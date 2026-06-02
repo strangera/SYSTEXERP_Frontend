@@ -420,25 +420,45 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   /** 送出 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      const body = this.createBody(frm);
-      const serviceCall = this.isFormCreateable
-        ? this.tls41010Service.insertTLS41010(body)
-        : this.tls41010Service.updateTLS41010(body);
-
-      serviceCall
-        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-        .subscribe({
-          next: (res) => {
-            this.messageService.successBubble(res.Message);
-            if (this.isFormCreateable) {
-              this.dataForm.reset();
-            } else if (this.isFormEditable) {
-              this.onCancel();
-            }
+      // 檢查是否為集中收銀(1) 且 專櫃編號有值
+      const rawValue = frm.getRawValue();
+      if (rawValue.ECR_Type === '1' && rawValue.ECR_TLT_No) {
+        this.messageService.confirm({
+          header: '變更確認',
+          message: '機台類型已變更為【統收(集中)機台】，系統將自動清空【機台所屬專櫃】，是否確定送出？',
+          accept: () => {
+            // 用戶點選同意，執行原本的送出流程
+            this.executeSubmit(frm);
+          },
+          reject: () => {
+            this.loading = false;
           },
         });
+      } else {
+        // 一般狀況直接送出
+        this.executeSubmit(frm);
+      }
     });
+  }
+  private executeSubmit(frm: FormGroup) {
+    this.loading = true;
+    const body = this.createBody(frm);
+    const serviceCall = this.isFormCreateable
+      ? this.tls41010Service.insertTLS41010(body)
+      : this.tls41010Service.updateTLS41010(body);
+
+    serviceCall
+      .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.messageService.successBubble(res.Message);
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+          } else if (this.isFormEditable) {
+            this.onCancel();
+          }
+        },
+      });
   }
 
   /** 組裝 Body */
@@ -451,7 +471,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       const date = new Date(rawValue.ECR_SettleHHNN);
       settleHHNN = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
     }
-
+    if (rawValue.ECR_Type === '1') {
+      rawValue.ECR_TLT_No = null;
+      rawValue.ECR_TLT_Name = null;
+    }
     return {
       ...rawValue,
       id: this.isFormEditable ? this.rowdata?.id : undefined,
