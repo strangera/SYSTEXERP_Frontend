@@ -259,19 +259,11 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
     this.amortRecordTotal = this.amortRecordData.length;
   }
 
-  private resolveContinuedId(): number | null {
-    // TODO: 調整ID取得來源
-    const raw = (this.rowdata as { ID?: unknown } | null)?.ID;
-    if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
-    if (typeof raw === 'string' && raw.trim() !== '' && !Number.isNaN(Number(raw))) return Number(raw);
-    return null;
-  }
-
   private submitContinued(): void {
-    const id = this.resolveContinuedId();
-    if (id == null) {
+    const assetId = this.rowdata?.ASSET_ID ?? null;
+    if (!assetId) {
       this.loading = false;
-      this.messageService.warnBubble('缺少 ID，無法續提');
+      this.messageService.warnBubble('缺少資產編號，無法續提');
       return;
     }
     const stoNo =
@@ -281,7 +273,7 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
     this.ass13090Service
       .continuedASS13090({
         STO_NO: stoNo,
-        ID: id,
+        ASSET_ID: assetId,
         DEPRE_AMOUNT: raw.renewalAmount ?? null,
         RESI_VALUE: raw.residual ?? null,
         MEMO: raw.remark ?? null,

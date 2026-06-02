@@ -189,8 +189,8 @@ export interface AmortizeASS13090Response {
 export interface ContinuedASS13090Request {
   /** 分店編號(必填) */
   STO_NO?: string | null;
-  /** FASCONDEP.ID(單筆) */
-  ID: number;
+  /** 資產編號 */
+  ASSET_ID?: string | null;
   /** 續提攤入金額(每月折舊額) */
   DEPRE_AMOUNT?: number | null;
   /** 續提殘值係數 */
