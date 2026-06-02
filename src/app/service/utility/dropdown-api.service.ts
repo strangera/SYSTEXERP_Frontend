@@ -25,6 +25,8 @@ import {
   EcrQuery,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
+  FAASSCHKMDropDownItem,
+  FAASSCHKMQuery,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -530,6 +532,30 @@ export class DropdownApiService {
   queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
     return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
       '/ASS0000/ASS1000/queryFAASSCHKMASS15070_DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢FAASSCHKM驗收單號下拉選單 */
+  queryFAASSCHKM_DropDownList(body: FAASSCHKMQuery = {}): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<FAASSCHKMDropDownItem, FAASSCHKMQuery>(
+      '/queryFAASSCHKM_DropDownList',
+      body
     ).pipe(
       map(items => {
         if (!items) return null;
