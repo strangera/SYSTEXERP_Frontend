@@ -10,10 +10,9 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -35,7 +34,6 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
     InputTextComponent,
     MenubarComponent,
     MultiSelectComponent,
-    RadiobuttonComponent,
     TableComponent,
   ],
 })
@@ -77,6 +75,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   }, { allowSignalWrites: true });
 
   public readonly voidingRowId = signal<number | null>(null);
+  public readonly deletingRowId = signal<number | null>(null);
 
   public readonly addButton: AddButton[] = [
     {
@@ -85,6 +84,13 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       action: (rowData: FIN53010Data) => this.onVoid(rowData),
       disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1',
       loading: (rowData: FIN53010Data) => this.voidingRowId() === rowData.id,
+    },
+    {
+      label: '刪除',
+      icon: 'pi pi-times text-red-700',
+      action: (rowData: FIN53010Data) => this.onDelete(rowData),
+      disabled: (rowData: FIN53010Data) => !rowData.CanDelete,
+      loading: (rowData: FIN53010Data) => this.deletingRowId() === rowData.id,
     },
   ];
 
@@ -146,6 +152,26 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
           next: res => {
             if (res.Status !== '0000') return;
             this.messageService.successBubble('作廢成功');
+            this.onSubmit();
+          },
+        });
+      },
+    });
+  }
+
+  public onDelete(rowData: FIN53010Data): void {
+    if (!rowData.CanDelete) return;
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否刪除傳票 ${rowData.VouNo} ?`,
+      accept: () => {
+        this.deletingRowId.set(rowData.id);
+        this.service.deleteFIN53010Data(rowData.id).pipe(
+          finalize(() => this.deletingRowId.set(null)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('刪除成功');
             this.onSubmit();
           },
         });

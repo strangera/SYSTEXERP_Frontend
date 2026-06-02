@@ -20,6 +20,7 @@ export interface CPM12020Request {
 export interface CPM12020Response {
   TotalCount: number;
   ID: number;
+  CLASS_ID: string;
   ORG_ID: string;
   ORG_NAME: string;
   CLASS_CODE: string;

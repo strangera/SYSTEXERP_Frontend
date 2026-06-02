@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin28010Service } from '@service/api/fin/fin28010.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
@@ -25,7 +24,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   templateUrl: './fin28010-cru.component.html',
   standalone: true,
   imports: [
-    NgIf,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -36,8 +34,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     TranslateModule,
     TableEditComponent,
-    CustomFooterTableComponent,
-    DatePipe
   ]
 })
 export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -185,9 +181,10 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     const formValue = frm.getRawValue();
-    // 以查詢時輸入的日期為主
-    const queryForm = this.queryData?.form as { VouDate?: any } | undefined;
+    // 以查詢時輸入的日期與匯款單號為主
+    const queryForm = this.queryData?.form as { WSLIP_NO?: string; VouDate?: Date | string } | undefined;
     const queryVouDate = queryForm?.VouDate ?? null;
+    const queryWslipNo = queryForm?.WSLIP_NO ?? '';
 
     if (!queryVouDate) {
       this.messageService.errorBubble('查詢的傳票日期不存在，請返回查詢頁重新查詢');
@@ -202,7 +199,7 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     const rows = (this.editData || []).filter(r => !r._isAutoInsertCandidate);
 
     const payload = {
-      WSLIP_NO: formValue.WSLIP_NO,
+      WSLIP_NO: queryWslipNo,
       VouDate: vouDateString,
       VouType: formValue.VouType,
       PostFlag: formValue.PostFlag,
@@ -234,10 +231,10 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
         next: (res) => {
           console.log('[FIN28010 insert response]', res);
           if (res.Status === '0000' || res.Status === '0001') {
-            const wslipNo = typeof res.Data === 'string' ? res.Data : (res.Data?.VouNo ?? res.Data?.WSLIP_NO);
+            const vouNo = typeof res.Data === 'string' ? res.Data : (res.Data?.VouNo ?? '');
             this.messageService.confirm({
               header: '新增成功',
-              message: wslipNo ? `匯款來源單號為:${wslipNo}` : (res.Message || '儲存成功'),
+              message: vouNo ? `傳票編號為:${vouNo}` : (res.Message || '儲存成功'),
               acceptLabel: '回查詢畫面',
               rejectLabel: '取消',
               accept: () => this.onCancel(),

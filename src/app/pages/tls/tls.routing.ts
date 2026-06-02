@@ -328,9 +328,9 @@ export const tlsRoutes: Routes = [
   { path: 'tls31080', loadComponent: () => import('./tls31080/tls31080.component').then(m => m.TLS31080Component), data: { progNo: 'TLS31080' } },
   // 各時段之樓層營業報表 CRU
   { path: 'tls31080cru', loadComponent: () => import('./tls31080-cru/tls31080-cru.component').then(m => m.Tls31080CRUComponent), data: { progNo: 'Tls31080' } },
-  // 時段之業種營業報表
+  // 各時段之大分類營業報表
   { path: 'tls31090', loadComponent: () => import('./tls31090/tls31090.component').then(m => m.TLS31090Component), data: { progNo: 'TLS31090' } },
-  // 時段之業種營業報表 CRU
+  // 各時段之大分類營業報表 CRU
   { path: 'tls31090cru', loadComponent: () => import('./tls31090-cru/tls31090-cru.component').then(m => m.Tls31090CRUComponent), data: { progNo: 'Tls31090' } },
   // 銷售排名分析報表
   { path: 'tls32010', loadComponent: () => import('./tls32010/tls32010.component').then(m => m.TLS32010Component), data: { progNo: 'TLS32010' } },
@@ -414,6 +414,14 @@ export const tlsRoutes: Routes = [
   { path: 'tls46030cru', loadComponent: () => import('./tls46030-cru/tls46030-cru.component').then(m => m.TLS46030CRUComponent), data: { progNo: 'TLS46030' } },
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent), data: { progNo: 'TLS46040' } },
+  // 組織預售業績總表
+  { path: 'tls26050', loadComponent: () => import('./tls26050/tls26050.component').then(m => m.TLS26050Component), data: { progNo: 'TLS26050' } },
+  // 中分類預售業績總表
+  { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component), data: { progNo: 'TLS26060' } },
+  // 各櫃預售業績總表
+  { path: 'tls26070', loadComponent: () => import('./tls26070/tls26070.component').then(m => m.TLS26070Component), data: { progNo: 'TLS26070' } },
+
+
   // 大分類維護作業
   { path: 'tls51010', loadComponent: () => import('./TLS50000/tls51010/tls51010.component').then(m => m.TLS51010Component), data: { progNo: 'TLS51010' } },
   // 中分類維護作業
@@ -576,10 +584,4 @@ export const tlsRoutes: Routes = [
   { path: 'tls56060cru', loadComponent: () => import('./TLS50000/tls56060/tls56060-cru/tls56060-cru.component').then(m => m.TLS56060CRUComponent), data: { progNo: 'TLS56060' } },
   // 商品報廢維護 CRU
   { path: 'tls56070cru', loadComponent: () => import('./TLS50000/tls56070/tls56070-cru/tls56070-cru.component').then(m => m.TLS56070CRUComponent), data: { progNo: 'TLS56070' } },
-  // 組織預售業績總表
-  { path: 'tls26050', loadComponent: () => import('./tls26050/tls26050.component').then(m => m.TLS26050Component), data: { progNo: 'TLS26050' } },
-  // 中分類預售業績總表
-  { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component), data: { progNo: 'TLS26060' } },
-  // 各櫃預售業績總表
-  { path: 'tls26070', loadComponent: () => import('./tls26070/tls26070.component').then(m => m.TLS26070Component), data: { progNo: 'TLS26070' } },
 ];

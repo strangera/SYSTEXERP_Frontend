@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from '@shared/componentkit/table/import-table';
 import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
@@ -148,7 +147,6 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
@@ -361,10 +359,6 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   detailRow(rowData: any) { this.detail.emit(rowData); }
   // 欄位Button 選擇 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
-  // 防止XSS
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
     return this.tableUtilityService.getColumnSpan(columns, groupField);
@@ -393,10 +387,6 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   // 全表總計
   getTotal(field: string): number {
     return this.tableUtilityService.getTotal(this.data, field);
-  }
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined {
-    return this.tableUtilityService.getImage(url);
   }
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {

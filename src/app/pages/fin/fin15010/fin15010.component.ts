@@ -7,8 +7,7 @@ import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -24,7 +23,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 export interface Option {
   label: string;
@@ -57,7 +56,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     PUR_GUIDate_S: [null],                                      // 發票日期_起
     PUR_GUIDate_E: [null],                                      // 發票日期_迄
     PUR_VoucherType: [null],                                    // 發票格式
-    GUI_Track: [null],                                          // 字軌
+    GUI_Track: [null, [Validators.maxLength(2)]],               // 字軌
     InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
     InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
     PUR_RepYYYYMM: ['', [Validators.required]], // 申報年月
@@ -102,7 +101,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: formatDate },
     { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
-    { field: 'PUR_Uniform', header: '廠商統一編號', visible: true },
+    { field: 'PUR_VenUniform', header: '廠商統一編號', visible: true },
     { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount, isTotal: true },
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount, isTotal: true },
@@ -159,6 +158,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
     this.queryForm.get('PUR_RepYYYYMM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
+    // this.loadGuiTrackOptions(this.queryForm.get('PUR_RepYYYYMM')?.value); // 字軌下拉改成手key輸入，不依賴申報年月，故註解掉此行
   }
 
   private buildRequest(body?: { pageSize?: number; PageSize?: number; pageIndex?: number; PageIndex?: number; SortBy?: unknown }): FIN15010QueryRequest {
@@ -277,7 +277,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
+    globalThis.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   }
 
   private loadDropdownOptions(): void {
@@ -290,17 +290,34 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     });
   }
 
-  loadGuiTrackOptions(event: any): void {
-    // 選完申報年月 載入字軌下拉
-    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
-      GUI_YYMM: event,
-      MID: 0,
-      STO_No: '10',
-      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
-    }).subscribe(r => {
-      this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
-    });
-  }
+  // 字軌下拉改成手key輸入，不依賴申報年月，故註解掉此方法
+  // loadGuiTrackOptions(yyyymm: string | null | undefined): void {
+  //   if (!yyyymm) {
+  //     this.guiTrackOptions = [];
+  //     return;
+  //   }
+  //   // 1. 解析傳入的字串 (假設格式為 yyyyMM)
+  //   const year = parseInt(yyyymm.substring(0, 4), 10);
+  //   const month = parseInt(yyyymm.substring(4, 6), 10);
+
+  //   // 2. 判斷是否為雙數月，若是則減 1
+  //   let targetMonth = month;
+  //   if (targetMonth % 2 === 0) {
+  //     targetMonth -= 1;
+  //   }
+
+  //   // 3. 重新組合成 yyyyMM 格式 (補 0)
+  //   const formattedYyyymm = `${year}${targetMonth.toString().padStart(2, '0')}`;
+  //   // 選完申報年月 載入字軌下拉
+  //   this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+  //     GUI_YYMM: formattedYyyymm,
+  //     MID: 0,
+  //     STO_No: '10',
+  //     GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
+  //   }).subscribe(r => {
+  //     this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
+  //   });
+  // }
 
   onStartControlChange(event: any, controlName: string): void {
     switch (controlName) {

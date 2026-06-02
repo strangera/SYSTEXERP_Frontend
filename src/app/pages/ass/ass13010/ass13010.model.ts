@@ -47,6 +47,7 @@ export interface QueryASS13010Request {
   HANDLE_VENDOR?: string | null;
   HANDLE_VID?: string | null;
   HANDLE_NOTE?: string | null;
+  PURCHASE_NOTES?: string | null;
 }
 
 export interface QueryASS13010Response {
@@ -94,63 +95,121 @@ export interface DetailASS13010Request {
 }
 
 export interface DetailASS13010Response {
+  /** 主鍵值 */
   ID: number;
+  /** 財產代號 */
   ASSET_ID: string | null;
+  /** 購入日期 */
   GET_DATE: string | null;
+  /** 財產狀態 (1:使用中, 3:維修中, 4:報廢, 5:變賣, 7:庫存未使用) */
   ASSET_STATUS: string | null;
+  /** 保管人 */
   HOLD_EMP_ID: string | null;
+  /** 保管單位 */
   HOLD_ORG_ID: string | null;
+  /** 使用人 */
   USE_EMP_ID: string | null;
+  /** 使用單位 */
   USE_ORG_ID: string | null;
+  /** 財產類型 (1:資產, 2:列管品) */
   DEPRE_YN: string | null;
+  /** 折舊會計科目 */
   STYPE_ID: string | null;
+  /** 累計折舊科目 */
   STYPE_ID2: string | null;
+  /** 購入金額(未稅) */
   GET_COST: number | null;
+  /** 進貨單號 */
   SUBPOENA_ID: string | null;
+  /** 資產註記說明 */
   NOTES: string | null;
+  /** 採購說明 */
   PURCHASE_NOTES: string | null;
+  /** 折舊年限(年) */
   EXP_YEAR: number | null;
+  /** 變賣金額 */
   ONSALE_AMT: number | null;
+  /** 位置代號 */
   LOCATION_ID: string | null;
+  /** 維修合約編號 */
   FIX_N: string | null;
+  /** 利潤中心部門代號 */
   FORG_ID: string | null;
+  /** 入帳日期 */
   BILL_DATE: string | null;
+  /** 處分日期(報廢或變賣) */
   HANDLE_DATE: string | null;
+  /** 處分說明 */
   HANDLE_NOTE: string | null;
+  /** 處分廠商 */
   HANDLE_VENDOR: string | null;
+  /** 處分傳票編號 */
   HANDLE_VID: string | null;
+  /** 處分暫存傳票KEY */
   HANDLE_VKEY: number | null;
+  /** 預留殘值 */
   RESI_VALUE: number | null;
+  /** 會計科目(借) */
   STYPE_D: string | null;
+  /** 會計科目(貸) */
   STYPE_C: string | null;
+  /** 攤提代號 */
   DEPRE_ID: string | null;
+  /** 稅額 */
   GET_COST_TAX: number | null;
+  /** 使用狀態 (1:使用中, 6:閒置中) */
   USE_STATUS: string | null;
+  /** 已提列折舊金額 */
   DEPRE_AMT: number | null;
+  /** 折舊年限(月) */
   EXP_MONTH: number | null;
+  /** 原保管單位 */
   ORI_ORG_ID: string | null;
+  /** 原保管人 */
   ORI_EMP_ID: string | null;
+  /** 資產維護單號 */
   ASSET_INS_ID: string | null;
+  /** 維修總金額 */
   FIX_AMT: number | null;
+  /** 品項編號 */
   GOODS_ID: string | null;
+  /** 供應商編號 */
   SUPPLIER_ID: string | null;
+  /** 設備編號 */
   EQUIP_ID: string | null;
+  /** 攤提起始日期 */
   DEPRE_SDATE: string | null;
+  /** 檔案來源 (1:審核入檔, 2:手動新增) */
   SOURCE_STATUS: string | null;
+  /** 已攤提金額 */
   TAL_DEPRE_AMT: number | null;
+  /** 已攤提月數 */
   TAL_DEPRE_MON: number | null;
+  /** 批次驗收單號 */
   SUBCHECK_ID: string | null;
+  /** 原始購入金額 */
   FIR_GET_COST: number | null;
+  /** 原始折舊年限 */
   FIR_EXP_YEAR: number | null;
+  /** 出借狀態 */
   LEND_TYPE: string | null;
+  /** 原始財產編號 */
   ORI_ASSET_ID: string | null;
+  /** 原資產轉入已攤提月數 */
   ORI_IMPORT_DEPRE_MON: number | null;
+  /** 原資產轉入已攤提金額 */
   ORI_IMPORT_DEPRE_AMT: number | null;
+  /** 扣抵代號 */
   REDU_CODE: string | null;
+  /** 變賣稅額 */
   ONSALE_RATE: number | null;
+  /** 變賣未稅金額 */
   ONSALE_NORATE_AMT: number | null;
+  /** 延長折舊年限 */
   EXTEND_EXP_YEAR: number | null;
+  /** 批次報廢單號 */
   DAMAGEM_ID: string | null;
+  /** 保固年限(日) */
   Warranty_YEAR: number | null;
 }
 

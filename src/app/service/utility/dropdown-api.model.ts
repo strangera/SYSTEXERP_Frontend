@@ -17,6 +17,31 @@ export interface IDropdownItem {
 }
 
 /**
+ * queryPOS2002_Location_DropDownList 回傳項目
+ */
+export interface Pos2002LocationItem {
+  location_no?: string | null;
+  tlt_building?: string | null;
+  tlt_floor?: string | null;
+  area_no?: string | null;
+  tlt_space?: number | null;
+  building_desc?: string | null;
+  floor_desc?: string | null;
+  area_desc?: string | null;
+}
+
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME / UNIT_NAME / ID） */
+export interface FasItemDropdownItem {
+  RowNo?: string;
+  RowNum?: number;
+  ID?: number | null;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  UNIT_NAME?: string | null;
+}
+
+/**
  * 查詢採購單號下拉選單(ASS13010)
  * 後端回傳欄位：ID、APPLY_DATE
  * 前端下拉顯示僅需 ID
@@ -34,6 +59,13 @@ export interface FAASSCHKMASS15070DropDownItem {
   SUBPOENA_ID?: string | null;
   NTAX_AMT?: number;
   CHECK_DATE?: string | null;
+}
+
+/** FIN70000 / POS2064MPCS_NoDropDownList 回傳列 */
+export interface Pos2064MpcsNoDropDownItem {
+  PCS_No?: string | null;
+  PCS_Date?: string | null;
+  PCS_UsrNo?: string | null;
 }
 
 /** 
@@ -73,25 +105,21 @@ export interface FaClassMItem {
 }
 
 /**
- * 查詢 FACLASS1_DropDownList 時的請求 body
+ * 查詢 FACLASS1_DropDownList 時的請求 body（資材大分類代碼 = FACLASSM.CLASS_ID）
  */
 export interface FaClass1Query {
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
-  B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS1_DropDownList 回傳的項目型別
  */
 export interface FaClass1Item {
-  RowNum?: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 
@@ -99,32 +127,42 @@ export interface FaClass1Item {
  * 查詢 FACLASS2_DropDownList 時的請求 body
  */
 export interface FaClass2Query {
-  S_CLASS_ID?: string | null;
-  S_CLASS_NAME?: string | null;
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
+  /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  /** 資材中分類代碼 */
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS2_DropDownList 回傳的項目型別
  */
 export interface FaClass2Item {
-  RowNum?: string;
-  S_CLASS_ID: string;
-  S_CLASS_NAME: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  S_CLASS_ID?: string | null;
+  S_CLASS_NAME?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 
+export interface FaHosItem {
+  WH_ID: string;
+  WH_NAME: string;
+}
+
+export interface FaSItemQuery {
+  MATERIAL_TYPE: string;
+}
+
+export interface FaSItem {
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
 /**
- * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
- */
+ * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
 export interface FaSitemQuery {
   MATERIAL_TYPE?: string | null;
 }
@@ -357,6 +395,13 @@ export interface Pos2004Query {
 }
 
 /**
+ * 查詢 POS2004_DropDownList 時的請求 body
+ */
+export interface Pos2004SearchKey {
+  SearchKey: string;
+}
+
+/**
  * 查詢 POS2004_DropDownList 回傳的項目型別
  */
 export interface Pos2004Item {
@@ -364,6 +409,14 @@ export interface Pos2004Item {
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc: number;
+}
+
+/**
+ * 查詢 商品下拉選單 Response (擴充版)
+ */
+export interface Pos2004ExtendedItem extends Pos2004Item {
+  PLU_Unit: string
+  PLU_OrgPLUNo: string
 }
 
 /**
@@ -609,6 +662,13 @@ export interface TALPORDERMQueryForShare {
 }
 
 /**
+ * 查詢 GLS3002 對帳 Key 值下拉式選單回傳項目
+ */
+export interface Gls3002AcctKeyItem {
+  ACCT_KEY: string;
+}
+
+/**
  * 查詢 queryLOGOaccorHOS 時的請求 body (品牌對應倉別)
  */
 export interface LogoAccorHosQuery {
@@ -677,6 +737,8 @@ export interface Css1005Query {
 export interface CssDropDownItem {
   No: string;
   Name: string;
+  /** CSS1005 專用：選 CLASS_ID 後自動帶出組織代碼 */
+  ORG_ID?: string;
 }
 
 /**
@@ -745,4 +807,24 @@ export interface queryPOS1002_DropDownListItem {
   No: string;
   Name: string;
   ECR_TLT_No?: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別(自營)
+ */
+export interface queryOwnPOS1002_DropDownListItem {
+  ECR_No: string;
+  ECR_Name: string;
+}
+
+/**
+ * 查詢過濾後的收銀機設定檔 (POS1002 Filtered) 回傳項目
+ * 對應後端 SQL: ECR_No, ECR_Name, ECR_TLT_No, ECR_TLT_Name, ECR_Status
+ */
+export interface Pos1002FilteredItem {
+  No: string;        // ECR_No
+  Name: string;      // ECR_Name
+  ECR_TLT_No: string;
+  ECR_TLT_Name: string;
+  ECR_Status: string;
 }

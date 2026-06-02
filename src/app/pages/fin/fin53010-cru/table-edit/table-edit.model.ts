@@ -36,7 +36,13 @@ export interface EditColumn {
   templateLabel?: string; // 模板欄位 label
   showClear?: boolean; // 是否顯示清除按鈕
   triggerFields?: string[]; /** 下拉連動：當這些欄位的值改變時，觸發 options 重新獲取 (僅適用於 options 為 function 的情況) */
+  /** 下拉搜尋欄位輸入時的回呼，可用來動態更新 options（filterQuery: 使用者輸入的文字） */
+  onFilter?: (filterQuery: string, rowData: any, col: EditColumn, index: number) => void;
   allowCustomValue?: boolean; // 允許輸入不在選項中的自訂值
+  /** 下拉欄位若值不在 options 中則改用 input 文字輸入框（預設 false：維持下拉） */
+  dropdownFallbackToInput?: boolean;
+  /** 判斷該列的 options 是否已載入完成（避免 async 載入中誤判 fallback） */
+  isOptionsLoaded?: (rowData: any) => boolean;
   // date
   timeOnly?: boolean;
   showTime?: boolean;

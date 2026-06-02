@@ -14,25 +14,17 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AddButton, formatAmount, formatYYYYMMDD, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
-import { map } from 'rxjs/operators';
-import { AddButton, Column, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
-import { environment } from 'src/environments/environment';
+import { finalize, map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-/**
- * 格式化發票狀態
- */
-const formatInvoiceStatus = (value: any) => {
-  if (value === 'N') return '開立';
-  if (value === 'Y') return '作廢';
-  return value;
-};
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
+
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -60,254 +52,187 @@ const formatInvoiceStatus = (value: any) => {
   ],
 })
 export class FIN13040Component extends BasicQueryPageComponent<any> implements OnInit {
-  public readonly addButton: AddButton[] = [
+  // --- 關鍵：將變數名稱恢復與 HTML 綁定一致 ---
+  SAL_Type_Options = getSYS1000Options('T205');
+  taxTypeOptions = getSYS1000Options('PUR_TaxType');
+  AssetNoteOptions = getSYS1000Options('AssetType');
+  Buyer_Uniform_Options: any[] = []; // 對應 HTML: [options]="Buyer_Uniform_Options"
+  InvoiceType_Options: any[] = [];   // 對應 HTML: [options]="InvoiceType_Options"
+
+  data: any[] = [];
+  totalRecords = 0;
+  lastQueryBody: any = null;
+  footerData: any = {};
+
+  addButton: AddButton[] = [
     {
-      label: '列印',
-      icon: 'pi pi-file-pdf',
-      action: (rowData: any) => this.onPrint(rowData),
-      disabled: () => !this.hasPermission(this.Actions.Query),
+      label: '列印', icon: 'pi pi-file-pdf',
+      action: (row: any) => this.onPrint(row),
+      disabled: () => !this.hasPermission(this.Actions.Query)
     },
+    {
+      label: '作廢', icon: 'pi pi-ban',
+      action: (row: any) => this.onVoid(row),
+      disabled: (row: any) => row?.INV_Cancel === 'Y' || !row?.CanEdit || !this.hasPermission(this.Actions.Edit)
+    }
   ];
 
-  // wrapper for table-report's queryFunction shape
-  queryFn = (body: any) => {
-    return this.fin13040Service.queryFIN13040(body).pipe(
-      map((res: any) => ({ Data: res?.Data?.Data ?? [], TotalCount: res?.Data?.TotalCount ?? 0 }))
-    );
-  };
+  queryFn = (body: any) => this.fin13040Service.queryFIN13040(body).pipe(
+    map(res => ({
+      Data: res?.Data?.Data ?? [],
+      TotalCount: res?.Data?.TotalCount ?? 0,
+      extra: res?.Data
+    }))
+  );
 
-  // Disable edit button for rows with InvoiceType === '35'
-  editDisabled = (rowData: any) => { return rowData?.InvoiceType === '35' }
+  editDisabled = (row: any) => row?.InvoiceType === '35' || !row?.CanEdit;
 
   queryForm = this.formBuilder.group({
-    // InvoiceType UI removed; default query to ['35'] per requirement
+    ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
     InvoiceType: [['35']],
     GUI_Track: [null, [Validators.maxLength(2)]],
     InvoiceNo_S: [null, [Validators.maxLength(8)]],
     InvoiceNo_E: [null, [Validators.maxLength(8)]],
-    InvoiceDate_S: [null],
-    InvoiceDate_E: [null],
+    InvoiceDate_S: [null], InvoiceDate_E: [null],
     InvoiceDateYM: [null],
-    INV_DeclareYM: [null as string | null, [Validators.required]],
-    INV_Data_YM_S: [null],
-    INV_Data_YM_E: [null],
+    INV_DeclareYM: [null as any, [Validators.required]],
+    INV_Data_YM_S: [null], INV_Data_YM_E: [null],
     Buyer_Uniform: [null],
     PUR_TaxType: [[]],
-    PUR_Amt_S: [null],
-    PUR_Amt_E: [null],
-    PUR_Tax_S: [null],
-    PUR_Tax_E: [null],
-    Voucher_No_S: [null],
-    Voucher_No_E: [null],
-    AssetType: [null],
-    SAL_Type: [null],
-    ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
+    PUR_Amt_S: [null], PUR_Amt_E: [null],
+    PUR_Tax_S: [null], PUR_Tax_E: [null],
+    Voucher_No_S: [null], Voucher_No_E: [null],
+    AssetType: [null], SAL_Type: [null],
   });
-  data: any[] = [];
-  totalRecords = 0;
-  lastQueryBody: any | null = null;
-  footerData: any = {};
-  InvoiceType_Options: { label: string; value: string }[] = [];
-  SAL_Type_Options = getSYS1000Options('T205'); //規格更新
-  taxTypeOptions = getSYS1000Options('PUR_TaxType');
-  AssetNoteOptions = getSYS1000Options('AssetType');
-  Buyer_Uniform_Options: { label: string; value: string }[] = [];
-  columns: Column[] = [
-    { field: 'InvoiceType', header: '發票格式', visible: true },
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
-    { field: 'InvoiceDate', header: '發票日期', visible: true },
-    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
-    { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true },
-    { field: 'PUR_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PUR_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PUR_Amt', header: '總金額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Voucher_No', header: '傳票編號', visible: true },
-    { field: 'AssetType', header: '資產註記', visible: true },
-    { field: 'SAL_Type', header: '使用別', visible: true },
-    { field: 'INV_Cancel', header: '發票狀態', visible: true, format: formatInvoiceStatus },
-    { field: 'TXN_VoidDT', header: '作廢日期', visible: true, format: formatDate },
+
+  columns: ReportColumn[] = [
+    { field: 'InvoiceType', header: '發票格式' },
+    { field: 'InvoiceNumber', header: '發票號碼' },
+    { field: 'InvoiceDate', header: '發票日期' },
+    { field: 'INV_DeclareYM', header: '申報年月' },
+    { field: 'Buyer_Uniform', header: '買受人統一編號' },
+    { field: 'PUR_TaxType', header: '課稅別' },
+    { field: 'PUR_Net', header: '未稅金額', format: formatAmount, align: 'right' },
+    { field: 'PUR_Tax', header: '稅額', format: formatAmount, align: 'right' },
+    { field: 'PUR_Amt', header: '總金額', format: formatAmount, align: 'right' },
+    { field: 'Voucher_No', header: '傳票編號' },
+    { field: 'AssetType', header: '資產註記' },
+    { field: 'SAL_Type', header: '使用別' },
+    { field: 'INV_Cancel', header: '發票狀態', format: (v: any) => v === 'Y' ? '作廢' : '開立' },
+    { field: 'TXN_VoidDT', header: '作廢日期', format: formatYYYYMMDD },
   ];
+
   constructor(
     private dropDownListService: DropDownListService,
-    private fin13040Service: Fin13040Service
-  ) {
-    super();
-  }
+    private fin13040Service: Fin13040Service,
+    private datePipe: DatePipe
+  ) { super(); }
+
   ngOnInit(): void {
-    this.initializePage('FIN13040', '/FIN/FIN13040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadBuyerUniformOptions();
-    this.loadInvoiceTypeOptions();
-    // 設定 INV_DeclareYM 預設為最近的雙數月（若當月為單月，跳到下個月）
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    if (currentMonth % 2 !== 0) {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-    }
-    const dp = new DatePipe('en-US');
-    this.queryForm.get('INV_DeclareYM')?.setValue(dp.transform(currentDate, 'yyyyMM'));
-
+    this.initializePage('FIN13040', '/FIN/FIN13040cru', this.queryForm, (f) => this.onSubmit(f));
+    this.initOptions();
+    this.setDefaultDeclareYM();
   }
 
-  loadGuiTrackOptions(event: any): void {
-    // 根據申報年月載入字軌下拉（參考 FIN15010）
-    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
-      GUI_YYMM: event,
-      MID: 0,
-      STO_No: '10',
-      GUI_Type: this.queryForm.controls.InvoiceType.value ?? []
-    }).pipe(untilDestroyed(this)).subscribe(r => {
-      const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
-      console.log('[loadGuiTrackOptions] tracks', tracks);
+  private initOptions() {
+    // 買受人統編
+    this.dropDownListService.queryPOS2013_DropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
+      const data = res?.Data ?? [];
+      this.Buyer_Uniform_Options = Array.from(new Map(data.map((i: any) => [i.No, i])).values())
+        .map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    });
+
+    // 發票類型
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).pipe(untilDestroyed(this)).subscribe(res => {
+      const allowed = ['31', '32', '35'];
+      this.InvoiceType_Options = (res?.Data?.INV_GUITypes ?? [])
+        .filter((x: any) => allowed.includes(x.INV_GUIType))
+        .map((x: any) => ({ label: `${x.INV_GUIType} - ${x.INV_GUIName}`, value: x.INV_GUIType }));
     });
   }
 
-  /** 載入買受人統一編號下拉清單 */
-  loadBuyerUniformOptions(): void {
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          const data = res?.Data ?? [];
-
-          // 使用 Map 以 No 作為 Key 來去重，後出現的會覆蓋先出現的（或可自行調整邏輯）
-          const uniqueDataMap = new Map();
-          data.forEach((item: any) => {
-            if (item.No) {
-              uniqueDataMap.set(item.No, item);
-            }
-          });
-
-          // 將 Map 的結果轉回 Array 並進行 map 轉換
-          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
-            label: `${item.No} - ${item.Name}`,
-            value: item.No,
-          }));
-        },
-      });
+  private setDefaultDeclareYM() {
+    const now = new Date();
+    const targetM = (now.getMonth() + 1) % 2 === 0 ? now.getMonth() + 1 : now.getMonth() + 2;
+    const date = new Date(now.getFullYear(), (targetM > 12 ? 12 : targetM) - 1, 1);
+    this.queryForm.get('INV_DeclareYM')?.setValue(this.datePipe.transform(date, 'yyyyMM'));
   }
 
-  /** 載入發票類型下拉清單 */
-  loadInvoiceTypeOptions(): void {
-    this.dropDownListService
-      .queryTDS1007_DropDownList({
-        mid: 0,
-      })
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          const allowed = ['31', '32', '35'];
-          const data = res?.Data?.INV_GUITypes ?? [];
-          const filtered = data.filter((x: any) => allowed.includes(x.INV_GUIType));
-          filtered.sort((a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType));
-          this.InvoiceType_Options = filtered.map((x: any) => ({
-            label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
-            value: x.INV_GUIType,
-          }));
-        },
-
-      });
+  loadGuiTrackOptions(event: any): void {
+    if (!event) return;
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: event, MID: 0, STO_No: '10', GUI_Type: this.queryForm.get('InvoiceType')?.value ?? []
+    }).pipe(untilDestroyed(this)).subscribe();
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      const v = form.value;
-
-      const dp = (d: any, key: string) => {
-        // --- 新增的防呆邏輯 ---
-        // 如果這個欄位不小心變成了物件（例如 AutoComplete 傳回了整個 item）
-        // 我們只取裡面的 value 屬性 (也就是統編 No)
-        if (d !== null && typeof d === 'object' && 'value' in d && !(d instanceof Date)) {
-          d = d.value;
+      const v = form.getRawValue();
+      const transform = (val: any, isYM = false) => {
+        if (!val) return undefined;
+        const actualVal = (typeof val === 'object' && 'value' in val && !(val instanceof Date)) ? val.value : val;
+        if (actualVal instanceof Date) {
+          return this.datePipe.transform(actualVal, isYM ? 'yyyyMM' : 'yyyy-MM-dd');
         }
-        // --------------------
-
-        if (!(d instanceof Date)) return d === '' ? null : d;
-
-        const date = new Date(d);
-        if (key.toLowerCase().includes('ym')) {
-          const y = date.getFullYear();
-          const m = String(date.getMonth() + 1).padStart(2, '0');
-          return `${y}${m}`;
-        }
-        return date.toISOString().split('T')[0];
+        return actualVal;
       };
 
-      const payload = Object.fromEntries(
-        Object.entries(v).map(([k, val]) => [k, dp(val, k)])
-      );
-      // Ensure InvoiceType defaults to ['35'] when UI hidden/removed
-      if (!payload['InvoiceType'] || (Array.isArray(payload['InvoiceType']) && payload['InvoiceType'].length === 0)) {
-        (payload as any)['InvoiceType'] = ['35'];
-      }
+      const payload = {
+        ...v,
+        InvoiceDate_S: transform(v.InvoiceDate_S),
+        InvoiceDate_E: transform(v.InvoiceDate_E),
+        INV_Data_YM_S: transform(v.INV_Data_YM_S, true),
+        INV_Data_YM_E: transform(v.INV_Data_YM_E, true),
+        InvoiceDateYM: transform(v.InvoiceDateYM, true),
+        SAL_Type: v.SAL_Type ? [v.SAL_Type] : undefined,
+        AssetType: v.AssetType ? [v.AssetType] : undefined,
+        InvoiceType: v.InvoiceType?.length ? v.InvoiceType : ['35'],
+        PUR_TaxType: v.PUR_TaxType?.length ? v.PUR_TaxType : undefined,
+      };
 
-      this.fin13040Service
-        .queryFIN13040(payload)
-        .pipe(untilDestroyed(this))
-        .subscribe({
+      this.fin13040Service.queryFIN13040(payload).pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
+        const d = res?.Data;
+        this.data = d?.Data ?? [];
+        this.totalRecords = d?.TotalCount ?? 0;
+        this.lastQueryBody = payload;
+        this.footerData = { PUR_Net: d?.TotalNet, PUR_Tax: d?.TotalTax, PUR_Amt: d?.TotalAmt };
+        this.queryStateService.setQueryState(this.ProgNo, v);
+      });
+    });
+  }
+
+  onVoid(row: any): void {
+    if (!row?.ID) return;
+    this.messageService.confirm({
+      header: '確認作廢',
+      message: `確定要作廢發票 ${row.InvoiceNumber} 嗎？此操作無法復原。`,
+      type: 'delete',
+      accept: () => {
+        this.fin13040Service.voidFIN13040({ ID: row.ID }).pipe(untilDestroyed(this)).subscribe({
           next: (res) => {
-            this.lastQueryBody = payload;
-            this.data = res?.Data?.Data ?? [];
-            this.totalRecords = res?.Data?.TotalCount ?? 0;
-            this.footerData = {};
-            this.footerData['PUR_Net'] = res?.Data?.TotalNet ?? 0;
-            this.footerData['PUR_Tax'] = res?.Data?.TotalTax ?? 0;
-            this.footerData['PUR_Amt'] = res?.Data?.TotalAmt ?? 0;
-            // 保存目前查詢條件，供 CRU 返回時還原
-            this.queryStateService.setQueryState(this.ProgNo, v);
-          },
-          complete: () => (this.loading = false),
+            if (res?.Status === '0000') {
+              this.messageService.successBubble(`發票 ${row.InvoiceNumber} 已作廢`);
+              this.onSubmit(this.queryForm);
+            }
+          }
         });
+      }
     });
   }
 
   onPrint(row: any): void {
-    if (!row || !row.ID) return;
-
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: 0,
-      STO_No: '10',
-      ID: row.ID,
-    };
-
-    this.fin13040Service.printFIN13040(payload).pipe(untilDestroyed(this)).subscribe({
-      next: async (res: any) => {
-        const contentType = res.headers?.get('Content-Type') || '';
-        const blob = res.body;
-
-        if (contentType.includes('application/json')) {
-          const text = await blob.text();
-          try {
-            const json = JSON.parse(text);
-            if (json?.Status === '0000' && json?.Data?.Print_URL) {
-              const url = `${environment.ApiUrl.replace(/\/$/, '')}${json.Data.Print_URL}`;
-              const filename = decodeURIComponent(json.Data.Print_URL.split('/').pop() ?? 'report.pdf');
-              const a = document.createElement('a');
-              a.href = url;
-              a.setAttribute('download', filename);
-              a.click();
-            }
-          } catch (e) {
-            console.error('解析 JSON 失敗', e);
-          }
-          return;
-        }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-        a.download = `${row.InvoiceNumber ?? 'report'}.pdf`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      },
-      error: () => {
-        this.messageService.errorBubble('列印失敗');
-      },
+    if (!row?.ID) return;
+    this.fin13040Service.printFIN13040({ MID: 0, STO_No: '10', ID: row.ID }).subscribe(res => {
+      const blob = new Blob([res.body as Blob], { type: 'application/pdf' });
+      const url = globalThis.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${row.InvoiceNumber || 'report'}.pdf`;
+      a.click();
+      globalThis.URL.revokeObjectURL(url);
     });
   }
-
 }

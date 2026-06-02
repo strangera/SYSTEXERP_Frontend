@@ -48,11 +48,10 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
+    // { field: 'VouNo', header: '暫存編號', visible: true },
     { field: 'SrcSheetType', header: '傳票型態代碼', visible: true },
-    { field: 'Voucher_Name', header: '傳票型態', visible: true },
-    { field: 'SrcSheetNo', header: '來源編號', visible: true },
+    { field: 'Voucher_Name', header: '傳票型態名稱', visible: true },
     { field: 'PostFlag_Desc', header: '傳票狀態', visible: true },
-    { field: 'Trans_Status_Desc', header: '轉拋狀態', visible: true },
     { field: 'Remark', header: '備註', visible: true },
   ];
 
@@ -88,90 +87,56 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.performQuery(frm);
+      const formValue = frm.value as any;
+      const pageSize = formValue.pageSize ?? 0;
+      const pageIndex = (formValue.pageIndex ?? 1);
+
+      let sam_yyymm_string = '';
+      if (formValue.sam_yyymm) {
+        const date = new Date(formValue.sam_yyymm);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        sam_yyymm_string = `${year}${month}`;
+      }
+
+      const params = {
+        PageSize: pageSize,
+        PageIndex: Math.max(0, pageIndex - 1),
+        OrderBy: formValue.OrderBy ?? '',
+        Offset: Math.max(0, (pageIndex - 1) * pageSize),
+        SortBy: formValue.SortBy ?? [],
+        sam_yyymm: sam_yyymm_string,
+        money_type: formValue.COMM_MONEY_TYPE ?? null,
+        sam_termno: formValue.sam_termno ?? null,
+      };
+
+      this.tlsService.queryTLS2F020(params)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res: any) => {
+            this.data = res?.Data ?? [];
+            this.totalRecords = res?.TotalCount ?? 0;
+          },
+
+        });
     });
   }
 
-  performQuery(frm: FormGroup) {
-    this.errorMessage = null;
-    const v = frm.value as any;
-    const pageSize = v.pageSize ?? 0;
-    const pageIndex = (v.pageIndex ?? 1);
-    // Normalize sam_yyymm to 'yyyymm' (e.g. 202601)
-    const sam_yyymm_val = v.sam_yyymm;
-    let sam_yyymm = '';
-    if (sam_yyymm_val) {
-      if (typeof sam_yyymm_val === 'string') {
-        const s = sam_yyymm_val.trim();
-        if (/^\d{6}$/.test(s)) {
-          sam_yyymm = s;
-        } else {
-          const d = new Date(s);
-          if (!isNaN(d.getTime())) sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-          else sam_yyymm = s;
-        }
-      } else if (sam_yyymm_val instanceof Date) {
-        const d = sam_yyymm_val as Date;
-        sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-      } else if (typeof sam_yyymm_val === 'number') {
-        const d = new Date(sam_yyymm_val);
-        if (!isNaN(d.getTime())) sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-        else sam_yyymm = String(sam_yyymm_val);
-      }
-    }
-
-    const params = {
-      PageSize: pageSize,
-      PageIndex: Math.max(0, pageIndex - 1),
-      OrderBy: v.OrderBy ?? '',
-      Offset: Math.max(0, (pageIndex - 1) * pageSize),
-      SortBy: v.SortBy ?? [],
-      sam_yyymm: sam_yyymm,
-      COMM_MONEY_TYPE: Array.isArray(v.COMM_MONEY_TYPE) ? (v.COMM_MONEY_TYPE[0] ?? '') : (v.COMM_MONEY_TYPE ?? ''),
-      sam_termno: v.sam_termno ?? null
-    };
-
-    this.tlsService.queryTLS2F020(params)
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe({
-        next: (res: any) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalCount ?? 0;
-        },
-
-      });
-  }
-
-  errorMessage: string | null = null;
-
   // 覆寫新增/產生按鈕行為：直接呼叫 execTLS2F020
   override onCreate(): void {
-    const v = this.queryForm.getRawValue() as any;
+    const formValue = this.queryForm.getRawValue() as any;
     // 轉換 sam_yyymm 為 yyyymm
-    const sam_yyymm_val = v.sam_yyymm;
-    let sam_yyymm = '';
-    if (sam_yyymm_val) {
-      if (typeof sam_yyymm_val === 'string') {
-        const s = sam_yyymm_val.trim();
-        if (/^\d{6}$/.test(s)) sam_yyymm = s;
-        else {
-          const d = new Date(s);
-          if (!isNaN(d.getTime())) sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-          else sam_yyymm = s;
-        }
-      } else if (sam_yyymm_val instanceof Date) {
-        const d = sam_yyymm_val as Date;
-        sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-      } else if (typeof sam_yyymm_val === 'number') {
-        const d = new Date(sam_yyymm_val);
-        if (!isNaN(d.getTime())) sam_yyymm = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-        else sam_yyymm = String(sam_yyymm_val);
-      }
+    let sam_yyymm_string = '';
+    if (formValue.sam_yyymm) {
+      const date = new Date(formValue.sam_yyymm);
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      sam_yyymm_string = `${year}${month}`;
     }
 
-    const sam_termno = v.sam_termno ?? null;
-    const money_type = v.COMM_MONEY_TYPE ?? null;
-    if (!sam_yyymm) {
+    const sam_termno = formValue.sam_termno ?? null;
+    const money_type = formValue.COMM_MONEY_TYPE ?? null;
+    if (!sam_yyymm_string) {
       this.messageService.warnBubble('請輸入 查核年月');
       return;
     }
@@ -185,7 +150,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     }
 
     const params = {
-      sam_yyymm: sam_yyymm,
+      sam_yyymm: sam_yyymm_string,
       money_type: money_type,
       sam_termno: sam_termno,
     };

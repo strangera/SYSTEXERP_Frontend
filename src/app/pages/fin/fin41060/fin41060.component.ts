@@ -1,11 +1,116 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN41060Service } from '@service/api/fin/fin41060.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { FIN41060QueryRow, QueryFIN41060Request } from './fin41060.model';
 
 @Component({
   selector: 'app-fin41060',
+  templateUrl: './fin41060.component.html',
+  styleUrl: './fin41060.component.scss',
   standalone: true,
-  imports: [],
-  templateUrl: './fin41060.component.html'
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    ButtonComponent,
+    TableReportComponent,
+    TranslateModule,
+  ],
 })
-export class Fin41060Component {
+export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow> implements OnInit {
+  queryForm = this.formBuilder.group({
+    Org_ID: [null as string | null],
+    Budget_Version: [null as string | null],
+    Budget_Year: [null as string | null],
+    Audit_Status: [null as string | null],
+    ...createPaginationConfig(),
+  });
 
+  orgIdOptions: IDropdownItem[] = [];
+
+  auditStatusOptions = [
+    { value: 'Y', label: '已審核' },
+    { value: 'N', label: '未審核' },
+  ];
+
+  data: FIN41060QueryRow[] = [];
+  totalRecords = 0;
+  lastQueryBody: QueryFIN41060Request | null = null;
+  queryFIN41060Fn = (body: QueryFIN41060Request) => this.fin41060Service.queryFIN41060(body);
+
+  columns: Column[] = [
+    { field: 'Org_ID', header: '部門代號', visible: true },
+    { field: 'Org_Name', header: '部門名稱', visible: true },
+    { field: 'Budget_Year', header: '年度', visible: true },
+    { field: 'Budget_Version', header: '版本', visible: true },
+    { field: 'Audit_Status_NM', header: '審核狀態', visible: true },
+  ];
+
+  constructor(
+    public readonly fin41060Service: FIN41060Service,
+    private readonly dropDownListService: DropDownListService,
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN41060', 'fin/fin41060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOrgIdOptions();
+  }
+
+  private loadOrgIdOptions(): void {
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.orgIdOptions = (res.Data || []).map((item) => ({
+          ...item,
+          label: `${item.No}-${item.Name}`,
+          value: item.No,
+        }));
+      });
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const raw = form.getRawValue();
+      const payload: QueryFIN41060Request = {
+        Org_ID: raw.Org_ID ?? null,
+        Budget_Version: raw.Budget_Version ?? null,
+        Budget_Year: raw.Budget_Year ?? null,
+        Audit_Status: raw.Audit_Status ?? null,
+        PageSize: raw.PageSize,
+        PageIndex: raw.PageIndex,
+        SortBy: raw.SortBy,
+      };
+
+      this.fin41060Service
+        .queryFIN41060(payload)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => (this.loading = false)),
+        )
+        .subscribe((response) => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.lastQueryBody = payload;
+          this.queryStateService.setQueryState(this.ProgNo, raw);
+        });
+    });
+  }
 }

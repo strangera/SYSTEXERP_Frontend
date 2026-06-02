@@ -37,6 +37,7 @@ interface VOID_TLS12040Request {
 /** 續約查詢請求 */
 export interface RenewalQueryRequest {
   ven_no: string;
+  tlt_no?: string;
 }
 
 /** 續約用基本資訊 */
@@ -124,6 +125,7 @@ export interface RenewalLocationInfo {
 export interface RenewalQueryResponse {
   source_talent_id: string;
   source_apply_no: string;
+  source_contract_no: string;
   source_contract_subno: number;
   next_contract_subno: number;
   BasicInfo: RenewalBasicInfo;

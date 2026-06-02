@@ -36,7 +36,7 @@ export class CPM11010CRUComponent extends BasicCruPageComponent<CPM11010Data> im
   dataForm = this.formBuilder.nonNullable.group({
     building_no: [null, Validators.required],   // 館別
     FLOOR_NO: [null, Validators.required],      // 營業樓層
-    AREA_desc: [null, Validators.required],       // 營業區域
+    AREA_desc: ['A', Validators.required],         // 營業區域
     Service_Id: ['系統自動產生'],    // 服務台位置編號
     Service_Name: ['', [Validators.required, Validators.maxLength(60)]] // 服務台位置名稱
   });

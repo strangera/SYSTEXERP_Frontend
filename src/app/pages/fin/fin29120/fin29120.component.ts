@@ -1,22 +1,21 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN29120Service } from '@service/api/fin/fin29120.service';
-import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CommonModule } from '@angular/common';
-import { DomSanitizer } from '@angular/platform-browser';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin29120',
@@ -29,7 +28,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
+    YearMonthComponent,
     InputTextComponent,
     ButtonComponent,
     TableComponent,
@@ -74,6 +73,10 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
 
   factoryIDOptions: any[] = [];
 
+  pageIndex = 1;
+  pageSize = 30;
+  sortMeta: unknown = null;
+
   columns: any[] = [
     { field: 'VoucherNo', header: '傳票號碼', visible: true },
     { field: 'VendorInfo', header: '廠商資訊', visible: true },
@@ -91,9 +94,8 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private fin29120Service: FIN29120Service,
-    private dropDownListService: DropDownListService,
-    private sanitizer: DomSanitizer
+    private readonly fin29120Service: FIN29120Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -136,26 +138,24 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
             return {
               ...row,
               ACPId: acpId
-                ? this.sanitizer.bypassSecurityTrustHtml(
-                    `<a href="#"
+                ?
+                `<a href="#"
                       class="acp-link"
                       data-acpid="${acpId}"
-                      onclick="window.open('${acpIdUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${acpIdUrl}', '_blank'); return false;"
                     >
                       ${acpId}
                     </a>`
-                  )
                 : '',
               InvoiceNo: guiNo
-                ? this.sanitizer.bypassSecurityTrustHtml(
-                    `<a href="#"
+                ?
+                `<a href="#"
                       class="invoice-link"
                       data-invoice="${guiNo}"
-                      onclick="window.open('${invoiceNoUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${invoiceNoUrl}', '_blank'); return false;"
                     >
                       ${guiNo}
                     </a>`
-                  )
                 : ''
             };
           });
@@ -168,36 +168,16 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
 
   private buildQueryPayload(formValue: any): any {
     return {
-      PurGuiDateYyyymm: this.formatYearMonth(formValue.onedatemm),
+      PurGuiDateYyyymm: formValue.onedatemm || null,
       PurGuiNoPrefix: formValue.track || null,
       VenNoFrom: formValue.startFactoryID || null,
       VenNoTo: formValue.endFactoryID || null,
       PurGuiNoFrom: formValue.startserialticket || null,
-      PurGuiNoTo: formValue.endserialticket || null
+      PurGuiNoTo: formValue.endserialticket || null,
+      PageIndex: this.pageIndex ?? 1,
+      PageSize: this.pageSize ?? 30,
+      SortBy: this.sortMeta ?? null
     };
-  }
-
-  private formatYearMonth(value: any): string | null {
-    if (!value) return null;
-
-    if (value instanceof Date) {
-      const y = value.getFullYear();
-      const m = String(value.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-
-    const str = String(value).trim();
-
-    if (/^\d{6}$/.test(str)) return str;
-
-    const d = new Date(str);
-    if (!isNaN(d.getTime())) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-
-    return null;
   }
 
   openNewWindow(value: string, type: string) {
@@ -207,6 +187,6 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     } else if (type === 'Invoice') {
       url = `/account/fin/fin13050cru?GUI_No=${encodeURIComponent(String(value ?? '').trim().toUpperCase())}`;
     }
-    window.open(url, '_blank');
+    globalThis.open(url, '_blank');
   }
 }

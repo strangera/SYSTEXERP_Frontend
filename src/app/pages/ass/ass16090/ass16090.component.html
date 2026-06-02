@@ -36,9 +36,9 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-              <div class="col-12 md:col-4">
-  
-                       <app-dropdown
+
+          <div class="col-12 md:col-4">
+            <app-dropdown
               label="報廢單狀態"
               controlName="DAMAGEM_STATUS"
               [options]="scrapStatusOptions"
@@ -48,6 +48,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-4">
             <app-input-text
               label="報廢單號"
@@ -70,7 +71,7 @@
           </div>
 
           <div class="col-12 md:col-4">
-           <app-dropdown
+            <app-dropdown
               label="品項編號"
               controlName="GOODS_ID"
               [options]="goodsIdOptions"
@@ -79,12 +80,10 @@
               [control]="queryForm.controls.GOODS_ID"
               [submitted]="submitted"
             ></app-dropdown>
-        
           </div>
 
           <div class="col-12 md:col-4">
-      
-                  <app-dropdown
+            <app-dropdown
               label="部門代號"
               controlName="ORG_ID"
               [options]="orgIdOptions"
@@ -94,17 +93,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-        
 
-      
-
-
-  
-   
-    
-
-
-            <div class="col-12 md:col-4">
+          <div class="col-12 md:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="申請日期"
@@ -114,7 +104,7 @@
             ></app-calendar-range>
           </div>
 
-           <div class="col-12 md:col-4">
+          <div class="col-12 md:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="審核日期"
@@ -123,8 +113,9 @@
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
           <div class="col-12 md:col-4">
-                         <app-dropdown
+            <app-dropdown
               label="審核者"
               controlName="APRV_EMP_ID"
               [options]="empIdOptions"
@@ -155,7 +146,7 @@
 <div class="card" *ngIf="showTable">
   <app-table-report
     [tableKey]="'ass16090_' + tableVer"
-    [dataKey]="'ID'"
+    [dataKey]="'_rowKey'"
     [columns]="columns"
     [data]="data"
     [totalRecords]="viewTotalRecords"
@@ -173,8 +164,8 @@
     (selectionChange)="selectedItems = $event"
     [showDetail]="true"
     (detail)="onDetail($event)"
-    [showEdit]="canShowEdit"
-    (edit)="onEdit($event)"
+    [showEdit]="false"
+    [addButton]="actionButtons"
     [expansionDataKey]="'Details'"
     [expansionColumns]="expansionColumns"
     [expansionLoadFn]="loadDetailForExpansion"

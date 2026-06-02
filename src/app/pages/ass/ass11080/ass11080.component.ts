@@ -66,7 +66,7 @@ export class ASS11080Component extends BasicCruPageComponent<ASS11080Data> imple
     { value: 'N', label: '否' }
   ];
 
-  // 下拉選項：會計科目 (GLS1005)
+  // 下拉選項：會計科目 (queryGLS1005_ledgerMD_DropDownList)
   accountOptions: Option[] = [];
 
   // 儲存每個 TAG 的完整資料（用於更新時取得 ID、SortNo 等）
@@ -150,10 +150,10 @@ export class ASS11080Component extends BasicCruPageComponent<ASS11080Data> imple
   }
 
   /**
-   * 載入會計科目下拉選項 (GLS1005)
+   * 載入會計科目下拉選項 (queryGLS1005_ledgerMD_DropDownList)
    */
   private loadAccountOptions(): void {
-    this.dropdownApiService.queryGls1005()
+    this.dropdownApiService.queryGls1005_ledgerMD()
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (options) => {

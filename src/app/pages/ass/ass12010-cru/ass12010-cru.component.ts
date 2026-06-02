@@ -2,9 +2,9 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -74,8 +74,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   public readonly empIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
   /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-  /** 品項代碼選項 */
-  public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
+  /** 品項代碼選項（unit 用於選擇後自動帶入單位） */
+  public readonly goodsIdOptions = signal<{ label: string; value: string; unit?: string }[]>([]);
   /** 保管單位選項 */
   public readonly custodyUnitOptions = signal<{ label: string; value: string }[]>([]);
   /** 保管人選項 */
@@ -96,6 +96,9 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
+      calculate: (_rowData, value: string) => ({
+        UNIT: value ? (this.goodsIdOptions().find(o => o.value === value)?.unit ?? '') : '',
+      }),
     },
     {
       field: 'CUSTODY_UNIT',
@@ -120,7 +123,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       header: '單位',
       type: 'input',
       maxLength: 8,
-      placeholder: '最多8個字',
+      disabled: () => true,
     },
     {
       field: 'QUANTITY',
@@ -140,7 +143,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   constructor(
     public readonly service: ASS12010Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11040Service: ASS11040Service,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
     private readonly notification: NotificationService,
@@ -206,7 +209,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
             GOODS_ID: detail.GOODS_ID,
             CUSTODY_UNIT: detail.HOLD_ORG_ID, // 保管部門對應到 CUSTODY_UNIT
             CUSTODIAN: detail.HOLD_EMP_ID, // 保管人員對應到 CUSTODIAN
-            UNIT: undefined, // API 沒有此欄位
+            UNIT: detail.GOODS_ID ? this.goodsIdOptions().find(o => o.value === detail.GOODS_ID)?.unit : undefined,
             QUANTITY: detail.QTY,
             ITEM_REMARK: detail.NOTES, // API 的 NOTES 對應到 ITEM_REMARK
           }));
@@ -231,8 +234,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
    * 載入下拉選單選項
    */
   private loadDropdownOptions(): void {
-    // 部門代號
-    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+    // 部門代號 / 保管單位（querySYS3100_DropDownList）
+    this.dropDownListService.querySYS3100_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
@@ -276,17 +279,32 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     });
 
     // 品項代碼 (GOODS_ID)
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+    this.ass11040Service.queryFASITEM_DropDownList({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+        const options = (res.Data?.Data ?? [])
+          .filter(item => item.GOODS_ID != null && item.GOODS_ID !== '')
           .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
+            label: `${item.GOODS_ID} - ${item.GOODS_NAME ?? ''}`,
+            value: item.GOODS_ID!,
+            unit: item.UNIT_NAME ?? '',
           }));
         this.goodsIdOptions.set(options);
+
+        // 編輯模式下 detail 可能早於下拉載入完成，這裡回頭補上既有列缺少的單位
+        const current = this.tableData();
+        if (current.length > 0) {
+          const filled = current.map(item => {
+            if (item.GOODS_ID && !item.UNIT) {
+              const found = options.find(o => o.value === item.GOODS_ID);
+              if (found?.unit) {
+                return { ...item, UNIT: found.unit };
+              }
+            }
+            return item;
+          });
+          this.tableData.set(filled);
+        }
       },
     });
   }
@@ -400,13 +418,23 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
         // 將明細陣列序列化為 JSON 字串
         const detailJson = JSON.stringify(items);
 
+        const u = this.authService.currentUserValue;
+        const applyDate = raw.APPLY_DATE
+          ? (raw.APPLY_DATE instanceof Date
+            ? raw.APPLY_DATE
+            : new Date(raw.APPLY_DATE as string))
+          : new Date();
+        const applyDateIso = Number.isNaN(applyDate.getTime())
+          ? new Date().toISOString()
+          : applyDate.toISOString();
+
         const insertPayload: ASS12010InsertRequest = {
           EMP_ID: raw.EMP_ID ?? '',
           ORG_ID: raw.ORG_ID ?? '',
           WH_ID: raw.WH_ID ?? '',
-          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
-          NEED_NUM: raw.NEED_NUM || undefined,
-          NOTE: raw.REMARK || undefined, // 表單欄位是 REMARK，API 需要 NOTE
+          APPLY_DATE: applyDateIso,
+          NEED_NUM: raw.NEED_NUM?.trim() ? raw.NEED_NUM.trim() : undefined,
+          NOTE: raw.REMARK?.trim() ? raw.REMARK.trim() : undefined,
           DetailJson: detailJson,
         };
         this.logger.debug(`onSubmit insert:`, [insertPayload]);
@@ -443,6 +471,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           .map((item) => ({
             GOODS_ID: item.GOODS_ID!,
             QTY: Number(item.QUANTITY) || 0,
+            UNIT: item.UNIT || '', //單位
             HOLD_ORG_ID: item.CUSTODY_UNIT || raw.ORG_ID || '', // 保管部門，如果沒有則使用申請部門
             HOLD_EMP_ID: item.CUSTODIAN || '', // 保管人員
             NOTES: item.ITEM_REMARK || undefined,

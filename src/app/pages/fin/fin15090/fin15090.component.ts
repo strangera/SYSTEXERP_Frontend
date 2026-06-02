@@ -1,275 +1,162 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { FIN15090Service } from '@service/api/fin/fin15090.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-// 本期發票月
+import {
+  Column,
+  formatDateTime,
+  formatYYYYMM,
+} from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
+
 const today = new Date();
 let invoiceYear = today.getFullYear();
-let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+let invoiceMonth = today.getMonth() + 1;
 
-// 如果不是偶數月，就加 1 個月
 if (invoiceMonth % 2 !== 0) {
   invoiceMonth += 1;
+
   if (invoiceMonth > 12) {
     invoiceMonth = 1;
     invoiceYear += 1;
   }
 }
 
-// 將年月轉成 YYYYMM 字串
-export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+export const invoiceDate =
+  invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
 
 interface REP_TaxNo_list {
-  No: string,
-  Lable: string,
-  STO_Status: string, // 使否為使用中
+  No: string;
+  Label: string;
+  STO_Status: string;
+  STO_TaxNo: string;
+  STO_TaxName: string;
+  REP_BegGUIYM?: string;
+  REP_EndGUIYM?: string;
 }
 
-/** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
-  // 這個table有點神奇，沒有id(先新增一個)
   id: number;
-
-  /** 分店編號 */
   STO_No: string;
-
-  /** 資料所屬年月 */
   REP_GUIYM: string;
-
-  /** 資料別 (1代表401；3代表403；4代表404) */
   REP_DataType?: string | null;
-
-  /** 統一編號 */
   REP_Uniform?: string | null;
-
-  /** 申報次數 (1代表總繳代號0或2；5代表總繳代號1) */
   REP_Times?: string | null;
-
-  /** 稅籍編號 */
   REP_TaxNo: string;
-
-  /** 總繳代號 (0單一機構/分別申報；1總機構彙總；2各單位分別申報) */
   REP_OrgCode?: string | null;
-
-  /** 申報種類 (1按期；2按月) */
   REP_MonthType?: string | null;
-
-  /** 縣市別 (A台北市；F台北縣) */
   REP_CityCode?: string | null;
-
-  /** 營業人名稱 */
   REP_TaxName?: string | null;
-
-  /** 負責人姓名 */
   REP_ManagerName?: string | null;
-
-  /** 營業地址 */
   REP_Addr?: string | null;
-
-  /** 使用發票份數 */
   REP_GuiCnt?: number | null;
-
-  /** (31)三聯式發票、電子計算機發票 */
   REP_SalSAmt_31?: number | null;
-  /** (35)收銀機發票(三聯式) */
   REP_SalSAmt_35?: number | null;
-  /** (32)二聯式發票、收銀機發票(二聯式) */
   REP_SalSAmt_32?: number | null;
-  /** (36)免用發票 */
   REP_SalSAmt_36?: number | null;
-  /** (33、34)退回及折讓 */
   REP_SalSAmt_RE?: number | null;
-  /** 應稅銷售額合計 */
   REP_SalSAmt_Sum?: number | null;
-
-  /** (31)三聯式發票、電子計算機發票 */
   REP_SalTaxAmt_31?: number | null;
-  /** (35)收銀機發票(三聯式) */
   REP_SalTaxAmt_35?: number | null;
-  /** (32)二聯式發票、收銀機發票(二聯式) */
   REP_SalTaxAmt_32?: number | null;
-  /** (36)免用發票 */
   REP_SalTaxAmt_36?: number | null;
-  /** (33、34)退回及折讓 */
   REP_SalTaxAmt_RE?: number | null;
-  /** 應稅稅額合計 */
   REP_SalTaxAmt_Sum?: number | null;
-
-  /** 零稅率銷售額 - 不使用 */
   REP_SalZeoTaxAmt_31?: number | null;
-  /** 零稅率銷售額 - 非經海關出口應附證明文件者 */
   REP_SalZeoTaxAmt_35?: number | null;
-  /** 零稅率銷售額 - 不使用 */
   REP_SalZeoTaxAmt_32?: number | null;
-  /** 零稅率銷售額 - 經海關出口免附證明文件者 */
   REP_SalZeoTaxAmt_36?: number | null;
-  /** 零稅率銷售額 - 退回及折讓 */
   REP_SalZeoTaxAmt_RE?: number | null;
-  /** 零稅率銷售額合計 */
   REP_SalZeoTaxAmt_Sum?: number | null;
-
-  /** 免稅銷售額 (31) */
   REP_SalNoTaxAmt_31?: number | null;
-  /** 免稅銷售額 (35) */
   REP_SalNoTaxAmt_35?: number | null;
-  /** 免稅銷售額 (32) */
   REP_SalNoTaxAmt_32?: number | null;
-  /** 免稅銷售額 (36) */
   REP_SalNoTaxAmt_36?: number | null;
-  /** 免稅銷售額 - 退回及折讓 */
   REP_SalNoTaxAmt_RE?: number | null;
-  /** 免稅銷售額合計 */
   REP_SalNoTaxAmt_Sum?: number | null;
-
-  /** 特種飲食25% 銷售額 */
   REP_SalSPSAmt_25?: number | null;
-  /** 特種飲食15% 銷售額 */
   REP_SalSPSAmt_15?: number | null;
-  /** 銀行保險及信託投資-專屬本業收入2% 銷售額 */
   REP_SalSPSAmt_2?: number | null;
-  /** 銀行保險及信託投資-非專屬本業收入5% 銷售額 */
   REP_SalSPSAmt_5?: number | null;
-  /** 再保收入 1% 銷售額 */
   REP_SalSPSAmt_1?: number | null;
-  /** 特種免稅收入 */
   REP_SalSPSAmt_No?: number | null;
-  /** 特種 - 退回及折讓 */
   REP_SalSPSAmt_RE?: number | null;
-  /** 特種銷售額合計 */
   REP_SalSPSAmt_Sum?: number | null;
-
-  /** 特種飲食25% 稅額 */
   REP_SalSPTax_25?: number | null;
-  /** 特種飲食15% 稅額 */
   REP_SalSPTax_15?: number | null;
-  /** 銀行保險及信託投資-專屬本業收入2% 稅額 */
   REP_SalSPTax_2?: number | null;
-  /** 銀行保險及信託投資-非專屬本業收入5% 稅額 */
   REP_SalSPTax_5?: number | null;
-  /** 再保收入 1% 稅額 */
   REP_SalSPTax_1?: number | null;
-  /** 特種 - 退回及折讓 稅額 */
   REP_SalSPTax_RE?: number | null;
-  /** 特種銷售稅額合計 */
   REP_SalSPTax_Sum?: number | null;
-
-  /** 銷售額總計 = 應稅 + 零稅率 + 免稅 + 特種 */
   REP_SalTotalSaleAmt?: number | null;
-
-  /** 內含銷售土地 */
   REP_SalLand?: number | null;
-  /** 內含銷售固定資產 */
   REP_SalAssets?: number | null;
-
-  /** 進貨及費用金額 - (21、26)統一發票扣抵聯 */
   REP_PurAmt_f21?: number | null;
-  /** (25)三聯式收銀機發票扣抵聯 */
   REP_PurAmt_f25?: number | null;
-  /** (22、27)其他憑證 */
   REP_PurAmt_f22?: number | null;
-  /** (28)海關代徵營業稅 */
   REP_PurAmt_f28?: number | null;
-  /** (23、24、29)退出、折讓等 */
   REP_PurAmt_fRE?: number | null;
-
-  /** 進貨及費用稅額 - (21、26)統一發票扣抵聯 */
   REP_PurTax_f21?: number | null;
   REP_PurTax_f25?: number | null;
   REP_PurTax_f22?: number | null;
   REP_PurTax_f28?: number | null;
   REP_PurTax_fRE?: number | null;
-
-  /** 固定資產金額 */
   REP_PurAmt_c21?: number | null;
   REP_PurAmt_c25?: number | null;
   REP_PurAmt_c22?: number | null;
   REP_PurAmt_c28?: number | null;
   REP_PurAmt_cRE?: number | null;
-
-  /** 固定資產稅額 */
   REP_PurTax_c21?: number | null;
   REP_PurTax_c25?: number | null;
   REP_PurTax_c22?: number | null;
   REP_PurTax_c28?: number | null;
   REP_PurTax_cRE?: number | null;
-
-  /** 進貨及費用金額合計 */
   REP_PurAmt_fSum?: number | null;
-  /** 進貨及費用稅額合計 */
   REP_PurTax_fSum?: number | null;
-  /** 固定資產金額合計 */
   REP_PurAmt_cSum?: number | null;
-  /** 固定資產稅額合計 */
   REP_PurTax_cSum?: number | null;
-
-  /** 進貨及費用總額 */
   REP_PurfTotalSaleAmt?: number | null;
-  /** 固定資產總額 */
   REP_PurcTotalSaleAmt?: number | null;
-
-  /** 不得扣抵比例 */
   REP_NotToCounteractRate?: number | null;
-  /** 得扣抵之進項稅額 */
   REP_ToCounteractTax?: number | null;
-
-  /** 進口免稅貨物 */
   REP_PurImportNoTax?: number | null;
-  /** 購買國外勞務給付額 */
   REP_PurBuyExternal?: number | null;
-  /** 購買國外勞務-應比例計算進項稅額 */
   REP_PurBuyExternal75?: number | null;
-  /** 購買國外勞務-應納稅額 */
   REP_PurBuyExternal76?: number | null;
-
-  /** 1. 本期(月)銷項稅額合計 */
   REP_TaxSum01?: number | null;
-  /** 2. 進口貨物應納稅額 */
   REP_TaxSum02?: number | null;
-  /** 3. 購買國外勞務應納稅額 */
   REP_TaxSum03?: number | null;
-  /** 4. 特種稅額計算應納稅額 */
   REP_TaxSum04?: number | null;
-  /** 5. 中途歇業/年底補徵 */
   REP_TaxSum05?: number | null;
-  /** 6. 小計(1+3+4+5) */
   REP_TaxSum06?: number | null;
-  /** 7. 得扣抵進項稅額合計 */
   REP_TaxSum07?: number | null;
-  /** 8. 上期累積留抵稅額 */
   REP_TaxSum08?: number | null;
-  /** 9. 中途歇業/年底退稅 */
   REP_TaxSum09?: number | null;
-  /** 10. 小計(7+8+9) */
   REP_TaxSum10?: number | null;
-  /** 11. 本期應實繳稅額(6-10) */
   REP_TaxSum11?: number | null;
-  /** 12. 本期申報留抵稅額(10-6) */
   REP_TaxSum12?: number | null;
-  /** 13. 得退稅限額合計 */
   REP_TaxSum13?: number | null;
-  /** 14. 本期應退稅額 */
   REP_TaxSum14?: number | null;
-  /** 15. 本期累積留抵稅額(12-14) */
   REP_TaxSum15?: number | null;
-
-  /** 免稅出口區/保稅區銷售額 */
   REP_NoPublishInvoice?: number | null;
-
-  // 能否刪除
   CanDel: boolean;
 }
 
@@ -279,76 +166,158 @@ export interface TDS1002 {
   styleUrls: ['./fin15090.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
+    CommonModule,
     DropdownComponent,
-    InputTextComponent,
-    InputTextRangeComponent,
-    TableComponent,
     TranslateModule,
     YearMonthComponent,
-  ]
+  ],
 })
-// 營業人媒體檔案遞送單
-export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
-  queryForm = this.formBuilder.group({
-    Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], //  section抓
-    STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
-    REP_GUIYM: [invoiceDate, [Validators.required, Validators.maxLength(6)]], // 發票年月
-    REP_TaxNo: ['', [Validators.required, Validators.maxLength(10)]], // 稅籍編號
+export class FIN15090Component
+  extends BasicQueryPageComponent<TDS1002>
+  implements OnInit {
 
-    // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
+  queryForm = this.formBuilder.group({
+    Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]],
+    STO_No: [
+      this.authService.getUserInfo()?.SYS_StoreNo ?? null,
+      [Validators.required],
+    ],
+    REP_GUIYM: [invoiceDate, [Validators.required, Validators.maxLength(6)]],
+    REP_TaxNo: ['' as string, [Validators.required, Validators.maxLength(10)]],
   });
+
+  // 控制畫面是否顯示
+  pageReady = false;
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: TDS1002[] = [];
   selectedRows: TDS1002[] = [];
 
-  REP_TaxNo_Options: REP_TaxNo_list[] = []; //稅籍編號 選項
+  REP_TaxNo_Options: REP_TaxNo_list[] = [];
 
-  columns: Column[] = [ //先放可視範圍內的
-    { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
-    { field: 'REP_OrgCode', header: '總繳代號', visible: true }, // 總繳代號 ---會有不同的申報書種類
-    { field: 'REP_PurAmt_fSum', header: '進貨及費用金額合計', visible: true }, // 進貨及費用金額合計
-    { field: 'REP_PurAmt_cSum', header: '固定資產金額合計', visible: true }, // 固定資產金額合計
-    { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
-    { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
-    { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true }, // 上期(月)累積留抵稅額
-    { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true }, // 得退稅限額合計
-
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+  columns: Column[] = [
+    { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM },
+    { field: 'REP_OrgCode', header: '總繳代號', visible: true },
+    { field: 'REP_PurAmt_fSum', header: '進貨及費用金額合計', visible: true },
+    { field: 'REP_PurAmt_cSum', header: '固定資產金額合計', visible: true },
+    { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true },
+    { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true },
+    { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true },
+    { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
   ];
 
   constructor(
     private fin15090Service: FIN15090Service,
+    private fin15080Service: FIN15080Service,
     private validationService: ValidationService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
+    this.pageReady = false;
     this.initializePage('FIN15090', '/FIN/FIN15090cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOption();
   }
 
-  onSubmit(frm: FormGroup) {
+  private loadOption(): void {
+    const mid = Number(this.authService.getUserInfo()?.mid ?? 0);
+    const STO_No = String(this.authService.getUserInfo()?.SYS_StoreNo ?? '');
+
+    this.pageReady = false;
+    this.loading = true;
+
+    this.fin15080Service
+      .getStoTaxNoOptions({
+        mid,
+        STO_No,
+      })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.pageReady = true;
+        }),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: (rows) => {
+          this.REP_TaxNo_Options = this.buildTaxNoOptions(rows);
+
+          const active =
+            this.REP_TaxNo_Options.find(
+              (x) => String(x.STO_Status).trim() === '1'
+            ) ?? this.REP_TaxNo_Options[0];
+
+          if (active) {
+            this.queryForm.controls.REP_TaxNo.setValue(active.No);
+          }
+        },
+        error: (err) => {
+          console.error('取得稅籍編號下拉失敗:', err);
+          this.REP_TaxNo_Options = [];
+          this.messageService.errorBubble('稅籍編號清單取得失敗');
+        },
+      });
+  }
+
+  private buildTaxNoOptions(rows: any[]): REP_TaxNo_list[] {
+    const map = new Map<string, REP_TaxNo_list>();
+
+    rows.forEach((x) => {
+      const taxNo = String(x?.STO_TaxNo ?? '').trim();
+      const taxName = String(x?.STO_TaxName ?? '').trim();
+      const status = String(x?.STO_Status ?? '').trim();
+
+      if (!taxNo) return;
+
+      const option: REP_TaxNo_list = {
+        Label: `${taxNo}-${taxName}`,
+        No: taxNo,
+        STO_Status: status,
+        STO_TaxNo: taxNo,
+        STO_TaxName: taxName,
+        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
+        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
+      };
+
+      const exists = map.get(taxNo);
+
+      if (!exists) {
+        map.set(taxNo, option);
+        return;
+      }
+
+      if (status === '1') {
+        map.set(taxNo, option);
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-      }
+      };
 
       console.log('營業人媒體檔案遞送單 request', body);
 
-      this.fin15090Service.PrintFIN15090(body)
+      this.loading = true;
+
+      this.fin15090Service
+        .PrintFIN15090(body)
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (response) => {
@@ -360,75 +329,20 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
                   ? printURL
                   : environment.BaseUrl + printURL;
 
-                window.open(url, '_blank');
+                globalThis.open(url, '_blank');
               }
             }
-          },
-          error: (err) => {
+
             this.loading = false;
           },
-          complete: () => {
+          error: () => {
             this.loading = false;
           },
         });
-
     });
   }
-  onDelete(selectedRows: TDS1002[]) {
-    const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
-  }
 
-  isRowSelectable(row: TDS1002) {
-    return true
-  }
-
-  loadOption() {
-    this.fin15090Service.queryTDS1003_STO_TaxNo_DropDownList({
-      mid: this.authService.getUserInfo()?.mid ?? null,
-      STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? null,
-    }).pipe(untilDestroyed(this))
-      .subscribe({
-        next: (response) => {
-          console.log('response.Data', response.Data);
-
-          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-          // 根據實際回傳陣列改寫
-          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
-            // Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
-            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
-            No: item.STO_TaxNo,
-            STO_Status: item.STO_Status
-          }));
-
-          console.log('稅籍編號選項.Data', response);
-
-          // 找出 STO_Status === '1' 的稅籍
-          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
-
-          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
-          this.REP_TaxNo_Options.sort((a, b) => {
-            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
-            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
-            return 0; // 都一樣就保持原順序
-          });
-
-          if (active) { //如果有使用中的設定為稅及編號預設值
-            console.log('當期使用中的稅籍編號', active);
-            this.queryForm.patchValue({
-              REP_TaxNo: active.No as any,
-            });
-          } else {
-            console.log('當期無使用中的稅籍編號', active);
-          }
-        },
-        error: () => { this.loading = false; },
-      });
+  onDelete(selectedRows: TDS1002[]): void {
+    const ids = selectedRows.map((row) => row.id);
   }
 }

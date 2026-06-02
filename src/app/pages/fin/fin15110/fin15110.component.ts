@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
@@ -12,6 +12,7 @@ import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import {
   Column,
@@ -22,6 +23,7 @@ import {
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -60,7 +62,11 @@ import {
     DatePipe,
     MultiSelectComponent,
     DropdownRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    InputTextComponent,
+    CheckboxModule,
+    NgIf,
+    NgFor,
   ],
 })
 export class FIN15110Component
@@ -72,8 +78,10 @@ export class FIN15110Component
     TXN_DT_E: [new Date(), [Validators.required]],
     ECR_No_S: [''],
     ECR_No_E: [''],
-    DataType: [['1', '2'] as string[]],
-    displayMode: ['1'],
+    Data_Source: [''],
+    INV_GUIType: [''],
+    IncludeExchange: [false],
+    displayMode: ['2'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
     pageSize: [30],
   });
@@ -87,18 +95,61 @@ export class FIN15110Component
   btnLoading = false;
   btnLoading2 = false;
 
+  /** 金額格式化（供 template 使用） */
+  readonly fmt = formatAmount;
+
+  /** Type 7 彙總表：17 個資料欄位名稱（不含發票日期） */
+  readonly type7DataFields = [
+    'ConvCashRegTaxableTotalAmount',
+    'ConvCashRegTaxFreeAmount',
+    'ConvCashRegZeroTaxAmount',
+    'ConvElectronicNoUniformTaxableTotalAmount',
+    'ConvElectronicWithUniformNetAmount',
+    'ConvElectronicWithUniformTaxAmount',
+    'ConvElectronicTaxFreeAmount',
+    'ConvElectronicZeroTaxAmount',
+    'VoidCashRegTaxableTotalAmount',
+    'VoidCashRegTaxFreeAmount',
+    'VoidCashRegZeroTaxAmount',
+    'VoidElectronicNoUniformTaxableTotalAmount',
+    'VoidElectronicWithUniformNetAmount',
+    'VoidElectronicWithUniformTaxAmount',
+    'VoidElectronicTaxFreeAmount',
+    'VoidElectronicZeroTaxAmount',
+    'NoOriginalTxnSalesAmount',
+  ];
+
+  /** Type 7 合計列各欄加總 */
+  getType7Sum(field: string): string {
+    const sum = this.data.reduce((acc, row) => acc + (row[field] ?? 0), 0);
+    return this.fmt(sum);
+  }
+
+  /** Type 7 單列前16欄金額加總（不含無原交易資料銷售總額） */
+  getType7RowTotal(row: any): number {
+    return this.type7DataFields.slice(0, 16).reduce((sum, field) => sum + (row[field] ?? 0), 0);
+  }
+
+  /** Type 7 合計金額欄的最終總計 */
+  getType7TotalSum(): string {
+    const sum = this.data.reduce((acc, row) => acc + this.getType7RowTotal(row), 0);
+    return this.fmt(sum);
+  }
+
   /** 下拉選項 */
   ECRNoOptions: IDropdownItem[] = [];
-  DATE_TYPEOptions = [
-    { label: '開立', value: '1' },
-    { label: '作廢', value: '2' },
-  ];
   displayModeOptions = [
-    { value: '1', label: '二電發票表' },
+    // { value: '1', label: '二電發票表' }, // 暫時隱藏
     { value: '2', label: '發票報表依機台加總' },
     { value: '3', label: '發票報表依機台明細' },
     { value: '4', label: '跨日作廢發票報表' },
     { value: '5', label: '跨期作廢發票報表' },
+    { value: '6', label: 'POS發票明細表' },
+    { value: '7', label: 'POS發票彙總表' },
+  ];
+  dataSourceOptions = [
+    { label: '轉檔報表', value: '1' },
+    { label: '跨日作廢', value: '2' },
   ];
   /** 表格欄位設定 */
   columns: Column[] = [];
@@ -116,7 +167,7 @@ export class FIN15110Component
       TXN_Uniform: { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
       TXN_SaleAmt: {
         field: 'TXN_SaleAmt',
-        header: '銷售金額',
+        header: '發票總金額',
         visible: true,
         showSort: true,
         format: formatAmount,
@@ -188,6 +239,7 @@ export class FIN15110Component
 
           baseColumns.Ecr_No,
           baseColumns.TXN_Date,
+          baseColumns.TXN_SaleAmt,
           baseColumns.TXN_SaleTax,
           baseColumns.TXN_SaleNoTax,
           baseColumns.TXN_SaleZeroTax,
@@ -215,7 +267,7 @@ export class FIN15110Component
           { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
           {
             field: 'TXN_SaleAmt',
-            header: '銷售金額',
+            header: '發票總金額',
             visible: true,
             showSort: true,
             format: formatAmount,
@@ -289,9 +341,51 @@ export class FIN15110Component
           },
         ];
 
+      case '6': // 二收及二電發票表-明細表
+        return [
+          { field: 'InvoiceTypeName', header: '發票類別', visible: true, showSort: true },
+          { field: 'DataSourceName', header: '資料來源', visible: true, showSort: true },
+          { field: 'EcrNo', header: '收銀機號', visible: true, showSort: true },
+          { field: 'InvoiceDate', header: '發票日期', visible: true, showSort: true },
+          { field: 'InvoiceNoStart', header: '發票號碼起', visible: true, showSort: true },
+          { field: 'InvoiceNoEnd', header: '發票號碼迄', visible: true, showSort: true },
+          { field: 'UniformNo', header: '統一編號', visible: true, showSort: true },
+          { field: 'TaxableTotalAmount', header: '應稅總金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'TaxAmount', header: '稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'TaxFreeAmount', header: '免稅金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ZeroTaxAmount', header: '零稅金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'SalesTotalAmount', header: '銷售總金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'InvoiceStatusName', header: '發票狀態', visible: true, showSort: true },
+          { field: 'DeclareYM', header: '申報年月', visible: true, showSort: true },
+          { field: 'CombineFlagName', header: '彙加註記', visible: true, showSort: true },
+        ];
+
+      case '7': // 二收及二電發票表-彙總表
+        return [
+          { field: 'InvoiceDate', header: '發票日期', visible: true, showSort: true },
+          { field: 'ConvCashRegTaxableTotalAmount', header: '轉檔/非電子/應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvCashRegTaxFreeAmount', header: '轉檔/非電子/免稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvCashRegZeroTaxAmount', header: '轉檔/非電子/零稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicTaxableTotalAmount', header: '轉檔/電子/應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicTaxFreeAmount', header: '轉檔/電子/免稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicZeroTaxAmount', header: '轉檔/電子/零稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicNoUniformTaxableTotalAmount', header: '轉檔/電子/無統編應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicWithUniformNetAmount', header: '轉檔/電子/有統編未稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'ConvElectronicWithUniformTaxAmount', header: '轉檔/電子/有統編稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidCashRegTaxableTotalAmount', header: '跨日作廢/非電子/應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidCashRegTaxFreeAmount', header: '跨日作廢/非電子/免稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidCashRegZeroTaxAmount', header: '跨日作廢/非電子/零稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicTaxableTotalAmount', header: '跨日作廢/電子/應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicTaxFreeAmount', header: '跨日作廢/電子/免稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicZeroTaxAmount', header: '跨日作廢/電子/零稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicNoUniformTaxableTotalAmount', header: '跨日作廢/電子/無統編應稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicWithUniformNetAmount', header: '跨日作廢/電子/有統編未稅', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'VoidElectronicWithUniformTaxAmount', header: '跨日作廢/電子/有統編稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'NoOriginalTxnSalesAmount', header: '無原交易資料銷售總額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+        ];
+
       default:
-        // 預設使用 ReportType 1 的欄位
-        return this.getColumnsByReportType('1');
+        return this.getColumnsByReportType('2');
     }
   }
 
@@ -325,11 +419,11 @@ export class FIN15110Component
       });
 
     // 初始化預設欄位配置
-    this.columns = this.getColumnsByReportType(this.queryForm.value.displayMode || '1');
+    this.columns = this.getColumnsByReportType(this.queryForm.value.displayMode || '2');
 
     this.setupDisplayModeWatcher();
     // 根據目前 displayMode 設定初始欄位狀態
-    this.updateControlsByDisplayMode(this.queryForm.value.displayMode || '1');
+    this.updateControlsByDisplayMode(this.queryForm.value.displayMode || '2');
   }
 
   /** 監聽報表類型變化，自動調整日期範圍 */
@@ -356,45 +450,45 @@ export class FIN15110Component
   private updateControlsByDisplayMode(mode: string): void {
     const ecrS = this.queryForm.get('ECR_No_S');
     const ecrE = this.queryForm.get('ECR_No_E');
-    const dataType = this.queryForm.get('DataType');
+    const dataSource = this.queryForm.get('Data_Source');
+    const invGUIType = this.queryForm.get('INV_GUIType');
     const txnEs = this.queryForm.get('TXN_DT_E');
+    const includeExchange = this.queryForm.get('IncludeExchange');
 
-    if (!ecrS || !ecrE || !dataType || !txnEs) return;
+    if (!ecrS || !ecrE || !dataSource || !invGUIType || !txnEs || !includeExchange) return;
 
-    switch (mode) {
-      case '1': // 二電發票表: ECR 起訖、資料種類、結束日 都可用
-        ecrS.enable({ emitEvent: false });
-        ecrE.enable({ emitEvent: false });
-        dataType.enable({ emitEvent: false });
-        txnEs.enable({ emitEvent: false });
-        break;
-      case '2':
-      case '3': // 發票報表依機台加總/明細: 起始銷售日期為主要搜尋欄位，可使用收銀機號，資料種類不可用，結束日可輸入
-        ecrS.enable({ emitEvent: false });
-        ecrE.enable({ emitEvent: false });
-        dataType.disable({ emitEvent: false });
-        // 清除 DataType 值
-        dataType.patchValue([], { emitEvent: false });
-        txnEs.enable({ emitEvent: false });
-        break;
-      case '4':
-      case '5': // 跨日/跨期作廢發票報表: 收銀機號與資料種類不可使用
-        ecrS.disable({ emitEvent: false });
-        ecrE.disable({ emitEvent: false });
-        ecrS.patchValue('', { emitEvent: false });
-        ecrE.patchValue('', { emitEvent: false });
-        dataType.disable({ emitEvent: false });
-        dataType.patchValue([], { emitEvent: false });
-        txnEs.enable({ emitEvent: false });
-        break;
-      default:
-        // 預設行為，啟用所有
-        ecrS.enable({ emitEvent: false });
-        ecrE.enable({ emitEvent: false });
-        dataType.enable({ emitEvent: false });
-        txnEs.enable({ emitEvent: false });
-        break;
+    // 收銀機號：mode '4', '5' 時停用並清空
+    if (mode === '4' || mode === '5') {
+      ecrS.disable({ emitEvent: false });
+      ecrE.disable({ emitEvent: false });
+      ecrS.patchValue('', { emitEvent: false });
+      ecrE.patchValue('', { emitEvent: false });
+    } else {
+      ecrS.enable({ emitEvent: false });
+      ecrE.enable({ emitEvent: false });
     }
+
+    // 資料來源條件 / 發票格式代號：只有 mode '6', '7' 才啟用
+    if (mode === '6' || mode === '7') {
+      dataSource.enable({ emitEvent: false });
+      invGUIType.enable({ emitEvent: false });
+    } else {
+      dataSource.disable({ emitEvent: false });
+      dataSource.patchValue('', { emitEvent: false });
+      invGUIType.disable({ emitEvent: false });
+      invGUIType.patchValue('', { emitEvent: false });
+    }
+
+    // 包含換開發票：mode 2, 3, 6, 7 才啟用，其餘停用並清空
+    if (mode === '2' || mode === '3' || mode === '6' || mode === '7') {
+      includeExchange.enable({ emitEvent: false });
+    } else {
+      includeExchange.disable({ emitEvent: false });
+      includeExchange.patchValue(false, { emitEvent: false });
+    }
+
+    // mode '2', '3' 時結束日自動同步起始日（由 setupDisplayModeWatcher 處理），此處保持啟用
+    txnEs.enable({ emitEvent: false });
   }
 
   /** 根據 ReportType 設置 footerData */
@@ -418,6 +512,7 @@ export class FIN15110Component
             TXN_SaleAmt: data.TotalTXN_SaleAmt,
             TXN_SaleTax: data.TotalTXN_SaleTax,
             TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax,
           },
         ];
         break;
@@ -438,6 +533,35 @@ export class FIN15110Component
             TXN_SaleAmt: data.TotalTXN_SaleAmt,
             TXN_Net: data.TotalNet,
             TXN_Tax: data.TotalTax,
+          },
+        ];
+        break;
+      case '6': // 二收及二電發票表-明細表
+        this.footerData = [
+          {
+            group_name: '合計',
+            TaxableTotalAmount: data.TaxableTotalAmount,
+            TaxAmount: data.TaxAmount,
+            TaxFreeAmount: data.TaxFreeAmount,
+            ZeroTaxAmount: data.ZeroTaxAmount,
+            SalesTotalAmount: data.SalesTotalAmount,
+          },
+        ];
+        break;
+      case '7': // 二收及二電發票表-彙總表
+        this.footerData = [
+          {
+            ConvSalesTotalAmount: data.ConvSalesTotalAmount,
+            ConvTaxableTotalAmount: data.ConvTaxableTotalAmount,
+            ConvTaxAmount: data.ConvTaxAmount,
+            ConvTaxFreeAmount: data.ConvTaxFreeAmount,
+            ConvZeroTaxAmount: data.ConvZeroTaxAmount,
+            VoidSalesTotalAmount: data.VoidSalesTotalAmount,
+            VoidTaxableTotalAmount: data.VoidTaxableTotalAmount,
+            VoidTaxAmount: data.VoidTaxAmount,
+            VoidTaxFreeAmount: data.VoidTaxFreeAmount,
+            VoidZeroTaxAmount: data.VoidZeroTaxAmount,
+            GrandSalesTotalAmount: data.GrandSalesTotalAmount,
           },
         ];
         break;
@@ -463,19 +587,23 @@ export class FIN15110Component
       const v = frm.value;
 
       // 在查詢時更新表格欄位配置
-      this.columns = this.getColumnsByReportType(v.displayMode || '1');
+      this.columns = this.getColumnsByReportType(v.displayMode || '2');
+      const isSummary = v.displayMode === '7';
       const payload = {
-        PageSize: v.pageSize || 30,
-        PageIndex: v.pageIndex ?? 1,
+        // 彙總表不套用分頁，傳 0 取全部
+        PageSize: isSummary ? 0 : (v.pageSize || 30),
+        PageIndex: isSummary ? 0 : (v.pageIndex ?? 1),
         OrderBy: '',
         Offset: 0,
         SortBy: v.SortBy ?? [],
         TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
         TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
-        DataType: v.DataType || [],
         ECR_No_S: v.ECR_No_S || '',
         ECR_No_E: v.ECR_No_E || '',
-        ReportType: v.displayMode || '1', // 根據選擇的報表格式添加 ReportType 參數
+        Data_Source: v.Data_Source || '',
+        INV_GUIType: v.INV_GUIType || '',
+        IncludeExchange: v.IncludeExchange ? 1 : 0,
+        ReportType: v.displayMode || '2',
       };
 
       this.fin15110Service
@@ -488,7 +616,9 @@ export class FIN15110Component
               const d = Array.isArray(res.Data) ? res.Data[0] : res.Data;
 
               this.data = d.FIN15110s ?? [];
-              this.totalRecords = d.TotalCount ?? this.data.length;
+              console.log('[FIN15110] response d keys:', Object.keys(d));
+              // 彙總表不使用後端 TotalCount，直接以資料筆數呈現
+              this.totalRecords = isSummary ? this.data.length : (d.TotalCount ?? this.data.length);
 
               // 根據 ReportType 設置不同的 footerData
               this.setFooterDataByReportType(d, v.displayMode);
@@ -532,7 +662,7 @@ export class FIN15110Component
     else this.btnLoading = true;
 
     const v = this.queryForm.value;
-    const reportType = v.displayMode || '1';
+    const reportType = v.displayMode || '2';
 
     // ReportType "2" 需要確保日期為同一天
     const startDate = v.TXN_DT_S;
@@ -554,11 +684,13 @@ export class FIN15110Component
       SortBy: v.SortBy ?? [],
       TXN_DT_S: this.datePipe.transform(startDate, 'yyyy-MM-dd'),
       TXN_DT_E: this.datePipe.transform(endDate, 'yyyy-MM-dd'),
-      DataType: v.DataType || [],
       ECR_No_S: v.ECR_No_S || '',
       ECR_No_E: v.ECR_No_E || '',
-      ReportType: reportType, // 添加報表類型參數
-      IsMerge: isMerge, // ReportType "2" 使用 false，其他使用 true
+      Data_Source: v.Data_Source || '',
+      INV_GUIType: v.INV_GUIType || '',
+      IncludeExchange: v.IncludeExchange ? 1 : 0,
+      ReportType: reportType,
+      IsMerge: isMerge,
       IsExcel: isExcel,
     };
 

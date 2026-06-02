@@ -6,43 +6,29 @@
           {{ field.header }}
           <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
-        <p-autoComplete
-          [formControl]="control"
-          [id]="field.field"
-          [optionLabel]="optionLabel"
-          (click)="onFocusAndInitialLoad($event)"
-          (input)="onInputChange(); op?.hide()"
-          (onFocus)="onFocusAndInitialLoad($event)"
-          (onSelect)="onValueChange($event)"
-          [suggestions]="suggestions"
-          [optionValue]="optionValue"
-          [placeholder]="control.disabled ? '' : placeholder"
-        >
+        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
+          (click)="onFocusAndInitialLoad($event)" (input)="onInputChange(); op?.hide()"
+          (keydown.enter)="handleEnterKey($event)" (onFocus)="onFocusAndInitialLoad($event)"
+          (onSelect)="onValueChange($event)" [suggestions]="suggestions" [optionValue]="optionValue"
+          [placeholder]="control.disabled ? '' : placeholder">
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
               <div>
                 {{
-                  templateLabel !== ""
-                    ? options[templateLabel]
-                    : options[optionLabel]
+                templateLabel !== ""
+                ? options[templateLabel]
+                : options[optionLabel]
                 }}
               </div>
             </div>
           </ng-template>
         </p-autoComplete>
-        <app-control-messages
-          [onerror]="submitted || (control.touched && control.invalid)"
-          [control]="control"
-        ></app-control-messages>
+        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+          [control]="control"></app-control-messages>
       </ng-container>
       <ng-template #elseBlock>
         <label for="{{ field.field }}">{{ field.header }}</label>
-        <input
-          type="text"
-          pInputText
-          [disabled]="true"
-          [value]="getFieldValue(field)"
-        />
+        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" />
       </ng-template>
     </div>
   </ng-container>
@@ -51,24 +37,10 @@
 <p-overlayPanel #op [style]="{ 'max-width': '800px' }" [appendTo]="'body'">
   <form [formGroup]="formGroup" class="grid p-fluid">
     <ng-content />
-    <app-table
-      class="col-12"
-      [dataKey]="optionValue"
-      [data]="dialogData"
-      [selectedItems]="selectedItems"
-      (selectionChange)="onSelectionChange($event)"
-      [columns]="dialogColumns"
-      [showHeader]="false"
-      [showPage]="false"
-      [showCheckBox]="true"
-      selectionMode="multiple"
-      [showManage]="false"
-      scrollHeight="200px"
-      [loading]="loading"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, formGroup)"
-      [lazy]="lazy"
-      [showCaption]="false"
-    />
+    <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
+      (selectionChange)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
+      [showCheckBox]="true" selectionMode="multiple" [showManage]="false" scrollHeight="200px" [loading]="loading"
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
+      [showCaption]="false" />
   </form>
 </p-overlayPanel>

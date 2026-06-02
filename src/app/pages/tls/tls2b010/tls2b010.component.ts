@@ -104,19 +104,19 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   printedAt = '';
   simpleData: any[] = [];
 
-queryForm = this.formBuilder.group({
-  TXN_Date: [this.yesterday, [Validators.required]],
-  ECR_No_List: [[]],
-  TLT_No_List: [[]],
-  tlt_building: [null],
-  tlt_floor: [[]],
-  area_no: [null],
-  ECR_Type: [null],
-  cashShowUp: [1],
-  reimbursementType: [[1], Validators.nullValidator],
-  reporttype: [1],
-  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-});
+  queryForm = this.formBuilder.group({
+    TXN_Date: [this.yesterday, [Validators.required]],
+    ECR_No_List: [[]],
+    TLT_No_List: [[]],
+    tlt_building: [null],
+    tlt_floor: [[]],
+    area_no: [null],
+    ECR_Type: [null],
+    cashShowUp: [1],
+    reimbursementType: [[1], Validators.nullValidator],
+    reporttype: [1],
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+  });
 
   constructor(
     private tls2B010Service: TLS2B010Service,
@@ -135,16 +135,16 @@ queryForm = this.formBuilder.group({
   }
 
   ngOnInit(): void {
-      this.queryForm.patchValue(
-    {
-      pageIndex: 1,
-      pageSize: this.defaultPageSize,
-    },
-    { emitEvent: false }
-  );
+    this.queryForm.patchValue(
+      {
+        pageIndex: 1,
+        pageSize: this.defaultPageSize,
+      },
+      { emitEvent: false }
+    );
 
-console.log('ngOnInit pageIndex =', this.queryForm.value.pageIndex);
-console.log('ngOnInit pageSize =', this.queryForm.value.pageSize);
+    console.log('ngOnInit pageIndex =', this.queryForm.value.pageIndex);
+    console.log('ngOnInit pageSize =', this.queryForm.value.pageSize);
     this.initializePage(
       'TLS2B010',
       '/tls2000/tls2B010cru',
@@ -173,17 +173,17 @@ console.log('ngOnInit pageSize =', this.queryForm.value.pageSize);
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
 
-  this.queryForm.get('reimbursementType')?.valueChanges.subscribe((val) => {
-  if (this.queryForm.get('reporttype')?.value === 1) {
-    this.updateColumnVisibility(val ?? []);
-  }
-});
+    this.queryForm.get('reimbursementType')?.valueChanges.subscribe((val) => {
+      if (this.queryForm.get('reporttype')?.value === 1) {
+        this.updateColumnVisibility(val ?? []);
+      }
+    });
     this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
 
     // 🔹 監聽「報表格式」切換：明細表 ↔ 簡表 時先清空 table
-this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
-  this.onReportTypeChange(val ?? 1);  // 如果是 null，就當成 1
-});
+    this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
+      this.onReportTypeChange(val ?? 1);  // 如果是 null，就當成 1
+    });
 
     this.printedAt = this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
     this.refreshCloseDate();
@@ -258,13 +258,13 @@ this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
 
     // 組 payload（含 TXN_Date -> yyyy-MM-dd）
     const payload: any = { ...form.value };
-payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-payload.pageSize = Number(payload.pageSize || this.defaultPageSize);
-payload.pageIndex = payload.pageIndex || 1;
-console.log('onSubmit form.pageIndex =', form.value.pageIndex);
-console.log('onSubmit form.pageSize =', form.value.pageSize);
-console.log('onSubmit payload.pageIndex =', payload.pageIndex);
-console.log('onSubmit payload.pageSize =', payload.pageSize);
+    payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+    payload.pageSize = Number(payload.pageSize || this.defaultPageSize);
+    payload.pageIndex = payload.pageIndex || 1;
+    console.log('onSubmit form.pageIndex =', form.value.pageIndex);
+    console.log('onSubmit form.pageSize =', form.value.pageSize);
+    console.log('onSubmit payload.pageIndex =', payload.pageIndex);
+    console.log('onSubmit payload.pageSize =', payload.pageSize);
     // 帶入店號
     const userInfo = localStorage.getItem('UserInfo');
     if (userInfo) {
@@ -296,7 +296,7 @@ console.log('onSubmit payload.pageSize =', payload.pageSize);
 
     const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
     payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-       // 🔧 簡表：只把 TXN_Date 從 SortBy 拿掉，保留使用者點的欄位跟 order（含 -1）
+    // 🔧 簡表：只把 TXN_Date 從 SortBy 拿掉，保留使用者點的欄位跟 order（含 -1）
     if (reporttype === 2) {
       const currentSort = (payload.SortBy || []).filter(
         (s: any) => s?.field && s.field !== 'TXN_Date'
@@ -305,9 +305,9 @@ console.log('onSubmit payload.pageSize =', payload.pageSize);
       payload.SortBy = currentSort.length > 0
         ? currentSort
         : [
-            { field: 'ECR_No', order: 1 },
-            { field: 'TLT_NO', order: 1 },
-          ];
+          { field: 'ECR_No', order: 1 },
+          { field: 'TLT_NO', order: 1 },
+        ];
     }
 
     const apiCall =
@@ -412,14 +412,14 @@ console.log('onSubmit payload.pageSize =', payload.pageSize);
       this.lastSimpleLazyKey = key;
     }
 
-form.patchValue(
-  {
-    pageIndex: e.pageIndex,
-    pageSize: e.pageSize,
-    SortBy: sortBy
-  },
-  { emitEvent: false }
-);
+    form.patchValue(
+      {
+        pageIndex: e.pageIndex,
+        pageSize: e.pageSize,
+        SortBy: sortBy
+      },
+      { emitEvent: false }
+    );
 
     this.onSubmit(form);
   }
@@ -527,23 +527,40 @@ form.patchValue(
 
   // 從 Content-Disposition 取檔名
   private getFilenameFromResponse(res: any, fallback: string): string {
+    // const cd = res.headers?.get?.('Content-Disposition') || res.headers?.get?.('content-disposition');
+    // if (!cd) return fallback;
+    // const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
+    // if (!match || !match[1]) return fallback;
+    // return decodeURIComponent(match[1].replace(/['"]/g, ''));
     const cd = res.headers?.get?.('Content-Disposition') || res.headers?.get?.('content-disposition');
     if (!cd) return fallback;
-    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
-    if (!match || !match[1]) return fallback;
-    return decodeURIComponent(match[1].replace(/['"]/g, ''));
+
+    // 1. 優先找標準的 filename* (UTF-8)
+    const filenameStarMatch = cd.match(/filename\*=UTF-8''([^;]+)/i);
+    if (filenameStarMatch) {
+      return decodeURIComponent(filenameStarMatch[1]);
+    }
+
+    // 2. 次之找一般的 filename (處理引號與非引號狀況)
+    const filenameMatch = cd.match(/filename="?([^";]+)"?/i);
+    if (filenameMatch) {
+      return decodeURIComponent(filenameMatch[1]);
+    }
+
+    return fallback;
   }
 
   // 下載 blob
   private saveBlob(res: any, defaultName: string) {
     const blob = new Blob([res.body], { type: res.body?.type || 'application/octet-stream' });
-    const fileName = this.getFilenameFromResponse(res, defaultName);
-    const url = window.URL.createObjectURL(blob);
+    // const fileName = this.getFilenameFromResponse(res, defaultName);
+    const fileName = defaultName;
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   // === 匯出：Excel ===
@@ -563,8 +580,8 @@ form.patchValue(
     obs.subscribe({
       next: (res) => {
         this.saveBlob(res, reporttype === 2
-          ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.xlsx`
-          : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.xlsx`);
+          ? `溢欠簡表_${this.formattedTXNDate}.xlsx`
+          : `支付別溢欠明細表_${this.formattedTXNDate}.xlsx`);
         this.messageService.successBubble('Excel 產檔完成');
       },
       error: (err) => {
@@ -592,8 +609,8 @@ form.patchValue(
     obs.subscribe({
       next: (res) => {
         this.saveBlob(res, reporttype === 2
-          ? `TLS2B010_溢欠簡表_${this.formattedTXNDate}.pdf`
-          : `TLS2B010_支付別溢欠明細_${this.formattedTXNDate}.pdf`);
+          ? `溢欠簡表_${this.formattedTXNDate}.pdf`
+          : `支付別溢欠明細表_${this.formattedTXNDate}.pdf`);
         this.messageService.successBubble('PDF 產檔完成');
       },
       error: (err) => {

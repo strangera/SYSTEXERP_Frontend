@@ -13,7 +13,7 @@ export interface APS1002 {
   BNK_AccNo: string;                       // 帳號
   BNK_BranchNo: string;                    // 銀行分行代號
   BNK_AccType: string;                     // 存款代號 (SYS1000.BNK_ACCTYPE)
-  BNK_AccName: string;                     // 帳戶名稱
+  BNK_AccName1: string;                    // 帳戶名稱
   BNK_AccStatus: string;                   // 帳戶狀態 (0=正常)
   BNK_DepositAccNo?: string | null;        // 公司銀行科目 (下拉 GLS1005.ACCNO，讀取 ACCNO, ACCCNAME)
   BNK_CheckInAccNo?: string | null;        // 應付票據科目 (下拉 GLS1005.ACCNO，讀取 ACCNO, ACCCNAME)
@@ -49,7 +49,7 @@ export interface FIN21010Request extends BaseQueryRequest {
   AccCName?: string;                // 公司銀行科目名稱
   BNK_No?: string;                  // 全省銀行代碼
   BNK_AccNo?: string[];             // 帳號
-  BNK_AccName?: string[];           // 帳戶名稱
+  BNK_AccName1?: string[];          // 帳戶名稱
   BNK_AccType?: string;             // 存款代號
   BNK_CheckInAccNo?: string;        // 應付票據科目
   BNK_CheckOutAccNo?: string;       // 應收票據科目
@@ -62,7 +62,7 @@ export interface FIN21010Response {
   AccCName: string;
   BNK_No: string;
   BNK_AccNo: string;
-  BNK_AccName: string;
+  BNK_AccName1: string;
   BNK_AccType: string;
   SYS_Name: string;
   BNK_CheckInAccNo: string;
@@ -95,5 +95,13 @@ export class Fin21010Service {
   // 刪除 APS1002 資料
   deleteFIN21010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteFIN21010`, body);
+  }
+
+  checkDuplicateBNKid(bnkId: string, id?: number): Observable<any> {
+    // 對應後端 [HttpPost("checkDuplicateBNKid")]
+    return this.http.post<any>(`${this.apiUrl}/checkDuplicateBNKid`, {
+      BNK_id: bnkId,
+      id: id
+    });
   }
 }

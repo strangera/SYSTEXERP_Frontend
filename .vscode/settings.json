@@ -21,10 +21,10 @@
     "tsconfig.json": true,
     "instructions.md": true,
     ".eslintrc.json": true,
-    "sonar-project.properties": true,
+    // "sonar-project.properties": true,
     "ngsw-config.json": true,
-    "src/assets": true,
-    ".sonarlint": true,
+    // "src/assets": true,
+    // ".sonarlint": true,
     ".scannerwork": true,
     "public": true,
     ".vscode/extensions.json": true,
@@ -48,8 +48,8 @@
   // 可選：當檔案儲存時是否自動重新載入
   "liveServer.settings.reloadBrowserWhenSaved": true,
   "sonarlint.connectedMode.project": {
-    "connectionId": "http-127-0-0-1-9000-",
-    "projectKey": "TSRDERP"
+    "connectionId": "http-172-20-10-2-9000-",
+    "projectKey": "TSRDERP_Frontend_Angular"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
@@ -59,5 +59,8 @@
   "javascript.suggest.paths": true,
   "typescript.suggest.paths": true,
   "html.suggest.paths": true,
-  "typescript.referencesCodeLens.enabled": false
+  "typescript.referencesCodeLens.enabled": false,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  }
 }

@@ -27,13 +27,13 @@
           </div>
           <!-- 建立日期(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="建立日期" controlName="D_Date_b" [startControl]="queryForm.controls.D_Date_b"
-              [endControl]="queryForm.controls.D_Date_e" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range label="建立日期" controlName="CRT_Date" [startControl]="queryForm.controls.CRT_Date_b"
+              [endControl]="queryForm.controls.CRT_Date_e" [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 收/付款日(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="收/付款日" controlName="PTA_Date_b" [startControl]="queryForm.controls.PTA_Date_b"
-              [endControl]="queryForm.controls.PTA_Date_e" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range label="收/付款日" controlName="D_Date" [startControl]="queryForm.controls.D_Date_b"
+              [endControl]="queryForm.controls.D_Date_e" [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 是否形成電匯 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -64,8 +64,8 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="FIN25010" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+  <app-table-report tableKey="FIN25010" dataKey="PAM_No" [data]="data" [columns]="columns" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showEdit]="false" (detail)="onDetail($event)"
     [queryFunction]="fin25010Service.queryFIN25010.bind(fin25010Service)" [loading]="loading"></app-table-report>
 </div>

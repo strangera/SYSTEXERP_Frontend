@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from '@shared/componentkit/table/import-table';
 import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
@@ -220,7 +219,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   @Input() emptyMessage = '查無資料';
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService,
     private readonly cd: ChangeDetectorRef,
   ) { super(); }
@@ -250,7 +248,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
-    fromEvent(window, 'resize')
+    fromEvent(globalThis, 'resize')
       .pipe(debounceTime(300))
       .subscribe(() => {
         this.cd.detectChanges();
@@ -349,11 +347,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   // 欄位Button 選擇 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
 
-  // 防止XSS
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
     return this.tableUtilityService.getColumnSpan(columns, groupField);
@@ -388,11 +381,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   // 全表總計
   getTotal(field: string): number {
     return this.tableUtilityService.getTotal(this.data, field);
-  }
-
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined {
-    return this.tableUtilityService.getImage(url);
   }
 
   // 欄位調整

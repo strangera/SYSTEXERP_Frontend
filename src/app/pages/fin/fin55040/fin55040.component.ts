@@ -21,6 +21,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Fin29060TableSubheaderComponent } from './fin29060-table-subheader/fin29060-table-subheader.component';
 
@@ -51,7 +52,8 @@ export interface GroupedFIN55040Detail extends FIN55040Detail {
     InputTextRangeComponent,
     ButtonComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    MultiSelectComponent,
   ]
 })
 // FIN55040立沖科目明細表
@@ -67,8 +69,9 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     PTA_Start: [''], // 立沖代號 GLS3003.PTA
     PTA_End: [''],
     SubDetailNo: [''], // 對象別編號 GLS3001.SubDetailNo
-    PostFlag: [''], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
+    PostFlag: [[] as string[]], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
     IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
+    ACCT_KEY: [''], // 帳鍵 GLS3002.ACCT_KEY
 
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
@@ -76,10 +79,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'PTA', header: '立沖編號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
+
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
+    { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
   ];
   data: fin55040response[] = [];
   totalRecords = 0;
@@ -97,6 +102,8 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     { label: '是', value: true },
     { label: '否', value: false }
   ]
+
+  readonly formatAmount = formatAmount;
 
   btn_pdf_Loading = false;
   btn_excel_Loading = false;
@@ -149,7 +156,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     if (event.col.field === 'VouNo') {
       // 範例：導向傳票維護介面
       const vouNo = event.row?.VouNo;
-      const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now() };
+      const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now() };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       // ... 導向邏輯
     }
@@ -188,12 +195,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
             }
           });
 
-          // 攤平後進行排序確保分組正確，同科目內先沖帳(Status='2')後立帳(Status='1')
-          flattenedList.sort((a, b) => {
-            const accCmp = a.AccNo.localeCompare(b.AccNo);
-            if (accCmp !== 0) return accCmp;
-            return b.Status.localeCompare(a.Status); // DESC: '2' > '1'
-          });
+          // 後端 groupData 已按 raw PTA ASC + Status DESC 排序，攤平後順序不變，無需前端再排
 
           this.fullData = flattenedList;
           // 改為直接賦值：
@@ -219,7 +221,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
@@ -231,9 +233,15 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     }
 
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open(finalUrl, '_blank', 'noopener');
+    globalThis.open(finalUrl, '_blank', 'noopener');
+  }
+
+  getAccSubtotal(accNo: string, field: string): number {
+    return this.fullData
+      .filter(d => d.AccNo === accNo)
+      .reduce((sum, row) => sum + (Number((row as any)[field]) || 0), 0);
   }
 
   // 列印 PDF 或 Excel
@@ -259,11 +267,11 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
   private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

@@ -22,7 +22,7 @@ export const FORM_DEFAULTS = {
   rece_yn: 'N',
   pos_yn: 'N',
   cash_yn: 'N',
-  vip_yn: 'N',
+  vip_yn: 'Y',
   rent_ahead: 'N',
   water_flag: 'N',
   electric_flag: 'N',

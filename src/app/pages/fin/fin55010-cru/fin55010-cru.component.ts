@@ -16,6 +16,8 @@ interface DetailRow {
   VouNo?: string | null;
   VouType_Name?: string | null;
   VouStatus?: string | null;
+  VoucherType?: string | null;
+  VoucherType_Name?: string | null;
   ACCNO?: string | null;
   AccCName?: string | null;
   Org_Name?: string | null;
@@ -29,6 +31,8 @@ interface DetailRow {
 interface VoucherMeta {
   vouDate: string;
   vouType: string;
+  VoucherType: string;
+  VoucherType_Name: string;
   vouNo: string;
   vouStatus: string;
 }
@@ -124,6 +128,8 @@ export class FIN55010CRUComponent extends BasicCruPageComponent<any> implements 
         vouType: head.VouType_Name ?? '',
         vouNo: head.VouNo ?? vouNo,
         vouStatus: head.VouStatus ?? '',
+        VoucherType: head.VoucherType ?? '',
+        VoucherType_Name: head.VoucherType_Name ?? ''
       };
       this.rows = list.map((r, i) => ({
         ...r,
@@ -164,12 +170,12 @@ export class FIN55010CRUComponent extends BasicCruPageComponent<any> implements 
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const cd = resp?.headers?.get?.('Content-Disposition') ?? resp?.headers?.get?.('content-disposition');
     const fileName = this.getFilenameFromHeader(cd, ext) ?? `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   private getFilenameFromHeader(contentDisposition: string | null | undefined, ext: string): string | null {

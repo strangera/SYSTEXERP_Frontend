@@ -75,10 +75,7 @@
             (click)="onClear(queryForm)"
           ></app-button>
 
-          <app-button
-            btnType="query"
-            [loading]="loading"
-          ></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -87,8 +84,9 @@
 
 <div class="card">
   <app-table-report
-    [tableKey]="'fin32020_' + tableVer"
-    [dataKey]="'ADJ_No'"
+    *ngIf="tableVisible"
+    [tableKey]="'fin32020'"
+    [dataKey]="'_rowKey'"
     [columns]="columns"
     [data]="data"
     [totalRecords]="viewTotalRecords"
@@ -113,6 +111,5 @@
     [expansionColumns]="expansionColumns"
     [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
     [expansionLoadFn]="loadDetailForExpansion"
-  >
-  </app-table-report>
+  ></app-table-report>
 </div>

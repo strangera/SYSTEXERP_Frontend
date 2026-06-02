@@ -458,8 +458,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       check_type: [''],
       check_typeList: [[] as string[]],
       paytype: [''],
-      vip_yn: [''],
-      credit_card: [''],
+      vip_yn: ['Y'],
+      credit_card: [null],
       invoice_type: ['', [Validators.required]],
 
       // 抄表設定
@@ -1059,6 +1059,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
         this.messageService.warnBubble('支票付款時請填寫票據抬頭');
         return false;
       }
+    }
+
+    // 地點起訖日必填卡控
+    const locationsWithMissingDates = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
+    );
+    if (locationsWithMissingDates.length > 0) {
+      this.messageService.warnBubble('櫃位地點起訖日為必填');
+      return false;
     }
 
     return true;
@@ -1662,11 +1671,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
-          `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
-          `廠商編號:${formData.ven_uniform || ''}`,
-          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+          `招商編號：${formData.apply_no || response.applyNo || ''}`,
+          `版本編號：${formData.contract_subno || ''}`,
+          `專櫃編號：${formData.tlt_no || response.tltNo || ''}`,
+          `廠商編號：${formData.ven_uniform || ''}`,
+          `品牌（專櫃名稱）：${formData.tlt_name || ''}`
         ].join('\n');
 
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
@@ -1687,12 +1696,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
         });
         this.showSuccessDialog = true;
       } else {
-        throw new Error(response?.message || '契約書資料提交失敗');
+        // 業務邏輯失敗：直接顯示一次錯誤，不拋出例外（避免重複顯示）
+        this.messageService.errorBubble(response?.message || '契約書資料提交失敗');
       }
     } catch (error: unknown) {
+      // 此處只處理 HTTP 層例外（interceptor 已顯示通知，這裡僅記錄 log）
       console.error('契約書資料提交失敗:', error);
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      this.messageService.errorBubble(`契約書資料提交失敗: ${errorMessage}`);
     } finally {
       this.isSaving = false;
     }

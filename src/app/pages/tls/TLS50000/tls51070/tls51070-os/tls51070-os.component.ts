@@ -4,6 +4,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Tls51070Service } from '@service/api/tls/tls51070.service';
 import { IPOS2004DetailData, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { Pos2004SearchKey } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -47,7 +49,7 @@ export interface Label {
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements OnInit {
   baseId = 0; //初始id
-  state = window.history.state; // 接收標頭
+  state = globalThis.history.state; // 接收標頭
   // 查詢 變價歷史紀錄
   queryPriceForm = this.formBuilder.group({
     KeyWord: ['', [Validators.maxLength(20), Validators.required]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
@@ -113,7 +115,8 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
     private tls51070Service: Tls51070Service,
     private tls52010Service: Tls52010Service,
     private readonly exportLabelService: ExportLabelService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly dropDown: DropdownApiService
   ) {
     super();
   }
@@ -208,37 +211,38 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
       this.cdr.detectChanges();
       return;
     }
+
     setTimeout(() => {
-      const body = {
-        VEN_No: '',
-        LOGO_No: '',
-        queryNo: value || '',
-        pageSize: 30,
-        pageIndex: 1,
-        SortBy: [{ field: 'PLU_No', order: 1 }],
+      // 建立符合 Pos2004SearchKey 介面的 body
+      const body: Pos2004SearchKey = {
+        SearchKey: value.trim()
       };
-      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-        if (results.Data && results.Data.length > 0) {
-          const newData = results.Data[0];
-          const updatedRow: Label = {
-            ...this.labelData[index], // 保留原本的 id 等資訊
-            PLU_MagNo: newData.PLU_MagNo,
-            PLU_Name: newData.PLU_Name,
-            PLU_SalePrc: newData.PLU_SalePrc,
-            PLU_Unit: newData.PLU_Unit,
-            PLU_OrgPLUNo: newData.PLU_OrgPLUNo,
-            PLU_No: newData.PLU_No
-          };
-          this.labelData[index] = updatedRow;
-          this.labelData = [...this.labelData];
-          this.cdr.detectChanges();
-        } else {
-          this.messageService.errorBubble('查無該商品資訊，已移除該行');
-          this.labelData.splice(index, 1);
-          this.labelData = [...this.labelData];
-          this.cdr.detectChanges();
-        }
-      });
+
+      // 改用 dropDown 服務
+      this.dropDown.queryPOS2004_BySearchKey(body)
+        .pipe(untilDestroyed(this))
+        .subscribe((results) => {
+          if (results && results.length > 0) {
+            const newData = results[0]; // 取得第一筆匹配項
+            const updatedRow: Label = {
+              ...this.labelData[index],
+              PLU_MagNo: newData.PLU_MagNo,
+              PLU_No: newData.PLU_No,
+              PLU_Name: newData.PLU_Name,
+              PLU_SalePrc: newData.PLU_SalePrc,
+              PLU_Unit: newData.PLU_Unit,
+              PLU_OrgPLUNo: newData.PLU_OrgPLUNo
+            };
+            this.labelData[index] = updatedRow;
+            this.labelData = [...this.labelData];
+            this.cdr.detectChanges();
+          } else {
+            this.messageService.errorBubble('查無該商品資訊，已移除該行');
+            this.labelData.splice(index, 1);
+            this.labelData = [...this.labelData];
+            this.cdr.detectChanges();
+          }
+        });
     }, 50);
   }
 
@@ -248,20 +252,29 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
     { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
   onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
+    // 當 event.label 為空時不發送請求
+    if (!event.label) {
+      this.suggestions = [];
+      return;
     }
-    // !!! 若有自己這隻的API請改成自己的
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
+
+    const body: Pos2004SearchKey = {
+      SearchKey: event.label
+    };
+
+    // 改用 dropDown 服務
+    this.dropDown.queryPOS2004_BySearchKey(body)
+      .pipe(untilDestroyed(this))
+      .subscribe((results) => {
+        if (results) {
+          // 格式化下拉選單顯示的 label
+          this.suggestions = results.map(item => ({
+            ...item,
+            label: `${item.PLU_No}/${item.PLU_MagNo}/${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
+          })) as any; // 因為 suggestions 原本綁定的型別可能不同，必要時加 as any
+        } else {
+          this.suggestions = [];
+        }
+      });
   }
 }

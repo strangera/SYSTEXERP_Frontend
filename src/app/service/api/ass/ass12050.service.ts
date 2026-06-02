@@ -108,7 +108,7 @@ export class ASS12050Service {
 
   /** 匯出 PDF 報表 */
   exportPDFASS12050(body: ASS12050SubcheckRequest): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportPDFASS12050`, body, {
+    return this.http.post(`${this.apiUrl}/exportASS12050`, body, {
       responseType: 'blob',
       observe: 'response',
     });

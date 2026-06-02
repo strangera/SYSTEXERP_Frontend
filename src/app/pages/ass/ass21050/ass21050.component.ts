@@ -21,6 +21,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 interface ASS21050Item {
   id?: number;
   LOCATION_No?: string;
+  CanDelete?: boolean;
   [key: string]: unknown;
 }
 
@@ -79,6 +80,8 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
     { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
+
+  isRowSelectable = (rowData: ASS21050Item): boolean => rowData.CanDelete !== false;
 
 
   constructor(

@@ -63,6 +63,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
+    VEN_No: [null], // 廠商編號 下拉選擇
+
     ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
     ticket_kind: [null, [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
@@ -86,11 +88,12 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   TLTTALENT_Option: any[] = [];
   ven_uniformOption: apiOption[] = []; // 統一編號列表
   tlt_noListOption: option[] = []; //專櫃編號列表
+  VEN_No_Option: apiOption[] = []; // 廠商編號列表
 
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
     { value: '2', label: '施工保證票' },
-    { value: '3', label: '契約屆滿' },
+    { value: '3', label: '契約屆滿保證票' },
   ];
 
   ticket_kindOption: option[] = [ //票據種類
@@ -122,7 +125,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
-    { field: 'No', header: '合約編號' },
+    { field: 'No', header: '合約編號', align: 'left' },
     { field: 'Name', header: '專櫃名稱' },
     { field: 'contract_subno', header: '版次' },
   ];
@@ -209,11 +212,16 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     //--------
     const formValue = frm.getRawValue();
 
+    const payload = {
+      ...formValue,
+      ven_no: formValue.VEN_No, // 加上欄位
+    };
+
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert', formValue);
-          this.tls14030Service.insertTLS14030(formValue).subscribe(() => {
+          console.log('insert', payload);
+          this.tls14030Service.insertTLS14030(payload).subscribe(() => {
             this.messageService.successBubble('新增成功');
             this.lastTalentData = null;
             this.dataForm.reset(); // 重置表單
@@ -222,8 +230,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update', formValue);
-          this.tls14030Service.updateTLS14030(formValue).subscribe(() => {
+          console.log('update', payload);
+          this.tls14030Service.updateTLS14030(payload).subscribe(() => {
             this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });
@@ -287,6 +295,17 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
         // console.log('專櫃編號:', response.Data);
       });
+
+    // 廠商編號 下拉
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
+      this.VEN_No_Option = response.Data.map((item: any) => ({
+        No: item.VEN_No,
+        Name: item.Name,
+        Label: item.VEN_No + '-' + item.Name,
+      }));
+      // console.log('廠商編號:', this.VEN_No_Option);
+    }
+    );
   }
 
   // Fallback：只有編輯模式改 ticket_type 且無快取時才呼叫

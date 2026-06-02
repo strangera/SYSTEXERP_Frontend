@@ -13,6 +13,26 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-dropdown-cell',
   host: { 'table-edit-id': 'FIN53010-CRU' },
   template: `
+<ng-container *ngIf="shouldRenderAsInput(); else dropdownTpl">
+  <p-iconField iconPosition="right">
+    <input type="text"
+           class="min-w-max p-inputtext p-component p-element"
+           [placeholder]="dropdownDisabled ? '' : '請輸入' + cellInput.col.header"
+           [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+           [ngModelOptions]="{ standalone: true }"
+           [disabled]="dropdownDisabled"
+           (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
+           [maxlength]="cellInput.col.maxLength || null"
+           [style]="{ 'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign, 'min-width': '-webkit-fill-available' }"
+           [ngClass]="{ 'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
+    <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                 styleClass="pi pi-exclamation-circle text-red-500"
+                 [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                 tooltipPosition="bottom" />
+  </p-iconField>
+</ng-container>
+
+<ng-template #dropdownTpl>
  <p-iconField iconPosition="right">
   <p-dropdown class="flex min-w-max" appendTo="body"
               [(ngModel)]="cellInput.rowData[cellInput.col.field]"
@@ -27,9 +47,10 @@ import { CellInput } from './table-edit-cell.model';
               [editable]="false"
               [loading]="internalLoading"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+              (onFilter)="handleFilter($event, cellInput)"
               (onHide)="handleHide()"
               (keydown.enter)="handleEnter($event)"
-              [virtualScroll]="true"
+              [virtualScroll]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 10"
               [virtualScrollItemSize]="37"
               scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
@@ -48,6 +69,7 @@ import { CellInput } from './table-edit-cell.model';
                [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
                tooltipPosition="bottom" />
 </p-iconField>
+</ng-template>
   `,
   styles: [`
     /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
@@ -60,7 +82,7 @@ import { CellInput } from './table-edit-cell.model';
     }
 
     /* 確保虛擬滾動容器高度也是固定的 */
-    ::ng-deep .p-scroller {
+    ::ng-deep .p-dropdown-items-wrapper .p-scroller {
         height: 250px !important; /* 與 scrollHeight 一致 */
     }
     `],
@@ -114,7 +136,11 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
 
   handleHide() {
     const rowData = this.cellInput.rowData;
-    const col = this.cellInput.col as EditColumn; // 確保類型為 EditColumn
+    const col = this.cellInput.col as EditColumn;
+    // 關閉時重置自訂 filter，避免影響其他列
+    if (col.onFilter) {
+      col.onFilter('', rowData, col, this.cellInput.index);
+    }
     const currentValue = rowData[col.field];
 
     // 如果允許自訂值，跳過驗證邏輯
@@ -213,8 +239,39 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
     return this._resolvedOptions;
   }
 
+  handleFilter(event: { filter: string }, cellInput: CellInput): void {
+    const col = cellInput.col as EditColumn;
+    if (col.onFilter) {
+      col.onFilter(event.filter ?? '', cellInput.rowData, col, cellInput.index);
+      this.cdr.markForCheck();
+    }
+  }
+
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
     event.stopPropagation(); // 阻止事件冒泡
+  }
+
+  /**
+   * 當 col.dropdownFallbackToInput 為 true，且當前值不在 options 內時，
+   * 改以文字輸入框呈現。透過 col.isOptionsLoaded 避免 async 載入中誤判。
+   */
+  public shouldRenderAsInput(): boolean {
+    const col = this.cellInput.col;
+    if (!col.dropdownFallbackToInput) return false;
+
+    const rowData = this.cellInput.rowData;
+    const value = rowData?.[col.field];
+    if (value === null || value === undefined || value === '') return false;
+
+    if (typeof col.isOptionsLoaded === 'function' && !col.isOptionsLoaded(rowData)) {
+      return false;
+    }
+
+    const options = this.getOptions(rowData, col) || [];
+    const valueKey = col.optionValue || col.optionLabel;
+    if (!valueKey) return false;
+
+    return !options.some((o: any) => String(o?.[valueKey]) === String(value));
   }
 }

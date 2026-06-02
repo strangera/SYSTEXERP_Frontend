@@ -37,11 +37,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
+  @Input() ItemSize = 46;
   @Input() lazy = true;
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
-  @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
+  @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
   @Input() loading = false;
   public _loading = false;
   @Input() showReorder = true;
@@ -64,6 +65,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   public get multiSortMeta() { // 暴露內部 p-table 的多重排序狀態
     return this.dt?.multiSortMeta || [];
   }
+  private isSyncingSort = false;
   @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
   // Header(左) 相關
   @Input() showFilter = true;      // 是否顯示 Filter
@@ -90,6 +92,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showDetail = true;    // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
+  @Input() editTooltip: string | ((rowData: any) => string) = '編輯';
+  // 新增一個輔助方法來解析 Tooltip
+  getEditTooltip(rowData: any): string {
+    if (typeof this.editTooltip === 'function') {
+      return this.editTooltip(rowData);
+    }
+    return this.editTooltip;
+  }
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止明細條件
   @Output() edit = new EventEmitter<any>(); // 編輯事件
@@ -100,6 +110,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   @Input() subTotalLabel = '小計'; // 小計列左側標籤文字
+  @Input() showSubTotalGroupValue = true; // 小計列是否顯示群組值（小計(XXX)）
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
@@ -123,10 +134,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() reportTitle?: string;                    // 自訂報表標題
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
+
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -168,9 +181,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
-          if (this.data.length === this.totalRecords) { this.dt.lazy = false; }
+          if (this.data.length === this.totalRecords) {
+            this.dt.lazy = false;
+            this.lazy = false;
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
+            if (!this.showManage) {
+              this.ItemSize = 46;
+            }
+          } else {
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          }
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: this.data.length });
           this.cdr.detectChanges();
           this.virtualData = this.data;
@@ -197,7 +218,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     };
     this._loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
-      if (res && res.Data && res.Data.length > 0) {
+      if (res?.Data && res.Data.length > 0) {
         this.virtualData = Array.from({ length: this.data.length + res.Data.length });
         this.updateGroupTotals(res.Data);
         this.cdr.detectChanges();
@@ -216,8 +237,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.cdr.detectChanges();
       return;
     }
-    if (this._loading) return;
-
+    if (this.isSyncingSort || this._loading) return;
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
@@ -244,7 +264,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.hasSearched = true;
-      if (res && res.Data && res.Data.length > 0) {
+      if (res?.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
         this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
@@ -278,7 +298,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 1. 原地排序
     this.data.sort((data1, data2) => {
-      for (const sortMeta of event.multiSortMeta!) {
+      for (const sortMeta of event.multiSortMeta) {
         const value1 = data1[sortMeta.field];
         const value2 = data2[sortMeta.field];
         let result = 0;
@@ -315,7 +335,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.isAllSelected) {
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
-        return selectable === undefined ? true : selectable;
+        return selectable ?? true;
       });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
@@ -330,17 +350,16 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.lazy) {
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
-      if (this.data.length < this.totalRecords && this.data.length >= pageSize) {
-        if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+      if (this.data.length >= pageSize) {
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 5000;
+        if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
       }
     }
-    else {
-      if (this.selectedItems && this.selectedItems.length > 0) {
-        this.selectedItems = [...this.selectedItems];
-        this.cdr.detectChanges();
-      }
+    else if (this.selectedItems && this.selectedItems.length > 0) {
+      this.selectedItems = [...this.selectedItems];
+      this.cdr.detectChanges();
     }
     this.cdr.markForCheck();
   }
@@ -351,7 +370,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 找出目前資料中真正「可以被勾選」的數量
     const selectableRows = this.data.filter(rowData => {
       const selectable = this.isRowSelectable(rowData);
-      return selectable === undefined ? true : selectable;
+      return selectable ?? true;
     });
     // 如果已選數量 > 0 且等於可選總數，才亮起全選
     this.isAllSelected = selectableRows.length > 0 && this.selectedItems.length === selectableRows.length;
@@ -366,7 +385,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       // 過濾出可選的資料
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
-        return selectable === undefined ? true : selectable;
+        return selectable ?? true;
       });
       // 如果過濾完發現根本沒資料可選，則全選按鈕不應亮起
       this.isAllSelected = this.selectedItems.length > 0;
@@ -414,14 +433,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 獲取用於分組的欄位定義
     const groupColumn = this.columns.find(c => c.field === this.groupRowsBy);
-    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+    const useFormatterForGroupKey = groupColumn?.format;
 
     let matchKey: string;
 
     // ** 1. 生成用於匹配的格式化群組鍵 **
     if (useFormatterForGroupKey) {
       // 使用欄位定義中的 format 函式來產生匹配鍵
-      matchKey = String(groupColumn!.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
+      matchKey = String(groupColumn.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
     } else {
       // 退回到安全轉換
       matchKey = String(rawGroupValue ?? '').trim() || 'UNKNOWN_GROUP';
@@ -436,7 +455,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         let itemMatchKey: string;
 
         if (useFormatterForGroupKey) {
-          itemMatchKey = String(groupColumn!.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+          itemMatchKey = String(groupColumn.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
         } else {
           itemMatchKey = String(itemRawValue ?? '').trim() || 'UNKNOWN_GROUP';
         }
@@ -466,15 +485,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 1. 找出作為分組依據的欄位定義
     const groupColumn = this.columns.find(col => col.field === this.groupRowsBy);
     // 檢查分組欄位是否存在且具有 format 函式
-    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+    const useFormatterForGroupKey = groupColumn?.format;
 
-    newData.forEach(row => {
-      const rawValue = row[this.groupRowsBy!];
+    for (const row of newData) {
+      const rawValue = row[this.groupRowsBy];
       let groupKey: string;
 
       if (useFormatterForGroupKey) {
         // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
-        groupKey = String(groupColumn!.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+        groupKey = String(groupColumn.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
       } else {
         // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
         groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
@@ -482,7 +501,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
       // 如果 groupKey 為 'UNKNOWN_GROUP' 且原始值為 undefined/null，可以選擇跳過
       if (groupKey === 'UNKNOWN_GROUP' && (rawValue === undefined || rawValue === null)) {
-        return;
+        continue;
       }
 
       // 初始化該群組的總計物件
@@ -491,7 +510,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
 
       // 進行增量加總
-      this.columns.forEach(col => {
+      for (const col of this.columns) {
         if (col.isSubTotal) {
           const field = col.field;
           // 確保值是數字，如果不是則為 0
@@ -500,30 +519,24 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           // 增量加總
           this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
         }
-      });
-    });
+      }
+    }
   }
   /**
  * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
  */
   private syncTableSortMeta() {
-    // 確保 dt 已初始化且有排序資料
     if (!this.dt || !this.lastQueryBody?.SortBy) return;
 
+    this.isSyncingSort = true; // 開啟旗標
     const sortBy = this.lastQueryBody.SortBy;
     const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
+    this.dt.multiSortMeta = meta.map(m => ({ field: m.field || m.Field, order: m.order || m.Order }));
 
-    // 1. 同步資料
-    this.dt.multiSortMeta = meta.map(m => ({
-      field: m.field || m.Field,
-      order: m.order || m.Order
-    }));
-
-    // 3. 核心：通知 TableService 排序已變動，這會讓 Header 的小箭頭亮起來
-    // PrimeNG 內部是靠這個 Observable 來通知 Header 元件更新 UI
     setTimeout(() => {
       this.dt.tableService.onSort(this.dt.multiSortMeta || []);
       this.cdr.detectChanges();
+      this.isSyncingSort = false; // 關閉旗標
     }, 0);
   }
   /** 確保分頁參數統一為小寫，避免 PascalCase 導致重複查詢或參數丟失 */
@@ -534,7 +547,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 移除可能干擾的小寫/大寫重複項，並統一回傳小寫
     const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex };
+    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
   }
 
   getBtnLabel(btn: any, rowData: any): string {

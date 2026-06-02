@@ -1,0 +1,49 @@
+name: Auto Merge to Main and Notify
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  merge-and-notify:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: merge-dev-to-main # 確保同一時間只有一個合併任務在跑
+      cancel-in-progress: true # 新的 Push 會取消舊的任務
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[merge-bot]'
+          git config --global user.email 'github-actions[merge-bot]@users.noreply.github.com'
+
+      - name: Merge dev to main
+        run: |
+          git checkout main
+          git merge origin/dev
+          git push origin main
+
+      - name: Notify Discord
+        if: always()
+        run: |
+          # 標註專案類型 (你可以根據不同 Repo 修改這行)
+          PROJECT_TYPE="Frontend"  # <--- 後端專案請改為 "Backend"
+
+          if [ "${{ job.status }}" == "success" ]; then
+            MESSAGE="🚀 [$PROJECT_TYPE] 自動合併成功！\nRepo: ${{ github.repository }}\n分支: dev → main"
+          else
+            MESSAGE="❌ [$PROJECT_TYPE] 合併失敗！\nRepo: ${{ github.repository }}\n請檢查 GitHub Actions 衝突紀錄。"
+          fi
+
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"$MESSAGE\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}

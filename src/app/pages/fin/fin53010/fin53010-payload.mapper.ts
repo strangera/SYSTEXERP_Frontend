@@ -66,10 +66,23 @@ function splitVenBankAccount(venBankAccount: string | undefined): {
 } {
   const s = typeof venBankAccount === 'string' ? venBankAccount.trim() : '';
   if (!s) return {};
-  const parts = s.split(/\s*\/\s*/);
+
+  // 1. 直接用字串的 '/' 進行分割，無任何回溯風險
+  const parts = s.split('/');
+
   if (parts.length >= 2) {
-    return { VEN_BankAccountNo: parts[0]?.trim(), VEN_AccountName: parts.slice(1).join(' / ').trim() };
+    // 2. 第一部分就是帳號，順便清除空格
+    const bankAccountNo = parts[0].trim();
+
+    // 3. 剩餘的部分重新用 '/' 組合回去（保留內含的單一斜線），並清除空格
+    const accountName = parts.slice(1).join('/').trim();
+
+    return {
+      VEN_BankAccountNo: bankAccountNo || undefined,
+      VEN_AccountName: accountName || undefined
+    };
   }
+
   return { VEN_BankAccountNo: s };
 }
 
@@ -85,9 +98,10 @@ function mapStepApToInsert(
     ACP_Date: toYmd(row.acp_date ?? undefined, deps.datePipe),
     VEN_No: row.ven_no,
     VEN_Name: vendorDisplayName(ven),
-    VEN_Uniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : undefined,
+    VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     ACP_Amt: row.acp_amt,
+    VEN_PayType: row.ven_pay_type,
     VEN_BNK_No: row.ven_bnk_no,
     VEN_BankAccountNo: bank.VEN_BankAccountNo,
     VEN_AccountName: bank.VEN_AccountName,
@@ -106,7 +120,7 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
     ARS_Date: toYmd(row.ars_date ?? undefined, deps.datePipe),
     VEN_No: row.ven_no,
     VEN_Name: vendorDisplayName(ven),
-    VEN_Uniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : undefined,
+    VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     NoteDesc: row.note_desc,
   };
@@ -125,21 +139,25 @@ function mapStepPurchaseToInsert2002(
   const prefix = String(row.track_no ?? '').trim();
   const no = String(row.invoice_no ?? '').trim();
   const purGuino = prefix && no ? `${prefix}${no}` : undefined;
-  const ven = deps.getVendorOption(row.vendor_tax_id);
+  const ven = deps.getVendorOption(row.ven_no);
   const voucherType = String(row.voucher_type ?? '').trim();
-  const purComb = (voucherType === '26' || voucherType === '27') ? 'A' : undefined;
+  const invoiceNoStr = String(row.invoice_no ?? '').trim();
+  const isSummaryInvoice = (voucherType === '22' || voucherType === '25')
+    && (invoiceNoStr === '' || invoiceNoStr === '0000000000');
+  const purComb = isSummaryInvoice ? 'A' : undefined;
+  const purVenUniform = row.vendor_tax_id ? String(row.vendor_tax_id).slice(0, 8) : undefined;
   return {
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
     ACP_Type: '7',
     PUR_GUIDate: toYmd(row.invoice_date ?? undefined, deps.datePipe),
-    PUR_VenNo: row.vendor_tax_id,
+    PUR_VenNo: row.ven_no,
     PUR_VenName: vendorDisplayName(ven),
-    PUR_VenUniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : row.vendor_tax_id,
+    PUR_VenUniform: purVenUniform,
     PUR_Net: row.net_amount,
     PUR_Tax: row.tax_amount,
     PUR_Amt: row.invoice_amount,
-    PUR_Uniform: row.vendor_tax_id,
+    // PUR_Uniform: row.vendor_tax_id,
     PUR_TaxType: row.tax_type,
     PUR_DiscNo: row.deduction_code,
     PUR_RepYYYYMM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe),
@@ -159,6 +177,7 @@ function mapStepBankToInsert4002(row: FIN53010StepBankDeposit, deps: Fin53010Pay
     VEN_No: row.ven_no,
     Remark: row.note_desc,
     Source_Date: toYmd(row.txn_date ?? undefined, deps.datePipe),
+    Status: row.status,
   };
 }
 
@@ -181,11 +200,11 @@ function buildInsertNext(
         ? stepAR.map(r => mapStepArToInsert(r, deps))
         : [],
     insertAPS4023Datas:
-      activeSteps.includes(5) && stepSales.length
+      activeSteps.includes(6) && stepSales.length
         ? stepSales.map(r => mapStepSalesToInsert4023(r))
         : [],
     insertAPS2002Datas:
-      activeSteps.includes(6) && stepPurchase.length
+      activeSteps.includes(5) && stepPurchase.length
         ? stepPurchase.map((r, i) => mapStepPurchaseToInsert2002(r, i, deps))
         : [],
     insertAPS4002Datas:
@@ -206,7 +225,7 @@ function buildInsertDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.recKey != null ? String(rest.recKey) : undefined;
+    const pta = rest.PTA != null ? String(rest.PTA) : (rest.recKey == null ? undefined : String(rest.recKey));
     const body: InsertFIN53010DetailBody = {
       index,
       SerNo: ser,
@@ -239,7 +258,7 @@ export function buildInsertFin53010Request(params: {
 }): InsertFIN53010Request {
   const { form, voucherTypePadded, tableData, activeVoucherSteps, deps } = params;
   const vouDate = form['VouDate'] instanceof Date ? form['VouDate'] : new Date();
-  const vouDateIso = vouDate.toISOString();
+  const vouDateIso = toYmd(vouDate, deps.datePipe) ?? vouDate.toISOString();
   const mergedDeps: Fin53010PayloadDepsWithVou = { ...deps, vouDate };
   const details = buildInsertDetails(tableData, { resolveNoteDesc: params.deps.resolveNoteDesc });
   const insertNext = buildInsertNext(
@@ -301,19 +320,18 @@ function buildUpdateNext(
   stepBank: FIN53010StepBankDeposit[],
   deps: Fin53010PayloadDepsWithVou,
 ): UpdateFIN53010DetailDataNextBody | null {
+  /** 後端契約：updateAPS3001Datas／updateARS3001Datas 為陣列；無 id 或省略 id 視為子檔新增（依 API 實作為準）。 */
   const next: UpdateFIN53010DetailDataNextBody = {};
   if (activeSteps.includes(3) && stepAP.length) {
-    const r = stepAP[0];
-    next.updateAPS3001Datas = [mapStepApToUpdate(r, deps, r.id)];
+    next.updateAPS3001Datas = stepAP.map(r => mapStepApToUpdate(r, deps, r.id));
   }
   if (activeSteps.includes(4) && stepAR.length) {
-    const r = stepAR[0];
-    next.updateARS3001Datas = [mapStepArToUpdate(r, deps, r.id)];
+    next.updateARS3001Datas = stepAR.map(r => mapStepArToUpdate(r, deps, r.id));
   }
-  if (activeSteps.includes(5) && stepSales.length) {
+  if (activeSteps.includes(6) && stepSales.length) {
     next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));
   }
-  if (activeSteps.includes(6) && stepPurchase.length) {
+  if (activeSteps.includes(5) && stepPurchase.length) {
     next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));
   }
   if (activeSteps.includes(7) && stepBank.length) {
@@ -342,7 +360,7 @@ function buildUpdateDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.recKey != null ? String(rest.recKey) : undefined;
+    const pta = rest.PTA == null ? undefined : String(rest.PTA);
     const id = typeof rest.id === 'number' ? rest.id : undefined;
     const body: UpdateFIN53010DetailBody = {
       id,
@@ -378,7 +396,7 @@ export function buildUpdateFin53010Request(params: {
 }): UpdateFIN53010Request {
   const { form, voucherTypePadded, tableData, activeVoucherSteps, masterId, deps } = params;
   const vouDate = form['VouDate'] instanceof Date ? form['VouDate'] : new Date();
-  const vouDateIso = vouDate.toISOString();
+  const vouDateIso = toYmd(vouDate, deps.datePipe) ?? vouDate.toISOString();
   const mergedDeps: Fin53010PayloadDepsWithVou = { ...deps, vouDate };
   const details = buildUpdateDetails(tableData, { resolveNoteDesc: params.deps.resolveNoteDesc });
   const updateNext = buildUpdateNext(

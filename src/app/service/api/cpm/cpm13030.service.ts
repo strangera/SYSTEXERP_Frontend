@@ -32,4 +32,9 @@ export class CPM13030Service {
         responseType: 'blob'
       });
     }
+
+    /** 組織下拉清單（限營運部/行銷部/二期商場，排除停用） */
+    queryCPM13030_Org_DropDownList(): Observable<any> {
+      return this.http.get<any>(`${this.apiUrl}/queryCPM13030_Org_DropDownList`);
+    }
 }

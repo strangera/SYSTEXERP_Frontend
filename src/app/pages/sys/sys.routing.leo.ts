@@ -9,6 +9,8 @@ export const sysRoutes: Routes = [
   { path: 'sysbp00cru', loadComponent: () => import('./sysbp00.cru/sysbp00.cru.component').then(m => m.SYSBP00CRUComponent), data: { progNo: 'SYSBP00' } }, // 參數資料設定維護 CRU
   { path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component), data: { progNo: 'SYS0110' } }, // 使用者基本資料維護
   { path: 'sys0110cru', loadComponent: () => import('./sys0110.cru/sys0110.cru.component').then(m => m.SYS0110CRUComponent), data: { progNo: 'SYS0110' } }, // 使用者基本資料維護 CRU
+  { path: 'sysb200', loadComponent: () => import('./sysb200/sysb200.component').then(m => m.SYSB200Component), data: { progNo: 'SYSB200' } }, // 廠商基本資料維護作業
+  { path: 'sysb200cru', loadComponent: () => import('./sysb200.cru/sysb200.cru.component').then(m => m.SYSB200CRUComponent), data: { progNo: 'SYSB200' } }, // 廠商基本資料維護作業 CRU
   { path: 'sys0210', loadComponent: () => import('./sys0210/sys0210.component').then(m => m.SYS0210Component), data: { progNo: 'SYS0210' } }, // 角色基本資料維護
   { path: 'sys0210cru', loadComponent: () => import('./sys0210.cru/sys0210.cru.component').then(m => m.SYS0210CRUComponent), data: { progNo: 'SYS0210' } }, // 角色基本資料維護 CRU
   { path: 'sys0230', loadComponent: () => import('./sys0230/sys0230.component').then(m => m.SYS0230Component), data: { progNo: 'SYS0230' } }, // 角色複製
@@ -28,6 +30,7 @@ export const sysRoutes: Routes = [
   { path: 'sys0750', loadComponent: () => import('./sys0750/sys0750.component').then(m => m.SYS0750Component), data: { progNo: 'SYS0750' } }, // 角色之使用者列表
   { path: 'sys0770', loadComponent: () => import('./sys0770/sys0770.component').then(m => m.SYS0770Component), data: { progNo: 'SYS0770' } }, // 作業權限統計表
   { path: 'sys0780', loadComponent: () => import('./sys0780/sys0780.component').then(m => m.SYS0780Component), data: { progNo: 'SYS0780' } }, // 作業權限申請表
+  { path: 'sys0791', loadComponent: () => import('./sys0791/sys0791.component').then(m => m.SYS0791Component), data: { progNo: 'SYS0791' } }, // 作業使用率查詢
   { path: 'sys0792', loadComponent: () => import('./sys0792/sys0792.component').then(m => m.SYS0792Component), data: { progNo: 'SYS0792' } }, // 在線人員查詢作業
   { path: 'sysbq00', loadComponent: () => import('./sysbq00/sysbq00.component').then(m => m.SYSBQ00Component), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護
   { path: 'sysbq00cru', loadComponent: () => import('./sysbq00.cru/sysbq00.cru.component').then(m => m.SYSBQ00CRUComponent), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護 CRU

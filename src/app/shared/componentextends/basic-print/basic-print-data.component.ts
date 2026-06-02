@@ -49,7 +49,7 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[], footerData?: any): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[], footerData?: any, reportTitle?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
@@ -82,7 +82,7 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: reportTitle || (apiUrl ? REPORT_TITLES[`${apiUrl}`] || funInfo?.prog_name : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name),
       columns: pdfColumns,
       config: {
         ...event,
@@ -100,7 +100,7 @@ export abstract class BasicPrintDataComponent {
       (isLoading) => this.exportDialog = isLoading
     ).subscribe();
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any, PrintColumn?: Column[]): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any, PrintColumn?: Column[], footerData?: any, reportTitle?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`); // 取得查詢條件
@@ -133,9 +133,10 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: reportTitle || (apiUrl ? REPORT_TITLES[`${apiUrl}`] || funInfo?.prog_name : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name),
       columns: excelColumns,
       config: event,
+      footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };

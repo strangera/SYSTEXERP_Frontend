@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -35,6 +35,8 @@ export class FIN53010Service {
   public readonly detailByVouNoForUpdateLoading = signal<boolean>(!1);
   /** 依發票號碼查 APS4023（queryAPS4023DetatilData_ByInvoiceNumber） */
   public readonly aps4023ByInvoiceLoading = signal<boolean>(!1);
+  /** 依廠商與立帳日期查預計付款日（getCalculatedPayDate） */
+  public readonly calculatedPayDateLoading = signal<boolean>(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -42,6 +44,10 @@ export class FIN53010Service {
   public readonly accNoOptions = signal<Option[]>([]);
   /** 廠商 */
   public readonly vendorOptions = signal<Option[]>([]);
+  /** 廠商統一編號（VEN_UNIFORM 去重） */
+  public readonly vendorUniformOptions = signal<Option[]>([]);
+  /** 廠商統一編號 → 廠商代號（VEN_No）對照 Map */
+  public readonly vendorUniformToVenNoMap = signal<Map<string, string>>(new Map());
   /** 員工 */
   public readonly usrOptions = signal<Option[]>([]);
   /** 組織代號 */
@@ -77,6 +83,7 @@ export class FIN53010Service {
   /** APS1001 銀行代號（無分行），與 fin32010 匯款銀行代號來源一致 */
   public readonly bankNoLoading = signal<boolean>(!1);
   public readonly bankNoOptions = signal<Option[]>([]);
+  public readonly ptaOptions = signal<Map<string, Option[]>>(new Map());
 
   /** 傳票種類 */
   public readonly vouTypeOptions = [
@@ -212,6 +219,31 @@ export class FIN53010Service {
     });
   }
 
+  public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
+    this.calculatedPayDateLoading.set(true);
+    return this.http.post<GetCalculatedPayDateResult>(`${apiUrl}/getCalculatedPayDate`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('getCalculatedPayDate:', [payload, res])),
+      catchError(err => {
+        this.logger.error('API getCalculatedPayDate 失敗:', err);
+        const body = err?.error as Partial<GetCalculatedPayDateResult> | undefined;
+        const msg = typeof body?.Message === 'string' && body.Message
+          ? body.Message
+          : (typeof err?.message === 'string' && err.message ? err.message : '查詢預計付款日失敗');
+        return of({
+          Status: '9999',
+          Data: null as string | null,
+          Message: msg,
+          Error: body?.Error ?? null,
+          Meta: body?.Meta ?? { Timestamp: '', RequestId: '' },
+          TotalCount: 0,
+          TotalPage: 0,
+        } as GetCalculatedPayDateResult);
+      }),
+      finalize(() => this.calculatedPayDateLoading.set(false)),
+    );
+  }
+
   /** 查詢會計科目（GLS1005 FIN53010 專用下拉） */
   public queryGls1005Fin53010(): Observable<Option[] | null> {
     return this.http
@@ -264,6 +296,46 @@ export class FIN53010Service {
       );
   }
 
+  /** 查詢立沖代號 (GLS3003 FIN53010 專用下拉) */
+  public queryGls3003Fin53010(body: { AccNo: string }): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<{ No: string; Name: string }[]>>(
+        `${fin53010RootApiUrl}/queryGLS3003_FIN53010_DropDownList`,
+        body
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data;
+          return data
+            ? data.map(item => ({
+              ...item,
+              value: item.No ?? '',
+              label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+            }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /queryGLS3003_FIN53010_DropDownList 失敗:', err);
+          return of(null);
+        }),
+      );
+  }
+
+  public getPTADropdownOptions(accNo: string): void {
+    if (!accNo || this.ptaOptions().has(accNo)) return;
+    this.queryGls3003Fin53010({ AccNo: accNo }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res) {
+          this.ptaOptions.update(map => {
+            const newMap = new Map(map);
+            newMap.set(accNo, res);
+            return newMap;
+          });
+        }
+      }
+    });
+  }
+
   public insertFIN53010Data(payload: InsertFIN53010Request): Observable<FIN53010InsertResult> {
     return this.http.post<FIN53010InsertResult>(`${apiUrl}/insertFIN53010`, payload).pipe(
       take(1),
@@ -278,8 +350,8 @@ export class FIN53010Service {
     );
   }
 
-  public deleteFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
-    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { ids: payload }).pipe(
+  public deleteFIN53010Data(id: number): Observable<FIN53010DeleteResult> {
+    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { id }).pipe(
       take(1),
       tap(res => this.logger.debug('刪除FIN53010結果:', [res])),
     );
@@ -455,6 +527,25 @@ export class FIN53010Service {
         this.logger.debug('查詢VendorOptions結果:', [res]);
       }),
       finalize(() => this.venLoading.set(!1)),
+    ).subscribe();
+  }
+
+  public getVendorUniformOptions(): void {
+    this.dropdownApi.queryVendorNoGroup({ VEN_Flag: '' }).pipe(
+      take(1),
+      map(res => (res ?? []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No} - ${item.Name}`,
+        VEN_No: item.subItems?.[0]?.VEN_No as string | undefined,
+      }))),
+      tap(list => {
+        this.vendorUniformOptions.set(list);
+        const m = new Map<string, string>();
+        for (const opt of list) {
+          if (opt.VEN_No) m.set(String(opt.value), String(opt.VEN_No));
+        }
+        this.vendorUniformToVenNoMap.set(m);
+      }),
     ).subscribe();
   }
 

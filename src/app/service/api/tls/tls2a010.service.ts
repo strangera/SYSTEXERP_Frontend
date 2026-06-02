@@ -43,7 +43,10 @@ export class Tls2a010Service {
   updateModPayAmt(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateModPayAmt`, data);
   }
-
+  /** 新增明細前刪除 */
+  deletePOS30011Detail(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deletePOS30011Detail`, data);
+  }
   exportTLS2A010Excel(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS2A010Excel`, data, {
       responseType: 'blob',

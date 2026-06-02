@@ -62,7 +62,7 @@ import { CellInput } from './table-edit-cell.model';
     }
 
     /* 確保虛擬滾動容器高度也是固定的 */
-    ::ng-deep .p-scroller {
+    ::ng-deep .p-dropdown-items-wrapper .p-scroller {
         height: 250px !important; /* 與 scrollHeight 一致 */
     }
     `],

@@ -110,7 +110,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     GUI_Track: ['', [Validators.maxLength(2), Validators.minLength(2), this.validationService.alphanumericValidator]], //發票字軌
     TXN_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.numberValidator]], //起始發票號碼
     TXN_GUIEndNo: [''], //結束發票號碼
-    TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
+    TXN_CustCnt: [1, [Validators.required, Validators.min(-99999999), Validators.max(99999999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     TXN_Time: [null as Date | null], //銷售時段今日的時間
@@ -255,6 +255,28 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         controls.GUI_Track.setValue(val.toUpperCase(), { emitEvent: false });
       }
     });
+    // 6. 處理 TXN_GUIPaper = '2' (手開發票) 必填發票字軌、號碼
+    if (this.isFormCreateable && this.TXN_GUIPaper === '2') {
+      // 設定 GUI_Track (發票字軌) 必填
+      controls.GUI_Track.setValidators([
+        Validators.required,
+        Validators.maxLength(2),
+        Validators.minLength(2),
+        this.validationService.alphanumericValidator
+      ]);
+
+      // 設定 TXN_GUIBegNo (起始發票號碼) 必填
+      controls.TXN_GUIBegNo.setValidators([
+        Validators.required,
+        Validators.maxLength(8),
+        Validators.minLength(8),
+        this.validationService.numberValidator
+      ]);
+
+      // 立即觸發驗證狀態更新 (加上 emitEvent: false 避免觸發不必要的 valueChanges 迴圈)
+      controls.GUI_Track.updateValueAndValidity({ emitEvent: false });
+      controls.TXN_GUIBegNo.updateValueAndValidity({ emitEvent: false });
+    }
     // 監聽是否為負項交易
     controls.isNegativeTXN.valueChanges.pipe(untilDestroyed(this)).subscribe(isNeg => {
       if (isNeg) {

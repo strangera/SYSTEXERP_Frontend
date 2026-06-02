@@ -12,16 +12,28 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-template-cell',
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
-    <div class="input-wrapper" [attr.data-suffix]="cellInput.col.suffix">
-      <input pInputText readonly class="w-full min-w-max" [placeholder]="isDisabled() ? '' :'請選擇' + (cellInput.col.header || '')"
-             [value]="templateDisplayValue(cellInput.rowData, cellInput.col)"
-             [disabled]="isDisabled()"
-             (click)="overlayPanel.show($event)" />
-      </div>
-      <p-overlayPanel #overlayPanel>
-      <ng-container *ngTemplateOutlet="cellInput.col.templateRef !; context: { $implicit: cellInput.rowData, col: cellInput.col, overlayPanel }"></ng-container>
-    </p-overlayPanel>
-    `,
+  <div class="input-wrapper"
+       [attr.data-suffix]="cellInput.col.suffix"
+       [style.width]="cellInput.col.width">
+
+    <input
+      pInputText
+      readonly
+      class="w-full"
+      [placeholder]="isDisabled() ? '' : '請選擇' + (cellInput.col.header || '')"
+      [value]="templateDisplayValue(cellInput.rowData, cellInput.col)"
+      [disabled]="isDisabled()"
+      (click)="overlayPanel.show($event)"
+      [style]="{
+        'width': '100%',
+        'text-align': cellInput.col.textAlign
+      }" />
+  </div>
+
+  <p-overlayPanel #overlayPanel>
+    <ng-container *ngTemplateOutlet="cellInput.col.templateRef!; context: { $implicit: cellInput.rowData, col: cellInput.col, overlayPanel }"></ng-container>
+  </p-overlayPanel>
+`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

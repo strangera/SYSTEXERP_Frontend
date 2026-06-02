@@ -14,9 +14,8 @@ import type {
 
 function parseYmdToDate(s: string | null | undefined): Date | null {
   if (s == null || String(s).trim() === '') return null;
-  const t = Date.parse(String(s).slice(0, 10));
-  if (Number.isNaN(t)) return null;
-  return new Date(t);
+  const d = new Date(String(s));
+  return isNaN(d.getTime()) ? null : d;
 }
 
 /** DeclareYM / RepYYYYMM 等 yyyyMM */
@@ -100,7 +99,6 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
   return {
     ...(id !== undefined ? { id } : {}),
-    add_flag: true,
     invoice_type: row.InvoiceType ?? undefined,
     invoice_prefix: prefix || undefined,
     invoice_no: inv8.length === 8 ? inv8 : invNum,
@@ -131,13 +129,13 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
   }
   return {
     ...(typeof id === 'number' && !Number.isNaN(id) ? { id } : {}),
-    add_flag: true,
     voucher_type: row.PUR_VoucherType ?? undefined,
     track_no: trackNo || undefined,
     invoice_no: invoiceNo || undefined,
     invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
     declare_ym: parseYyyyMmToMonthDate(row.PUR_RepYYYYMM ?? undefined),
-    vendor_tax_id: row.PUR_VenUniform ?? row.PUR_Uniform ?? row.PUR_VenNo ?? undefined,
+    vendor_tax_id: row.PUR_VenUniform ?? undefined,
+    ven_no: row.PUR_VenNo ?? undefined,
     invoice_usage: row.PUR_DirectType ?? undefined,
     invoice_amount: row.PUR_Amt ?? undefined,
     tax_type: row.PUR_TaxType ?? undefined,
@@ -146,6 +144,7 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     deduction_code: row.PUR_DiscNo ?? undefined,
     category_type: row.PUR_Type ?? undefined,
     source_doc_no: row.Source_Doc_No ?? undefined,
+    comb: row.PUR_Comb ?? undefined,
     total_count: row.PUR_Comb_Cnt ?? undefined,
   };
 }
@@ -158,6 +157,7 @@ export function mapAps4002RowToStepBank(row: APS4002): FIN53010StepBankDeposit {
     bank_no: row.BNK_id ?? undefined,
     deposit_amt: row.DAmt ?? undefined,
     withdraw_amt: row.CAmt ?? undefined,
+    status: row.Status ?? undefined,
     note_desc: row.Remark ?? undefined,
     txn_date: parseYmdToDate(row.Source_Date ?? undefined),
   };
@@ -190,10 +190,10 @@ export function mapFin53010ForUpdateResponseToStepRows(
   }
 
   return {
-    stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP),
-    stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR),
-    stepSalesRows: arr(data._APS4023s).map(mapAps4023RowToStepSales),
-    stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase),
-    stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank),
+    stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepSalesRows: arr(data._APS4023s).map(mapAps4023RowToStepSales).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank).map((r, i) => ({ ...r, SerNo: i + 1 })),
   };
 }

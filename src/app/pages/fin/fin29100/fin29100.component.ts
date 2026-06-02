@@ -7,17 +7,18 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { FIN29100Data, FIN29100Service, QueryBankAccountResponse, QueryFIN29100Request } from '../../../service/api/fin/fin29100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 
-type TxnTypeOption = { label: string; value: string };
+interface TxnTypeOption { label: string; value: string }
 
 @Component({
   selector: 'app-fin29100',
@@ -25,7 +26,6 @@ type TxnTypeOption = { label: string; value: string };
   standalone: true,
   imports: [
     ButtonModule,
-    TableSubheaderComponent,
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -34,7 +34,8 @@ type TxnTypeOption = { label: string; value: string };
     ButtonComponent,
     TranslateModule,
     InputTextRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    TableReportComponent
   ]
 })
 export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> implements OnInit {
@@ -66,28 +67,46 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   pdfBtnLoading = false;
   excelBtnLoading = false;
 
-  columns: Column[] = [
-    { field: 'TxnType', header: '型態', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'TxnType', header: '型態', visible: true, width: '80px' },
     {
       field: 'TxnDocumentNo',
       header: '匯款/開票/調撥單號',
       visible: true,
-      htmlFormat: true,
-      format: (value: string) => {
-        if (!value || value === 'null' || value === 'undefined') {
-          return '<span style="color: #999;">-</span>';
-        }
-        return `<span>${value}</span>`;
-      }
+      format: (val) => val || '-' // 如果單號為空，顯示 '-'
     },
     { field: 'TxnDate', header: '匯款/開票/調撥日期', visible: true, format: formatDate },
     { field: 'VendorNo', header: '廠商編號', visible: true },
-    { field: 'TxnAmount', header: '交易金額', visible: true, format: formatAmount },
-    { field: 'TxnFee', header: '手續費', visible: true, format: formatAmount },
-    { field: 'PaymentBank', header: '付款銀行', visible: true },
+    { field: 'TxnAmount', header: '交易金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
+    { field: 'TxnFee', header: '手續費', visible: true, align: 'right', format: formatAmount, isTotal: true },
+    { field: 'PaymentAccId', header: '付款銀行', visible: true },
     { field: 'CheckNo', header: '支票號碼', visible: true },
     { field: 'CheckExpireDate', header: '支票到期日', visible: true, format: formatDate }
   ];
+
+  footerData: any = null; // 用於存儲 API 的 Summary 部分
+  lastQueryBody: any = null;
+  queryFn = (body: any) => {
+    return this.fin29100Service.queryFIN29100(body).pipe(
+      map(res => {
+        // 這裡我們把 result.Data.Data (真正的陣列) 提取出來
+        // 並將 Summary 暫存起來，以便在 Component 中更新 footer
+        const innerData = res.Data as any;
+
+        // 更新元件內部的總計資料（這部分需要手動更新，因為 map 只負責回傳給 table）
+        this.footerData = innerData.Summary;
+
+        // 回傳符合 BaseQueryResponse<FIN29100Data[]> 格式的物件
+        return {
+          ...res,
+          Data: innerData.Data.map((x: any) => ({
+            ...x,
+            TxnType: this.TxnTypeMap[x.TxnType] || x.TxnType // 同時處理型態轉換
+          }))
+        };
+      })
+    );
+  };
 
   constructor(
     private fin29100Service: FIN29100Service,
@@ -115,58 +134,33 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue() as {
-        BNK_No: string | null;
-        DocNo_From: string | null;
-        DocNo_To: string | null;
-        TxnDate_From: string;
-        TxnDate_To: string;
-        TxnType: string | null;
-        pageSize: number;
-        pageIndex: number;
-        SortBy: any[];
+      const rawValue = frm.getRawValue();
+
+      // 統一參數格式
+      this.lastQueryBody = {
+        ...rawValue,
+        TxnType: rawValue.TxnType?.value || rawValue.TxnType || '',
+        TxnDate_From: this.datePipe.transform(rawValue.TxnDate_From, 'yyyy-MM-dd') || '',
+        TxnDate_To: this.datePipe.transform(rawValue.TxnDate_To, 'yyyy-MM-dd') || '',
+        pageIndex: 1,
+        pageSize: 30
       };
 
       this.loading = true;
 
-      const requestData: QueryFIN29100Request = {
-        PageSize: formValue.pageSize || 10,
-        PageIndex: formValue.pageIndex || 1,
-        SortBy: formValue.SortBy || [],
-        BNK_No: formValue.BNK_No || '',
-        DocNo_From: formValue.DocNo_From || '',
-        DocNo_To: formValue.DocNo_To || '',
-        TxnType: formValue.TxnType || '',
-        TxnDate_From: this.datePipe.transform(formValue.TxnDate_From, 'yyyy-MM-dd') || '',
-        TxnDate_To: this.datePipe.transform(formValue.TxnDate_To, 'yyyy-MM-dd') || ''
-      };
-
-      this.fin29100Service
-        .queryFIN29100(requestData)
+      // 直接呼叫我們封裝好的 queryFn
+      this.queryFn(this.lastQueryBody)
         .pipe(
           untilDestroyed(this),
-          finalize(() => {
-            this.loading = false;
-          })
+          finalize(() => this.loading = false)
         )
         .subscribe({
-          next: (response) => {
-            if (response && response.Data) {
-              this.data = response.Data.map(x => ({
-                ...x,
-                TxnType: this.TxnTypeMap[x.TxnType] || x.TxnType
-              }));
-              this.totalRecords = response.TotalCount || 0;
-            } else {
-              this.data = [];
-              this.totalRecords = 0;
-            }
+          next: (res) => {
+            // 此時 res.Data 已經是被 map 拍平後的陣列了
+            this.data = res.Data;
+            this.totalRecords = res.TotalCount || 0;
           },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService?.warnBubble?.('查詢失敗');
-          }
+          error: () => this.messageService?.warnBubble?.('查詢失敗')
         });
     });
   }
@@ -234,11 +228,11 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string): void {
     const blob = resp.body!;
     const fileName = `${name}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

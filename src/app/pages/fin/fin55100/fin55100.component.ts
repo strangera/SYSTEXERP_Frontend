@@ -53,7 +53,7 @@ export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Resp
     { label: '明細', value: '1' },
   ];
   OrgIdOptions = this.dropdownApi.querySys3100();
-  ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
+  ProjectNoOptions = this.dropdownApi.queryGls3002AcctKey();
 
   // 變更資料型別
   data: QueryFIN55100Response[] = [];
@@ -94,6 +94,16 @@ export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Resp
           ...item,
           STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
         }))
+          // 幫我把LTYPE_NAME為營業費用的LTYPE_ID改為null 還有STYPE_NAME為"營業毛利 合計"的LTYPE_NAME改為"營業毛利"和LTYPE_ID改為null
+          .map((item: QueryFIN55100Response) => {
+            if (item.STYPE_NAME?.trim() === '營業損益 合計') {
+              return { ...item, LTYPE_NAME: '營業損益', LTYPE_ID: null };
+            }
+            if (item.STYPE_NAME?.trim() === '營業毛利 合計') {
+              return { ...item, LTYPE_NAME: '營業毛利', LTYPE_ID: null };
+            }
+            return item;
+          });
         this.totalRecords = response.TotalCount - 1;
         this.footerData = {
           ...response.Data[response.Data.length - 1],

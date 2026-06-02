@@ -8,9 +8,9 @@
   sortMode="multiple" [multiSortMeta]="multiSortMeta" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [reorderableColumns]="true"
   (onColReorder)="columns = tableUtilityService.onColReorder($event)"
-  (onRowReorder)="onRowReorder(); rowReorderData.emit($event)"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [rowSelectable]="rowSelectableWrapper"
-  [loading]="loading" [scrollable]="scrollable || virtualScroll" scrollHeight="867px" [virtualScroll]="virtualScroll"
+  (onRowReorder)="onRowReorder(); rowReorderData.emit($event)" styleClass="p-datatable-sm p-datatable-gridlines "
+  [rowSelectable]="rowSelectableWrapper" [loading]="loading" [scrollable]="scrollable || virtualScroll"
+  scrollHeight="867px" [virtualScroll]="virtualScroll"
   [virtualScrollItemSize]="virtualScroll ? (virtualScrollItemSize ?? 46) : undefined" [paginator]="showPaginator"
   [rows]="20" [rowsPerPageOptions]="[20, 40, 60, 80, 100]" [showCurrentPageReport]="showPaginator"
   currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆">
@@ -99,9 +99,7 @@
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
         <th *ngIf="_tableData.length && showReorder" rowspan="1" class="w-1rem text-center"></th>
-        <th
-          [attr.colspan]="serialThColspan"
-          class="w-1rem text-center">
+        <th [attr.colspan]="serialThColspan" class="w-1rem text-center">
           {{ serialName }}
         </th>
         <th *ngIf="showCheckBox && !disabled && data.length" class="w-1rem text-center">
@@ -152,7 +150,7 @@
           : "新增資料"
           : rowData._rowValidationError?.isValid === false
           ? ""
-          : rowIndex + 1
+          : rowData.SerNo
           }}
         </span>
       </td>
@@ -183,7 +181,7 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr *ngIf="footerData" class="font-bold text-center text-sm text-primary">
-      <td class="text-center" [colSpan]="calculateFooterColspan()" pFrozenColumn>
+      <td class="text-center" [colSpan]="calculateFooterColspan()">
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
@@ -202,7 +200,7 @@
 
     <tr *ngIf="getObjectKeys(_calculatedFooterData).length > 0 && !footerData"
       class="font-bold text-center text-sm text-primary">
-      <td class="text-center" [colSpan]="calculateFooterColspan()" pFrozenColumn>
+      <td class="text-center" [colSpan]="calculateFooterColspan()">
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">

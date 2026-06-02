@@ -36,12 +36,16 @@
             [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="CrdNo"
             [control]="queryForm.controls.CrdNo" [submitted]="submitted" />
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="帳務日期"
+            startControlName="AccTxnDate_Start" endControlName="AccTxnDate_End"
+            [startControl]="queryForm.controls.AccTxnDate_Start" [endControl]="queryForm.controls.AccTxnDate_End"
+            [submitted]="submitted" />
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="檔案日期"
+            startControlName="BatCloseDate_Start" endControlName="BatCloseDate_End"
+            [startControl]="queryForm.controls.BatCloseDate_Start" [endControl]="queryForm.controls.BatCloseDate_End"
+            [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="TmID"
             [control]="queryForm.controls.TmID" [submitted]="submitted" />
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="請款日期"
-            startControlName="ReqDate_Start" endControlName="ReqDate_End"
-            [startControl]="queryForm.controls.ReqDate_Start" [endControl]="queryForm.controls.ReqDate_End"
-            [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="CrdTxnFgList"
             [options]="CrdTxnFgOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.CrdTxnFgList" [submitted]="submitted" />

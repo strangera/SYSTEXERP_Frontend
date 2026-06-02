@@ -12,7 +12,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { monthOptions } from '../fin11200/fin11200.model';
 
 //1.1.2.1 電子式發票各系統配號維護

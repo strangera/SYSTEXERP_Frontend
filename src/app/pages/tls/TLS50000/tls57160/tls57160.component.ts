@@ -211,13 +211,13 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     }
   }

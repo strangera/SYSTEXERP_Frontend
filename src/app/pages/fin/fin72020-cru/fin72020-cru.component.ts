@@ -1,22 +1,21 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ClaimFIN72020ExecuteRequest, ClaimFIN72020QueryResponse, FIN72020Service } from '@service/api/fin/fin72020.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { PanelModule } from 'primeng/panel';
-import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
+import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { monthOptions } from '../fin11200/fin11200.model';
 
 @Component({
     selector: 'app-fin72020-cru',
@@ -29,43 +28,46 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
         PanelModule,
         FormsModule,
         ReactiveFormsModule,
-        CalendarComponent,
         TableComponent,
         NgIf,
         DialogComponent,
-        InputTextComponent,
         TranslateModule,
-        YearMonthComponent
+        CalendarRangeQuickComponent,
+        TableReportComponent,
+        DropdownComponent,
     ],
 })
 
 // reference: 11200
-export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
+export class FIN72020CRUComponent extends BasicCruPageComponent<FIN72020Service> implements OnInit {
     dataForm = this.formBuilder.group({
-        requestDate: [null, [Validators.required]], // 申請日期
-        // keepingUnit: [null, [Validators.required]], // 保管單位
-        // Pettycashcustodian: [null, [Validators.required]], // 保管人
+        DateFrom: [null, [Validators.required]], // 零用金申請日期（起）
+        DateTo: [null, [Validators.required]], // 零用金申請日期（迄）
+        Keep_OrgID: [null, [Validators.required]], // 保管單位組織代碼
+        Keep_UsrNo: [null, [Validators.required]], // 保管人代碼
     });
     monthOptions = monthOptions;
     minDate?: Date;
     dialogVisible = false;
 
-    data: POS1002[] = [];
-    selectedData: POS1002[] = [];
+    data: ClaimFIN72020QueryResponse[] = [];
+    selectedData: ClaimFIN72020QueryResponse[] = [];
+    public readonly totalDialogRecords = signal<number>(0); // Dialog 中的資料總筆數
     columns: Column[] = [
-        { field: 'ECR_No', header: '零用金單號', visible: true },
-        { field: 'ECR_Name', header: '申請日期', visible: true },
-        { field: 'type01', header: '申請金額', visible: true },
-        { field: 'type02', header: '申請人', visible: true },
-        { field: 'type03', header: '組織代號', visible: true },
-        { field: 'type04', header: '零用金保管人', visible: true },
-        { field: 'type05', header: '狀態', visible: true },
+        { field: 'PCS_No', header: '零用金單號', visible: true },
+        { field: 'PCS_Date', header: '申請日期', visible: true, format: formatDate },
+        { field: 'PCS_TotAmt', header: '申請金額', visible: true },
+        { field: 'PCS_UsrDisplay', header: '申請人', visible: true },
+        { field: 'PCS_OrgDisplay', header: '組織代號', visible: true },
+        { field: 'Keep_UsrDisplay', header: '零用金保管人', visible: true },
+        { field: 'PCS_StatusName', header: '狀態', visible: true },
     ]
 
+    KeepOrgID_Options = signal<{ label: string; value: string }[]>([]);
+    KeepUsrNo_Options = signal<{ label: string; value: string }[]>([]);
+
     constructor(
-        private validationService: ValidationService,
-        private eCRNoService: ECRNoService,
-        private fin11200Service: Fin11200Service
+        public fin72020Service: FIN72020Service,
     ) {
         super();
     }
@@ -75,14 +77,7 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         if (this.isFormCreateable) {
             this.minDate = this.setMinDate();
         }
-        this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
-            const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
-                ECR_No: item.No,
-                ECR_Name: item.Name
-            }));
-            this.originalDialogData = mappedData;
-            this.dialogData = mappedData;
-        });
+        this.loadDropdownOptions();
     }
     setMinDate(): Date | undefined {
         if (this.isFormCreateable) {
@@ -99,71 +94,113 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
     onSubmit(frm: FormGroup) {
         this.handleSubmit(frm, () => {
-            if (this.data.length === 0) {
-                this.loading = false;
-                return this.messageService.errorBubble('請選擇零用金申請單據');
-            }
-            if (!frm.value.GUI_YYMM) { return; }
-            this.loading = true;
-            const body = {
-                NumberDetails: this.data.map(item => ({
-                    GUI_YYMM: frm.value.GUI_YYMM,
-                    ECR_No: item.ECR_No
-                })),
-            };
-            console.log('提交的資料', body);
-            // this.fin11200Service.execProcNumber(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
-            //     if (response.Status === '0000') {
-            //         this.messageService.successBubble(response.Message);
-            //         this.dataForm.reset();
-            //         this.data = [];
-            //         this.selectedData = [];
-            //     }
-            // });
+            this.fin72020Service.claimFIN72020Query(frm.value)
+                .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+                .subscribe(response => {
+                    this.dialogData = response.Data;
+                    this.totalDialogRecords.set(response.TotalCount);
+                    this.dialogVisible = true;
+                    console.log('查詢結果', response.Data);
+                });
         });
     }
 
-    private formatDateToYYYYMM(date: Date | null): string | null {
-        if (!date) {
-            return null;
+    onClaim() {
+        if (this.selectedData.length === 0) {
+            this.messageService.errorBubble('請選擇至少一筆資料進行請款');
+            return;
         }
-        const year = date.getFullYear().toString();
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        return year + month;
+        const req: ClaimFIN72020ExecuteRequest = {
+            Keep_UsrNo: this.dataForm.controls.Keep_UsrNo.value!,
+            PCS_NoList: this.data.map(item => item.PCS_No).join(','),
+            RqstUsrNo: this.getUserInfoFromLocal().user_No,
+            RqstUsrName: this.getUserInfoFromLocal().user_Name,
+        };
+        console.log('請款請求參數', req);
+        this.fin72020Service.claimFIN72020Execute(req)
+            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+            .subscribe(response => {
+                if (response.Status !== '0000') {
+                    this.messageService.errorBubble(response.Data.ErrMsg || '修改失敗');
+                }
+                else {
+                    this.messageService.successBubble(response.Data.ErrMsg || '修改成功');
+                }
+                this.onCancel();  // 返回查詢頁
+            });
     }
 
-    dialogQueryForm = this.formBuilder.group({
-        ECR_No: [''], // 申請日期
-        ECR_Name: [''], // 保管單位
-        ECR_Name2: [''] // 保管人
-    });
-    dialogData: POS1002[] = [];
-    private originalDialogData: POS1002[] = [];
-    selectedItemsDialog: POS1002[] = [];
+    dialogData: ClaimFIN72020QueryResponse[] = [];
+    selectedItemsDialog: ClaimFIN72020QueryResponse[] = [];
 
-    isRowSelectable(event: POS1002): boolean {
-        return !this.data || !this.data.some((item: POS1002) => item.ECR_No === event.ECR_No);
+    isRowSelectable(event: ClaimFIN72020QueryResponse): boolean {
+        return !this.data || !this.data.some((item: ClaimFIN72020QueryResponse) => item.PCS_No === event.PCS_No);
     }
-    inputEnter() {
-        const filterECRNo = this.dialogQueryForm.controls.ECR_No.value?.trim().toLowerCase() || '';
-        const filterECRName = this.dialogQueryForm.controls.ECR_Name.value?.trim().toLowerCase() || '';
-        this.dialogData = this.originalDialogData.filter(item => {
-            const matchECRNo = item.ECR_No.toLowerCase().includes(filterECRNo);
-            const matchECRName = item.ECR_Name.toLowerCase().includes(filterECRName);
-            return matchECRNo && matchECRName;
-        });
-    }
+
     saveDialog() {
         this.dialogVisible = false;
         this.data = [...this.data, ...this.selectedItemsDialog];
         this.selectedItemsDialog = [];
     }
-    onDelete(selectedRows: POS1002[]) {
+    onDelete(selectedRows: ClaimFIN72020QueryResponse[]) {
         this.data = this.data.filter(row => !selectedRows.includes(row));
         this.selectedData = [];
     }
     resetTable() {
         this.data = [];
         this.selectedData = [];
+    }
+
+
+    /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo, user_No, user_Name } */
+    private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string; user_No: string; user_Name: string } {
+        let mid = 0;
+        let SYS_StoreNo = '';
+        let user_No = '';
+        let user_Name = '';
+
+        try {
+            const raw = localStorage.getItem('UserInfo');
+            if (raw) {
+                const obj = JSON.parse(raw);
+                // 依你的截圖欄位：mid 與 SYS_StoreNo
+                mid = Number(obj?.mid ?? 0);
+                SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
+                user_No = String(obj?.user_No ?? '');
+                user_Name = String(obj?.user_Name ?? '');
+            }
+        } catch (e) {
+            console.error('解析 localStorage.UserInfo 失敗：', e);
+        }
+
+        return { mid, SYS_StoreNo, user_No, user_Name };
+    }
+
+    /** 載入下拉選單選項 */
+    private loadDropdownOptions(): void {
+        // 保管人
+        this.fin72020Service.queryTBLUSER_Orgid_DropDownList().subscribe({
+            next: res => {
+                if (res.Status !== '0000') return;
+                const options = res.Data.map(item => ({
+                    label: `${item.user_No ?? ''} - ${item.user_Name ?? ''}`,
+                    value: item.user_No ?? '',
+                }));
+
+                this.KeepUsrNo_Options.set(options);
+            },
+        });
+
+        // 保管單位
+        this.fin72020Service.querySYS3100_DropDownList().subscribe({
+            next: res => {
+                if (res.Status !== '0000') return;
+                const options = res.Data.map(item => ({
+                    label: `${item.No} - ${item.Name}`,
+                    value: item.No,
+                }));
+                this.KeepOrgID_Options.set(options);
+            },
+        });
     }
 }

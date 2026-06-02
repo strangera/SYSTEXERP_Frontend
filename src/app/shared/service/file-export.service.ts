@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { MessageService } from 'primeng/api'; // 需引入 PrimeNG 原生 MessageService
 import { Observable, tap } from 'rxjs';
@@ -8,26 +8,25 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root'
 })
 export class FileExportService {
+  private readonly messageService = inject(NotificationService);
+  private readonly primengMessageService = inject(MessageService);
   // 用於暫存待存檔的資料
   private pendingBlob: Blob | null = null;
   private pendingFilename = '';
 
-  constructor(
-    private messageService: NotificationService,
-    private primengMessageService: MessageService
-  ) { }
-
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
     fileExtension: string,
-    btnLoadingSetter?: (isLoading: boolean) => void
+    btnLoadingSetter?: (isLoading: boolean) => void,
+    customFilename?: string // 新增參數
   ): Observable<HttpResponse<Blob>> {
     if (btnLoadingSetter) btnLoadingSetter(true);
 
     return exportObservable.pipe(
       tap({
         next: (response: HttpResponse<Blob>) => {
-          this.handleResponse(response, fileExtension);
+          // 將自定義檔名傳遞下去
+          this.handleResponse(response, fileExtension, false, customFilename);
         },
         error: (err) => {
           this.messageService.errorBubble('檔案匯出失敗，請重試。');
@@ -39,15 +38,27 @@ export class FileExportService {
   }
 
 
-  public handleResponse(response: HttpResponse<Blob>, fileExtension: string, saveAs = false) {
+  public handleResponse(
+    response: HttpResponse<Blob>,
+    fileExtension: string,
+    saveAs = false,
+    customFilename?: string // 新增參數
+  ) {
     const blob = response.body;
     if (!blob || blob.size === 0) {
       this.messageService.warnBubble('目前無資料可供下載。');
       return;
     }
 
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    // 邏輯：優先使用傳入的 customFilename，若無則從 Header 抓，最後才用預設值
+    let filename = customFilename;
+
+    if (!filename) {
+      const contentDisposition = response.headers.get('Content-Disposition');
+      filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    } else if (!filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+      filename += fileExtension;
+    }
     const contentType = response.headers.get('Content-Type');
 
     // 1. 先執行自動下載 (保底：存到瀏覽器預設下載目錄)
@@ -81,9 +92,9 @@ export class FileExportService {
   public async savePendingFile(): Promise<void> {
     if (!this.pendingBlob) return;
 
-    if ('showSaveFilePicker' in window) {
+    if ('showSaveFilePicker' in globalThis) {
       try {
-        const handle = await (window as any).showSaveFilePicker({
+        const handle = await (globalThis as any).showSaveFilePicker({
           suggestedName: this.pendingFilename,
           types: [{
             description: '純文字檔案',
@@ -112,20 +123,20 @@ export class FileExportService {
   }
 
   private fallbackDownload(blob: Blob, filename: string, contentType?: string | null) {
-    const url = window.URL.createObjectURL(new Blob([blob], { type: contentType || 'text/plain' }));
+    const url = globalThis.URL.createObjectURL(new Blob([blob], { type: contentType || 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(url);
+      a.remove();
     }, 200);
   }
 
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) return `export_${new Date().getTime()}${defaultExtension}`;
+    if (!contentDisposition) return `export_${Date.now()}${defaultExtension}`;
     let filename = '';
     const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
     if (filenameStarMatch?.[1]) {
@@ -134,7 +145,7 @@ export class FileExportService {
     }
     if (!filename) {
       const filenameMatch = /filename="?([^";]+)"?/.exec(contentDisposition);
-      if (filenameMatch?.[1]) filename = decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      if (filenameMatch?.[1]) filename = decodeURIComponent(filenameMatch[1].replaceAll('+', ' '));
     }
     return filename || `download${defaultExtension}`;
   }

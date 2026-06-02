@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -21,22 +21,23 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
+
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+
 import {
   ApiResponse,
-  ASS16090Service,
   Ass16090DetailResponse,
   Ass16090Row,
+  ASS16090Service,
 } from '../../../service/api/ass/ass16090.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 interface SortItem {
   field: string;
@@ -47,7 +48,6 @@ interface SortItem {
 @Component({
   selector: 'app-ass16090',
   templateUrl: './ass16090.component.html',
-  styleUrl: './ass16090.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -64,7 +64,7 @@ interface SortItem {
     TableReportComponent,
   ],
 })
-export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
+export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> implements OnInit {
   showTable = true;
   data: Ass16090Row[] = [];
   totalRecords = 0;
@@ -73,16 +73,22 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
   lastQueryBody: any = null;
   footerData: any = undefined;
   tableVer = 0;
- /** 倉別選項 */
-    public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-    usercode = [];
-  /** 申請人下拉選項 */
+
+  /** 倉別 */
+  public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
+
+  /** 申請人 / 審核者 */
   empIdOptions: { value: string; label: string }[] = [];
-   /** 品項：queryFIN11040 */
+
+  /** 品項 */
   goodsIdOptions: { value: string; label: string }[] = [];
-   /** 部門：queryPOS2013_DropDownList */
+
+  /** 部門 */
   orgIdOptions: { value: string; label: string }[] = [];
+
+  /** 報廢狀態 */
   scrapStatusOptions: { value: string; label: string }[] = [];
+
   private _currentSortBy: SortItem[] = [];
 
   readonly defaultSort: SortItem[] = [
@@ -111,12 +117,37 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
   ];
 
   expansionColumns: ReportColumn[] = [
-    { field: 'LINE_NUM', header: '行號' },
+    // { field: 'LINE_NUM', header: '行號' },
     { field: 'GOODS_ID', header: '品項編號' },
     { field: 'GOODS_NAME', header: '品項名稱' },
     { field: 'GOODS_UNIT_NAME', header: '單位' },
     { field: 'QTY', header: '報廢數量', align: 'right' },
     { field: 'NOTES', header: '明細說明' },
+  ];
+
+  /** 管理欄位按鈕 */
+  actionButtons = [
+    {
+      icon: 'pi pi-pencil',
+      label: '編輯',
+      action: (row: Ass16090Row) => this.onClickEdit(row),
+      disabled: (row: Ass16090Row) =>
+        String(row?.DAMAGEM_STATUS ?? '') !== '1',
+    },
+    {
+      icon: 'pi pi-check',
+      label: '確認審核',
+      action: (row: Ass16090Row) => this.onClickApprove(row),
+      disabled: (row: Ass16090Row) =>
+        String(row?.DAMAGEM_STATUS ?? '') !== '1',
+    },
+    {
+      icon: 'pi pi-times',
+      label: '作廢',
+      action: (row: Ass16090Row) => this.onClickVoid(row),
+      disabled: (row: Ass16090Row) =>
+        String(row?.DAMAGEM_STATUS ?? '') !== '1',
+    },
   ];
 
   queryForm = this.formBuilder.group({
@@ -140,7 +171,6 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
   constructor(
     private readonly ass16090Service: ASS16090Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
     private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef
@@ -158,7 +188,7 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -179,44 +209,81 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
           this.tableVer++;
         }
       });
-          // 倉別 (WH_ID)
-    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = (res.Data ?? [])
-          .filter(item => item.WH_ID != null && item.WH_ID !== '')
-          .map(item => ({
-            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
-            value: item.WH_ID!,
-          }));
-        this.whIdOptions.set(options);
-      },
-    });
-     this.dropDownListService
+
+    this.loadDropdownOptions();
+  }
+
+  private loadDropdownOptions(): void {
+    /** 倉別 */
+    // this.ass11100Service
+    //   .queryASS11100({ PageSize: 9999, PageIndex: 1 })
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe({
+    //     next: (res) => {
+    //       if (res.Status !== '0000') return;
+    //       const options = (res.Data ?? [])
+    //         .filter((item) => item.WH_ID != null && item.WH_ID !== '')
+    //         .map((item) => ({
+    //           label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+    //           value: item.WH_ID!,
+    //         }));
+    //       this.whIdOptions.set(options);
+    //     },
+    //   });
+
+
+    /** 倉別 */
+    this.dropdownApiService
+      .queryFaHos()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.whIdOptions.set(
+          (res ?? []).map((item: any) => ({
+            value: item.value ?? item.No ?? item.WH_ID ?? '',
+            label: item.label ?? item.Name ?? item.WH_NAME ?? '',
+          }))
+        );
+      });
+
+    /** 申請人 / 審核者 */
+    this.dropDownListService
       .queryTBLUSER_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
+      .subscribe((res) => {
         const list = res.Data ?? [];
         this.empIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
-        this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-            next: res => {
-              if (res.Status !== '0000') return;
-              const data: TDS1008Data[] = res.Data ?? [];
-              const options = data
-                .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-                .map(item => ({
-                  label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-                  value: item.INV_ItemNo,
-                }));
-              this.goodsIdOptions = options;
-            },
-          });
-              this.dropDownListService
-      .queryPOS2013_DropDownList({})
+
+    /** 品項 */
+    // this.dropdownApiService
+    //   .queryAss11040Dropdown()
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe((res) => {
+    //     this.goodsIdOptions = (res ?? []).map((item: any) => ({
+    //       value: item.No ?? item.value ?? '',
+    //       label: item.Name
+    //         ? `${item.No ?? ''} - ${item.Name ?? ''}`
+    //         : item.label ?? '',
+    //     }));
+    //   });
+    this.dropdownApiService
+      .queryFasItemDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.goodsIdOptions = (res ?? []).map((item: any) => ({
+          value: item.value ?? '',
+          label: item.label ?? '',
+        }));
+      });
+
+
+    /** 部門 */
+
+    this.dropDownListService
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         const list = res.Data ?? [];
@@ -225,74 +292,63 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
-this.dropDownListService
-  .querySYS1000_DropDownList({ SYS_Type: 'AM_DAMAGEM_STATUS' })
-  .pipe(untilDestroyed(this))
-  .subscribe(res => {
-    const list = res.Data ?? [];
-
-    this.scrapStatusOptions = list.map((item: { No?: string; Name?: string }) => ({
-      value: item.No ?? '',
-      label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-    }));
-  });
-this.dropdownApiService
-  .queryAss11040Dropdown()
-  .pipe(untilDestroyed(this))
-  .subscribe(res => {
-   const list = res ?? [];
-
-  this.goodsIdOptions = (res ?? []).map((item: any) => ({
-  value: item.No ?? item.value ?? '',
-  label:
-    item.Name
-      ? `${item.No ?? ''} - ${item.Name ?? ''}`
-      : item.label ?? '',
-}));
-  });
 
 
+
+
+    /** 報廢狀態 */
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'AM_DAMAGEM_STATUS' })
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const list = res.Data ?? [];
+        this.scrapStatusOptions = list.map(
+          (item: { No?: string; Name?: string }) => ({
+            value: item.No ?? '',
+            label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+          })
+        );
+      });
   }
 
   private formatDate(val: string | null | undefined): string {
     if (!val) return '';
     const d = new Date(val);
     if (Number.isNaN(d.getTime())) return String(val);
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
-      d.getDate()
-    ).padStart(2, '0')}`;
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}/${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
     const asArr = Array.isArray(input) ? input : [];
     const cleaned = asArr
-      .filter(
-        (x) =>
-          x &&
-          typeof x.field === 'string' &&
-          typeof x.order === 'number'
-      )
+      .filter((x) => x && typeof x.field === 'string' && typeof x.order === 'number')
       .map((x) => ({ field: String(x.field), order: x.order as number }));
 
     return cleaned.length ? cleaned : fallback;
   }
 
   private initRows(rows: Ass16090Row[]): Ass16090Row[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
-      (r as any)._detailLoaded = false;
+    for (const [idx, r] of rows.entries()) {
+      // 優先使用報廢單號與 ID 組合，萬一為空則拿 index 當作保險
+      const scrapId = r.DAMAGEM_ID ?? 'NOSCRAP';
+      const rowId = r.ID ?? `fallback_${idx}`;
+      // 組裝成絕對唯一的業務 data key
+      (r as any)._rowKey = `ass16090_${scrapId}_${rowId}`;
       r.Details = [];
-    });
-
+      (r as any)._detailLoaded = false;
+    }
     return rows;
   }
 
@@ -324,7 +380,6 @@ this.dropdownApiService
       pageIndex,
       pageSize: 30,
       SortBy: sort,
-      MID: 0,
       DAMAGEM_ID: raw.DAMAGEM_ID || null,
       EMP_ID: raw.EMP_ID || null,
       GOODS_ID: raw.GOODS_ID || null,
@@ -338,12 +393,12 @@ this.dropdownApiService
       APRV_DATE_E: this.toYMDOrNull(raw.APRV_DATE_E),
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }
@@ -367,8 +422,8 @@ this.dropdownApiService
     return this.ass16090Service
       .queryDetailASS16090({
         MID: 0,
-        ID: row.ID ?? null,
-        DAMAGEM_ID: row.DAMAGEM_ID ?? null,
+        ID: row?.ID ?? null,
+        DAMAGEM_ID: row?.DAMAGEM_ID ?? null,
       })
       .pipe(
         map((res: ApiResponse<Ass16090DetailResponse>) => {
@@ -408,80 +463,76 @@ this.dropdownApiService
       })
     );
 
-onSubmit(frm: FormGroup): void {
-  this.submitted = true;
+  onSubmit(frm: FormGroup): void {
+    this.submitted = true;
 
-  if (frm.invalid) {
-    frm.markAllAsTouched();
-    return;
-  }
+    if (frm.invalid) {
+      frm.markAllAsTouched();
+      return;
+    }
 
-  if (!this.hasPermission(this.Actions.Query)) return;
+    if (!this.hasPermission(this.Actions.Query)) return;
 
-  const raw: any = this.queryForm.getRawValue();
+    const raw: any = this.queryForm.getRawValue();
 
-  const payload = this.buildPayload({
-    pageIndex: 1,
-    pageSize: 30,
-    SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
-  });
+    const payload = this.buildPayload({
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
+    });
 
-  this.loading = true;
+    this.loading = true;
+    this.showTable = false;
 
-  /** 先把表格銷毀，讓已展開項目收合 */
-  this.showTable = false;
+    this.data = [];
+    this.selectedItems = [];
+    this.footerData = undefined;
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.lastQueryBody = null;
+    this.tableVer++;
 
-  /** 清空舊資料 */
-  this.data = [];
-  this.selectedItems = [];
-  this.footerData = undefined;
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.lastQueryBody = null;
-  this.tableVer++;
-
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
-    /** 重建表格 */
-    this.showTable = true;
     this.cdr.detectChanges();
 
-    this.ass16090Service
-      .queryASS16090(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Ass16090Row[]>) => {
-          const rows: Ass16090Row[] = Array.isArray(res?.Data) ? res.Data : [];
+    setTimeout(() => {
+      this.showTable = true;
+      this.cdr.detectChanges();
 
-          this.initRows(rows);
-          this.data = rows;
-          this.cdr.detectChanges();
+      this.ass16090Service
+        .queryASS16090(payload)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: ApiResponse<Ass16090Row[]>) => {
+            const rows: Ass16090Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-          const realTotal =
-            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+            this.initRows(rows);
+            this.data = rows;
+            this.cdr.detectChanges();
 
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-            this._currentSortBy = payload.SortBy ?? this.defaultSort;
-            this.saveQueryState();
-          });
+            const realTotal =
+              Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('ASS16090 query error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.viewTotalRecords = 0;
-          this.footerData = undefined;
-          this.loading = false;
-        },
-      });
-  });
-}
+            setTimeout(() => {
+              this.totalRecords = realTotal;
+              this.viewTotalRecords = realTotal;
+              this.lastQueryBody = { ...payload };
+              this._currentSortBy = payload.SortBy ?? this.defaultSort;
+              this.saveQueryState();
+            });
+
+            this.loading = false;
+          },
+          error: (err: any) => {
+            console.error('ASS16090 query error:', err);
+            this.data = [];
+            this.totalRecords = 0;
+            this.viewTotalRecords = 0;
+            this.footerData = undefined;
+            this.loading = false;
+          },
+        });
+    });
+  }
 
   onClear(frm: FormGroup): void {
     frm.reset(
@@ -523,17 +574,62 @@ onSubmit(frm: FormGroup): void {
     this.onCreate(undefined, this.queryForm.value);
   }
 
+  onClickEdit(row: Ass16090Row): void {
+    if (String(row?.DAMAGEM_STATUS ?? '') !== '1') return;
+
+    this.saveQueryState();
+    super.onEdit(row, this.queryForm.getRawValue());
+  }
+
+  onClickApprove(row: Ass16090Row): void {
+    if (String(row?.DAMAGEM_STATUS ?? '') !== '1') return;
+
+    this.loading = true;
+
+    this.ass16090Service
+      .approveASS16090({
+        ID: Number(row?.ID ?? 0),
+      } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: () => {
+          this.onSubmit(this.queryForm);
+        },
+        error: (err) => {
+          console.error('ASS16090 approve error:', err);
+          this.loading = false;
+        },
+      });
+  }
+
+  onClickVoid(row: Ass16090Row): void {
+    if (String(row?.DAMAGEM_STATUS ?? '') !== '1') return;
+
+    this.loading = true;
+
+    this.ass16090Service
+      .voidASS16090({
+        ID: Number(row?.ID ?? 0),
+      } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: () => {
+          this.onSubmit(this.queryForm);
+        },
+        error: (err) => {
+          console.error('ASS16090 void error:', err);
+          this.loading = false;
+        },
+      });
+  }
+
   override onDetail(row: Ass16090Row, queryConditions?: any): void {
     this.saveQueryState();
     super.onDetail(row, queryConditions);
   }
 
-  override onEdit(row: Ass16090Row, queryConditions?: any): void {
-    this.saveQueryState();
-    super.onEdit(row, queryConditions);
-  }
-
   get canShowEdit(): boolean {
-    return this.hasPermission(this.Actions.Edit);
+    /** 內建 edit 拿掉，改用自訂 actionButtons 的編輯按鈕 */
+    return false;
   }
 }

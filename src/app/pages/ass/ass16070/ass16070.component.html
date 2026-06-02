@@ -82,16 +82,15 @@
             ></app-dropdown>
           </div>
 
+          <!-- 改成和 CRU 一樣用 Dialog 選品項 -->
           <div class="col-12 md:col-4">
-            <app-dropdown
+                 <app-input-text
               label="品項編號"
               controlName="GOODS_ID"
-              [options]="goodsIdOptions"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.GOODS_ID"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
+            
           </div>
 
           <div class="col-12 md:col-4">
@@ -158,7 +157,7 @@
 <div class="card" *ngIf="showTable">
   <app-table-report
     [tableKey]="'ass16070_' + tableVer"
-    [dataKey]="'ID'"
+    [dataKey]="'_rowKey'"
     [columns]="columns"
     [data]="data"
     [totalRecords]="viewTotalRecords"
@@ -183,3 +182,74 @@
     [expansionLoadFn]="loadDetailForExpansion"
   ></app-table-report>
 </div>
+
+<!-- 查詢頁的品項選擇 Dialog -->
+<app-dialog
+  [(visible)]="queryGoodsDialogVisible"
+  [header]="'選擇品項'"
+  [showFooter]="false"
+>
+  <form
+    [formGroup]="queryGoodsSearchForm"
+    (ngSubmit)="onSearchQueryGoods()"
+    class="grid p-fluid mb-3"
+  >
+    <div class="col-12 md:col-4">
+      <app-input-text
+        label="品項編號"
+        controlName="GoodsPrefix"
+        [control]="queryGoodsSearchForm.controls.GoodsPrefix"
+        [submitted]="submitted"
+      ></app-input-text>
+    </div>
+
+    <div class="col-12 md:col-6">
+      <app-input-text
+        label="品項名稱"
+        controlName="Keyword"
+        [control]="queryGoodsSearchForm.controls.Keyword"
+        [submitted]="submitted"
+      ></app-input-text>
+    </div>
+
+    <div class="col-12 md:col-2 flex justify-content-end mt-2">
+      <app-button btnType="query" [type]="'submit'"></app-button>
+    </div>
+  </form>
+
+  <app-table2
+    [tableKey]="'ass16070QueryGoodsDialog'"
+    dataKey="GOODS_ID"
+    [columns]="queryGoodsColumns"
+    [data]="queryGoodsList"
+    [loading]="queryGoodsLoading"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDetail]="true"
+    [showEdit]="false"
+    [showHeader]="true"
+    [showFilter]="false"
+    [showReportMode]="false"
+    [showPaginator]="false"
+    [showCaption]="false"
+    selectionMode="single"
+    [(selectedItems)]="queryGoodsSelectedRows"
+    (selectionChange)="onQueryGoodsSelectionChange($event)"
+    (detail)="onQueryGoodsRowDetail($event)"
+  ></app-table2>
+
+  <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="cancel"
+      [type]="'button'"
+      label="清除"
+      (click)="onQueryGoodsCancel()"
+    ></app-button>
+    <app-button
+      btnType="submit"
+      [type]="'button'"
+      [disabled]="!queryGoodsSelectedRows || !queryGoodsSelectedRows.length"
+      (click)="confirmQueryGoodsSelection()"
+    ></app-button>
+  </div>
+</app-dialog>

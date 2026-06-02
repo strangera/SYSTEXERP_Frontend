@@ -145,8 +145,8 @@ export class Fin55130cruComponent extends BasicCruPageComponent<unknown> impleme
       params.set('vou', rowData.VouStatus);
       // 5. 取得完整網址並開啟
       const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin55130detail?${params.toString()}`);
-      const finalUrl = `${window.location.origin}${externalUrl}`;
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+      globalThis.open(finalUrl, '_blank', 'noopener,noreferrer');
       console.log('跳轉到傳票明細:', rowData.VouNo);
     }
   }

@@ -11,7 +11,7 @@
   [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)" [styleClass]="
     'p-datatable-sm' +
     (IsPrint ? ' p-datatable-gridlines' : ' ') +
-    (!disabled ? ' p-datatable-striped' : ' ')
+    (!disabled ? ' ' : ' ')
   " [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)" (onPage)="onPageChange($event)"
@@ -221,9 +221,6 @@
                 (filterChange)="filterOptions($event)"></app-table-input>
             </ng-template>
           </p-cellEditor>
-          <ng-container *ngIf="col.type === 'image'">
-            <p-image [src]="getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
-          </ng-container>
           <ng-container *ngIf="col.type === 'button'">
             <p-button *ngIf="IsPrint" label="{{ col.buttonLabel }}" severity="info" (click)="onSelectButton(rowData)"
               [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>

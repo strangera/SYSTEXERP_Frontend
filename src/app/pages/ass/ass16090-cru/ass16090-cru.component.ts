@@ -44,6 +44,7 @@ import {
 } from '../../fin/fin32020-cru/fin32020table-edit/fin32020table-edit.model';
 
 /** Dialog 查詢結果 table */
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { Column } from '../../../shared/componentkit/table2/table2.model';
 
@@ -242,6 +243,7 @@ export class ASS16090CRUComponent
   constructor(
     private readonly ass16090Service: ASS16090Service,
     private readonly ass11100Service: ASS11100Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService
   ) {
     super();
@@ -256,8 +258,8 @@ export class ASS16090CRUComponent
       this.loadDetail();
     } else {
       this.detailData = [
-  { ...this.defaultDetailRow, LINE_NUM: 1, _isAutoInsertCandidate: true },
-];
+        { ...this.defaultDetailRow, LINE_NUM: 1, _isAutoInsertCandidate: true },
+      ];
 
       if (this.crudstatus === CRUDStatus.Create) {
         this.dataForm.patchValue({ APPLY_DATE: new Date() });
@@ -270,26 +272,24 @@ export class ASS16090CRUComponent
   }
 
   onBack(): void {
-    this.router.navigate(['account/ass/ass16090']);
+    this.router.navigate(['account/ass/ass16090'], {
+      state: { fromCru: true },
+    });
   }
 
   private loadDropdownOptions(): void {
-    this.ass11100Service
-      .queryASS11100({ PageSize: 9999, PageIndex: 1 })
+
+    //倉別
+    this.dropdownApiService
+      .queryFaHos()
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000') return;
-
-          const options = (res.Data ?? [])
-            .filter((item) => item.WH_ID != null && item.WH_ID !== '')
-            .map((item) => ({
-              label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
-              value: item.WH_ID!,
-            }));
-
-          this.whIdOptions.set(options);
-        },
+      .subscribe((res) => {
+        this.whIdOptions.set(
+          (res ?? []).map((item: any) => ({
+            value: item.value ?? item.No ?? item.WH_ID ?? '',
+            label: item.label ?? item.Name ?? item.WH_NAME ?? '',
+          }))
+        );
       });
 
     this.dropDownListService
@@ -306,16 +306,14 @@ export class ASS16090CRUComponent
       });
 
     this.dropDownListService
-      .queryPOS2013_DropDownList({})
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
+      .subscribe(res => {
         const list = res.Data ?? [];
-        this.orgIdOptions = list.map(
-          (item: { No?: string; Name?: string }) => ({
-            value: item.No ?? '',
-            label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-          })
-        );
+        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
+          value: item.No ?? '',
+          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
       });
   }
 
@@ -480,66 +478,66 @@ export class ASS16090CRUComponent
     this.goodsDialogVisible = false;
   }
 
- confirmGoodsSelection(): void {
-  if (!this.goodsSelectedRows || !this.goodsSelectedRows.length) {
-    return;
+  confirmGoodsSelection(): void {
+    if (!this.goodsSelectedRows || !this.goodsSelectedRows.length) {
+      return;
+    }
+
+    const selected = this.goodsSelectedRows[0];
+
+    const selectedRow = {
+      ...this.defaultDetailRow,
+      GOODS_ID: selected.GOODS_ID ?? null,
+      GOODS_NAME: selected.GOODS_NAME ?? null,
+      GOODS_UNIT_NAME: selected.UNIT ?? null,
+      APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
+      ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
+      SAFE_QTY: selected.SAFE_QTY ?? null,
+      STOCK_SAFE: selected.STOCK_SAFE ?? null,
+      _isAutoInsertCandidate: false,
+    };
+
+    let finalList: any[] = [];
+
+    // 1. 如果點的是新增候選列，不要 map 蓋資料，直接新增正式列
+    if (this.isSelectingCandidateRow) {
+      finalList = [
+        ...(this.detailData || []),
+        selectedRow,
+        { ...this.defaultDetailRow, _isAutoInsertCandidate: true },
+      ];
+    } else {
+      // 2. 一般列才用 index 回填
+      finalList = (this.detailData || []).map((row, idx) => {
+        if (idx !== this.currentDetailIndex) {
+          return row;
+        }
+
+        return {
+          ...row,
+          GOODS_ID: selected.GOODS_ID ?? null,
+          GOODS_NAME: selected.GOODS_NAME ?? null,
+          GOODS_UNIT_NAME: selected.UNIT ?? null,
+          APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
+          ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
+          SAFE_QTY: selected.SAFE_QTY ?? null,
+          STOCK_SAFE: selected.STOCK_SAFE ?? null,
+          _isAutoInsertCandidate: false,
+        };
+      });
+    }
+
+    this.detailData = finalList.map((row, idx) => ({
+      ...row,
+      LINE_NUM: idx + 1,
+    }));
+
+    this.goodsSelectedRows = [];
+    this.goodsDialogVisible = false;
+    this.currentDetailIndex = null;
+    this.currentDetailRowData = null;
+    this.isSelectingCandidateRow = false;
   }
-
-  const selected = this.goodsSelectedRows[0];
-
-  const selectedRow = {
-    ...this.defaultDetailRow,
-    GOODS_ID: selected.GOODS_ID ?? null,
-    GOODS_NAME: selected.GOODS_NAME ?? null,
-    GOODS_UNIT_NAME: selected.UNIT ?? null,
-    APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
-    ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
-    SAFE_QTY: selected.SAFE_QTY ?? null,
-    STOCK_SAFE: selected.STOCK_SAFE ?? null,
-    _isAutoInsertCandidate: false,
-  };
-
-  let finalList: any[] = [];
-
-  // 1. 如果點的是新增候選列，不要 map 蓋資料，直接新增正式列
-  if (this.isSelectingCandidateRow) {
-    finalList = [
-      ...(this.detailData || []),
-      selectedRow,
-      { ...this.defaultDetailRow, _isAutoInsertCandidate: true },
-    ];
-  } else {
-    // 2. 一般列才用 index 回填
-    finalList = (this.detailData || []).map((row, idx) => {
-      if (idx !== this.currentDetailIndex) {
-        return row;
-      }
-
-      return {
-        ...row,
-        GOODS_ID: selected.GOODS_ID ?? null,
-        GOODS_NAME: selected.GOODS_NAME ?? null,
-        GOODS_UNIT_NAME: selected.UNIT ?? null,
-        APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
-        ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
-        SAFE_QTY: selected.SAFE_QTY ?? null,
-        STOCK_SAFE: selected.STOCK_SAFE ?? null,
-        _isAutoInsertCandidate: false,
-      };
-    });
-  }
-
-  this.detailData = finalList.map((row, idx) => ({
-    ...row,
-    LINE_NUM: idx + 1,
-  }));
-
-  this.goodsSelectedRows = [];
-  this.goodsDialogVisible = false;
-  this.currentDetailIndex = null;
-  this.currentDetailRowData = null;
-  this.isSelectingCandidateRow = false;
-}
 
   private formatDateToYMD(
     date: Date | string | null | undefined
@@ -621,40 +619,50 @@ export class ASS16090CRUComponent
     });
   }
 
-  onSubmit(frm: FormGroup): void {
-    if (this.detailTableEdit) {
-      const tableValid = this.detailTableEdit.validateAndShowErrors();
-      if (!tableValid) return;
-    }
+private hasValidDetail(): boolean {
+  return this.buildDetailList().length > 0;
+}
 
-    this.handleSubmit(frm, () => {
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        const payload = this.buildInsertPayload();
+onSubmit(frm: FormGroup): void {
+  this.submitted = true;
 
-        this.ass16090Service.insertASS16090(payload).subscribe({
-          next: () => this.afterSaveSuccess(),
-          error: (err) => {
-            console.error('ASS16090 insert error:', err);
-            this.loading = false;
-          },
-        });
-        return;
-      }
-
-      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const payload = this.buildUpdatePayload();
-
-        this.ass16090Service.updateASS16090(payload).subscribe({
-          next: () => this.afterSaveSuccess(),
-          error: (err) => {
-            console.error('ASS16090 update error:', err);
-            this.loading = false;
-          },
-        });
-      }
-    });
+  if (!this.hasValidDetail()) {
+    this.messageService?.warnBubble?.('請至少輸入一筆報廢明細');
+    return;
   }
 
+  if (this.detailTableEdit) {
+    const tableValid = this.detailTableEdit.validateAndShowErrors();
+    if (!tableValid) return;
+  }
+
+  this.handleSubmit(frm, () => {
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      const payload = this.buildInsertPayload();
+
+      this.ass16090Service.insertASS16090(payload).subscribe({
+        next: () => this.afterSaveSuccess(),
+        error: (err) => {
+          console.error('ASS16090 insert error:', err);
+          this.loading = false;
+        },
+      });
+      return;
+    }
+
+    if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      const payload = this.buildUpdatePayload();
+
+      this.ass16090Service.updateASS16090(payload).subscribe({
+        next: () => this.afterSaveSuccess(),
+        error: (err) => {
+          console.error('ASS16090 update error:', err);
+          this.loading = false;
+        },
+      });
+    }
+  });
+}
   override onCancel(): void {
     if (this.crudstatus === CRUDStatus.Create) {
       this.dataForm.reset();

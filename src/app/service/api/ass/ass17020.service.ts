@@ -22,4 +22,16 @@ export class ASS17020Service {
       body
     );
   }
+
+  exportPDFASS17020(body: QueryASS17020Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS17020`, body, {
+      responseType: 'blob',
+    });
+  }
+
+  exportExcelASS17020(body: QueryASS17020Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportExcelASS17020`, body, {
+      responseType: 'blob',
+    });
+  }
 }

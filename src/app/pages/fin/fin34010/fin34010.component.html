@@ -58,7 +58,16 @@
             ></app-radiobutton>
           </div>
 
-      
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              label="帳款餘額為零是否顯示"
+              groupname="ShowZeroAmt"
+              [control]="queryForm.controls.ShowZeroAmt"
+              [options]="showFlagOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
+
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

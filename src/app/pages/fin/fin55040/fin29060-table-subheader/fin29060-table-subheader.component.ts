@@ -117,10 +117,67 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() showSubTotal = false;
   /** 群組小計顯示文字，預設 '小計' */
   @Input() subtotalLabel = '小計';
+  /** 群組表頭小計欄位設定，預設使用 ACP_Amt / PayAmt / NotPayAmt */
+  @Input() subTotalGroupHeaders: { field: string; label: string }[] = [
+    { field: 'ACP_Amt', label: '廠商立帳合計' },
+    { field: 'PayAmt', label: '廠商沖銷合計' },
+    { field: 'NotPayAmt', label: '廠商未沖銷合計' },
+  ];
   groupTotals: Record<string, Record<string, number>> = {};
+  // 群組 Footer 科目餘額
+  /** 是否顯示群組 Footer（科目餘額列）@default false */
+  @Input() showGroupFooter = false;
+  /** 群組 Footer 顯示標籤 @default '科目餘額' */
+  @Input() groupFooterLabel = '科目餘額';
+  /** ACCDC 對照表，key = groupRowsBy 的值，value = '借方' 或 '貸方' @default {} */
+  @Input() accdcMap: Record<string, string> = {};
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
+  /** 「總計」文字顯示在哪個欄位（field）；不設定則顯示在序號欄 */
+  @Input() totalLabelColumn?: string;
+  /** 依此欄位值（去除首字前綴）做交替色區隔，例如 'PTA' */
+  @Input() ptaGroupByField?: string;
+  private _ptaGroupIndices: number[] = [];
+
+  private recomputePTAGroups() {
+    if (!this.ptaGroupByField || !this.data.length) {
+      this._ptaGroupIndices = [];
+      return;
+    }
+    // 計算每個 base PTA 的筆數，只有多筆才做交替色
+    const getPTABase = (raw: string) => {
+      const withoutPrefix = raw.length > 1 ? raw.substring(1) : raw;
+      const lastHyphen = withoutPrefix.lastIndexOf('-');
+      return lastHyphen > 0 ? withoutPrefix.substring(0, lastHyphen) : withoutPrefix;
+    };
+    const groupCounts = new Map<string, number>();
+    for (const row of this.data) {
+      const key = getPTABase(row[this.ptaGroupByField] as string ?? '');
+      groupCounts.set(key, (groupCounts.get(key) ?? 0) + 1);
+    }
+
+    const indices: number[] = [];
+    let groupIdx = 0;
+    let prevKey = '';
+    for (let i = 0; i < this.data.length; i++) {
+      const raw = this.data[i]?.[this.ptaGroupByField] as string ?? '';
+      const key = getPTABase(raw);
+      if (i > 0 && key !== prevKey && (groupCounts.get(key) ?? 0) > 1) {
+        groupIdx = (groupIdx + 1) % 2;
+      }
+      // 只有多筆組才標記顏色
+      indices[i] = (groupCounts.get(key) ?? 0) > 1 ? groupIdx : -1;
+      prevKey = key;
+    }
+    this._ptaGroupIndices = indices;
+  }
+
+  getPTAGroupClass(rowIndex: number): string {
+    if (!this.ptaGroupByField) return '';
+    const idx = this._ptaGroupIndices[rowIndex];
+    return idx === 0 ? 'pta-group-0' : idx === 1 ? 'pta-group-alt' : '';
+  }
   // 管理 欄位
   /** 是否顯示 管理欄位 @default true */
   @Input() showManage = true;
@@ -197,6 +254,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
     if (changes['data']) {
       this.virtualData = [...this.data];
+      this.recomputePTAGroups();
 
       console.log('[ngOnChanges] data 改變', {
         dataLength: this.data.length,
@@ -426,7 +484,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
-    fromEvent(window, 'resize')
+    fromEvent(globalThis, 'resize')
       .pipe(debounceTime(300))
       .subscribe(() => {
         this.cd.detectChanges();
@@ -456,7 +514,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
           const all = this.dt.el.nativeElement.querySelectorAll('*');
           all.forEach((n: any) => {
             try {
-              const style = window.getComputedStyle(n);
+              const style = globalThis.getComputedStyle(n);
               if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && n.clientHeight > 0) {
                 elements.push({ el: n, selector: 'computed-overflow' });
               }
@@ -505,7 +563,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     }, 500);
 
     // 監聽整頁滾動（處理使用者在整頁滾動而非 table 內部滾動的情況）
-    fromEvent(window, 'scroll')
+    fromEvent(globalThis, 'scroll')
       .pipe(debounceTime(150))
       .subscribe(() => {
         try {
@@ -515,14 +573,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
           const rect = tableEl.getBoundingClientRect();
           const threshold = 200; // 距離視窗底部 threshold
 
-          console.log('[window scroll] table rect', { top: rect.top, bottom: rect.bottom, innerHeight: window.innerHeight });
+          console.log('[globalThis scroll] table rect', { top: rect.top, bottom: rect.bottom, innerHeight: globalThis.innerHeight });
 
           // 如果 table 的底部接近或低於視窗底部，嘗試載入更多
-          if (rect.bottom <= window.innerHeight + threshold && rect.top < window.innerHeight) {
+          if (rect.bottom <= globalThis.innerHeight + threshold && rect.top < globalThis.innerHeight) {
             if (this._loading) return;
             const hasMoreData = this.queryFunction ? (this.data.length < this.totalRecords) : (this.data.length < this.fullData.length);
             if (hasMoreData) {
-              console.log('[window scroll] 接近 table 底部，觸發載入更多資料');
+              console.log('[globalThis scroll] 接近 table 底部，觸發載入更多資料');
               this.loadMoreData();
             }
           }
@@ -624,6 +682,33 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
     // fallback: 計算目前 data 的小計
     return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
+  }
+
+  /**
+   * 依 ACCDC 計算群組科目餘額，回傳 { debit, credit }。
+   * 若 ACCDC='借方'：net = PTA1 - PTA2；net>0→借方，net<0→貸方(正值)
+   * 若 ACCDC='貸方'：net = PTA2 - PTA1；net>0→貸方，net<0→借方(正值)
+   * Fallback（無 ACCDC）：以符號判斷
+   */
+  getGroupNetBalance(groupValue: string): { debit: number; credit: number } {
+    const pta1 = this.getGroupSubtotal(groupValue, 'PTA1');
+    const pta2 = this.getGroupSubtotal(groupValue, 'PTA2');
+    // DB 值：'D' = 借方, 'C' = 貸方；fallback 用符號判斷
+    const accdc = this.accdcMap[groupValue] ?? (pta1 >= pta2 ? 'D' : 'C');
+
+    if (accdc === 'D') {
+      // 借方科目：net = 借 - 貸
+      const net = pta1 - pta2;
+      return net >= 0
+        ? { debit: net, credit: 0 }
+        : { debit: 0, credit: -net };
+    } else {
+      // 貸方科目：net = 貸 - 借
+      const net = pta2 - pta1;
+      return net >= 0
+        ? { debit: 0, credit: net }
+        : { debit: -net, credit: 0 };
+    }
   }
 
   // 全表總計

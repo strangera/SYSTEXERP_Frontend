@@ -82,7 +82,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     cash_yn: [null], // 是否為業主收現
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'apply_No', order: 1 }]],
+    SortBy: [[{ field: 'location_no', order: 1 }]],
   });
   totalRecords = 0;
   lastQueryBody: Tls13070QueryRequest | null = null;

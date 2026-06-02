@@ -86,27 +86,13 @@ export class TLS55030DialogComponent {
 
   /** 開啟折讓單明細選擇彈窗並載入資料 */
   openInvoiceDialog() {
-    // <-- 修正：檢查並使用 venUniformNo (廠商統一編號)
-    if (!this.venNo) return;
-
+    if (!this.venNo) {
+      // 這裡可以提示使用者先選廠商
+      return;
+    }
     this.dialogVisible = true;
-    this.dialogLoading = true;
-    this.selectedItemsDialog = []; // 清空上次的選擇
-
-    const body: RebateDetailOptionQueryBody = {
-      VEN_No: this.venNo,
-      PageSize: 30,
-      PageIndex: 1,
-      SortBy: [{ field: 'SeqNo', order: 1 }]
-    };
-
-    // 使用 venUniformNo (即 No) 作為 VEN_No 參數進行 API 查詢
-    this.tls55030Service.queryTLS55030RebateDetailOption(body).pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogData = res.Data;
-      this.dialogLoading = false;
-      this.totalRecords = res.TotalCount || res.Data.length;
-      this.lastQueryBody = body;
-    });
+    this.selectedItemsDialog = [];
+    // 資料已經在廠商切換時 preload 好了，所以不用再打一次 API
   }
 
   /** 儲存選取的折讓單明細並發送事件給父元件 */
@@ -186,5 +172,31 @@ export class TLS55030DialogComponent {
   isRowSelectable2(event: IReturnDetailData): boolean {
     // 使用 RJM_No 作為唯一鍵
     return !this.existingReturnData || !this.existingReturnData.some((item: IReturnDetailData) => item.RJM_No === event.RJM_No);
+  }
+
+  /** 新增：供父元件主動觸發的預載入方法 */
+  preloadInvoiceData(venNo: string) {
+    this.dialogLoading = true;
+    const body: RebateDetailOptionQueryBody = {
+      VEN_No: venNo, // 使用傳入的廠商編號
+      PageSize: 30,
+      PageIndex: 1,
+      SortBy: [{ field: 'SeqNo', order: 1 }]
+    };
+
+    this.tls55030Service.queryTLS55030RebateDetailOption(body)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.dialogData = res.Data || [];
+          this.totalRecords = res.TotalCount || (res.Data ? res.Data.length : 0);
+          this.lastQueryBody = body;
+          this.dialogLoading = false;
+        },
+        error: () => {
+          this.dialogLoading = false;
+          this.dialogData = [];
+        }
+      });
   }
 }

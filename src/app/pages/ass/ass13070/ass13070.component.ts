@@ -2,9 +2,6 @@ import { AsyncPipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
 import { ASS13070Service } from '@service/api/ass/ass13070.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
@@ -20,7 +17,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
+import { combineLatest, distinctUntilChanged, finalize, map, Observable, of, startWith, switchMap, tap } from 'rxjs';
 import { ASS12040QueryRequest } from '../ass12040/ass12040.model';
 import { ASS13070QueryRequest, ASS13070QueryRow } from './ass13070.model';
 
@@ -75,8 +72,8 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
   public readonly subpoenaOptions = signal<{ label: string; value: string }[]>([]);
   public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly smallClassOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly midClassOptions = signal<{ label: string; value: string | number | null | undefined }[]>([]);
+  public readonly smallClassOptions = signal<{ label: string; value: string | number | null | undefined }[]>([]);
   readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
   readonly orgOptions$ = this.dropdownApi.querySys3100();
   readonly userOrgidOptions$ = this.dropdownApi.queryTblUserOrgid();
@@ -116,9 +113,6 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
   constructor(
     public readonly service: ASS13070Service,
-    private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
-    private readonly ass11030Service: ASS11030Service,
     private readonly ass12040Service: ASS12040Service,
     private readonly dropdownApi: DropdownApiService,
   ) {
@@ -127,8 +121,9 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
   ngOnInit(): void {
     this.initializePage('ASS13070', 'ass/ass13070cru', this.queryForm, this.onSubmit.bind(this));
-    this.loadClassOptions();
+    this.loadBigClassOptions();
     this.loadSubpoenaOptions();
+    this.setupClassCascades();
   }
 
   private formatDateStr(d: Date | null): string | undefined {
@@ -140,40 +135,117 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
     return `${y}-${m}-${day}`;
   }
 
-  private loadClassOptions(): void {
-    this.ass11010Service.queryASS11010({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.bigClassOptions.set(
-          (res.Data ?? []).map(item => ({
-            label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-            value: item.CLASS_ID,
-          })),
-        );
-      },
+  private loadBigClassOptions(): void {
+    this.dropdownApi.queryFaClassM({}).subscribe((opts) => {
+      this.bigClassOptions.set(
+        (opts ?? []).map((item) => ({
+          label: item.label,
+          value: String(item.value),
+        })),
+      );
     });
-    this.ass11020Service.queryASS11020({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.midClassOptions.set(
-          (res.Data ?? []).map(item => ({
-            label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-            value: item.M_CLASS_ID,
-          })),
-        );
-      },
-    });
-    this.ass11030Service.queryASS11030({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.smallClassOptions.set(
-          (res.Data ?? []).map(item => ({
-            label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
-            value: item.S_CLASS_ID,
-          })),
-        );
-      },
-    });
+  }
+
+  private setupClassCascades(): void {
+    const bCtrl = this.queryForm.controls.B_CLASS_ID;
+    const mCtrl = this.queryForm.controls.M_CLASS_ID;
+    const sCtrl = this.queryForm.controls.S_CLASS_ID;
+
+    type ClassOption = { label: string; value: string | number | null | undefined };
+
+    const valueInOptions = (opts: ClassOption[], v: unknown): boolean => {
+      if (v == null) return false;
+      const sv = String(v);
+      return opts.some(o => o?.value != null && String(o.value) === sv);
+    };
+
+    // B_CLASS_ID -> M_CLASS_ID
+    bCtrl.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        tap(() => {
+          // 大分類一變，直接清掉中/小分類（對齊 ASS13050 行為）
+          mCtrl.patchValue(null, { emitEvent: false });
+          sCtrl.patchValue(null, { emitEvent: false });
+          this.midClassOptions.set([]);
+          this.smallClassOptions.set([]);
+        }),
+        switchMap(bClassId => {
+          if (!bClassId) {
+            return of([] as ClassOption[]);
+          }
+          return this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).pipe(
+            map(midOptions => (midOptions ?? []) as ClassOption[]),
+          );
+        }),
+      )
+      .subscribe(midOptions => {
+        this.midClassOptions.set(midOptions);
+      });
+
+    // M_CLASS_ID -> S_CLASS_ID
+    mCtrl.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        tap(() => {
+          // 中分類一變，直接清掉小分類
+          sCtrl.patchValue(null, { emitEvent: false });
+          this.smallClassOptions.set([]);
+        }),
+        switchMap(mClassId => {
+          if (!mClassId) {
+            return of([] as ClassOption[]);
+          }
+          return this.dropdownApi
+            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: mClassId })
+            .pipe(
+            map(smallOptions => (smallOptions ?? []) as ClassOption[]),
+          );
+        }),
+      )
+      .subscribe(smallOptions => {
+        this.smallClassOptions.set(smallOptions);
+      });
+
+    // 初始化：載入初始的中/小分類選項
+    const initialBClassId = bCtrl.value;
+    const initialMClassId = mCtrl.value;
+
+    if (initialBClassId) {
+      this.dropdownApi
+        .queryFaClass1({ CLASS_ID: initialBClassId })
+        .subscribe(midOptions => {
+          const mids = (midOptions ?? []) as ClassOption[];
+          this.midClassOptions.set(mids);
+
+          // 若還原進來的中分類不在大分類選項內，直接清掉中/小
+          if (mCtrl.value != null && !valueInOptions(mids, mCtrl.value)) {
+            mCtrl.patchValue(null, { emitEvent: false });
+            sCtrl.patchValue(null, { emitEvent: false });
+            this.smallClassOptions.set([]);
+            return;
+          }
+
+          // 再載入小分類
+          if (initialMClassId) {
+            this.dropdownApi
+              .queryFaClass2({ B_CLASS_ID: initialBClassId ?? undefined, CLASS_ID: initialMClassId })
+              .subscribe(smallOptions => {
+                const smalls = (smallOptions ?? []) as ClassOption[];
+                this.smallClassOptions.set(smalls);
+
+                // 若還原進來的小分類不在中分類選項內，清掉小分類
+                if (sCtrl.value != null && !valueInOptions(smalls, sCtrl.value)) {
+                  sCtrl.patchValue(null, { emitEvent: false });
+                }
+              });
+          }
+        });
+    } else {
+      // 大分類沒有選，選項清空即可
+      this.midClassOptions.set([]);
+      this.smallClassOptions.set([]);
+    }
   }
 
   /** 進貨單號下拉：由採購單審核查詢結果去重取得 */

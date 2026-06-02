@@ -5,10 +5,9 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
@@ -19,8 +18,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
-
+import { TableReportComponent, } from './fin25010-table-report/fin25010-table-report.component';
+import { formatAmount, formatDate } from './fin25010-table-report/fin25010-table-report.model';
 @Component({
   selector: 'app-fin25010-cru',
   templateUrl: './fin25010-cru.component.html',
@@ -57,25 +56,14 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
-    D_Date: [null],  // 建立日期
-    PTA_Date: [null],  // 收/付款日
+    CRT_Date: [null],  // 建立日期
+    D_Date: [null],  // 收/付款日
     WSLIP_NO: [null],  // 匯款單號
   });
   // 廠客代號選項
   venNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
   // 傳票型態選項
-  voucherKindOptions = [
-    { label: 'AS - 贊助金傳票', value: 'AS' },
-    { label: 'AT - 電匯EDI傳票', value: 'AT' },
-    { label: 'BT - 銀行資金調撥傳票', value: 'BT' },
-    { label: 'CA - 零用金拋轉傳票', value: 'CA' },
-    { label: 'CH - 票據兌現傳票', value: 'CH' },
-    { label: 'CM - 支票沖轉傳票', value: 'CM' },
-    { label: 'CR - 退票沖轉票據傳票', value: 'CR' },
-    { label: 'CT - 開票傳票', value: 'CT' },
-    { label: 'CW - 撤票沖轉票據傳票', value: 'CW' },
-    { label: 'DB - 存出保證金傳票收回拋轉', value: 'DB' }
-  ];
+  voucherKindOptions = this.dropDown.queryGls1010();
   // 付款方式選項
   venPayTypeOptions = [
     { label: '電匯', value: '1' },
@@ -130,6 +118,8 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     { field: 'ORG_ID', header: '組織代號' },
   ];
 
+  apiUrl = 'query_addFIN25010'
+
   constructor(
     public readonly fin25010Service: FIN25010Service,
     private readonly dropDown: DropdownApiService,
@@ -150,7 +140,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
  */
   loadDetailData(): void {
     // 從路由 state 取得 rowdata (通常是主檔的資料)
-    if (!this.rowdata || !this.rowdata.PAM_No) {
+    if (!this.rowdata?.PAM_No) {
       this.messageService.errorBubble('缺少單號資訊，無法讀取資料');
       return;
     }
@@ -171,6 +161,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       .subscribe(response => {
         this.data = response.Data || [];
         this.totalRecords = response.TotalCount;
+        this.apiUrl = 'query_detailFIN25010'; // 切換 API URL 以供匯出使用
 
         // 在檢視模式下，我們可能希望預設「全選」來顯示統計金額
         // 或者根據業務邏輯計算 footer，這裡強制計算一次
@@ -213,9 +204,18 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       this.messageService.errorBubble('分組小計或總計不可為負數');
       return;
     }
+
+    // 1. 透過 Set 取得不重複的廠商代號數量
+    const uniqueVenCount = new Set(
+      this.selectedItems
+        .map(item => item.ven_no)
+        .filter(venNo => !!venNo) // 過濾掉可能為空的值
+    ).size;
+
     this.messageService.confirm({
       header: `確定要產生電匯資料嗎?`,
-      message: `確定要產生 ${this.selectedItems.length} 筆電匯資料嗎?`,
+      // 2. 將原本的 this.selectedItems.length 改為不重複的廠商數量
+      message: `確定要產生 ${uniqueVenCount} 筆廠商的電匯資料嗎?`,
       accept: () => {
         const aps3009Items: APS3009Item[] = this.selectedItems.map(item => ({
           ID: item.ID,
@@ -230,11 +230,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
           IN_TYPE: item.IN_TYPE,
           Remit_Status: item.Remit_Status
         }));
+
         const request: InsertFIN25010Request = {
           D_Date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           APS3009: aps3009Items
         };
-        this.loading = true; // 記得要打開 loading
+
+        this.loading = true;
         this.fin25010Service.insertFIN25010(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
           this.messageService.successBubble(res.Message);
           this.selectedItems = [];
@@ -258,15 +260,15 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   calculateFooter(): void {
     // 建立當下所有廠商的「零元底圖」
     const groupMap = new Map<string, number>();
-    this.data.forEach(item => {
+    for (const item of this.data) {
       if (item.ven_no && !groupMap.has(item.ven_no)) {
         groupMap.set(item.ven_no, 0);
       }
-    });
+    }
 
     // 累加已勾選
     let total = 0;
-    this.selectedItems.forEach(item => {
+    for (const item of this.selectedItems) {
       const amt = Number(item.ACP_Amt) || 0;
       const weightedAmt = item.IN_TYPE === '3' ? -amt : amt;
 
@@ -277,7 +279,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       if (item.ven_no) {
         groupMap.set(item.ven_no, (groupMap.get(item.ven_no) || 0) + weightedAmt);
       }
-    });
+    }
 
     this.footerData = { ACP_Amt: total } as any;
     this.subTotalData = Array.from(groupMap.entries()).map(([no, sum]) => ({

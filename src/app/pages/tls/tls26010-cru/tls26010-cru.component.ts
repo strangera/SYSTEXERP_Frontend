@@ -1,14 +1,12 @@
-import { TLS26010Service } from '@service/api/tls/tls26010.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ValidationService } from './../../../shared/service/validation.service';
-// --Commonly used imports--
-import { CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
+import { CommonModule, DatePipe, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { EcrItem, TltItem } from '@pages/tls/tls26010/tls26010.model';
+import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -20,19 +18,17 @@ import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-imp
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus, ItemOperationStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from './../../../shared/service/validation.service';
 
 // 擴展 EcrItem 加上 id 和 status
 export interface EcrItemWithStatus extends EcrItem {
@@ -79,13 +75,7 @@ export interface tls26010response {
     CommonModule,
     DropdownComponent,
     DialogComponent,
-    RadiobuttonComponent,
-    EditorTextComponent,
-    ExpandableEditTableComponent,
     InputTextComponent,
-    InputNumberComponent,
-    EditorTextComponent,
-    NgFor,
     ButtonComponent,
     NgIf
   ]
@@ -1045,7 +1035,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   /**
    * 匯出專櫃 Excel 範例檔案
    */
-  onExportTltExcel(): void {
+  async onExportTltExcel(): Promise<void> {
     // 建立工作簿
     const wb = XLSX.utils.book_new();
 
@@ -1197,7 +1187,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   /**
    * 下載匯入錯誤報告
    */
-  private downloadImportErrorReport(notFoundItems: string[], duplicateItems: string[]): void {
+  private async downloadImportErrorReport(notFoundItems: string[], duplicateItems: string[]): Promise<void> {
     const rows: { 專櫃編號: string; 錯誤原因: string }[] = [
       ...notFoundItems.map(no => ({ 專櫃編號: no, 錯誤原因: '查無此櫃位' })),
       ...duplicateItems.map(no => ({ 專櫃編號: no, 錯誤原因: '資料重複，已略過' }))

@@ -90,13 +90,6 @@
               [control]="generateForm.controls.CHK_DATE"
             ></app-calendar>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="欄位說明"
-              controlName="COL_NOTES"
-              [control]="generateForm.controls.COL_NOTES"
-            ></app-input-text>
-          </div>
         </div>
 
         <h3 class="text-lg mt-4 mb-2">單位/人員清點設定</h3>
@@ -104,7 +97,7 @@
           tableKey="ASS13100_GenerateUnits"
           [data]="generateRows"
           [columns]="generateColumns"
-          [showInsert]="true"
+          [showInsert]="false"
           [showDelete]="true"
           [showCheckBox]="true"
           (dataChange)="generateRows = $event"

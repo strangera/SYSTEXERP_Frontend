@@ -42,7 +42,8 @@
       </div>
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" label="帳務日期" controlName="NCML_TXN_Date"
-          [control]="POS6118dataForm.controls.NCML_TXN_Date" [submitted]="submitted" />
+          [control]="POS6118dataForm.controls.NCML_TXN_Date" [submitted]="submitted"
+          (calendarEvent)="onDateChange(POS6118dataForm, 'NCML_TXN_Date')" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6118dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6118dataForm)" />
@@ -99,7 +100,8 @@
       </div>
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" label="帳務日期" controlName="NCML_TXN_Date"
-          [control]="POS6118HdataForm.controls.NCML_TXN_Date" [submitted]="submitted" />
+          [control]="POS6118HdataForm.controls.NCML_TXN_Date" [submitted]="submitted"
+          (calendarEvent)="onDateChange(POS6118HdataForm, 'NCML_TXN_Date')" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6118HdataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6118HdataForm)" />
@@ -153,7 +155,8 @@
       </div>
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" label="帳務日期" controlName="CTBC_TXN_Date"
-          [control]="POS6119dataForm.controls.CTBC_TXN_Date" [submitted]="submitted" />
+          [control]="POS6119dataForm.controls.CTBC_TXN_Date" [submitted]="submitted"
+          (calendarEvent)="onDateChange(POS6119dataForm, 'CTBC_TXN_Date')" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6119dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6119dataForm)" />
@@ -205,7 +208,8 @@
       </div>
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" label="帳務日期" controlName="CTBC_TXN_Date"
-          [control]="POS6119PdataForm.controls.CTBC_TXN_Date" [submitted]="submitted" />
+          [control]="POS6119PdataForm.controls.CTBC_TXN_Date" [submitted]="submitted"
+          (calendarEvent)="onDateChange(POS6119PdataForm, 'CTBC_TXN_Date')" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6119PdataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6119PdataForm)" />

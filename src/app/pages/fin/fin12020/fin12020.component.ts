@@ -18,7 +18,7 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 import { ReportColumn, formatDate } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin12020',
@@ -176,6 +176,15 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
           }
         });
     });
+  }
+
+  get tableFooter() {
+    const data = this.tableData();
+    return {
+      TOT_NOS: data.reduce((sum, r) => sum + (r.TOT_NOS ?? 0), 0),
+      USED_NOS: data.reduce((sum, r) => sum + (r.USED_NOS ?? 0), 0),
+      FREE_NOS: data.reduce((sum, r) => sum + (r.FREE_NOS ?? 0), 0),
+    };
   }
 
   isRowSelectable = (_rowData: FIN12020Data): boolean => true;

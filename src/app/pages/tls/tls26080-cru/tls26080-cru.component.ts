@@ -24,7 +24,8 @@ import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, tap } from 'rxjs';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
+import { WorkBook, WorkSheet } from 'xlsx-js-style';
 import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
 @Component({
@@ -1013,7 +1014,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     }
   }
 
-  public onExportExcelTemplate(): void {
+  public async onExportExcelTemplate(): Promise<void> { // 加入 async
     const exampleByApi = true;
     const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
     const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
@@ -1029,9 +1030,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         .subscribe({ next: res => this.logger.debug(`downloadXLSXExample:`, [res]) });
       return;
     }
-
     // 生成工作表
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);
+    const ws: WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);
 
     // 合併儲存格
     ws['!merges'] = [
@@ -1057,7 +1057,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       { wch: 8 },  // I
     ];
 
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const wb: WorkBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '範本');
     const name = `專櫃活動設定匯入範本.xlsx`;
     // const name = `專櫃活動設定匯入範本-${new Date().toISOString().slice(0, 10)}.xlsx`;

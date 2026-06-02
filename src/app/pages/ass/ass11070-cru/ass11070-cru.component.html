@@ -81,7 +81,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="票期" controlName="ticketPeriod" [control]="df().ticketPeriod"
-            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+            [disabled]="isFormReadable" [submitted]="submitted" keyFilter="num"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="服務項目" controlName="serviceItems" [control]="df().serviceItems"

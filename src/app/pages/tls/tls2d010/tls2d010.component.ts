@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AsyncPipe } from '@angular/common';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -29,6 +32,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
   styleUrls: ['./tls2d010.component.scss'],
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -41,7 +45,8 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
     TableComponent,
     TranslateModule,
     Button,
-    FileUploadModule
+    FileUploadModule,
+    DialogComponent
   ]
 })
 export class TLS2D010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -53,13 +58,17 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     org_idList: [[] as number[]], // 組織
     tpy_YYYYMM: [], // 扣款年月
     tpy_date: [], // 扣款日期
+    tlt_floorList: [null], // 樓層
     pod_noList: [[]], // 維護日
     CRT_USR_No: [''],
     GUI_FLAG: [''],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
-  //     CRT_USR_No: [this.authService.currentUserValue?.user_No], 預設為登入者
-
+  deleteForm = this.formBuilder.group({
+    tpy_YYYYMM: [null, Validators.required],    // 扣款年月
+    tlt_floorList: [null, Validators.required], // 樓層
+    CRT_USR_No: [''],                           // 建立者
+  });
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -89,7 +98,10 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   org_idOptions: IDropdownItem[] = [];
   CAP_ItemOptions: IAPS1003Item[] = [];
   CRT_USR_NoOptions: IDropdownItem[] = [];
+  tlt_floorListOption = this.dropdown.querySys3900();
   pod_noOptions: any[] = [];
+  dialogVisible = false;
+  @ViewChild('fileInput') fileInput!: ElementRef;
 
   get f() {
     return this.queryForm.controls;
@@ -102,6 +114,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     private dropDownListService: DropDownListService,
     public sharedDropdownService: SharedDropdownService,
     private readonly fileExportService: FileExportService,
+    public readonly dropdown: DropdownApiService,
   ) {
     super();
   }
@@ -304,11 +317,94 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         },
       });
   }
+  handleFileSelect(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 準備上傳資料
+    const formValue: any = { ...this.deleteForm.value };
+    const formData = new FormData();
+    let yyyymm = '';
+    if (formValue.tpy_YYYYMM instanceof Date) {
+      const yyyy = formValue.tpy_YYYYMM.getFullYear();
+      const mm = String(formValue.tpy_YYYYMM.getMonth() + 1).padStart(2, '0');
+      yyyymm = `${yyyy}${mm}`;
+    } else if (typeof formValue.tpy_YYYYMM === 'string') {
+      yyyymm = String(formValue.tpy_YYYYMM).replace(/[^0-9]/g, '');
+    }
+    formData.append('tpy_YYYYMM', yyyymm);
+    if (Array.isArray(formValue.tlt_floorList)) {
+      formValue.tlt_floorList.forEach((floor: string) => {
+        formData.append('tlt_floorList', floor);
+      });
+    }
+    formData.append('CRT_USR_No', formValue.CRT_USR_No || '');
+    formData.append('file', file);
+
+    this.excelLoading = true;
+    this.tls2d010Service.uploadExcel(formData)
+      .pipe(untilDestroyed(this), finalize(() => {
+        this.excelLoading = false;
+        this.fileInput.nativeElement.value = '';
+        this.deleteForm.reset();
+      }))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
+
+          if (data) {
+            if (data.ErrorFilePath) {
+              // 有錯誤檔：顯示錯誤提示
+              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+              // 自動下載錯誤檔
+              this.downloadErrorFile(data.ErrorFilePath);
+            } else if (data.Success === false) {
+              // 匯入失敗但沒有錯誤檔：直接顯示錯誤訊息
+              const backendMessage = res?.Message || '';
+              const errorDetail = Array.isArray(data.Errors) && data.Errors.length
+                ? data.Errors.join('\n')
+                : '';
+              const finalMessage = backendMessage || errorDetail || '匯入失敗，請聯絡系統管理員';
+              this.messageService.errorBubble(finalMessage);
+            } else {
+              // 成功：顯示成功筆數並重新查詢
+              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+              this.onSubmit(this.queryForm);
+            }
+          }
+        },
+      });
+  }
 
   /** 自動下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
+  openImportDialog() {
+    this.dialogVisible = true;
+  }
+
+  onSaveDialog(): void {
+    if (this.deleteForm.invalid) {
+      this.deleteForm.markAllAsTouched();
+      this.messageService.errorBubble('請填寫完整必填欄位');
+      return;
+    }
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '系統會先刪除資料再轉入，是否確認執行?',
+      accept: () => {
+        console.log('刪除資料並匯入新資料');
+        this.dialogVisible = false;
+        this.fileInput.nativeElement.click();
+      }
+    });
+  }
+
+  onDialogClose(visible: boolean): void {
+    this.dialogVisible = visible;
+    this.deleteForm.reset();
+  }
 }
 

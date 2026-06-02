@@ -67,6 +67,12 @@
               [submitted]="submitted"></app-multi-select>
           </div>
 
+          <!-- 對帳key -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="對帳key" controlName="ACCT_KEY" [control]="queryForm.controls.ACCT_KEY"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
           <!-- 是否為對象別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="是否為對象別" groupname="g1" [control]="queryForm.controls.IsTarget" [options]="[

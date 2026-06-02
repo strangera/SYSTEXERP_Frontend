@@ -4,10 +4,13 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin21020Service, IFin21020Data, IFin21020Detail } from '@service/api/fin/fin21020.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -16,9 +19,6 @@ import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ErrorReportService } from '@shared/service/error-report.service';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-fin21020-cru',
   templateUrl: './fin21020-cru.component.html',
@@ -188,7 +188,6 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
           Cash_Back_Amt: item.Cash_Back_Amt,
         })),
       };
-      this.loading = false;
       const api = this.isFormCreateable ? this.fin21020Service.insertFIN21020(body) : this.fin21020Service.updateFIN21020(body);
       api.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.messageService.successBubble(res.Message);
@@ -315,7 +314,7 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
 
       // --- 核心修正點：只要有錯誤，絕對不准更新畫面 ---
       if (result.hasErrors && result.errorBlob) {
-        errorUrl = window.URL.createObjectURL(result.errorBlob);
+        errorUrl = globalThis.URL.createObjectURL(result.errorBlob);
         this.errorReportService.showImportError(errorUrl, '匯入失敗：Excel 資料含有邏輯錯誤，請下載報告修正全部紅字後重新匯入。');
         // 這裡直接中斷，不執行下方的 this.data = result.data
         this.excelBtnLoading.set(false);

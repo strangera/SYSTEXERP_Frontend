@@ -185,6 +185,7 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
       ONSALE_AMT_E: raw.soldAmountTo != null && raw.soldAmountTo !== '' ? Number(raw.soldAmountTo) : null,
       // 查詢時 `disposeRemark(處份說明)` 對應後端 `HANDLE_NOTE`
       HANDLE_NOTE: raw.disposeRemark || null,
+      PURCHASE_NOTES: raw.purchaseRemark || null,
     };
     const cleanPayload = removeEmptyValues(payload) as QueryASS13010Request;
     return this.ass13010Service.queryASS13010(cleanPayload);

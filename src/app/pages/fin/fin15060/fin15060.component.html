@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card" *ngIf="pageReady">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
@@ -46,7 +46,7 @@
   </p-accordion>
 </div>
 
-<div class="card">
+<div class="card" *ngIf="pageReady">
   <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
     <p-button
       [style]="{ 'z-index': '999' }"

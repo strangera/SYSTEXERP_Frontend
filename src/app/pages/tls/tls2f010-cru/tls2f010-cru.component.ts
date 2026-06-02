@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,10 +10,10 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { TableValidationService } from '@shared/componentkit/table-edit/services/table-validation.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -25,19 +25,19 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/componentkit/table-report/table-report.model';
 import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-
+  @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;
+  private readonly validationService = inject(TableValidationService);
+  protected readonly cdr = inject(ChangeDetectorRef);
   dataForm = this.formBuilder.nonNullable.group({
     tlt_no: ['', [Validators.required]],
     sam_yyymm: [new Date(), [Validators.required]],
@@ -45,7 +45,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     sam_termno: [1, [Validators.required]],
     COMM_YM: [new Date(), [Validators.required]],
     COMM_MONEY_TYPE: ['', [Validators.required]],
-    // 以下為從查詢頁帶入的條件，用於編輯模式顯示，不一定都參與送出
     PUR_GUIType: [null],
     PUR_GUINO: [''],
     PUR_GUIDate: [null],
@@ -97,6 +96,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   ).pipe(shareReplay(1));
   vendorTLS2F010Options: { label: string; value: string }[] = [];
   tltOptionsList: { label: string; value: string }[] = [];
+  isInsertDisable = false;
   // 當頁面顯示 "no - name" 時，保留原始的 tlt_no（送出時使用）
   private selectedTltNoRaw: string | null = null;
 
@@ -151,6 +151,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   bus_typeOptions = this.dropdown.queryTltBusType();
   bus_classOptions: IDropdownItem[] = [];
   invoiceTypeOptions = getSYS1000Options('invoice_type');
+  InvWayOptions = getSYS1000Options('Inv_Way');
   invoiceFormatOptions = [
     { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
     { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
@@ -241,23 +242,43 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     },
     { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '12rem', textAlign: 'right' },
-    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '12rem', textAlign: 'right', minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12 },
+    {
+      field: 'GUITax', header: '稅額', type: 'inputNumber', width: '12rem', textAlign: 'right', minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12,
+      disabled: (_v, _i, row) => {
+        // 單據別是收據，或是課稅別選免稅時，稅額要為0且disable
+        const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
+        const isReceipt = (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
+        const isTaxFree = String(row?.TAX_TYPE ?? '') === '0';
+
+        return isReceipt || isTaxFree;
+      },
+      validate: [
+        (value, rowData, _data, _field, header) => {
+          const num = Number(value ?? 0);
+          const net = Number(rowData?.GUINet ?? 0);
+          const calculatedTax = Math.round(net * 0.05);
+          if (Math.abs(num - calculatedTax) > 1) {
+            return {
+              isValid: false,
+              errorMessage: [`差額 +1/-1`],
+            };
+          }
+
+          return {
+            isValid: true,
+            errorMessage: [],
+          };
+        },
+      ],
+    },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '14rem', textAlign: 'right', disabled: () => true, minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12 },
     { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
     {
       field: 'INV_UseType',
       header: '發票用途',
-      type: 'input',
+      type: 'dropdown',
       width: '120px',
-      maxLength: 1,
-      placeholder: '',
-      validate: [
-        (value: any, _row: any, _data: any[], _field: string, header: string) => {
-          const s = value == null ? '' : String(value);
-          const ok = s.length <= 1;
-          return { isValid: ok, errorMessage: ok ? [] : [`${header} 只能輸入 1 個字元`] };
-        }
-      ]
+      options: this.InvWayOptions, optionLabel: 'label', optionValue: 'value', showClear: true
     },
   ];
 
@@ -537,6 +558,10 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 查詢並載入
   querySourceInvoice(): void {
+    if (this.dataForm.invalid) {
+      this.dataForm.markAllAsTouched();
+      return;
+    }
     this.queryLoading = true;
     const formValue = this.dataForm.getRawValue();
     const params = {
@@ -555,16 +580,35 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           this.changeEditData = mains;
           this.sourceInvoiceData = details;
 
+          this.checkIsInsertDisable(); // 如果已有請款年月，新增時不可存檔的判斷
+
           // 設定新增明細候選列的預設值（取自後端回傳的第一筆明細）
           const firstDetail = details[0] ?? null;
           const firstMain = mains[0] ?? null;
+          const commYmValue = this.dataForm.controls.sam_yyymm.value;
+          let defaultInvoiceDate: Date | null = null;
+
+          if (commYmValue instanceof Date) {
+            // 計算該年月的最後一天：設定為下個月的第 0 天
+            defaultInvoiceDate = new Date(commYmValue.getFullYear(), commYmValue.getMonth() + 1, 0);
+          } else {
+            // 如果不是 Date 型別（例如是字串），則維持抓取當下月份月底作為 fallback
+            defaultInvoiceDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+          }
           if (firstDetail || firstMain) {
             // TAX_TYPE 與 Deduct (Deduct_Code) 要找對應的 option value
             const taxVal = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('應稅'))?.value ?? '';
             const deductVal = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項可扣抵'))?.value ?? '';
             // 優先取出 Details 中第一個有 ven_uniform 的值，若無則看 firstDetail，再 fallback 到 firstMain
             const defaultVenUniform = (details.find((d: any) => d?.ven_uniform) ?? firstDetail)?.ven_uniform ?? firstMain?.ven_uniform ?? '';
-
+            const commYm = this.dataForm.controls.COMM_YM.value;
+            let targetDate = null;
+            if (commYm) {
+              const year = commYm.getFullYear();
+              const month = commYm.getMonth() + 1;
+              const targetMonth = month % 2 === 0 ? month : month + 1;
+              targetDate = new Date(year, targetMonth, 0);
+            }
             this.detailDefaultInsert = {
               // 從 Mains 帶入 VEN_No
               VEN_No: firstMain?.ven_no != null ? String(firstMain?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
@@ -572,9 +616,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               ven_uniform: defaultVenUniform,
               // 不預設 PUR_GUINO
               PUR_GUINO: '',
-              // 預設發票日期/申報年月（若後端有提供）
-              PUR_GUIDate: new Date(),
-              DEC_YM: this.dataForm.controls.COMM_YM.value || null,
+              // 預設發票日期為當月最後一天
+              PUR_GUIDate: defaultInvoiceDate,
+              DEC_YM: targetDate || null, // 預設申報年月改雙數月
               // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
               GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
               // 預設課稅別為「應稅」
@@ -621,6 +665,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           this.queryLoading = false;
         },
       });
+  }
+  /** 如果已有請款付款年月，新增時不可存檔的判斷 */
+  private checkIsInsertDisable(): void {
+    const formCommYm = this.formatYearMonth(this.dataForm.controls.COMM_YM.value);
+    const dataCommYm = this.changeEditData[0]?.COMM_YM;
+
+    // 確保都有值且相等時設為 true
+    this.isInsertDisable = this.isFormCreateable && !!dataCommYm && (dataCommYm === formCommYm);
   }
   private buildUpdateParams(): any {
     const formValue = this.dataForm.getRawValue();
@@ -704,6 +756,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     // 新增模式
+    const valid = this.tableDetailEdit?.validateAndShowErrors()
+    // 驗證edit-table的資料，若有錯誤則不執行存檔
+    if (!valid) {
+      this.loading = false;
+      this.submitted = false;
+      return;
+    }
+
     const effectiveDetails = (this.detailEditData || []).filter(row => {
       if (row._isAutoInsertCandidate) return false;
       const status = row.status ?? row._dataStatus;
@@ -753,19 +813,48 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     // 驗證：發票金額不得超過應付貨款，且若有應付貨款(免稅)則需包含免稅發票
     const mainForValidation = this.selectedMain ?? (this.changeEditData && this.changeEditData.length ? this.changeEditData[0] : null);
     if (mainForValidation) {
+      // 1. 準備統計數據
+      const newInvoices = details; // 新增單據資料
+      const oldInvoices = this.sourceInvoiceData ?? []; // 已開立發票資料（中間table)
+
+      // Helper: 計算總和
+      const sumField = (arr: any[], field: string) => arr.reduce((s, d) => s + (Number(d[field] ?? 0)), 0);
+
+      // 2. 加總所有欄位 (New + Old)
+      const totalAmt = sumField(newInvoices, 'ACP_GUIAmt') + sumField(oldInvoices, 'ACP_GUIAmt');
+      const totalTax = sumField(newInvoices, 'ACP_GUITax') + sumField(oldInvoices, 'ACP_GUITax');
+      const totalNet = sumField(newInvoices, 'ACP_GUINet') + sumField(oldInvoices, 'ACP_GUINet');
+
+      // 3. 驗證邏輯
+      // A. 發票總額 vs 應付貨款總額 (sam_ap_amt 或 sam_ap_namt)
       const payableTotal = Number(mainForValidation.sam_ap_amt ?? mainForValidation.sam_ap_namt ?? 0);
-      const totalInvoiceAmt = details.reduce((s: number, d: any) => s + (Number(d.ACP_GUIAmt ?? 0)), 0);
-      if (payableTotal > 0 && totalInvoiceAmt > payableTotal) {
-        this.messageService.errorBubble('發票總額不可超過應付貨款總額');
-        this.messageService.unblockUi();
-        this.loading = false;
-        this.submitted = false;
+      if (payableTotal > 0 && totalAmt > payableTotal) {
+        this.messageService.errorBubble(`單據總額 (${totalAmt}) 不可超過應付貨款總額 (${payableTotal})`);
+        this.loading = false; this.submitted = false; this.messageService.unblockUi();
         return;
       }
 
+      // B. 稅額合計 vs sam_ap_tax
+      const limitTax = Number(mainForValidation.sam_ap_tax ?? 0);
+      if (limitTax > 0 && totalTax > limitTax) {
+        this.messageService.errorBubble(`單據稅額合計 (${totalTax}) 不可超過營業稅 (${limitTax})`);
+        this.loading = false; this.submitted = false; this.messageService.unblockUi();
+        return;
+      }
+
+      // C. 未稅金額合計 vs sam_ap_namt
+      const limitNet = Number(mainForValidation.sam_ap_namt ?? 0);
+      if (limitNet > 0 && totalNet > limitNet) {
+        this.messageService.errorBubble(`單據未稅金額合計 (${totalNet}) 不可超過廠商應開立發票額(收據) (${limitNet})`);
+        this.loading = false; this.submitted = false; this.messageService.unblockUi();
+        return;
+      }
+
+      // 4. 免稅發票檢查
       const noTaxPayable = Number(mainForValidation.sam_ap_notaxamt ?? 0);
       if (noTaxPayable > 0) {
-        const hasNoTaxInvoice = details.some((d: any) => {
+        const allInvoices = [...details, ...(this.sourceInvoiceData ?? [])];
+        const hasNoTaxInvoice = allInvoices.some((d: any) => {
           const label = this.mapValueToLabel(this.taxTypeOptions, d.PUR_TaxType);
           return (label ?? '').includes('免稅');
         });
@@ -860,7 +949,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
 
   onDetailFieldChange(_event: any): void {
-    // event payload: { rowData, field, value, index }
     const ev = _event as { rowData: any, field: string, value: any, index?: number };
     if (!ev || !ev.field) return;
 
@@ -890,6 +978,21 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.GUIAmt = (isNaN(netVal) ? 0 : netVal);
       }
     }
+
+    // 如果稅別選免稅 "0"，則強制扣抵代號為「代表進項不可扣抵之進貨及費用」，且稅額為 0
+    if (ev.field === 'TAX_TYPE' && ev.value === '0') {
+      const row = ev.rowData ?? {};
+      let deductVal = this.mapLabelToValue(this.discountOptions, '代表進項不可扣抵之進貨及費用');
+      if (deductVal == null) {
+        const hit2 = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項不可扣抵'));
+        deductVal = hit2?.value ?? null;
+      }
+      row.Deduct_Code = deductVal ?? row.Deduct_Code;
+      row.GUITax = 0; // 免稅時稅額為 0
+      const netVal = Number(row.GUINet ?? 0);
+      row.GUIAmt = (isNaN(netVal) ? 0 : netVal); // 免稅時總額 = 未稅金額
+    }
+
     // 當未稅金額 (GUINet) 變更時，自動計算稅額與發票總額
     if (ev.field === 'GUINet') {
       const row = ev.rowData ?? {};
@@ -903,10 +1006,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         const tax = (!isReceipt && isTaxable) ? Math.round(net * 0.05) : 0;
         row.GUITax = tax;
         row.GUIAmt = net + tax;
+
+        // 重新計算稅額，解除稅額的+1/-1驗證錯誤（如果有的話）
+        if (row._validationErrors) {
+          delete row._validationErrors['GUITax'];
+        }
+        this.cdr.markForCheck();
+      }
+    }
+
+    // 當稅額 (GUITax) 變更時，自動計算發票總額
+    if (ev.field === 'GUITax') {
+      const row = ev.rowData ?? {};
+      const net = Number(row.GUINet ?? 0);
+      const tax = Number(ev.value ?? 0);
+      if (!isNaN(net) && !isNaN(tax)) {
+        row.GUIAmt = net + tax;
       }
     }
   }
-
   // 由 value 取得對應的 label（若找不到就回傳 undefined）
   private mapValueToLabel(options: { label: string, value: any }[] | any, raw: any): string | undefined {
     if (!options) return undefined;

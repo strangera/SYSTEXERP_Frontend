@@ -93,17 +93,30 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
         ...frm.value
       }
       this.fin55070Service.queryFIN55070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data
-        this.footerData = response.Data.reduce((footer, row) => {
-          footer.Prior_DAmt += Number(row.Prior_DAmt) || 0;
-          footer.Prior_CAmt += Number(row.Prior_CAmt) || 0;
-          footer.Curr_DAmt += Number(row.Curr_DAmt) || 0;
-          footer.Curr_CAmt += Number(row.Curr_CAmt) || 0;
-          footer.Total_DAmt += Number(row.Total_DAmt) || 0;
-          footer.Total_CAmt += Number(row.Total_CAmt) || 0;
-          return footer;
-        }, this.footerData);
-        this.historyRequestBody = body;
+        if (response.Data.length > 0) {
+          this.data = response.Data
+          this.footerData = response.Data.reduce((footer, row) => {
+            footer.Prior_DAmt += Number(row.Prior_DAmt) || 0;
+            footer.Prior_CAmt += Number(row.Prior_CAmt) || 0;
+            footer.Curr_DAmt += Number(row.Curr_DAmt) || 0;
+            footer.Curr_CAmt += Number(row.Curr_CAmt) || 0;
+            footer.Total_DAmt += Number(row.Total_DAmt) || 0;
+            footer.Total_CAmt += Number(row.Total_CAmt) || 0;
+            return footer;
+          }, this.footerData);
+          this.historyRequestBody = body;
+        } else {
+          this.data = [];
+          this.footerData = {
+            Prior_DAmt: 0,
+            Prior_CAmt: 0,
+            Curr_DAmt: 0,
+            Curr_CAmt: 0,
+            Total_DAmt: 0,
+            Total_CAmt: 0,
+          };
+          this.historyRequestBody = null;
+        }
         this.totalRecords = response.TotalCount || this.data.length || 0;
       });
     });
@@ -159,18 +172,21 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
     }
   }
 
-
+  onAccNoFromChange(value: any) {
+    // 將 科目代號迄 的值設定跟 科目代號起 一樣
+    this.queryForm.patchValue({ AccNoTo: value });
+  }
 }

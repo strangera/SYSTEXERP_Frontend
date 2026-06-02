@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -17,6 +17,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { POS2004 } from '@shared/models/tls/tls000.model';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
@@ -158,7 +159,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   importForm = this.formBuilder.group({
     sheetName: ['', [Validators.maxLength(50)]] // 指定頁籤名稱
   });
-
+  private readonly erroreportService = inject(ErrorReportService);
   // ----------------------------------------------------------------
   constructor(
     private tls51070Service: Tls51070Service,
@@ -420,45 +421,65 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // #reigion Excel匯入
   onImportExcelSubmit(event: FileUploadHandlerEvent) {
     if (!event || !event.files || event.files.length === 0) return;
-
+    this.excelLoading = true;
     const file = event.files[0];
-    const sheetName = this.importForm.get('sheetName')?.value || undefined; // 取得輸入框的值
+    const sheetName = this.importForm.get('sheetName')?.value || '';
 
-    this.messageService.blockUi();
+    this.tls51070Service.uploadTLS51070(file, sheetName).pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.excelUploadComponent.clearFiles();
+        this.excelLoading = false;
+      })
+    ).subscribe(res => {
+      const data = res?.Data;
 
-    this.tls51070Service.uploadTLS51070(file, sheetName)
-      .pipe(
-        untilDestroyed(this),
-        // 2. 確保無論成功或失敗，最後都會解除鎖定
-        finalize(() => {
-          this.messageService.unblockUi();
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          const data = res?.Data;
+      // --- 第一層：處理 ErrorFilePath (匯入失敗，包含錯誤檔案路徑) ---
+      if (data?.ErrorFilePath) {
+        // 拼接後端完整網址連結
+        const fullDownloadUrl = `${environment.ApiUrl}/${data.ErrorFilePath}`;
 
-          if (data) {
-            if (data.ErrorFilePath) {
-              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-              this.downloadErrorFile(data.ErrorFilePath);
-            } else {
-              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+        this.messageService.confirm({
+          header: '匯入失敗',
+          // 第一行：成功與失敗筆數
+          // 第二行：後端完整位置（以超連結樣式呈現，並設定 target="_blank"）
+          message: `匯入失敗，錯誤筆數：${data.ErrorCount || 0}，正確筆數：${data.SuccessCount || 0}<br>` +
+            `檔案位置：<a href="${fullDownloadUrl}" target="_blank" style="color: var(--primary-color); text-decoration: underline; word-break: break-all;">${fullDownloadUrl}</a>`,
+          icon: 'times-circle',
+          showIcon: true,
+          acceptLabel: '確定',
+          showRejectButton: false, // 只留下一顆確定按鈕
+          accept: () => {
+            // 點擊下方確定按鈕時，一樣貼心幫他觸發下載
+            // this.downloadErrorFile(data.ErrorFilePath);
 
-              // 只有成功時才關閉視窗，方便使用者若失敗時可以直接重選檔案
+            if (data.SuccessCount > 0) {
               this.importDialogVisible = false;
-              this.onSubmit(this.queryForm); // 重新查詢資料
+              this.onSubmit(this.queryForm);
             }
           }
-          // 清除上傳元件內的檔案 (避免下次打開還看到舊檔案)
-          this.excelUploadComponent.clearFiles();
-        },
-        error: (err) => {
-          console.error(err);
-          this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
-          this.excelUploadComponent.clearFiles();
-        },
-      });
+        });
+        return;
+      }
+
+      // --- 第二層：處理 Data.Errors (預檢失敗，例如找不到工作表) ---
+      if (data?.Errors && data.Errors.length > 0) {
+        const errorDetail = data.Errors.join('；');
+        this.messageService.errorBubble(errorDetail);
+        return;
+      }
+
+      // --- 第三層：完全成功判斷 ---
+      if (data?.Success === true || res?.Status === "0000") {
+        this.messageService.successBubble(`匯入成功，共 ${data?.SuccessCount || 0} 筆`);
+        this.importDialogVisible = false;
+        this.onSubmit(this.queryForm);
+      }
+      // --- 最後：保險用的錯誤顯示 ---
+      else {
+        this.messageService.errorBubble(res?.Message || '匯入失敗，請檢查檔案格式');
+      }
+    });
   }
 
   // 匯入圖片檔
@@ -503,7 +524,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   //!!! 國際條碼/商品管理編號/廠商貨號

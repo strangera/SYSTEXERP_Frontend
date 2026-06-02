@@ -1,17 +1,57 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="選擇伺服器檔案並轉入" icon="pi pi-server" (click)="openImportDialog()"></app-button>
   </div>
-  <p-accordion>
-    <p-accordionTab header="上傳檔案" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+
+  <p-accordion [multiple]="true">
+    <p-accordionTab header="手動上傳檔案" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="false"
-            chooseLabel="選擇 Excel 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            chooseLabel="選擇 Excel 檔案" uploadLabel="上傳本地檔案" cancelLabel="清除" [auto]="false" [customUpload]="true"
             mode="advanced" (select)="files = $event.files" [loading]="loading"
-            emptyMessage="拖曳檔案到此處或點擊「選擇 Excel 檔案」按鈕。" (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+            emptyMessage="拖曳檔案到此處或點擊「選擇 Excel 檔案」按鈕。" (uploadHandler)="handleCustomUpload($event)">
+          </app-file-upload>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<p-dialog header="選擇轉入檔案 (伺服器)" [(visible)]="displayDialog" [modal]="true" [style]="{width: '70vw'}" [draggable]="false"
+  [resizable]="false">
+  <div class="grid align-items-center p-fluid mb-2">
+    <div class="col-12 md:col-6">
+      <span class="p-input-icon-left">
+        <i class="pi pi-file"></i>
+        <input type="text" pInputText [(ngModel)]="searchFileName" placeholder="搜尋檔案名稱 (FileName)"
+          (keyup.enter)="onSearch()" />
+      </span>
+    </div>
+    <div class="col-12 md:col-2">
+      <p-button label="查詢" icon="pi pi-search" (click)="onSearch()" [loading]="loading"></p-button>
+    </div>
+  </div>
+
+  <div *ngIf="isProcessing" class="mb-3">
+    <small>處理進度：{{processProgress}}%</small>
+    <p-progressBar [value]="processProgress"></p-progressBar>
+  </div>
+
+  <div style="min-height: 300px;">
+    <app-table-report [data]="fileList" [columns]="cols" [totalRecords]="totalRecords" [loading]="loading"
+      [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showManage]="false" [showCheckBox]="true"
+      [lazy]="false" (selectionChange)="selectedFiles = $event" emptyMessage="請輸入條件查詢檔案"
+      (selectButton)="onDownload($event)">
+    </app-table-report>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="取消" icon="pi pi-times" (click)="displayDialog = false" styleClass="p-button-text"
+      [disabled]="isProcessing"></p-button>
+    <p-button label="確定轉入" icon="pi pi-check" (click)="onConfirmImport()" [loading]="isProcessing"
+      [disabled]="selectedFiles.length === 0"></p-button>
+  </ng-template>
+</p-dialog>

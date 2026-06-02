@@ -36,15 +36,24 @@
             [submitted]="submitted"
           ></app-multi-select>
 
-          <!-- 申報年月 -->
-          <app-year-month
-            class="col-12 md:col-6 lg:col-4"
-            label="申報年月"
-            [control]="queryForm.controls.INV_YM2"
-            [submitted]="submitted"
-            [evenMonth]="true"
-            (valueChanges)="loadGuiTrackOptions($event)"
-          ></app-year-month>
+          <!-- 申報年月起訖 -->
+          <div class="col-12 md:col-6 lg:col-8 flex gap-2">
+            <app-year-month
+              class="flex-1"
+              label="申報年月(起)"
+              [control]="queryForm.controls.INV_YM2_S"
+              [submitted]="submitted"
+              [evenMonth]="true"
+              (valueChanges)="loadGuiTrackOptions($event)"
+            ></app-year-month>
+            <app-year-month
+              class="flex-1"
+              label="申報年月(訖)"
+              [control]="queryForm.controls.INV_YM2_E"
+              [submitted]="submitted"
+              [evenMonth]="true"
+            ></app-year-month>
+          </div>
           <!-- 字軌 -->
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
@@ -175,6 +184,32 @@
             [control]="queryForm.controls.HasUniform"
             [submitted]="submitted"
           ></app-dropdown>
+          <!-- 收銀機號 -->
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機號"
+            controlName="ECR_No"
+            [options]="ecrOptions"
+            [optionLabel]="'label'"
+            [optionValue]="'value'"
+            [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <!-- 包含隔日作廢 / 排除B2B發票 -->
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-end pb-2 gap-4">
+            <p-checkbox
+              formControlName="IncludeNextDayVoid"
+              [binary]="true"
+              inputId="includeNextDayVoid"
+              label="包含隔日作廢"
+            ></p-checkbox>
+            <p-checkbox
+              formControlName="ExcludeB2B"
+              [binary]="true"
+              inputId="excludeB2B"
+              label="排除B2B發票"
+            ></p-checkbox>
+          </div>
         </div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"

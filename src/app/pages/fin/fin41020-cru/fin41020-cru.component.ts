@@ -1,18 +1,20 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { EditFIN41020Request, FIN41020Data, FIN41020Service } from '@service/api/fin/fin41020.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { finalize } from 'rxjs';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableEditComponent } from '../fin13040-cru/fin13040-table-edit/fin13040-table-edit.component';
+import { EditColumn } from '../fin13040-cru/fin13040-table-edit/fin13040-table-edit.model';
 
 @Component({
   selector: 'app-fin41020-cru',
@@ -25,38 +27,45 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    NgFor,
-
-
     ButtonComponent,
     NgIf,
     TranslateModule,
+    TableEditComponent,
   ],
 })
-export class FIN41020CRUComponent
-
-  implements OnInit {
+export class FIN41020CRUComponent extends BasicCruPageComponent<FIN41020Data> implements OnInit {
   // 表單初始化
   dataForm = this.formBuilder.nonNullable.group({
-    departmentCode: ['', [Validators.required]], // 部門代號
-    version: ['', [Validators.required]], // 版本
-    year: ['', [Validators.required]], // 年
-    accountCode: ['', [Validators.required]], // 會計科目
-    items: this.formBuilder.array([this.createItem()]), // 動態新增的項目
+    OrgId: ['', [Validators.required]], // 部門代號
+    BudgetYear: ['', [Validators.required]], // 年度
+    BudgetVersion: ['', [Validators.required]], // 版本
+    AccNo: ['', [Validators.required]], // 會計科目
   });
 
+  data: any[] = [];
+  initData: any[] = []; // 用於儲存初始資料以供重置
+  selectedRows: any[] = [];
+  deleteRows: any[] = [];
+  columns: EditColumn[] = [
+    { field: 'MonthNo', header: '月', type: 'input', disabled: () => true, minLength: 1 },
+    { field: 'Budget', header: '金額', type: 'inputNumber', disabled: () => this.isFormReadable },
+    { field: 'Remark', header: '備註', type: 'input', disabled: () => this.isFormReadable },
+  ];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private fin41020Service: FIN41020Service,
   ) {
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     // 初始化程式
     this.ProgNo = '140002';
+    this.initializePage('FIN41020', this.dataForm);
+    console.log(this.dataForm.value);
+
+    this.loadData();
 
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -65,12 +74,6 @@ export class FIN41020CRUComponent
 
     // 根據 CRUD 狀態來設置不同的邏輯
     switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
@@ -85,31 +88,6 @@ export class FIN41020CRUComponent
         break;
     }
 
-    console.log(this.accordionTabCss);
-  }
-
-  // 取得動態新增的項目
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  // 取得動態項目的表單控制
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  // 創建動態表單項目
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      month: ['', [Validators.required]], // 月
-      amount: ['', [Validators.required]], // 金額
-      remark: ['', Validators.maxLength(255)], // 備註
-    });
-  }
-
-  // 動態移除項目
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
   }
 
   // 編輯邏輯
@@ -123,63 +101,69 @@ export class FIN41020CRUComponent
     this.dataForm.disable();
   }
 
-  // 動態新增項目
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   // 提交邏輯
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const updateRequest: EditFIN41020Request = {
+        ORG_ID: this.dataForm.getRawValue().OrgId,
+        AccNo: this.dataForm.getRawValue().AccNo,
+        BudgetYear: this.dataForm.getRawValue().BudgetYear,
+        BudgetVersion: this.dataForm.getRawValue().BudgetVersion,
+        Details: this.data
+          .filter(item => item.MonthNo !== '合計')
+          .map(item => ({
+            MonthNo: item.MonthNo.replace('月', ''),
+            Budget: item.Budget,
+            Remark: item.Remark
+          }))
+      };
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
+      this.fin41020Service.editFIN41020(updateRequest)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          if (response.Data.ErrCode !== 0) {
+            this.messageService.errorBubble(response.Data.ErrMsg || '修改失敗');
+          }
+          else {
+            this.messageService.successBubble(response.Data.ErrMsg || '修改成功');
+          }
+          this.onCancel();  // 返回查詢頁
+        })
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // 假設有保存邏輯
-          // this.storeService.addRecord(frm.value).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // 假設有更新邏輯
-          // this.storeService.updateRecord(frm.value).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
   accordionTabCss = '';
-  canEdit() { return false; }
-  canAdd() { return false; }
-  // 最終提交表單
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+
+  // 載入資料
+  loadData() {
+    this.fin41020Service.queryFIN41020(this.dataForm.value)
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(response => {
+        this.data = [
+          { MonthNo: '01月', Budget: response.Data[0]?.M01, Remark: response.Data[0]?.R01 },
+          { MonthNo: '02月', Budget: response.Data[0]?.M02, Remark: response.Data[0]?.R02 },
+          { MonthNo: '03月', Budget: response.Data[0]?.M03, Remark: response.Data[0]?.R03 },
+          { MonthNo: '04月', Budget: response.Data[0]?.M04, Remark: response.Data[0]?.R04 },
+          { MonthNo: '05月', Budget: response.Data[0]?.M05, Remark: response.Data[0]?.R05 },
+          { MonthNo: '06月', Budget: response.Data[0]?.M06, Remark: response.Data[0]?.R06 },
+          { MonthNo: '07月', Budget: response.Data[0]?.M07, Remark: response.Data[0]?.R07 },
+          { MonthNo: '08月', Budget: response.Data[0]?.M08, Remark: response.Data[0]?.R08 },
+          { MonthNo: '09月', Budget: response.Data[0]?.M09, Remark: response.Data[0]?.R09 },
+          { MonthNo: '10月', Budget: response.Data[0]?.M10, Remark: response.Data[0]?.R10 },
+          { MonthNo: '11月', Budget: response.Data[0]?.M11, Remark: response.Data[0]?.R11 },
+          { MonthNo: '12月', Budget: response.Data[0]?.M12, Remark: response.Data[0]?.R12 },
+          { MonthNo: '合計', Budget: response.Data[0]?.TotalAmount, Remark: response.Data[0]?.RemarkAny },
+        ];
+
+        this.initData = JSON.parse(JSON.stringify(this.data)); // 深拷貝初始資料
+        console.log('初始資料已載入並保存到 initData', this.initData);
+      });
   }
 
-  // 取消按鈕邏輯
-  onCancel() {
-    this.router.navigate(['FIN4000/FIN41020']);
+
+  // 重置表格資料
+  resetTable() {
+    if (!this.initData) return;
+    this.data = JSON.parse(JSON.stringify(this.initData));
   }
 }

@@ -10,17 +10,18 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button, ButtonDirective } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
-import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
+import { Fin11200Service, SummaryData } from '../../../service/api/fin/fin11200.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { AddButton, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import { columns, monthOptions, Pos1018 } from './fin11200.model';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
+import { columns, ecrSummaryColumns, ecrTrackSummaryColumns, monthOptions, Pos1018 } from './fin11200.model';
 
 @Component({
   selector: 'app-fin11200',
@@ -39,7 +40,8 @@ import { columns, monthOptions, Pos1018 } from './fin11200.model';
     ButtonDirective,
     NgStyle,
     TranslateModule,
-    YearMonthComponent
+    YearMonthComponent,
+    DropdownModule,
   ],
 })
 
@@ -58,9 +60,20 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   POS_NOSOptions: { value: string; label: string; }[] = [];
   GUI_StatusOptions = getSYS1000Options('GUI_Status');
   data: Pos1018[] = [];
+  summaryData: SummaryData[] = [];
   lastQueryBody: any;
   selectedRows: Pos1018[] = [];
   columns: ReportColumn[] = columns;
+  ecrSummaryColumns: ReportColumn[] = ecrSummaryColumns;
+  ecrTrackSummaryColumns: ReportColumn[] = ecrTrackSummaryColumns;
+
+  displayMode = 1;
+  readonly displayModeOptions = [
+    { label: '明細表', value: 1 },
+    { label: '機號彙總(依機台)', value: 2 },
+    { label: '機號彙總(依機台+連續號)', value: 3 },
+  ];
+
   addButton: AddButton[] = [
     {
       label: '停用',
@@ -95,14 +108,23 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        ECR_NoList: frm.get('ECR_NoList')?.value
-      }
-      this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.data = response.Data;
-        this.lastQueryBody = body;
-        this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      });
+        DisplayMode: this.displayMode,
+        ECR_NoList: frm.get('ECR_NoList')?.value,
+      };
+      this.fin11200Service.queryFIN11200(body)
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe((response) => {
+          if (this.displayMode === 1) {
+            this.data = response.Data;
+            this.summaryData = [];
+            this.totalRecords = response.TotalCount;
+          } else {
+            this.data = [];
+            this.summaryData = response.Data;
+          }
+          this.lastQueryBody = body;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
     });
   }
   manageLoading = false;
@@ -150,6 +172,26 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.onSubmit(this.queryForm);
     });
   }
+  get summaryFooter() {
+    return {
+      TOT_NOS: this.summaryData.reduce((sum, r) => sum + (r.TOT_NOS ?? 0), 0),
+      USED_NOS: this.summaryData.reduce((sum, r) => sum + (r.USED_NOS ?? 0), 0),
+      FREE_NOS: this.summaryData.reduce((sum, r) => sum + (r.FREE_NOS ?? 0), 0),
+    };
+  }
+
+  get summaryExportConditions() {
+    if (!this.lastQueryBody) return null;
+    const { GUI_YYMM, ECR_NoList, GUI_StatusList, DisplayMode } = this.lastQueryBody;
+    return { GUI_YYMM, ECR_NoList, GUI_StatusList, DisplayMode };
+  }
+
+  onDisplayModeChange() {
+    if (this.lastQueryBody) {
+      this.onSubmit(this.queryForm);
+    }
+  }
+
   onAllocationOfNumber() {
     if (this.hasPermission(Actions.AllocateNumber)) { // '新增' 的 function_code 是 "20"
       this.navigateWithState(CRUDStatus.Create);

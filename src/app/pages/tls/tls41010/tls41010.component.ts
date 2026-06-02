@@ -49,29 +49,27 @@ import { columns, TLS41010Data, TLS41010Item } from './tls41010.model';
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
   columns: Column[] = columns;
   queryForm = this.formBuilder.group({
-    ECR_No: ['', [Validators.maxLength(10)]],
-    ECR_Type: ['', [Validators.maxLength(2)]], // 收銀機號
-    ECR_Name: ['', [Validators.maxLength(20)]],
-    ECR_TLT_No: ['', [Validators.maxLength(20)]],
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]],
+    ECR_No: [null, [Validators.maxLength(10)]],
+    ECR_Type: [null, [Validators.maxLength(2)]], // 收銀機號
+    ECR_Name: [null, [Validators.maxLength(20)]],
+    ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_ActiveDateStart: [null as Date | null],
     ECR_ActiveDateEnd: [null as Date | null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
     ECR_Status: ['A'],
-    ECR_Group: [''],
-    ECR_SubGroup: [''],
-    ECR_AreaNo: [''],
-    ECR_LocNo: ['', [Validators.maxLength(10)]],
+    ECR_Group: [null as string | null],
+    ECR_SubGroup: [null as string | null],
+    ECR_AreaNo: [null as string | null],
+    ECR_LocNo: [null, [Validators.maxLength(10)]],
     ECR_SAL_Type: [null, [Validators.maxLength(8)]],
-    ECR_GUI_Type: ['', [Validators.maxLength(2)]],
-    ECR_USR_No: ['', [Validators.maxLength(8)]],
-    ECR_USR_Name: ['', [Validators.maxLength(20)]],
-    ECR_ComName: ['', [Validators.maxLength(64)]],
-    ECR_IP: ['', [Validators.maxLength(20)]],
-    ECR_SrvIP: ['', [Validators.maxLength(20)]],
-    ECR_TmplNo: ['', [Validators.maxLength(8)]],
-
+    ECR_GUI_Type: [null, [Validators.maxLength(2)]],
+    ECR_USR_No: [null, [Validators.maxLength(8)]],
+    ECR_USR_Name: [null, [Validators.maxLength(20)]],
+    ECR_ComName: [null, [Validators.maxLength(64)]],
+    ECR_IP: [null, [Validators.maxLength(20)]],
+    ECR_SrvIP: [null, [Validators.maxLength(20)]],
+    ECR_TmplNo: [null, [Validators.maxLength(8)]],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   statusOptions = getSYS1000Options('ECR_Status');
@@ -113,13 +111,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   constructor(
     public tls41010Service: TLS41010Service,
-    private tls46010Service: Tls46010Service,
-    private tls11010Service: Tls11010Service,
-    private counterNameService: CounterNameService,
-    private tls14030Service: Tls14030Service,
-    private dropDownListService: DropDownListService,
-    private dropdownApiService: DropdownApiService,
-    private eCRNoService: ECRNoService,
+    private readonly tls46010Service: Tls46010Service,
+    private readonly tls11010Service: Tls11010Service,
+    private readonly counterNameService: CounterNameService,
+    private readonly tls14030Service: Tls14030Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly eCRNoService: ECRNoService,
   ) {
     super();
   }
@@ -149,9 +147,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.loading = true;
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
-        console.log('查詢 TLS11010 成功', res.Data);
-
-        // 如果有資料，自動帶入館別、樓層、區域
         if (res?.Data && res.Data.length > 0) {
           const locationData = res.Data[0];
           this.queryForm.patchValue({
@@ -178,63 +173,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.dropdownApiService.querySys3A00().subscribe(options => {
       this.areaNoOptions = options ?? [];
     });
-    this.queryForm.get('ECR_TLT_No')?.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((selectedNo) => {
-        if (!selectedNo) return;
-
-        const selected = this.CounterOptions.find((c) => c.value === selectedNo);
-        this.queryForm.patchValue(
-          {
-            ECR_TLT_Name: selected ? selected.Name : ''
-          },
-          { emitEvent: false }
-        );
-
-        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
-          next: (res) => {
-            if (res?.Status === '0000' && res.Data) {
-              const info = res.Data;
-              // 對應樓層
-              const infoSub = String(info.ECR_SubGroup ?? '').trim();
-              const normalizedInfoSub = infoSub.toLowerCase();
-
-              const matchedFloor = this.floorOption.find((f: apiOption) => {
-                const val = String((f as any).value ?? (f as any).No ?? '').trim();
-                const label = String((f as any).label ?? (f as any).Name ?? '').trim();
-                const name = String((f as any).Name ?? '').trim();
-
-                if (val === infoSub || label === infoSub || name === infoSub) return true;
-
-                if (val.toLowerCase() === normalizedInfoSub || label.toLowerCase() === normalizedInfoSub || name.toLowerCase() === normalizedInfoSub) return true;
-
-                if (infoSub) {
-                  if (label.includes(infoSub) || name.includes(infoSub) || val.includes(infoSub)) return true;
-                  if (label.toLowerCase().includes(normalizedInfoSub) || name.toLowerCase().includes(normalizedInfoSub) || val.toLowerCase().includes(normalizedInfoSub)) return true;
-                }
-
-                return false;
-              });
-
-              this.queryForm.patchValue({
-                ECR_LocNo: info.ECR_LocNo ?? '',
-                ECR_Status: info.ECR_Status ?? '',
-                ECR_Group: info.ECR_Group ?? '',
-                ECR_SubGroup: matchedFloor ? ((matchedFloor as any).value ?? matchedFloor.No) : '',
-                ECR_AreaNo: info.ECR_AreaNo ?? '',
-                ECR_ActiveDateStart: info.tlt_bdate ? new Date(info.tlt_bdate) : null,
-                ECR_ActiveDateEnd: info.tlt_edate ? new Date(info.tlt_edate) : null,
-              }, { emitEvent: false });
-
-
-            } else {
-              console.warn('查詢櫃位資料失敗:', res?.Message);
-            }
-          },
-        });
-      });
-
-
 
     //後台主機ip
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {

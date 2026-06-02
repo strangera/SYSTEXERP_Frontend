@@ -10,7 +10,6 @@ export const pagesRoutes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./base/dashboard/dashboard.component').then(m => m.DashboardComponent) },
-      { path: 'demo', loadComponent: () => import('./base/demo/input.table.component').then(m => m.InputTableComponent) },
       { path: 'fin', loadChildren: () => import('./fin/fin.routing.leo').then(m => m.finRoutes) },// 財務會計系統 (FIN)
       { path: 'tls', loadChildren: () => import('./tls/tls.routing.leo').then(m => m.tlsRoutes) },// 銷售管理系統 (TLS)
       { path: 'sys', loadChildren: () => import('./sys/sys.routing.leo').then(m => m.sysRoutes) },// 系統管理 (SYS)

@@ -1,7 +1,7 @@
 <p-table #dt [value]="data" [columns]="selectedColumns" [lazy]="false" [totalRecords]="data.length" [scrollable]="true"
   [scrollHeight]="dynamicScrollHeight" [virtualScroll]="useVirtualScroll" [virtualScrollItemSize]="25"
   [virtualScrollDelay]="0" [resizableColumns]="true" [reorderableColumns]="true" [groupRowsBy]="groupRowsBy"
-  rowGroupMode="subheader" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+  rowGroupMode="subheader" styleClass="p-datatable-sm p-datatable-gridlines ">
 
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event"
@@ -66,7 +66,7 @@
   <ng-template pTemplate="footer" let-columns>
     <tr class="font-bold bg-gray-100 text-primary">
       <td class="text-center" pFrozenColumn>總計</td>
-      <td *ngFor="let col of columns" class="text-right px-2">
+      <td *ngFor="let col of columns" [ngStyle]="{ 'text-align': col.align || 'center' }" class="px-2">
         <ng-container *ngIf="col.isTotal">
           {{ col.format ? col.format(getTotalSum(col.field)) : (getTotalSum(col.field) | number) }}
         </ng-container>

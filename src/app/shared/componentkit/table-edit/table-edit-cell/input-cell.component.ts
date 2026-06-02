@@ -11,27 +11,35 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-input-cell',
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
-    <ng-container [ngSwitch]="cellInput.col.type">
-      <p-iconField iconPosition="right">
-        <ng-container *ngSwitchCase="'input'">
-          <input pInputText class="min-w-max" [placeholder]="isDisabled() ? '' :'請輸入' + cellInput.col.header"
-                 [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-                 [ngModelOptions]="{ standalone: true }"
-                 [disabled]="isDisabled()"
-                 (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
-                 [maxlength]="cellInput.col.maxLength || null"
-                 [style]="{'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-                 [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-                 (focus)="handleFocus()" (blur)="handleBlur()" (keydown.enter)="handleEnter($event)"
-                 [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
-        </ng-container>
+  <ng-container [ngSwitch]="cellInput.col.type">
+    <p-iconField iconPosition="right">
+      <ng-container *ngSwitchCase="'input'">
+        <input
+          pInputText
+          class="w-full"
+          [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
+          [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+          [ngModelOptions]="{ standalone: true }"
+          [disabled]="isDisabled()"
+          (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
+          [maxlength]="cellInput.col.maxLength || null"
+          [style]="{
+            'width': cellInput.col.width || '100%',
+            'text-align': cellInput.col.textAlign
+          }"
+          [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+          (focus)="handleFocus()"
+          (blur)="handleBlur()"
+          (keydown.enter)="handleEnter($event)"
+          [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
+      </ng-container>
 
-        <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                     styleClass="pi pi-exclamation-circle text-red-500"
-                     [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                     tooltipPosition="bottom" />
-      </p-iconField>
-    </ng-container>
+      <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                  styleClass="pi pi-exclamation-circle text-red-500"
+                  [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                  tooltipPosition="bottom" />
+    </p-iconField>
+  </ng-container>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,

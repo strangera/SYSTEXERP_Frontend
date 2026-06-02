@@ -6,6 +6,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
 import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -37,10 +38,10 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> implements OnInit {
   queryForm = this.formBuilder.group({
     PAM_No: [null, Validators.maxLength(12)],           // 匯款來源單號
-    D_Date_b: [null as Date | null],                    // 建立日期(起)
-    D_Date_e: [null as Date | null],                    // 建立日期(迄)
-    PTA_Date_b: [null as Date | null],                  // 收/付款日(起)
-    PTA_Date_e: [null as Date | null],                  // 收/付款日(迄)
+    CRT_Date_b: [null as Date | null],                    // 建立日期(起)
+    CRT_Date_e: [null as Date | null],                    // 建立日期(迄)
+    D_Date_b: [null as Date | null],                  // 收/付款日(起)
+    D_Date_e: [null as Date | null],                  // 收/付款日(迄)
     Remit_Status: [null],                               // 是否形成電匯
     WSLIP_NO: [null, Validators.maxLength(12)],        // 匯款單號
     payday_Counts: [null, this.validationService.numberValidator], // 付款天數
@@ -55,8 +56,8 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   lastQueryBody: QueryFIN25010Request | null = null;
   columns: Column[] = [
     { field: 'PAM_No', header: '匯款來源單號', visible: true },
-    { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'PTA_Date', header: '收/付款日', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'D_Date', header: '收/付款日', visible: true, format: formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
     { field: 'WSLIP_NO', header: '匯款單號', visible: true }
   ];
@@ -124,6 +125,10 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   }
 
   onSubmit(form: FormGroup) {
+    const body = {
+      ...form.getRawValue(),
+
+    }
     this.handleSubmit(form, () => {
       this.fin25010Service.queryFIN25010(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -133,6 +138,31 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
           this.lastQueryBody = form.getRawValue();
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
+    });
+  }
+
+  onDelete(selectedItems: FIN25010Data[]) {
+    const body = {
+      selectList: selectedItems.map(item => ({
+        PAM_No: item.PAM_No,
+      })),
+    }
+    const PAM_NoList = selectedItems.map((item: FIN25010Data) => item.PAM_No);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${PAM_NoList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.fin25010Service.deleteFIN25010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm);
+        });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
   }
 }

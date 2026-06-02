@@ -1,11 +1,11 @@
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { MessageService } from "primeng/api";
 
 @Injectable({
   providedIn: 'root'
 })
 export class ErrorReportService {
-  constructor(private primengMessageService: MessageService) { }
+  private readonly primengMessageService = inject(MessageService);
 
   /**
  * 觸發錯誤檔提示 Toast

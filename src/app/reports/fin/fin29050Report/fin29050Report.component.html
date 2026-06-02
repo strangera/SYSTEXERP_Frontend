@@ -1,0 +1,47 @@
+<div class="card">
+  <div class="card" *ngIf="initialized && meta">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <app-button label="列印" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="PDFBtnLoading">
+      </app-button>
+    </div>
+
+    <div class="flex flex-column align-items-center mb-3">
+      <div class="col-12 text-2xl font-bold mb-1 text-center">
+        南紡流通事業股份有限公司(南紡購物中心)
+      </div>
+      <div class="col-12 text-xl font-bold text-center">轉帳傳票</div>
+    </div>
+
+    <div class="grid text-sm text-700 border-top-1 border-bottom-1 surface-border py-2">
+      <div class="col-12 md:col-3">
+        <span class="mr-2 font-bold">傳票日期：</span>
+        <span class="font-medium">{{ meta.vouDate }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2 font-bold">傳票型態：</span>
+        <span class="font-medium">{{ meta.vouType }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2 font-bold">傳票編號：</span>
+        <span class="font-medium">{{ meta.vouNo }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2 font-bold">狀態：</span>
+        <span class="font-medium">{{ meta.vouStatus }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <app-table-report tableKey="FIN55050CRU" dataKey="__rowid" [data]="rows" [columns]="columns" [showManage]="false"
+      [showDelete]="false" [totalRecords]="rows.length" [lazy]="false" [loading]="isLoading()" [showReportMode]="false"
+      [showCaption]="false" [footerData]="sumData">
+    </app-table-report>
+
+    <div *ngIf="initialized && !isLoading() && rows.length === 0"
+      class="mt-3 p-3 surface-100 text-600 text-center border-round">
+      <i class="pi pi-info-circle mr-2"></i>
+      查無明細資料。請確認傳票號碼是否正確或該傳票是否包含分錄。
+    </div>
+  </div>
+</div>

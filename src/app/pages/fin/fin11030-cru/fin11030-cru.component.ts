@@ -15,7 +15,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { APS2001Data } from '../fin11030/fin11030.model';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({
@@ -65,6 +65,16 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
       this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required]);
+
+      // --- 新增預設值邏輯 ---
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const currentPeriodMonth = month % 2 === 0 ? month - 1 : month;
+      const defaultYYYYMM = `${year}${currentPeriodMonth.toString().padStart(2, '0')}`;
+
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValue(defaultYYYYMM);
+      // --------------------
     }
     this.dataForm.get('SAL_GUIEndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('SAL_GUIBegNo')?.value;

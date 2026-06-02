@@ -71,7 +71,7 @@
           controlName="TXN_Remark" />
       </div>
       <app-table-edit title="商品管理編號修正" [data]="data" [columns]="columns" [disabled]="isFormReadable" [canInsert]="false"
-        [showCheckBox]="false" [showDelete]="false" [rowValidate]="validateEntireRow">
+        [showCheckBox]="false" [showDelete]="false" [showFooter]="true" [rowValidate]="validateEntireRow">
       </app-table-edit>
       <app-table-edit title="付款方式" [data]="data2" [columns]="columns2" [disabled]="isFormReadable" [canInsert]="false"
         [showCheckBox]="false" [showDelete]="false">

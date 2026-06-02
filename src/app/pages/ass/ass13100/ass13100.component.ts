@@ -4,9 +4,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13100Service } from '@service/api/ass/ass13100.service';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Pos2002LocationItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -23,13 +23,13 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from 'primeng/button';
-import { FileSelectEvent } from 'primeng/fileupload';
-import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs/operators';
 import {
   ASS13100ExportPDFRequest,
   ASS13100QueryRow,
   QueryASS13100Request,
+  Status,
 } from './ass13100.model';
 
 // 3.1.3.10 資產清點作業
@@ -55,7 +55,7 @@ import {
     DialogComponent,
     FileUploadComponent,
     BreadcrumbModule
-],
+  ],
 })
 export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow> implements OnInit {
   @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
@@ -85,7 +85,6 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   data: ASS13100QueryRow[] = [];
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '序號' },
     { field: 'CHK_ID', header: '清點單號' },
     { field: 'CHK_DATE', header: '清點日期' },
     { field: 'FIRST_CHK_EMP_ID', header: '清點人代碼' },
@@ -93,6 +92,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   ];
   lastQueryBody?: QueryASS13100Request;
   selectedItems: ASS13100QueryRow[] = [];
+  /** 已結案 的 checkbox 不可選取 */
+  readonly isRowSelectable = (row: ASS13100QueryRow): boolean => row?.STATUS !== Status.Completed;
 
   /** 上傳盤點機檔案 Dialog 狀態 */
   uploadDialogVisible = false;
@@ -158,10 +159,10 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     });
 
     // 位置代碼：queryPOS2002_Location_DropDownList
-    this.dropdownApi.queryPos2002Location()?.subscribe((options: IDropdownItem[] | null) => {
+    this.dropdownApi.queryPos2002Location()?.subscribe((options: Pos2002LocationItem[] | null) => {
       this.locationOptions = (options ?? []).map(x => ({
-        label: `${x.Name}`,
-        value: x.No,
+        label: x.location_no + '-' + x.tlt_floor,
+        value: x.location_no ?? '',
       }));
     });
 
@@ -347,13 +348,13 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
           const blob = response.body;
 
           if (blob && blob.size > 0) {
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           }
         },

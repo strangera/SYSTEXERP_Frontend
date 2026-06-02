@@ -80,8 +80,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     { field: 'PTA', header: '立沖編號', visible: true, align: 'left' },
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'Balance', header: '立沖餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
+    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
   ];
   data: fin55030response[] = [];
   totalRecords = 0;
@@ -108,6 +107,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   fullData: fin55030response[] = [];
   totalData: any[] = []; // 視後端回傳格式而定
   lazyBatchSize = 30;
+  accdcMap: Record<string, string> = {}; // key = Label (AccNo + " - " + AccCName), value = ACCDC
 
   constructor(
     private dropdown: DropdownApiService,
@@ -151,7 +151,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     if (event.col.field === 'VouNo') {
       // 範例：導向傳票維護介面
       const vouNo = event.row?.VouNo;
-      const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now() };
+      const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now() };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       // ... 導向邏輯
     }
@@ -179,20 +179,24 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
 
           // 進行資料攤平處理
           const flattenedList: FIN55030Detail[] = [];
+          const newAccdcMap: Record<string, string> = {};
           nestedData.forEach((group, index) => {
             // 檢查每個科目下的明細筆數
             console.log(`科目[${index}] ${group.AccNo} 的明細筆數:`, group.data?.length);
+            const label = group.AccNo + " - " + group.AccCName;
+            newAccdcMap[label] = group.ACCDC ?? 'D'; // 建立 ACCDC 對照表（'D'=借方, 'C'=貸方）
             if (group.data && group.data.length > 0) {
               group.data.forEach(detail => {
                 flattenedList.push({
                   ...detail,
                   AccNo: group.AccNo,       // 將父層的科目代號帶入明細
                   AccCName: group.AccCName,  // 將父層的科目名稱帶入明細
-                  Label: group.AccNo + " - " + group.AccCName
+                  Label: label
                 });
               });
             }
           });
+          this.accdcMap = newAccdcMap;
 
           // 攤平後進行排序確保分組正確
           flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
@@ -245,7 +249,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
@@ -257,9 +261,9 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     }
 
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open(finalUrl, '_blank', 'noopener');
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 
   // 下載pdf/excel

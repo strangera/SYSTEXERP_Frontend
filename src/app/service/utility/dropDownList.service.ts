@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TLS41010Item } from '../../pages/tls/tls41010/tls41010.model';
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
@@ -40,6 +40,8 @@ export interface IAPS3001Item {
   VEN_Name: string;
   ACP_Amt: number;
   ACP_Date: string; // yyyy-MM-dd
+  ACP_BalanceAmt: number;
+  acp_reserveamt: number;
 }
 
 export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
@@ -264,6 +266,10 @@ export interface TLTTALENTDropDownRequest {
   tlt_noList?: string[]; // 查指定專櫃編號
   isNewData?: boolean;   // 是否僅查詢合約有效期內（當日介於契約起迄日）的專櫃資料，後端預設false
 }
+export interface queryTLS2D010TLTTALENTRequest {
+  tlt_noList?: string[]; // 查指定專櫃編號
+  tlt_date?: string | null; // 查詢包含該日期的專櫃資料，格式為 yyyy-MM-dd
+}
 
 @Injectable({
   providedIn: 'root'
@@ -354,6 +360,11 @@ export class DropDownListService {
   // 查詢會計科目設定檔(GLS1005)下拉式選單
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
+  }
+
+  // 查詢科目大分類(GLS1003)下拉式選單
+  queryGLS1003_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1003_DropDownList`, {});
   }
   // 查詢 ENG1002 下拉式選單
   queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -505,6 +516,15 @@ export class DropDownListService {
   queryTLTTALENTDropDownList(params: TLTTALENTDropDownRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
       `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, params
+    );
+  }
+
+  // 查詢專櫃下拉 (取所有契約，含對應資料，依照傳入日期查詢有效的專櫃資料)
+  queryTLS2D010TLTTALENTList(params: queryTLS2D010TLTTALENTRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
+    return this.http.post<ApiResponse<ITalentOption[]>>(
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLS2D010TLTTALENTList`, params
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

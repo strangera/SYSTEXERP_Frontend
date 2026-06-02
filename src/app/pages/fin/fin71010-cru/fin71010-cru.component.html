@@ -1,0 +1,87 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="分店代號"
+          controlName="SYS_StoreNo"
+          [control]="df().SYS_StoreNo"
+          [submitted]="submitted"
+          [disabled]="true"
+        ></app-input-text>
+
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="收銀機號"
+          controlName="ECR_No"
+          [control]="df().ECR_No"
+          [submitted]="submitted"
+          [disabled]="true"
+        ></app-input-text>
+
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="應付費用會計科目"
+          controlName="APEXP_LID"
+          [control]="df().APEXP_LID"
+          [options]="apexpOptions()"
+          optionLabel="Name"
+          optionValue="No"
+          [submitted]="submitted"
+          [readonly]="isFormReadable"
+        ></app-dropdown>
+
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="應付費用會計科目(共同)"
+          controlName="APEXP_LID_COMMON"
+          [control]="df().APEXP_LID_COMMON"
+          [options]="apexpCommonOptions()"
+          optionLabel="Name"
+          optionValue="No"
+          [submitted]="submitted"
+          [readonly]="isFormReadable"
+        ></app-dropdown>
+
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="進項稅額會計科目"
+          controlName="PTAX_LID"
+          [control]="df().PTAX_LID"
+          [options]="ptaxOptions()"
+          optionLabel="Name"
+          optionValue="No"
+          [submitted]="submitted"
+          [readonly]="isFormReadable"
+        ></app-dropdown>
+
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="進項稅額會計科目(共同)"
+          controlName="PTAX_LID_COMMON"
+          [control]="df().PTAX_LID_COMMON"
+          [options]="ptaxCommonOptions()"
+          optionLabel="Name"
+          optionValue="No"
+          [submitted]="submitted"
+          [readonly]="isFormReadable"
+        ></app-dropdown>
+      </div>
+
+      @if (!isFormReadable) {
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
+        </div>
+      }
+    </form>
+  </p-panel>
+</div>

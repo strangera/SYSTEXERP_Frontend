@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
@@ -192,5 +192,18 @@ export class Tls13070Service {
 
   queryTLS13070(params: Tls13070QueryRequest): Observable<ApiResponse<Tls13070Response[]>> {
     return this.http.post<ApiResponse<Tls13070Response[]>>(`${this.apiUrl}/queryTLS13070`, params)
+  }
+  exportTLS13070Excel(
+    body: Tls13070QueryRequest
+  ): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportTLS13070Excel`;
+    return this.http.post(
+      url,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob' // 預期回傳檔案的 Blob 格式
+      }
+    );
   }
 }

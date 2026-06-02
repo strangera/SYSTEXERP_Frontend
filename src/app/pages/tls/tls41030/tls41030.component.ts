@@ -47,7 +47,6 @@ interface POS2001 {
 @Component({
   selector: 'app-tls41030',
   templateUrl: './tls41030.component.html',
-  styleUrl: './tls41030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

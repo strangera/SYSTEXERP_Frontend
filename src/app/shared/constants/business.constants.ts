@@ -62,9 +62,8 @@ export const TLT_KIND_OPTIONS = {
 
 // 營運狀態
 export const TLT_OPENFLAG_OPTIONS = {
-  '0': '閉店/撤櫃',
+  '0': '已撤櫃',
   '1': '營業中',
-  '2': '已撤櫃',
   '9': '合約未生效'
 } as const;
 
@@ -213,6 +212,10 @@ export const formatApproveStatus = (value: string): string => {
 
 export const formatApplyStatus = (value: string): string => {
   return formatSingleOption(value, APPLY_STATUS_OPTIONS);
+};
+
+export const formatApplyType = (value: string): string => {
+  return formatSingleOption(value, APPLY_TYPE_OPTIONS);
 };
 
 export const formatTltctypemtotal = (value: string): string => {

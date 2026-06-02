@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -7,6 +8,7 @@ import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -31,6 +33,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
   styleUrl: './ass12030.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -74,7 +77,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   empIdOptions: { value: string; label: string }[] = [];
   aprvEmpIdOptions: { value: string; label: string }[] = [];
   /** 部門：queryPOS2013_DropDownList */
-  orgIdOptions: { value: string; label: string }[] = [];
+  orgIdOptions = this.dropdownApiService.querySys3100();
   /** 品項：queryFIN11040 */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 倉別：queryASS11100 */
@@ -130,6 +133,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   constructor(
     public readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service
   ) {
@@ -182,16 +186,6 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
         }));
         this.empIdOptions = options;
         this.aprvEmpIdOptions = options;
-      });
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        const list = res.Data ?? [];
-        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
-          value: item.No ?? '',
-          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-        }));
       });
     this.dropDownListService
       .queryPOS2013_DropDownList({ VEN_Flag: '1' })
@@ -361,12 +355,12 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
             this.messageService.errorBubble('報表下載失敗');
             return;
           }
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `ASS12030_${subpoenaId}.pdf`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           this.messageService.successBubble('報表下載成功');
         },
         error: () => {

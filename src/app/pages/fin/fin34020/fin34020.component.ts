@@ -5,10 +5,10 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
-import { finalize, map } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize, map } from 'rxjs/operators';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -17,9 +17,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -60,7 +60,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
   data: QueryFIN34020Row[] = [];
   totalRecords = 0;
   selectedItems: QueryFIN34020Row[] = [];
-
+  totalSummary: Record<string, number> = {};
   lastQueryBody: any = null;
   tableVer = 0;
 
@@ -334,21 +334,48 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
 
   private parseQueryResponse(
     res: any
-  ): { rows: QueryFIN34020Row[]; total: number } {
-    const rows = Array.isArray(res?.Data)
-      ? (res.Data as QueryFIN34020Row[])
-      : [];
+  ): {
+    rows: QueryFIN34020Row[];
+    total: number;
+    totalSummary: Record<string, number>;
+  } {
+    const rows = Array.isArray(res?.Data?.QueryData)
+      ? (res.Data.QueryData as QueryFIN34020Row[])
+      : Array.isArray(res?.Data)
+        ? (res.Data as QueryFIN34020Row[])
+        : [];
+
+    const totalSummary = this.coerceTotals(res?.Data?.TotalSummary);
 
     const total =
-      Number(res?.TotalCount ?? (res?.Data as any)?.TotalCount ?? rows.length) ||
-      rows.length;
+      Number(res?.TotalCount ?? rows.length) || rows.length;
 
     const mapped = rows.map((r: any, idx: number) => ({
       ...r,
       _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
     }));
 
-    return { rows: mapped, total };
+    return { rows: mapped, total, totalSummary };
+  }
+  private coerceTotals(src: any): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (!src) return out;
+
+    for (const k of Object.keys(src)) {
+      const v = src[k];
+      out[k] = typeof v === 'number' ? v : Number(v) || 0;
+    }
+
+    return out;
+  }
+  buildFooterFromTotals(): Record<string, any> | undefined {
+    if (!this.totalSummary) return undefined;
+
+    return {
+      ARS_Amt: this.totalSummary['Total_ARS_Amt'] ?? 0,
+      RcvOrAdjAmt: this.totalSummary['Total_RcvOrAdjAmt'] ?? 0,
+      UnpaidBalanceAmt: this.totalSummary['Total_UnpaidBalanceAmt'] ?? 0,
+    };
   }
 
   /** 給 app-table-report 用 */
@@ -357,13 +384,12 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
       map((res: ApiResponse<any>) => {
         const parsed = this.parseQueryResponse(res);
 
-        const totalCount =
-          parsed.rows.length === 0 ? (this.data?.length ?? 0) : parsed.total;
+        this.totalSummary = parsed.totalSummary;
 
         return {
           Data: parsed.rows,
-          TotalCount: totalCount,
-          GrandTotal: null,
+          TotalCount: parsed.total,
+          GrandTotal: parsed.totalSummary,
         };
       })
     );
@@ -401,6 +427,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
 
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
+          this.totalSummary = parsed.totalSummary;
 
           this.lastQueryBody = {
             ...raw,
@@ -506,13 +533,13 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.(
@@ -529,9 +556,9 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
     const base = this.lastQueryBody
       ? { ...this.lastQueryBody }
       : {
-          ...this.queryForm.getRawValue(),
-          SortBy: this._currentSortBy || this.defaultSort,
-        };
+        ...this.queryForm.getRawValue(),
+        SortBy: this._currentSortBy || this.defaultSort,
+      };
 
     const payload = this.buildPayload(base);
 

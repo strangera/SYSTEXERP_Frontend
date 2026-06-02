@@ -78,4 +78,31 @@ export class TlsKeyboardService {
       );
     });
   }
+
+  /**
+ * 重新計算所有頁面的按鍵座標與 code (當有頁面被刪除、遞補時調用)
+ * @param pages 當前剩餘的所有頁面矩陣
+ * @param xCount 每頁橫向數量 (8)
+ * @param yCount 每頁縱向數量 (5)
+ */
+  public reindexPages(pages: KeyItem[][], xCount: number, yCount: number): void {
+    pages.forEach((page, pageIndex) => {
+      const offsetY = pageIndex * yCount;
+
+      page.forEach(key => {
+        // 1. 根據原本在該頁的相對位置，推算出新的絕對 y 軸
+        // 舊的 y 軸扣除舊的分頁 offset 得到相對 y (1~5)，再加上新分頁的 offset
+        const relativeY = ((key.y - 1) % yCount) + 1;
+        const newY = relativeY + offsetY;
+
+        // 2. 重新產生 4 碼的絕對 ScanCode (例如: 0106)
+        const newCode = `${key.x.toString().padStart(2, '0')}${newY.toString().padStart(2, '0')}`;
+
+        // 3. 賦值更新
+        key.y = newY;
+        key.code = newCode;
+        key.KB_ScanCode = newCode; // 同步更新後端對應欄位
+      });
+    });
+  }
 }

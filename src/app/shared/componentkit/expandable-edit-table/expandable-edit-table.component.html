@@ -3,82 +3,32 @@
 <div class="expandable-edit-table-container">
   <h3 *ngIf="title" class="expandable-table-title">{{ title }}</h3>
 
-  <p-table
-    #dt
-    [value]="data"
-    [columns]="mainColumns"
-    [(selection)]="selectedItems"
-    [dataKey]="dataKey"
-    [rowTrackBy]="trackByFn"
-    [paginator]="showPaginator"
-    [rows]="rows"
-    [(first)]="first"
-    (onPage)="onPageChange($event)"
-    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-    [expandedRowKeys]="expandedRows"
-    [ngClass]="{ 'table-disabled': readonly }"
-    [loading]="loading"
-  >
+  <p-table #dt [value]="data" [columns]="mainColumns" [(selection)]="selectedItems" [dataKey]="dataKey"
+    [rowTrackBy]="trackByFn" [paginator]="showPaginator" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
+    styleClass="p-datatable-sm  p-datatable-gridlines" [expandedRowKeys]="expandedRows"
+    [ngClass]="{ 'table-disabled': readonly }" [loading]="loading">
     <!-- 表格頂部工具欄 -->
     <ng-template pTemplate="caption">
-      <div
-        *ngIf="hasCaptionContent()"
-        class="table-caption flex justify-content-between align-items-center"
-      >
+      <div *ngIf="hasCaptionContent()" class="table-caption flex justify-content-between align-items-center">
         <div class="table-caption-left flex gap-2 align-items-center">
-          <p-multiSelect
-            *ngIf="showColumnToggle"
-            [options]="columnToggleOptions"
-            [(ngModel)]="selectedVisibleColumns"
-            optionLabel="header"
-            dropdownIcon="pi pi-cog"
-            pTooltip="顯示欄位"
-            tooltipPosition="top"
-            (onChange)="onColumnToggleChange($event.value)"
-            appendTo="body"
-            styleClass="column-toggle-btn"
-            [panelStyle]="{'min-width': '180px'}"
-          ></p-multiSelect>
+          <p-multiSelect *ngIf="showColumnToggle" [options]="columnToggleOptions" [(ngModel)]="selectedVisibleColumns"
+            optionLabel="header" dropdownIcon="pi pi-cog" pTooltip="顯示欄位" tooltipPosition="top"
+            (onChange)="onColumnToggleChange($event.value)" appendTo="body" styleClass="column-toggle-btn"
+            [panelStyle]="{'min-width': '180px'}"></p-multiSelect>
 
-          <button
-            *ngIf="!readonly && showAddButton"
-            pButton
-            pRipple
-            type="button"
-            icon="pi pi-plus"
-            pTooltip="新增"
-            (click)="onAddMainItem()"
-            severity="success"
-            class="p-button-rounded"
-          ></button>
+          <button *ngIf="!readonly && showAddButton" pButton pRipple type="button" icon="pi pi-plus" pTooltip="新增"
+            (click)="onAddMainItem()" severity="success" class="p-button-rounded"></button>
 
-          <button
-            *ngIf="!readonly && showBatchDelete"
-            pButton
-            pRipple
-            type="button"
-            icon="pi pi-trash"
-            pTooltip="批次刪除"
-            [disabled]="selectedItems.length === 0"
-            (click)="onBatchDelete()"
-            severity="danger"
-            class="p-button-rounded"
-            [ngClass]="{ 'p-button-outlined': selectedItems.length === 0 }"
-          ></button>
+          <button *ngIf="!readonly && showBatchDelete" pButton pRipple type="button" icon="pi pi-trash" pTooltip="批次刪除"
+            [disabled]="selectedItems.length === 0" (click)="onBatchDelete()" severity="danger" class="p-button-rounded"
+            [ngClass]="{ 'p-button-outlined': selectedItems.length === 0 }"></button>
 
           <ng-content select="[caption-left]"></ng-content>
         </div>
 
         <div class="table-caption-right flex gap-2 align-items-center">
-          <button
-            *ngIf="detailKey"
-            pButton
-            pRipple
-            [icon]="isAllExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-            (click)="toggleExpandAll()"
-            [label]="isAllExpanded ? '收合全部' : '展開全部'"
-            class="p-button-text"
-          ></button>
+          <button *ngIf="detailKey" pButton pRipple [icon]="isAllExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+            (click)="toggleExpandAll()" [label]="isAllExpanded ? '收合全部' : '展開全部'" class="p-button-text"></button>
           <ng-content select="[caption-right]"></ng-content>
         </div>
       </div>
@@ -90,61 +40,38 @@
         <th *ngIf="showSequenceNumber" style="width: 4rem; text-align: center">
           序號
         </th>
-        <th
-          *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly"
-          style="width: 4rem"
-        >
+        <th *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly" style="width: 4rem">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
         <th *ngIf="detailKey" style="width: 4rem; text-align: center">展開</th>
-        <th
-          *ngFor="let col of mainColumns"
-          [hidden]="col.hidden"
-          [ngStyle]="getColumnStyle(col)"
-          style="text-align: center"
-        >
+        <th *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
+          style="text-align: center">
           {{ col.header }}
         </th>
-        <th
-          *ngIf="!readonly && showActionColumn"
-          [ngStyle]="getActionHeaderStyle()"
-        >
+        <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">
           操作
         </th>
       </tr>
     </ng-template>
 
     <!-- 表身 -->
-    <ng-template
-      pTemplate="body"
-      let-rowData
-      let-expanded="expanded"
-      let-editing="editing"
-      let-ri="rowIndex"
-    >
+    <ng-template pTemplate="body" let-rowData let-expanded="expanded" let-editing="editing" let-ri="rowIndex">
       <!-- 前一筆展開時重複顯示外層表頭（作為欄位提示） -->
       <tr *ngIf="showHeaderInExpansion && isPreviousRowExpanded(ri)" class="repeated-outer-header">
         <th *ngIf="showSequenceNumber" style="width: 4rem; text-align: center">序號</th>
         <th *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly" style="width: 4rem"></th>
         <th *ngIf="detailKey" style="width: 4rem; text-align: center">展開</th>
-        <th
-          *ngFor="let col of mainColumns"
-          [hidden]="col.hidden"
-          [ngStyle]="getColumnStyle(col)"
-          style="text-align: center"
-        >
+        <th *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
+          style="text-align: center">
           {{ col.header }}
         </th>
         <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">操作</th>
       </tr>
 
-      <tr
-        [pEditableRow]="rowData"
-        [ngClass]="{
+      <tr [pEditableRow]="rowData" [ngClass]="{
           'editing-row': isRowEditing(ri),
           'error-row': hasRowErrors(rowData),
-        }"
-      >
+        }">
         <td *ngIf="showSequenceNumber" style="text-align: center">
           {{ ri + 1 }}
         </td>
@@ -154,219 +81,118 @@
         </td>
 
         <td *ngIf="detailKey" style="text-align: center">
-          <button
-            type="button"
-            pButton
-            pRipple
-            [pRowToggler]="rowData"
-            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-            class="p-button-text p-button-rounded"
-            [ngClass]="{ 'expanded-button': expanded }"
-          ></button>
+          <button type="button" pButton pRipple [pRowToggler]="rowData"
+            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="p-button-text p-button-rounded"
+            [ngClass]="{ 'expanded-button': expanded }"></button>
         </td>
 
         <!-- 各個欄位 -->
-        <td
-          *ngFor="let col of mainColumns"
-          [hidden]="col.hidden"
-          [ngStyle]="getColumnStyle(col)"
-          [ngClass]="{ 'error-cell': hasCellError(rowData, col.field) }"
-          style="text-align: center"
-        >
+        <td *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
+          [ngClass]="{ 'error-cell': hasCellError(rowData, col.field) }" style="text-align: center">
           <!-- 可編輯欄位 -->
-          <ng-container
-            *ngIf="shouldShowInputControl(col, isRowEditing(ri), rowData)"
-          >
+          <ng-container *ngIf="shouldShowInputControl(col, isRowEditing(ri), rowData)">
             <ng-container [ngSwitch]="col.type">
-              <app-selector-panel
-                *ngSwitchCase="'selector-panel'"
+              <app-selector-panel *ngSwitchCase="'selector-panel'"
                 [valueControl]="getSelectorControl(rowData, col.field)"
                 [searchForm]="getSelectorSearchForm(rowData, col)"
-                [autoCompleteItems]="getSelectorSuggestions(rowData, col.field)"
-                [valuePropertyName]="
+                [autoCompleteItems]="getSelectorSuggestions(rowData, col.field)" [valuePropertyName]="
                   col.selectorConfig?.valuePropertyName || 'value'
-                "
-                [labelPropertyName]="
+                " [labelPropertyName]="
                   col.selectorConfig?.labelPropertyName || 'label'
-                "
-                [displayFieldsConfig]="
+                " [displayFieldsConfig]="
                   col.selectorConfig?.displayFieldsConfig || []
-                "
-                [panelDataSource]="col.selectorConfig?.panelDataSource || []"
-                [panelTableColumns]="
+                " [panelDataSource]="col.selectorConfig?.panelDataSource || []" [panelTableColumns]="
                   col.selectorConfig?.panelTableColumns || []
-                "
-                [totalDataCount]="col.selectorConfig?.totalDataCount || 0"
-                (searchInputChanged)="
+                " [totalDataCount]="col.selectorConfig?.totalDataCount || 0" (searchInputChanged)="
                   onSelectorSearchInputChanged($event, rowData, col)
-                "
-                (searchFormChanged)="
+                " (searchFormChanged)="
                   onSelectorSearchFormChanged($event, rowData, col)
-                "
-                (itemSelected)="onSelectorItemSelected($event, rowData, col)"
-                (valueChanged)="onSelectorValueChanged($event, rowData, col)"
-                (selectionChanged)="
+                " (itemSelected)="onSelectorItemSelected($event, rowData, col)"
+                (valueChanged)="onSelectorValueChanged($event, rowData, col)" (selectionChanged)="
                   onSelectorSelectionChanged($event, rowData, col)
-                "
-              >
+                ">
                 <!-- 搜尋表單內容 -->
-                <div
-                  search-form
-                  class="grid"
-                  [formGroup]="getSelectorSearchForm(rowData, col)"
-                >
-                  <ng-container
-                    *ngFor="
+                <div search-form class="grid" [formGroup]="getSelectorSearchForm(rowData, col)">
+                  <ng-container *ngFor="
                       let formField of col.selectorConfig?.searchFormFields
-                    "
-                  >
+                    ">
                     <div [class]="formField.colClass || 'col-6'">
                       <label [for]="formField.name">
                         {{ formField.label }}
                       </label>
-                      <input
-                        *ngIf="formField.type === 'text'"
-                        [id]="formField.name"
-                        type="text"
-                        pInputText
-                        [formControlName]="formField.name"
-                      />
-                      <p-dropdown
-                        *ngIf="formField.type === 'dropdown'"
-                        [id]="formField.name"
-                        [formControlName]="formField.name"
-                        [options]="formField.options"
-                        optionLabel="label"
-                        optionValue="value"
-                        [showClear]="false"
-                        [style]="{ width: '100%', 'min-width': '200px' }"
-                        [showClear]="true"
-                      ></p-dropdown>
+                      <input *ngIf="formField.type === 'text'" [id]="formField.name" type="text" pInputText
+                        [formControlName]="formField.name" />
+                      <p-dropdown *ngIf="formField.type === 'dropdown'" [id]="formField.name"
+                        [formControlName]="formField.name" [options]="formField.options" optionLabel="label"
+                        optionValue="value" [showClear]="false" [style]="{ width: '100%', 'min-width': '200px' }"
+                        [showClear]="true"></p-dropdown>
                     </div>
                   </ng-container>
                 </div>
               </app-selector-panel>
               <!-- 基本文字輸入 -->
-              <input
-                *ngSwitchCase="'text'"
-                pInputText
-                type="text"
-                [ngModel]="getFieldDefaultValue(col, rowData)"
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onTextInputChange(rowData, col, $event)"
-                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
-                [maxlength]="col.maxLength ?? null"
-                [placeholder]="col.placeholder || ''"
-                class="text-input"
-              />
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)" [maxlength]="col.maxLength ?? null"
+                [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
-              <p-inputNumber
-                *ngSwitchCase="'number'"
-                [ngModel]="getFieldDefaultValue(col, rowData)"
-                [max]="col.maxValue"
-                [min]="col.minValue"
-                (ngModelChange)="
+              <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, rowData)"
+                [max]="col.maxValue" [min]="col.minValue" (ngModelChange)="
                   onNumberModelChange($event, col.field, rowData, false)
-                "
-                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
-                [minFractionDigits]="
+                " (keydown)="onFieldKeyDown($event, rowData, col, ri)" [minFractionDigits]="
                   getNumberInputConfig(col).minFractionDigits
-                "
-                [maxFractionDigits]="
+                " [maxFractionDigits]="
                   getNumberInputConfig(col).maxFractionDigits
-                "
-                [step]="getNumberInputConfig(col).step"
-                [mode]="getNumberInputConfig(col).mode"
-                [useGrouping]="getNumberInputConfig(col).useGrouping"
-              ></p-inputNumber>
+                " [step]="getNumberInputConfig(col).step" [mode]="getNumberInputConfig(col).mode"
+                [useGrouping]="getNumberInputConfig(col).useGrouping"></p-inputNumber>
 
               <!-- 下拉選單 -->
-              <p-dropdown
-                *ngSwitchCase="'dropdown'"
-                [options]="getFieldOptions(rowData, col.field)"
+              <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(rowData, col.field)"
                 [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
-                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
-                [style]="{ width: '100%' }"
-                appendTo="body"
-                [showClear]="false"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                filterMatchMode="contains"
-              ></p-dropdown>
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)" [style]="{ width: '100%' }" appendTo="body"
+                [showClear]="false" optionLabel="label" optionValue="value" [filter]="true"
+                filterMatchMode="contains"></p-dropdown>
 
               <!-- 日期選擇  -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
-                <input
-                  pInputText
-                  type="text"
-                  [ngModel]="getDateInputValue(rowData, col)"
-                  (input)="handleDateInput($event, rowData, col)"
-                  (blur)="onDateInputBlur(rowData, col, false)"
-                  (keydown)="onFieldKeyDown($event, rowData, col, ri)"
-                  [placeholder]="getDatePlaceholder(col)"
+                <input pInputText type="text" [ngModel]="getDateInputValue(rowData, col)"
+                  (input)="handleDateInput($event, rowData, col)" (blur)="onDateInputBlur(rowData, col, false)"
+                  (keydown)="onFieldKeyDown($event, rowData, col, ri)" [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="
                     col.maxLength ||
                     (col.dateFormat?.includes('year-month') ? 7 : 10)
-                  "
-                  class="date-input"
-                />
-                <button
-                  pButton
-                  pRipple
-                  type="button"
-                  icon="pi pi-calendar"
+                  " class="date-input" />
+                <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
-                  (click)="openDatePicker(rowData, col.field, false, ri)"
-                ></button>
+                  (click)="openDatePicker(rowData, col.field, false, ri)"></button>
               </div>
 
               <!-- Checkbox 核取方塊 -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
-                <p-checkbox
-                  [(ngModel)]="rowData[col.field]"
-                  [binary]="true"
-                  (ngModelChange)="
+                <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true" (ngModelChange)="
                     onCheckboxChange(rowData, col.field, $event, ri, col)
-                  "
-                  [disabled]="readonly || col.editable === false"
-                ></p-checkbox>
+                  " [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
               <!-- 預設文字輸入 -->
-              <input
-                *ngSwitchDefault
-                pInputText
-                type="text"
-                [ngModel]="getFieldDefaultValue(col, rowData)"
+              <input *ngSwitchDefault pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onTextInputChange(rowData, col, $event)"
-                (keydown)="onFieldKeyDown($event, rowData, col, ri)"
-                [maxlength]="col.maxLength ?? null"
-                [placeholder]="col.placeholder || ''"
-                class="text-input"
-              />
+                (keydown)="onFieldKeyDown($event, rowData, col, ri)" [maxlength]="col.maxLength ?? null"
+                [placeholder]="col.placeholder || ''" class="text-input" />
 
               <ng-container *ngSwitchCase="'button'">
-                <button
-                  *ngIf="!col.showCondition || col.showCondition(rowData, data)"
-                  pButton
-                  pRipple
-                  type="button"
-                  [label]="col.buttonLabel ?? ''"
-                  [icon]="col.buttonIcon || ''"
-                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
-                  [pTooltip]="col.buttonTooltip || ''"
-                  (click)="onButtonClick(rowData, col.field)"
-                ></button>
+                <button *ngIf="!col.showCondition || col.showCondition(rowData, data)" pButton pRipple type="button"
+                  [label]="col.buttonLabel ?? ''" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onButtonClick(rowData, col.field)"></button>
               </ng-container>
             </ng-container>
           </ng-container>
 
           <!-- 非編輯狀態 -->
-          <ng-container
-            *ngIf="shouldShowDisplayOnly(col, isRowEditing(ri), rowData)"
-          >
+          <ng-container *ngIf="shouldShowDisplayOnly(col, isRowEditing(ri), rowData)">
             <ng-container [ngSwitch]="col.type">
               <!-- 日期顯示 - 使用新的方法 -->
               <span *ngSwitchCase="'date'">
@@ -386,30 +212,17 @@
               <!-- Checkbox 顯示 -->
               <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
                 <div class="p-checkbox p-component p-disabled">
-                  <div
-                    class="p-checkbox-box"
-                    [ngClass]="{ 'p-highlight': rowData[col.field] }"
-                  >
-                    <span
-                      class="p-checkbox-icon pi pi-check"
-                      *ngIf="rowData[col.field]"
-                    ></span>
+                  <div class="p-checkbox-box" [ngClass]="{ 'p-highlight': rowData[col.field] }">
+                    <span class="p-checkbox-icon pi pi-check" *ngIf="rowData[col.field]"></span>
                   </div>
                 </div>
               </span>
               <!-- 按鈕在非編輯狀態下也要顯示 -->
               <ng-container *ngSwitchCase="'button'">
-                <button
-                  *ngIf="!col.showCondition || col.showCondition(rowData, data)"
-                  pButton
-                  pRipple
-                  type="button"
-                  [label]="col.buttonLabel ?? ''"
-                  [icon]="col.buttonIcon || ''"
-                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'"
-                  [pTooltip]="col.buttonTooltip || ''"
-                  (click)="onButtonClick(rowData, col.field)"
-                ></button>
+                <button *ngIf="!col.showCondition || col.showCondition(rowData, data)" pButton pRipple type="button"
+                  [label]="col.buttonLabel ?? ''" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onButtonClick(rowData, col.field)"></button>
               </ng-container>
               <!-- 預設顯示 -->
               <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
@@ -418,46 +231,19 @@
         </td>
 
         <!-- 操作按鈕 -->
-        <td
-          *ngIf="!readonly && showActionColumn"
-          [ngStyle]="getActionBodyStyle()"
-        >
+        <td *ngIf="!readonly && showActionColumn" [ngStyle]="getActionBodyStyle()">
           <div class="edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
-            <button
-              *ngIf="!isRowEditing(ri)"
-              pButton
-              pRipple
-              type="button"
-              icon="pi pi-pencil"
-              pTooltip="編輯"
-              class="p-button-rounded p-button-text"
-              (click)="onRowEditInit(rowData, ri)"
-            ></button>
+            <button *ngIf="!isRowEditing(ri)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"
+              class="p-button-rounded p-button-text" (click)="onRowEditInit(rowData, ri)"></button>
 
             <!-- 確認按鈕 -->
-            <button
-              *ngIf="isRowEditing(ri)"
-              pButton
-              pRipple
-              type="button"
-              icon="pi pi-check"
-              pTooltip="確認"
-              class="p-button-rounded p-button-text p-button-success"
-              (click)="onRowEditSave(rowData)"
-            ></button>
+            <button *ngIf="isRowEditing(ri)" pButton pRipple type="button" icon="pi pi-check" pTooltip="確認"
+              class="p-button-rounded p-button-text p-button-success" (click)="onRowEditSave(rowData)"></button>
 
             <!-- 取消按鈕 -->
-            <button
-              *ngIf="isRowEditing(ri)"
-              pButton
-              pRipple
-              type="button"
-              icon="pi pi-times"
-              pTooltip="取消"
-              class="p-button-rounded p-button-text p-button-danger"
-              (click)="onRowEditCancel(rowData, ri)"
-            ></button>
+            <button *ngIf="isRowEditing(ri)" pButton pRipple type="button" icon="pi pi-times" pTooltip="取消"
+              class="p-button-rounded p-button-text p-button-danger" (click)="onRowEditCancel(rowData, ri)"></button>
           </div>
         </td>
       </tr>
@@ -469,69 +255,36 @@
         <td [attr.colspan]="getExpandedColspan()">
           <div class="expanded-detail p-3">
             <!-- 內層表格標題區域 -->
-            <div
-              class="detail-table-header flex justify-content-between align-items-center mb-2"
-            >
-              <div
-                class="detail-table-header-left flex align-items-center gap-2"
-              >
+            <div class="detail-table-header flex justify-content-between align-items-center mb-2">
+              <div class="detail-table-header-left flex align-items-center gap-2">
                 <!-- 選項卡按鈕 -->
-                <div
-                  *ngIf="showDetailTabs && detailTabOptions.length > 0"
-                  class="detail-tab-buttons"
-                >
+                <div *ngIf="showDetailTabs && detailTabOptions.length > 0" class="detail-tab-buttons">
                   <div class="tab-button-group">
-                    <button
-                      *ngFor="let tab of detailTabOptions"
-                      pButton
-                      type="button"
-                      [label]="tab.label"
-                      [ngClass]="{
+                    <button *ngFor="let tab of detailTabOptions" pButton type="button" [label]="tab.label" [ngClass]="{
                         'p-button-primary':
                           getDetailSelectedTab(rowData) === tab.id,
                         'p-button-outlined p-button-secondary':
                           getDetailSelectedTab(rowData) !== tab.id,
-                      }"
-                      class="p-button-sm tab-button"
-                      (click)="onDetailTabChange(rowData, tab.id)"
-                    ></button>
+                      }" class="p-button-sm tab-button" (click)="onDetailTabChange(rowData, tab.id)"></button>
                   </div>
                 </div>
 
                 <!-- 新增按鈕 -->
-                <button
-                  *ngIf="
+                <button *ngIf="
                     !readonly &&
                     showDetailAddButton &&
                     canAddDetailForCurrentTab(rowData)
-                  "
-                  pButton
-                  pRipple
-                  type="button"
-                  icon="pi pi-plus"
-                  pTooltip="新增明細"
-                  (click)="onAddDetailItem(rowData, ri)"
-                  severity="success"
-                  class="p-button-rounded"
-                ></button>
+                  " pButton pRipple type="button" icon="pi pi-plus" pTooltip="新增明細"
+                  (click)="onAddDetailItem(rowData, ri)" severity="success" class="p-button-rounded"></button>
 
                 <!-- 批次刪除按鈕 -->
-                <button
-                  *ngIf="
+                <button *ngIf="
                     !readonly &&
                     showDetailBatchDelete &&
                     canDeleteDetailForCurrentTab(rowData)
-                  "
-                  pButton
-                  pRipple
-                  type="button"
-                  icon="pi pi-trash"
-                  pTooltip="批次刪除明細"
-                  [disabled]="getDetailSelectedCount(rowData) === 0"
-                  (click)="onDetailBatchDelete(rowData, ri)"
-                  severity="danger"
-                  class="p-button-rounded"
-                ></button>
+                  " pButton pRipple type="button" icon="pi pi-trash" pTooltip="批次刪除明細"
+                  [disabled]="getDetailSelectedCount(rowData) === 0" (click)="onDetailBatchDelete(rowData, ri)"
+                  severity="danger" class="p-button-rounded"></button>
               </div>
               <div class="detail-table-header-right flex align-items-center gap-2">
                 <!-- 詳細表格提示區域 -->
@@ -541,98 +294,59 @@
             </div>
 
             <!-- 詳細資料表格 -->
-            <p-table
-              [value]="rowData[detailKey]"
-              [columns]="getDetailColumnsForTab(rowData)"
-              [(selection)]="detailSelectedItems[rowData[dataKey]]"
-              [dataKey]="dataKey"
-              [rowTrackBy]="trackByFn"
+            <p-table [value]="rowData[detailKey]" [columns]="getDetailColumnsForTab(rowData)"
+              [(selection)]="detailSelectedItems[rowData[dataKey]]" [dataKey]="dataKey" [rowTrackBy]="trackByFn"
               [selectionMode]="readonly ? null : 'multiple'"
-              (selectionChange)="onDetailSelectionChange(rowData, $event)"
-              styleClass="detail-table"
-            >
+              (selectionChange)="onDetailSelectionChange(rowData, $event)" styleClass="detail-table">
               <ng-template pTemplate="header">
-                <tr>
-                  <th
-                    *ngIf="showDetailSequenceNumber"
-                    style="width: 4rem; text-align: center"
-                  >
-                    序號
-                  </th>
-                  <th
-                    *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)"
-                    style="width: 4rem; text-align: center"
-                  >
-                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-                  </th>
-                  <th
-                    *ngFor="let col of getDetailColumnsForTab(rowData)"
-                    [hidden]="col.hidden"
-                    style="text-align: center"
-                  >
-                    {{ col.header }}
-                  </th>
-                  <th
-                    *ngIf="!readonly && showDetailActionColumn"
-                    [ngStyle]="getActionHeaderStyle()"
-                  >
-                    操作
-                  </th>
-                </tr>
-              </ng-template>
+      <tr>
+        <th *ngIf="showDetailSequenceNumber" style="width: 4rem; text-align: center">
+          序號
+        </th>
+        <th *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)" style="width: 4rem; text-align: center">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" style="text-align: center">
+          {{ col.header }}
+        </th>
+        <th *ngIf="!readonly && showDetailActionColumn" [ngStyle]="getActionHeaderStyle()">
+          操作
+        </th>
+      </tr>
+    </ng-template>
 
-              <!-- 空資料訊息模板 -->
-              <ng-template pTemplate="emptymessage">
-                <div
-                  class="flex flex-wrap justify-content-center min-h-full"
-                  [ngStyle]="{ height: '62px' }"
-                >
-                  <p class="empty-message text-xl font-bold text-center">
-                    查無詳細資料
-                  </p>
-                </div>
-              </ng-template>
-              <ng-template pTemplate="body" let-detailData let-di="rowIndex">
-                <tr [ngClass]="{ 'error-row': hasDetailErrors(detailData) }">
-                  <td
-                    *ngIf="showDetailSequenceNumber"
-                    style="text-align: center"
-                  >
-                    {{ di + 1 }}
-                  </td>
+    <!-- 空資料訊息模板 -->
+    <ng-template pTemplate="emptymessage">
+      <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
+        <p class="empty-message text-xl font-bold text-center">
+          查無詳細資料
+        </p>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="body" let-detailData let-di="rowIndex">
+      <tr [ngClass]="{ 'error-row': hasDetailErrors(detailData) }">
+        <td *ngIf="showDetailSequenceNumber" style="text-align: center">
+          {{ di + 1 }}
+        </td>
 
-                  <td
-                    *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)"
-                    style="text-align: center"
-                  >
-                    <p-tableCheckbox [value]="detailData"></p-tableCheckbox>
-                  </td>
+        <td *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)" style="text-align: center">
+          <p-tableCheckbox [value]="detailData"></p-tableCheckbox>
+        </td>
 
-                  <td
-                    *ngFor="let col of getDetailColumnsForTab(rowData)"
-                    [hidden]="col.hidden"
-                    [ngStyle]="getColumnStyle(col)"
-                    [ngClass]="{ 'error-cell': hasCellError(detailData, col.field) }"
-                    style="text-align: center"
-                  >
-                    <!-- 可編輯欄位 -->
-                    <ng-container
-                      *ngIf="
+        <td *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
+          [ngClass]="{ 'error-cell': hasCellError(detailData, col.field) }" style="text-align: center">
+          <!-- 可編輯欄位 -->
+          <ng-container *ngIf="
                         shouldShowInputControl(
                           col,
                           isDetailEditing(ri, di),
                           detailData
                         )
-                      "
-                    >
-                      <ng-container [ngSwitch]="col.type">
-                        <!-- 基本文字輸入 -->
-                        <input
-                          *ngSwitchCase="'text'"
-                          pInputText
-                          type="text"
-                          [ngModel]="getFieldDefaultValue(col, rowData)"
-                          (ngModelChange)="
+                      ">
+            <ng-container [ngSwitch]="col.type">
+              <!-- 基本文字輸入 -->
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
+                (ngModelChange)="
                             onDetailTextInputChange(
                               detailData,
                               col,
@@ -640,8 +354,7 @@
                               ri,
                               di
                             )
-                          "
-                          (keydown)="
+                          " (keydown)="
                             onFieldKeyDown(
                               $event,
                               detailData,
@@ -650,27 +363,19 @@
                               true,
                               di
                             )
-                          "
-                          [maxlength]="col.maxLength ?? null"
-                          [placeholder]="col.placeholder || ''"
-                          class="text-input"
-                        />
+                          " [maxlength]="col.maxLength ?? null" [placeholder]="col.placeholder || ''"
+                class="text-input" />
 
-                        <!-- 數字輸入 -->
-                        <p-inputNumber
-                          *ngSwitchCase="'number'"
-                          [ngModel]="getFieldDefaultValue(col, detailData)"
-                          [max]="col.maxValue"
-                          [min]="col.minValue"
-                          (ngModelChange)="
+              <!-- 數字輸入 -->
+              <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, detailData)"
+                [max]="col.maxValue" [min]="col.minValue" (ngModelChange)="
                             onNumberModelChange(
                               $event,
                               col.field,
                               detailData,
                               true
                             )
-                          "
-                          (keydown)="
+                          " (keydown)="
                             onFieldKeyDown(
                               $event,
                               detailData,
@@ -679,30 +384,20 @@
                               true,
                               di
                             )
-                          "
-                          (onInput)="
+                          " (onInput)="
                             onNumberInput($event, col.field, detailData, true)
-                          "
-                          [minFractionDigits]="
+                          " [minFractionDigits]="
                             getNumberInputConfig(col).minFractionDigits
-                          "
-                          [maxFractionDigits]="
+                          " [maxFractionDigits]="
                             getNumberInputConfig(col).maxFractionDigits
-                          "
-                          [step]="getNumberInputConfig(col).step"
-                          [mode]="getNumberInputConfig(col).mode"
-                          [useGrouping]="getNumberInputConfig(col).useGrouping"
-                        ></p-inputNumber>
+                          " [step]="getNumberInputConfig(col).step" [mode]="getNumberInputConfig(col).mode"
+                [useGrouping]="getNumberInputConfig(col).useGrouping"></p-inputNumber>
 
-                        <!-- 下拉選單 -->
-                        <p-dropdown
-                          *ngSwitchCase="'dropdown'"
-                          [options]="getFieldOptions(detailData, col.field)"
-                          [ngModel]="getFieldDefaultValue(col, detailData)"
-                          (ngModelChange)="
+              <!-- 下拉選單 -->
+              <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(detailData, col.field)"
+                [ngModel]="getFieldDefaultValue(col, detailData)" (ngModelChange)="
                             onDropdownChange(detailData, col.field, $event)
-                          "
-                          (keydown)="
+                          " (keydown)="
                             onFieldKeyDown(
                               $event,
                               detailData,
@@ -711,30 +406,15 @@
                               true,
                               di
                             )
-                          "
-                          [style]="{ width: '100%' }"
-                          appendTo="body"
-                          [showClear]="false"
-                          optionLabel="label"
-                          optionValue="value"
-                          [filter]="true"
-                          filterMatchMode="contains"
-                        ></p-dropdown>
+                          " [style]="{ width: '100%' }" appendTo="body" [showClear]="false" optionLabel="label"
+                optionValue="value" [filter]="true" filterMatchMode="contains"></p-dropdown>
 
-                        <!-- 日期選擇 - 使用新的方法 -->
-                        <div
-                          *ngSwitchCase="'date'"
-                          class="date-selector-wrapper"
-                        >
-                          <input
-                            pInputText
-                            type="text"
-                            [ngModel]="
+              <!-- 日期選擇 - 使用新的方法 -->
+              <div *ngSwitchCase="'date'" class="date-selector-wrapper">
+                <input pInputText type="text" [ngModel]="
                               getDateInputValue(detailData, col, true, di)
-                            "
-                            (input)="onDetailDateInputChange(detailData, col, $any($event.target).value, ri, di)"
-                            (blur)="onDetailDateInputBlur(detailData, col, ri, di)"
-                            (keydown)="
+                            " (input)="onDetailDateInputChange(detailData, col, $any($event.target).value, ri, di)"
+                  (blur)="onDetailDateInputBlur(detailData, col, ri, di)" (keydown)="
                               onFieldKeyDown(
                                 $event,
                                 detailData,
@@ -743,21 +423,12 @@
                                 true,
                                 di
                               )
-                            "
-                            [placeholder]="getDatePlaceholder(col)"
-                            [maxlength]="
+                            " [placeholder]="getDatePlaceholder(col)" [maxlength]="
                               col.maxLength ||
                               (col.dateFormat?.includes('year-month') ? 7 : 10)
-                            "
-                            class="date-input"
-                          />
-                          <button
-                            pButton
-                            pRipple
-                            type="button"
-                            icon="pi pi-calendar"
-                            class="p-button-text p-button-sm p-button-rounded date-picker-button"
-                            (click)="
+                            " class="date-input" />
+                <button pButton pRipple type="button" icon="pi pi-calendar"
+                  class="p-button-text p-button-sm p-button-rounded date-picker-button" (click)="
                               openDatePicker(
                                 detailData,
                                 col.field,
@@ -765,19 +436,12 @@
                                 ri,
                                 di
                               )
-                            "
-                          ></button>
-                        </div>
+                            "></button>
+              </div>
 
-                        <!-- 內層Checkbox -->
-                        <div
-                          *ngSwitchCase="'checkbox'"
-                          class="checkbox-wrapper"
-                        >
-                          <p-checkbox
-                            [(ngModel)]="detailData[col.field]"
-                            [binary]="true"
-                            (ngModelChange)="
+              <!-- 內層Checkbox -->
+              <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true" (ngModelChange)="
                               onDetailCheckboxChange(
                                 detailData,
                                 col.field,
@@ -786,204 +450,121 @@
                                 di,
                                 col
                               )
-                            "
-                            [disabled]="readonly || col.editable === false"
-                          ></p-checkbox>
-                        </div>
+                            " [disabled]="readonly || col.editable === false"></p-checkbox>
+              </div>
 
-                        <!-- 預設文字輸入 -->
-                        <input
-                          *ngSwitchDefault
-                          pInputText
-                          type="text"
-                          [(ngModel)]="detailData[col.field]"
-                        />
-                      </ng-container>
-                    </ng-container>
+              <!-- 預設文字輸入 -->
+              <input *ngSwitchDefault pInputText type="text" [(ngModel)]="detailData[col.field]" />
+            </ng-container>
+          </ng-container>
 
-                    <!-- 不可編輯或非編輯狀態 -->
-                    <ng-container
-                      *ngIf="
+          <!-- 不可編輯或非編輯狀態 -->
+          <ng-container *ngIf="
                         shouldShowDisplayOnly(
                           col,
                           isDetailEditing(ri, di),
                           detailData
                         )
-                      "
-                    >
-                      <ng-container [ngSwitch]="col.type">
-                        <!-- 日期顯示 - 使用新的方法 -->
-                        <span *ngSwitchCase="'date'">
-                          {{ getDateDisplayValue(detailData, col) }}
-                        </span>
+                      ">
+            <ng-container [ngSwitch]="col.type">
+              <!-- 日期顯示 - 使用新的方法 -->
+              <span *ngSwitchCase="'date'">
+                {{ getDateDisplayValue(detailData, col) }}
+              </span>
 
-                        <!-- 數字顯示 -->
-                        <span *ngSwitchCase="'number'">
-                          {{ getNumberDisplayValue(col, detailData) | number }}
-                        </span>
+              <!-- 數字顯示 -->
+              <span *ngSwitchCase="'number'">
+                {{ getNumberDisplayValue(col, detailData) | number }}
+              </span>
 
-                        <!-- Checkbox 顯示 -->
-                        <span
-                          *ngSwitchCase="'checkbox'"
-                          class="checkbox-wrapper"
-                        >
-                          <div class="p-checkbox p-component p-disabled">
-                            <div
-                              class="p-checkbox-box"
-                              [ngClass]="{
+              <!-- Checkbox 顯示 -->
+              <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                <div class="p-checkbox p-component p-disabled">
+                  <div class="p-checkbox-box" [ngClass]="{
                                 'p-highlight': detailData[col.field],
-                              }"
-                            >
-                              <span
-                                class="p-checkbox-icon pi pi-check"
-                                *ngIf="detailData[col.field]"
-                              ></span>
-                            </div>
-                          </div>
-                        </span>
-                        <!-- 按鈕在非編輯狀態下也要顯示 -->
-                        <ng-container *ngSwitchCase="'button'">
-                          <button
-                            pButton
-                            pRipple
-                            type="button"
-                            [label]="col.buttonLabel ?? ''"
-                            [icon]="col.buttonIcon || ''"
-                            [ngClass]="
+                              }">
+                    <span class="p-checkbox-icon pi pi-check" *ngIf="detailData[col.field]"></span>
+                  </div>
+                </div>
+              </span>
+              <!-- 按鈕在非編輯狀態下也要顯示 -->
+              <ng-container *ngSwitchCase="'button'">
+                <button pButton pRipple type="button" [label]="col.buttonLabel ?? ''" [icon]="col.buttonIcon || ''"
+                  [ngClass]="
                               col.buttonClass || 'p-button-sm p-button-info'
-                            "
-                            [pTooltip]="col.buttonTooltip || ''"
-                            (click)="
+                            " [pTooltip]="col.buttonTooltip || ''" (click)="
                               onDetailButtonClick(
                                 detailData,
                                 col.field,
                                 rowData
                               )
-                            "
-                          ></button>
-                        </ng-container>
-                        <!-- 下拉選單顯示 -->
-                        <span *ngSwitchCase="'dropdown'">
-                          {{ getDropdownDisplayText(detailData, col) }}
-                        </span>
+                            "></button>
+              </ng-container>
+              <!-- 下拉選單顯示 -->
+              <span *ngSwitchCase="'dropdown'">
+                {{ getDropdownDisplayText(detailData, col) }}
+              </span>
 
-                        <!-- 預設顯示 -->
-                        <span *ngSwitchDefault>
-                          {{ detailData[col.field] }}
-                        </span>
-                      </ng-container>
-                    </ng-container>
-                  </td>
+              <!-- 預設顯示 -->
+              <span *ngSwitchDefault>
+                {{ detailData[col.field] }}
+              </span>
+            </ng-container>
+          </ng-container>
+        </td>
 
-                  <!-- 詳細資料操作按鈕 -->
-                  <td
-                    *ngIf="!readonly && showDetailActionColumn"
-                    [ngStyle]="getDetailActionBodyStyle()"
-                  >
-                    <div
-                      class="detail-edit-buttons flex justify-content-center gap-2"
-                    >
-                      <!-- 編輯按鈕 -->
+        <!-- 詳細資料操作按鈕 -->
+        <td *ngIf="!readonly && showDetailActionColumn" [ngStyle]="getDetailActionBodyStyle()">
+          <div class="detail-edit-buttons flex justify-content-center gap-2">
+            <!-- 編輯按鈕 -->
 
-                      <button
-                        *ngIf="!isDetailEditing(ri, di)"
-                        pButton
-                        pRipple
-                        type="button"
-                        icon="pi pi-pencil"
-                        pTooltip="編輯"
-                        class="p-button-rounded p-button-text"
-                        (click)="onDetailEditInit(detailData, rowData, ri, di)"
-                      ></button>
+            <button *ngIf="!isDetailEditing(ri, di)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"
+              class="p-button-rounded p-button-text" (click)="onDetailEditInit(detailData, rowData, ri, di)"></button>
 
-                      <!-- 確認按鈕 -->
-                      <button
-                        *ngIf="isDetailEditing(ri, di)"
-                        pButton
-                        pRipple
-                        type="button"
-                        icon="pi pi-check"
-                        pTooltip="確認"
-                        class="p-button-rounded p-button-text p-button-success"
-                        (click)="onDetailEditSave(detailData, rowData)"
-                      ></button>
+            <!-- 確認按鈕 -->
+            <button *ngIf="isDetailEditing(ri, di)" pButton pRipple type="button" icon="pi pi-check" pTooltip="確認"
+              class="p-button-rounded p-button-text p-button-success"
+              (click)="onDetailEditSave(detailData, rowData)"></button>
 
-                      <!-- 取消按鈕 -->
-                      <button
-                        *ngIf="isDetailEditing(ri, di)"
-                        pButton
-                        pRipple
-                        type="button"
-                        icon="pi pi-times"
-                        pTooltip="取消"
-                        class="p-button-rounded p-button-text p-button-danger"
-                        (click)="
+            <!-- 取消按鈕 -->
+            <button *ngIf="isDetailEditing(ri, di)" pButton pRipple type="button" icon="pi pi-times" pTooltip="取消"
+              class="p-button-rounded p-button-text p-button-danger" (click)="
                           onDetailEditCancel(detailData, rowData, ri, di)
-                        "
-                      ></button>
-                    </div>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
+                        "></button>
           </div>
         </td>
       </tr>
     </ng-template>
-
-    <!-- 無資料時顯示 -->
-    <ng-template pTemplate="emptymessage">
-      <div
-        class="flex flex-wrap justify-content-center min-h-full"
-        [ngStyle]="{ height: '62px' }"
-      >
-        <p class="empty-message text-xl font-bold text-center">
-          {{ emptyMessage }}
-        </p>
-      </div>
-    </ng-template>
   </p-table>
+</div>
+</td>
+</tr>
+</ng-template>
+
+<!-- 無資料時顯示 -->
+<ng-template pTemplate="emptymessage">
+  <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
+    <p class="empty-message text-xl font-bold text-center">
+      {{ emptyMessage }}
+    </p>
+  </div>
+</ng-template>
+</p-table>
 </div>
 
 <!-- 日期視窗 -->
-<p-dialog
-  header="選擇日期"
-  [(visible)]="datePickerVisible"
-  [modal]="true"
-  [style]="{ width: '400px' }"
-  [contentStyle]="{ overflow: 'visible' }"
-  [draggable]="false"
-  [resizable]="false"
-  styleClass="date-picker-dialog"
->
+<p-dialog header="選擇日期" [(visible)]="datePickerVisible" [modal]="true" [style]="{ width: '400px' }"
+  [contentStyle]="{ overflow: 'visible' }" [draggable]="false" [resizable]="false" styleClass="date-picker-dialog">
   <div class="date-picker-container">
-    <p-calendar
-      [(ngModel)]="temporaryDate"
-      [inline]="true"
-      [showIcon]="false"
-      [showButtonBar]="true"
-      [view]="getCalendarView()"
-      [dateFormat]="getCalendarDateFormat()"
-    ></p-calendar>
+    <p-calendar [(ngModel)]="temporaryDate" [inline]="true" [showIcon]="false" [showButtonBar]="true"
+      [view]="getCalendarView()" [dateFormat]="getCalendarDateFormat()"></p-calendar>
   </div>
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <button
-        pButton
-        pRipple
-        label="確認"
-        icon="pi pi-check"
-        class="p-button-text"
-        (click)="confirmDateSelection()"
-      ></button>
-      <button
-        pButton
-        pRipple
-        label="取消"
-        icon="pi pi-times"
-        class="p-button-text p-button-secondary"
-        (click)="cancelDateSelection()"
-      ></button>
+      <button pButton pRipple label="確認" icon="pi pi-check" class="p-button-text"
+        (click)="confirmDateSelection()"></button>
+      <button pButton pRipple label="取消" icon="pi pi-times" class="p-button-text p-button-secondary"
+        (click)="cancelDateSelection()"></button>
     </div>
   </ng-template>
 </p-dialog>

@@ -15,13 +15,14 @@ import { CellInput } from './table-edit-cell.model';
         <ng-container *ngSwitchCase="'input'">
           <input type="text"
                  class="min-w-max p-inputtext p-component p-element"
-                 [placeholder]="isDisabled() ? '' :'請輸入' + cellInput.col.header"
+                 [placeholder]="isDisabled() ? '' : (cellInput.col.placeholder ?? '請輸入' + cellInput.col.header)"
                  [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                  [ngModelOptions]="{ standalone: true }"
                  [disabled]="isDisabled()"
                  (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
                  [maxlength]="cellInput.col.maxLength || null"
                  [style]="{'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
+                 (focus)="handleFocus()"
                  (blur)="handleBlur()"
                  (keydown.enter)="handleEnter($event)"
                  (input)="onInput()"
@@ -70,6 +71,15 @@ export class InputCellComponent {
 
   onInput(): void {
     this.cdr.markForCheck();
+  }
+
+  handleFocus() {
+    this.cellInput.col.onFocus?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
   }
 
   handleBlur() {
