@@ -107,7 +107,6 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
         rowData.approve_status !== '2' ||
-        rowData.tlt_openflag !== '9' ||
         !this.hasPermission(Actions.AntiAudit)
     },
 
@@ -126,7 +125,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       action: (rowData: ContractItem) => this.onEarlyTermination(rowData),
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
-        rowData.approve_status !== '2'
+        rowData.approve_status !== '2' ||
+        this.isContractExpired(rowData)
     }
   ];
 
@@ -412,10 +412,6 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
       return;
     }
-    if (rowData.tlt_openflag !== '9') {
-      this.messageService.warnBubble('合約已開始營運，無法反審核');
-      return;
-    }
 
     this.messageService.confirm({
       message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
@@ -511,6 +507,13 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   // ========== 輔助方法 ==========
+  private isContractExpired(rowData: ContractItem): boolean {
+    if (!rowData.tlt_edate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(rowData.tlt_edate) < today;
+  }
+
   private isVoidDisabled(rowData: ContractItem): boolean {
     // 已作廢的不能再作廢
     if (rowData.approve_status === '3') {
