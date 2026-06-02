@@ -11,7 +11,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -36,7 +35,6 @@ import { finalize, Observable } from 'rxjs';
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    InputNumberComponent,
     TableReportComponent,
     CalendarRangeQuickComponent,
     AsyncPipe,
@@ -127,7 +125,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         VEN_No: formValue.VEN_No,
         ECR_No: formValue.ECR_No,
         TXN_SaleNoteNo: formValue.TXN_SaleNoteNo,
-        TXN_No: formValue.TXN_No,
+        TXN_No: formValue.TXN_No || null,
         PLU_MagNo: formValue.PLU_MagNo,
         PLU_No: formValue.PLU_No,
         PLU_OrgPLUNo: formValue.PLU_OrgPLUNo,
