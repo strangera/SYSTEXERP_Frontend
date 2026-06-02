@@ -58,7 +58,7 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     // POS2064M 收支主檔(I/O)
     // 收支請款檔(I/O) 
 
-    PCS_No: [null, [Validators.maxLength(20)]], // 支出請款單號
+    PCS_RqstNo: [null, [Validators.maxLength(20)]], // 支出請款單號
     PCS_RqstDate: [null], // 產生日期
     PCS_UsrNo: [null], // 申請人
     PCS_UsrName: [''], // 申請人名稱
@@ -70,7 +70,7 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     Keep_OrgID: [null], // 保管單位
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'PCS_RqstNo', order: 1 }]), // 分頁和排序參數
   });
 
   public readonly totalRecords = signal<number>(0);
@@ -107,10 +107,10 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
 
   addButton: AddButton[] = [
     {
-      label: '刪除',
+      label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72020Data) => this.onDelete(rowData),
-      disabled: () => !this.hasPermission(this.Actions.Delete),
+      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.Delete) || rowData.PCS_Status == '9',
     }
   ];
 
@@ -153,13 +153,13 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
   onSubmit(form: FormGroup) {
     console.log('查詢條件', form.value);
     const req = {
-      PCS_No: form.value.PCS_No,
+      PCS_RqstNo: form.value.PCS_RqstNo,
       PCS_RqstDate: form.value.PCS_RqstDate,
       PCS_UsrNo: form.value.PCS_UsrNo,
       Keep_UsrNo: form.value.Keep_UsrNo,
       PCS_Status: form.value.PCS_Status,
       Keep_OrgID: form.value.Keep_OrgID,
-      SortColumn: 'PCS_No',
+      SortColumn: 'PCS_RqstNo',
       SortDirection: '1',
       PageSize: 30,
       PageIndex: 1,

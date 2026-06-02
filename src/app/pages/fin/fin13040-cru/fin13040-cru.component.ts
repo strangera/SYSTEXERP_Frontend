@@ -308,14 +308,24 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    this.data = details.map(d => ({
-      PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
-      PLU_Name: d.PLU_Name ?? '',
-      TXN_Qty: Number(d.TXN_Qty ?? 0),
-      PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
-      TXN_SaleAmt: Number(d.TXN_SaleAmt ?? 0),
-      TXN_Tax: Number(d.TXN_Tax ?? 0),
-    }));
+    this.data = details.map(d => {
+      const saleAmt = Number(d.TXN_SaleAmt ?? 0);
+      const tax = Number(d.TXN_Tax ?? 0);
+      const qty = Number(d.TXN_Qty ?? 0);
+      // 重算未稅單價，確保顯示一致
+      const unitPrice = qty > 0
+        ? Math.round(((saleAmt / qty) - (saleAmt / qty) / 21) * 100) / 100
+        : Number(d.PLU_SalePrc ?? 0);
+      return {
+        PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
+        PLU_Name: d.PLU_Name ?? '',
+        TXN_Qty: qty,
+        PLU_SalePrc: unitPrice,
+        TXN_SaleAmt: saleAmt,
+        TXN_Tax: tax,
+        SaleAmt: saleAmt - tax,
+      };
+    });
     this.totalRecords = this.data.length;
     if (this.INV_ItemName_Options && this.INV_ItemName_Options.length > 0) {
       const normalize = (s: any) => (s ?? '').toString().trim();
@@ -342,8 +352,13 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
 
-    // 填完明細後更新主檔金額
-    this.updateMasterAmounts();
+    // 填完明細後，依課稅別重算（確保免稅/零稅時 TXN_Tax=0）
+    const taxType = this.dataForm.get('PUR_TaxType')?.value;
+    if (taxType) {
+      this.recalculateAllDetailByTaxType(taxType);
+    } else {
+      this.updateMasterAmounts();
+    }
   }
 
   // ======================== 下拉選單 ========================
@@ -510,7 +525,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
             : Math.round(value / 21);
 
           const saleAmt = value - tax;
-          const unitPrice = Math.round((value / qty) - (value / qty) / 21);
+          const unitPrice = isNoTax
+            ? (qty > 0 ? Math.round(value / qty) : value)
+            : Math.round((value / qty) - (value / qty) / 21);
 
           return {
             TXN_SaleAmt: value,
@@ -524,15 +541,34 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         field: 'PLU_SalePrc',
         header: '單價',
         type: 'inputNumber',
-        disabled: () => true, // 不允許直接編輯
+        defaultValue: 0,
         validate: [validateRequired],
+        calculate: (rowData, value) => {
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
+          const qty = Number(rowData.TXN_Qty) || 0;
+          const saleAmt = Math.round(Number(value) * qty);
+          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const tax = txnSaleAmt - saleAmt;
+          return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
+        },
       },
       {
         field: 'SaleAmt',
-        header: '销售金额',
+        header: '銷售金額',
         type: 'inputNumber',
-        disabled: () => true, // 不允許直接編輯
+        defaultValue: 0,
         validate: [validateRequired],
+        calculate: (rowData, value) => {
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
+          const qty = Number(rowData.TXN_Qty) || 0;
+          const saleAmt = Number(value);
+          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const tax = txnSaleAmt - saleAmt;
+          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
+          return { TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax, PLU_SalePrc: unitPrice };
+        },
       },
     ];
   }
@@ -636,8 +672,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ======================== 儲存 ========================
   onSubmit(form: FormGroup): void {
-    // 驗證明細
-    for (const item of this.data) {
+    // 驗證明細（排除自動插入的空白候選列）
+    for (const item of this.data.filter(d => !d._isAutoInsertCandidate)) {
       const { isValid, errorMessage } = this.validateDetailRow(item);
       if (isValid) continue;
 

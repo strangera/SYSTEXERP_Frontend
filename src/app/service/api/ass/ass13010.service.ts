@@ -39,8 +39,8 @@ export class ASS13010Service {
     );
   }
 
-  detailASS13010(body: DetailASS13010Request): Observable<ApiResponse<DetailASS13010Response>> {
-    return this.http.post<ApiResponse<DetailASS13010Response>>(`${this.apiUrl}/detailASS13010`, body);
+  detailASS13010(body: DetailASS13010Request): Observable<ApiResponse<DetailASS13010Response[]>> {
+    return this.http.post<ApiResponse<DetailASS13010Response[]>>(`${this.apiUrl}/detailASS13010`, body);
   }
 
   insertASS13010(body: InsertASS13010Request): Observable<ApiResponse<InsertASS13010Response>> {

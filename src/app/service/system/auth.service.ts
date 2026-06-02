@@ -25,14 +25,6 @@ import { QueryStateService } from '../../shared/service/query-state.service';
 import { SystemDataService } from './system-data.service';
 
 registerLocaleData(zhHant, 'zh-Hant-TW');
-
-export interface OuterTokenResponse {
-  token: string;
-  expiresAt: string;
-  expiresInSeconds: number;
-  tokenType: string;
-}
-
 @UntilDestroy()
 @Injectable({
   providedIn: 'root'
@@ -47,9 +39,7 @@ export class AuthService {
   private readonly injector = inject(Injector);
   private readonly systemDataService = inject(SystemDataService);
   private readonly locationStrategy = inject(LocationStrategy);
-
   private inactivityService?: InactivityService;
-
   private readonly apiUrl: string = environment.ApiUrl;
   private readonly jwtHelper: JwtHelperService = new JwtHelperService();
   private readonly userSubject: BehaviorSubject<UserInfo | null>;
@@ -115,17 +105,13 @@ export class AuthService {
           client_ip: this.client_ip,
           mid: Number(userInfo.mid)
         };
-
         localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
         sessionStorage.removeItem('SSO_LOGOUT');
         this.userSubject.next(updatedUserInfo);
-
         this.inactivityService ??= this.injector.get(InactivityService);
         this.inactivityService.setupListener();
         this.inactivityService.startTimer();
-
         this.queryStateService.clearAllQueryStates();
-
         if (!options?.skipNavigate) {
           this.router.navigate(['/sso/dashboard']);
         }
@@ -224,10 +210,5 @@ export class AuthService {
   // 是否允許自動 SSO
   canAutoSSO(): boolean {
     return sessionStorage.getItem('SSO_LOGOUT') !== '1';
-  }
-
-  // 獲取外部 Token
-  getOuterToken(): Observable<OuterTokenResponse> {
-    return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
   }
 }

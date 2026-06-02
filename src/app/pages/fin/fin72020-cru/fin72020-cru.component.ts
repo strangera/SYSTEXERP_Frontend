@@ -113,10 +113,8 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<FIN72020Service>
         const req: ClaimFIN72020ExecuteRequest = {
             Keep_UsrNo: this.dataForm.controls.Keep_UsrNo.value!,
             PCS_NoList: this.data.map(item => item.PCS_No).join(','),
-            RqstUsrNo: this.dataForm.controls.Keep_UsrNo.value!,
-            RqstUsrName: this.getUserNameFromOptions(
-                this.dataForm.controls.Keep_UsrNo.value
-            ),
+            RqstUsrNo: this.getUserInfoFromLocal().user_No,
+            RqstUsrName: this.getUserInfoFromLocal().user_Name,
         };
         console.log('請款請求參數', req);
         this.fin72020Service.claimFIN72020Execute(req)
@@ -153,21 +151,29 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<FIN72020Service>
         this.selectedData = [];
     }
 
-    private getUserNameFromOptions(userNo: string | null | undefined): string {
-        if (!userNo) {
-            return '';
+
+    /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo, user_No, user_Name } */
+    private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string; user_No: string; user_Name: string } {
+        let mid = 0;
+        let SYS_StoreNo = '';
+        let user_No = '';
+        let user_Name = '';
+
+        try {
+            const raw = localStorage.getItem('UserInfo');
+            if (raw) {
+                const obj = JSON.parse(raw);
+                // 依你的截圖欄位：mid 與 SYS_StoreNo
+                mid = Number(obj?.mid ?? 0);
+                SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
+                user_No = String(obj?.user_No ?? '');
+                user_Name = String(obj?.user_Name ?? '');
+            }
+        } catch (e) {
+            console.error('解析 localStorage.UserInfo 失敗：', e);
         }
 
-        const option = this.KeepUsrNo_Options()
-            .find(item => item.value === userNo);
-
-        if (!option?.label) {
-            return '';
-        }
-
-        const parts = option.label.split(' - ');
-
-        return parts.length > 1 ? parts[1] : option.label;
+        return { mid, SYS_StoreNo, user_No, user_Name };
     }
 
     /** 載入下拉選單選項 */

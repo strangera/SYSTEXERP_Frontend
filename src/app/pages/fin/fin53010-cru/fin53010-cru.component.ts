@@ -3,6 +3,7 @@ import { afterNextRender, Component, computed, effect, Injector, OnInit, signal,
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN32030Service, QueryAbatAcctResponse } from '@service/api/fin/fin32030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -18,6 +19,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
@@ -71,6 +73,7 @@ function parseApiDateToLocal(s: string | null | undefined): Date | null {
   imports: [
     ButtonModule,
     CheckboxModule,
+    DialogModule,
     DropdownModule,
     FormsModule,
     InputTextModule,
@@ -95,6 +98,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
+  @ViewChild('ptaDialogTable') ptaDialogTable!: TableComponent;
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
@@ -126,6 +130,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly selectedOrgId = signal<string>('100000');
   /** 立沖代號等暫無選項時使用，固定參考避免 dropdown 每次 getOptions 回傳新陣列 */
   readonly emptyClearingOptions: Option[] = [];
+
+  // 立沖代號選取彈窗
+  showPtaDialog = false;
+  ptaDialogLoading = false;
+  ptaDialogSelectedItem: QueryAbatAcctResponse | null = null;
+  ptaDialogData: QueryAbatAcctResponse[] = [];
+  ptaFilterForm = this.formBuilder.group({
+    VouNo: [''],
+    PTA: [''],
+    VEN_No: [null as string | null],
+  });
+  ptaDialogColumns: Column[] = [
+    { field: 'VouNo', header: '傳票號碼', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'DebitAmt', header: '借方(餘額)', visible: true, format: formatAmount, align: 'right' },
+    { field: 'CreditAmt', header: '貸方(餘額)', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PTA', header: '立沖代號', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
+  ];
+  private currentEditingPtaRowIndex: number | null = null;
+  private currentEditingPtaAccNo: string | null = null;
   /** 避免 effect 在 maps 抖動時反覆 tableData.set 造成 table-edit 重初始化 */
   private _lastAppliedDetailTableFingerprint: string | null = null;
   public readonly currentStep = signal<number>(1);
@@ -163,15 +189,22 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepSalesTotal = signal<{ total_amount: number; net_amount: number; tax_amount: number }>({ total_amount: 0, net_amount: 0, tax_amount: 0 });
   public readonly stepBankTotal = signal<{ deposit_amt: number; withdraw_amt: number }>({ deposit_amt: 0, withdraw_amt: 0 });
 
-  public readonly stepAPFooter = computed(() => ({ acp_amt: this.stepAPTotal() }));
-  public readonly stepARFooter = computed(() => ({ ars_amt: this.stepARTotal() }));
+  public readonly stepAPFooter = computed(() => ({ acp_amt: this.stepAPRows().reduce((sum, r) => sum + (r.acp_amt ?? 0), 0) }));
+  public readonly stepARFooter = computed(() => ({ ars_amt: this.stepARRows().reduce((sum, r) => sum + (r.ars_amt ?? 0), 0) }));
   public readonly stepPurchaseFooter = computed(() => ({
     invoice_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.invoice_amount ?? 0), 0),
     net_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
     tax_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
   }));
-  public readonly stepSalesFooter = computed(() => this.stepSalesTotal());
-  public readonly stepBankFooter = computed(() => this.stepBankTotal());
+  public readonly stepSalesFooter = computed(() => ({
+    total_amount: this.stepSalesRows().reduce((sum, r) => sum + (r.total_amount ?? 0), 0),
+    net_amount: this.stepSalesRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
+    tax_amount: this.stepSalesRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
+  }));
+  public readonly stepBankFooter = computed(() => ({
+    deposit_amt: this.stepBankRows().reduce((sum, r) => sum + (r.deposit_amt ?? 0), 0),
+    withdraw_amt: this.stepBankRows().reduce((sum, r) => sum + (r.withdraw_amt ?? 0), 0),
+  }));
 
   /** APS1001 銀行下拉 + 步驟列上 POS2013 銀行代號（清單無該代碼時補佔位） */
   public readonly bankNoOptionsForStep = computed(() => {
@@ -578,19 +611,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         field: 'PTA',
         header: '立沖代號',
         textAlign: 'left',
-        type: 'dropdown',
-        options: (rowData: { AccNo?: string }) => {
-          const { AccNo } = rowData || {};
-          if (!AccNo) return this.emptyClearingOptions;
-          return this.service.ptaOptions().get(AccNo) || this.emptyClearingOptions;
+        type: 'input',
+        placeholder: '點擊選擇...',
+        onFocus: (_r, _v, _c, index: number) => {
+          if (this.isFormReadable) return;
+          const rowData = this.tableData()[index];
+          const { ABAT_YN } = this.getAccAbatInfo(rowData?.AccNo);
+          if (ABAT_YN !== 'Y') return;
+          if (this.isAutoCodeRow(rowData)) return;
+          this.openPtaDialog(index);
         },
-        triggerFields: ['AccNo'],
-        optionLabel: 'label',
-        optionValue: 'value',
-        // 若該 AccNo 的下拉選項已查回但載入回來的 PTA 不在其中（已立沖打平的舊值）→ 改用文字輸入框
-        dropdownFallbackToInput: true,
-        isOptionsLoaded: (row: { AccNo?: string }) =>
-          !!row?.AccNo && this.service.ptaOptions().has(row.AccNo),
+        disabled: (_v, _i, rowData) => {
+          if (this.isFormReadable) return true;
+          if (!rowData?.AccNo) return true;
+          const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+          if (ABAT_YN !== 'Y') return true;
+          // 同方向（自動編碼）禁用
+          if (this.isAutoCodeRow(rowData)) return true;
+          // 反方向有金額才開放，否則禁用（還沒輸金額時不可點）
+          if (AccDC === 'D') return !((rowData.AccAmtC ?? 0) > 0);
+          if (AccDC === 'C') return !((rowData.AccAmtD ?? 0) > 0);
+          return true;
+        },
       },
       {
         field: 'ReflNo',
@@ -620,7 +662,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'org_id', header: '組織代號', textAlign: 'left', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true },
+    { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date' },
     { field: 'acp_date', header: '立帳日期', textAlign: 'left', width: '9rem', type: 'date', disabled: () => true },
     { field: 'ven_bnk_no', header: '匯款銀行代號', textAlign: 'left', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
@@ -634,7 +676,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepARColumns: EditColumn[] = [
     { field: 'org_id', header: '組織代號', type: 'dropdown', textAlign: 'left', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', type: 'dropdown', textAlign: 'left', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true, textAlign: 'right' },
+    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true, textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'pta_date', header: '預計收款日', type: 'date', textAlign: 'left' },
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true, textAlign: 'left' },
     { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
@@ -686,8 +728,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepBankColumns: EditColumn[] = [
     { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
     { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
-    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
-    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'status', header: '狀態', type: 'dropdown', options: [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }], optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true, textAlign: 'left' },
@@ -733,6 +775,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   constructor(
     public readonly service: FIN53010Service,
+    private readonly fin32030Service: FIN32030Service,
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
@@ -929,11 +972,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (vt === '3') {
             ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
           } else if (vt === '4') {
+            const arVenOpt = getVenOpt(String(row.DetailNo ?? ''));
+            const payCondDay = arVenOpt?.['VEN_PayConditionDay'] as number | null | undefined;
+            let ptaDate: Date | undefined;
+            if (payCondDay != null && vouDate instanceof Date) {
+              const d = new Date(vouDate);
+              d.setDate(d.getDate() + payCondDay);
+              ptaDate = d;
+            }
             ar.push({
               org_id: row.ORG_ID ?? '100000',
               ven_no: row.DetailNo,
               ars_amt: amt || undefined,
               ars_date: vouDate,
+              pta_date: ptaDate,
               acc_no: row.AccNo,
               note_desc: noteDesc,
             });
@@ -1470,6 +1522,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
 
+    // 銷項發票：所有列必須已找到對應 DB 記錄（id 不為 0 / undefined）
+    if (this.activeVoucherSteps().includes(6)) {
+      const invalidRows = this.stepSalesRows()
+        .map((r, i) => ({ r, i }))
+        .filter(({ r }) => !r.id || r.id === 0);
+      if (invalidRows.length > 0) {
+        const serNos = invalidRows.map(({ r, i }) => r.SerNo ?? (i + 1)).join('、');
+        this.messageService.errorBubble(`銷項發票第 ${serNos} 筆發票號碼在系統中查無資料，請確認字軌及發票號碼是否正確`);
+        return;
+      }
+    }
+
     this.handleSubmit(this.dataForm, () => {
       if ((this.isFormCreateable || this.isFormEditable) && !this.isLastStep()) {
         this.messageService.warnBubble('請先完成所有步驟，再進行送出');
@@ -1571,6 +1635,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug(`onDataChange:`, [data]);
     const renumbered = data.map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i }));
     this.tableData.set(renumbered);
+    this.rebuildAllAutoPta();
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
   }
 
@@ -1622,10 +1687,40 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onStepSalesInvoiceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
-    if (f !== 'invoice_prefix' && f !== 'invoice_no') return;
     const idx = event.index;
     if (typeof idx !== 'number' || idx < 0) return;
     const row = event.rowData as FIN53010StepSalesInvoiceRow;
+
+    if (f === 'invoice_date' || f === 'declare_ym') {
+      const srcDate = f === 'invoice_date'
+        ? (row.invoice_date instanceof Date ? row.invoice_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      if (!srcDate) return;
+      const month = srcDate.getMonth();
+      const nextEvenMonth = month % 2 === 0
+        ? new Date(srcDate.getFullYear(), month + 1, 1)
+        : new Date(srcDate.getFullYear(), month, 1);
+      event.rowData.declare_ym = nextEvenMonth;
+      return;
+    }
+
+    if (f === 'total_amount' || f === 'tax_type') {
+      const amount = row.total_amount;
+      if (amount != null && amount > 0) {
+        const taxType = String(row.tax_type ?? '').trim();
+        if (taxType === '1') {
+          const tax = Math.round(amount * 5 / 105);
+          event.rowData.tax_amount = tax;
+          event.rowData.net_amount = amount - tax;
+        } else {
+          event.rowData.tax_amount = 0;
+          event.rowData.net_amount = amount;
+        }
+      }
+      return;
+    }
+
+    if (f !== 'invoice_prefix' && f !== 'invoice_no') return;
     const prefix = String(row.invoice_prefix ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
     if (prefix.length !== 2 || no.length !== 8) return;
@@ -1817,16 +1912,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
           // 取得立沖代號下拉選單
           this.service.getPTADropdownOptions(String(event.value));
+          // 科目不需立沖時清空 PTA
+          if (this.getAccAbatInfo(String(event.value)).ABAT_YN !== 'Y') {
+            rowData.PTA = undefined;
+          }
+          this.rebuildAllAutoPta();
           break;
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtC = void 0;
+          this.rebuildAllAutoPta();
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtD = void 0;
+          this.rebuildAllAutoPta();
           break;
 
         case 'ORG_ID':
@@ -1849,6 +1951,41 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
       }
     }
+  }
+
+  /** 從 accNoMap 取得科目的 AccDC 與 ABAT_YN */
+  private getAccAbatInfo(accNo: string | undefined | null): { AccDC: string; ABAT_YN: string } {
+    const info = this.service.accNoMap().get(String(accNo ?? ''));
+    return {
+      AccDC: String(info?.['AccDC'] ?? '').trim(),
+      ABAT_YN: String(info?.['ABAT_YN'] ?? '').trim(),
+    };
+  }
+
+  /** 判斷該列是否應自動編碼 PTA（同方向 + ABAT_YN=Y） */
+  private isAutoCodeRow(rowData: FIN53010DetailTable): boolean {
+    const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+    if (ABAT_YN !== 'Y') return false;
+    if (AccDC === 'D' && (rowData.AccAmtD ?? 0) > 0) return true;
+    if (AccDC === 'C' && (rowData.AccAmtC ?? 0) > 0) return true;
+    return false;
+  }
+
+  /** 重新為所有「自動編碼」列指定 PTA = VouNo-1, VouNo-2...
+   *  新增模式（VouNo='自動給號'）時不處理 */
+  private rebuildAllAutoPta(): void {
+    const vouNo = this.dataForm.getRawValue().VouNo?.trim() ?? '';
+    if (!vouNo || vouNo === '自動給號') return;
+
+    let counter = 1;
+    this.tableData.update(rows =>
+      rows.map(row => {
+        if (this.isAutoCodeRow(row)) {
+          return { ...row, PTA: `${vouNo}-${counter++}` };
+        }
+        return row;
+      })
+    );
   }
 
   public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
@@ -2017,6 +2154,85 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public clearVenUsr(rowData: FIN53010DetailTable): void {
     rowData.DetailNo = '';
     rowData.DetailName = '';
+  }
+
+  // ── 立沖代號選取彈窗 ─────────────────────────────────────────────────────
+
+  openPtaDialog(rowIndex: number): void {
+    const rowData = this.tableData()[rowIndex];
+    if (!rowData?.AccNo) return;
+
+    this.currentEditingPtaRowIndex = rowIndex;
+    this.currentEditingPtaAccNo = rowData.AccNo ?? null;
+    this.showPtaDialog = true;
+    this.ptaFilterForm.reset();
+    this.ptaDialogSelectedItem = null;
+    this.ptaDialogData = [];
+
+    const currentPta = rowData.PTA;
+    this.ptaDialogLoading = true;
+    this.fin32030Service.queryAbatAcct({ AccNo: rowData.AccNo })
+      .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
+      .subscribe(response => {
+        this.ptaDialogData = response.Data ?? [];
+        if (currentPta) {
+          const match = this.ptaDialogData.find(item => item.PTA === currentPta);
+          if (match) {
+            this.ptaDialogSelectedItem = match;
+            setTimeout(() => {
+              if (this.ptaDialogTable?.dt) {
+                this.ptaDialogTable.selectedItems = match;
+                this.ptaDialogTable.dt.selection = match;
+              }
+            }, 100);
+          }
+        }
+      });
+  }
+
+  filterPtaDialog(): void {
+    const { VouNo, PTA, VEN_No } = this.ptaFilterForm.value;
+    this.ptaDialogLoading = true;
+    this.fin32030Service.queryAbatAcct({
+      AccNo: this.currentEditingPtaAccNo,
+      VouNo: VouNo || null,
+      PTA: PTA || null,
+      VEN_No: VEN_No || null,
+    })
+      .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
+      .subscribe(response => {
+        this.ptaDialogData = response.Data ?? [];
+      });
+  }
+
+  onPtaRowSelect(event: { data?: QueryAbatAcctResponse }): void {
+    if (event.data) {
+      this.ptaDialogSelectedItem = event.data;
+    }
+  }
+
+  confirmPtaSelection(): void {
+    let selected = this.ptaDialogSelectedItem;
+    if (!selected) {
+      const raw = this.ptaDialogTable?.selectedItems;
+      selected = Array.isArray(raw) ? (raw[0] ?? null) : (raw as QueryAbatAcctResponse ?? null);
+    }
+    if (!selected) return;
+
+    const rowIndex = this.currentEditingPtaRowIndex;
+    if (rowIndex !== null) {
+      this.tableData.update(rows =>
+        rows.map((r, i) => i === rowIndex ? { ...r, PTA: selected!.PTA ?? '' } : r)
+      );
+    }
+    this.showPtaDialog = false;
+    this.currentEditingPtaRowIndex = null;
+    this.ptaDialogSelectedItem = null;
+  }
+
+  closePtaDialog(): void {
+    this.showPtaDialog = false;
+    this.ptaDialogSelectedItem = null;
   }
 
 }

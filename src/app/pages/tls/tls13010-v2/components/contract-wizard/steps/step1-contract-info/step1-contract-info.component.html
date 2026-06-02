@@ -26,7 +26,7 @@
               [control]="getControl('tlt_no')"
               [customPlaceholder]="'系統自動產生'"
               [alwaysShowPlaceholder]="true"
-              [readonly]="false"
+              [readonly]="crudstatus !== CRUDStatus.Create"
               [submitted]="submitted"
             ></app-input-text>
           </div>

@@ -74,8 +74,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   public readonly empIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
   /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-  /** 品項代碼選項 */
-  public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
+  /** 品項代碼選項（unit 用於選擇後自動帶入單位） */
+  public readonly goodsIdOptions = signal<{ label: string; value: string; unit?: string }[]>([]);
   /** 保管單位選項 */
   public readonly custodyUnitOptions = signal<{ label: string; value: string }[]>([]);
   /** 保管人選項 */
@@ -96,6 +96,9 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
+      calculate: (_rowData, value: string) => ({
+        UNIT: value ? (this.goodsIdOptions().find(o => o.value === value)?.unit ?? '') : '',
+      }),
     },
     {
       field: 'CUSTODY_UNIT',
@@ -120,7 +123,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       header: '單位',
       type: 'input',
       maxLength: 8,
-      placeholder: '最多8個字',
+      disabled: () => true,
     },
     {
       field: 'QUANTITY',
@@ -206,7 +209,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
             GOODS_ID: detail.GOODS_ID,
             CUSTODY_UNIT: detail.HOLD_ORG_ID, // 保管部門對應到 CUSTODY_UNIT
             CUSTODIAN: detail.HOLD_EMP_ID, // 保管人員對應到 CUSTODIAN
-            UNIT: undefined, // API 沒有此欄位
+            UNIT: detail.GOODS_ID ? this.goodsIdOptions().find(o => o.value === detail.GOODS_ID)?.unit : undefined,
             QUANTITY: detail.QTY,
             ITEM_REMARK: detail.NOTES, // API 的 NOTES 對應到 ITEM_REMARK
           }));
@@ -279,14 +282,29 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     this.ass11040Service.queryFASITEM_DropDownList({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const list = res.Data?.Data ?? [];
-        const options = list
+        const options = (res.Data?.Data ?? [])
           .filter(item => item.GOODS_ID != null && item.GOODS_ID !== '')
           .map(item => ({
             label: `${item.GOODS_ID} - ${item.GOODS_NAME ?? ''}`,
             value: item.GOODS_ID!,
+            unit: item.UNIT_NAME ?? '',
           }));
         this.goodsIdOptions.set(options);
+
+        // 編輯模式下 detail 可能早於下拉載入完成，這裡回頭補上既有列缺少的單位
+        const current = this.tableData();
+        if (current.length > 0) {
+          const filled = current.map(item => {
+            if (item.GOODS_ID && !item.UNIT) {
+              const found = options.find(o => o.value === item.GOODS_ID);
+              if (found?.unit) {
+                return { ...item, UNIT: found.unit };
+              }
+            }
+            return item;
+          });
+          this.tableData.set(filled);
+        }
       },
     });
   }

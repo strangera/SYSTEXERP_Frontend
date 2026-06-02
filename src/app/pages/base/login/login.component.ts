@@ -1,7 +1,7 @@
 import { NgClass, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { userLogin } from '@shared/models/system/userInfo';
 import { Button, ButtonDirective } from 'primeng/button';
@@ -10,6 +10,7 @@ import { first } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { SsoDashboardService } from '../sso-dashboard/sso-dashboard.service';
 
 @UntilDestroy()
 @Component({
@@ -27,87 +28,63 @@ import { NotificationService } from '../../../shared/component/notification-mess
   ],
 })
 export class LoginComponent implements OnInit {
+  private readonly ssoDashboardService = inject(SsoDashboardService);
+  private readonly authService = inject(AuthService);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly notemessage = inject(NotificationService);
+  private readonly router = inject(Router);
   logoPath = 'assets/layout/images/login_logo.webp';
 
   loginForm = this.formBuilder.group({
     code: ['' as string, Validators.required],
     password: ['' as string, Validators.required],
   });
-
   submitted = false;
   loading = false;
-
   version = environment.version;
 
-  constructor(
-    private authService: AuthService,
-    private formBuilder: FormBuilder,
-    private notemessage: NotificationService,
-    private router: Router,
-    private route: ActivatedRoute,
-  ) { }
-
   ngOnInit(): void {
-    console.log('[LoginComponent] ngOnInit triggered');
-
     // ---- 逃離 iframe ----
     try {
       if (typeof globalThis !== 'undefined') {
         const topWin = globalThis.top as (Window & typeof globalThis) | null;
         const selfWin = globalThis.self as Window & typeof globalThis;
         if (topWin && topWin !== selfWin) {
-          console.log('[LoginComponent] 逃離 iframe');
           topWin.location.replace(globalThis.location.href);
           return;
         }
       }
     } catch {
-      console.log('[LoginComponent] iframe try-catch fallback');
       globalThis.location.replace(globalThis.location.href);
       return;
     }
-
     // ===== 先處理 SSO 登出回呼 =====
     const ssoLogout = this.getQueryParamFromLocation('ssoLogout');
-
-    console.log('[LoginComponent] ssoLogout(from location):', ssoLogout);
-    console.log('[LoginComponent] current href:', globalThis.location.href);
-
     if (ssoLogout === '1') {
-      console.log('[LoginComponent] 偵測到 ssoLogout=1，執行 ERP 前後端同步登出');
       this.authService.ssoLogoutAndRedirectToLogin();
       return;
     }
 
     const loggedIn = this.authService.isLoggedIn();
-    console.log('[LoginComponent] isLoggedIn:', loggedIn);
 
     if (loggedIn) {
       // 避免剛從外站 logout 回來，又自動重新 SSO
       if (!this.authService.canAutoSSO()) {
-        console.log('[LoginComponent] canAutoSSO = false，停留在 login 頁');
         return;
       }
 
       // 已登入時，只看目前網址有沒有 redirectURL
       const redirect = this.getRedirectFromPreLoginOrLocation();
-      console.log('[LoginComponent] redirect (ngOnInit):', redirect);
-
       if (redirect) {
-        console.log('[LoginComponent] 已登入且有 redirectURL，開始 getOuterToken()');
-
-        this.authService
+        this.ssoDashboardService
           .getOuterToken()
           .pipe(first(), untilDestroyed(this))
           .subscribe({
             next: (res) => {
-              console.log('[LoginComponent] getOuterToken success:', res);
               const target = this.appendOrReplaceParam(redirect, 'token', res.token);
-              console.log('[LoginComponent] redirect to:', target);
               globalThis.location.href = target;
             },
             error: (err) => {
-              console.error('[LoginComponent] getOuterToken error:', err);
               this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
               this.router.navigate(['/sso/dashboard']);
             },
@@ -128,8 +105,6 @@ export class LoginComponent implements OnInit {
   private getRedirectFromPreLoginOrLocation(): string {
     try {
       const href = globalThis.location.href;
-      console.log('[getRedirectFromPreLoginOrLocation] href:', href);
-
       const u = new URL(href);
 
       const rawRedirect =
@@ -139,7 +114,6 @@ export class LoginComponent implements OnInit {
         '';
 
       if (!rawRedirect) {
-        console.log('[LoginComponent] no redirect in current URL');
         return '';
       }
 
@@ -159,17 +133,13 @@ export class LoginComponent implements OnInit {
       }
 
       if (!outerQuery) {
-        console.log('[LoginComponent] redirect (no outerQuery):', baseRedirect);
         return baseRedirect;
       }
 
       const fullRedirect =
         baseRedirect + (baseRedirect.includes('?') ? '&' : '?') + outerQuery;
-
-      console.log('[LoginComponent] redirect (merged outerQuery):', fullRedirect);
       return fullRedirect;
     } catch (err) {
-      console.error('[getRedirectFromPreLoginOrLocation] error:', err);
       return '';
     }
   }
@@ -201,10 +171,8 @@ export class LoginComponent implements OnInit {
           this.notemessage.successBubble('登入成功');
 
           const redirect = this.getRedirectFromPreLoginOrLocation();
-          console.log('[LoginComponent] redirect (onSubmit):', redirect);
-
           if (redirect) {
-            this.authService
+            this.ssoDashboardService
               .getOuterToken()
               .pipe(first(), untilDestroyed(this))
               .subscribe({
@@ -243,7 +211,6 @@ export class LoginComponent implements OnInit {
 
       return '';
     } catch (err) {
-      console.error('[getQueryParamFromLocation] error:', err);
       return '';
     }
   }

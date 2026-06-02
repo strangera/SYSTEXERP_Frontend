@@ -82,7 +82,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     { field: 'org_name', header: '組織別', visible: true, align: 'left' },
     { field: 'open_fees', header: '準時開業保證票', visible: true, format: formatAmount, align: 'right' },
     { field: 'construct_fees', header: '施工保證票', visible: true, format: formatAmount, align: 'right' },
-    { field: 'expiration_fees', header: '契約屆滿', visible: true, format: formatAmount, align: 'right' },
+    { field: 'expiration_fees', header: '契約屆滿保證票', visible: true, format: formatAmount, align: 'right' },
     { field: 'remark', header: '保證票備註', visible: true, align: 'left' },
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
