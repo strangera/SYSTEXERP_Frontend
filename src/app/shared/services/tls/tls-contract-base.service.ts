@@ -81,7 +81,7 @@ export class TlsContractBaseService {
       ? getTLS13010FormDefaults()
       : getTLS12040FormDefaults();
 
-    form.patchValue(defaultValues);
+    form.patchValue(defaultValues, { emitEvent: false });
 
     console.log('✅ 空白表單初始化完成', {
       抽成別: defaultValues.tlt_term_type,

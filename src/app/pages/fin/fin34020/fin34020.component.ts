@@ -5,10 +5,10 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
-import { finalize, map } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize, map } from 'rxjs/operators';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -17,9 +17,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -60,7 +60,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
   data: QueryFIN34020Row[] = [];
   totalRecords = 0;
   selectedItems: QueryFIN34020Row[] = [];
-totalSummary: Record<string, number> = {};
+  totalSummary: Record<string, number> = {};
   lastQueryBody: any = null;
   tableVer = 0;
 
@@ -332,67 +332,67 @@ totalSummary: Record<string, number> = {};
     return payload;
   }
 
-private parseQueryResponse(
-  res: any
-): {
-  rows: QueryFIN34020Row[];
-  total: number;
-  totalSummary: Record<string, number>;
-} {
-  const rows = Array.isArray(res?.Data?.QueryData)
-    ? (res.Data.QueryData as QueryFIN34020Row[])
-    : Array.isArray(res?.Data)
-      ? (res.Data as QueryFIN34020Row[])
-      : [];
+  private parseQueryResponse(
+    res: any
+  ): {
+    rows: QueryFIN34020Row[];
+    total: number;
+    totalSummary: Record<string, number>;
+  } {
+    const rows = Array.isArray(res?.Data?.QueryData)
+      ? (res.Data.QueryData as QueryFIN34020Row[])
+      : Array.isArray(res?.Data)
+        ? (res.Data as QueryFIN34020Row[])
+        : [];
 
-  const totalSummary = this.coerceTotals(res?.Data?.TotalSummary);
+    const totalSummary = this.coerceTotals(res?.Data?.TotalSummary);
 
-  const total =
-    Number(res?.TotalCount ?? rows.length) || rows.length;
+    const total =
+      Number(res?.TotalCount ?? rows.length) || rows.length;
 
-  const mapped = rows.map((r: any, idx: number) => ({
-    ...r,
-    _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
-  }));
+    const mapped = rows.map((r: any, idx: number) => ({
+      ...r,
+      _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
+    }));
 
-  return { rows: mapped, total, totalSummary };
-}
-private coerceTotals(src: any): Record<string, number> {
-  const out: Record<string, number> = {};
-  if (!src) return out;
+    return { rows: mapped, total, totalSummary };
+  }
+  private coerceTotals(src: any): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (!src) return out;
 
-  for (const k of Object.keys(src)) {
-    const v = src[k];
-    out[k] = typeof v === 'number' ? v : Number(v) || 0;
+    for (const k of Object.keys(src)) {
+      const v = src[k];
+      out[k] = typeof v === 'number' ? v : Number(v) || 0;
+    }
+
+    return out;
+  }
+  buildFooterFromTotals(): Record<string, any> | undefined {
+    if (!this.totalSummary) return undefined;
+
+    return {
+      ARS_Amt: this.totalSummary['Total_ARS_Amt'] ?? 0,
+      RcvOrAdjAmt: this.totalSummary['Total_RcvOrAdjAmt'] ?? 0,
+      UnpaidBalanceAmt: this.totalSummary['Total_UnpaidBalanceAmt'] ?? 0,
+    };
   }
 
-  return out;
-}
-buildFooterFromTotals(): Record<string, any> | undefined {
-  if (!this.totalSummary) return undefined;
-
-  return {
-    ARS_Amt: this.totalSummary['Total_ARS_Amt'] ?? 0,
-    RcvOrAdjAmt: this.totalSummary['Total_RcvOrAdjAmt'] ?? 0,
-    UnpaidBalanceAmt: this.totalSummary['Total_UnpaidBalanceAmt'] ?? 0,
-  };
-}
-
   /** 給 app-table-report 用 */
-public queryFIN34020ForReport = (body: any) =>
-  this.fin34020Service.queryFIN34020(this.buildPayload(body || {})).pipe(
-    map((res: ApiResponse<any>) => {
-      const parsed = this.parseQueryResponse(res);
+  public queryFIN34020ForReport = (body: any) =>
+    this.fin34020Service.queryFIN34020(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
 
-      this.totalSummary = parsed.totalSummary;
+        this.totalSummary = parsed.totalSummary;
 
-      return {
-        Data: parsed.rows,
-        TotalCount: parsed.total,
-        GrandTotal: parsed.totalSummary,
-      };
-    })
-  );
+        return {
+          Data: parsed.rows,
+          TotalCount: parsed.total,
+          GrandTotal: parsed.totalSummary,
+        };
+      })
+    );
 
   /** 查詢按鈕：一定從第一頁開始，並建立 lastQueryBody 給 table-report / 匯出 用 */
   onSubmit(_frm: any) {
@@ -533,13 +533,13 @@ public queryFIN34020ForReport = (body: any) =>
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.(
@@ -556,9 +556,9 @@ public queryFIN34020ForReport = (body: any) =>
     const base = this.lastQueryBody
       ? { ...this.lastQueryBody }
       : {
-          ...this.queryForm.getRawValue(),
-          SortBy: this._currentSortBy || this.defaultSort,
-        };
+        ...this.queryForm.getRawValue(),
+        SortBy: this._currentSortBy || this.defaultSort,
+      };
 
     const payload = this.buildPayload(base);
 

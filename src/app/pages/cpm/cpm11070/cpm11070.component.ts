@@ -42,8 +42,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
     SeqId: ['', [Validators.maxLength(11)]],
-    RecDateFrom: [new (Date), [Validators.required,]],
-    RecDateTo: [null as Date | null],
+    RecDateFrom: [new Date(), [Validators.required]],
+    RecDateTo: [new Date()],
     LostDateFrom: [null as Date | null],
     LostDateTo: [null as Date | null],
     FindDateFrom: [null as Date | null],
@@ -84,7 +84,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   ];
   addButton: AddButton[] = [];
   Type3Options = [
-    { Name: '登錄', No: '1' },
+    { Name: '未通知', No: '1' },
     { Name: '已通知', No: '3' },
     { Name: '領回', No: '4' },
     { Name: '轉出', No: '6' },
@@ -97,7 +97,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   ];
   SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
   USER5Options = [
-    { Name: '遊客', No: '1' },
+    { Name: '顧客', No: '1' },
     { Name: '員工', No: '2' },
   ];
   ProcessingUserOptions: { label: string; value: string }[] = [];
@@ -331,12 +331,12 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
           const excelBlob = new Blob([blob], {
             type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           });
-          const url = window.URL.createObjectURL(excelBlob);
+          const url = globalThis.URL.createObjectURL(excelBlob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `CPM11070_未領取報表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
       });
   }

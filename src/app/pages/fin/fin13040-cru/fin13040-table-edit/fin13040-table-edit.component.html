@@ -7,7 +7,7 @@
   [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
+  styleClass="p-datatable-sm p-datatable-gridlines " (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">

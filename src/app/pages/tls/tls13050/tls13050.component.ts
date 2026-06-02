@@ -11,10 +11,11 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -24,6 +25,7 @@ import { Column, createPaginationConfig, formatAmount } from '../../../shared/co
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    CalendarComponent,
     CalendarRangeComponent,
     MultiSelectComponent,
     InputNumberRangeComponent,
@@ -47,7 +49,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     check_day_end: [null],
     Building_No: [[]],
     org_idList: [[]],
-    ...createPaginationConfig([{ field: 'check_day', order: 0 }]),
+    perf_edate: [null as Date | null],
     pageIndex: [0],
     pageSize: [0],
     SortBy: [[{ field: 'check_day', order: 0 }]]
@@ -175,6 +177,9 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
       cag_edate_end: this.formatQueryDate(formValue.cag_edate_end),
       check_day_start: this.formatNullableNumber(formValue.check_day_start),
       check_day_end: this.formatNullableNumber(formValue.check_day_end),
+      org_idList: formValue.org_idList ?? [],
+      Building_No: formValue.Building_No ?? [],
+      perf_edate: this.formatQueryDate(formValue.perf_edate),
     };
   }
 

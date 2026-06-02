@@ -175,12 +175,12 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `年度對帳單_${new Date().toISOString().slice(0, 10)}.xlsx`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
         complete: () => this.excelBtnLoading = false,
       });
@@ -195,12 +195,12 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `年度對帳單_${new Date().toISOString().slice(0, 10)}.pdf`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
         complete: () => this.pdfBtnLoading = false,
       });

@@ -20,10 +20,6 @@
             [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
-              [submitted]="submitted"></app-input-text>
-          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="queryForm.controls.PLU_OrgPLUNo"
               [submitted]="submitted"></app-input-text>
@@ -52,14 +48,17 @@
 <div class="card">
   <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
     [columnGroup]="columnGroup" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false"
-    [footerData]="footerData" [loading]="loading" [showReportMode]="false"
-    [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+    [footerData]="footerData" [loading]="loading" [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="商品庫存表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
-          [disabled]="data.length === 0 || !hasPermission(Actions.Print)"></p-button>
+          [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
+          (keydown.enter)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.Print) && onExportPDF()"
+          (keydown.space)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.Print) && onExportPDF()"></p-button>
         <p-button styleClass="p-2" label="商品庫存表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
-          [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"></p-button>
+          [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"
+          (keydown.enter)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.ExportExcel) && onExportXLSX()"
+          (keydown.space)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.ExportExcel) && onExportXLSX()"></p-button>
       </div>
     </header>
   </app-table-report>

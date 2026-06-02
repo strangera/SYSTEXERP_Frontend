@@ -141,6 +141,11 @@ export class FIN13050Service {
         })
       );
   }
+  /** 透過 POS2013 取得廠商清單（含統一編號、廠商名稱） */
+  queryPOS2013VendorList(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, { VEN_Flag: '1' });
+  }
+
   /** 查詢 TDS1003 資料表（取得 STO_Uniform 等門市資訊） */
   queryFIN11010(params: { STO_StatusList?: string[] } = {}): Observable<any> {
     return this.http

@@ -3,13 +3,14 @@ import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS42020Data, TLS42020DetailData, TLS42020InsertUpdateDetailData, TLS42020Service } from '@service/api/tls/tls42020.service';
+import { TLS42020Data, TLS42020DetailData, TLS42020DropdownResponse, TLS42020InsertUpdateDetailData, TLS42020Service } from '@service/api/tls/tls42020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { validateMaxByteLength, validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, of, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -47,13 +48,12 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   });
   data: TLS42020DetailData[] = [];
   gridDefaultData = { TLT_No: '' };
-  private originalDetailData: TLS42020DetailData[] = [];
   menuTypeOptions = getSYS1000Options('SBM_Type');
   tltNoOptions = this.dropDown.queryTltTalent();
-  private pluOptionsCache = new Map<string, Observable<any[]>>();
-  private latestPluData = new Map<string, any[]>();
+  private readonly pluOptionsCache = new Map<string, Observable<ApiResponse<TLS42020DropdownResponse[]>>>();
+  private readonly latestPluData = new Map<string, any[]>();
   columns: EditColumn[] = [
-    { field: 'SBM_BtnNo', header: '菜單按鍵序號', type: 'input', validate: [validateRequired] },
+    { field: 'SBM_BtnNo', header: '菜單按鍵序號', type: 'input', validate: [validateRequired, validateNumber] },
     {
       field: 'PLU_MagNo',
       header: '商品管理碼',
@@ -77,24 +77,24 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         return this.pluOptionsCache.get(tltNo)!;
       },
       optionLabel: 'PLU_MagNo',
-      optionValue: 'PLU_MagNo', // 🎯 使用者要求的字串值
+      optionValue: 'PLU_MagNo', // 使用者要求的字串值
       templateLabel: 'label',
       showClear: true,
-      onBlur: (rowData) => this.syncProductData(rowData, 'PLU_MagNo') // 🎯 失焦觸發偵測
+      onBlur: (rowData) => this.syncProductData(rowData, 'PLU_MagNo') // 失焦觸發偵測
     },
     {
       field: 'PLU_No', header: '國際條碼', type: 'input',
       onBlur: (rowData) => this.syncProductData(rowData, 'PLU_No')
     },
     {
-      field: 'PLU_Name', header: '商品名稱', type: 'input', validate: [validateRequired],
+      field: 'PLU_Name', header: '商品名稱', type: 'input', validate: [validateRequired, validateMaxByteLength(32)],
       onBlur: (rowData) => {
         if (rowData.PLU_Name && !rowData.PLU_PrnName) {
           rowData.PLU_PrnName = rowData.PLU_Name;
         }
       }
     },
-    { field: 'PLU_PrnName', header: '商品列印名稱', type: 'input' },
+    { field: 'PLU_PrnName', header: '商品按鍵名稱', type: 'input', validate: [validateMaxByteLength(60)] },
     { field: 'PLU_FixPrc', header: '商品定價', type: 'inputNumber' },
     {
       field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber', validate: [validateRequired],
@@ -106,7 +106,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     }
   ];
   /**
-   * 🎯 核心連動邏輯：根據目前輸入的欄位值，去商品清單找對應項目並填入
+   * 核心連動邏輯：根據目前輸入的欄位值，去商品清單找對應項目並填入
    */
   private syncProductData(rowData: any, triggerField: string) {
     const tltNo = this.dataForm.get('TLT_No')?.value;
@@ -163,7 +163,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       };
       this.tls42020Service.queryTLS42020Detail(detailReq).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
-        this.originalDetailData = [...this.data];
         this.cdr.markForCheck();
       });
     }
@@ -177,9 +176,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         return;
       }
       const formValue = this.dataForm.getRawValue();
-      // 🎯 處理明細資料與自動補值
       const detailData: TLS42020InsertUpdateDetailData[] = this.data.map((item) => {
-        // 若提交前沒輸入，自動給值
         const finalFixPrc = (item.PLU_FixPrc === null || item.PLU_FixPrc === undefined) ? item.PLU_SalePrc : item.PLU_FixPrc;
         const finalPrnName = (!item.PLU_PrnName || item.PLU_PrnName.trim() === '') ? item.PLU_Name : item.PLU_PrnName;
 

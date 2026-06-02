@@ -51,8 +51,8 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
     FACTO_FAX: ['', [Validators.maxLength(12)]],
     /** 送貨方式 */
     DELIVERY: [null as string | null],
-    /** 廠商送貨期限 */
-    DELIVERY_LIMIT: [null as number | null],
+    /** 廠商送貨期限（只能 1 碼：0–9） */
+    DELIVERY_LIMIT: [null as number | null, [Validators.min(0), Validators.max(9)]],
     /** 退貨處理方式 */
     RETURN_ORDER: [null as string | null],
     /** 附註 */
@@ -98,17 +98,18 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
         next: (res) => {
           if (res.Status !== '0000' || !res.Data) return;
           this.detailData = res.Data;
+          const d = res.Data;
           this.dataForm.patchValue({
-            ORDER_ADDR: res.Data.ORDER_ADDR ?? '',
-            ORDER_TEL: res.Data.ORDER_TEL ?? '',
-            ORDER_FAX: res.Data.ORDER_FAX ?? '',
-            FACTO_ADDR: res.Data.FACTO_ADDR ?? '',
-            FACTO_TEL: res.Data.FACTO_TEL ?? '',
-            FACTO_FAX: res.Data.FACTO_FAX ?? '',
-            DELIVERY: res.Data.DELIVERY ?? null,
-            DELIVERY_LIMIT: res.Data.DELIVERY_LIMIT ?? null,
-            RETURN_ORDER: res.Data.RETURN_ORDER ?? null,
-            VEN_Remark: res.Data.VEN_Remark ?? '',
+            ORDER_ADDR: d.VEN_ORDER_ADDR ?? '',
+            ORDER_TEL: d.VEN_ORDER_TEL ?? '',
+            ORDER_FAX: d.VEN_ORDER_FAX ?? '',
+            FACTO_ADDR: d.VEN_FACTO_ADDR ?? '',
+            FACTO_TEL: d.VEN_FACTO_TEL ?? '',
+            FACTO_FAX: d.VEN_FACTO_FAX ?? '',
+            DELIVERY: d.VEN_DELIVERY ?? null,
+            DELIVERY_LIMIT: d.VEN_DELIVERY_LIMIT ?? null,
+            RETURN_ORDER: d.VEN_RETURN_ORDER ?? null,
+            VEN_Remark: d.VEN_Remark ?? '',
           });
         },
       });

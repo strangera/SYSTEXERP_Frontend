@@ -93,9 +93,9 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 控制 checkbox 是否可選 - 當 GUI_Status 為 "1" 時不可選
+  // 控制 checkbox 是否可選：當換開狀態為 刪除=1 時不可選，不是換開機台或已關帳的資料也不可刪除
   isRowSelectable = (rowData: TLS2J030Data): boolean => {
-    return rowData?.GUI_Status !== "1" && !this.isNotECR;
+    return rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y";
   }
 
   ngOnInit(): void {
@@ -247,12 +247,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       .pipe(finalize(() => (this.btnLoading2 = false)))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
           link.download = `發票換開報表_${formatDateToYYYY_MM_DD(new Date())}.pdf`;
           link.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
 
           this.messageService.successBubble('PDF 匯出成功');
         },

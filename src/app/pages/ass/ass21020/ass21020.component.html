@@ -46,5 +46,5 @@
     [queryFunction]="service.queryASS21020.bind(service)" [data]="data" dataKey="dataKey" tableKey="ASS21020_Data"
     [columns]="columns" [totalRecords]="totalRecords" [loading]="loading" [expansionColumns]="extColumns"
     [expansionDataKey]="'Details'" (edit)="onEdit($event)" (delete)="onDelete($event)"
-    (detail)="onDetail($event)"></app-table-report>
+    (detail)="onDetail($event)" [isRowSelectable]="isRowSelectable"></app-table-report>
 </div>

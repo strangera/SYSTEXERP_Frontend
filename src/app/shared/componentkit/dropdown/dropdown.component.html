@@ -6,14 +6,15 @@
 
 <!-- 一般模式 -->
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-dropdown styleClass="w-full" [id]="controlName" [formControl]="control" [attr.aria-describedby]="controlName"
+  <p-dropdown #dd styleClass="w-full" [id]="controlName" [formControl]="control" [attr.aria-describedby]="controlName"
     [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
     [optionValue]="optionValue" [showClear]="showClear" [filterBy]="filterBy"
     [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
     [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
     [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true"
     [virtualScroll]="options.length > 10 ? true : false" [virtualScrollItemSize]="40" [editable]="editable"
-    [loading]="loading" [filter]="filter" (keydown.enter)="$event.preventDefault()" [group]="group">
+    [loading]="loading" [filter]="filter" (keydown.enter)="handleEnterKey($event)"
+    (keydown.enter.capture)="handleEnterKey($event)" [group]="group">
     <ng-template let-options pTemplate="item">
       <div class="flex align-items-center gap-2">
         <div>

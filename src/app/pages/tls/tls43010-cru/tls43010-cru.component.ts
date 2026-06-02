@@ -201,28 +201,45 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
         this.loading = false;
         return;
       }
+
       if (this.uploadedFiles.length === 0 && this.mediaItems().length === 0) {
         this.messageService.errorBubble('請選擇要上傳的媒體檔案。');
         this.loading = false;
         return;
       }
+
       const formData = new FormData();
       this.uploadedFiles.forEach(file => formData.append('files', file, file.name));
+
       const allTableData = this.tableEditComponent.data;
+
+      // 🌟 核心修正：將表單的原始資料取出，並手動將 Date 欄位轉為當地 ISO 字串
+      const rawFormValue = frm.getRawValue();
+
       const requestData = {
-        ...frm.getRawValue(),
+        ...rawFormValue,
         ID: this.rowdata?.ID || 0,
-        // 2. 處理 Detail：過濾掉「自動新增候選行」，保留其餘所有資料 (含刪除項)
+
+        // 🔧 強制將 Date 物件轉為當地的 YYYY-MM-DDTHH:mm:ss 格式，避免被轉成 UTC
+        NOT_Date: this.toLocalISOString(rawFormValue.NOT_Date),
+        NOT_BegDate: this.toLocalISOString(rawFormValue.NOT_BegDate),
+        NOT_EndDate: this.toLocalISOString(rawFormValue.NOT_EndDate),
+
+        // 處理 Detail：過濾掉「自動新增候選行」，保留其餘所有資料 (含刪除項)
         Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? allTableData
           .filter(item => !item['_isAutoInsertCandidate'])
           .map(item => ({
             ID: this.isFormCreateable ? 0 : (item['ID'] || 0),
             ...item,
-          }))
-          : undefined,
+          })) : undefined,
       } as IUTls43010Request;
+
       formData.append('request', JSON.stringify(requestData));
-      const $res = this.isFormCreateable ? this.tls43010Service.insertTLS43010(formData) : this.tls43010Service.updateTLS43010(formData);
+
+      const $res = this.isFormCreateable
+        ? this.tls43010Service.insertTLS43010(formData)
+        : this.tls43010Service.updateTLS43010(formData);
+
       $res.pipe(finalize(() => this.loading = false)).subscribe(res => {
         this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
         if (this.isFormCreateable) {
@@ -236,6 +253,30 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
         }
       });
     });
+  }
+
+  /**
+   * 🌟 新增輔助方法：將 Date 物件安全地轉換為當地時區的 ISO 字串（不帶時區 Z 或偏移）
+   * 範例：當地時間 2026-05-27 00:00:00 -> "2026-05-27T00:00:00"
+   */
+  private toLocalISOString(date: any): string | null {
+    if (!date) return null;
+
+    // 如果已經是字串，直接回傳
+    if (typeof date === 'string') return date;
+
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
+
+    return null;
   }
   validateEntireRow(rowData: Tls43010Detail) {
     if (!rowData.ECR_No && !rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {

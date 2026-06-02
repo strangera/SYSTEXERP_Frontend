@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -21,12 +21,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -34,9 +34,9 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 import {
   ApiResponse,
-  ASS16090Service,
   Ass16090DetailResponse,
   Ass16090Row,
+  ASS16090Service,
 } from '../../../service/api/ass/ass16090.service';
 
 interface SortItem {
@@ -48,7 +48,6 @@ interface SortItem {
 @Component({
   selector: 'app-ass16090',
   templateUrl: './ass16090.component.html',
-  styleUrl: './ass16090.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -65,7 +64,7 @@ interface SortItem {
     TableReportComponent,
   ],
 })
-export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
+export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> implements OnInit {
   showTable = true;
   data: Ass16090Row[] = [];
   totalRecords = 0;
@@ -189,7 +188,7 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -216,20 +215,34 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
   private loadDropdownOptions(): void {
     /** 倉別 */
-    this.ass11100Service
-      .queryASS11100({ PageSize: 9999, PageIndex: 1 })
+    // this.ass11100Service
+    //   .queryASS11100({ PageSize: 9999, PageIndex: 1 })
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe({
+    //     next: (res) => {
+    //       if (res.Status !== '0000') return;
+    //       const options = (res.Data ?? [])
+    //         .filter((item) => item.WH_ID != null && item.WH_ID !== '')
+    //         .map((item) => ({
+    //           label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+    //           value: item.WH_ID!,
+    //         }));
+    //       this.whIdOptions.set(options);
+    //     },
+    //   });
+
+
+    /** 倉別 */
+    this.dropdownApiService
+      .queryFaHos()
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000') return;
-          const options = (res.Data ?? [])
-            .filter((item) => item.WH_ID != null && item.WH_ID !== '')
-            .map((item) => ({
-              label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
-              value: item.WH_ID!,
-            }));
-          this.whIdOptions.set(options);
-        },
+      .subscribe((res) => {
+        this.whIdOptions.set(
+          (res ?? []).map((item: any) => ({
+            value: item.value ?? item.No ?? item.WH_ID ?? '',
+            label: item.label ?? item.Name ?? item.WH_NAME ?? '',
+          }))
+        );
       });
 
     /** 申請人 / 審核者 */
@@ -245,29 +258,43 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
       });
 
     /** 品項 */
+    // this.dropdownApiService
+    //   .queryAss11040Dropdown()
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe((res) => {
+    //     this.goodsIdOptions = (res ?? []).map((item: any) => ({
+    //       value: item.No ?? item.value ?? '',
+    //       label: item.Name
+    //         ? `${item.No ?? ''} - ${item.Name ?? ''}`
+    //         : item.label ?? '',
+    //     }));
+    //   });
     this.dropdownApiService
-      .queryAss11040Dropdown()
+      .queryFasItemDropdown()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.goodsIdOptions = (res ?? []).map((item: any) => ({
-          value: item.No ?? item.value ?? '',
-          label: item.Name
-            ? `${item.No ?? ''} - ${item.Name ?? ''}`
-            : item.label ?? '',
+          value: item.value ?? '',
+          label: item.label ?? '',
         }));
       });
 
+
     /** 部門 */
+
     this.dropDownListService
-      .queryPOS2013_DropDownList({})
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
+      .subscribe(res => {
         const list = res.Data ?? [];
         this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
+
+
+
 
     /** 報廢狀態 */
     this.dropDownListService
@@ -296,11 +323,11 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -312,17 +339,18 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
     return cleaned.length ? cleaned : fallback;
   }
 
- private initRows(rows: Ass16090Row[]): Ass16090Row[] {
-  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-  rows.forEach((r, idx) => {
-    (r as any)._rowKey = `${seed}_${idx}`;
-    r.Details = [];
-    (r as any)._detailLoaded = false;
-  });
-
-  return rows;
-}
+  private initRows(rows: Ass16090Row[]): Ass16090Row[] {
+    for (const [idx, r] of rows.entries()) {
+      // 優先使用報廢單號與 ID 組合，萬一為空則拿 index 當作保險
+      const scrapId = r.DAMAGEM_ID ?? 'NOSCRAP';
+      const rowId = r.ID ?? `fallback_${idx}`;
+      // 組裝成絕對唯一的業務 data key
+      (r as any)._rowKey = `ass16090_${scrapId}_${rowId}`;
+      r.Details = [];
+      (r as any)._detailLoaded = false;
+    }
+    return rows;
+  }
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
@@ -365,12 +393,12 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
       APRV_DATE_E: this.toYMDOrNull(raw.APRV_DATE_E),
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }

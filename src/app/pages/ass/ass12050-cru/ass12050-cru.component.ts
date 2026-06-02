@@ -450,7 +450,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       if (valid === false) return;
       const raw = this.dataForm.getRawValue();
       const applyDate = raw.APPLY_DATE instanceof Date
-        ? raw.APPLY_DATE.toISOString().slice(0, 10)
+        ? `${raw.APPLY_DATE.getFullYear()}-${String(raw.APPLY_DATE.getMonth() + 1).padStart(2, '0')}-${String(raw.APPLY_DATE.getDate()).padStart(2, '0')}`
         : String(raw.APPLY_DATE ?? '');
 
       this.loading = true;

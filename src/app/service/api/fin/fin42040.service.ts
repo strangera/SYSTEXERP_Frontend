@@ -10,17 +10,18 @@ export interface FIN42040QueryRequest extends BaseQueryRequest {
   YM?: string;
   CompareYM?: string;
   Org_ID?: string;
+  Org_Name?: string;
   ReportType?: number;
   AmtUnit?: number;
 }
 
 export interface FIN42040Data {
-  Org_ID?: string;
-  Org_Name?: string;
-  Acc_No?: string;
-  Acc_Name?: string;
-  Item_No?: string;
-  Item_Name?: string;
+  SortNo?: number;
+  LevelNo?: number;
+  RowType?: string;
+
+  AccountCode?: string;
+  AccountName?: string;
 
   CurrentAmount?: number;
   CurrentRatio?: number;

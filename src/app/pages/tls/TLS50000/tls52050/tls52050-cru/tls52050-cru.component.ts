@@ -509,16 +509,74 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         }))
       };
       const $request = this.isFormCreateable ? this.tls52050Service.insertTLS52050(body) : this.tls52050Service.updateTLS52050(body);
-      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.messageService.successBubble(response.Message);
+      $request.pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
         if (this.isFormCreateable) {
-          this.dataForm.reset();
-          this.data = [];
+          // 取得回傳的變價單號 (假設 response.Message 回傳的是單號)
+          const mamNo = (response.Message ?? '').trim();
+
+          this.messageService.confirm({
+            header: '新增成功',
+            message: `變價單號：<strong>${mamNo || '—'}</strong>`,
+            icon: 'check',
+            showIcon: true,
+            acceptLabel: '返回',
+            accept: () => this.onCancel(), // 點擊返回，回到查詢頁
+            rejectLabel: '繼續新增',
+            reject: () => {
+              // 點擊繼續新增，呼叫重置方法
+              this.resetFormForContinueNew();
+            },
+          });
         } else {
+          // 編輯模式維持原樣
+          this.messageService.successBubble(response.Message || '修改成功');
           this.onCancel();
         }
       });
     });
+  }
+  /** 新增成功後選擇「繼續新增」時，還原表單與明細 */
+  private resetFormForContinueNew(): void {
+    this.dataForm.reset({
+      MAM_No: '系統自動產生',
+      MAM_Method: 'H',
+      MAM_BegDate: tomorrow,
+      MAM_EndDate: null,
+      MAM_Remark: '',
+      MAM_Status: '0',
+      MAM_Type: '3',
+      MAM_Source: '1',
+      MAM_DateType: '1',
+      MAM_Week1: 'N',
+      MAM_Week2: 'N',
+      MAM_Week3: 'N',
+      MAM_Week4: 'N',
+      MAM_Week5: 'N',
+      MAM_Week6: 'N',
+      MAM_Week7: 'N',
+      MAM_Day: 0,
+      APPLY_Date: new Date(),
+      APPLY_USR_No: this.authService.currentUserValue?.user_No,
+      costPriceDiscount: 0,
+      costPriceAmount: 0,
+      salePriceDiscount: 0,
+      salePriceAmount: 0,
+    });
+
+    // 清空明細數據
+    this.data = [];
+    this.originalData = [];
+    this.selectedItems = [];
+    this.selectedItemsDialog = [];
+
+    // 還原下拉選單選項（選填，視業務需求而定，通常建議還原）
+    this.vendorOptions = this.dropdown.queryPos2013TltTalent();
+    this.brandOptions = this.dropdown.queryPluLogo();
+
+    this.cdr.detectChanges();
   }
   onReset() {
     this.data = JSON.parse(JSON.stringify(this.originalData));

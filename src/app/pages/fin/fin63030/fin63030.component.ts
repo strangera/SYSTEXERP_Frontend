@@ -21,19 +21,19 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import {
   ApiResponse,
   Fin63030Service,
+  FIN63030TransVoucherRequest,
   QueryFIN63030Request,
   QueryFIN63030Row,
   SortItem,
-  FIN63030TransVoucherRequest,
 } from '../../../service/api/fin/fin63030.service';
 
-import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
+import { Aps1002BankDropDownRow, Fin26010Service } from '../../../service/api/fin/fin26010.service';
 
 // ✅ 改用 app-table-report
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -465,13 +465,13 @@ export class FIN63030Component extends BasicQueryPageComponent<any> implements A
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');

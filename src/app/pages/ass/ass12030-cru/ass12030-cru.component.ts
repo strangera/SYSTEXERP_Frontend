@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -17,6 +18,7 @@ import { ASS12030Service } from '@service/api/ass/ass12030.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -35,8 +37,6 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { AsyncPipe } from '@angular/common';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 /** 進入新增頁時的套用模式：已詢價=套用請購清單，未詢價=套用詢價清單 */
 export type CreateMode = 'quoted' | 'unquoted';
@@ -86,7 +86,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   empIdOptions: { value: string; label: string }[] = [];
   /** 部門下拉選項 */
   orgIdOptions = this.dropdownApiService.querySys3100();
-  /** 委託部門下拉選項 */
+  /** 委託部門下拉選項：querySYS3100_DropDownList */
   entrustOrgIdOptions: { value: string; label: string }[] = [];
   /** 稅別下拉選項 */
   taxCodeOptions: { value: string; label: string }[] = [];
@@ -268,7 +268,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         }));
       });
     this.dropDownListService
-      .queryPOS2013_DropDownList({})
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         const list = res.Data ?? [];

@@ -11,7 +11,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -40,7 +39,6 @@ import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
     ButtonComponent,
     CalendarComponent,
     DropdownComponent,
-    MultiSelectComponent,
     RadiobuttonComponent,
     MenubarComponent,
     TableReportComponent,
@@ -54,12 +52,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     NEW_HOLD_EMP_ID: new FormControl<string | null>(null),
     NEW_USE_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
     NEW_USE_EMP_ID: new FormControl<string | null>(null),
-    PURCHASE_TYPE: new FormControl<string[]>([]),
+    DEPRE_YN: new FormControl<string | null>(null),
     B_CLASS_ID: new FormControl<string | null>(null),
     M_CLASS_ID: new FormControl<string | null>(null),
     S_CLASS_ID: new FormControl<string | null>(null),
     ASSET_ID: new FormControl<string | null>(null),
-    TITLE: new FormControl<number | null>(null),
+    GOODS_NAME: new FormControl<number | null>(null),
     HOLD_ORG_ID: new FormControl<string | null>(null),
     HOLD_EMP_ID: new FormControl<string | null>(null),
     USE_ORG_ID: new FormControl<string | null>(null),
@@ -251,12 +249,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       NEW_HOLD_EMP_ID: rawValue.NEW_HOLD_EMP_ID || undefined,
       NEW_USE_ORG_ID: rawValue.NEW_USE_ORG_ID || undefined,
       NEW_USE_EMP_ID: rawValue.NEW_USE_EMP_ID || undefined,
-      PURCHASE_TYPE: rawValue.PURCHASE_TYPE?.length ? rawValue.PURCHASE_TYPE : undefined,
+      DEPRE_YN: rawValue.DEPRE_YN || undefined,
       B_CLASS_ID: rawValue.B_CLASS_ID || undefined,
       M_CLASS_ID: rawValue.M_CLASS_ID || undefined,
       S_CLASS_ID: rawValue.S_CLASS_ID || undefined,
       ASSET_ID: rawValue.ASSET_ID || undefined,
-      TITLE: rawValue.TITLE ?? undefined,
+      GOODS_NAME: rawValue.GOODS_NAME ?? undefined,
       HOLD_ORG_ID: rawValue.HOLD_ORG_ID || undefined,
       HOLD_EMP_ID: rawValue.HOLD_EMP_ID || undefined,
       USE_ORG_ID: rawValue.USE_ORG_ID || undefined,

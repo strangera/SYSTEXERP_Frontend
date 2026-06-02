@@ -15,7 +15,7 @@ import type { SortMeta as PSortMeta, SortMeta } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize, map } from 'rxjs/operators';
-import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
+import { Cpm13020Service, ECRDropDownOption, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -62,13 +62,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   btnLoading = false;
   historyRequestBody: QueryCPM13020Request | null = null;
 
-  // paymentTypeOptions: {
-  //   label: string;
-  //   value: string;
-  //   Name: string;
-  //   No: string;
-  //   PAY_Type: string;
-  // }[] = [];
+  ecrNoOptions: { label: string; value: string }[] = [];
 
   // ✅ 預設排序
   readonly defaultSort: SortMeta[] = [{ field: 'PAY_No', order: 1 }];
@@ -88,6 +82,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     TXN_BDate: [this.yesterday, [Validators.required]],
     TXN_EDate: [this.yesterday, [Validators.required]],
     PAY_No: [''],
+    ECR_No: [null as string[] | null],
     reportMode: ['ALL', [Validators.required]],
     // 分頁 + 排序
     ...createPaginationConfig([{ field: 'PAY_No', order: 1 }]),
@@ -187,6 +182,22 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
           this.paymentTypeOptions = [];
         },
       });
+
+    this.cpm13020Service
+      .queryCPM13020_ECR_DropDown()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (rows: ECRDropDownOption[]) => {
+          this.ecrNoOptions = (rows ?? []).map((x) => ({
+            label: `${x.ECR_No} - ${x.ECR_Name}${x.building_desc ? ' - ' + x.building_desc : ''}`,
+            value: x.ECR_No,
+          }));
+        },
+        error: (err) => {
+          console.error('ECR_No 下拉取得失敗', err);
+          this.ecrNoOptions = [];
+        },
+      });
     // 檢視模式切換：清空總計 + 清空列表
     this.queryForm.controls.reportMode.valueChanges
       .pipe(untilDestroyed(this))
@@ -253,12 +264,16 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     ? val.PAY_No
     : undefined;
 
+      const ecrNo: string[] | undefined =
+        Array.isArray(val?.ECR_No) && val.ECR_No.length > 0 ? val.ECR_No : undefined;
+
       const sortBy = this.normalizeSortMeta(val?.SortBy?.length ? val.SortBy : this._currentSortBy);
 
     const payload: QueryCPM13020Request = {
   TXN_BDate: this.toDateOnly(val?.TXN_BDate),
   TXN_EDate: this.toDateOnly(val?.TXN_EDate),
   PAY_No: payNo,
+  ECR_No: ecrNo,
   pageIndex: Number(val?.pageIndex ?? 1),
   pageSize: Number(val?.pageSize ?? 30),
   SortBy: sortBy,

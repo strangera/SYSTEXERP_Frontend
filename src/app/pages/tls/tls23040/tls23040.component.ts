@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
@@ -59,7 +59,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     TableReportComponent,
   ],
 })
-export class TLS23040Component extends BasicQueryPageComponent<any> {
+export class TLS23040Component extends BasicQueryPageComponent<any> implements OnInit {
   // === 視圖切換 ===
   viewMode: 'invoice' | 'payment' | 'discount' = 'invoice';
 
@@ -557,7 +557,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
             return;
           }
 
-          window.open(openUrl, '_blank', 'noopener');
+          globalThis.open(openUrl, '_blank', 'noopener');
         },
         error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
       });
@@ -566,19 +566,26 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   private resolveTempUrlForOpen(pathOrUrl: string): string {
     if (!pathOrUrl) return '';
 
-    // 後端若已回完整 URL，直接用
-    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+    // 1. 使用字串方法判斷是否為完整網址
+    // 比起正則表達式，這更加直覺且效能極高，絕對沒有 ReDoS 風險
+    if (pathOrUrl.toLowerCase().startsWith('http://') ||
+      pathOrUrl.toLowerCase().startsWith('https://')) {
+      return pathOrUrl;
+    }
 
-    // 抽出 /temp/xxx.pdf
+    // 2. 抽出 /temp/xxx.pdf
     const idx = pathOrUrl.indexOf('/temp/');
     const tempPath =
       idx >= 0 ? pathOrUrl.substring(idx) :
         pathOrUrl.startsWith('/') ? pathOrUrl :
           `/${pathOrUrl}`;
 
-    // 用 apiUrl 的 host 組完整 URL（例如 http://localhost:5142 + /temp/xxx.pdf）
-    const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
-    return `${apiBase}${tempPath}`;
+    // 3. 組裝 URL
+    // 同樣將 replace 的正則換成字串切分邏輯，徹底消滅正規表達式警告
+    const apiBase = this.tls23040Service.apiUrl || '';
+    const cleanBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+
+    return `${cleanBase}${tempPath}`;
   }
 
 
@@ -614,13 +621,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = name;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
@@ -640,14 +647,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       catch { return m[1]; }
     }
     return `download${def}`;
-  }
-
-  private resolveDownloadUrl(path: string): string {
-    if (!path) return '';
-    if (/^https?:\/\//i.test(path)) return path;
-    const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
-    const p = path.startsWith('/') ? path : `/${path}`;
-    return `${apiBase}${p}`;
   }
 
   // 依視圖更新總計列
@@ -681,7 +680,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     // { field: 'TaxType_desc', header: '交易稅別', visible: false, style: 'text-right' },
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
-    { field: 'TXN_VIP', header: '外交官零稅', visible: true,format: (v: any) => v === 'Y' ? '是' : '否' },
+    { field: 'TXN_VIP', header: '外交官零稅', visible: true, format: (v: any) => v === 'Y' ? '是' : '否' },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },

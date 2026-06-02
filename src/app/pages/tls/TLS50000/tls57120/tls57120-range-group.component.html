@@ -1,0 +1,40 @@
+<div class="grid p-fluid m-0" [formGroup]="form">
+
+  <div class="col-12 p-0 mb-3 flex flex-column custom-row-group">
+    <div class="flex align-items-center gap-2 mb-1 label-container">
+      <p-radioButton name="rangeMode" value="D" [(ngModel)]="rangeMode" [ngModelOptions]="{standalone: true}"
+        (onClick)="onModeChange('D')" inputId="rangeModeD">
+      </p-radioButton>
+      <label for="rangeModeD" class="font-medium cursor-pointer m-0">
+        日期時間範圍
+        <span *ngIf="rangeMode === 'D'" class="text-red-500 font-bold ml-1">*</span>
+      </label>
+    </div>
+
+    <div class="component-container hide-internal-label" [ngClass]="{'disabled-opacity': rangeMode !== 'D'}">
+      <app-calendar-range calendarType="dateRange" label="日期時間範圍" [startControl]="dateFromControl"
+        [endControl]="dateToControl" [submitted]="submitted && rangeMode === 'D'"
+        [showErrorMessage]="rangeMode === 'D'">
+      </app-calendar-range>
+    </div>
+  </div>
+
+  <div class="col-12 p-0 flex flex-column custom-row-group">
+    <div class="flex align-items-center gap-2 mb-1 label-container">
+      <p-radioButton name="rangeMode" value="P" [(ngModel)]="rangeMode" [ngModelOptions]="{standalone: true}"
+        (onClick)="onModeChange('P')" inputId="rangeModeP">
+      </p-radioButton>
+      <label for="rangeModeP" class="font-medium cursor-pointer m-0">
+        期間天數
+        <span *ngIf="rangeMode === 'P'" class="text-red-500 font-bold ml-1">*</span>
+      </label>
+    </div>
+
+    <div class="component-container hide-internal-label" [ngClass]="{'disabled-opacity': rangeMode !== 'P'}">
+      <app-input-number label="期間天數" controlName="PeriodDays" [control]="periodDaysControl"
+        [submitted]="submitted && rangeMode === 'P'" [showErrorMessage]="rangeMode === 'P'">
+      </app-input-number>
+    </div>
+  </div>
+
+</div>

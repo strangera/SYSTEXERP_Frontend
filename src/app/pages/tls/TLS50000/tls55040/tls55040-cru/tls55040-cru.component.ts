@@ -220,16 +220,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         }, width: '45px', showClear: false
       },
       {
-        field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined,
-        options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v),
-        width: '60px', showClear: false
-      },
-      {
-        field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined,
-        options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v),
-        width: '130px', showClear: false
-      },
-      {
         field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
         onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
         width: '80px'
@@ -252,6 +242,16 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         options: this.PUR_VoucherTypeOptions,
         optionLabel: 'value', optionValue: 'value',
         width: '50px', showClear: false, minWidth: '50px'
+      },
+      {
+        field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v),
+        width: '60px', showClear: false
+      },
+      {
+        field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v),
+        width: '130px', showClear: false
       },
     ]
   }

@@ -3,13 +3,13 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
       btnType="create"
-      label="新增(已詢價)"
-      (click)="onCreateQuoted()"
+      label="新增(未詢價)"
+      (click)="onCreateUnquoted()"
     ></app-button>
     <app-button
       btnType="create"
-      label="新增(未詢價)"
-      (click)="onCreateUnquoted()"
+      label="新增(已詢價)"
+      (click)="onCreateQuoted()"
     ></app-button>
   </div>
   <p-accordion>

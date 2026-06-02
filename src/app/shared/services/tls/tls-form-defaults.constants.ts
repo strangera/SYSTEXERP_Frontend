@@ -83,7 +83,7 @@ export const TLS_COMMON_FORM_DEFAULTS = {
   rece_yn: 'Y',                      // 是否開立業主發票：是
   pos_yn: 'Y',                       // 是否使用業主收銀機：是
   cash_yn: 'Y',                      // 是否為業主收現：是（會被 SPECIFIC_DEFAULTS 覆蓋）
-  vip_yn: 'N',                       // 是否配合聯名卡：否
+  vip_yn: 'Y',                       // 是否配合聯名卡：是
 
   // ========== 結帳與付款 ==========
   money_type: '30',                  // 結帳方式：月結

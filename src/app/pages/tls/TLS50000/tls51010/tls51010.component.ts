@@ -8,7 +8,8 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -52,7 +53,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   lastQueryBody: any = null;// 上次查詢的表單數據
   data: CategoryItem[] = [];// 表格數據和篩選數據
-  columns: Column[] = [// 表格欄位定義
+  columns: ReportColumn[] = [// 表格欄位定義
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
     { field: 'CAT_LRemark', header: '備註', visible: true, type: 'html' },

@@ -66,6 +66,8 @@ export interface TLS31030Item {
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
+
+  PreOrderAmt: number;
 }
 
 export interface TLS31030DetailItem {

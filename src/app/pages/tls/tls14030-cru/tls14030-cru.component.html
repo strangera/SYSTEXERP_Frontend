@@ -16,182 +16,89 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div> -->
-        <app-dropdown-table
-          class="col-12 md:col-6 lg:col-4"
-          [control]="dataForm.controls.talent_id"
-          [submitted]="submitted"
-          optionLabel="Label"
-          optionValue="No"
-          [suggestions]="suggestions"
-          [fieldsConfig]="fieldsConfig"
-          (inputValueChanged)="onAutoCompleteInputChange($event)"
-          (formValueChanged)="onformValueChanged($event)"
-          (select)="onTalentSelected($event)"
-          [formGroup]="opForm"
-          [dialogData]="opData"
-          [dialogColumns]="opColumns"
-          [loading]="opLoading"
-          [totalRecords]="opTotalRecords"
-          [lazy]="true"
-        >
-          <app-dropdown
-            class="col-12 md:col-6"
-            label="專櫃編號"
-            [options]="tlt_noListOption"
-            optionLabel="Label"
-            optionValue="No"
-            (click)="$event.stopPropagation()"
-            [control]="opForm.controls.TLT_NO"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6"
-            label="統一編號"
-            [options]="ven_uniformOption"
-            optionLabel="Label"
-            optionValue="No"
-            (click)="$event.stopPropagation()"
-            [control]="opForm.controls.ven_uniform"
-            [submitted]="submitted"
-          ></app-dropdown>
+        <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.talent_id"
+          [submitted]="submitted" optionLabel="Label" optionValue="No" [suggestions]="suggestions"
+          [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+          (formValueChanged)="onformValueChanged($event)" (select)="onTalentSelected($event)" [formGroup]="opForm"
+          [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords"
+          [lazy]="true">
+          <app-dropdown class="col-12 md:col-6" label="專櫃編號" [options]="tlt_noListOption" optionLabel="Label"
+            optionValue="No" (click)="$event.stopPropagation()" [control]="opForm.controls.TLT_NO"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6" label="統一編號" [options]="ven_uniformOption" optionLabel="Label"
+            optionValue="No" (click)="$event.stopPropagation()" [control]="opForm.controls.ven_uniform"
+            [submitted]="submitted"></app-dropdown>
         </app-dropdown-table>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="專櫃編號"
-            controlName="tlt_no"
-            [control]="dataForm.controls.tlt_no"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="櫃位名稱"
-            controlName="tlt_name"
-            [control]="dataForm.controls.tlt_name"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="dataForm.controls.tlt_name"
+            [submitted]="submitted"></app-input-text>
         </div>
+        <app-dropdown class="col-12 md:col-4" label="廠商編號" [options]="VEN_No_Option" optionLabel="Label"
+          optionValue="No" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
       </div>
       <hr />
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="保證票型態"
-            [options]="ticket_typeOption"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.ticket_type"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="保證票型態" [options]="ticket_typeOption" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.ticket_type" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="票據種類"
-            [options]="ticket_kindOption"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.ticket_kind"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="票據種類" [options]="ticket_kindOption" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.ticket_kind" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="票據編號"
-            controlName="ticket_no"
-            [control]="dataForm.controls.ticket_no"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="票據編號" controlName="ticket_no" [control]="dataForm.controls.ticket_no"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="保證票金額"
-            controlName="ticket_amount"
-            [control]="dataForm.controls.ticket_amount"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="保證票金額" controlName="ticket_amount" [control]="dataForm.controls.ticket_amount"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="票據到期日期"
-            [control]="dataForm.controls.expiry_date"
-            controlName="expiry_date"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="票據到期日期"
+            [control]="dataForm.controls.expiry_date" controlName="expiry_date" [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="保證票摘要"
-            controlName="ticket_remarks"
-            [control]="dataForm.controls.ticket_remarks"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="保證票摘要" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="票據收票狀態"
-            [options]="get_ticket_statusOption"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.get_ticket_status"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="票據收票狀態" [options]="get_ticket_statusOption" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.get_ticket_status" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="繳票日期"
-            [control]="dataForm.controls.get_date"
-            controlName="get_date"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="繳票日期"
+            [control]="dataForm.controls.get_date" controlName="get_date" [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="退票日期"
-            [control]="dataForm.controls.return_date"
-            controlName="return_date"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="退票日期"
+            [control]="dataForm.controls.return_date" controlName="return_date" [submitted]="submitted" />
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="封存日期"
-            [control]="dataForm.controls.close_date"
-            controlName="close_date"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="封存日期"
+            [control]="dataForm.controls.close_date" controlName="close_date" [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="備註"
-            controlName="remark"
-            [control]="dataForm.controls.remark"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>

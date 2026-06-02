@@ -32,25 +32,19 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
-
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
     ...createPaginationConfig([{ field: 'AccDC', order: 0 }, { field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
-
   private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
-
   public readonly tableData = signal<TLS21020Data[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(!1);
   public readonly selectedItems = signal<TLS21020Data[]>([]);
-
-  /** 根據 ENTRY_TYPE 動態調整欄位顯示與查詢 */
   public readonly entryTypeEffect = effect(() => {
     const ENTRY_TYPE = this.entryTypeSignal();
     if (!ENTRY_TYPE) return (this.tableData.set([]), this.totalRecords.set(0));
-
     // 日後可客製化欄位顯示
     switch (ENTRY_TYPE) {
       case EntryType['SD銷售日傳票']:
@@ -193,7 +187,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         optionValue: 'value',
         templateLabel: 'label',
         validate: [this.validator.bind(this)],
-        // disabled: v => v.ABAT_YN === 'N',
         disabled: (v, i, r) => r.ABAT_YN === 'N',
       },
       {
@@ -201,8 +194,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         header: '付款天數',
         type: 'inputNumber',
         validate: [this.validator.bind(this)],
-        // disabled: v => v.ABAT_YN === 'N',
-        // disabled: (v, i, r) => r.ABAT_YN === 'N',
         width: '4rem',
       },
       {
@@ -223,7 +214,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       .filter(col => col.field in keys)
       .map(col => {
         const shouldKeepType = keys[col.field as keyof TLS21020Data];
-        if (!shouldKeepType) { const { type, ...rest } = col; return { ...rest, type: void 0 }; }
+        if (!shouldKeepType) { const { ...rest } = col; return { ...rest, type: void 0 }; }
         return col;
       });
   });
@@ -263,6 +254,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
+    this.service.getEntryTypes();
   }
 
   public onSubmit(): void {
@@ -306,11 +298,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   /** 錯誤檢查 */
-  public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
+  public validateRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
     // 重複性檢查
-    const rows = this.tableData();
-    const { AccDC, AccNo, ItemDesc, ABAT_YN, VEN_No, PAY_days } = rowData;
-    const duplicateKey = `${AccDC}|${AccNo}|${ItemDesc}`;
+    const { ABAT_YN, VEN_No, PAY_days } = rowData;
 
     // 立沖科目檢查
     if (ABAT_YN === 'Y') {
@@ -333,7 +323,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   };
 
   /** 欄位級別驗證 */
-  private readonly validator = (value: unknown, rowData: TLS21020Data, data: TLS21020Data[], field: keyof TLS21020Data, header: string) => {
+  private readonly validator = (value: unknown, rowData: TLS21020Data, data: TLS21020Data[], field: keyof TLS21020Data) => {
     for (const [key, label, isRequired] of this.validatorField) {
       // 跳過非該欄位
       if (field !== key) continue;
@@ -356,6 +346,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     if (typeof value === 'string') return !value.trim();
     if (typeof value === 'number') return !Number.isInteger(value) || value < 0;
     const str = value?.toString();
-    return !str || !str.trim();
+    return !str?.trim();
   }
 }

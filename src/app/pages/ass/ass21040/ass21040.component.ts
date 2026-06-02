@@ -128,7 +128,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
           next: (response) => {
             const url = response.Data?.Print_URL || '';
             if (url) {
-              window.open(environment.ApiUrl + url, '_blank');
+              globalThis.open(environment.ApiUrl + url, '_blank');
               this.messageService.successBubble('列印成功');
             } else {
               this.messageService.errorBubble('無法取得列印檔案');

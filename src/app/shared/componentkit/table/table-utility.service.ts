@@ -1,10 +1,8 @@
 // table-utility.service.ts
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { Column, ColumnGroup } from './table.model';
 
 @Injectable({
@@ -14,7 +12,6 @@ export class TableUtilityService {
 
   constructor(
     private readonly messageService: NotificationService,
-    private readonly sanitizer: DomSanitizer
   ) { }
 
   // 判斷欄位是否可見
@@ -29,10 +26,10 @@ export class TableUtilityService {
 
   // 取得沒有分組的欄位
   getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
-    const groupFields = columnGroup.map(g => g.field);
+    const groupFields = new Set(columnGroup.map(g => g.field));
     return columns.filter(
       col =>
-        (!col.groupField || !groupFields.includes(col.groupField)) &&
+        (!col.groupField || !groupFields.has(col.groupField)) &&
         this.isColumnVisible(col)
     );
   }
@@ -140,7 +137,7 @@ export class TableUtilityService {
     const otherColumns = columns.filter(col => col.field !== dataKey);
     return otherColumns.every(col => {
       const currentValue = rowData[col.field];
-      const defaultValue = (defaultInsertData && defaultInsertData[col.field] !== undefined)
+      const defaultValue = (defaultInsertData?.[col.field] !== undefined)
         ? defaultInsertData[col.field]
         : null;
       return currentValue === defaultValue;
@@ -170,13 +167,13 @@ export class TableUtilityService {
 
   insertNewRow(data: any[], originalColumns: Column[], dataKey: string, defaultInsertData: any): { newRowData: any, data: any[] } {
     const newRowData: Record<string, any> = {};
-    originalColumns.forEach(col => {
+    for (const col of originalColumns) {
       newRowData[col.field] = defaultInsertData[col.field] !== undefined
         ? defaultInsertData[col.field] : null;
-    });
+    }
 
     // 產生一個臨時 ID
-    const tempId = `temp-${new Date().getTime()}`;
+    const tempId = `temp-${Date.now()}`;
     newRowData[dataKey] = tempId;
 
     // 將新資料加入到資料陣列的底部
@@ -184,31 +181,5 @@ export class TableUtilityService {
 
     // 回傳新資料和更新後的資料陣列
     return { newRowData, data: updatedData };
-  }
-  private safeUrlCache = new Map<string, SafeUrl>();
-  getImage(url: string): SafeUrl | undefined {
-    if (!url) { return undefined; }
-    if (this.safeUrlCache.has(url)) {
-      return this.safeUrlCache.get(url);
-    }
-    const match = url.match(/(.*\/)([^/]*)/);
-    let finalUrl: string;
-
-    if (match && match.length === 3) {
-      const path = match[1].replace(/~/g, '');
-      const filename = match[2];
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const sanitizedPath = path.startsWith('/') ? path.slice(1) : path;
-      finalUrl = `${baseUrl}/${sanitizedPath}${filename}`;
-    } else {
-      const sanitizedUrl = url.replace(/~/g, '');
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const imagePath = sanitizedUrl.startsWith('/') ? sanitizedUrl.slice(1) : sanitizedUrl;
-      finalUrl = `${baseUrl}/${imagePath}`;
-    }
-    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
-    this.safeUrlCache.set(url, safeUrl);
-
-    return safeUrl;
   }
 }

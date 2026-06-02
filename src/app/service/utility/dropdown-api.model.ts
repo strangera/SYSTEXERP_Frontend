@@ -646,6 +646,13 @@ export interface TALPORDERMQueryForShare {
 }
 
 /**
+ * 查詢 GLS3002 對帳 Key 值下拉式選單回傳項目
+ */
+export interface Gls3002AcctKeyItem {
+  ACCT_KEY: string;
+}
+
+/**
  * 查詢 queryLOGOaccorHOS 時的請求 body (品牌對應倉別)
  */
 export interface LogoAccorHosQuery {
@@ -784,4 +791,24 @@ export interface queryPOS1002_DropDownListItem {
   No: string;
   Name: string;
   ECR_TLT_No?: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別(自營)
+ */
+export interface queryOwnPOS1002_DropDownListItem {
+  ECR_No: string;
+  ECR_Name: string;
+}
+
+/**
+ * 查詢過濾後的收銀機設定檔 (POS1002 Filtered) 回傳項目
+ * 對應後端 SQL: ECR_No, ECR_Name, ECR_TLT_No, ECR_TLT_Name, ECR_Status
+ */
+export interface Pos1002FilteredItem {
+  No: string;        // ECR_No
+  Name: string;      // ECR_Name
+  ECR_TLT_No: string;
+  ECR_TLT_Name: string;
+  ECR_Status: string;
 }

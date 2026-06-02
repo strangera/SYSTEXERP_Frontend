@@ -43,7 +43,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<TLS41040Data> im
     NOT_EndDateTime: [new Date(new Date().setHours(23, 59, 59, 999)), [Validators.required]],
     NOT_Status: [{ value: 'A', disabled: true }],
     NOT_Remark: ['', [Validators.maxLength(200)]],
-    NOT_Desc: ['', [Validators.maxLength(2000)]],
+    NOT_Desc: ['', [Validators.required, Validators.maxLength(2000)]],
     NOT_DispRt: ['Y'],
     NOT_DispSpd: ['Y'],
     NOT_DispBtn: ['Y'],

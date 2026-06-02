@@ -87,15 +87,15 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
     {
       field: 'CRN_SubQty', header: '數量', type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)], width: '100px',
+      onFocus: (rowData: IPOS2004DetailData, value: any, col: EditColumn, index: number) => { },
       calculate: (row) => {
-        // 基本欄位
-        const subQty = Number(row.CRN_SubQty ?? 0);   // 數量
-        const buyPrc = Number(row.CRN_BuyPrc ?? 0);   // 單價
-        const salePrc = Number(row.CRN_SalePrc ?? 0); // 售價
-        const buyNet = subQty * buyPrc;               // 數量 * 單價
-        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額 (應稅0.05 免稅0)
-        const buyAmt = Math.round(buyNet + buyTax);   // 採購合計 (含稅小計) - 做四捨五入 // !!!待確認是否四捨五入
-        // 售價小計計算
+        // 👇 加上 ?? 0 防呆，避免全選塗改中途產生 NaN
+        const subQty = Number(row.CRN_SubQty ?? 0);
+        const buyPrc = Number(row.CRN_BuyPrc ?? 0);
+        const salePrc = Number(row.CRN_SalePrc ?? 0);
+        const buyNet = subQty * buyPrc;
+        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+        const buyAmt = Math.round(buyNet + buyTax);
         const saleAmt = Math.round(subQty * salePrc);
         return {
           'CRN_BuyNet': buyNet,
@@ -132,7 +132,17 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     const logoNo = this.dataForm.controls.LOGO_No.value;
     // 1. 立即檢查並退出
     if (!venNo || !logoNo || !value) return;
+
+    // 🎯【核心優化】：失焦當下立刻、同步帶入數量 1，不等 API 回傳
+    const currentRow = this.data[index];
+    if (currentRow) {
+      currentRow.CRN_SubQty = 1;
+      this.calculateTotals();
+      this.cdr.detectChanges();
+    }
+
     const body = { VEN_No: venNo, queryNo: value, LOGO_No: logoNo };
+
     // 2. 延遲執行 API 查詢，讓瀏覽器有時間處理 Tab 鍵焦點跳轉
     setTimeout(() => {
       // 再次檢查，防止在延遲期間，使用者清除了 VEN_No/LOGO_No
@@ -143,12 +153,16 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
           const salePrc = newData.PLU_SalePrc || 0;
           const taxType = newData.PLU_StockTaxType;
-          const subQty = 0; // 預設數量為 0
+
+          // 💡 讀取使用者在 API 回傳前可能已經敲進去的新數量，若無則維持剛剛給的 1
+          const subQty = currentRow?.CRN_SubQty ?? 1;
+
           const buyNet = subQty * buyPrc;
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 計算稅額
           const buyAmt = Math.round(buyNet + buyTax); // 計算合計
           const saleAmt = Math.round(subQty * salePrc); // 銷售小計
           const originalKey = this.data[index]._TABLE_KEY;
+
           const updatedProps = {
             ...newData, // 帶入所有查詢結果的屬性
             _TABLE_KEY: originalKey,
@@ -168,33 +182,40 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
             CRN_SaleAmt: saleAmt,
             CRN_BuyPrc: buyPrc,
             CRN_SalePrc: salePrc,
-            CRN_Remark: ''
+            CRN_Remark: currentRow?.CRN_Remark || '' // 避免覆蓋打字途中的備註
           };
-          // 1：在原地更新行物件的屬性
+
+          // 在原地更新行物件的屬性
           Object.assign(this.data[index], updatedProps);
           // 替換 data 的引用，通知通用表格元件更新
           this.data = [...this.data];
           this.calculateTotals();
           this.cdr.detectChanges();
+
+          // // 🎯 當成功查到商品並自動帶入後，等 DOM 渲染完自動全選數量
+          // setTimeout(() => {
+          //   const tableEl = document.querySelector(`[table-edit-id] .p-datatable-tbody`);
+          //   if (tableEl && tableEl.children[index]) {
+          //     const targetRow = tableEl.children[index];
+          //     const quantityInput = targetRow.querySelector('.p-inputnumber-input') as HTMLInputElement;
+          //     if (quantityInput) {
+          //       if (document.activeElement === quantityInput) {
+          //         quantityInput.select();
+          //       } else {
+          //         quantityInput.focus();
+          //         quantityInput.select(); // 執行全選，讓使用者按 2 直接覆蓋 1
+          //       }
+          //     }
+          //   }
+          // }, 40);
+
         } else {
           this.messageService.errorBubble('查無該商品資訊');
           // 在原地清空欄位值
           Object.assign(this.data[index], {
-            PLU_MagNo: '',
-            PLU_Name: '',
-            PLU_No: '',
-            UNIT_NAME: '',
-            PLU_BoxQty: 0,
-            PLU_StockTaxType: '',
-            PLU_TaxType: '',
-            CRN_SubQty: 0,
-            CRN_BuyNet: 0,
-            CRN_BuyTax: 0,
-            CRN_BuyAmt: 0,
-            CRN_SaleAmt: 0,
-            CRN_BuyPrc: 0,
-            CRN_SalePrc: 0,
-            CRN_Remark: ''
+            PLU_MagNo: '', PLU_Name: '', PLU_No: '', UNIT_NAME: '', PLU_BoxQty: 0,
+            PLU_StockTaxType: '', PLU_TaxType: '', CRN_SubQty: 0, CRN_BuyNet: 0,
+            CRN_BuyTax: 0, CRN_BuyAmt: 0, CRN_SaleAmt: 0, CRN_BuyPrc: 0, CRN_SalePrc: 0, CRN_Remark: ''
           });
           // 替換 data 的引用，通知通用表格元件更新
           this.data = [...this.data];
@@ -525,7 +546,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       const buyPrc = item.PLU_SalePrc_UNI || 0;
       const salePrc = item.PLU_SalePrc || 0;
       const taxType = item.PLU_StockTaxType;
-      const subQty = 0; // 預設數量為 1
+      const subQty = 1; // 預設數量為 1
       const buyNet = subQty * buyPrc;
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
       const buyAmt = Math.round(buyNet + buyTax);
@@ -668,16 +689,59 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         YYYYMM: `${formData.APPLY_Date.getFullYear()}${(formData.APPLY_Date.getMonth() + 1).toString().padStart(2, '0')}`,
         Details: details,
       };
-      const request$ = this.isFormCreateable ? this.tls52020Service.insertTLS52020(submitData) : this.tls52020Service.updateTLS52020(submitData);
-      request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(() => {
-        this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+      const request$ = this.isFormCreateable
+        ? this.tls52020Service.insertTLS52020(submitData)
+        : this.tls52020Service.updateTLS52020(submitData);
+
+      request$.pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
         if (this.isFormCreateable) {
-          this.onCancel(); // 或者調用 reset 邏輯
+          // 取得回傳的進貨單號 (假設 Message 回傳的是單號)
+          const crnNo = (res.Message ?? '').trim();
+
+          this.messageService.confirm({
+            header: '新增成功',
+            message: `退貨單號：<strong>${crnNo || '—'}</strong>`,
+            icon: 'check',
+            showIcon: true,
+            acceptLabel: '返回',
+            accept: () => this.onCancel(),
+            rejectLabel: '繼續新增',
+            reject: () => this.resetFormForContinueNew(),
+          });
         } else {
+          this.messageService.successBubble(res.Message || '修改成功');
           this.onCancel();
         }
       });
     });
+  }
+
+  /** 新增成功後選擇「繼續新增」時，還原表單與明細 */
+  private resetFormForContinueNew(): void {
+    this.dataForm.patchValue({
+      CRN_No: '系統自動產生',
+      VEN_No: null,
+      LOGO_No: null,
+      HOS_No: null,
+      CRN_TotalBuyNet: 0,
+      CRN_TotalBuyTax: 0,
+      CRN_TotalBuyAmt: 0,
+      CRN_TotalSaleAmt: 0,
+      APPLY_USR_No: this.user?.user_No ?? null,
+      APPLY_USR_Name: this.user?.user_Name ?? null,
+      APPLY_Date: new Date(),
+      CRN_Remark: null,
+    });
+
+    this.clearDetails(); // 清空 data 陣列與計算總額
+    this.vendorOptions = this.dropdown.queryPos2013TltTalent(); // 還原廠商下拉選單
+    this.filteredLogoOptions = this.fullLogoOptions;
+    this.filteredWarehouseOptions = this.fullWarehouseOptions;
+
+    this.cdr.detectChanges();
   }
   onReset() { this.data = [...this.originalData]; }
 }

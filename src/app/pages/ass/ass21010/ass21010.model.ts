@@ -7,6 +7,7 @@ export interface ASS21010Data {
   ENG_MeterNo: string;
   Location_No: string;
   ENG_Remark: string;
+  CanDelete?: boolean;
 }
 
 export interface ASS21010Payload extends BaseQueryRequest {

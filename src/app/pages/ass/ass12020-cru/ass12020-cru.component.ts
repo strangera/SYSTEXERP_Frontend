@@ -8,28 +8,29 @@ import {
   ASS12010QueryRequest,
 } from '@pages/ass/ass12010/ass12010.model';
 import {
-  ApplyPurchaseRequestRow,
   ASS12020Detail,
   ASS12020DetailItem,
   ASS12020InsertRequest,
+  ApplyPurchaseRequestRow,
 } from '@pages/ass/ass12020/ass12020.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
 import { ASS12020Service } from '@service/api/ass/ass12020.service';
 import { Fin11040Service } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatDate, formatDateToYYYY_MM_DD, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { Column, LazyLoadEvent, formatDate, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -49,6 +50,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
+    DropdownComponent,
     InputTextComponent,
     DialogComponent,
     TableComponent,
@@ -68,6 +70,9 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
   /** 明細資料（table-edit 綁定） */
   data: ASS12020DetailItem[] = [];
 
+
+  /** 供應商下拉：queryPOS2013_DropDownList */
+  supplierOptions: { value: string; label: string }[] = [];
   /** 品項編號下拉：queryFIN11040 */
   itemCodeOptions: { value: string; label: string }[] = [];
   itemUnitOptions = getSYS1000Options('UNIT');
@@ -93,7 +98,7 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       placeholder: '輸入數字',
       validate: [validateRequired, validateMinNumber(0)],
     },
-    { field: 'PURCHASE_QTY', header: '請購數量', type: 'inputNumber', placeholder: '輸入數字' },
+    { field: 'PURCHASE_QTY', header: '請購數量', type: 'inputNumber', disabled: () => true },
     { field: 'QTY', header: '數量', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired, validateMinNumber(0)] },
     {
       field: 'GOODS_UNIT',
@@ -103,7 +108,7 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       optionValue: 'value',
       options: () => this.itemUnitOptions,
     },
-    { field: 'TOTAL_AMT', header: '總金額', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired] },
+    { field: 'TOTAL_AMT', header: '總金額', type: 'inputNumber', disabled: () => true, validate: [validateRequired] },
     { field: 'EXPIRE_LIMIT', header: '保存期限(月)', type: 'inputNumber', placeholder: '輸入數字' },
     {
       field: 'WH_ID',
@@ -175,15 +180,17 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     return r?.FAQuotationM_ID;
   }
 
-  /** 載入品項編號 (queryFIN11040)、倉別 (queryASS11100) 下拉選項 */
+  /** 載入供應商 (queryPOS2013)、品項編號 (queryFIN11040)、倉別 (queryASS11100) 下拉選項 */
   private loadOptions(): void {
     forkJoin({
+      suppliers: this.dropdownApiService.queryPos2013({ VEN_Flag: '' }),
       items: this.dropdownApiService.queryASS11040_DropDownList(),
       wh: this.ass11100Service.queryASS11100({ PageSize: 100, PageIndex: 1 }),
     })
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: ({ items, wh }) => {
+        next: ({ suppliers, items, wh }) => {
+          this.supplierOptions = suppliers ?? [];
           this.itemCodeOptions = items ?? [];
           if (wh.Status === '0000' && Array.isArray(wh.Data)) {
             this.whIdOptions = wh.Data.map(item => ({
@@ -290,10 +297,10 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
             NEED_ID: needId || null,
             GOODS_ID: detail.GOODS_ID ?? null,
             GOODS_PRICE: null,
-            PURCHASE_QTY: detail.PURCHASE_QTY ?? null,
+            PURCHASE_QTY: detail.PURCHASE_QTY ?? 0,
             QTY: detail.QTY ?? null,
             GOODS_UNIT: null,
-            TOTAL_AMT: null,
+            TOTAL_AMT: 0,
             EXPIRE_LIMIT: null,
             WH_ID: whId ?? null,
             NOTES: detail.NOTES ?? null,
@@ -302,6 +309,20 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
           this.messageService.successBubble('套用成功');
         },
       });
+  }
+
+  /** 明細欄位變更：候選列轉正時補預設 0；單價(未稅) × 數量 → 總金額（自動計算） */
+  onDetailFieldChange(event: FieldChangeEvent): void {
+    const row = event.rowData;
+    if (!row) return;
+    // 使用者首次在候選列輸入任何欄位 → 此列已轉為真實列，補預設 0
+    if (row.PURCHASE_QTY == null) row.PURCHASE_QTY = 0;
+    if (row.TOTAL_AMT == null) row.TOTAL_AMT = 0;
+    if (event.field === 'GOODS_PRICE' || event.field === 'QTY') {
+      const price = Number(row.GOODS_PRICE) || 0;
+      const qty = Number(row.QTY) || 0;
+      row.TOTAL_AMT = price * qty;
+    }
   }
 
   /** table-edit 新增按鈕：新增一列 */
@@ -316,10 +337,10 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       NEED_ID: null,
       GOODS_ID: null,
       GOODS_PRICE: null,
-      PURCHASE_QTY: null,
+      PURCHASE_QTY: 0,
       QTY: null,
       GOODS_UNIT: null,
-      TOTAL_AMT: null,
+      TOTAL_AMT: 0,
       EXPIRE_LIMIT: null,
       WH_ID: null,
       NOTES: null,

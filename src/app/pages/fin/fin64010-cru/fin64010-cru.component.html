@@ -6,7 +6,6 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-
       <!-- 基本資料 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -31,15 +30,15 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-   <app-dropdown
-  label="銀行代號"
-  controlName="BNK_Key"
-  [options]="bankNoOptions"
-  optionLabel="label"
-  optionValue="value"
-  [control]="dataForm.controls.BNK_Key"
-  [submitted]="submitted"
-></app-dropdown>
+          <app-dropdown
+            label="銀行代號"
+            controlName="BNK_Key"
+            [options]="bankNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.BNK_Key"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -64,11 +63,11 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="託收銀行"
-            controlName="CHK_BNK_No"
-            [options]="colleBankOptions"
+            controlName="COL_BNK_id"
+            [options]="colBankAccOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.CHK_BNK_No"
+            [control]="dataForm.controls.COL_BNK_id"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -82,27 +81,16 @@
             [submitted]="submitted"
           ></app-calendar>
         </div>
+       
 <div class="col-12 md:col-6 lg:col-4">
-  <app-dropdown
-    label="託收帳戶"
-    controlName="COL_BNK_id"
-    [options]="colBankAccOptions"
-    optionLabel="label"
-    optionValue="value"
-    [control]="dataForm.controls.COL_BNK_id"
+  <app-input-text
+    label="收票業務員"
+    controlName="Sales_Id"
+    [control]="dataForm.controls.Sales_Id"
     [submitted]="submitted"
-  ></app-dropdown>
+    [disabled]="true"
+  ></app-input-text>
 </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="收票業務員"
-            controlName="Sales_Id"
-            [control]="dataForm.controls.Sales_Id"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="收款單號"
@@ -111,6 +99,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
@@ -215,23 +204,26 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="狀態"
-              controlName="CHK_Status"
-              [options]="chkStatusOptions"
+              controlName="TranStatus"
+              [options]="tranStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.CHK_Status"
+              [control]="dataForm.controls.TranStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據狀態"
-              controlName="Tran_Status"
-              [control]="dataForm.controls.Tran_Status_Name"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+         <div class="col-12 md:col-6 lg:col-4">
+  <app-dropdown
+    label="票據狀態"
+    controlName="CHK_Status"
+    [options]="chkStatusOptions"
+    optionLabel="label"
+    optionValue="value"
+    [control]="dataForm.controls.CHK_Status"
+    [submitted]="submitted"
+  ></app-dropdown>
+</div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -268,19 +260,34 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+                  <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="託收帳戶"
+            controlName="COL_BNK_id"
+            [options]="colBankAccOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.COL_BNK_id"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div> -->
         </div>
       </p-panel>
 
-      <div class="mt-2 text-red-500" *ngIf="crudstatus !== CRUDStatus.Read && !isEditable">
+      <div
+        class="mt-2 text-red-500"
+        *ngIf="crudstatus !== CRUDStatus.Read && !isEditable"
+      >
         ※ 此票據已拋轉/已兌現/已退票，依規格不可再修改。
       </div>
 
-      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-           *ngIf="crudstatus !== CRUDStatus.Read && isEditable">
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="crudstatus !== CRUDStatus.Read && isEditable"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-
     </form>
   </p-panel>
 </div>

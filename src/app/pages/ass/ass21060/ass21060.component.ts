@@ -4,17 +4,17 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 
-import { ASS21060Service } from '../../../service/api/ass/ass21060.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ASS21060Service } from '../../../service/api/ass/ass21060.service';
 
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -86,19 +86,19 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
 
     this.buildColumns(this.queryForm.getRawValue().ENG_Type);
 
-  this.queryForm.controls.ENG_Type.valueChanges
-  .pipe(untilDestroyed(this))
-  .subscribe((engType) => {
-    // 1. 切換表頭
-    this.buildColumns(engType);
+    this.queryForm.controls.ENG_Type.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((engType) => {
+        // 1. 切換表頭
+        this.buildColumns(engType);
 
-    // 2. 清空表格資料
-    this.data = [];
-    this.totalRecords = 0;
+        // 2. 清空表格資料
+        this.data = [];
+        this.totalRecords = 0;
 
-    // 3. 清掉上一筆查詢條件，避免直接匯出舊資料
-    this.lastQueryBody = null;
-  });
+        // 3. 清掉上一筆查詢條件，避免直接匯出舊資料
+        this.lastQueryBody = null;
+      });
   }
 
   private buildColumns(engType: string | null): void {
@@ -186,76 +186,76 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
     });
   }
 
-public onExportXLSX(): void {
-  const exportBody = this.buildExportBody();
-  if (!exportBody) {
-    return;
+  public onExportXLSX(): void {
+    const exportBody = this.buildExportBody();
+    if (!exportBody) {
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.service.exportASS21060Excel(exportBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.xlsx`;
+          this.downloadBlob(res.body, fileName);
+        },
+        error: (err) => {
+          console.error('匯出 Excel 失敗', err);
+        }
+      });
   }
-
-  this.btnLoading = true;
-
-  this.service.exportASS21060Excel(exportBody)
-    .pipe(
-      untilDestroyed(this),
-      finalize(() => this.btnLoading = false)
-    )
-    .subscribe({
-      next: (res) => {
-        const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.xlsx`;
-        this.downloadBlob(res.body, fileName);
-      },
-      error: (err) => {
-        console.error('匯出 Excel 失敗', err);
-      }
-    });
-}
 
   public onExportPDFClick(): void {
-  const exportBody = this.buildExportBody();
-  if (!exportBody) {
-    return;
+    const exportBody = this.buildExportBody();
+    if (!exportBody) {
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.service.exportASS21060PDF(exportBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.pdf`;
+          this.downloadBlob(res.body, fileName);
+        },
+        error: (err) => {
+          console.error('匯出 PDF 失敗', err);
+        }
+      });
   }
+  private getNowTimeString(): string {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const MM = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const HH = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
 
-  this.btnLoading = true;
-
-  this.service.exportASS21060PDF(exportBody)
-    .pipe(
-      untilDestroyed(this),
-      finalize(() => this.btnLoading = false)
-    )
-    .subscribe({
-      next: (res) => {
-        const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.pdf`;
-        this.downloadBlob(res.body, fileName);
-      },
-      error: (err) => {
-        console.error('匯出 PDF 失敗', err);
-      }
-    });
-}
-private getNowTimeString(): string {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const MM = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const HH = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  const ss = String(now.getSeconds()).padStart(2, '0');
-
-  return `${yyyy}${MM}${dd}${HH}${mm}${ss}`;
-}
+    return `${yyyy}${MM}${dd}${HH}${mm}${ss}`;
+  }
 
   private downloadBlob(blob: Blob | null, fileName: string): void {
     if (!blob) {
       return;
     }
 
-    const objectUrl = window.URL.createObjectURL(blob);
+    const objectUrl = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = objectUrl;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(objectUrl);
+    globalThis.URL.revokeObjectURL(objectUrl);
   }
 
   private getFileNameFromResponse(response: { headers?: { get(name: string): string | null } }, fallback: string): string {

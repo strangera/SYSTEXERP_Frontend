@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -5,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS12020Service } from '@service/api/ass/ass12020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
@@ -19,12 +21,10 @@ import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AsyncPipe } from '@angular/common';
 import {
   ASS12020QueryRow,
   QueryASS12020Request,
 } from './ass12020.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 /** 3.1.2.2 詢價登錄作業 */
 @UntilDestroy()
@@ -120,15 +120,11 @@ export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow>
   }
 
   loadSupplierOptions(): void {
-    this.dropDownListService
-      .queryTBLUSER_DropDownList()
+    this.dropdownApiService
+      .queryPos2013({ VEN_Flag: '' })
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        const list = res.Data ?? [];
-        this.supplierCodeOptions = list.map((item: { No?: string; Name?: string }) => ({
-          value: item.No ?? '',
-          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-        }));
+        this.supplierCodeOptions = res ?? [];
       });
   }
 
@@ -249,13 +245,13 @@ export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow>
         next: response => {
           const blob = response.body;
           if (blob && blob.size > 0) {
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `詢價登錄_${id}.pdf`;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
             document.body.removeChild(a);
             this.messageService.successBubble('匯出成功');
           } else {

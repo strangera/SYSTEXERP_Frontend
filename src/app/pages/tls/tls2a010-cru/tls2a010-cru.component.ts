@@ -55,6 +55,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       { label: '信用卡缺單', value: '2' },
       { label: '信用卡未簽', value: '3' },
       { label: '其他異常', value: '4' },
+      { label: '作廢/退貨', value: '7' },
     ],
     VOUCHER: [
       { label: '已繳回', value: '1' },

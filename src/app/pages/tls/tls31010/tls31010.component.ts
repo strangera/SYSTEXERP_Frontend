@@ -13,7 +13,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -22,6 +22,17 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+
+interface BusClassItem {
+  bus_type: string;
+  No: string;
+}
+
+interface BusSClassItem {
+  bus_type: string;
+  bus_class: string;
+  No: string;
+}
 
 @Component({
   selector: 'app-tls31010',
@@ -45,27 +56,30 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     CategorySelectComponent
   ]
 })
-
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_Date: [null],//交易日期
-    tlt_building: [[]],// 館別
-    tlt_floor: [[]],// 樓層
-    area_no: [[]],// 區域
+    TXN_Date: [null],
+    TLT_NO: [[]],
+    tlt_building: [[]],
+    tlt_floor: [[]],
+    area_no: [[]],
     category: [{ bus_type: [], bus_class: [], bus_sclass: [] }],
-    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
-    org_id: [[]],  // 組織
-    TaxType: ['0'],  // 銷售金額是否含稅
-    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
+    tlt_kind: [[]],
+    tlt_term_type: [[]],
+    org_id: [[]],
+    TaxType: ['0'],
+    IsRece_Yn: [null],
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'tlt_building', order: 1 }]],
   });
+
   totalRecords = 0;
   data: TLS31010QueryData[] = [];
   footerData: TLS31010TotalData | null = null;
   lastQueryBody: TLS31010Request | null = null;
+  btnLoading = false;
+
   columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
     { field: 'org_name', header: '組織名稱', align: 'left' },
@@ -73,86 +87,170 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     { field: 'tlt_no', header: '專櫃編號', align: 'left' },
     { field: 'location_no', header: '位置編號', align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
+
     { field: 'budget', header: '營業目標', align: 'right', groupField: '營業額', format: formatAmount, isTotal: true },
     { field: 'AVN_TotSaleAmt', header: '營業實績', align: 'right', groupField: '營業額', format: formatAmount, isTotal: true },
-    { field: 'AchievementRate', header: '達成率', align: 'right', groupField: '營業額', format: (value) => formatPercentage(value, 2), isTotal: true },
-    { field: 'BudgetRate', header: '營業目標佔比', align: 'right', groupField: '營業佔比', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', align: 'right', groupField: '營業佔比', format: (value) => formatPercentage(value, 2) },
+
+    {
+      field: 'AchievementRate',
+      header: '達成率',
+      align: 'right',
+      groupField: '營業額',
+      format: (v: number) => this.percent(v),
+      exportFormat: 'suffix:%' as unknown as Record<string, string>[],
+      isTotal: true
+    },
+    {
+      field: 'BudgetRate',
+      header: '營業目標佔比',
+      align: 'right',
+      groupField: '營業佔比',
+      format: (v: number) => this.percent(v),
+      exportFormat: 'suffix:%' as unknown as Record<string, string>[]
+    },
+    {
+      field: 'PerformanceRate',
+      header: '營業實績佔比',
+      align: 'right',
+      groupField: '營業佔比',
+      format: (v: number) => this.percent(v),
+      exportFormat: 'suffix:%' as unknown as Record<string, string>[]
+    },
+
     { field: 'TxnCount', header: '交易筆數', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
     { field: 'AvgTicket', header: '客單價', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
-    { field: 'tlt_space', header: '坪數', align: 'right', groupField: '營業坪效', isTotal: true, format: (value) => formatAmountWithDecimals(value, 2) },
-    { field: 'MonthlyPSM', header: '坪效', align: 'right', groupField: '營業坪效', isTotal: true },
+
+    {
+      field: 'tlt_space',
+      header: '坪數',
+      align: 'right',
+      groupField: '營業坪效',
+      isTotal: true,
+      format: (v: number) => formatAmountWithDecimals(v, 2),
+      exportFormat: 'number:comma2' as unknown as Record<string, string>[]
+    },
+    {
+      field: 'MonthlyPSM',
+      header: '坪效',
+      align: 'right',
+      groupField: '營業坪效',
+      isTotal: true,
+      format: (v: number) => formatAmountWithDecimals(v, 2),
+      exportFormat: 'number:comma2' as unknown as Record<string, string>[]
+    },
+
     { field: 'MonthlyBudgetTotal', header: '月營業目標', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'MonthlySalesTotal', header: '營業實績', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
-    { field: 'CompletionRate', header: '完成率', align: 'right', groupField: '月累計', format: (value) => formatPercentage(value, 2), isTotal: true },
+
+    {
+      field: 'CompletionRate',
+      header: '完成率',
+      align: 'right',
+      groupField: '月累計',
+      format: (v: number) => this.percent(v),
+      exportFormat: 'suffix:%' as unknown as Record<string, string>[],
+      isTotal: true
+    },
+
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right', isTotal: true },
   ];
+
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
     { field: '營業佔比', header: '營業佔比' },
     { field: '客單價', header: '客單價' },
     { field: '營業坪效', header: '營業坪效' },
     { field: '月累計', header: '月累計' },
-  ]
+  ];
+
   tlt_kind_Option = getSYS1000Options('TLT_Kind');
   tlt_term_type = getSYS1000Options('tlt_term_type');
-  tlt_building_Option = this.dropdown.querySys3800(); // 館別
-  tlt_floor_Option = this.dropdown.querySys3900(); // 樓層
-  area_no_Option = this.dropdown.querySys3A00(); // 區域
-  org_id_Option = this.dropdown.querySys3100(); // 組織
+  tlt_noListOption = this.dropdown.queryTltTalent();
+  tlt_building_Option = this.dropdown.querySys3800();
+  tlt_floor_Option = this.dropdown.querySys3900();
+  area_no_Option = this.dropdown.querySys3A00();
+  org_id_Option = this.dropdown.querySys3100();
+
   constructor(
     public readonly tls31010Service: Tls31010Service,
     private readonly dropdown: DropdownApiService
-  ) { super(); }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.initializePage('TLS31010', 'TLS/TLS31010cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
+
+  percent(v: number): string {
+    if (v === null || v === undefined) return '';
+    const n = Number(v);
+    if (Number.isNaN(n)) return '';
+    return `${n.toFixed(2)}%`;
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const rawValue = frm.getRawValue();
       const cat = rawValue.category;
+
       const formValue: TLS31010Request = {
         ...rawValue,
         TXN_Date: formatDate(rawValue.TXN_Date, 'yyyy-MM-dd', 'en-US'),
+        TLT_NO: rawValue.TLT_NO || null,
         tlt_floor: rawValue.tlt_floor || null,
         area_no: rawValue.area_no || null,
         org_id: rawValue.org_id || null,
         tlt_kind: rawValue.tlt_kind || null,
         tlt_term_type: rawValue.tlt_term_type || null,
         bus_type: cat.bus_type || null,
-        bus_class: cat.bus_class?.map((item: any) => [item.bus_type, item.No]) || null,
-        bus_sclass: cat.bus_sclass?.map((item: any) => [item.bus_type, item.bus_class, item.No]) || null,
-        tlt_building: rawValue.tlt_building?.length ? rawValue.tlt_building : null, IsRece_Yn: rawValue.IsRece_Yn || null,
-        TaxType: rawValue.TaxType || "0",
+        bus_class: cat.bus_class?.map((item: BusClassItem) => [item.bus_type, item.No]) || null,
+        bus_sclass: cat.bus_sclass?.map((item: BusSClassItem) => [item.bus_type, item.bus_class, item.No]) || null,
+        tlt_building: rawValue.tlt_building?.length ? rawValue.tlt_building : null,
+        IsRece_Yn: rawValue.IsRece_Yn || null,
+        TaxType: rawValue.TaxType || '0',
         category: undefined
       } as TLS31010Request;
-      this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
-        this.lastQueryBody = formValue;
-        this.totalRecords = res.TotalCount;
-        this.footerData = res.TotalData ?? null;
-      });
+
+      this.tls31010Service.queryTLS31010(formValue)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          this.data = res.Data;
+          this.lastQueryBody = formValue;
+          this.totalRecords = res.TotalCount;
+          this.footerData = res.TotalData ?? null;
+        });
     });
   }
-  btnLoading = false;
+
   onReport(isExcel = true) {
     if (!this.lastQueryBody) {
-      this.messageService.errorBubble("請先進行查詢後再列印");
+      this.messageService.errorBubble('請先進行查詢後再列印');
       return;
     }
 
     this.btnLoading = true;
+
     const printBody: TLS31010Request = {
       ...this.lastQueryBody,
       IsExcel: isExcel
     };
 
-    this.tls31010Service.printTLS31010(printBody).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      if (res.Data && res.Data.Print_URL) {
-        const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-        window.open(downloadUrl, '_blank');
-      }
-    });
+    this.tls31010Service.printTLS31010(printBody)
+      .pipe(
+        finalize(() => this.btnLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          globalThis.open(downloadUrl, '_blank');
+        }
+      });
   }
 }

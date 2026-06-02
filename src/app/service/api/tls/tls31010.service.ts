@@ -67,7 +67,8 @@ export interface TLS31010TotalData {
   AvgPSM: number,
   TotalMonthlyBudget: number,
   TotalMonthlySales: number,
-  AvgCompletionRate: number
+  AvgCompletionRate: number,
+  TotalPreOrderAmt: number
 }
 
 export interface TLS31010Response {
@@ -101,6 +102,7 @@ export class Tls31010Service {
           MonthlyBudgetTotal: res.Data.TotalData.TotalMonthlyBudget,
           MonthlySalesTotal: res.Data.TotalData.TotalMonthlySales,
           CompletionRate: res.Data.TotalData.AvgCompletionRate,
+          PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt,
           // 如果有其他欄位需要對應，繼續寫在這裡
           building_desc: '總計', // 選擇性：給予一個標籤讓 Footer 顯示
         } : null;

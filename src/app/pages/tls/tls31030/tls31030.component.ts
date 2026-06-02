@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31030Item, TLS31030PrintRequest, TLS31030Request, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -17,7 +18,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -26,6 +27,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31030',
@@ -35,6 +37,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   imports: [
     MenubarComponent,
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,
@@ -60,6 +63,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
     // 合約查詢條件
+    TLT_NO: [[]],// 專櫃編號
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -139,34 +143,36 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31030Request | null = null; //歷史查詢條件
 
-  columns: Column[] = [
-    { field: 'bus_type', header: '大分類代碼', visible: false }, // queryTLS31030
+  columns: ReportColumn[] = [
+    { field: 'bus_type', header: '大分類代碼', visible: false, align: 'left' }, // queryTLS31030
     { field: 'bus_type_name', header: '大分類名稱', visible: true, align: 'left' }, // queryTLS31030
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
 
-    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount, align: 'right' }, // queryTLS31030
-    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount, align: 'right' }, // queryTLS31030
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount, align: 'right' }, // queryTLS31030
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: '臨時櫃', format: formatAmount, align: 'right' }, // queryTLS31030
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: '臨時櫃', format: formatAmount, align: 'right' }, // queryTLS31030
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: '臨時櫃', format: formatAmount, align: 'right' }, // queryTLS31030
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
+
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    { field: 'temp', header: '臨時櫃' }, // queryTLS31030
-    { field: 'month', header: '月累計' },
+    { field: '營業額', header: '營業額' },
+    { field: '營業佔比', header: '營業佔比' },
+    { field: '客單價', header: '客單價' },
+    { field: '營業坪效', header: '營業坪效' },
+    { field: '臨時櫃', header: '臨時櫃' }, // queryTLS31030
+    { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -193,12 +199,14 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
   bus_class_Option: IDropdownItem[] = []; // 中分類
   bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
+  tlt_noListOption = this.dropdown.queryTltTalent(); // 專櫃編號選項
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls31030Service: Tls31030Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
+    private readonly dropdown: DropdownApiService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -373,6 +381,8 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
 
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
+
+          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
@@ -415,7 +425,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }
@@ -426,7 +436,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }
@@ -529,7 +539,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
         end = this.dateForm.get('enddate')?.value ?? null;
         break;
 
-      case '3': { // 月報 
+      case '3': { // 月報
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);

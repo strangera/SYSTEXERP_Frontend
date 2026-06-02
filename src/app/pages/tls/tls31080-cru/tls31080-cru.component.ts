@@ -11,13 +11,14 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 // 各時段之樓層營業報表
 @Component({
@@ -68,33 +69,36 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   });
   totalRecords = 0;
   data: TLS31080DetailResponse[] = [];
+  footerData: any = null;
   historyRequestBody: any = null; //歷史查詢條件
-  columns: Column[] = [
-    { field: 'tlt_no', header: '專櫃代號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'floor_desc', header: '樓層名稱', visible: true },
-    { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
-    { field: 'H08', header: '08時段', visible: true },
-    { field: 'H09', header: '09時段', visible: true },
-    { field: 'H10', header: '10時段', visible: true },
-    { field: 'H11', header: '11時段', visible: true },
-    { field: 'H12', header: '12時段', visible: true },
-    { field: 'H13', header: '13時段', visible: true },
-    { field: 'H14', header: '14時段', visible: true },
-    { field: 'H15', header: '15時段', visible: true },
-    { field: 'H16', header: '16時段', visible: true },
-    { field: 'H17', header: '17時段', visible: true },
-    { field: 'H18', header: '18時段', visible: true },
-    { field: 'H19', header: '19時段', visible: true },
-    { field: 'H20', header: '20時段', visible: true },
-    { field: 'H21', header: '21時段', visible: true },
-    { field: 'H22', header: '22時段', visible: true },
-    { field: 'H23', header: '23時段', visible: true },
-
-    { field: 'ReentryAmt', header: '補登金額或筆數', visible: true },
-    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true },
-    { field: 'SubTotal', header: '小計', visible: true },
+  columns: ReportColumn[] = [];
+  // 時段column
+  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -142,6 +146,42 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
 
+    const { TimeMode, TimeFromHH, TimeToHH } = this.queryConditions;
+
+    // 先過濾出符合條件的小時欄位
+    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
+      // 如果不是範圍模式('T')，或者起訖點沒填，就預設全部顯示
+      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
+        return true;
+      }
+
+      // 從欄位名稱 (例如 'H08') 轉化成數字 8
+      const hourNum = parseInt(col.field.substring(1), 10);
+
+      // 判斷是否在範圍內 (支援跨午夜或正常範圍)
+      if (TimeFromHH <= TimeToHH) {
+        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
+      } else {
+        // 如果填寫 22 到 02 點 (跨日狀況)
+        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
+      }
+    });
+
+    // 重新組合回原本的欄位順序：前置欄位 + 過濾後的小時 + 後置總計欄位
+    this.columns = [
+      { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
+      { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+      { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
+      { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
+
+      ...filteredHours, // 放入動態過濾後的小時時段
+
+      { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    ];
+
     console.log('查詢頁request條件', this.queryConditions);
     console.log('查詢頁response點選項目', this.dataForm.value);
 
@@ -150,7 +190,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.tlt_floor_Option = res.Data;
-        console.log('樓層選單 GOGO', this.tlt_floor_Option);
+        console.log('樓層選單', this.tlt_floor_Option);
 
         // 在這裡才呼叫查詢 (因為樓層選單已經準備好了)
         if (this.queryConditions) {
@@ -198,8 +238,39 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
 
     this.tls31080Service.queryTLS31080Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單時段之營業報表response', res.Data);
-      this.data = res.Data ?? [];               // 查詢資料
-      this.totalRecords = res.Data.length;      // 長度計算筆數
+      this.data = res.Data.QueryData ?? [];               // 查詢資料
+      this.footerData = {
+        H00: res.Data.TotalData.H00 ?? 0,
+        H01: res.Data.TotalData.H01 ?? 0,
+        H02: res.Data.TotalData.H02 ?? 0,
+        H03: res.Data.TotalData.H03 ?? 0,
+        H04: res.Data.TotalData.H04 ?? 0,
+        H05: res.Data.TotalData.H05 ?? 0,
+        H06: res.Data.TotalData.H06 ?? 0,
+        H07: res.Data.TotalData.H07 ?? 0,
+        H08: res.Data.TotalData.H08 ?? 0,
+        H09: res.Data.TotalData.H09 ?? 0,
+        H10: res.Data.TotalData.H10 ?? 0,
+        H11: res.Data.TotalData.H11 ?? 0,
+        H12: res.Data.TotalData.H12 ?? 0,
+        H13: res.Data.TotalData.H13 ?? 0,
+        H14: res.Data.TotalData.H14 ?? 0,
+        H15: res.Data.TotalData.H15 ?? 0,
+        H16: res.Data.TotalData.H16 ?? 0,
+        H17: res.Data.TotalData.H17 ?? 0,
+        H18: res.Data.TotalData.H18 ?? 0,
+        H19: res.Data.TotalData.H19 ?? 0,
+        H20: res.Data.TotalData.H20 ?? 0,
+        H21: res.Data.TotalData.H21 ?? 0,
+        H22: res.Data.TotalData.H22 ?? 0,
+        H23: res.Data.TotalData.H23 ?? 0,
+
+        ReentryAmt: res.Data.TotalData.ReentryAmt ?? 0,
+        PreOrderAmt: res.Data.TotalData.PreOrderAmt ?? 0,
+        PresaleCheckoutAmt: res.Data.TotalData.PresaleCheckoutAmt ?? 0,
+        SubTotal: res.Data.TotalData.SubTotal ?? 0,
+      }
+      this.totalRecords = res.Data.QueryData.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
     })

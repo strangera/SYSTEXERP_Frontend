@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN29120Service } from '@service/api/fin/fin29120.service';
@@ -95,9 +94,8 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private fin29120Service: FIN29120Service,
-    private dropDownListService: DropDownListService,
-    private sanitizer: DomSanitizer
+    private readonly fin29120Service: FIN29120Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -140,26 +138,24 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
             return {
               ...row,
               ACPId: acpId
-                ? this.sanitizer.bypassSecurityTrustHtml(
-                  `<a href="#"
+                ?
+                `<a href="#"
                       class="acp-link"
                       data-acpid="${acpId}"
-                      onclick="window.open('${acpIdUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${acpIdUrl}', '_blank'); return false;"
                     >
                       ${acpId}
                     </a>`
-                )
                 : '',
               InvoiceNo: guiNo
-                ? this.sanitizer.bypassSecurityTrustHtml(
-                  `<a href="#"
+                ?
+                `<a href="#"
                       class="invoice-link"
                       data-invoice="${guiNo}"
-                      onclick="window.open('${invoiceNoUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${invoiceNoUrl}', '_blank'); return false;"
                     >
                       ${guiNo}
                     </a>`
-                )
                 : ''
             };
           });
@@ -191,6 +187,6 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     } else if (type === 'Invoice') {
       url = `/account/fin/fin13050cru?GUI_No=${encodeURIComponent(String(value ?? '').trim().toUpperCase())}`;
     }
-    window.open(url, '_blank');
+    globalThis.open(url, '_blank');
   }
 }
