@@ -27,7 +27,6 @@
     ".vscode/extensions.json": true,
     ".vscode/launch.json": true,
     ".vscode/tasks.json": true,
-    "src/app/core": true,
     "src/styles.scss": true
   },
   // "html.format.wrapAttributes": "auto",
