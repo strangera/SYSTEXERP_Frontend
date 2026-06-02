@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 // Shared
@@ -18,13 +18,15 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatDate } from '../../../shared/componentkit/table-report/table-report.model';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { formatAmount2, formatDate } from '../../../shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '../../../shared/service/file-export.service';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
 import {
   QueryASS15030DetailResponse,
+  QueryASS15030DetailResult,
   QueryASS15030Request,
   QueryASS15030SumResponse,
+  QueryASS15030SumResult,
 } from './ass15030.model';
 
 //3.1.5.3  財產目錄
@@ -39,7 +41,6 @@ import {
 export class ASS15030Component extends BasicQueryPageComponent<any> implements OnInit {
   private static readonly SUBTOTAL_SEQ = '小計';
   private static readonly GRANDTOTAL_SEQ = '總合計';
-  private static readonly GROUP_KEY_FIELD = '__groupKey';
 
   queryForm = this.formBuilder.group({
     paperType: ['1'], // 報表型態 1=折舊前試算 2=拋轉
@@ -60,27 +61,33 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   });
   data: any[] = [];
   totalRecords = 0;
-  subTotalData: any[] = [];
   footerData: any | null = null;
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
   exportExcelLoading = false;
   private readonly defaultPageSize = 30;
   lastQueryBody?: QueryASS15030Request & { pageIndex?: number; pageSize?: number };
+  // 跨頁累計筆數：parent.data 不會被 table-report 的 loadMoreData 同步回來，
+  // 所以末頁偵測必須自己累計，否則 pageIndex>=3 的末頁 TotalCount 會錯。
+  private accumulatedRowCount = 0;
+
+  // 小計列套用此 class，重現原本群組底小計樣式（灰底/粗體/主色/小字）
+  private readonly subtotalCellClass = (row: any): string =>
+    this.isSubtotalRow(row?.SEQ) ? 'ass15030-subtotal-cell' : '';
 
   private readonly summaryColumns: any[] = [
     { field: 'SEQ', header: '項次', visible: true },
     { field: 'GOODS_ID', header: '品項編號', visible: true },
     { field: 'GOODS_NAME', header: '品項名稱', visible: true },
     { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true },
-    { field: 'GET_COST_TTL', header: '取得價格\n合計', visible: true, isSubTotal: true },
-    { field: 'FIX_AMT_TTL', header: '異動價格\n合計', visible: true, isSubTotal: true },
-    { field: 'AFT_AMT_TTL', header: '異動後價格\n合計', visible: true, isSubTotal: true },
-    { field: 'RESI_VALUE_TTL', header: '預留總值\n合計', visible: true, isSubTotal: true },
-    { field: 'PRE_DEPRE_TTL', header: '前期折舊金額', visible: true, isSubTotal: true },
-    { field: 'CUR_DEPRE_TTL', header: '本期\n折舊金額\n合計', visible: true, isSubTotal: true },
-    { field: 'ACC_DEPRE_TTL', header: '累計\n折舊金額\n合計', visible: true, isSubTotal: true },
-    { field: 'UNDEPRE_TTL', header: '未折舊金額\n合計', visible: true, isSubTotal: true },
+    { field: 'GET_COST_TTL', header: '取得價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'FIX_AMT_TTL', header: '異動價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'AFT_AMT_TTL', header: '異動後價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'RESI_VALUE_TTL', header: '預留總值\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'PRE_DEPRE_TTL', header: '前期折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'CUR_DEPRE_TTL', header: '本期\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'ACC_DEPRE_TTL', header: '累計\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'UNDEPRE_TTL', header: '未折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
   ];
 
   private readonly detailColumns: any[] = [
@@ -90,24 +97,24 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     { field: 'GET_DATE', header: '購入\n日期', visible: true, format: (v: string) => formatDate(v) },
     { field: 'BILL_DATE', header: '入帳\n日期', visible: true, format: (v: string) => formatDate(v) },
     { field: 'HOLD_ORG_ID', header: '保管單位', visible: true },
-    { field: 'FIR_GET_COST', header: '取得價格', visible: true, isSubTotal: true },
-    { field: 'MODIFY_AMT', header: '異動價格', visible: true, isSubTotal: true },
-    { field: 'GET_COST', header: '異動後價格', visible: true, isSubTotal: true },
-    { field: 'RESI_VALUE', header: '預留\n殘值', visible: true, isSubTotal: true },
+    { field: 'FIR_GET_COST', header: '取得價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'MODIFY_AMT', header: '異動價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'GET_COST', header: '異動後價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'RESI_VALUE', header: '預留\n殘值', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
     { field: 'FIR_EXP_YEAR', header: '耐用\n年數', visible: true, isSubTotal: true },
     { field: 'MODIFY_YEAR', header: '異動\n耐用\n年數', visible: true, isSubTotal: true },
     { field: 'EXP_YEAR', header: '異動後\n耐用\n年數', visible: true, isSubTotal: true },
     { field: 'BUY_MONTHS', header: '已購入\n月數', visible: true, isSubTotal: true },
     { field: 'BILL_MONTHS', header: '已入帳\n月數', visible: true, isSubTotal: true },
     { field: 'DEPRE_MONTHS', header: '已攤提\n月數', visible: true, isSubTotal: true },
-    { field: 'DEPRE_AMOUNT', header: '本年\n折舊金額', visible: true, isSubTotal: true },
-    { field: 'THIS_DEPRE_AMT', header: '本期\n折舊金額', visible: true, isSubTotal: true },
-    { field: 'TAL_DEPRE_AMT', header: '累計\n折舊金額', visible: true, isSubTotal: true },
-    { field: 'NO_DEPRE_AMT', header: '未折舊金額', visible: true, isSubTotal: true },
+    { field: 'DEPRE_AMOUNT', header: '本年\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'THIS_DEPRE_AMT', header: '本期\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'TAL_DEPRE_AMT', header: '累計\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'NO_DEPRE_AMT', header: '未折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
     { field: 'NOTES', header: '財產註記', visible: true },
   ];
 
-  columns: any[] = [...this.summaryColumns];
+  columns: any[] = this.getColumnsByReportStyle('1');
 
   paperTypeOptions: Option[] = [
     { value: '1', label: '折舊前試算' },
@@ -124,6 +131,8 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     { value: '2', label: '明細' },
   ];
 
+  private readonly fileExportService = inject(FileExportService);
+
   constructor(
     private readonly dropdownApiService: DropdownApiService,
     private readonly ass15030Service: ASS15030Service,
@@ -135,6 +144,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('ASS15030', '', this.queryForm, frm => this.onSubmit(frm));
     this.loadDropdownOptions();
     this.setupCategoryCascade();
+    this.setupReportStyleSync();
   }
 
   onSubmit(frm: FormGroup): void {
@@ -168,12 +178,6 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
               this.totalRecords = res.TotalCount ?? 0;
               this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
             },
-            error: () => {
-              this.data = [];
-              this.totalRecords = 0;
-              this.subTotalData = [];
-              this.footerData = null;
-            },
           });
       },
       v => this.tableLoading.set(v),
@@ -187,54 +191,47 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     PageIndex?: number;
     SortBy?: unknown;
   }): Observable<{ Data: any[]; TotalCount: number }> => {
-    const rawPageIndex = Number(body.pageIndex ?? body.PageIndex ?? 1) || 1;
-    const apiPageSize = Number(body.PageSize ?? this.defaultPageSize) || this.defaultPageSize;
-    const apiPageIndex = rawPageIndex;
+    const apiPageIndex = Number(body.pageIndex ?? body.PageIndex ?? 1) || 1;
+    const apiPageSize =
+      Number(body.pageSize ?? body.PageSize ?? this.defaultPageSize) || this.defaultPageSize;
+    const sortBy = Array.isArray(body.SortBy) ? body.SortBy : undefined;
+
     const request = this.buildRequest({
-      ...body,
       pageIndex: apiPageIndex,
       PageIndex: apiPageIndex,
       pageSize: apiPageSize,
       PageSize: apiPageSize,
+      SortBy: sortBy,
     });
-    this.lastQueryBody = request;
+
+    this.lastQueryBody = {
+      ...(request as QueryASS15030Request),
+      pageIndex: apiPageIndex,
+      pageSize: apiPageSize,
+    };
+
     return this.queryByReportStyle(request).pipe(
-      map(({ rows, totalCount }) => {
-        const part = this.partitionRows(rows, apiPageIndex);
-        this.syncSummaryRowsFromPage(part, apiPageIndex);
-        const effectivePageSize = Math.max(1, part.details.length);
-        this.lastQueryBody = {
-          ...(request as QueryASS15030Request),
-          pageIndex: rawPageIndex,
-          pageSize: effectivePageSize,
-        };
+      map(({ rows, totalCount, footer, rawCount }) => {
+        // 只在第一頁更新 footer（總合計），避免後續分頁回傳的 page-scoped TOTAL_* 蓋掉
+        if (apiPageIndex === 1) {
+          this.footerData = footer;
+          this.accumulatedRowCount = rows.length;
+        } else {
+          this.accumulatedRowCount += rows.length;
+        }
+
+        // 末頁偵測：後端原始 row 數 < pageSize → 視為末頁，
+        // 把 TotalCount 設為「append 後累計筆數」讓 table-report 停止再觸發
+        const isLastPage = rawCount < apiPageSize;
+        const adjustedTotal = isLastPage ? this.accumulatedRowCount : totalCount;
+
         return {
-          Data: this.mapDetailsWithDataKey(part.details, apiPageIndex),
-          TotalCount: totalCount,
+          Data: rows,
+          TotalCount: adjustedTotal,
         };
       }),
     );
   };
-
-  onSubmitQuery(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  override onCreate(): void {
-    if (this.hasPermission(this.Actions.Create)) {
-      this.navigateWithState(CRUDStatus.Create, null);
-    }
-  }
-
-  override onEdit(data: any): void {
-    if (this.hasPermission(this.Actions.Edit)) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  override onDetail(data: any): void {
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
 
   private loadDropdownOptions(): void {
     this.dropdownApiService
@@ -288,6 +285,20 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
       });
   }
 
+  // 切換報表樣式時立即同步欄位定義；同時清掉上一個樣式的資料/footer，
+  // 避免新欄位套到舊資料形狀上造成空白欄與錯誤總合計
+  private setupReportStyleSync(): void {
+    this.queryForm.controls.reportStyle.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(style => {
+        this.columns = this.getColumnsByReportStyle(style);
+        this.data = [];
+        this.footerData = null;
+        this.totalRecords = 0;
+        this.accumulatedRowCount = 0;
+      });
+  }
+
   private buildRequest(body?: {
     pageSize?: number;
     PageSize?: number;
@@ -325,75 +336,96 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   private queryByReportStyle(
     request: QueryASS15030Request,
-  ): Observable<{ rows: any[]; totalCount: number }> {
+  ): Observable<{ rows: any[]; totalCount: number; footer: any | null; rawCount: number }> {
     const reportStyle = this.queryForm.controls.reportStyle.value;
     if (reportStyle === '2') {
       return this.ass15030Service.queryASS15030Detail(request).pipe(
         map(res => {
-          const list = res.Status === '0000' ? (res.Data ?? []) : [];
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message);
+            return { rows: [], totalCount: 0, footer: null, rawCount: 0 };
+          }
+          const result = res.Data;
+          const list = result?.detail ?? [];
           const rows = this.mapDetailRows(list);
-          const totalCount = list[0]?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
-          return { rows, totalCount };
+          const totalCount = result?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
+          const footer = result ? this.buildDetailFooter(result) : null;
+          return { rows, totalCount, footer, rawCount: list.length };
         }),
       );
     }
     return this.ass15030Service.queryASS15030Sum(request).pipe(
       map(res => {
-        const list = res.Status === '0000' ? (res.Data ?? []) : [];
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message);
+          return { rows: [], totalCount: 0, footer: null, rawCount: 0 };
+        }
+        const result = res.Data;
+        const list = result?.detail ?? [];
         const rows = this.mapSummaryRows(list);
-        const totalCount = list[0]?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
-        return { rows, totalCount };
+        const totalCount = result?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
+        const footer = result ? this.buildSumFooter(result) : null;
+        return { rows, totalCount, footer, rawCount: list.length };
       }),
     );
   }
 
   private mapSummaryRows(rows: QueryASS15030SumResponse[]): any[] {
-    return (rows ?? []).map((row, idx) => ({
-      ...row,
-      SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
-      GOODS_ID: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_ID ?? ''),
-      GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
-      HOLD_ORG_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_NAME ?? ''),
-      GET_COST_TTL: row.GET_COST_TTL ?? 0,
-      FIX_AMT_TTL: row.FIX_AMT_TTL ?? 0,
-      AFT_AMT_TTL: row.AFT_AMT_TTL ?? 0,
-      RESI_VALUE_TTL: row.RESI_VALUE_TTL ?? 0,
-      PRE_DEPRE_TTL: row.PRE_DEPRE_TTL ?? 0,
-      CUR_DEPRE_TTL: row.CUR_DEPRE_TTL ?? 0,
-      ACC_DEPRE_TTL: row.ACC_DEPRE_TTL ?? 0,
-      UNDEPRE_TTL: row.UNDEPRE_TTL ?? 0,
-    }));
+    // 過濾掉總合計列（由 wrapper TOTAL_* 走 footerData），其餘明細+小計依 API 順序保留
+    return (rows ?? [])
+      .filter(row => !this.isGrandTotalRow(row.SEQ))
+      .map((row, idx) => ({
+        ...row,
+        SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
+        GOODS_ID: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_ID ?? ''),
+        GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
+        HOLD_ORG_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_NAME ?? ''),
+        GET_COST_TTL: row.GET_COST_TTL ?? 0,
+        FIX_AMT_TTL: row.FIX_AMT_TTL ?? 0,
+        AFT_AMT_TTL: row.AFT_AMT_TTL ?? 0,
+        RESI_VALUE_TTL: row.RESI_VALUE_TTL ?? 0,
+        PRE_DEPRE_TTL: row.PRE_DEPRE_TTL ?? 0,
+        CUR_DEPRE_TTL: row.CUR_DEPRE_TTL ?? 0,
+        ACC_DEPRE_TTL: row.ACC_DEPRE_TTL ?? 0,
+        UNDEPRE_TTL: row.UNDEPRE_TTL ?? 0,
+      }));
   }
 
   private mapDetailRows(rows: QueryASS15030DetailResponse[]): any[] {
-    return (rows ?? []).map((row, idx) => ({
-      ...row,
-      SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
-      ASSET_ID: this.isSubtotalRow(row.SEQ) ? null : (row.ASSET_ID ?? ''),
-      GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
-      GET_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.GET_DATE ?? ''),
-      BILL_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.BILL_DATE ?? ''),
-      HOLD_ORG_ID: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_ID ?? ''),
-      FIR_GET_COST: row.FIR_GET_COST ?? 0,
-      MODIFY_AMT: row.MODIFY_AMT ?? 0,
-      GET_COST: row.GET_COST ?? 0,
-      RESI_VALUE: row.RESI_VALUE ?? 0,
-      FIR_EXP_YEAR: row.FIR_EXP_YEAR ?? 0,
-      MODIFY_YEAR: row.MODIFY_YEAR ?? 0,
-      EXP_YEAR: row.EXP_YEAR ?? 0,
-      BUY_MONTHS: row.BUY_MONTHS ?? 0,
-      BILL_MONTHS: row.BILL_MONTHS ?? 0,
-      DEPRE_MONTHS: row.DEPRE_MONTHS ?? 0,
-      DEPRE_AMOUNT: row.DEPRE_AMOUNT ?? 0,
-      THIS_DEPRE_AMT: row.THIS_DEPRE_AMT ?? 0,
-      TAL_DEPRE_AMT: row.TAL_DEPRE_AMT ?? 0,
-      NO_DEPRE_AMT: row.NO_DEPRE_AMT ?? 0,
-      NOTES: row.NOTES ?? '',
-    }));
+    return (rows ?? [])
+      .filter(row => !this.isGrandTotalRow(row.SEQ))
+      .map((row, idx) => ({
+        ...row,
+        SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
+        ASSET_ID: this.isSubtotalRow(row.SEQ) ? null : (row.ASSET_ID ?? ''),
+        GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
+        GET_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.GET_DATE ?? ''),
+        BILL_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.BILL_DATE ?? ''),
+        HOLD_ORG_ID: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_ID ?? ''),
+        FIR_GET_COST: row.FIR_GET_COST ?? 0,
+        MODIFY_AMT: row.MODIFY_AMT ?? 0,
+        GET_COST: row.GET_COST ?? 0,
+        RESI_VALUE: row.RESI_VALUE ?? 0,
+        FIR_EXP_YEAR: row.FIR_EXP_YEAR ?? 0,
+        MODIFY_YEAR: row.MODIFY_YEAR ?? 0,
+        EXP_YEAR: row.EXP_YEAR ?? 0,
+        BUY_MONTHS: row.BUY_MONTHS ?? 0,
+        BILL_MONTHS: row.BILL_MONTHS ?? 0,
+        DEPRE_MONTHS: row.DEPRE_MONTHS ?? 0,
+        DEPRE_AMOUNT: row.DEPRE_AMOUNT ?? 0,
+        THIS_DEPRE_AMT: row.THIS_DEPRE_AMT ?? 0,
+        TAL_DEPRE_AMT: row.TAL_DEPRE_AMT ?? 0,
+        NO_DEPRE_AMT: row.NO_DEPRE_AMT ?? 0,
+        NOTES: row.NOTES ?? '',
+      }));
   }
 
   private getColumnsByReportStyle(reportStyle: string | null | undefined): any[] {
-    return reportStyle === '2' ? [...this.detailColumns] : [...this.summaryColumns];
+    const base = reportStyle === '2' ? this.detailColumns : this.summaryColumns;
+    return base.map(col => ({
+      ...col,
+      cellClass: col.cellClass ?? this.subtotalCellClass,
+    }));
   }
 
   private normalizeSeqValue(seq: string | undefined, fallback: string): string {
@@ -409,132 +441,63 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     return String(seq ?? '').trim() === ASS15030Component.GRANDTOTAL_SEQ;
   }
 
-  private partitionRows(rows: any[], pageIndex: number): { details: any[]; subTotals: any[]; grandTotal: any | null } {
-    const details: any[] = [];
-    const subTotals: any[] = [];
-    let grandTotal: any | null = null;
-    let groupNo = 1;
-    let currentGroupKey = this.buildGroupKey(pageIndex, groupNo);
-
-    for (const row of rows ?? []) {
-      if (this.isSubtotalRow(row?.SEQ)) {
-        subTotals.push({
-          ...row,
-          [ASS15030Component.GROUP_KEY_FIELD]: currentGroupKey,
-        });
-        groupNo += 1;
-        currentGroupKey = this.buildGroupKey(pageIndex, groupNo);
-      } else if (this.isGrandTotalRow(row?.SEQ)) {
-        grandTotal = row;
-      } else {
-        details.push({
-          ...row,
-          [ASS15030Component.GROUP_KEY_FIELD]: currentGroupKey,
-        });
-      }
-    }
-    return { details, subTotals, grandTotal };
+  private buildSumFooter(r: QueryASS15030SumResult): any {
+    return {
+      GET_COST_TTL:   r.TOTAL_GET_COST_TTL   ?? 0,
+      FIX_AMT_TTL:    r.TOTAL_FIX_AMT_TTL    ?? 0,
+      AFT_AMT_TTL:    r.TOTAL_AFT_AMT_TTL    ?? 0,
+      RESI_VALUE_TTL: r.TOTAL_RESI_VALUE_TTL ?? 0,
+      PRE_DEPRE_TTL:  r.TOTAL_PRE_DEPRE_TTL  ?? 0,
+      CUR_DEPRE_TTL:  r.TOTAL_CUR_DEPRE_TTL  ?? 0,
+      ACC_DEPRE_TTL:  r.TOTAL_ACC_DEPRE_TTL  ?? 0,
+      UNDEPRE_TTL:    r.TOTAL_UNDEPRE_TTL    ?? 0,
+    };
   }
 
-  private mergeSubTotals(existing: any[], incoming: any[]): any[] {
-    return [...(existing ?? []), ...(incoming ?? [])];
+  private buildDetailFooter(r: QueryASS15030DetailResult): any {
+    // 年/月欄位 (FIR_EXP_YEAR / MODIFY_YEAR / EXP_YEAR / BUY_MONTHS / BILL_MONTHS / DEPRE_MONTHS)
+    // 後端無對應 TOTAL_* 欄位，footer 該幾格留白即可。
+    return {
+      FIR_GET_COST:   r.TOTAL_FIR_GET_COST   ?? 0,
+      MODIFY_AMT:     r.TOTAL_MODIFY_AMT     ?? 0,
+      GET_COST:       r.TOTAL_GET_COST       ?? 0,
+      RESI_VALUE:     r.TOTAL_RESI_VALUE     ?? 0,
+      DEPRE_AMOUNT:   r.TOTAL_DEPRE_AMOUNT   ?? 0,
+      THIS_DEPRE_AMT: r.TOTAL_THIS_DEPRE_AMT ?? 0,
+      TAL_DEPRE_AMT:  r.TOTAL_TAL_DEPRE_AMT  ?? 0,
+      NO_DEPRE_AMT:   r.TOTAL_NO_DEPRE_AMT   ?? 0,
+    };
   }
 
-  private mapDetailsWithDataKey(details: any[], pageIndex: number): any[] {
-    return (details ?? []).map((item, idx) => ({
-      ...item,
-      dataKey: item.dataKey ?? `${pageIndex}-${item[ASS15030Component.GROUP_KEY_FIELD] ?? 'g'}-${item.SEQ ?? idx}-${idx}`,
-    }));
-  }
-
-  private buildGroupKey(pageIndex: number, groupNo: number): string {
-    return `P${pageIndex}_G${groupNo}`;
-  }
-
-  private syncSummaryRowsFromPage(
-    part: { details: any[]; subTotals: any[]; grandTotal: any | null },
-    pageIndex: number,
-  ): void {
-    if (pageIndex <= 1) {
-      this.subTotalData = [...part.subTotals];
-      this.footerData = part.grandTotal;
-      return;
-    }
-
-    this.subTotalData = this.mergeSubTotals(this.subTotalData, part.subTotals);
-    if (part.grandTotal) {
-      this.footerData = part.grandTotal;
-    }
+  // 匯出固定送 PageSize/PageIndex = 0 取全部資料，避免只匯出第一頁
+  private buildExportPayload(): QueryASS15030Request {
+    return this.buildRequest({
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: this.lastQueryBody?.SortBy,
+    });
   }
 
   onExportPdf(): void {
-    const request = this.buildRequest({
-      PageSize: this.lastQueryBody?.PageSize ?? 0,
-      PageIndex: this.lastQueryBody?.PageIndex ?? 0,
-      SortBy: this.lastQueryBody?.SortBy,
-    });
-    this.exportPdfLoading = true;
+    const request = this.buildExportPayload();
     const isDetail = this.queryForm.controls.reportStyle.value === '2';
     const export$ = isDetail
       ? this.ass15030Service.exportPDFASS15080Detail(request)
       : this.ass15030Service.exportPDFASS15080Sum(request);
-    export$
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.exportPdfLoading = false)),
-      )
-      .subscribe({
-        next: blob => {
-          const reportName = isDetail ? '財產目錄_明細' : '財產目錄_彙總';
-          this.downloadBlob(blob, `${reportName}_${this.getTimestamp()}.pdf`);
-        },
-      });
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
   }
 
   onExportExcel(): void {
-    const request = this.buildRequest({
-      PageSize: this.lastQueryBody?.PageSize ?? 0,
-      PageIndex: this.lastQueryBody?.PageIndex ?? 0,
-      SortBy: this.lastQueryBody?.SortBy,
-    });
+    const request = this.buildExportPayload();
     const isDetail = this.queryForm.controls.reportStyle.value === '2';
     const export$ = isDetail
       ? this.ass15030Service.exportExcelASS15030Detail(request)
       : this.ass15030Service.exportExcelASS15030Sum(request);
-    this.exportExcelLoading = true;
-    export$
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.exportExcelLoading = false)),
-      )
-      .subscribe({
-        next: blob => {
-          const reportName = isDetail ? '財產目錄_明細' : '財產目錄_彙總';
-          this.downloadBlob(blob, `${reportName}_${this.getTimestamp()}.xlsx`);
-        },
-        error: () => this.messageService.warnBubble('匯出 Excel 失敗，請稍後再試'),
-      });
-  }
-
-  private downloadBlob(blob: Blob, fileName: string): void {
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(blobUrl);
-  }
-
-  private getTimestamp(): string {
-    const now = new Date();
-    return (
-      now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0') +
-      '_' +
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0')
-    );
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
   }
 
   private toApiDateValue(value: unknown): string | undefined {

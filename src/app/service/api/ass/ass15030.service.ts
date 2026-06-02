@@ -1,9 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  QueryASS15030DetailResponse,
+  QueryASS15030DetailResult,
   QueryASS15030Request,
-  QueryASS15030SumResponse,
+  QueryASS15030SumResult,
 } from '@pages/ass/ass15030/ass15030.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
@@ -17,8 +17,8 @@ export class ASS15030Service {
 
   queryASS15030Sum(
     body: QueryASS15030Request
-  ): Observable<ApiResponse<QueryASS15030SumResponse[]>> {
-    return this.http.post<ApiResponse<QueryASS15030SumResponse[]>>(
+  ): Observable<ApiResponse<QueryASS15030SumResult>> {
+    return this.http.post<ApiResponse<QueryASS15030SumResult>>(
       `${this.apiUrl}/queryASS15030Sum`,
       body
     );
@@ -26,33 +26,37 @@ export class ASS15030Service {
 
   queryASS15030Detail(
     body: QueryASS15030Request
-  ): Observable<ApiResponse<QueryASS15030DetailResponse[]>> {
-    return this.http.post<ApiResponse<QueryASS15030DetailResponse[]>>(
+  ): Observable<ApiResponse<QueryASS15030DetailResult>> {
+    return this.http.post<ApiResponse<QueryASS15030DetailResult>>(
       `${this.apiUrl}/queryASS15030Detail`,
       body
     );
   }
 
-  exportPDFASS15080Sum(body: QueryASS15030Request): Observable<Blob> {
+  exportPDFASS15080Sum(body: QueryASS15030Request): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportPDFASS15080Sum`, body, {
+      observe: 'response',
       responseType: 'blob',
     });
   }
 
-  exportPDFASS15080Detail(body: QueryASS15030Request): Observable<Blob> {
+  exportPDFASS15080Detail(body: QueryASS15030Request): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportPDFASS15080Detail`, body, {
+      observe: 'response',
       responseType: 'blob',
     });
   }
 
-  exportExcelASS15030Sum(body: QueryASS15030Request): Observable<Blob> {
+  exportExcelASS15030Sum(body: QueryASS15030Request): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportExcelASS15030Sum`, body, {
+      observe: 'response',
       responseType: 'blob',
     });
   }
 
-  exportExcelASS15030Detail(body: QueryASS15030Request): Observable<Blob> {
+  exportExcelASS15030Detail(body: QueryASS15030Request): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportExcelASS15030Detail`, body, {
+      observe: 'response',
       responseType: 'blob',
     });
   }

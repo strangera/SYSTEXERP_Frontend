@@ -58,8 +58,6 @@ export interface QueryASS15030SumResponse {
   ACC_DEPRE_TTL?: number;
   /** 未折舊金額合計 */
   UNDEPRE_TTL?: number;
-  /** 總筆數 (分頁計算用) */
-  TOTAL_COUNT?: number;
 }
 
 export interface QueryASS15030DetailResponse {
@@ -105,6 +103,32 @@ export interface QueryASS15030DetailResponse {
   TAL_DEPRE_AMT?: number;
   /** 未折舊金額 */
   NO_DEPRE_AMT?: number;
-  /** 總筆數 (分頁計算用) */
+}
+
+/** ASS15030 財產目錄-彙總 查詢回應 wrapper */
+export interface QueryASS15030SumResult {
+  detail?: QueryASS15030SumResponse[];
+  TOTAL_GET_COST_TTL?: number;
+  TOTAL_FIX_AMT_TTL?: number;
+  TOTAL_AFT_AMT_TTL?: number;
+  TOTAL_RESI_VALUE_TTL?: number;
+  TOTAL_PRE_DEPRE_TTL?: number;
+  TOTAL_CUR_DEPRE_TTL?: number;
+  TOTAL_ACC_DEPRE_TTL?: number;
+  TOTAL_UNDEPRE_TTL?: number;
+  TOTAL_COUNT?: number;
+}
+
+/** ASS15030 財產目錄-明細 查詢回應 wrapper */
+export interface QueryASS15030DetailResult {
+  detail?: QueryASS15030DetailResponse[];
+  TOTAL_FIR_GET_COST?: number;
+  TOTAL_MODIFY_AMT?: number;
+  TOTAL_GET_COST?: number;
+  TOTAL_RESI_VALUE?: number;
+  TOTAL_DEPRE_AMOUNT?: number;
+  TOTAL_THIS_DEPRE_AMT?: number;
+  TOTAL_TAL_DEPRE_AMT?: number;
+  TOTAL_NO_DEPRE_AMT?: number;
   TOTAL_COUNT?: number;
 }
