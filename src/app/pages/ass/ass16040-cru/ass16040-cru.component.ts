@@ -1,187 +1,248 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16040Data, ASS16040Request } from '@service/api/ass/ass16040.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { PanelModule } from 'primeng/panel';
+import { finalize, forkJoin } from 'rxjs';
+
+import { ASS16040Service } from '@service/api/ass/ass16040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
-import { PanelModule } from 'primeng/panel';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
+import {
+  ASS16040ApproveRequest,
+  ASS16040DetailRow,
+  ASS16040MasterRow,
+  ASS16040QueryRequest,
+} from '../ass16040/ass16040.model';
+
+/** 3.1.6.4 領用審核作業 — CRU 頁（SPEC §5 / F-003 / F-004） */
+@UntilDestroy()
 @Component({
-    selector: 'app-ass16040-cru',
-    templateUrl: './ass16040-cru.component.html',
-    styleUrl: './ass16040-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableEditComponent,
-        NgIf,
-        TranslateModule,
-        DropdownComponent,
-        InputTextComponent,
-        CalendarComponent,
-    ],
+  selector: 'app-ass16040-cru',
+  templateUrl: './ass16040-cru.component.html',
+  styleUrl: './ass16040-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    TranslateModule,
+    FormsModule,
+    ReactiveFormsModule,
+    PanelModule,
+    MenubarComponent,
+    ButtonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    InputTextComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> implements OnInit {
-    dataForm = this.formBuilder.nonNullable.group({
-        id: [],
-        applicantCode: ['', [Validators.required, Validators.maxLength(60)]], // 申請人代號
-        departmentCode: ['', [Validators.required, Validators.maxLength(60)]], // 部門代號
-        applicationDate: ['', [Validators.required, Validators.maxLength(60)]], // 申請日期
-        illustrate: ['', [Validators.maxLength(30)]], // 建議需求日(天)
-        inventoryNo: ['', [Validators.required, Validators.maxLength(30)]], // 倉別
+export class ASS16040CRUComponent
+  extends BasicCruPageComponent<ASS16040MasterRow>
+  implements OnInit
+{
+  /**
+   * 主檔表單（全部唯讀 — SPEC §5.2「不可手輸」）。
+   * 依 CLAUDE.local.md §1：使用 formBuilder.group()，預設值 null 配聯合型別。
+   */
+  readonly dataForm = this.formBuilder.group({
+    MTAPPLY_ID:   new FormControl<string | null>({ value: null, disabled: true }),
+    EMP_ID:       new FormControl<string | null>({ value: null, disabled: true }),
+    ORG_ID:       new FormControl<string | null>({ value: null, disabled: true }),
+    APPLY_DATE:   new FormControl<Date | null>({ value: null, disabled: true }),
+    SUGGEST_DAYS: new FormControl<number | null>({ value: null, disabled: true }),
+    WH_ID:        new FormControl<string | null>({ value: null, disabled: true }),
+    NOTES:        new FormControl<string | null>({ value: null, disabled: true }),
+  });
+
+  /** 明細資料（唯讀，由 queryASS16040 取得） */
+  detailData: ASS16040DetailRow[] = [];
+
+  /**
+   * 明細表格欄位（SPEC §5.3）— 代碼/名稱拆兩欄，UNIT 由 FASITEM lookup。
+   * 用唯讀型 app-table-report（無 lazy 分頁）。
+   */
+  readonly detailColumns: ReportColumn[] = [
+    {
+      field: 'GOODS_ID',
+      header: '品項代號',
+      format: (_v, _i, row: ASS16040DetailRow) =>
+        this.fasItemGoodsIdMap.get(row?.FASITEM_ID) ?? '',
+    },
+    {
+      field: 'GOODS_NAME',
+      header: '品項名稱',
+      format: (_v, _i, row: ASS16040DetailRow) =>
+        this.fasItemGoodsNameMap.get(row?.FASITEM_ID) ?? '',
+    },
+    {
+      field: 'UNIT_NAME',
+      header: '單位',
+      format: (_v, _i, row: ASS16040DetailRow) =>
+        this.fasItemUnitMap.get(row?.FASITEM_ID) ?? '',
+    },
+    { field: 'QTY',   header: '數量',     align: 'right' },
+    { field: 'NOTES', header: '單項說明' },
+  ];
+
+  // 主檔下拉選項（代碼/名稱合併顯示，label 格式 `<code> - <name>`）
+  readonly empIdOptions = signal<{ label: string; value: string }[]>([]);
+  readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
+  readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
+
+  // FASITEM lookup map（SPEC §10.1）
+  private fasItemGoodsIdMap = new Map<number, string>();
+  private fasItemGoodsNameMap = new Map<number, string>();
+  private fasItemUnitMap = new Map<number, string>();
+
+  constructor(
+    private readonly ass16040Service: ASS16040Service,
+    private readonly dropdownApiService: DropdownApiService,
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('ASS16040', this.dataForm);
+    this.loadAll();
+  }
+
+  /**
+   * 同步載入下拉資料 + 主檔/明細，避免明細「品項 / 單位」欄位於 lookup 完成前閃空白。
+   * SPEC §10.1 同步策略：forkJoin([detail$, fasItem$])。
+   */
+  private loadAll(): void {
+    const mtapplyId = (this.rowdata as ASS16040MasterRow | null)?.MTAPPLY_ID;
+    if (!mtapplyId) return;
+
+    const detailReq: ASS16040QueryRequest = {
+      MTAPPLY_ID: mtapplyId,
+      PageSize: 0,
+      PageIndex: 1,
+    };
+
+    this.loading = true;
+    forkJoin({
+      detail: this.ass16040Service.queryASS16040(detailReq),
+      fasItem: this.dropdownApiService.queryFasItemRawList(),
+      tblUser: this.dropdownApiService.queryTblUser(),
+      sys3100: this.dropdownApiService.querySys3100(),
+      faHos: this.dropdownApiService.queryFaHos(),
+    })
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: ({ detail, fasItem, tblUser, sys3100, faHos }) => {
+          // 建立合併顯示用下拉選項（代碼/名稱合併為 label）
+          this.empIdOptions.set(
+            (tblUser ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
+
+          this.orgIdOptions.set(
+            (sys3100 ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
+
+          this.whIdOptions.set(
+            (faHos ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
+
+          // FASITEM lookup（FASITEM_ID → GOODS_ID / GOODS_NAME / UNIT_NAME）
+          (fasItem ?? []).forEach(r => {
+            if (r?.ID == null) return;
+            const id = Number(r.ID);
+            this.fasItemGoodsIdMap.set(id, String(r.GOODS_ID ?? ''));
+            this.fasItemGoodsNameMap.set(id, String(r.GOODS_NAME ?? ''));
+            this.fasItemUnitMap.set(id, String(r.UNIT_NAME ?? ''));
+          });
+
+          // 主檔 + 明細
+          if (detail.Status !== '0000') {
+            this.messageService.errorBubble('操作失敗：' + (detail.Message ?? ''));
+            return;
+          }
+          const rows = detail.Data ?? [];
+          this.detailData = rows;
+
+          // 主檔欄位：以第一筆（後端 join 在每筆明細）取，回填到 rowdata（如有）
+          const master = rows[0] ?? (this.rowdata as ASS16040MasterRow | null);
+          if (master) this.patchMasterForm(master);
+        },
+      });
+  }
+
+  /** 將主檔資料填入唯讀表單（SPEC §5.2 全欄位唯讀） */
+  private patchMasterForm(row: ASS16040MasterRow): void {
+    this.dataForm.patchValue({
+      MTAPPLY_ID:   row.MTAPPLY_ID ?? null,
+      EMP_ID:       row.EMP_ID ?? null,
+      ORG_ID:       row.ORG_ID ?? null,
+      APPLY_DATE:   row.APPLY_DATE ? new Date(row.APPLY_DATE) : null,
+      SUGGEST_DAYS: row.SUGGEST_DAYS ?? null,
+      WH_ID:        row.WH_ID ?? null,
+      NOTES:        row.NOTES ?? null,
     });
-    data: ASS16040Request[] = [];
-    selectedRows: ASS16040Request[] = [];
-    deleteRows: ASS16040Request[] = [];
-    columns: EditColumn[] = [
-        { field: 'itemCode', header: '品項代碼', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
-        { field: 'unit', header: '單位', type: 'input', maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'quantity', header: '數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
-        { field: 'itemRemark', header: '單項說明', type: 'autoComplete' },
-    ];
+  }
 
-    inventoryNoOptions = [];
-    applicantCodeOptions = [];
-    departmentCodeOptions = [];
-
-    Departmentcode = [
-        { value: 1, label: 'D001' },
-        { value: 2, label: 'D002' },
-    ];
-    Kurabe = [
-        { value: 1, label: '001' },
-        { value: 2, label: '002' },
-    ];
-    Itemnumber = [
-
-        { value: 1, label: '3A24210000001' },
-        { value: 2, label: '3A24210000002' },
-        { value: 3, label: '3A24210000003' },
-        { value: 4, label: '3A24210000004' },
-        { value: 5, label: '3A24210000005' },
-        { value: 6, label: '3A24210000006' },
-        { value: 7, label: '3A24210000007' },
-        { value: 8, label: '3A24210000008' },
-        { value: 9, label: '3A24210000009' },
-        { value: 10, label: '3A24210000010' },
-    ];
-    Inventorystatus = [
-        { value: 1, label: '盤點中' },
-        { value: 2, label: '登錄完成' },
-        { value: 3, label: '已結案' },
-
-    ];
-    Inventoryordenumber = [
-        { value: 1, label: '202406002' },
-
-    ];
-    custodyunit = [
-        { value: 1, label: '101000' },
-        { value: 2, label: '102000' },
-        { value: 3, label: '103000' },
-        { value: 4, label: '104000' },
-        { value: 5, label: '105000' },
-        { value: 6, label: '106000' },
-        { value: 7, label: '107000' },
-        { value: 8, label: '108000' },
-        { value: 9, label: '109000' },
-        { value: 10, label: '10A000' },
-    ];
-    Accountcode = [
-        { value: 1, label: '1501' },
-        { value: 2, label: '150101' },
-        { value: 3, label: '1511' },
-        { value: 4, label: '151101' },
-        { value: 5, label: '1512' },
-        { value: 6, label: '151201' },
-        { value: 7, label: '1521' },
-        { value: 8, label: '152101' },
-        { value: 9, label: '1522' },
-        { value: 10, label: '152201' },
-    ];
-    reviewer = [
-        { value: 1, label: '人員A' },
-        { value: 2, label: '人員B' },
-    ];
-    usercode = [
-        { value: 1, label: 'B001' },
-        { value: 2, label: 'B002' },
-        { value: 3, label: 'B003' },
-        { value: 4, label: 'B004' },
-        { value: 5, label: 'B005' },
-    ];
-
-    Querybystatus = [
-        { value: 1, label: '移轉' },
-        { value: 2, label: '報廢除帳' },
-        { value: 3, label: '變賣除帳' },
-        { value: 4, label: '新購' },
-    ];
-    assetCodeOptions = [
-        { value: 1, label: '1A232300000010000001' },
-        { value: 2, label: '1A232300000020000001' },
-        { value: 3, label: '1A232300000040000001' },
-        { value: 4, label: '1A232300000050000001' },
-        { value: 5, label: '1A232300000060000001' },
-        { value: 6, label: '1A232300000090000001' },
-        { value: 7, label: '1A232400000010000001' },
-        { value: 8, label: '1A232400000040000001' },
-        { value: 9, label: '1A232400000060000001' },
-    ];
-    propertytype = [
-        { value: 1, label: '資產' },
-        { value: 2, label: '列管品' },
-    ];
-    status = [
-        { value: 1, label: '領用申請' },
-        { value: 2, label: '審核確認' },
-        { value: 2, label: '領用發料' },
-    ];
-
-    constructor(
-    ) {
-        super();
+  /**
+   * F-004 確認審核：先彈確認對話框 → approveASS16040（只傳 MTAPPLY_ID，
+   * APRV_EMP_ID 由後端從 JWT 取）→ 成功訊息 + 返回查詢頁。
+   */
+  onApprove(): void {
+    if (!this.canEdit() || !this.isFormEditable) return;
+    const mtapplyId = this.dataForm.getRawValue().MTAPPLY_ID;
+    if (!mtapplyId) {
+      this.messageService.warnBubble('找不到領用單號');
+      return;
     }
-    ngOnInit(): void {
-        this.initializePage('ASS16040', this.dataForm);
-    }
+    this.messageService.confirm({
+      header: '確認審核',
+      message: '是否確認審核此筆領用單？',
+      accept: () => this.executeApprove(mtapplyId),
+    });
+  }
 
-    @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
-    onSubmit(frm: FormGroup) {
-        this.handleSubmit(frm, () => {
-            const valid = this.tableEditComponent.validateAndShowErrors();
-            if (!valid) {
-                this.loading = false;
-                return;
-            }
+  private executeApprove(mtapplyId: string): void {
+    const payload: ASS16040ApproveRequest = { MTAPPLY_ID: mtapplyId };
+    this.loading = true;
+    this.ass16040Service
+      .approveASS16040(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
+            return;
+          }
+          this.messageService.successBubble('審核成功');
+          this.onCancel();
+        },
+      });
+  }
 
-        });
-    }
-    resetTable() {
-        this.data = [];
-        this.selectedRows = [];
-    }
-
-    // 刪除資料的方法
-    onDelete(rows: ASS16040Request[]) {
-        // 將畫面資料中刪除這些 row
-        this.data = this.data.filter(item => !rows.includes(item));
-        // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-        rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
-        // 清空選取列
-        this.selectedRows = [];
-    }
+  /** 表單送出（本頁僅審核） */
+  onSubmit(): void {
+    this.onApprove();
+  }
 }

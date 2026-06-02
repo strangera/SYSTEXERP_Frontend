@@ -1001,6 +1001,35 @@ export class DropdownApiService {
       { MATERIAL_TYPE: '3' }
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+
+  /**
+   * queryFASITEM_DropDownList — 取得原始 row（含 ID / GOODS_ID / GOODS_NAME / UNIT_NAME 等）。
+   * 後端回傳為巢狀 `Data: { Data: [...], TotalCount, TotalPages }`，此 method 已展平。
+   * 用於 ASS16040 CRU 頁明細「單位」欄位 lookup（FASITEM_ID → UNIT_NAME）。
+   */
+  queryFasItemRawList(body: FaSitemQuery = {}): Observable<FasItemDropdownItem[]> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.http
+      .post<ApiResponse<{ Data?: FasItemDropdownItem[] | null; TotalCount?: number; TotalPages?: number } | FasItemDropdownItem[] | null>>(
+        `${this.apiUrl}/ASS0000/ASS1000/queryFASITEM_DropDownList`,
+        payload,
+      )
+      .pipe(
+        map(res => {
+          const raw: any = res?.Data;
+          if (Array.isArray(raw)) return raw as FasItemDropdownItem[];
+          return (raw?.Data ?? raw?.QueryData ?? []) as FasItemDropdownItem[];
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryFASITEM_DropDownList 失敗:', err);
+          return of([] as FasItemDropdownItem[]);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
