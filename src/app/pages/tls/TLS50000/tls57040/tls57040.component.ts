@@ -121,6 +121,8 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
 
   // 表單提交處理方法
   onSubmit(frm: FormGroup) {
+    const obj: any = null;
+    obj.hello();
     this.handleSubmit(frm, () => {
       // 檢查是否勾選了「顯示標準進價」
       const showStandardCost = frm.controls['ShowOrderPrc'].value;
