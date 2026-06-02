@@ -51,7 +51,12 @@
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
             <th rowspan="2" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+              pReorderableColumn pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+              [pSortableColumnDisabled]="col.showSort === false" [ngStyle]="{
+          'min-width': col.width ? col.width : (col.dynamicMinWidth || '55px'),
+          'width': col.width ? col.width : (col.dynamicWidth || '55px'),
+          'max-width': col.width ? col.width : (col.dynamicMaxWidth || '55px')
+        }" pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
               [pSortableColumnDisabled]="col.showSort === false || showSort === false" pFrozenColumn
               [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
@@ -89,8 +94,11 @@
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
-          [ngClass]="{ 'multiline-header': allowMultilineHeader }" style="min-width: 55px">
+          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header" [ngStyle]="{
+          'min-width': col.width ? col.width : (col.dynamicMinWidth || '55px'),
+          'width': col.width ? col.width : (col.dynamicWidth || '55px'),
+          'max-width': col.width ? col.width : (col.dynamicMaxWidth || '55px')
+        }" style="min-width: 55px">
           {{ col.header }}
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
@@ -120,11 +128,11 @@
         (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)" />
       </td>
       <td *ngFor="let col of columns" [ngStyle]="{
-          'text-align': col.align ? col.align : 'center',
-          'text-overflow': 'ellipsis',
-          'min-width': col.width || '55px',
-          width: col.width
-        }" (dblclick)="detail.emit(rowData)" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
+      'text-align': col.align ? col.align : 'center',
+      'min-width': col.width ? col.width : (col.dynamicMinWidth || '120px'),
+      'width': col.width ? col.width : (col.dynamicWidth || '120px'),
+      'max-width': col.width ? col.width : (col.dynamicMaxWidth || '120px')
+    }" (dblclick)="detail.emit(rowData)" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
         <ng-container *ngIf="customTemplates[col.field]; else defaultCell">
           <ng-container
             *ngTemplateOutlet="customTemplates[col.field]; context: { $implicit: rowData, column: col, index: rowIndex }">
@@ -197,7 +205,8 @@
       <td class="text-center"
         [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstSubtotalIndex(columns)">
         <span class="font-bold">
-          {{ subTotalLabel }} {{ groupRowsBy && showSubTotalGroupValue ? '(' + tableUtility.getGroupValue(rowData, groupRowsBy,columns) + ')' : ''
+          {{ subTotalLabel }} {{ groupRowsBy && showSubTotalGroupValue ? '(' + tableUtility.getGroupValue(rowData,
+          groupRowsBy,columns) + ')' : ''
           }}
         </span>
       </td>
