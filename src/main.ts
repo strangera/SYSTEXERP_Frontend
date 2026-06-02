@@ -5,7 +5,6 @@ import { importProvidersFrom } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { PreloadAllModules, provideRouter, UrlSerializer, withPreloading } from '@angular/router';
-import { provideServiceWorker } from '@angular/service-worker';
 import { JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -83,11 +82,6 @@ bootstrapApplication(AppComponent, {
     ...primeNgProviders,
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
-    provideServiceWorker('ngsw-worker.js', {
-      // enabled: !isDevMode(),
-      enabled: false,
-      registrationStrategy: 'registerWhenStable:30000'
-    }),
   ]
 })
   .catch((err) => console.error(err));

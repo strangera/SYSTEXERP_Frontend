@@ -184,7 +184,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
       if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 5000;
         if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
