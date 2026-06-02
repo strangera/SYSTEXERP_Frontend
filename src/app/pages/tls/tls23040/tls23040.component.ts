@@ -537,7 +537,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
 
     this.btnLoading = true;
 
-    this.tls23040Service.exportTLS23040PDF(this.historyRequestBody)
+    this.tls23040Service.exportTLS23040PDF({ ...this.historyRequestBody, ReportType: this.viewMode })
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.btnLoading = false))
@@ -604,7 +604,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
 
     this.btnLoading = true;
 
-    this.tls23040Service.exportTLS23040Excel(this.historyRequestBody)
+    this.tls23040Service.exportTLS23040Excel({ ...this.historyRequestBody, ReportType: this.viewMode })
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.btnLoading = false))
