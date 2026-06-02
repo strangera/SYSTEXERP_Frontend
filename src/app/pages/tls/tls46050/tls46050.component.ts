@@ -43,7 +43,7 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
     ECR_No_End: [null],   // end serial Text
     ShowTypes: [null],    // DropDown
     ECR_GrpNos: [null],   // DropDown
-    pageSize: [30],
+    pageSize: [100],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_Group', order: 1 },
     { field: 'FloorDesc', order: 1 },
