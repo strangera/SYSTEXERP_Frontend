@@ -850,15 +850,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // console.log('專櫃編號代碼:', response.Data);
     });
 
-    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag) -- 20251013 更新(request 用專櫃編號 篩選，不要直接下拉) _當request
-    this.tls51070Service
-      .queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
+    // 廠商編號時新增模式要用 queryTLTTALENT_ActiveStoreWay2 作為下拉
+    if (this.crudstatus == CRUDStatus.Create) {
+      this.tls51070Service.queryTLTTALENT_ActiveStoreWay2({}).pipe(untilDestroyed(this)).subscribe((response) => {
         this.vendorOptions = response.Data.map((item: any) => ({
-          value: item.VEN_No,
-          label: item.VEN_No + '-' + item.Name,
+          value: item.ven_no,
+          label: item.ven_no + '-' + item.VEN_Name,
         }));
-
-        // console.log('廠商代碼:', response.Data);
 
         // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
         this.POS2020DataColumn = [
@@ -875,6 +873,31 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'Remark', header: '備註', type: 'input', width: '12rem' },
         ];
       });
+    } else {
+      // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag) -- 20251013 更新(request 用專櫃編號 篩選，不要直接下拉) _當request
+      this.tls51070Service
+        .queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
+          this.vendorOptions = response.Data.map((item: any) => ({
+            value: item.VEN_No,
+            label: item.VEN_No + '-' + item.Name,
+          }));
+
+          // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
+          this.POS2020DataColumn = [
+            // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
+            { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
+
+            { field: 'PLU_TransType', header: '運輸方式', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.transTypeOption },  // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
+            { field: 'PLU_TransDay', header: '送貨天數', type: 'inputNumber', width: '12rem', format: formatAmount },
+            { field: 'PLU_Purchase', header: '採購狀態', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.purchaseTypeOption },  // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
+            { field: 'PLU_OrderPrc', header: '目前進價', width: '12rem', format: formatAmount }, // readonly: 目前進價 > 顯示 最後進價
+            //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
+
+            { field: 'VDP_LastStockDate', header: '最後進貨日期', width: '12rem' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
+            { field: 'Remark', header: '備註', type: 'input', width: '12rem' },
+          ];
+        });
+    }
 
     //查詢 大分類
     this.tls51070Service.queryCAT_LNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
