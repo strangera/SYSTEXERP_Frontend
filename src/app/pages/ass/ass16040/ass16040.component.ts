@@ -118,7 +118,6 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
     },
     { field: 'CHECK_DATE',     header: '發料日期', format: (v: string) => formatDate(v) },
     { field: 'TOTAL_COUNT',    header: '明細筆數', align: 'right' },
-    { field: 'AMT',            header: '金額',     align: 'right' },
   ];
 
   // ─── Dropdown options ─────────────────────────────────────────────────────────
@@ -262,10 +261,6 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
   override onEdit(row: ASS16040MasterRow): void {
     const canApprove = this.hasPermission('30') && row?.MTAPPLY_STATUS === MTAPPLY_STATUS_APPLIED;
     this.navigateWithState(canApprove ? CRUDStatus.Edit : CRUDStatus.Read, row);
-  }
-
-  override onDetail(row: ASS16040MasterRow): void {
-    this.navigateWithState(CRUDStatus.Read, row);
   }
 
   /** SPEC F-001：使用者按【查詢】按鈕觸發 */

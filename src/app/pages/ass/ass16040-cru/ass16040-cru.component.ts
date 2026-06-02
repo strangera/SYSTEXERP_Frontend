@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -54,16 +54,13 @@ export class ASS16040CRUComponent
    * 依 CLAUDE.local.md §1：使用 formBuilder.group()，預設值 null 配聯合型別。
    */
   readonly dataForm = this.formBuilder.group({
-    MTAPPLY_ID:     new FormControl<string | null>({ value: null, disabled: true }),
-    EMP_ID:         new FormControl<string | null>({ value: null, disabled: true }),
-    ORG_ID:         new FormControl<string | null>({ value: null, disabled: true }),
-    APPLY_DATE:     new FormControl<Date | null>({ value: null, disabled: true }),
-    SUGGEST_DAYS:   new FormControl<number | null>({ value: null, disabled: true }),
-    WH_ID:          new FormControl<string | null>({ value: null, disabled: true }),
-    NOTES:          new FormControl<string | null>({ value: null, disabled: true }),
-    APRV_EMP_ID:    new FormControl<string | null>({ value: null, disabled: true }),
-    APRV_DATE:      new FormControl<Date | null>({ value: null, disabled: true }),
-    MTAPPLY_STATUS: new FormControl<string | null>({ value: null, disabled: true }),
+    MTAPPLY_ID:   new FormControl<string | null>({ value: null, disabled: true }),
+    EMP_ID:       new FormControl<string | null>({ value: null, disabled: true }),
+    ORG_ID:       new FormControl<string | null>({ value: null, disabled: true }),
+    APPLY_DATE:   new FormControl<Date | null>({ value: null, disabled: true }),
+    SUGGEST_DAYS: new FormControl<number | null>({ value: null, disabled: true }),
+    WH_ID:        new FormControl<string | null>({ value: null, disabled: true }),
+    NOTES:        new FormControl<string | null>({ value: null, disabled: true }),
   });
 
   /** 明細資料（唯讀，由 queryASS16040 取得） */
@@ -96,38 +93,15 @@ export class ASS16040CRUComponent
     { field: 'NOTES', header: '單項說明' },
   ];
 
-  // 主檔的代碼 → 名稱 map（顯示用）
-  empNameMap = new Map<string, string>();
-  orgNameMap = new Map<string, string>();
-  whNameMap = new Map<string, string>();
-  statusNameMap = new Map<string, string>();
+  // 主檔下拉選項（代碼/名稱合併顯示，label 格式 `<code> - <name>`）
+  readonly empIdOptions = signal<{ label: string; value: string }[]>([]);
+  readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
+  readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
 
   // FASITEM lookup map（SPEC §10.1）
   private fasItemGoodsIdMap = new Map<number, string>();
   private fasItemGoodsNameMap = new Map<number, string>();
   private fasItemUnitMap = new Map<number, string>();
-
-  /** 用於唯讀顯示主檔的名稱欄位（HTML 透過 getter 取） */
-  get empName(): string {
-    const id = this.dataForm.getRawValue().EMP_ID ?? '';
-    return id ? this.empNameMap.get(id) ?? '' : '';
-  }
-  get orgName(): string {
-    const id = this.dataForm.getRawValue().ORG_ID ?? '';
-    return id ? this.orgNameMap.get(id) ?? '' : '';
-  }
-  get whName(): string {
-    const id = this.dataForm.getRawValue().WH_ID ?? '';
-    return id ? this.whNameMap.get(id) ?? '' : '';
-  }
-  get aprvEmpName(): string {
-    const id = this.dataForm.getRawValue().APRV_EMP_ID ?? '';
-    return id ? this.empNameMap.get(id) ?? '' : '';
-  }
-  get statusName(): string {
-    const code = this.dataForm.getRawValue().MTAPPLY_STATUS ?? '';
-    return code ? this.statusNameMap.get(code) ?? '' : '';
-  }
 
   constructor(
     private readonly ass16040Service: ASS16040Service,
@@ -162,35 +136,34 @@ export class ASS16040CRUComponent
       tblUser: this.dropdownApiService.queryTblUser(),
       sys3100: this.dropdownApiService.querySys3100(),
       faHos: this.dropdownApiService.queryFaHos(),
-      sys1000Status: this.dropdownApiService.querySys1000({ SYS_Type: 'MTAPPLY_STATUS' }),
     })
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.loading = false)),
       )
       .subscribe({
-        next: ({ detail, fasItem, tblUser, sys3100, faHos, sys1000Status }) => {
-          // 建立顯示用 lookup map
-          (tblUser ?? []).forEach(item => {
-            const code = String(item.value ?? '').trim();
-            const name = String(item['Name'] ?? item['label'] ?? '').trim();
-            if (code) this.empNameMap.set(code, name || code);
-          });
-          (sys3100 ?? []).forEach(item => {
-            const code = String(item.value ?? '').trim();
-            const name = String(item['Name'] ?? item['label'] ?? '').trim();
-            if (code) this.orgNameMap.set(code, name || code);
-          });
-          (faHos ?? []).forEach(item => {
-            const code = String(item.value ?? '').trim();
-            const name = String(item['Name'] ?? item['WH_NAME'] ?? item['label'] ?? '').trim();
-            if (code) this.whNameMap.set(code, name || code);
-          });
-          (sys1000Status ?? []).forEach(item => {
-            const code = String(item.No ?? '').trim();
-            const name = String(item.Name ?? '').trim();
-            if (code) this.statusNameMap.set(code, name || code);
-          });
+        next: ({ detail, fasItem, tblUser, sys3100, faHos }) => {
+          // 建立合併顯示用下拉選項（代碼/名稱合併為 label）
+          this.empIdOptions.set(
+            (tblUser ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
+
+          this.orgIdOptions.set(
+            (sys3100 ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
+
+          this.whIdOptions.set(
+            (faHos ?? []).map(item => ({
+              label: item.label,
+              value: String(item.value ?? ''),
+            })),
+          );
 
           // FASITEM lookup（FASITEM_ID → GOODS_ID / GOODS_NAME / UNIT_NAME）
           (fasItem ?? []).forEach(r => {
@@ -219,16 +192,13 @@ export class ASS16040CRUComponent
   /** 將主檔資料填入唯讀表單（SPEC §5.2 全欄位唯讀） */
   private patchMasterForm(row: ASS16040MasterRow): void {
     this.dataForm.patchValue({
-      MTAPPLY_ID:     row.MTAPPLY_ID ?? null,
-      EMP_ID:         row.EMP_ID ?? null,
-      ORG_ID:         row.ORG_ID ?? null,
-      APPLY_DATE:     row.APPLY_DATE ? new Date(row.APPLY_DATE) : null,
-      SUGGEST_DAYS:   row.SUGGEST_DAYS ?? null,
-      WH_ID:          row.WH_ID ?? null,
-      NOTES:          row.NOTES ?? null,
-      APRV_EMP_ID:    row.APRV_EMP_ID ?? null,
-      APRV_DATE:      row.APRV_DATE ? new Date(row.APRV_DATE) : null,
-      MTAPPLY_STATUS: row.MTAPPLY_STATUS ?? null,
+      MTAPPLY_ID:   row.MTAPPLY_ID ?? null,
+      EMP_ID:       row.EMP_ID ?? null,
+      ORG_ID:       row.ORG_ID ?? null,
+      APPLY_DATE:   row.APPLY_DATE ? new Date(row.APPLY_DATE) : null,
+      SUGGEST_DAYS: row.SUGGEST_DAYS ?? null,
+      WH_ID:        row.WH_ID ?? null,
+      NOTES:        row.NOTES ?? null,
     });
   }
 
