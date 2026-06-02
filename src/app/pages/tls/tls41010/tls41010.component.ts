@@ -21,7 +21,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
@@ -70,7 +70,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_IP: [null, [Validators.maxLength(20)]],
     ECR_SrvIP: [null, [Validators.maxLength(20)]],
     ECR_TmplNo: [null, [Validators.maxLength(8)]],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
   statusOptions = getSYS1000Options('ECR_Status');
   typeOptions = getSYS1000Options('ECR_Type');
@@ -260,17 +262,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
-      const body = {
-        ...raw,
-        pageIndex: 1,
-        pageSize: 30,
-        SortBy: [{ field: 'ECR_No', order: 1 }],
-      };
-
-      this.tls41010Service.queryTLS41010(body)
+      this.tls41010Service.queryTLS41010(raw)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
-          this.lastQueryForm = body;
+          this.lastQueryForm = raw;
           this.totalRecords = res?.TotalCount || 0;
           this.footerTotal = null;
           const resData = Array.isArray(res?.Data) ? res.Data : [];
@@ -286,7 +281,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
               ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name
             };
           });
-          this.queryStateService.setQueryState(this.ProgNo, body);
+          this.queryStateService.setQueryState(this.ProgNo, this.ProgNo);
         });
     });
   }
