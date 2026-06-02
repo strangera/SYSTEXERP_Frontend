@@ -139,6 +139,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
+
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -350,7 +351,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
       if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 5000;
         if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
