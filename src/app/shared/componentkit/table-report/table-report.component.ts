@@ -562,15 +562,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     return btn.label;
   }
   /**
- * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
- */
+  * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
+  */
   private calculateAndFixColumnWidths(): void {
     // 基礎字元寬度估算：中文字大約 16px，英數/符號大約 9px
     const CHINESE_CHAR_WIDTH = 16;
     const ANY_CHAR_WIDTH = 9;
+    // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
+    const PADDING_BUFFER = 24;
 
     this.columns = this.columns.map(col => {
-      // 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
+      // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
       if (col.width) {
         return col;
       }
@@ -583,7 +585,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         // 取得格式化後或原始的內容字串
         const rawValue = row[col.field];
         let displayValue = '';
-
         if (col.format) {
           displayValue = String(col.format(rawValue, 0, row) ?? '');
         } else {
@@ -596,7 +597,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
 
         const textWidth = this.estimateTextWidth(displayValue, CHINESE_CHAR_WIDTH, ANY_CHAR_WIDTH);
-
         if (textWidth > maxLength) maxLength = textWidth;
         if (textWidth < minLength) minLength = textWidth;
       });
@@ -604,18 +604,22 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       // 如果完全沒有資料或全是空值，給予預設基礎
       if (minLength === Infinity || maxLength === 0) {
         minLength = 50;
-        maxLength = 96; // 相當於 120px - PADDING_OFFSET
+        maxLength = 96;
       }
 
       // 加上 padding 核心偏移量
-      let finalMax = maxLength;
-      let finalMin = minLength;
+      let finalMax = maxLength + PADDING_BUFFER;
+      let finalMin = minLength + PADDING_BUFFER;
+
+      // 2.  核心調整邏輯
       if (col.format) {
-        // 如果有下 format：絕對不能折行！
-        // 最小寬度直接塞滿最長內容的長度，取消 200px 的上限限制，讓它根據內容完全撐開
-        finalMin = finalMax;
-        // 可以視專案需求加上極端防禦上限（例如 800px），避免後端髒資料毀掉排版
-        finalMax = Math.min(finalMax, 800);
+        // 就算有 format，最小寬度也絕對不能低於 55px (防呆：避免空值或極短值擠壓表頭)
+        finalMin = Math.max(finalMax, 55);
+
+        // 標準寬度同步設為 finalMin 確保不換行，同時限制極端髒資料的上限為 800px
+        finalMax = Math.min(finalMin, 800);
+
+        // 確保結構對齊
         if (finalMin > finalMax) finalMin = finalMax;
       } else {
         // 如果沒有下 format：維持一般欄位的彈性安全邊界
@@ -623,11 +627,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         finalMax = Math.min(Math.max(finalMax, 120), 200);
         if (finalMin > finalMax) finalMin = finalMax;
       }
+
       // 將計算好的寬度字串直接回填到 column 物件中
       return {
         ...col,
         dynamicMinWidth: `${finalMin}px`,
-        dynamicWidth: `${finalMax}px`, // 用最長的資料當作標準寬度
+        dynamicWidth: `${finalMax}px`,     // 用最長的資料當作標準寬度
         dynamicMaxWidth: `${finalMax}px`
       };
     });
