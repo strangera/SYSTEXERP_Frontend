@@ -52,6 +52,7 @@ import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sy
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   @ViewChild('multiSelectTemp', { static: true }) multiSelectTemp!: TemplateRef<any>;
+  @ViewChild('table') tableComponent!: TableEditComponent;
   @ViewChild('table2') tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     user_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.englishNumberSymbolValidator]], // 使用者編號
@@ -105,9 +106,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   private sysIdOptionsList: any[] = []; // 改為 any[] 因為我們要用到 CRT_USR_Name
   private sysSubModuleList: any[] = [];
 
-  get defaultInsertData() {
-    return { Org_ID: this.dataForm.get('org_ID')?.value || null };
-  }
+  defaultInsertData: Partial<UserSys3700Detail> = {};
 
   data: UserSys3700Detail[] = [];
   selectedRows: UserSys3700Detail[] = [];
@@ -190,6 +189,9 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         this.cdr.detectChanges();
       });
     }
+    this.dataForm.get('org_ID')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
+      this.defaultInsertData = { Org_ID: value || null };
+    });
   }
 
   // 模擬將 SYS_ID 選項轉成 Tree 結構的函式
@@ -285,10 +287,11 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      if (this.data.some((item: UserSys3700Detail) => !item.Org_ID && !item.Building_No && !item.Floor_No && !item.Area_No && !item.TLT_No && !item.TLT_Kind && !item.BUS_Type)) {
-        this.messageService.errorBubble('請至少填寫一個組織代碼、館別代碼、樓層代碼、區域代碼、專櫃編號、專櫃類型或大分類代碼');
+      if (this.data.some((item: UserSys3700Detail) => !item.Org_ID)) {
+        this.messageService.errorBubble('專櫃權限清單中，組織代碼為必填');
         return;
       }
+      if (this.tableComponent && !this.tableComponent.validateAndShowErrors()) return;
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
