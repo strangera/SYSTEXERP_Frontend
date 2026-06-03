@@ -86,9 +86,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dataForm = this.formBuilder.group({
     pod_no: [null as string | null, [Validators.maxLength(25)]], // 活動單號
     pod_desc: [null as string | null, [Validators.required]], // 活動名稱
-    pod_sdate: [{ value: this.service.dateS as Date | null, disabled: true }], // 起始日期(起)
+    pod_sdate: [this.service.dateS as Date | null], // 起始日期(起)
+    pod_edate: [this.service.dateE as Date | null], // 起始日期(迄)
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
-    pod_edate: [{ value: this.service.dateE as Date | null, disabled: true }], // 起始日期(迄)
     pod_back_edate: [null as Date | null, [Validators.required]], // 兌回日期(迄)
     pod_busdate: [null as Date | null, [Validators.required]], // 活動正檔日期
     pod_status: ['0', [Validators.required]], // 活動狀態 (0=未核准, 1=已核准, 9=刪除)
@@ -905,43 +905,44 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       finalize(() => this.uploadLoading.set(false))
     ).subscribe({
       next: res => {
-
-        if (!res.Success) { // Success = true 代表全部成功
-          this.erroreportService.showImportError(
-            res.ErrorFilePath,
-            `匯入失敗：成功 ${res.SuccessCount} 筆，失敗 ${res.ErrorCount} 筆`
-          );
-          return;
-        }
-
-        const data = res.queryTLS26080_DetailResponses;
-        this.tableData.update(td => {
-          if (td.length === 0) return data.map(item => ({
-            ...item,
-            tlt_id_desc: this.service.tltTalentMap().get(item.tlt_no)?.['tlt_id_desc'] || '',
-            tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] || '',
-            pod_no: item.pod_no ?? this.getPodNo()!,
-            tpy_rate_D16: Number(item.tpy_rate_D16),
-            tpy_rate_D17: Number(item.tpy_rate_D17),
-          }));
-          return [
-            ...td,
-            ...data.map(item => ({
+        const data = res.queryTLS26080_DetailResponses || [];
+        if (data.length > 0) {
+          this.tableData.update(td => {
+            if (td.length === 0) return data.map(item => ({
               ...item,
               tlt_id_desc: this.service.tltTalentMap().get(item.tlt_no)?.['tlt_id_desc'] || '',
               tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] || '',
               pod_no: item.pod_no ?? this.getPodNo()!,
               tpy_rate_D16: Number(item.tpy_rate_D16),
               tpy_rate_D17: Number(item.tpy_rate_D17),
-            })).filter(newItem => !td.some(existingItem => existingItem.tlt_no === newItem.tlt_no)),
-          ];
-        });
+            }));
+            return [
+              ...td,
+              ...data.map(item => ({
+                ...item,
+                tlt_id_desc: this.service.tltTalentMap().get(item.tlt_no)?.['tlt_id_desc'] || '',
+                tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] || '',
+                pod_no: item.pod_no ?? this.getPodNo()!,
+                tpy_rate_D16: Number(item.tpy_rate_D16),
+                tpy_rate_D17: Number(item.tpy_rate_D17),
+              })).filter(newItem => !td.some(existingItem => existingItem.tlt_no === newItem.tlt_no)),
+            ];
+          });
 
-        this.messageService.successBubble('上傳成功');
-
-        res.queryTLS26080_DetailResponses.forEach(item => {
-          this.updateTltIdOptions(item.talent_id);
-        });
+          data.forEach(item => {
+            this.updateTltIdOptions(item.talent_id);
+          });
+        }
+        if (!res.Success) {
+          // Success = false 代表有部分失敗，提示匯入結果並提供錯誤檔
+          this.erroreportService.showImportError(
+            res.ErrorFilePath,
+            `匯入完畢：成功 ${res.SuccessCount} 筆，失敗 ${res.ErrorCount} 筆`
+          );
+        } else {
+          // 全部成功
+          this.messageService.successBubble('上傳成功');
+        }
       },
       error: err => this.messageService.errorBubble(err.message || '上傳失敗'),
     });
