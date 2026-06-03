@@ -126,36 +126,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     super();
   }
 
-  callOtherApi() {
-    const requestData = { queryKey: 'value' };
-    this.loading = true;
-    this.tls46010Service.queryTLS0000(requestData)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (res) => {
-          console.log('呼叫 TLS0000 成功', res.Data);
-        },
-      });
-  }
-
-  callTls11010Api(locNo: string) {
-    const payload = { ECR_LocNo: locNo, PageSize: 10, PageIndex: 1 };
-    this.loading = true;
-    this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
-      next: (res) => {
-        // 如果 callTls11010Api 後端回傳也不需要自動帶入，請把這整段 patchValue 註解或刪除
-        if (res?.Data && res.Data.length > 0) {
-          const locationData = res.Data[0];
-          this.queryForm.patchValue({
-            ECR_Group: locationData.building_no ?? '',      // 館別
-            ECR_SubGroup: locationData.FLOOR_NO ?? '',      // 樓層
-            ECR_AreaNo: locationData.AREA_NO?.trim() ?? ''  // 區域（去除空白）
-          }, { emitEvent: false });
-        }
-      },
-    });
-  }
-
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
 
@@ -181,12 +151,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           label: item.No,   // 顯示 IP    (或改成 item.Name)
           value: item.No    // 存 IP 編號
         }));
-      }
-    });
-
-    this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ECR_SrvIP) => {
-      if (ECR_SrvIP) {
-        this.callOtherApi();
       }
     });
 
@@ -224,15 +188,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           value: item.No
         }));
       });
-
-    // 【已調整】移除選擇位置編號時連動帶出 樓層、區域 的前端 patchValue 邏輯
-    this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
-      if (locNo) {
-        // 這裡原本有 this.queryForm.patchValue 帶出樓層跟區域的程式碼，現已移除。
-        // 如果點選位置編號時完全不需要觸發連動 API，也可以把下面這行整包註解掉。
-        this.callTls11010Api(locNo);
-      }
-    });
 
     this.eCRNoService.getECRNo()
       .pipe(untilDestroyed(this))
