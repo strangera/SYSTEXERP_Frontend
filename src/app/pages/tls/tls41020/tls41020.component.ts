@@ -3,7 +3,12 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { QueryTLS41020Request, TLS41020Data, TLS41020Service } from '../../../service/api/tls/tls41020.service';
@@ -15,11 +20,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { ValidationService } from '@shared/service/validation.service';
 @Component({
   selector: 'app-tls41020',
   templateUrl: './tls41020.component.html',
@@ -84,8 +84,8 @@ export class TLS41020Component extends BasicQueryPageComponent<TLS41020Data> imp
   columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
-    { field: 'EDC_BegDate', header: '啟用日期', visible: true, format: formatDate },
-    { field: 'EDC_EndDate', header: '停用日期', visible: true, format: formatDate },
+    { field: 'EDC_BegDate', header: '啟用日期', visible: true, format: formatDate, width: '80px' },
+    { field: 'EDC_EndDate', header: '停用日期', visible: true, format: formatDate, width: '80px' },
     // 專櫃與地點資料
     { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
     { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
@@ -93,29 +93,29 @@ export class TLS41020Component extends BasicQueryPageComponent<TLS41020Data> imp
     { field: 'LOCATION_Name', header: '地點名稱', visible: true },
     // 第一台 (中信)
     { field: 'EDC_Status1Name', header: '中信刷卡機狀態', visible: true },
-    { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true },
-    { field: 'EDC_TmID1', header: '中信刷卡機端末機號', visible: true },
+    { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true, width: '80px' },
+    { field: 'EDC_TmID1', header: '中信刷卡機端末機號', visible: true, width: '80px' },
     // 第二台 (聯合)
     { field: 'EDC_Status2Name', header: '聯合刷卡機狀態', visible: true },
-    { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
-    { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
+    { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true, width: '80px' },
+    { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true, width: '80px' },
     // 第三台 (中信分期)
     { field: 'EDC_Status3Name', header: '中信分期刷卡機狀態', visible: false },
-    { field: 'EDC_IP3', header: '中信分期刷卡機IP', visible: false },
-    { field: 'EDC_TmID3', header: '中信分期刷卡機端末機號', visible: false },
+    { field: 'EDC_IP3', header: '中信分期刷卡機IP', visible: false, width: '80px' },
+    { field: 'EDC_TmID3', header: '中信分期刷卡機端末機號', visible: false, width: '80px' },
     // 第四台 (中信紅利)
     { field: 'EDC_Status4Name', header: '中信紅利刷卡機狀態', visible: false },
-    { field: 'EDC_IP4', header: '中信紅利刷卡機IP', visible: false },
-    { field: 'EDC_TmID4', header: '中信紅利刷卡機端末機號', visible: false },
+    { field: 'EDC_IP4', header: '中信紅利刷卡機IP', visible: false, width: '80px' },
+    { field: 'EDC_TmID4', header: '中信紅利刷卡機端末機號', visible: false, width: '80px' },
     // 第五台 (中信銀聯)
     { field: 'EDC_Status5Name', header: '中信銀聯刷卡機狀態', visible: false },
-    { field: 'EDC_IP5', header: '中信銀聯刷卡機IP', visible: false },
-    { field: 'EDC_TmID5', header: '中信銀聯刷卡機端末機號', visible: false },
+    { field: 'EDC_IP5', header: '中信銀聯刷卡機IP', visible: false, width: '80px' },
+    { field: 'EDC_TmID5', header: '中信銀聯刷卡機端末機號', visible: false, width: '80px' },
     // 審核異動欄位
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime, width: '130px' },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime, width: '130px' },
     { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];

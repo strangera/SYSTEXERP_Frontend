@@ -118,7 +118,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerLabel = '總計'; // 總計列左側標籤文字
   /** 多列 footer 時，每列第一欄顯示的欄位名（如 group_name）；未設則顯示 footerLabel */
   @Input() footerLabelField?: string;
-  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 450px）
+  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 700px）
   @Input() showFooterTotal = true; // 是否顯示第一列 footer 總計資料
   @Input() allowFooterHtml = false; // 是否允許 footer 使用 HTML 內嵌呈現（預設 false，避免影響既有頁面）
   // expansion 收合展開
@@ -170,6 +170,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+      // ====== 新增：第一次拿到資料時，動態計算並固定欄位寬度 ======
+      if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
+        this.calculateAndFixColumnWidths();
+      }
+      // ========================================================
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
@@ -182,17 +187,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         } else {
           if (this.data.length === this.totalRecords) {
             this.dt.lazy = false;
             this.lazy = false;
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
             if (!this.showManage) {
               this.ItemSize = 46;
             }
           } else {
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
           }
           this.dt.virtualScroll = true;
           this.virtualData = Array.from({ length: this.data.length });
@@ -270,7 +275,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       if (res?.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
-        this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+        this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
@@ -282,10 +287,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.data = res.Data;
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         } else {
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
           this.virtualData = Array.from({ length: res.Data.length });
           this.data = res.Data;
           this.cdr.detectChanges();
@@ -354,7 +359,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
       if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 5000;
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10000;
         if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
@@ -614,4 +619,96 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.cdr.detectChanges();
   }
   // ----更新: 欄位群組的排序處理 ---
+  /**
+ * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
+ */
+  private calculateAndFixColumnWidths(): void {
+    // 基礎字元寬度估算：中文字大約 16px，英數/符號大約 9px
+    const CHINESE_CHAR_WIDTH = 16;
+    const ANY_CHAR_WIDTH = 9;
+    // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
+    const PADDING_BUFFER = 24;
+
+    this.columns = this.columns.map(col => {
+      // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
+      if (col.width) {
+        return col;
+      }
+
+      let maxLength = 0;
+      let minLength = Infinity;
+
+      // 遍歷第一批資料，純粹找出該欄位內容的最長與最短
+      this.data.forEach(row => {
+        // 取得格式化後或原始的內容字串
+        const rawValue = row[col.field];
+        let displayValue = '';
+        if (col.format) {
+          displayValue = String(col.format(rawValue, 0, row) ?? '');
+        } else {
+          displayValue = String(rawValue ?? '');
+        }
+
+        // 如果是 HTML 類型，過濾掉標籤後再計算長度，避免標籤字串干擾
+        if (col.type === 'html') {
+          displayValue = displayValue.replace(/<[^>]*>/g, '');
+        }
+
+        const textWidth = this.estimateTextWidth(displayValue, CHINESE_CHAR_WIDTH, ANY_CHAR_WIDTH);
+        if (textWidth > maxLength) maxLength = textWidth;
+        if (textWidth < minLength) minLength = textWidth;
+      });
+
+      // 如果完全沒有資料或全是空值，給予預設基礎
+      if (minLength === Infinity || maxLength === 0) {
+        minLength = 50;
+        maxLength = 96;
+      }
+
+      // 加上 padding 核心偏移量
+      let finalMax = maxLength + PADDING_BUFFER;
+      let finalMin = minLength + PADDING_BUFFER;
+
+      // 2.  核心調整邏輯
+      if (col.format) {
+        // 就算有 format，最小寬度也絕對不能低於 55px (防呆：避免空值或極短值擠壓表頭)
+        finalMin = Math.max(finalMax, 55);
+
+        // 標準寬度同步設為 finalMin 確保不換行，同時限制極端髒資料的上限為 800px
+        finalMax = Math.min(finalMin, 800);
+
+        // 確保結構對齊
+        if (finalMin > finalMax) finalMin = finalMax;
+      } else {
+        // 如果沒有下 format：維持一般欄位的彈性安全邊界
+        finalMin = Math.max(finalMin, 55);
+        finalMax = Math.min(Math.max(finalMax, 120), 200);
+        if (finalMin > finalMax) finalMin = finalMax;
+      }
+
+      // 將計算好的寬度字串直接回填到 column 物件中
+      return {
+        ...col,
+        dynamicMinWidth: `${finalMin}px`,
+        dynamicWidth: `${finalMax}px`,     // 用最長的資料當作標準寬度
+        dynamicMaxWidth: `${finalMax}px`
+      };
+    });
+  }
+  /**
+ * 估算字串在畫面上實質佔用的像素寬度
+ */
+  private estimateTextWidth(text: string, chineseWidth: number, anyWidth: number): number {
+    if (!text) return 0;
+    let width = 0;
+    for (let i = 0; i < text.length; i++) {
+      // 判斷是否為中文字元或全形符號
+      if (text.charCodeAt(i) > 127) {
+        width += chineseWidth;
+      } else {
+        width += anyWidth;
+      }
+    }
+    return width;
+  }
 }
