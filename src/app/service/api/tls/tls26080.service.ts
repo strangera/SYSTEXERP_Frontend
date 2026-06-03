@@ -248,6 +248,23 @@ export class TLS26080Service {
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
+  /** 專供 Dialog 查詢專櫃用——不更新 tltTalentOptions，不影響主表格下拉 */
+  public searchTltTalentForDialog(query: { ven_no?: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[]> {
+    const payload: TalentOpenFlagQuery = {
+      VEN_No: query.ven_no ?? '',
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
+    };
+    return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
+      take(1),
+      map(res => res?.map((item: TalentOpenFlagItem) => {
+        const raw = item as unknown as Record<string, unknown>;
+        const talentId = typeof item.talent_id === 'number' ? item.talent_id : Number(raw['Talent_ID']) || 0;
+        return { ...item, value: item.No, label: `${item.No} - ${item.Name}`, talent_id: talentId } as Option & { talent_id: number };
+      }) ?? [])
+    );
+  }
+
   public getTLTTalentOptions(query: { ven_no: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[] | null> {
     this.tltTalentOptionsLoading.set(true);
     const payload: TalentOpenFlagQuery = {

@@ -29,7 +29,7 @@ export interface TLS26080Data {
   CanEdit: boolean;            // 是否可編輯
 }
 
-export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable & { _err?: boolean; };
+export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable & { _err?: boolean; _rowKey?: string; };
 export type TLS26080KeyInTable = Omit<TLS26080DetailTable, 'tpy_rate_D16' | 'tpy_rate_D17'> & { tpy_rate_D16: string; tpy_rate_D17: string; };
 
 export interface TLS26080DetailTable {
