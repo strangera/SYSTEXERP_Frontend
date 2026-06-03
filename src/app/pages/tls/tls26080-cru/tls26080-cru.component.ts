@@ -142,16 +142,25 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly isRowSelectable = (rowData: TLS26080EditTable) => rowData.pod_status !== '9';
   public readonly validateEntireRow = (rowData: TLS26080EditTable, rowIndex?: number): { isValid: boolean, errorMessage: string; } => {
     const tltNo = String(rowData?.tlt_no ?? '').trim();
-    if (!tltNo) {
+    const tltId = String(rowData?.tlt_id ?? '').trim();
+
+    if (!tltNo && !tltId) {
       return { isValid: true, errorMessage: '' };
     }
+
     const hasDuplicate = this.tableData().some((item, index) => {
       if (index === rowIndex) return false;
       if (item?._isAutoInsertCandidate) return false;
-      return String(item?.tlt_no ?? '').trim() === tltNo;
+
+      const currentItemTltNo = String(item?.tlt_no ?? '').trim();
+      const currentItemTltId = String(item?.tlt_id ?? '').trim();
+
+      // 判斷當前遍歷的資料，其 tlt_no 與 tlt_id 是否與輸入的資料「雙雙相同」
+      return currentItemTltNo === tltNo && currentItemTltId === tltId;
     });
+
     return hasDuplicate
-      ? { isValid: false, errorMessage: '專櫃編號重複' }
+      ? { isValid: false, errorMessage: '專櫃編號與抽成類別資料重複' }
       : { isValid: true, errorMessage: '' };
   };
 
