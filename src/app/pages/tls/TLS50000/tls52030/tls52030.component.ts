@@ -16,7 +16,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, Column, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -85,9 +86,9 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
   lastQueryBody: IQueryTLS52030Request | null = null;
-  columns: Column[] = [
-    { field: 'ODM_No', header: '進貨驗收編號', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
+  columns: ReportColumn[] = [
+    { field: 'ODM_No', header: '進貨驗收編號', visible: true, width: '110px' },
+    { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' }, // 廠商編號
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
@@ -95,7 +96,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     // { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
     { field: 'ODM_Status', header: '進貨驗收單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
-    { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDate },
+    { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDate, width: '80px' },
     { field: 'ODM_USR_No', header: '申請人員', visible: true },
     { field: 'ODM_USR_Name', header: '申請人員姓名', visible: true },
     { field: 'ODM_TotalBuyNet', header: '未稅進價小計', visible: true, format: formatAmount },
@@ -105,23 +106,23 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     // { field: 'ODM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
     // { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : value === '0' ? '免稅' : '' },
-    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDate },
+    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDate, width: '80px' },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true },
-    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate },
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate, width: '80px' },
     { field: 'ReAPRV_USR_No', header: '反審核人員', visible: true },
     { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true },
-    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDate },
+    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDate, width: '80px' },
     { field: 'Void_USR_No', header: '作廢人員', visible: true },
     { field: 'Void_USR_Name', header: '作廢人員姓名', visible: true },
     { field: 'ODM_Remark', header: '備註', visible: true },
     { field: 'Request_No', header: '請款單號', visible: true },
     { field: 'ACP_No', header: '應付帳款編號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime, width: '130px' },
     { field: 'CRT_USR_No', header: '建立人員', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime, width: '130px' },
     { field: 'UPD_USR_No', header: '變更人員', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
