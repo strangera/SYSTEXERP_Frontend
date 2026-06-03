@@ -87,7 +87,7 @@
           ></app-input-text>
         </div>
 
-        <!-- 第四行：證件類型、設備名稱 -->
+        <!-- 第四行：證件類型 -->
         <div class="col-12 md:col-6">
           <app-input-text
             label="證件類型"
@@ -96,14 +96,21 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-        <div class="col-12 md:col-6">
-          <app-input-text
-            label="設備名稱"
-            controlName="DeviceName"
-            [control]="dataForm.controls.DeviceName"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+      </div>
+
+      <!-- 出借設備明細（唯讀） -->
+      <div class="mt-3">
+        <app-table-edit
+          tableKey="cpm11040-detail"
+          [data]="detailItems"
+          [columns]="detailColumns"
+          [disabled]="true"
+          [showInsert]="false"
+          [showDelete]="false"
+          [showCheckBox]="false"
+          [loading]="detailLoading"
+          [dataStatusField]="''"
+        ></app-table-edit>
       </div>
 
       <div

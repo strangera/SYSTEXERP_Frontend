@@ -84,7 +84,6 @@
               "outputHashing": "all",
               "aot": true,
               "optimization": true,
-              "serviceWorker": "ngsw-config.json",
               "assets": [
                 "src/web.config",
                 "src/favicon.ico",
@@ -142,7 +141,6 @@
               "outputHashing": "all",
               "aot": true,
               "optimization": true,
-              "serviceWorker": "ngsw-config.json",
               "baseHref": "/TSRDWEB/",
               "assets": [
                 "src/favicon.ico",

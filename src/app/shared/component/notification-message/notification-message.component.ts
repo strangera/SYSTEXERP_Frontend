@@ -228,7 +228,7 @@ export class NotificationMessageComponent implements OnInit {
       document.body.removeChild(link);
       // 如果是 Blob URL，下載完後建議釋放記憶體
       if (filePath.startsWith('blob:')) {
-        window.URL.revokeObjectURL(filePath);
+        globalThis.URL.revokeObjectURL(filePath);
       }
     }, 100);
   }

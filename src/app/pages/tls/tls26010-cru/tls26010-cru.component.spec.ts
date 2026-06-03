@@ -165,7 +165,7 @@ describe('TLS26010CRUComponent', () => {
     component = fixture.componentInstance;
 
     // Mock history state for CRU operations
-    Object.defineProperty(window, 'history', {
+    Object.defineProperty(globalThis, 'history', {
       value: {
         state: {
           crudstatus: CRUDStatus.Create,

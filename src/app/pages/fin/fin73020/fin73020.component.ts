@@ -10,15 +10,15 @@ import { finalize, map, take } from 'rxjs/operators';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { FIN73020Service } from '../../../service/api/fin/fin73020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FIN73020Service } from '../../../service/api/fin/fin73020.service';
 
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import {
@@ -204,8 +204,8 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
 
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as string | null | undefined;
-    return !s ? null : s;
+    const s = formatDateToYYYY_MM_DD(d) as string | null | undefined;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -222,7 +222,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   }
 
   private cleanPayload<T extends Record<string, any>>(payload: T): T {
-    Object.keys(payload).forEach(key => {
+    for (const key of Object.keys(payload)) {
       const value = payload[key];
 
       if (value === '' || value === null || value === undefined) {
@@ -232,18 +232,24 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       if (Array.isArray(value) && value.length === 0) {
         delete payload[key];
       }
-    });
+    }
 
     return payload;
   }
 
   private initRows(rows: FIN73020Data[]): FIN73020Data[] {
-    const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    // 徹底移除 crypto.randomUUID() 或 Math.random()，完全不需要隨機數了！
 
-    rows.forEach((row, index) => {
-      (row as any).dataKey =
-        `${seed}_${index}_${row.PCS_RqstNo ?? ''}_${row.PCS_No ?? ''}_${row.PCS_SeqNo ?? ''}_${row.RowType ?? ''}`;
-    });
+    for (const [index, row] of rows.entries()) {
+      // 利用業務唯一欄位組合（請款單號 + 零用金單號 + 項次 + 列別）作為絕對穩定的 Key
+      const rqstNo = row.PCS_RqstNo ?? 'NORQST';
+      const pcsNo = row.PCS_No ?? 'NOPCS';
+      const seqNo = row.PCS_SeqNo ?? index;
+      const rowType = row.RowType ?? 'NOTYPE';
+
+      // 這樣組出來的 Key 永遠固定，不管重新查詢或分頁，都不會導致元件重新渲染
+      (row as any).dataKey = `key_${rqstNo}_${pcsNo}_${seqNo}_${rowType}`;
+    }
 
     return rows;
   }
@@ -274,7 +280,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       pageIndex,
       pageSize,
       SortBy: sort,
-    } as FIN73020Query);
+    });
   }
 
   private saveQueryState(): void {
@@ -291,26 +297,26 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     } as any);
   }
 
- public queryFIN73020ForReport = (body: any) =>
-  this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
-    map((res: any) => {
-      const src = res?.Data as any;
-      const apiRows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
-      const rows = this.normalizeDisplayRows(apiRows);
+  public queryFIN73020ForReport = (body: any) =>
+    this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
+      map((res: any) => {
+        const src = res?.Data;
+        const apiRows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
+        const rows = this.normalizeDisplayRows(apiRows);
 
-      this.initRows(rows);
+        this.initRows(rows);
 
-      const totalCount = rows.length === 0
-        ? 0
-        : Number(res?.TotalCount ?? rows.length) || rows.length;
+        const totalCount = rows.length === 0
+          ? 0
+          : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-      return {
-        Data: rows,
-        TotalCount: totalCount,
-        GrandTotal: null,
-      };
-    })
-  );
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: null,
+        };
+      })
+    );
 
   onSubmit(frm: FormGroup): void {
     this.submitted = true;
@@ -343,25 +349,25 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       .queryFIN73020(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
-       next: (res: any) => {
-  const apiRows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
-  const rows = this.normalizeDisplayRows(apiRows);
+        next: (res: any) => {
+          const apiRows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
+          const rows = this.normalizeDisplayRows(apiRows);
 
-  this.initRows(rows);
+          this.initRows(rows);
 
-  const realTotal = rows.length === 0
-    ? 0
-    : Number(res?.TotalCount ?? rows.length) || rows.length;
+          const realTotal = rows.length === 0
+            ? 0
+            : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-  this.lastQueryBody = { ...payload };
-  this._currentSortBy = payload.SortBy ?? this.defaultSort;
-  this.totalRecords = realTotal;
-  this.viewTotalRecords = realTotal;
-  this.data = rows;
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
+          this.data = rows;
 
-  this.cdr.detectChanges();
-  this.saveQueryState();
-},
+          this.cdr.detectChanges();
+          this.saveQueryState();
+        },
         error: err => {
           console.error('FIN73020 API error:', err);
           this.data = [];
@@ -450,7 +456,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     }
 
     const fileName = this.getFilenameFromHeader(res.headers.get('Content-Disposition'), ext);
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
 
     a.href = url;
@@ -459,8 +465,8 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     document.body.appendChild(a);
     a.click();
 
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    globalThis.URL.revokeObjectURL(url);
+    a.remove();
   }
 
   private getFilenameFromHeader(contentDisposition: string | null, defaultExt: string): string {
@@ -478,7 +484,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     const filename = /filename="([^"]+)"/.exec(contentDisposition);
     if (filename?.[1]) {
       try {
-        return decodeURIComponent(filename[1].replace(/\+/g, ' '));
+        return decodeURIComponent(filename[1].replaceAll('+', ' '));
       } catch {
         return filename[1];
       }
@@ -487,21 +493,21 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     return `FIN73020${defaultExt}`;
   }
   private isOnlyGrandTotalRow(rows: FIN73020Data[]): boolean {
-  if (rows.length !== 1) return false;
+    if (rows.length !== 1) return false;
 
-  const row: any = rows[0];
+    const row: any = rows[0];
 
-  return String(row?.NOTeDesc ?? '').trim() === '總計'
-    && Object.keys(row).every(key =>
-      key === 'NOTeDesc' ||
-      key === 'dataKey' ||
-      row[key] === null ||
-      row[key] === undefined ||
-      row[key] === ''
-    );
-}
+    return String(row?.NOTeDesc ?? '').trim() === '總計'
+      && Object.keys(row).every(key =>
+        key === 'NOTeDesc' ||
+        key === 'dataKey' ||
+        row[key] === null ||
+        row[key] === undefined ||
+        row[key] === ''
+      );
+  }
 
-private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
-  return this.isOnlyGrandTotalRow(rows) ? [] : rows;
-}
+  private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
+    return this.isOnlyGrandTotalRow(rows) ? [] : rows;
+  }
 }

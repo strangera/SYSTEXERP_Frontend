@@ -8,6 +8,8 @@ import { Button } from 'primeng/button';
 import { combineLatest, Subject, timer } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
+type ButtonType = 'button' | 'submit' | 'reset';
+
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -15,17 +17,27 @@ interface ButtonConfig {
   text?: boolean;
   outlined?: boolean;
   disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  type?: ButtonType;
   severity?: 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
   permissionCode?: string; // 加上這個，表示 permissionCode 可能是 string 或 undefined
 }
 @Component({
   selector: 'app-button',
-  templateUrl: './button.component.html',
+  template: `
+  <p-button [hidden]="!showButton() && (btnType === 'cancel' || btnType === 'clear')" id="customButton"
+  (onClick)="handleClick()" [label]="label" [class]="class" [icon]="icon" [loading]="loading" [disabled]="disabled"
+  [type]="type" [severity]="severity" [text]="text" [outlined]="outlined"
+  [styleClass]="'w-max ' + styleClass"></p-button>
+  `,
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [Button]
+  imports: [Button],
+  host: {
+    '[attr.tabindex]': 'disabled ? "-1" : "0"', // 沒禁用時允許 Tab 聚焦
+    '(keydown.enter)': 'handleKeyboardClick($event)',
+    '(keydown.space)': 'handleKeyboardClick($event)'
+  }
 })
 export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' | 'textclear' = 'default';
@@ -37,18 +49,18 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() severity: 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
   @Input() class: string | undefined;
   @Input() disabled: boolean | undefined | string;
-  @Input() type: 'button' | 'submit' | 'reset' = 'button'; // 原始html的type
+  @Input() type: ButtonType = 'button'; // 原始html的type
   @Input() text: boolean | undefined; // 是否為文字按鈕
   @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
   @Input() form: FormGroup | undefined;
   @Input() styleClass = '';
   public showButton = signal(false);
 
-  private systemDataService: SystemDataService = inject(SystemDataService);
-  private currentPageService: CurrentPageService = inject(CurrentPageService);
-  private permissionGuard = inject(PermissionGuardService);
-  private formStatusService = inject(FormStatusService);
-  private ngUnsubscribe = new Subject<void>();
+  private readonly systemDataService: SystemDataService = inject(SystemDataService);
+  private readonly currentPageService: CurrentPageService = inject(CurrentPageService);
+  private readonly permissionGuard = inject(PermissionGuardService);
+  private readonly formStatusService = inject(FormStatusService);
+  private readonly ngUnsubscribe = new Subject<void>();
   private readonly buttonConfig: Record<string, ButtonConfig> = {
     default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
     create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '20' },   // 新增
@@ -71,13 +83,13 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
     const config = this.buttonConfig[this.btnType];
-    if (this.label === undefined) this.label = config.label;
-    if (this.icon === undefined) this.icon = config.icon;
-    if (this.class === undefined) this.class = config.class;
-    if (this.disabled === undefined) this.disabled = config.disabled;
-    if (this.text === undefined) this.text = config.text;
-    if (this.outlined === undefined) this.outlined = config.outlined;
-    if (this.severity === undefined) this.severity = config.severity as 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
+    this.label ??= config.label;
+    this.icon ??= config.icon;
+    this.class ??= config.class;
+    this.disabled ??= config.disabled;
+    this.text ??= config.text;
+    this.outlined ??= config.outlined;
+    this.severity ??= config.severity;
     this.type = config.type as 'button' | 'submit' | 'reset';
 
     combineLatest([
@@ -85,14 +97,12 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentPageService.currentPageProgNo$.pipe(filter(progNo => !!progNo))
     ])
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(([menu, progNo]) => {
+      .subscribe(([, progNo]) => {
         if (config.permissionCode) {
           const funInfo = this.systemDataService.getUserPermissions(progNo!);
           const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === config.permissionCode);
           this.disabled = !hasPermission;
-        } else if (this.disabled === undefined) {
-          this.disabled = config.disabled;
-        }
+        } else this.disabled ??= config.disabled;
         this.cdr.detectChanges(); // 確保 OnPush 變更檢測更新
       });
   }
@@ -106,7 +116,6 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showButton.set(true);
         const progNo = this.currentPageService.getCurrentProgNo();
         if (progNo) {
-          // console.log(`按鈕元件(${this.btnType})通知表單(${progNo})已截取初始值`);
           this.formStatusService.notifyReady(progNo);
         }
       });
@@ -134,5 +143,18 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     this.clickEvent.emit();
+  }
+  handleKeyboardClick(event: Event) {
+    // 轉成KeyboardEvent
+    const keyboardEvent = event as KeyboardEvent;
+    if (this.disabled) return;
+
+    // 如果是空白鍵，防止網頁滾動
+    if (keyboardEvent.key === ' ') {
+      keyboardEvent.preventDefault();
+    }
+
+    // 直接呼叫你原本就寫好的點擊邏輯
+    this.handleClick();
   }
 }

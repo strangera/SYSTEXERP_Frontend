@@ -12,18 +12,27 @@ export interface fin13090Item {
 }
 
 export interface fin13090Detail {
-  id: number, // APS2002 主鍵 新增為0 
+  id: number, // APS2002 主鍵 新增為0
+  ACP_Type: string, // 應付帳款類別
   PUR_VoucherType: string, // 發票格式 (憑證類別 21~29)
   PUR_GUINo: string, // 發票號碼
   PUR_GUIDate: Date, // 發票日期
   PUR_RepYYYYMM: string, // 申報年月 (固定為雙數月)
+  PUR_VenNo: string, // 廠商編號
+  PUR_VenName: string, // 廠商名稱
   PUR_VenUniform: string, // 廠商統一編號
+  PUR_Uniform: string, // 買受人統一編號
   PUR_DirectType: string, // 發票用途 (1=營業用 2=共同使用)
   PUR_Amt: number, // 發票總金額（含稅）
 
   PUR_TaxType: string, // 課稅別 (0=免稅 1=應稅 2=零稅)
-  PUR_Net: string, // 發票未稅金額
-  PUR_Tax: string  // 發票稅額
+  PUR_Net: number, // 發票未稅金額
+  PUR_Tax: number, // 發票稅額
+  PUR_DiscNo: string | null, // 扣抵代號
+  PUR_Type: string | null, // 類別區分
+  Source_Doc_No: string | null, // 憑證單號
+  PUR_Comb_Cnt: number, // 彙總張數
+  PUR_Comb: string | null  // 彙加註記
 }
 
 export interface fin13090response {

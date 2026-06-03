@@ -30,11 +30,15 @@ export interface Pos2002LocationItem {
   area_desc?: string | null;
 }
 
-/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME / UNIT_NAME / ID） */
 export interface FasItemDropdownItem {
   RowNo?: string;
+  RowNum?: number;
+  ID?: number | null;
   GOODS_ID?: string | null;
   GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  UNIT_NAME?: string | null;
 }
 
 /**
@@ -62,6 +66,22 @@ export interface Pos2064MpcsNoDropDownItem {
   PCS_No?: string | null;
   PCS_Date?: string | null;
   PCS_UsrNo?: string | null;
+}
+
+/** 
+ * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
+ */
+export interface FAASSCHKMQuery {
+  Keyword?: string;
+}
+
+/**
+ * 查詢採購單號下拉選單 queryFAASSCHKM_DropDownList
+ * 後端回傳欄位：SUBPOENA_ID
+ * 前端下拉顯示僅需 後端回傳欄位：SUBPOENA_ID
+ */
+export interface FAASSCHKMDropDownItem {
+  SUBPOENA_ID?: string | null;
 }
 
 /**
@@ -642,6 +662,13 @@ export interface TALPORDERMQueryForShare {
 }
 
 /**
+ * 查詢 GLS3002 對帳 Key 值下拉式選單回傳項目
+ */
+export interface Gls3002AcctKeyItem {
+  ACCT_KEY: string;
+}
+
+/**
  * 查詢 queryLOGOaccorHOS 時的請求 body (品牌對應倉別)
  */
 export interface LogoAccorHosQuery {
@@ -780,4 +807,24 @@ export interface queryPOS1002_DropDownListItem {
   No: string;
   Name: string;
   ECR_TLT_No?: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別(自營)
+ */
+export interface queryOwnPOS1002_DropDownListItem {
+  ECR_No: string;
+  ECR_Name: string;
+}
+
+/**
+ * 查詢過濾後的收銀機設定檔 (POS1002 Filtered) 回傳項目
+ * 對應後端 SQL: ECR_No, ECR_Name, ECR_TLT_No, ECR_TLT_Name, ECR_Status
+ */
+export interface Pos1002FilteredItem {
+  No: string;        // ECR_No
+  Name: string;      // ECR_Name
+  ECR_TLT_No: string;
+  ECR_TLT_Name: string;
+  ECR_Status: string;
 }

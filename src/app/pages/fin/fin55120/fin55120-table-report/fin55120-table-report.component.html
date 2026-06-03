@@ -1,7 +1,7 @@
 <p-table #dt [columns]="columns" [value]="data" [scrollable]="true" [dataKey]="dataKey" scrollHeight="85vh"
   sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
-  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [loading]="loading" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
+  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines " [loading]="loading"
+  rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
 
   <ng-template pTemplate="header" let-columns>
     <tr class="bg-gray-100">

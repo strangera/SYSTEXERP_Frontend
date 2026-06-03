@@ -77,7 +77,7 @@
       [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
       (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
       [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
-      scrollHeight="400px" [lastQueryBody]="dialogLastQueryParams"
+      scrollHeight="400px" [lastQueryBody]="dialogLastQueryParams" [showSort]="false"
       [queryFunction]="tls52040Service.GetPOS2031P.bind(tls52040Service)">
     </app-table-report>
   </div>

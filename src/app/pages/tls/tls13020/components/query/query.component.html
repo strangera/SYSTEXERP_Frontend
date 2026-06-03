@@ -1,11 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
+    <!-- 暫時隱藏應該不會用到新增 -->
+    <!-- <app-button
       btnType="create"
       (click)="onCreate()"
       label="{{ 'create' | translate }}"
-    ></app-button>
+    ></app-button> -->
   </div>
 
   <p-accordion>
@@ -26,7 +27,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="申請案件內容"
               [options]="applyTypeOptions"
@@ -36,7 +37,7 @@
               [submitted]="submitted"
               [readonly]="true"
             ></app-multi-select>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類代號"
@@ -101,14 +102,14 @@
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="合約狀態"
-              [options]="approvalStatusOptions"
+            <app-multi-select
+              label="館別"
+              [options]="buildingOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.approve_status"
+              [control]="queryForm.controls.tlt_buildingList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
         </div>
 
@@ -321,6 +322,16 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="營運狀況"
+              [options]="openFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
         </div>
 
         <!-- Checkboxes -->
@@ -367,20 +378,19 @@
     [data]="data"
     [columns]="columns"
     [addButton]="addButton"
-    (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [showCheckBox]="true"
-    dataKey="row_id"
-    [multiSortMeta]="[{ field: 'apply_no', order: 1 }]"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [isRowSelectable]="isRowSelectable"
     [loading]="loading"
     [showDelete]="false"
-    [editDisabled]="editDisabled"
+    [showEdit]="false"
     [showReportMode]="false"
     [rows]="30"
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]"

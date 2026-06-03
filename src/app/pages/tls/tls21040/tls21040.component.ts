@@ -140,7 +140,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
           res.Message
         );
         if (res.Data.ErrorFilePath) {
-          window.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
+          globalThis.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
         }
       }
     })
@@ -155,6 +155,6 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
 
   /** 自動下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }

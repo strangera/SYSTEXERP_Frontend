@@ -65,7 +65,7 @@ export enum Actions {
   providedIn: 'root'
 })
 export class PermissionGuardService {
-  private systemDataService = inject(SystemDataService);
+  private readonly systemDataService = inject(SystemDataService);
 
   /**
    * 獲取指定程式代碼的權限物件。

@@ -185,7 +185,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
               action: (rowdata: TLS24010Data) => {
                 if (!rowdata || !rowdata.TXN_Ret_No) return this.messageService.errorBubble('無折讓單號，無法列印折讓單');
                 this.tls24010Service.printTLS24010(rowdata.TXN_Ret_No).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-                  window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
+                  globalThis.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
                   this.onSubmit(this.queryForm);
                 })
               },
@@ -358,7 +358,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             accept: () => {
               this.loading = true;
               this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((printRes) => {
-                window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
+                globalThis.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
                 this.onSubmit(this.queryForm);
               });
             }

@@ -165,7 +165,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
         const blob = new Blob([response.body!], { type: 'text/plain;charset=utf-8' });
 
         // 用 <a> 動態下載
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
@@ -174,7 +174,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
         // 清理
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       });
   }
 

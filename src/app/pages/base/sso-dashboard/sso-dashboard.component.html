@@ -40,18 +40,13 @@
       <img [src]="logo" alt="logo" class="center-img">
     </div>
   </div>
-
-  <div *ngIf="!loading && !errorMessage" class="slider-viewport">
+  <div *ngIf="!loading" class="slider-viewport">
     <div class="slider-track" [style.transform]="'translateX(' + (currentPage * -100) + 'vw)'">
-
       <div class="page-grid" *ngFor="let page of pagedItems">
-
-
-
         <div *ngFor="let item of page; let i = index" class="system-block" [style.background-color]="item.dynamicColor"
           (click)="navigateToUrl(item)">
           <div class="icon-circle" [style.border-color]="item.dynamicColor">
-            <img [src]="'assets/layout/images/' + item.System_ImgFile + '.svg'" [alt]="item.System_Name">
+            <img [src]="imagesUrl +  item.System_ImgFile + '.svg'" [alt]="item.System_Name">
           </div>
           <div class="system-label" [style.color]="item.dynamicColor">
             {{ item.System_Name }}

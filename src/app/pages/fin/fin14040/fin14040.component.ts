@@ -197,7 +197,7 @@ export class FIN14040Component
               console.log('形成媒體申報檔 response', response.Data);
 
               if (response.Data?.ZipUrl) {
-                window.open(
+                globalThis.open(
                   environment.BaseUrl + response.Data.ZipUrl,
                   '_blank'
                 );

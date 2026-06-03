@@ -317,7 +317,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     this.tls2e080Service.PrintTLS2E080PDF(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       const url = res.Data?.url || '';
       if (url) {
-        window.open(environment.ApiUrl + url);
+        globalThis.open(environment.ApiUrl + url);
       }
     });
   }

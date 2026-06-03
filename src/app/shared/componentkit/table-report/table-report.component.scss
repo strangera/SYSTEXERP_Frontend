@@ -23,6 +23,12 @@
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
+    .p-datatable-tbody > tr > td {
+      // 2. 允許換行，並在單字過長時強制中斷
+      white-space: normal !important;
+      word-break: break-all !important; // 英文/數字過長也會斷行
+      overflow-wrap: break-word !important;
+    }
     // ----------------------------------------------------------------
     .p-datatable-header {
       background: transparent;

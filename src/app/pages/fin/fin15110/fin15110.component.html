@@ -4,89 +4,43 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="銷售日期"
-              [startControl]="queryForm.controls.TXN_DT_S"
-              [endControl]="queryForm.controls.TXN_DT_E"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.TXN_DT_S"
+              [endControl]="queryForm.controls.TXN_DT_E" [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="收銀機號"
-              controlName="dropdownRange"
-              [startControl]="queryForm.controls.ECR_No_S"
-              [endControl]="queryForm.controls.ECR_No_E"
-              [submitted]="submitted"
-              [options]="ECRNoOptions"
-              optionLabel="Name"
-              optionValue="No"
-            ></app-dropdown-range>
+            <app-dropdown-range label="收銀機號" controlName="dropdownRange" [startControl]="queryForm.controls.ECR_No_S"
+              [endControl]="queryForm.controls.ECR_No_E" [submitted]="submitted" [options]="ECRNoOptions"
+              optionLabel="Name" optionValue="No"></app-dropdown-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="報表格式"
-              controlName="displayMode"
-              [options]="displayModeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.displayMode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="報表格式" controlName="displayMode" [options]="displayModeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="資料來源條件"
-              controlName="Data_Source"
-              [options]="dataSourceOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Data_Source"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="資料來源條件" controlName="Data_Source" [options]="dataSourceOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Data_Source" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票格式代號"
-              controlName="INV_GUIType"
-              [control]="queryForm.controls.INV_GUIType"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票格式代號" controlName="INV_GUIType" [control]="queryForm.controls.INV_GUIType"
+              [submitted]="submitted"></app-input-text>
           </div>
-          <div
-            class="col-12 md:col-6 lg:col-4 flex align-items-center"
-            *ngIf="
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center" *ngIf="
               ['2', '3', '6', '7'].includes(queryForm.value.displayMode || '')
-            "
-          >
-            <p-checkbox
-              formControlName="IncludeExchange"
-              [binary]="true"
-              inputId="includeExchange"
-              [disabled]="queryForm.controls.IncludeExchange.disabled"
-            ></p-checkbox>
+            ">
+            <p-checkbox formControlName="IncludeExchange" [binary]="true" inputId="includeExchange"
+              [disabled]="queryForm.controls.IncludeExchange.disabled"></p-checkbox>
             <label for="includeExchange" class="ml-2 cursor-pointer">
               包含換開發票
             </label>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -97,43 +51,17 @@
 
 <!-- 一般報表 (Type 1~6) -->
 <div class="card mt-5" *ngIf="queryForm.value.displayMode !== '7'">
-  <app-customFooter-table
-    tableKey="FIN15110"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [footerData]="footerData"
-    dataKey="Ecr_No"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    [multiSortMeta]="queryForm.controls.SortBy.value"
-    [showReportMode]="false"
-    [showTotal]="true"
-    [rows]="30"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    (lazyLoadData)="onLazyLoadData($event)"
-  >
+  <app-customFooter-table tableKey="FIN15110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [footerData]="footerData" dataKey="Ecr_No" [lazy]="true" [loading]="loading" [showManage]="false"
+    [showDelete]="false" [multiSortMeta]="queryForm.controls.SortBy.value" [showReportMode]="false" [showTotal]="true"
+    [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]" (lazyLoadData)="onLazyLoadData($event)">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
-          <p-button
-            styleClass="p-2"
-            label="匯出PDF"
-            [loading]="btnLoading"
-            icon="pi pi-file-pdf"
-            (click)="onExportPDF()"
-            [disabled]="data.length === 0"
-          ></p-button>
-          <p-button
-            styleClass="p-2"
-            label="匯出Excel"
-            [loading]="btnLoading2"
-            icon="pi pi-file-excel"
-            (click)="onExportExcel()"
-            [disabled]="data.length === 0"
-          ></p-button>
+          <p-button styleClass="p-2" label="匯出PDF" [loading]="btnLoading" icon="pi pi-file-pdf" (click)="onExportPDF()"
+            [disabled]="data.length === 0"></p-button>
+          <p-button styleClass="p-2" label="匯出Excel" [loading]="btnLoading2" icon="pi pi-file-excel"
+            (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
         </div>
       </div>
     </header>
@@ -144,86 +72,45 @@
 <div class="card mt-5" *ngIf="queryForm.value.displayMode === '7'">
   <!-- 匯出按鈕列 -->
   <div class="flex gap-2 mb-3">
-    <p-button
-      styleClass="p-2"
-      label="匯出PDF"
-      [loading]="btnLoading"
-      icon="pi pi-file-pdf"
-      (click)="onExportPDF()"
-      [disabled]="data.length === 0"
-    ></p-button>
-    <p-button
-      styleClass="p-2"
-      label="匯出EXCEL"
-      [loading]="btnLoading2"
-      icon="pi pi-file-excel"
-      (click)="onExportExcel()"
-      [disabled]="data.length === 0"
-    ></p-button>
+    <p-button styleClass="p-2" label="匯出PDF" [loading]="btnLoading" icon="pi pi-file-pdf" (click)="onExportPDF()"
+      [disabled]="data.length === 0"></p-button>
+    <p-button styleClass="p-2" label="匯出EXCEL" [loading]="btnLoading2" icon="pi pi-file-excel" (click)="onExportExcel()"
+      [disabled]="data.length === 0"></p-button>
   </div>
 
-  <p-table
-    [value]="data"
-    [loading]="loading"
-    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-    [scrollable]="true"
-    scrollHeight="600px"
-  >
+  <p-table [value]="data" [loading]="loading" styleClass="p-datatable-sm p-datatable-gridlines " [scrollable]="true"
+    scrollHeight="600px">
     <ng-template pTemplate="header">
       <!-- 第 1 層 -->
       <tr>
-        <th
-          rowspan="3"
-          class="text-center"
-          style="
+        <th rowspan="3" class="text-center" style="
             min-width: 40px;
             background-color: var(--table-header-bg-group);
-          "
-        >
+          ">
           序號
         </th>
-        <th
-          rowspan="3"
-          class="text-center"
-          style="
+        <th rowspan="3" class="text-center" style="
             min-width: 90px;
             background-color: var(--table-header-bg-group);
-          "
-        >
+          ">
           發票日期
         </th>
-        <th
-          colspan="8"
-          class="text-center"
-          style="background-color: var(--table-header-bg-group)"
-        >
+        <th colspan="8" class="text-center" style="background-color: var(--table-header-bg-group)">
           轉帳報表
         </th>
-        <th
-          colspan="8"
-          class="text-center"
-          style="background-color: var(--table-header-bg-group)"
-        >
+        <th colspan="8" class="text-center" style="background-color: var(--table-header-bg-group)">
           跨日作廢
         </th>
-        <th
-          rowspan="3"
-          class="text-center"
-          style="
+        <th rowspan="3" class="text-center" style="
             min-width: 80px;
             background-color: var(--table-header-bg-group);
-          "
-        >
+          ">
           合計金額
         </th>
-        <th
-          rowspan="3"
-          class="text-center"
-          style="
+        <th rowspan="3" class="text-center" style="
             min-width: 70px;
             background-color: var(--table-header-bg-group);
-          "
-        >
+          ">
           無原交易資料
           <br />
           銷售總額
@@ -231,143 +118,79 @@
       </tr>
       <!-- 第 2 層 -->
       <tr>
-        <th
-          colspan="3"
-          class="text-center"
-          style="background-color: var(--table-header-bg)"
-        >
+        <th colspan="3" class="text-center" style="background-color: var(--table-header-bg)">
           二聯式收銀機發票
         </th>
-        <th
-          colspan="5"
-          class="text-center"
-          style="background-color: var(--table-header-bg)"
-        >
+        <th colspan="5" class="text-center" style="background-color: var(--table-header-bg)">
           電子發票
         </th>
-        <th
-          colspan="3"
-          class="text-center"
-          style="background-color: var(--table-header-bg)"
-        >
+        <th colspan="3" class="text-center" style="background-color: var(--table-header-bg)">
           二聯式收銀機發票
         </th>
-        <th
-          colspan="5"
-          class="text-center"
-          style="background-color: var(--table-header-bg)"
-        >
+        <th colspan="5" class="text-center" style="background-color: var(--table-header-bg)">
           電子發票
         </th>
       </tr>
       <!-- 第 3 層 -->
       <tr>
-        <th
-          class="text-center"
-          style="min-width: 70px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 70px; background-color: var(--table-header-bg)">
           應稅總金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           免稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           零稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 80px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 80px; background-color: var(--table-header-bg)">
           無統編
           <br />
           應稅總金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 70px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 70px; background-color: var(--table-header-bg)">
           有統編
           <br />
           未稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           有統編
           <br />
           稅額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           免稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           零稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 70px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 70px; background-color: var(--table-header-bg)">
           應稅總金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           免稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           零稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 80px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 80px; background-color: var(--table-header-bg)">
           無統編
           <br />
           應稅總金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 70px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 70px; background-color: var(--table-header-bg)">
           有統編
           <br />
           未稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           有統編
           <br />
           稅額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           免稅金額
         </th>
-        <th
-          class="text-center"
-          style="min-width: 60px; background-color: var(--table-header-bg)"
-        >
+        <th class="text-center" style="min-width: 60px; background-color: var(--table-header-bg)">
           零稅金額
         </th>
       </tr>

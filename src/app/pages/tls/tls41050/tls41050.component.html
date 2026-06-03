@@ -8,13 +8,10 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機代號/名稱" controlName="ECR_NoList" [options]="POS1002_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="收銀機號/收銀機名稱/專櫃名稱" controlName="ECR_NoList" [options]="ECR_NoListOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted">
+            </app-multi-select>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="收銀機名稱" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_Name"
-              [submitted]="submitted"></app-input-text>
-          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="機台類型" controlName="ECR_Type" [options]="typeOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
@@ -26,14 +23,6 @@
               optionLabel="Label" optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="櫃位名稱"
-              controlName="ECR_TLT_Name"
-              [control]="queryForm.controls.ECR_TLT_Name"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="機台狀態" controlName="ECR_Status" [options]="statusOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_Status" [submitted]="submitted"></app-dropdown>
@@ -49,12 +38,10 @@
               [submitted]="submitted" />
           </div>
         </div>
-        <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-        <!-- </div> -->
       </form>
     </p-accordionTab>
   </p-accordion>

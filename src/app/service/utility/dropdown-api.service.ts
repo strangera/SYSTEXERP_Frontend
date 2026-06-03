@@ -25,6 +25,8 @@ import {
   EcrQuery,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
+  FAASSCHKMDropDownItem,
+  FAASSCHKMQuery,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -36,6 +38,7 @@ import {
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
+  Gls3002AcctKeyItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -47,6 +50,7 @@ import {
   PluLogoItem,
   PluLogoOrderPrcRateInnerItem,
   Pos1002EcrTypeQuery,
+  Pos1002FilteredItem,
   Pos1002GroupItem,
   Pos1002GroupQuery,
   Pos1002StatusItem,
@@ -67,6 +71,7 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Pos2064MpcsNoDropDownItem,
+  queryOwnPOS1002_DropDownListItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
@@ -112,16 +117,17 @@ export class DropdownApiService {
   private queryAndMapDropdown<T, U = object>(
     endpoint: string,
     noKey: keyof T,
-    nameKey: keyof T,
+    nameKey?: keyof T,
     body: U = {} as U // 給予預設值
   ): Observable<Option[] | null> {
     return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
       map(response => {
         const data = response?.Data;
+        const label = nameKey ? (item: T) => `${item[noKey]} - ${item[nameKey]}` : (item: T) => `${item[noKey]}`;
         return data ? data.map(item => ({
           ...item,
           value: item[noKey] as string | number,
-          label: `${item[noKey]} - ${item[nameKey]}`,
+          label: label(item), // 如果 nameKey 為空字串,不顯示
         })) : null;
       }),
       catchError(err => {
@@ -429,15 +435,15 @@ export class DropdownApiService {
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */
-  queryPos10015(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS10015_DropDownList').pipe(
+  queryPos10015(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS10015_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
 
   /** 查詢環境變數編號(POS1002TML) */
-  queryPos1002Tml(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList').pipe(
+  queryPos1002Tml(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -450,8 +456,8 @@ export class DropdownApiService {
   }
 
   /** 查詢表格定義檔(DEFTBL) */
-  queryDefTbl(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryDEFTBL_DropDownList').pipe(
+  queryDefTbl(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryDEFTBL_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -460,6 +466,36 @@ export class DropdownApiService {
   queryPos1002(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢收銀機設定檔(POS1002)自營用 */
+  queryOwnPOS1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<queryOwnPOS1002_DropDownListItem>('/queryOwnPOS_DropDownList', 'ECR_No', 'ECR_Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /**
+ * 查詢過濾後的收銀機設定檔 (POS1002)
+ * 條件：SYS_StoreNo = '10', 未過期, Type IN ('1','2')
+ */
+  queryPos1002Filtered(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos1002FilteredItem>(
+      '/queryPOS1002_Filtered_DropDownList', // 請確認與後端 Controller 的 Route 一致
+      'No',
+      'Name'
+    ).pipe(
+      map(options => {
+        if (!options) return null;
+        // 重新加工 label
+        return options.map(opt => ({
+          ...opt,
+          // opt 內已經包含 Pos1002FilteredItem 的所有欄位
+          label: `${opt['No']} - ${opt['Name']} ${opt['ECR_TLT_Name'] ? `- ${opt['ECR_TLT_Name']}` : ''}`,
+        }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
@@ -496,6 +532,30 @@ export class DropdownApiService {
   queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
     return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
       '/ASS0000/ASS1000/queryFAASSCHKMASS15070_DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢FAASSCHKM驗收單號下拉選單 */
+  queryFAASSCHKM_DropDownList(body: FAASSCHKMQuery = {}): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<FAASSCHKMDropDownItem, FAASSCHKMQuery>(
+      '/queryFAASSCHKM_DropDownList',
+      body
     ).pipe(
       map(items => {
         if (!items) return null;
@@ -733,6 +793,13 @@ export class DropdownApiService {
     );
   }
 
+  queryPos2002LocationMap(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos2002LocationItem>('/queryPOS2002_Location_DropDownList', 'location_no').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }),
+
+    );
+  }
+
   /** 查詢收銀機(POS1002) (依照館別、樓層、區域、機台類型查詢) */
   queryEcr(body: EcrQuery): Observable<EcrItem[] | null> {
     return this.queryDropdownWithParams<EcrItem, EcrQuery>('/queryECRDropDownList', body).pipe(
@@ -960,6 +1027,35 @@ export class DropdownApiService {
       { MATERIAL_TYPE: '3' }
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+
+  /**
+   * queryFASITEM_DropDownList — 取得原始 row（含 ID / GOODS_ID / GOODS_NAME / UNIT_NAME 等）。
+   * 後端回傳為巢狀 `Data: { Data: [...], TotalCount, TotalPages }`，此 method 已展平。
+   * 用於 ASS16040 CRU 頁明細「單位」欄位 lookup（FASITEM_ID → UNIT_NAME）。
+   */
+  queryFasItemRawList(body: FaSitemQuery = {}): Observable<FasItemDropdownItem[]> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.http
+      .post<ApiResponse<{ Data?: FasItemDropdownItem[] | null; TotalCount?: number; TotalPages?: number } | FasItemDropdownItem[] | null>>(
+        `${this.apiUrl}/ASS0000/ASS1000/queryFASITEM_DropDownList`,
+        payload,
+      )
+      .pipe(
+        map(res => {
+          const raw: any = res?.Data;
+          if (Array.isArray(raw)) return raw as FasItemDropdownItem[];
+          return (raw?.Data ?? raw?.QueryData ?? []) as FasItemDropdownItem[];
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryFASITEM_DropDownList 失敗:', err);
+          return of([] as FasItemDropdownItem[]);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
@@ -1039,6 +1135,21 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+
+  /** * 查詢對帳 Key 值(GLS3002.ACCT_KEY) 下拉選單
+   * Value: ACCT_KEY, Label: ACCT_KEY - ACCT_KEY
+   */
+  queryGls3002AcctKey(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Gls3002AcctKeyItem>(
+      '/queryGLS3002_DropDownList', // 對應後端 Controller 的路由
+      'ACCT_KEY',
+      'ACCT_KEY'
+    ).pipe(
+      map(options => options?.map(opt => ({ ...opt, label: opt.value })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
   queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(

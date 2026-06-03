@@ -11,6 +11,10 @@
             <app-calendar label="日期" controlName="TXN_Date" [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted"></app-calendar>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="專櫃編號" controlName="TLT_NO" [options]="tlt_noListOption | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TLT_NO" [submitted]="submitted"></app-multi-select>
+          </div>
         </div>
         <hr />
         <div class="grid p-fluid">

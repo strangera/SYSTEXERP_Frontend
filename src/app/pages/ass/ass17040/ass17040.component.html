@@ -50,7 +50,25 @@
       [columnGroup]="columnGroup.length ? columnGroup : undefined" [totalRecords]="totalRecords"
       [footerData]="summaryFooter" footerLabel="小計" [loading]="loading" dataKey="__rowUid" tableKey="ASS17040_Data"
       [showReorder]="false" [showCheckBox]="false" [showEdit]="false" [showDetail]="false" [showDelete]="false"
-      [queryFunction]="queryFunction" [showManage]="false" [lastQueryBody]="lastQueryBody" apiUrl="queryASS17040">
+      [queryFunction]="queryFunction" [showManage]="false" [lastQueryBody]="lastQueryBody" [showReportMode]="false">
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="領用退料統計表.PDF"
+            icon="pi pi-file-pdf"
+            (click)="onExportPdf()"
+            [disabled]="loading || exportPdfLoading || data.length === 0"
+            [loading]="exportPdfLoading"
+          ></p-button>
+          <p-button
+            label="領用退料統計表.XLSX"
+            icon="pi pi-file-excel"
+            (click)="onExportExcel()"
+            [disabled]="loading || exportExcelLoading || data.length === 0"
+            [loading]="exportExcelLoading"
+          ></p-button>
+        </div>
+      </header>
     </app-ass17020-table-report>
   </div>
 </div>

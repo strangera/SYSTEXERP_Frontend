@@ -6,8 +6,8 @@ import { fin13090Item, Fin13090Service } from '@service/api/fin/fin13090.service
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -27,6 +27,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     ReactiveFormsModule,
     CalendarRangeComponent,
     InputTextRangeComponent,
+    MultiSelectComponent,
     TableComponent,
     ButtonModule,
   ],
@@ -36,11 +37,17 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   queryForm = this.formBuilder.group({
     VouNoStart: [null], // 傳票編號_起
     VouNoEnd: [null], // 傳票編號_迄
-    VouDateStart: [null], // 傳票日期_起
-    VouDateEnd: [null], // 傳票日期_迄
+    VouDateStart: [new Date()], // 傳票日期_起 (預設當日)
+    VouDateEnd: [new Date()], // 傳票日期_迄 (預設當日)
+    InvoiceStatus: [[]], // 發票狀態多選：Y=發票已入 N=發票未入 空=全部
 
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
+
+  invoiceStatusOptions = [
+    { label: '發票已入', value: 'Y' },
+    { label: '發票未入', value: 'N' },
+  ];
 
   selectedItems: fin13090Item[] = [];
   data: fin13090Item[] = [];
@@ -50,9 +57,9 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    { field: 'PostFlag', header: '傳票狀態代碼', visible: true }, // (1=建立 2=確認 3=過帳)
-    { field: 'PostFlagName', header: '傳票狀態名稱', visible: true },
-    { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount, align: 'right' },
+    // { field: 'PostFlag', header: '傳票狀態代碼', visible: true }, // (1=建立 2=確認 3=過帳)
+    { field: 'PostFlagName', header: '傳票狀態', visible: true },
+    // { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount, align: 'right' },
   ];
 
   constructor(
@@ -71,6 +78,7 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   onSubmit(frm: FormGroup): void {
     console.log('補登進項稅額作業_request:', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
       this.fin13090Service.queryFIN13090(this.queryForm.value).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryBody = frm.value;
         this.data = response.Data;

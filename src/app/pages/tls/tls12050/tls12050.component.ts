@@ -86,7 +86,7 @@ export class TLS12050Component extends BasicQueryPageComponent<TLS12050Detail> i
   markerVisible = false;
 
   constructor(
-    private fb: FormBuilder,
+    private readonly fb: FormBuilder,
     public readonly tls12050Service: TLS12050Service,
   ) {
     super();

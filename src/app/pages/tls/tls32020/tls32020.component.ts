@@ -152,6 +152,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatAmount, isSubTotal: true },
     { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatAmount, isSubTotal: true },
     { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatAmount, isSubTotal: true },
+
+    { field: 'BasePreOrderAmt', header: '預售業績', align: 'right', format: formatAmount, isSubTotal: true },
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [

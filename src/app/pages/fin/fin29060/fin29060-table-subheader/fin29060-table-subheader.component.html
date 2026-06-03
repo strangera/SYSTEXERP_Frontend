@@ -1,7 +1,7 @@
 <p-table #dt [value]="data" [columns]="selectedColumns" [lazy]="false" [totalRecords]="data.length" [scrollable]="true"
   [scrollHeight]="dynamicScrollHeight" [virtualScroll]="useVirtualScroll" [virtualScrollItemSize]="25"
   [virtualScrollDelay]="0" [resizableColumns]="true" [reorderableColumns]="true" [groupRowsBy]="groupRowsBy"
-  rowGroupMode="subheader" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+  rowGroupMode="subheader" styleClass="p-datatable-sm p-datatable-gridlines ">
 
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event"

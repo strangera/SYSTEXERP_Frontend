@@ -42,7 +42,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
-  @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
+  @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
   @Input() loading = false;
   public _loading = false;
   @Input() showReorder = true;
@@ -110,6 +110,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   @Input() subTotalLabel = '小計'; // 小計列左側標籤文字
+  @Input() showSubTotalGroupValue = true; // 小計列是否顯示群組值（小計(XXX)）
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
@@ -117,7 +118,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerLabel = '總計'; // 總計列左側標籤文字
   /** 多列 footer 時，每列第一欄顯示的欄位名（如 group_name）；未設則顯示 footerLabel */
   @Input() footerLabelField?: string;
-  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 450px）
+  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 700px）
   @Input() showFooterTotal = true; // 是否顯示第一列 footer 總計資料
   @Input() allowFooterHtml = false; // 是否允許 footer 使用 HTML 內嵌呈現（預設 false，避免影響既有頁面）
   // expansion 收合展開
@@ -133,10 +134,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() reportTitle?: string;                    // 自訂報表標題
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
+
+  draggedCol: any = null;
+  draggedIndex = -1;
+
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -164,6 +170,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+      // ====== 新增：第一次拿到資料時，動態計算並固定欄位寬度 ======
+      if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
+        this.calculateAndFixColumnWidths();
+      }
+      // ========================================================
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
@@ -176,17 +187,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         } else {
           if (this.data.length === this.totalRecords) {
             this.dt.lazy = false;
             this.lazy = false;
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
             if (!this.showManage) {
-              this.ItemSize = 20;
+              this.ItemSize = 46;
             }
           } else {
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
           }
           this.dt.virtualScroll = true;
           this.virtualData = Array.from({ length: this.data.length });
@@ -215,7 +226,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     };
     this._loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
-      if (res && res.Data && res.Data.length > 0) {
+      if (res?.Data && res.Data.length > 0) {
         this.virtualData = Array.from({ length: this.data.length + res.Data.length });
         this.updateGroupTotals(res.Data);
         this.cdr.detectChanges();
@@ -261,10 +272,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.hasSearched = true;
-      if (res && res.Data && res.Data.length > 0) {
+      if (res?.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
-        this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+        this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
@@ -276,10 +287,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.data = res.Data;
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
         } else {
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
           this.virtualData = Array.from({ length: res.Data.length });
           this.data = res.Data;
           this.cdr.detectChanges();
@@ -295,7 +306,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 1. 原地排序
     this.data.sort((data1, data2) => {
-      for (const sortMeta of event.multiSortMeta!) {
+      for (const sortMeta of event.multiSortMeta) {
         const value1 = data1[sortMeta.field];
         const value2 = data2[sortMeta.field];
         let result = 0;
@@ -332,7 +343,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.isAllSelected) {
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
-        return selectable === undefined ? true : selectable;
+        return selectable ?? true;
       });
       this.selectionChange.emit(this.selectedItems);
       this.selectAllChange.emit(true);
@@ -348,17 +359,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
       if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10000;
         if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
       }
     }
-    else {
-      if (this.selectedItems && this.selectedItems.length > 0) {
-        this.selectedItems = [...this.selectedItems];
-        this.cdr.detectChanges();
-      }
+    else if (this.selectedItems && this.selectedItems.length > 0) {
+      this.selectedItems = [...this.selectedItems];
+      this.cdr.detectChanges();
     }
     this.cdr.markForCheck();
   }
@@ -369,7 +378,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 找出目前資料中真正「可以被勾選」的數量
     const selectableRows = this.data.filter(rowData => {
       const selectable = this.isRowSelectable(rowData);
-      return selectable === undefined ? true : selectable;
+      return selectable ?? true;
     });
     // 如果已選數量 > 0 且等於可選總數，才亮起全選
     this.isAllSelected = selectableRows.length > 0 && this.selectedItems.length === selectableRows.length;
@@ -384,7 +393,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       // 過濾出可選的資料
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
-        return selectable === undefined ? true : selectable;
+        return selectable ?? true;
       });
       // 如果過濾完發現根本沒資料可選，則全選按鈕不應亮起
       this.isAllSelected = this.selectedItems.length > 0;
@@ -432,14 +441,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 獲取用於分組的欄位定義
     const groupColumn = this.columns.find(c => c.field === this.groupRowsBy);
-    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+    const useFormatterForGroupKey = groupColumn?.format;
 
     let matchKey: string;
 
     // ** 1. 生成用於匹配的格式化群組鍵 **
     if (useFormatterForGroupKey) {
       // 使用欄位定義中的 format 函式來產生匹配鍵
-      matchKey = String(groupColumn!.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
+      matchKey = String(groupColumn.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
     } else {
       // 退回到安全轉換
       matchKey = String(rawGroupValue ?? '').trim() || 'UNKNOWN_GROUP';
@@ -454,7 +463,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         let itemMatchKey: string;
 
         if (useFormatterForGroupKey) {
-          itemMatchKey = String(groupColumn!.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+          itemMatchKey = String(groupColumn.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
         } else {
           itemMatchKey = String(itemRawValue ?? '').trim() || 'UNKNOWN_GROUP';
         }
@@ -484,15 +493,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     // 1. 找出作為分組依據的欄位定義
     const groupColumn = this.columns.find(col => col.field === this.groupRowsBy);
     // 檢查分組欄位是否存在且具有 format 函式
-    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+    const useFormatterForGroupKey = groupColumn?.format;
 
-    newData.forEach(row => {
-      const rawValue = row[this.groupRowsBy!];
+    for (const row of newData) {
+      const rawValue = row[this.groupRowsBy];
       let groupKey: string;
 
       if (useFormatterForGroupKey) {
         // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
-        groupKey = String(groupColumn!.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+        groupKey = String(groupColumn.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
       } else {
         // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
         groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
@@ -500,7 +509,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
       // 如果 groupKey 為 'UNKNOWN_GROUP' 且原始值為 undefined/null，可以選擇跳過
       if (groupKey === 'UNKNOWN_GROUP' && (rawValue === undefined || rawValue === null)) {
-        return;
+        continue;
       }
 
       // 初始化該群組的總計物件
@@ -509,7 +518,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
 
       // 進行增量加總
-      this.columns.forEach(col => {
+      for (const col of this.columns) {
         if (col.isSubTotal) {
           const field = col.field;
           // 確保值是數字，如果不是則為 0
@@ -518,8 +527,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           // 增量加總
           this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
         }
-      });
-    });
+      }
+    }
   }
   /**
  * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
@@ -546,7 +555,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 移除可能干擾的小寫/大寫重複項，並統一回傳小寫
     const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex };
+    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
   }
 
   getBtnLabel(btn: any, rowData: any): string {
@@ -554,5 +563,152 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return btn.label(rowData);
     }
     return btn.label;
+  }
+
+  // #region 更新: 群組欄位排序處理
+  public onCustomDragStart(event: DragEvent, col: ReportColumn, index: number) {
+    this.draggedCol = col;
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  public onCustomDragOver(event: DragEvent, targetCol: ReportColumn) {
+    if (!this.draggedCol) return;
+
+    // 規則判斷：
+    // 情況 A：拖曳的是群組欄位 -> 目標欄位必須是同一個群組
+    // 情況 B：拖曳的是非群組欄位 -> 目標欄位也必須是非群組欄位 (groupField 皆為 undefined/null)
+    const isSameGroup = this.draggedCol.groupField === targetCol.groupField;
+
+    if (isSameGroup) {
+      event.preventDefault(); // 只有符合規則，才允許放下 (Drop)
+    }
+  }
+
+  public onCustomDrop(event: DragEvent, targetCol: ReportColumn, targetIndex: number) {
+    event.preventDefault();
+
+    if (!this.draggedCol || this.draggedIndex === -1) return;
+
+    // 再次防呆：若放下的目標跟來源不合規則，不執行任何動作
+    if (this.draggedCol.groupField !== targetCol.groupField) {
+      return;
+    }
+
+    // 產生新陣列進行位置重排
+    const updatedColumns = [...this.columns];
+
+    // 1. 先把拖曳源從舊位置拔掉
+    updatedColumns.splice(this.draggedIndex, 1);
+    // 2. 塞入新位置
+    updatedColumns.splice(targetIndex, 0, this.draggedCol);
+
+    // 更新欄位順序，觸發 PrimeNG 重新渲染
+    this.columns = updatedColumns;
+
+    // 記憶使用者調整後的欄位順序 (沿用您原本的 queryState 機制)
+    if ((this as any).queryState) {
+      (this as any).queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+    }
+
+    // 重置暫存變數
+    this.draggedCol = null;
+    this.draggedIndex = -1;
+    this.cdr.detectChanges();
+  }
+  // ----更新: 欄位群組的排序處理 ---
+  /**
+ * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
+ */
+  private calculateAndFixColumnWidths(): void {
+    // 基礎字元寬度估算：中文字大約 16px，英數/符號大約 9px
+    const CHINESE_CHAR_WIDTH = 16;
+    const ANY_CHAR_WIDTH = 9;
+    // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
+    const PADDING_BUFFER = 24;
+
+    this.columns = this.columns.map(col => {
+      // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
+      if (col.width) {
+        return col;
+      }
+
+      let maxLength = 0;
+      let minLength = Infinity;
+
+      // 遍歷第一批資料，純粹找出該欄位內容的最長與最短
+      this.data.forEach(row => {
+        // 取得格式化後或原始的內容字串
+        const rawValue = row[col.field];
+        let displayValue = '';
+        if (col.format) {
+          displayValue = String(col.format(rawValue, 0, row) ?? '');
+        } else {
+          displayValue = String(rawValue ?? '');
+        }
+
+        // 如果是 HTML 類型，過濾掉標籤後再計算長度，避免標籤字串干擾
+        if (col.type === 'html') {
+          displayValue = displayValue.replace(/<[^>]*>/g, '');
+        }
+
+        const textWidth = this.estimateTextWidth(displayValue, CHINESE_CHAR_WIDTH, ANY_CHAR_WIDTH);
+        if (textWidth > maxLength) maxLength = textWidth;
+        if (textWidth < minLength) minLength = textWidth;
+      });
+
+      // 如果完全沒有資料或全是空值，給予預設基礎
+      if (minLength === Infinity || maxLength === 0) {
+        minLength = 50;
+        maxLength = 96;
+      }
+
+      // 加上 padding 核心偏移量
+      let finalMax = maxLength + PADDING_BUFFER;
+      let finalMin = minLength + PADDING_BUFFER;
+
+      // 2.  核心調整邏輯
+      if (col.format) {
+        // 就算有 format，最小寬度也絕對不能低於 55px (防呆：避免空值或極短值擠壓表頭)
+        finalMin = Math.max(finalMax, 55);
+
+        // 標準寬度同步設為 finalMin 確保不換行，同時限制極端髒資料的上限為 800px
+        finalMax = Math.min(finalMin, 800);
+
+        // 確保結構對齊
+        if (finalMin > finalMax) finalMin = finalMax;
+      } else {
+        // 如果沒有下 format：維持一般欄位的彈性安全邊界
+        finalMin = Math.max(finalMin, 55);
+        finalMax = Math.min(Math.max(finalMax, 120), 200);
+        if (finalMin > finalMax) finalMin = finalMax;
+      }
+
+      // 將計算好的寬度字串直接回填到 column 物件中
+      return {
+        ...col,
+        dynamicMinWidth: `${finalMin}px`,
+        dynamicWidth: `${finalMax}px`,     // 用最長的資料當作標準寬度
+        dynamicMaxWidth: `${finalMax}px`
+      };
+    });
+  }
+  /**
+ * 估算字串在畫面上實質佔用的像素寬度
+ */
+  private estimateTextWidth(text: string, chineseWidth: number, anyWidth: number): number {
+    if (!text) return 0;
+    let width = 0;
+    for (let i = 0; i < text.length; i++) {
+      // 判斷是否為中文字元或全形符號
+      if (text.charCodeAt(i) > 127) {
+        width += chineseWidth;
+      } else {
+        width += anyWidth;
+      }
+    }
+    return width;
   }
 }

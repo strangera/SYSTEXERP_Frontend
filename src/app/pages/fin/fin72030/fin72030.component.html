@@ -1,12 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button> -->
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -23,19 +19,18 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="支出請款單號"
-              controlName="KeepQuota_No"
-              [options]="KeepQuota_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.KeepQuota_No"
+              controlName="PCS_RqstNo"
+              [control]="queryForm.controls.PCS_RqstNo"
+              [options]="rqstNoOptions"
+              optionLabel="PCS_RqstNo"
+              optionValue="PCS_RqstNo"
               [submitted]="submitted"
+              [filter]="true"
             ></app-dropdown>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -43,30 +38,70 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
-  <div class="col-13">
-    <app-table
-      tableKey="FIN72030"
-      [data]="data"
-      [columns]="columns"
-      [addButton]="addButton"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
-    ></app-table>
+
+<div class="card" *ngIf="hasResult">
+  <p-panel header="傳票主檔" class="mb-3">
+    <form [formGroup]="masterForm">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票編號" controlName="Voucher_No"
+            [control]="masterForm.controls.Voucher_No"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票種類" controlName="Voucher_Type"
+            [control]="masterForm.controls.Voucher_Type"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票類型" controlName="Voucher_Class"
+            [control]="masterForm.controls.Voucher_Class"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="傳票日期" controlName="Voucher_Date"
+            [control]="masterForm.controls.Voucher_Date"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-input-text label="傳票摘要" controlName="Voucher_Desc"
+            [control]="masterForm.controls.Voucher_Desc"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateTimeOne" label="建立日期" controlName="CRT_Date"
+            [control]="masterForm.controls.CRT_Date"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="建立人員" controlName="CRT_USR"
+            [control]="masterForm.controls.CRT_USR"></app-input-text>
+        </div>
+      </div>
+    </form>
+  </p-panel>
+
+  <app-table
+    tableKey="FIN72030"
+    title="傳票明細"
+    [data]="detailData"
+    [columns]="columns"
+    [loading]="loading"
+    [showSerialNo]="false"
+    [showEdit]="false"
+    [showDelete]="false"
+    [showDetail]="false"
+    [showCheckBox]="false"
+    [lazy]="false"
+    [showReportMode]="false"
+    [showManage]="false"
+    [showSort]="false"
+  ></app-table>
+
+  <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
+    <app-button
+      btnType="cancel"
+      (click)="resetResult()"
+    ></app-button>
+    <app-button
+      label="確定拋轉"
+      btnType="default"
+      [loading]="postingLoading"
+      (click)="onPosting()"
+    ></app-button>
   </div>
 </div>

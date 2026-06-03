@@ -75,12 +75,14 @@ export interface EditFIN41020MonthDetail {
 
 // 刪除 Request
 export interface DeleteFIN41020Request {
+    Items: DeleteFIN41020Item[];
+}
+
+export interface DeleteFIN41020Item {
     ORG_ID: string;   // 部門代碼
     BudgetYear?: string;   // 年 (YYYY)
     BudgetVersion?: string;   // 版本
 }
-
-
 
 @Injectable({
     providedIn: 'root'

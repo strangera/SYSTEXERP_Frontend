@@ -49,7 +49,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     SEX: ['', [Validators.required, Validators.maxLength(2)]], // 性別
     COMPLAIN_DATE: [null, [Validators.required]], // 提供日期
     ORG_ID: ['', [Validators.required, Validators.maxLength(10)]], // 處理單位
-    STATUS: ['', [Validators.required, Validators.maxLength(1)]], // 處理狀態(S:已建立,W:已派單,Y:處理中,Z:結案)
+    STATUS: ['', [Validators.required, Validators.maxLength(1)]], // 處理狀態(1:已建立,2:已派單,3:處理中,4:結案)
     ANSWER_DATE_MM: ['', [Validators.maxLength(4)]], // 處理-時
   });
 
@@ -82,17 +82,17 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     ANSWER_NAME: [''], // 回覆人員
   });
 
-  // 處理狀態 下拉選單
+  // 處理狀態 下拉選單（value 為中文，對應後端回傳）
   statusOptions: option[] = [
-    { label: '已建立', value: 'S' },
-    { label: '已派單', value: 'W' },
-    { label: '處理中', value: 'Y' },
-    { label: '結案', value: 'Z' },
+    { label: '已建立', value: '已建立' },
+    { label: '已派單', value: '已派單' },
+    { label: '處理中', value: '處理中' },
+    { label: '結案', value: '結案' },
   ]
-  // 性別 下拉選單
+  // 性別 下拉選單（value 為中文，對應後端回傳）
   SEXOptions: option[] = [
-    { label: '男', value: 'M' },
-    { label: '女', value: 'F' },
+    { label: '男', value: '男' },
+    { label: '女', value: '女' },
   ]
 
   detailColumns: EditColumn[] = [

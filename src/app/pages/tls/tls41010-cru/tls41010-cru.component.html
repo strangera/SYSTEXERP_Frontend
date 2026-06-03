@@ -8,19 +8,19 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
+            [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+            [submitted]="submitted"></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="收銀機號" controlName="ECR_No" [control]="dataForm.controls.ECR_No"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="收銀機名稱" controlName="ECR_Name" [control]="dataForm.controls.ECR_Name"
             [submitted]="submitted"></app-input-text>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
-            [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
-            [submitted]="submitted"></app-dropdown>
         </div>
         <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -185,30 +185,12 @@
             <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印收銀機財務報表" controlName="ECR_SaleRpt2"
               [options]="yesNoOptions" optionLabel="label" optionValue="value"
               [control]="dataForm.controls.ECR_SaleRpt2" [submitted]="submitted" />
-            <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印時段銷售報表" controlName="ECR_SaleRpt3"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt3" [submitted]="submitted" /> -->
-            <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印部門銷售報表" controlName="ECR_SaleRpt4"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt4" [submitted]="submitted" /> -->
-            <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印單品銷售報表" controlName="ECR_SaleRpt5"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt5" [submitted]="submitted" /> -->
             <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印銷貨明細表" controlName="ECR_SaleRpt6"
               [options]="yesNoOptions" optionLabel="label" optionValue="value"
               [control]="dataForm.controls.ECR_SaleRpt6" [submitted]="submitted" />
             <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印作廢明細表" controlName="ECR_SaleRpt7"
               [options]="yesNoOptions" optionLabel="label" optionValue="value"
               [control]="dataForm.controls.ECR_SaleRpt7" [submitted]="submitted" />
-            <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印自我報帳(現額報告)帳條" controlName="ECR_SaleRpt8"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt8" [submitted]="submitted" />
-            <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印保全現金帳條(現金明細表)" controlName="ECR_SaleRpt9"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt9" [submitted]="submitted" /> -->
-            <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="保留" controlName="ECR_SaleRpt10"
-              [options]="yesNoOptions" optionLabel="label" optionValue="value"
-              [control]="dataForm.controls.ECR_SaleRpt10" [submitted]="submitted" /> -->
             <app-dropdown class="col-12 md:col-6 lg:col-4" label="零用金是否需要認證" controlName="ECR_PcashValid"
               [options]="yesNoOptions" optionLabel="label" optionValue="value"
               [control]="dataForm.controls.ECR_PcashValid" [submitted]="submitted" />
@@ -234,20 +216,6 @@
             <app-input-text class="col-12 md:col-6 lg:col-4" label="商標門市統一編號" controlName="ECR_Logo4"
               [control]="dataForm.controls.ECR_Logo4" [submitted]="submitted" />
           </div>
-          <!-- <app-input-text
-              class="col-12 md:col-6 lg:col-4"
-              label="商標5"
-              controlName="ECR_Logo5"
-              [control]="dataForm.controls.ECR_Logo5"
-              [submitted]="submitted"
-            />
-            <app-input-text
-              class="col-12 md:col-6 lg:col-4"
-              label="商標6"
-              controlName="ECR_Logo6"
-              [control]="dataForm.controls.ECR_Logo6"
-              [submitted]="submitted"
-            /> -->
         </p-accordionTab>
         <hr />
         <p-accordionTab header="周邊設定">
@@ -341,16 +309,6 @@
                 [submitted]="submitted"></app-input-number>
             </div>
           </div>
-          <!-- <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="第三台信用卡刷卡機型態" controlName="ECR_EDC3" [control]="dataForm.controls.ECR_EDC3"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number label="第三台信用卡刷卡機連接埠" controlName="ECR_EDC3Com" [control]="dataForm.controls.ECR_EDC3Com"
-                [submitted]="submitted"></app-input-number>
-            </div>
-          </div> -->
           <h4>電子票證、電子支付</h4>
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">

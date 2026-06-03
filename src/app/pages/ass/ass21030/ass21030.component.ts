@@ -316,13 +316,11 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
         if (data) {
           if (data.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
+            this.messageService.errorBubble(`匯入失敗，共 ${data.ErrorCount} 筆錯誤，請下載錯誤檔修正後重新上傳`);
             this.downloadErrorFile(data.ErrorFilePath);
           } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+            this.messageService.infoBubble(`匯入成功，共 ${data.SuccessCount} 筆`);
+            this.onSubmit(this.queryForm);
           }
         }
       },
@@ -334,7 +332,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   }
 
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   // 匯出 PDF

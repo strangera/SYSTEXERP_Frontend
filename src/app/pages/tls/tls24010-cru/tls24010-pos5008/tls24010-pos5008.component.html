@@ -7,7 +7,7 @@
 }
 <p-table [value]="!isFormCreateable ? POS5008SelectedItems: POS5008Data" [(selection)]="POS5008SelectedItems"
   dataKey="PAY_No" [rowTrackBy]="trackByRow" [resizableColumns]="true"
-  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" (onRowSelect)="onRowSelect($event)"
+  styleClass="p-datatable-sm  p-datatable-gridlines" (onRowSelect)="onRowSelect($event)"
   (onRowUnselect)="onRowUnselect($event)">
   <ng-template pTemplate="header" let-columns>
     <tr>

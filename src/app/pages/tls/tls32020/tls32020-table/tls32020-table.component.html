@@ -1,8 +1,8 @@
 <p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
   scrollHeight="flex" sortMode="multiple" [rowTrackBy]="trackByFn" [loading]="loading"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [lazy]="lazy" [virtualScrollItemSize]="46"
-  [virtualScrollDelay]="0" [virtualScrollOptions]="{ inline: true,  trackBy: trackByFn,  autoSize: true }"
-  rowGroupMode="rowspan" groupRowsBy="YM">
+  styleClass="p-datatable-sm p-datatable-gridlines " [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [virtualScrollOptions]="{ inline: true,  trackBy: trackByFn,  autoSize: true }" rowGroupMode="rowspan"
+  groupRowsBy="YM">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [showCaption]="true"

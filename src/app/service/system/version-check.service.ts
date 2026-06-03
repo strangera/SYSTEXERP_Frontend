@@ -50,7 +50,7 @@ export class VersionCheckService {
         },
       });
 
-    window.addEventListener('focus', () => this.checkVersion());
+    globalThis.addEventListener('focus', () => this.checkVersion());
   }
 
   public checkVersion(): void {
