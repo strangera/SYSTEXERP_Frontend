@@ -185,11 +185,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         this.cdr.detectChanges();
       });
     }
-    this.dataForm.get('org_ID')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
-      if (this.isFormCreateable && value && this.data.length === 0) {
-        this.data = [{ ID: 0, User_No: this.dataForm.get('user_No')?.value, Org_ID: value, Building_No: null, Floor_No: null, Area_No: null, TLT_No: null, TLT_Kind: null, BUS_Type: null }];
-      }
-    });
   }
 
   // 模擬將 SYS_ID 選項轉成 Tree 結構的函式
