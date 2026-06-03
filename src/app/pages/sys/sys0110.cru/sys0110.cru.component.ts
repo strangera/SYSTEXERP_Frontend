@@ -9,6 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { TreeNode } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -104,10 +105,14 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   private sysIdOptionsList: any[] = []; // 改為 any[] 因為我們要用到 CRT_USR_Name
   private sysSubModuleList: any[] = [];
 
+  get defaultInsertData() {
+    return { Org_ID: this.dataForm.get('org_ID')?.value || null };
+  }
+
   data: UserSys3700Detail[] = [];
   selectedRows: UserSys3700Detail[] = [];
   columns: EditColumn[] = [
-    { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value' },
+    { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
     { field: 'Building_No', header: '館別代碼', width: '110px', type: 'dropdown', options: this.SYS3700_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
     { field: 'Floor_No', header: '樓層代碼', width: '110px', type: 'dropdown', options: this.SYS3800_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
     { field: 'Area_No', header: '區域代碼', width: '110px', type: 'dropdown', options: this.SYS3A00_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
