@@ -47,8 +47,8 @@ import { finalize } from 'rxjs';
 })
 export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    HOS_No: [null],
-    LOGO_No: [null],
+    HOS_No: [null, [Validators.required]],
+    LOGO_No: [null, [Validators.required]],
     PLU_MagNo: [null, [Validators.maxLength(20)]],
     PLU_No: [null as string | null],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
