@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
-      *ngIf="isFormReadable && hasPermission(Actions.Edit)"
+      *ngIf="isFormReadable && canDispatch"
       label="結案"
       btnType="default"
       icon="pi pi-check"
@@ -97,6 +97,7 @@
         [columns]="detailColumns"
         [totalRecords]="detailItems.length"
         [lazy]="false"
+        [showManage]="false"
         [showEdit]="false"
         [showDelete]="false"
         [showDetail]="false"

@@ -50,6 +50,18 @@
             [submitted]="submitted"
           ></app-dropdown>
 
+          <!-- 部門代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="部門代碼/名稱"
+            controlName="ORG_ID"
+            [options]="orgOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ORG_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
           <!-- 申請日期（起迄） -->
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
@@ -67,18 +79,6 @@
             [endControl]="queryForm.controls.APRV_DATE_E"
             [submitted]="submitted"
           ></app-calendar-range-quick>
-
-          <!-- 部門代碼/名稱 -->
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="部門代碼/名稱"
-            controlName="ORG_ID"
-            [options]="orgOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ORG_ID"
-            [submitted]="submitted"
-          ></app-dropdown>
 
           <!-- 發料日期 -->
           <app-calendar
@@ -146,7 +146,8 @@
       [data]="data"
       [columns]="columns"
       [totalRecords]="totalRecords"
-      [lazy]="false"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
       [loading]="loading"
       [showEdit]="false"
       [showDelete]="false"

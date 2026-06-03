@@ -22,10 +22,10 @@ import {
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
+import { finalize, map, Observable } from 'rxjs';
 import {
-  Ass16050GroupedRecord,
-  Ass16050QueryData,
+  Ass16050MasterDisplayRow,
+  Ass16050MasterRow,
   Ass16050QueryRequest,
 } from './ass16050.model';
 
@@ -51,10 +51,9 @@ import {
   ],
 })
 export class ASS16050Component
-  extends BasicQueryPageComponent<Ass16050GroupedRecord>
+  extends BasicQueryPageComponent<Ass16050MasterDisplayRow>
   implements OnInit
 {
-  // ─── 查詢表單 ───────────────────────────────────────────────────────
   queryForm = this.formBuilder.group({
     MTAPPLY_ID: [null as string | null, [Validators.maxLength(15)]],
     EMP_ID: [null as string | null],
@@ -72,12 +71,7 @@ export class ASS16050Component
     PageIndex: [1 as number | null],
   });
 
-  // ─── 主表格 ──────────────────────────────────────────────────────────
-  /**
-   * API 回傳為扁平結構（每品項一列），前端依 MTAPPLY_ID group by 後顯示。
-   * 由於需要客端聚合，表格採非 lazy 模式（一次取得後在前端分頁）。
-   */
-  data: Ass16050GroupedRecord[] = [];
+  data: Ass16050MasterDisplayRow[] = [];
   totalRecords = 0;
   lastQueryBody?: Ass16050QueryRequest;
 
@@ -108,18 +102,10 @@ export class ASS16050Component
       format: (_v, _i, row) => this.getOptionName(row?.APRV_EMP_ID, this.userOptions),
     },
     { field: 'APRV_DATE', header: '審核日期', format: (v) => formatDate(v) },
-    { field: 'WH_ID', header: '倉別代碼' },
-    {
-      field: 'WH_NAME',
-      header: '倉別名稱',
-      format: (_v, _i, row) => this.getOptionName(row?.WH_ID, this.whOptions),
-    },
     { field: 'CHECK_DATE', header: '發料日期', format: (v) => formatDate(v) },
     { field: 'detailCount', header: '明細筆數', align: 'right' },
-    { field: 'AMT', header: '總金額', align: 'right', format: (v) => formatAmount(v) },
   ];
 
-  // ─── 下拉選項 ──────────────────────────────────────────────────────────
   /** 申請人、審核者共用同一次 queryTBLUSER 呼叫結果 */
   userOptions: Option[] = [];
   fasItemOptions: Option[] = [];
@@ -135,20 +121,19 @@ export class ASS16050Component
   }
 
   ngOnInit(): void {
-    // 明細按鈕導向 cru 頁面（Read mode）由 BasicQueryPageComponent.onDetail 自動處理
     this.initializePage('ASS16050', 'ass/ass16050cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
     this.loadDropdowns();
   }
 
-  // ─── 下拉資料載入 ───────────────────────────────────────────────────
   private loadDropdowns(): void {
     this.dropdownApiService
       .queryTblUser()
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.userOptions = opts ?? [];
+        this.refreshTableIfPopulated();
       });
 
     this.dropdownApiService
@@ -163,6 +148,7 @@ export class ASS16050Component
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.orgOptions = opts ?? [];
+        this.refreshTableIfPopulated();
       });
 
     this.dropdownApiService
@@ -180,14 +166,30 @@ export class ASS16050Component
           value: item.No,
           label: `${item.No} - ${item.Name}`,
         }));
+        this.refreshTableIfPopulated();
       });
   }
 
-  // ─── 查詢 ────────────────────────────────────────────────────────────
+  /** dropdown 較查詢 API 後到時，重新指派 data 觸發 table-report (OnPush) 重新渲染 */
+  private refreshTableIfPopulated(): void {
+    if (this.data.length > 0) {
+      this.data = [...this.data];
+    }
+  }
+
+  /** 表格 lazy loading 用 query function — service 已攤平 wrapper，此處只負責 detailCount 補欄 */
   public queryFunction = (
     body: Ass16050QueryRequest,
-  ): Observable<ApiResponse<Ass16050QueryData[]>> => {
-    return this.ass16050Service.queryASS16050(body);
+  ): Observable<ApiResponse<Ass16050MasterDisplayRow[]>> => {
+    return this.ass16050Service.queryASS16050M(body).pipe(
+      map((res) => ({
+        ...res,
+        Data: (res.Data ?? []).map((row) => ({
+          ...row,
+          detailCount: row.TOTAL_COUNT ?? 0,
+        })),
+      })),
+    );
   };
 
   onSubmit(frm: FormGroup): void {
@@ -207,18 +209,23 @@ export class ASS16050Component
               this.messageService.errorBubble(res.Message || '查詢失敗');
               return;
             }
-            this.data = this.groupQueryData(res.Data ?? []);
+            this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? this.data.length;
           },
         });
     });
   }
 
-  /** 組裝查詢 payload，日期欄位轉為 ISO string，過濾空值 */
+  /** 組裝查詢 payload，日期欄位轉為本地日期字串（YYYY-MM-DD），避免 toISOString 的 UTC 偏移 */
   private buildQueryPayload(frm: FormGroup): Ass16050QueryRequest {
     const v = frm.getRawValue();
-    const toDateStr = (d: Date | null): string | undefined =>
-      d ? d.toISOString() : undefined;
+    const toDateStr = (d: Date | null): string | undefined => {
+      if (!d) return undefined;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
 
     const payload: Ass16050QueryRequest = {
       MTAPPLY_ID: v.MTAPPLY_ID || undefined,
@@ -241,46 +248,6 @@ export class ASS16050Component
     return removeEmptyValues(payload) as Ass16050QueryRequest;
   }
 
-  /**
-   * 將扁平 API response（每品項一列）依 MTAPPLY_ID group by，
-   * 產出主表格用的聚合記錄
-   */
-  groupQueryData(rows: Ass16050QueryData[]): Ass16050GroupedRecord[] {
-    const map = new Map<string, Ass16050GroupedRecord>();
-
-    rows.forEach((row) => {
-      if (!map.has(row.MTAPPLY_ID)) {
-        const {
-          LINE_NUM: _ln,
-          FASITEM_ID: _fid,
-          QTY: _qty,
-          GOODS_PRICE: _gp,
-          ITEM_AMT: _ia,
-          DISPATCH_QTY: _dq,
-          ...master
-        } = row;
-        map.set(row.MTAPPLY_ID, {
-          ...master,
-          detailCount: 0,
-          items: [],
-        });
-      }
-
-      const record = map.get(row.MTAPPLY_ID)!;
-      record.items.push({
-        FASITEM_ID: row.FASITEM_ID,
-        QTY: row.QTY,
-        GOODS_PRICE: row.GOODS_PRICE,
-        ITEM_AMT: row.ITEM_AMT,
-        DISPATCH_QTY: row.DISPATCH_QTY,
-      });
-      record.detailCount = record.items.length;
-    });
-
-    return Array.from(map.values());
-  }
-
-  // ─── 工具函式 ────────────────────────────────────────────────────────
   getStatusLabel(value: string): string {
     return this.getOptionName(value, this.statusOptions) || (value ?? '');
   }
