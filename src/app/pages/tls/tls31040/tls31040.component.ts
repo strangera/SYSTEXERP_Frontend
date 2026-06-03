@@ -144,8 +144,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   historyRequestBody: TLS31040Request | null = null; //歷史查詢條件
 
   columns: ReportColumn[] = [
-    { field: 'tlt_kind', header: '櫃別代碼', visible: false, align: 'left' },
-    { field: 'tlt_kindName', header: '櫃別名稱', visible: true, align: 'left' },
+    // { field: 'tlt_kind', header: '櫃別代碼', align: 'left' },
+    { field: 'tlt_kindName', header: '櫃別名稱', align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },

@@ -75,12 +75,12 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31060DetailRequest | null = null; //歷史查詢條件
   columns: ReportColumn[] = [
-    { field: 'building_desc', header: '館別', visible: true, align: 'left' },
-    { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
-    { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
-    { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'building_desc', header: '館別', align: 'left' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
+    { field: 'location_no', header: '位置編號', align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },

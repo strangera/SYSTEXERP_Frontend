@@ -143,8 +143,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   historyRequestBody: TLS31070Request | null = null; //歷史查詢條件
 
   columns: ReportColumn[] = [
-    { field: 'paper_type', header: '營業形態代號', visible: false, align: 'left' },
-    { field: 'paper_type_desc', header: '營業形態', visible: true, align: 'left' },
+    // { field: 'paper_type', header: '營業形態代號', align: 'left' },
+    { field: 'paper_type_desc', header: '營業形態', align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },

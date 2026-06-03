@@ -75,8 +75,8 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31070Response
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31070DetailRequest | null = null; //歷史查詢條件
   columns: ReportColumn[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },

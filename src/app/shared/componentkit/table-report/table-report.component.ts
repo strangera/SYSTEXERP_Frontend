@@ -140,6 +140,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
 
+  draggedCol: any = null;
+  draggedIndex = -1;
+
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -653,4 +656,59 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
     return width;
   }
+
+  // #region 更新: 群組欄位排序處理
+  public onCustomDragStart(event: DragEvent, col: ReportColumn, index: number) {
+    this.draggedCol = col;
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  public onCustomDragOver(event: DragEvent, targetCol: ReportColumn) {
+    if (!this.draggedCol) return;
+
+    // 規則判斷：
+    // 情況 A：拖曳的是群組欄位 -> 目標欄位必須是同一個群組
+    // 情況 B：拖曳的是非群組欄位 -> 目標欄位也必須是非群組欄位 (groupField 皆為 undefined/null)
+    const isSameGroup = this.draggedCol.groupField === targetCol.groupField;
+
+    if (isSameGroup) {
+      event.preventDefault(); // 只有符合規則，才允許放下 (Drop)
+    }
+  }
+
+  public onCustomDrop(event: DragEvent, targetCol: ReportColumn, targetIndex: number) {
+    event.preventDefault();
+
+    if (!this.draggedCol || this.draggedIndex === -1) return;
+
+    // 再次防呆：若放下的目標跟來源不合規則，不執行任何動作
+    if (this.draggedCol.groupField !== targetCol.groupField) {
+      return;
+    }
+
+    // 產生新陣列進行位置重排
+    const updatedColumns = [...this.columns];
+
+    // 1. 先把拖曳源從舊位置拔掉
+    updatedColumns.splice(this.draggedIndex, 1);
+    // 2. 塞入新位置
+    updatedColumns.splice(targetIndex, 0, this.draggedCol);
+
+    // 更新欄位順序，觸發 PrimeNG 重新渲染
+    this.columns = updatedColumns;
+
+    // 記憶使用者調整後的欄位順序 (沿用您原本的 queryState 機制)
+    if ((this as any).queryState) {
+      (this as any).queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+    }
+
+    // 重置暫存變數
+    this.draggedCol = null;
+    this.draggedIndex = -1;
+    this.cdr.detectChanges();
+  }
+  // ----更新: 欄位群組的排序處理 ---
 }

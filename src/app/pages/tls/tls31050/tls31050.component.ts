@@ -142,8 +142,8 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   footershowPercent: footer31050Total | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31050Request | null = null; //歷史查詢條件
   columns: ReportColumn[] = [
-    { field: 'tlt_term_type', header: '抽成別代碼', visible: false, align: 'left' },
-    { field: 'tlt_term_desc', header: '抽成別名稱', visible: true, align: 'left' },
+    // { field: 'tlt_term_type', header: '抽成別代碼', align: 'left' },
+    { field: 'tlt_term_desc', header: '抽成別名稱', align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
