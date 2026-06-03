@@ -30,17 +30,7 @@ export class PublicGuard implements CanActivate {
 
     const finalRedirect = redirect || manualRedirect;
 
-    console.log(
-      '[PublicGuard] isLoggedIn:',
-      loggedIn,
-      'redirect:',
-      finalRedirect,
-      'ssoLogout:',
-      ssoLogout
-    );
-
     if (ssoLogout === '1') {
-      console.log('[PublicGuard] ssoLogout=1，放行到 login');
       return true;
     }
 
@@ -49,11 +39,9 @@ export class PublicGuard implements CanActivate {
     }
 
     if (finalRedirect) {
-      console.log('[PublicGuard] 已登入但有 redirectURL，放行到 login');
       return true;
     }
 
-    console.log('[PublicGuard] 已登入且無 redirectURL，導向 /sso/dashboard');
     return this.router.parseUrl('/sso/dashboard');
   }
 

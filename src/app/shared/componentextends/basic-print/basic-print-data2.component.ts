@@ -1,16 +1,15 @@
-import { saveAs } from 'file-saver';
-import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
+import { saveAs } from 'file-saver';
 import { AuthService } from '../../../service/system/auth.service';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { TableService } from '../../componentkit/table/report.service';
 import { TableExport2 } from '../../componentkit/table2/table-export2/table-export2.component';
 import { Column } from '../../componentkit/table2/table2.model';
 import { QueryStateService } from '../../service/query-state.service';
+import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 
 @UntilDestroy()
 @Injectable({
