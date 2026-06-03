@@ -74,6 +74,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
+
   statusOptions = getSYS1000Options('ECR_Status');
   typeOptions = getSYS1000Options('ECR_Type');
   guiTypeOptions = getSYS1000Options('ECR_GUI_Type');
@@ -84,12 +85,14 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   totalRecords = 0;
   floorOption: apiOption[] = []; //樓層
   ECR_TmplNo_Option: IDropdownItem[] = [];
+
   // 複製設定 Dialog 相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     Source_ECR_No: ['', [Validators.required]],
     Target_ECR_No: ['', [Validators.required]],
   });
+
   SrvIPOptions: IDropdownItem[] = [];
   lastQueryForm: any;
   footerTotal: TLS41010Data | null = null;
@@ -106,7 +109,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       icon: 'pi pi-copy text-blue-500',
       action: (rowData: TLS41010Item) => {
         this.onCreate(rowData);
-
       },
     },
   ];
@@ -125,10 +127,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   }
 
   callOtherApi() {
-    const requestData = {
-      queryKey: 'value'
-    };
-
+    const requestData = { queryKey: 'value' };
     this.loading = true;
     this.tls46010Service.queryTLS0000(requestData)
       .pipe(finalize(() => this.loading = false))
@@ -140,15 +139,11 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   }
 
   callTls11010Api(locNo: string) {
-    const payload = {
-      ECR_LocNo: locNo,
-      PageSize: 10,
-      PageIndex: 1
-    };
-
+    const payload = { ECR_LocNo: locNo, PageSize: 10, PageIndex: 1 };
     this.loading = true;
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
+        // 如果 callTls11010Api 後端回傳也不需要自動帶入，請把這整段 patchValue 註解或刪除
         if (res?.Data && res.Data.length > 0) {
           const locationData = res.Data[0];
           this.queryForm.patchValue({
@@ -163,15 +158,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
+
     this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          No: x.value,              // 編號
-          Name: x.label,            // 名稱
-          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-          value: x.value            // 存值
-        })) || [];
+      this.CounterOptions = res?.map((x: any) => ({
+        No: x.value,              // 編號
+        Name: x.label,            // 名稱
+        formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+        value: x.value            // 存值
+      })) || [];
     });
+
     this.dropdownApiService.querySys3A00().subscribe(options => {
       this.areaNoOptions = options ?? [];
     });
@@ -187,11 +183,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
+
     this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ECR_SrvIP) => {
       if (ECR_SrvIP) {
         this.callOtherApi();
       }
     });
+
     // 環境變數下拉選單
     this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
       if (res?.Data) {
@@ -203,6 +201,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
+
     //收銀員下拉選單
     this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
       if (res?.Data) {
@@ -214,6 +213,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
+
     // 樓層下拉
     this.tls14030Service
       .querySYS3900_DropDownList({})
@@ -225,29 +225,22 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       });
 
-
-
+    // 【已調整】移除選擇位置編號時連動帶出 樓層、區域 的前端 patchValue 邏輯
     this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
       if (locNo) {
-        const selected = this.LocOptions.find(opt => opt.value === locNo);
-        if (selected) {
-          this.queryForm.patchValue({
-            ECR_Group: selected.tlt_building,
-            ECR_SubGroup: selected.tlt_floor,
-            ECR_AreaNo: selected.area_no
-          }, { emitEvent: false });
-        }
+        // 這裡原本有 this.queryForm.patchValue 帶出樓層跟區域的程式碼，現已移除。
+        // 如果點選位置編號時完全不需要觸發連動 API，也可以把下面這行整包註解掉。
         this.callTls11010Api(locNo);
       }
     });
+
     this.eCRNoService.getECRNo()
       .pipe(untilDestroyed(this))
       .subscribe(data => {
-        // 後端已回傳 label 為「000011-小騎士」，這裡直接沿用即可
         this.dialogOptions = data;
       });
-    //位置編號
 
+    //位置編號
     this.dropDownListService.queryPOS2002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -258,6 +251,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       });
   }
+
   //  Submit 查詢
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -289,9 +283,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = false;
-      // 來源和目標一樣，不能複製
-      if (this.isValid) { return; }
-      // 組資料，補上四個欄位
+      if (this.isValid) {
+        return;
+      }
       const formValue = frm.value;
       const body: Partial<TLS41010Item> = {
         ...this.dialogSelectItem,
@@ -300,8 +294,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         ECR_AreaNo: formValue.ECR_AreaNo,
         ECR_LocNo: formValue.ECR_LocNo
       };
-      // 判斷是否為新增或更新，假設「new」是新增
-      // 更新
+
       this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe({
         next: (res) => {
           console.log('更新成功', res);
@@ -323,11 +316,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   onDialogChange(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body: QueryTLS41010Request = {
-      ECR_No: selectedValue,
-      PageSize: 10,
-      PageIndex: 0
-    };
+    const body: QueryTLS41010Request = { ECR_No: selectedValue, PageSize: 10, PageIndex: 0 };
     this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectItem = res.Data[0];
     });
@@ -335,40 +324,33 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   onDialogChange2(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body: QueryTLS41010Request = {
-      ECR_No: selectedValue,
-      PageSize: 10,
-      PageIndex: 0,
-    };
+    const body: QueryTLS41010Request = { ECR_No: selectedValue, PageSize: 10, PageIndex: 0 };
     this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectTargetItem = res.Data[0];
     });
   }
 
-  // isValid 判斷來源和目標是否相同
   get isValid(): boolean {
     const Source_ECR_No = this.dialogQueryForm.value.Source_ECR_No ?? '';
     const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
     return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
   }
+
   openCru(data: TLS41010Item, mode: string): void {
     console.log(`Opening CRU page with mode: ${mode}`, data);
-
-    // 帶id去 CRU 頁
-    this.router.navigate([`/TLS/TLS41010cru`], {
-      queryParams: { id: data.id, mode }
-    });
+    this.router.navigate([`/TLS/TLS41010cru`], { queryParams: { id: data.id, mode } });
   }
-  // 刪除項目
+
   onDelete(rowData: any[]): void {
     const idList = rowData
-      .map((item) => item.id) // 主鍵欄位叫 ID
+      .map((item) => item.id)
       .filter((id) => id !== undefined && id !== null);
 
     if (idList.length === 0) {
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
+
     this.messageService.confirm({
       header: '刪除確認',
       message: '是否刪除所選項目?',
@@ -379,14 +361,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
             next: (res) => {
               if (res.Status === '0000') {
                 this.messageService.successBubble('選中項目刪除成功');
-                this.selectedItems = []; // 清空選中項目
-                this.onSubmit(this.queryForm); // 重新查詢刷新列表
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
               } else {
                 console.error('API error:', res.Status, res.Message);
                 this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
               }
             },
-
           });
       }
     });
