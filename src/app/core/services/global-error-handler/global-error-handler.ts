@@ -5,8 +5,7 @@ import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
-
-  // 💡 注意：在 ErrorHandler 中必須使用 Injector 動態注入 HttpClient
+  // 注意：在 ErrorHandler 中必須使用 Injector 動態注入 HttpClient
   // 如果直接在 constructor 注入 HttpClient，會引發 Angular 核心啟動時的循環依賴錯誤 (Circular Dependency)
   constructor(private injector: Injector) { }
 
