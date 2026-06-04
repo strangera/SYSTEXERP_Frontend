@@ -58,9 +58,17 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
+  footerData: any[] = [];
   private readonly includePagingAndSorting = true;
   lastQueryBody: any = null;
-  queryTLS13030Fn = (body: any) => this.tls13030Service.queryTLS13030(body);
+  queryTLS13030Fn = (body: any) =>
+  this.tls13030Service.queryTLS13030(body).pipe(
+    map((res: any) => ({
+      Data: res?.Data?.QueryData ?? [],
+      TotalCount: res?.TotalCount ?? res?.Data?.TotalCount ?? 0,
+      QueryDataSum: res?.Data?.QueryDataSum ?? null,
+    }))
+  );
   private readonly allowedSortFields = new Set<string>([
     'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
     'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
@@ -218,7 +226,18 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
 
 
-  // ===== lazy 事件（分頁/排序）=====
+ private calculateFooter(data: any[]): void {
+  const total = {
+    tpy_totalamt: data.reduce((sum, row) => sum + Number(row.tpy_totalamt || 0), 0),
+    down_payment: data.reduce((sum, row) => sum + Number(row.down_payment || 0), 0),
+    period_nos: data.reduce((sum, row) => sum + Number(row.period_nos || 0), 0),
+    tpy_amount: data.reduce((sum, row) => sum + Number(row.tpy_amount || 0), 0),
+    defSalesAmt: data.reduce((sum, row) => sum + Number(row.defSalesAmt || 0), 0),
+    commRate: data.reduce((sum, row) => sum + Number(row.commRate || 0), 0),
+  };
+
+  this.footerData = [total];
+}
   // ===== lazy 事件（分頁/排序）=====
   // ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
@@ -378,30 +397,34 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     this.loading = true;
     this.messageService.blockUi();
 
-    this.tls13030Service.queryTLS13030(payload).pipe(
-      untilDestroyed(this),
-      finalize(() => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      })
-    ).subscribe({
-      next: (res) => {
-        if (res?.Status === '0000') {
-          const arr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : [] as any[]);
-          this.data = this.processResultData(arr);
-          this.totalRecords = Number(res?.TotalCount ?? this.data.length ?? 0);
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-          this.data = [];
-          this.totalRecords = 0;
-        }
-      },
-      error: () => {
-        this.data = [];
-        this.totalRecords = 0;
-      }
-    });
+    this.tls13030Service
+  .queryTLS13030(payload)
+  .pipe(untilDestroyed(this))
+  .subscribe({
+ next: (res: any) => {
+  const rows = res?.Data?.QueryData ?? [];
+  const sum = res?.Data?.QueryDataSum ?? null;
+
+  this.data = this.processResultData(rows);
+  this.totalRecords = res?.TotalCount ?? res?.Data?.TotalCount ?? 0;
+
+  this.footerData = sum ? [sum] : [];
+
+  this.loading = false;
+  this.messageService.unblockUi();
+},
+error: (err) => {
+  console.error('queryTLS13030 error:', err);
+
+  this.data = [];
+  this.totalRecords = 0;
+  this.footerData = [];
+
+  this.loading = false;
+  this.messageService.unblockUi();
+}
+  });
+  
   }
 
 
