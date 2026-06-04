@@ -68,6 +68,13 @@ export interface Pos2064MpcsNoDropDownItem {
   PCS_UsrNo?: string | null;
 }
 
+/** FIN70000 / POS2064MPCS_RqstNoDropDownList 回傳列 */
+export interface Pos2064MpcsRqstNoDropDownItem {
+  PCS_RqstNo?: string | null;
+  PCS_RqstDate?: string | null;
+  Keep_UsrNo?: string | null;
+}
+
 /** 
  * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
  */
@@ -76,12 +83,11 @@ export interface FAASSCHKMQuery {
 }
 
 /**
- * 查詢採購單號下拉選單 queryFAASSCHKM_DropDownList
- * 後端回傳欄位：SUBPOENA_ID
- * 前端下拉顯示僅需 後端回傳欄位：SUBPOENA_ID
+ * 查詢驗收單號下拉選單 queryFAASSCHKM_DropDownList
+ * 後端回傳欄位：SUBCHECK_ID
  */
 export interface FAASSCHKMDropDownItem {
-  SUBPOENA_ID?: string | null;
+  SUBCHECK_ID?: string | null;
 }
 
 /**
