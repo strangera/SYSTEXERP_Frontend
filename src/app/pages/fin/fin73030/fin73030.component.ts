@@ -3,20 +3,20 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN73030Service } from '@service/api/fin/fin73030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, map } from 'rxjs';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import {
   FIN73030FilterBody,
   FIN73030Option,
@@ -68,7 +68,7 @@ export class FIN73030Component extends BasicQueryPageComponent<FIN73030TableRow>
   lastQueryBody: FIN73030Query | null = null;
 
   readonly columns: ReportColumn[] = [
-    { field: 'PCS_RqstNo', header: '支付全衝' },
+    { field: 'PCS_RqstNo', header: '支付全衡' },
     { field: 'Keep_UsrName', header: '姓名' },
     { field: 'PCS_RqstDate', header: '請款日期', format: formatDate },
     { field: 'PCS_TotNet', header: '小計(未稅)', format: formatAmount, align: 'right' },
@@ -107,7 +107,7 @@ export class FIN73030Component extends BasicQueryPageComponent<FIN73030TableRow>
 
   private loadPcsRqstNoOptions(): void {
     this.dropdownApiService
-      .queryPOS2064MPCS_NoDropDownList()
+      .queryPOS2064MPCS_RqstNoDropDownList()
       .pipe(
         untilDestroyed(this),
         map((items) =>

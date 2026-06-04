@@ -71,6 +71,7 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Pos2064MpcsNoDropDownItem,
+  Pos2064MpcsRqstNoDropDownItem,
   queryOwnPOS1002_DropDownListItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
@@ -1034,6 +1035,27 @@ export class DropdownApiService {
               ...item,
               value: pcsNo,
               label: pcsNo,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢支出請款單號（FIN70000 / POS2064MPCS_RqstNoDropDownList，TC+YYYYMMDDXXXX） */
+  queryPOS2064MPCS_RqstNoDropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Pos2064MpcsRqstNoDropDownItem>('/FIN0000/FIN70000/POS2064MPCS_RqstNoDropDownList').pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const pcsRqstNo = String(item.PCS_RqstNo ?? '').trim();
+            if (!pcsRqstNo) return null;
+            return {
+              ...item,
+              value: pcsRqstNo,
+              label: pcsRqstNo,
             };
           })
           .filter((x): x is Option => x !== null);

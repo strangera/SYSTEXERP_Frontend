@@ -68,6 +68,13 @@ export interface Pos2064MpcsNoDropDownItem {
   PCS_UsrNo?: string | null;
 }
 
+/** FIN70000 / POS2064MPCS_RqstNoDropDownList 回傳列 */
+export interface Pos2064MpcsRqstNoDropDownItem {
+  PCS_RqstNo?: string | null;
+  PCS_RqstDate?: string | null;
+  Keep_UsrNo?: string | null;
+}
+
 /** 
  * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
  */
