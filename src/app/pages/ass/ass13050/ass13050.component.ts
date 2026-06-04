@@ -285,7 +285,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       this.midClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe((opts) => {
+    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe((opts) => {
       this.midClassOptions.set(opts ?? []);
     });
   }
@@ -298,7 +298,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       return;
     }
     this.dropdownApi
-      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, M_CLASS_ID: mClassId })
       .subscribe((opts) => {
         this.smallClassOptions.set(opts ?? []);
       });

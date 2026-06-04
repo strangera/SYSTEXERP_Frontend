@@ -256,32 +256,89 @@ export class DropdownApiService {
 
   /** 查詢資產大分類(FACLASSM)資料表下拉選單 - 回傳 B_CLASS_ID / B_CLASS_NAME */
   queryFaClassM(body: FaClassMQuery = {}): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClassMItem, FaClassMQuery>(
-      '/queryFACLASSM_DropDownList',
-      'B_CLASS_ID',
-      'B_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASSM_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClassMItem[] | null } | FaClassMItem[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClassMItem[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.B_CLASS_ID as string | number,
+            label: `${item.B_CLASS_ID} - ${item.B_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢資產中分類(FACLASS1)資料表下拉選單 - 回傳 M_CLASS_ID / M_CLASS_NAME */
   queryFaClass1(body: FaClass1Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClass1Item, FaClass1Query>(
-      '/queryFACLASS1_DropDownList',
-      'M_CLASS_ID',
-      'M_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASS1_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClass1Item[] | null } | FaClass1Item[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClass1Item[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.M_CLASS_ID as string | number,
+            label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢資產小分類(FACLASS2)資料表下拉選單 - 回傳 S_CLASS_ID / S_CLASS_NAME */
   queryFaClass2(body: FaClass2Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClass2Item, FaClass2Query>(
-      '/queryFACLASS2_DropDownList',
-      'S_CLASS_ID',
-      'S_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASS2_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClass2Item[] | null } | FaClass2Item[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClass2Item[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.S_CLASS_ID as string | number,
+            label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */

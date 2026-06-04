@@ -119,7 +119,7 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
         this.smallClassOptions.set([]);
         if (!bClassId) return;
         this.dropdownApiService
-          .queryFaClass1({ CLASS_ID: bClassId })
+          .queryFaClass1({ B_CLASS_ID: bClassId })
           .pipe(untilDestroyed(this))
           .subscribe(options => {
             this.midClassOptions.set(
@@ -139,7 +139,7 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
         if (!mClassId) return;
         const bForSmall = bCtrl.value ?? undefined;
         this.dropdownApiService
-          .queryFaClass2({ B_CLASS_ID: bForSmall, CLASS_ID: mClassId })
+          .queryFaClass2({ B_CLASS_ID: bForSmall, M_CLASS_ID: mClassId })
           .pipe(untilDestroyed(this))
           .subscribe(options => {
             this.smallClassOptions.set(
@@ -155,7 +155,7 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
     const initialMClassId = mCtrl.value;
     if (initialBClassId) {
       this.dropdownApiService
-        .queryFaClass1({ CLASS_ID: initialBClassId })
+        .queryFaClass1({ B_CLASS_ID: initialBClassId })
         .pipe(untilDestroyed(this))
         .subscribe(options => {
           this.midClassOptions.set(
@@ -168,7 +168,7 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
     }
     if (initialMClassId && initialBClassId) {
       this.dropdownApiService
-        .queryFaClass2({ B_CLASS_ID: initialBClassId, CLASS_ID: initialMClassId })
+        .queryFaClass2({ B_CLASS_ID: initialBClassId, M_CLASS_ID: initialMClassId })
         .pipe(untilDestroyed(this))
         .subscribe(options => {
           this.smallClassOptions.set(

@@ -112,7 +112,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
         this.dataForm.controls.M_CLASS_ID.patchValue('', { emitEvent: false });
         this.midClassOptions.set([]);
         if (!bClassId) return;
-        this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe(options => {
+        this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
           this.midClassOptions.set(
             (options ?? []).map(item => ({
               value: String(item.value),
@@ -129,7 +129,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       this.midClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe(options => {
+    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
       this.midClassOptions.set(
         (options ?? []).map(item => ({
           value: String(item.value),

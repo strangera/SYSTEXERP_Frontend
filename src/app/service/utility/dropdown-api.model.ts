@@ -108,7 +108,8 @@ export interface FaClassMItem {
  * 查詢 FACLASS1_DropDownList 時的請求 body（資材大分類代碼 = FACLASSM.CLASS_ID）
  */
 export interface FaClass1Query {
-  CLASS_ID?: string | null;
+  /** 大分類代碼（對應 swagger B_CLASS_ID） */
+  B_CLASS_ID?: string | null;
 }
 
 /**
@@ -129,8 +130,8 @@ export interface FaClass1Item {
 export interface FaClass2Query {
   /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  /** 資材中分類代碼 */
-  CLASS_ID?: string | null;
+  /** 中分類代碼（對應 swagger M_CLASS_ID） */
+  M_CLASS_ID?: string | null;
 }
 
 /**
