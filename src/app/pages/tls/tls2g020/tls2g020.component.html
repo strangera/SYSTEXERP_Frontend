@@ -35,7 +35,7 @@
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" dataKey="talent_id"
       [data]="data" [columns]="columns" (rowExpand)="onRowExpand($event)" (edit)="onEdit($event)"
       [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-      [rows]="30" (detail)="onDetail($event)" expansionDataKey="Mdeatil"
-      [expansionColumns]="expansionColumns"></app-table>
+      [rows]="30" (detail)="onDetail($event)" expansionDataKey="Mdeatil" [expansionColumns]="expansionColumns"
+      DataKeyName="Mdeatil"></app-table>
   </div>
 </div>
