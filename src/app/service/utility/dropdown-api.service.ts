@@ -619,7 +619,7 @@ export class DropdownApiService {
         if (!items) return null;
         return items
           .map(item => {
-            const id = item.SUBPOENA_ID?.trim() ?? '';
+            const id = item.SUBCHECK_ID?.trim() ?? '';
             if (!id) return null;
             return {
               ...item,
