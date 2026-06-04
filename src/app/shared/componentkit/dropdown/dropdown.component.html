@@ -4,36 +4,43 @@
   <ng-content select="header"></ng-content>
 </label>
 
-<!-- 一般模式 -->
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-dropdown #dd styleClass="w-full" [id]="controlName" [formControl]="control" [attr.aria-describedby]="controlName"
-    [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
-    [optionValue]="optionValue" [showClear]="showClear" [filterBy]="filterBy"
-    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
-    [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
-    [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true"
-    [virtualScroll]="options.length > 10 ? true : false" [virtualScrollItemSize]="40" [editable]="editable"
-    [loading]="loading" [filter]="filter" (keydown.enter)="handleEnterKey($event)"
-    (keydown.enter.capture)="handleEnterKey($event)" [group]="group">
-    <ng-template let-options pTemplate="item">
-      <div class="flex align-items-center gap-2">
-        <div>
-          {{
-          templateLabel !== "" ? options[templateLabel] : options[optionLabel]
-          }}
-        </div>
-      </div>
-    </ng-template>
+  <div class="relative w-full" (focusout)="onComponentBlur($event)">
 
-    <ng-template let-group pTemplate="group">
-      <div class="flex align-items-center">
-        <span>{{ group.label }}</span>
-      </div>
-    </ng-template>
-  </p-dropdown>
+    <p-dropdown #dd styleClass="w-full" [styleClass]="editable ? 'w-full editable-dropdown-hide-label' : 'w-full'"
+      [id]="controlName" [formControl]="control" [attr.aria-describedby]="controlName"
+      panelStyleClass="editable-dropdown-panel" [placeholder]="editable ? '' : (customPlaceholder || placeholder)"
+      [options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue" [showClear]="showClear"
+      [filterBy]="filterBy || optionLabel" [autofocusFilter]="false"
+      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
+      [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
+      [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="options.length > 10"
+      [virtualScrollItemSize]="40" [editable]="false" [loading]="loading" [filter]="filter"
+      (keydown.enter)="handleEnterKey($event)" (keydown.enter.capture)="handleEnterKey($event)" [group]="group">
+
+      <ng-template let-options pTemplate="item">
+        <div class="flex align-items-center gap-2">
+          <div> {{ templateLabel !== "" ? options[templateLabel] : options[optionLabel] }} </div>
+        </div>
+      </ng-template>
+      <ng-template let-group pTemplate="group">
+        <div class="flex align-items-center">
+          <span>{{ group.label }}</span>
+        </div>
+      </ng-template>
+    </p-dropdown>
+
+    <input *ngIf="editable" [disabled]="control.disabled" type="text"
+      class="absolute top-0 left-0 h-full border-none bg-transparent pl-3 disabled-input-style"
+      [style.width]="control.disabled ? '100%' : 'calc(100% - 4.5rem)'" [style.z-index]="control.disabled ? '10' : '1'"
+      style="outline: none;border-radius: 6px;" [value]="selectedOptionLabel"
+      [placeholder]="customPlaceholder || placeholder" (input)="onNativeInput($event)"
+      (focus)="onNativeInputFocus($event)" (click)="$event.stopPropagation(); !control.disabled && dd.show()"
+      (keydown)="onInputKeyDown($event)" (keydown.enter)="handleEnterKey($event)"
+      (keydown.enter.capture)="handleEnterKey($event)" />
+  </div>
 </ng-container>
 
-<!-- 唯讀模式 -->
 <ng-template #readonlyMode>
   <div class="readonly-dropdown">
     <input type="text" [id]="controlName" [value]="selectedOptionLabel" [placeholder]="customPlaceholder || placeholder"
@@ -44,6 +51,4 @@
 
 <app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>
-<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
-  {{helpMsg}}
-</small>
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName"> {{helpMsg}} </small>
