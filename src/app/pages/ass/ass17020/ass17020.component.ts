@@ -171,7 +171,7 @@ export class ASS17020Component
           return;
         }
         this.dropdownApi
-          .queryFaClass1({ CLASS_ID: b })
+          .queryFaClass1({ B_CLASS_ID: b })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.midClassOptions = opts ?? [];
@@ -189,7 +189,7 @@ export class ASS17020Component
         this.dropdownApi
           .queryFaClass2({
             B_CLASS_ID: this.queryForm.controls.bClassId.value ?? undefined,
-            CLASS_ID: m,
+            M_CLASS_ID: m,
           })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {

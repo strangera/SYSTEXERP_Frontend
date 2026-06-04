@@ -158,7 +158,7 @@ export class ASS17040Component
       return;
     }
     this.dropdown
-      .queryFaClass1({ CLASS_ID: bClassId })
+      .queryFaClass1({ B_CLASS_ID: bClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.midCategoryOptions = opts ?? [];
@@ -171,7 +171,7 @@ export class ASS17040Component
       return;
     }
     this.dropdown
-      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, M_CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.smallCategoryOptions = opts ?? [];

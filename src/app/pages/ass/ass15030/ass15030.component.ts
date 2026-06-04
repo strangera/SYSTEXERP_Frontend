@@ -267,7 +267,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
         this.smlCategoryCodeOptions = [];
         if (!bigCode) return;
         this.dropdownApiService
-          .queryFaClass1({ CLASS_ID: bigCode })
+          .queryFaClass1({ B_CLASS_ID: bigCode })
           .pipe(untilDestroyed(this))
           .subscribe(opts => (this.midCategoryCodeOptions = opts ?? []));
       });
@@ -279,7 +279,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
         this.smlCategoryCodeOptions = [];
         if (!midCode) return;
         this.dropdownApiService
-          .queryFaClass2({ CLASS_ID: midCode })
+          .queryFaClass2({ M_CLASS_ID: midCode })
           .pipe(untilDestroyed(this))
           .subscribe(opts => (this.smlCategoryCodeOptions = opts ?? []));
       });
