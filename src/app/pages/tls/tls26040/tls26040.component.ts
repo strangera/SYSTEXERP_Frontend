@@ -66,20 +66,20 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     { field: 'id', header: 'ID', visible: false },
     { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
     { field: 'sad_preorder_date', header: '結帳日期', visible: true, format: formatDate },
-    { field: 'tlt_no', header: '櫃別編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_no', header: '櫃別編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
     { field: 'batch_no', header: '批號', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '金額', visible: true, format: formatAmount },
+    { field: 'TXN_TotSaleAmt', header: '金額', visible: true, format: formatAmount, align: 'right' },
   ];
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
     { field: 'TXN_Date', header: '預售日期', visible: true, format: formatDate },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
-    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount, align: 'right' },
   ];
 
   // 專櫃編號選項
