@@ -1,6 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
@@ -20,12 +20,12 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   ]
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit {
+  readonly Validators = Validators;
   @Input() readonly = false; // 新增：唯讀模式
   // 必填
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
-  @Input() set control(value: FormControl) { this._control = value; }
   @Input() set options(value: any[] | null) {
     if (value === null) {
       this.loading = true;
@@ -59,7 +59,19 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
   @Output() valueChange = new EventEmitter<any>(); //直接用 (valueChange) 拿到值
   private _control: FormControl = new FormControl();
-  public get control(): FormControl { this.disabled && this._control.disable(); return this._control; }
+  @Input() set control(value: FormControl) {
+    if (value) {
+      this._control = value;
+      this.initControl(this._control);
+      this.cdr.markForCheck();
+    }
+  }
+  public get control(): FormControl {
+    if (this.disabled && this._control) {
+      this._control.disable({ emitEvent: false });
+    }
+    return this._control;
+  }
 
   ngOnInit(): void {
     this.initControl(this.control);
