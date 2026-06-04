@@ -51,5 +51,5 @@
 
 <app-table-export [visible]="exportDialog" header="列印選項" (visibleChange)="exportDialog = $event"
   [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [exportStatus]="exportStatus"
-  (save)="exportStatus === 'PDF' ? exportPDFDownload($event, selectedColumns, apiUrl,DataKeyName,PrintRemark,Conditions,PrintColumn,footerData,reportTitle) :
-  exportExcelDownload($event, selectedColumns, apiUrl,DataKeyName,Conditions,PrintColumn,footerData,reportTitle)"></app-table-export>
+  (save)="exportStatus === 'PDF' ? exportPDFDownload($event, selectedColumns, apiUrl, DataKeyName, PrintRemark, Conditions, PrintColumn, footerData, reportTitle, expansionColumns) :
+  exportExcelDownload($event, selectedColumns, apiUrl,DataKeyName,Conditions,PrintColumn,footerData,reportTitle, expansionColumns)"></app-table-export>
