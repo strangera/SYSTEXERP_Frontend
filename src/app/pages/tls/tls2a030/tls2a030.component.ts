@@ -16,8 +16,9 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { TLS2F010TableReportComponent } from '../tls2f010-cru/tls2f010-table-report.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 
 interface SalesRecord {
@@ -75,7 +76,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   private lastQueryParams = '';
   // 表格欄位
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
     { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
     { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
@@ -188,12 +189,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
             }
           }
         }
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = customFilename;
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnLoading2 = false;
       },
     });

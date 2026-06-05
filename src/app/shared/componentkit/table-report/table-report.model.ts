@@ -7,6 +7,9 @@ export interface ReportColumn {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   width?: string;    // 欄位寬度，例如 '80px'、'10rem'
+  dynamicMinWidth?: string;
+  dynamicWidth?: string;
+  dynamicMaxWidth?: string;
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('field'))
   groupField?: string; //
@@ -79,6 +82,23 @@ export const formatDateTime = (dateStr: string) => {
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
+
+/**
+ * 將小數轉換為百分比字串 (例如: 0.12000 -> '12%')
+ * 如果需要保留小數點，例如 12.00%，可以改成 (value * 100).toFixed(2) + '%'
+ */
+export const formatPercentage = (value: any): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return '';
+  }
+  const num = Number(value) * 100;
+  // 使用 Math.round 或 toFixed 根據你的業務需求決定
+  // 範例 A (無條件捨入到整數，如 12%):
+  // return `${Math.round(num)}%`;
+
+  // 範例 B (如果需要保留兩位小數，如 12.00%):
+  return `${num.toFixed(2)}%`;
+}
 
 // formatYYYYMM 輸出為 YYYY/MM
 export const formatYYYYMM = (value: string | Date | null): string => {

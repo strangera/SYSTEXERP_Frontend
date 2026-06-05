@@ -372,12 +372,12 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
       type: res.body?.type || 'application/octet-stream',
     });
     const fileName = this.getFilenameFromResponse(res, defaultName);
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   // 匯出按鈕 loading 狀態
@@ -425,7 +425,7 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
@@ -436,8 +436,8 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     }
 
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
-    window.open(finalUrl, '_blank', 'noopener');
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 
   /** 開啟應收/應付帳款頁面 - 收: FIN32010CRU, 付: FIN24010CRU */
@@ -453,7 +453,7 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     try {
       const handoff = {
         arsId: docNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem(localStorageKey, JSON.stringify(handoff));
@@ -463,7 +463,7 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     }
 
     const externalUrl = this.location.prepareExternalUrl(route);
-    const finalUrl = `${window.location.origin}${externalUrl}`;
-    window.open(finalUrl, '_blank', 'noopener');
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 }

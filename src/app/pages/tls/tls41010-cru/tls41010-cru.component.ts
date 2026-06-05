@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -49,27 +49,27 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
-    ECR_SchNo: [''],
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-    ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
-    ECR_TLT_No: ['', [Validators.maxLength(20)]],
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]],
+    ECR_SchNo: [null as string | null],
+    ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],
+    ECR_Name: [null, [Validators.required, Validators.maxLength(20)]],
+    ECR_TLT_No: [null, [Validators.maxLength(20)]],
+    ECR_TLT_Name: [null, [Validators.maxLength(60)]],
     ECR_Type: ['1', [Validators.required, Validators.maxLength(2)]],
-    ECR_SAL_Type: ['', [Validators.maxLength(8)]],
-    ECR_LocNo: ['', [Validators.maxLength(10)]],
-    ECR_USR_No: ['', [Validators.maxLength(8)]],
-    ECR_USR_Name: ['', [Validators.maxLength(20)]],
+    ECR_SAL_Type: [null, [Validators.maxLength(8)]],
+    ECR_LocNo: [null, [Validators.maxLength(10)]],
+    ECR_USR_No: [null, [Validators.maxLength(8)]],
+    ECR_USR_Name: [null as string | null, [Validators.maxLength(20)]],
     ECR_Status: ['A'],
     ECR_ActiveDate: [null as Date | null],
-    ECR_Group: [''],
-    ECR_AreaNo: [''],
-    ECR_SubGroup: [''],
+    ECR_Group: [null],
+    ECR_AreaNo: [null],
+    ECR_SubGroup: [null],
     ECR_CloseDate: [null as Date | null],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
-    ECR_ComName: ['', [Validators.maxLength(64)]],
-    ECR_IP: ['', [Validators.maxLength(20)]],
-    ECR_SrvIP: ['', [Validators.maxLength(20)]],
-    ECR_TmplNo: ['', [Validators.maxLength(8)]],
+    ECR_ComName: [null, [Validators.maxLength(64)]],
+    ECR_IP: [null, [Validators.maxLength(20)]],
+    ECR_SrvIP: [null, [Validators.maxLength(20)]],
+    ECR_TmplNo: [null, [Validators.maxLength(8)]],
     ECR_SernoType: ['2', [Validators.required, Validators.maxLength(1)]],
     ECR_GUI_Type: ['07', [Validators.required, Validators.maxLength(2)]],
     ECR_TimeTickInvl: [1, [Validators.required, Validators.min(1), Validators.max(999999)]],
@@ -101,57 +101,57 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_PickUpValid: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_ReprintGUI: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_PrnLogo: ['Y', [Validators.maxLength(1)]],
-    ECR_Logo1: ['', [Validators.maxLength(100)]],
-    ECR_Logo2: ['', [Validators.maxLength(100)]],
-    ECR_Logo3: ['', [Validators.maxLength(100)]],
-    ECR_Logo4: ['', [Validators.maxLength(100)]],
-    ECR_Logo5: ['', [Validators.maxLength(100)]],
-    ECR_Logo6: ['', [Validators.maxLength(100)]],
+    ECR_Logo1: [null, [Validators.maxLength(100)]],
+    ECR_Logo2: [null, [Validators.maxLength(100)]],
+    ECR_Logo3: [null, [Validators.maxLength(100)]],
+    ECR_Logo4: [null, [Validators.maxLength(100)]],
+    ECR_Logo5: [null, [Validators.maxLength(100)]],
+    ECR_Logo6: [null, [Validators.maxLength(100)]],
     ECR_VoidTxn: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_VoidRstDay: [0, [Validators.required, Validators.min(0), Validators.max(9999)]],
     ECR_CreditNote: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_GUI_PeriodQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_SettleHHNN: [this.defaultTime1110(), [Validators.required]],
     ECR_SettleDD: ['T', [Validators.required, Validators.maxLength(2)]],
-    ECR_KBLevel: ['', [Validators.maxLength(6)]],
-    ECR_KBType: ['', [Validators.maxLength(6)]],
-    ECR_Scanner: ['', [Validators.maxLength(20)]],
+    ECR_KBLevel: [null, [Validators.maxLength(6)]],
+    ECR_KBType: [null, [Validators.maxLength(6)]],
+    ECR_Scanner: [null, [Validators.maxLength(20)]],
     ECR_ScannerCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ScrType: ['', [Validators.maxLength(20)]],
-    ECR_CD: ['', [Validators.maxLength(20)]],
+    ECR_ScrType: [null, [Validators.maxLength(20)]],
+    ECR_CD: [null, [Validators.maxLength(20)]],
     ECR_CDCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ExtScr: ['', [Validators.maxLength(20)]],
+    ECR_ExtScr: [null, [Validators.maxLength(20)]],
     ECR_ExtScrCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_GUIPrn: ['', [Validators.maxLength(20)]],
+    ECR_GUIPrn: [null, [Validators.maxLength(20)]],
     ECR_GUICom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_SlipPrn: ['', [Validators.maxLength(20)]],
+    ECR_SlipPrn: [null, [Validators.maxLength(20)]],
     ECR_SlipPrnCom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_OrderPrn: ['', [Validators.maxLength(20)]],
+    ECR_OrderPrn: [null, [Validators.maxLength(20)]],
     ECR_OrderPrnCom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_LablePrn: ['', [Validators.maxLength(20)]],
+    ECR_LablePrn: [null, [Validators.maxLength(20)]],
     ECR_LablePrnCom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_EDC: ['', [Validators.maxLength(20)]],
+    ECR_EDC: [null, [Validators.maxLength(20)]],
     ECR_EDCCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_EDC2: ['', [Validators.maxLength(20)]],
+    ECR_EDC2: [null, [Validators.maxLength(20)]],
     ECR_EDC2Com: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ElecSVCrdA: ['', [Validators.maxLength(20)]],
+    ECR_ElecSVCrdA: [null, [Validators.maxLength(20)]],
     ECR_ElecSVCrdACom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ElecSVCrdB: ['', [Validators.maxLength(20)]],
+    ECR_ElecSVCrdB: [null, [Validators.maxLength(20)]],
     ECR_ElecSVCrdBCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ElecSVCrdC: ['', [Validators.maxLength(20)]],
+    ECR_ElecSVCrdC: [null, [Validators.maxLength(20)]],
     ECR_ElecSVCrdCCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_ElecPay: ['', [Validators.maxLength(20)]],
+    ECR_ElecPay: [null, [Validators.maxLength(20)]],
     ECR_ElecPayCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_Drawer: ['', [Validators.maxLength(20)]],
+    ECR_Drawer: [null, [Validators.maxLength(20)]],
     ECR_DrawerCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_MSR: ['', [Validators.maxLength(20)]],
+    ECR_MSR: [null, [Validators.maxLength(20)]],
     ECR_MSRCom: [null, [Validators.min(0), Validators.max(99)]],
     CRT_Date: [null],
-    CRT_USR_No: ['', [Validators.maxLength(16)]],
-    CRT_USR_Name: ['', [Validators.maxLength(20)]],
+    CRT_USR_No: [null, [Validators.maxLength(16)]],
+    CRT_USR_Name: [null, [Validators.maxLength(20)]],
     UPD_Date: [null],
     UPD_USR_No: [{ value: '', disabled: true }],
-    UPD_USR_Name: ['', [Validators.maxLength(20)]],
+    UPD_USR_Name: [null, [Validators.maxLength(20)]],
     ECR_RestoreVoid: ['N', [Validators.required, Validators.maxLength(1)]],
   });
 
@@ -171,10 +171,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   tmplDetailList: any[] = [];
 
   constructor(
-    public override formBuilder: FormBuilder,
-    private dropDownListService: DropDownListService,
-    private tls41010Service: TLS41010Service,
-    private counterNameService: CounterNameService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly tls41010Service: TLS41010Service,
+    private readonly counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -184,12 +183,12 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || []; });
 
     // Disable 一些欄位
-    [
+    for (const field of [
       'ECR_KBType', 'ECR_Scanner', 'ECR_MSR', 'ECR_ScrType', 'ECR_CD', 'ECR_ExtScr',
       'ECR_GUIPrn', 'ECR_SlipPrn', 'ECR_OrderPrn', 'ECR_LablePrn', 'ECR_EDC', 'ECR_EDC2',
       'ECR_ElecSVCrdA', 'ECR_ElecSVCrdB', 'ECR_ElecSVCrdC', 'ECR_ElecPay', 'ECR_Drawer',
       'CRT_Date', 'CRT_USR_No', 'CRT_USR_Name', 'UPD_Date', 'UPD_USR_No', 'UPD_USR_Name',
-    ].forEach(field => this.dataForm.get(field)?.disable());
+    ]) this.dataForm.get(field)?.disable();
 
     if (this.isFormCreateable) {
       this.dataForm.get('ECR_No')?.enable();
@@ -279,14 +278,14 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         const selected = this.LocOptions.find(c => c.value === selectedNo);
         if (!selected) return;
 
-        const patch: any = {
-          ECR_Group: selected.tlt_building,
-          ECR_SubGroup: selected.tlt_floor,
-          ECR_AreaNo: selected.area_no,
+        const patch: Record<string, string> = {
+          ECR_Group: selected.tlt_building || '',
+          ECR_SubGroup: selected.tlt_floor || '',
+          ECR_AreaNo: selected.area_no || '',
         };
 
         if (this.isFormCreateable && !this.dataForm.get('ECR_TLT_Name')?.value) {
-          patch.ECR_TLT_Name = selected.Name;
+          patch['ECR_TLT_Name'] = selected.Name || '';
         }
 
         this.dataForm.patchValue(patch, { emitEvent: false });
@@ -297,13 +296,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       if (tmplNo) {
         const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
         if (detail) {
-          const patchObj: any = {};
-          Object.keys(this.dataForm.controls).forEach(key => {
+          const patchObj: Record<string, string | Date | number> = {};
+          for (const key of Object.keys(this.dataForm.controls)) {
             if (detail[key] !== undefined) {
               // 特別處理連接埠欄位為 null 的情況
               if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
                 patchObj[key] = 0;
-                return;
+                continue;
               }
 
               // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
@@ -313,21 +312,21 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
                   patchObj[key] = val;
                 } else if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(String(val)))) {
                   const s = String(val).padStart(4, '0');
-                  const hh = parseInt(s.substring(0, 2), 10);
-                  const mm = parseInt(s.substring(2, 4), 10);
+                  const hh = Number.parseInt(s.substring(0, 2), 10);
+                  const mm = Number.parseInt(s.substring(2, 4), 10);
                   const d = new Date();
                   d.setHours(hh, mm, 0, 0);
                   patchObj[key] = d;
                 } else {
                   patchObj[key] = this.defaultTime1110();
                 }
-                return;
+                continue;
               }
 
               // 其他欄位直接帶入
               patchObj[key] = detail[key];
             }
-          });
+          }
           this.dataForm.patchValue(patchObj);
         }
       }
@@ -349,15 +348,15 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
               console.log('自動帶入櫃位資訊:', info);
 
               //  無論新增或編輯，都可 patch，但限定特定欄位
-              const patch: any = {};
+              const patch: Record<string, string | Date | number> = {};
 
               // 只要櫃位查詢回來有值，就覆蓋（不動沒給值的欄位）
-              if (info.ECR_LocNo) patch.ECR_LocNo = info.ECR_LocNo;
-              if (info.ECR_Group) patch.ECR_Group = info.ECR_Group;
-              if (info.ECR_SubGroup) patch.ECR_SubGroup = info.ECR_SubGroup;
-              if (info.ECR_AreaNo) patch.ECR_AreaNo = info.ECR_AreaNo;
-              if (info.tlt_bdate) patch.ECR_ActiveDate = new Date(info.tlt_bdate);
-              if (info.tlt_edate) patch.ECR_CloseDate = new Date(info.tlt_edate);
+              if (info.ECR_LocNo) patch['ECR_LocNo'] = info.ECR_LocNo;
+              if (info.ECR_Group) patch['ECR_Group'] = info.ECR_Group;
+              if (info.ECR_SubGroup) patch['ECR_SubGroup'] = info.ECR_SubGroup;
+              if (info.ECR_AreaNo) patch['ECR_AreaNo'] = info.ECR_AreaNo;
+              if (info.tlt_bdate) patch['ECR_ActiveDate'] = new Date(info.tlt_bdate);
+              if (info.tlt_edate) patch['ECR_CloseDate'] = new Date(info.tlt_edate);
               this.dataForm.patchValue(patch, { emitEvent: false });
             } else {
               console.warn('查詢櫃位資訊失敗:', res?.Message);
@@ -368,12 +367,12 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       });
 
     // 若後端/範本回傳 null/undefined 的連接埠欄位，畫面預設顯示 0
-    ['ECR_MSRCom', 'ECR_OrderPrnCom'].forEach(field => {
+    for (const field of ['ECR_MSRCom', 'ECR_OrderPrnCom']) {
       const ctrl = this.dataForm.get(field);
       if (ctrl && (ctrl.value === null || ctrl.value === undefined)) {
         ctrl.setValue(0, { emitEvent: false });
       }
-    });
+    }
 
 
   }
@@ -384,14 +383,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       next: (res) => {
         if (res.Data?.length) {
           const patchData = res.Data[0];
-          // delete patchData.ECR_TmplNo;
-
-
           if ('ECR_SettleHHNN' in patchData) {
             const val = patchData.ECR_SettleHHNN;
             if (typeof val === 'string' && /^\d{4}$/.test(val)) {
-              const hh = parseInt(val.substring(0, 2), 10);
-              const mm = parseInt(val.substring(2, 4), 10);
+              const hh = Number.parseInt(val.substring(0, 2), 10);
+              const mm = Number.parseInt(val.substring(2, 4), 10);
               const d = new Date();
               d.setHours(hh, mm, 0, 0);
               patchData.ECR_SettleHHNN = d;
@@ -409,40 +405,65 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
   }
 
-  /** 判斷 TLT 必填 */
+  /** 判斷 TLT (專櫃編號) 必填 */
   checkTltNoRequired(value: string) {
     const tltControl = this.dataForm.get('ECR_TLT_No');
     if (!tltControl) return;
-    if (value === '3') {
+
+    // 當機台類型為 '2' (專櫃機台) 時，專櫃編號為必填
+    if (value === '2') {
       tltControl.addValidators(Validators.required);
     } else {
+      // 其他類型 (例如 '1' 集中統收) 則清除必填卡控
       tltControl.clearValidators();
     }
-    tltControl.updateValueAndValidity();
+
+    // 關鍵：必須重新驗證欄位狀態，畫面上的紅框與錯誤提示才會即時更新
+    tltControl.updateValueAndValidity({ emitEvent: false });
   }
 
   /** 送出 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      const body = this.createBody(frm);
-      const serviceCall = this.isFormCreateable
-        ? this.tls41010Service.insertTLS41010(body)
-        : this.tls41010Service.updateTLS41010(body);
-
-      serviceCall
-        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-        .subscribe({
-          next: (res) => {
-            this.messageService.successBubble(res.Message);
-            if (this.isFormCreateable) {
-              this.dataForm.reset();
-            } else if (this.isFormEditable) {
-              this.onCancel();
-            }
+      // 檢查是否為集中收銀(1) 且 專櫃編號有值
+      const rawValue = frm.getRawValue();
+      if (rawValue.ECR_Type === '1' && rawValue.ECR_TLT_No) {
+        this.messageService.confirm({
+          header: '變更確認',
+          message: '機台類型已變更為【統收(集中)機台】，系統將自動清空【機台所屬專櫃】，是否確定送出？',
+          accept: () => {
+            // 用戶點選同意，執行原本的送出流程
+            this.executeSubmit(frm);
+          },
+          reject: () => {
+            this.loading = false;
           },
         });
+      } else {
+        // 一般狀況直接送出
+        this.executeSubmit(frm);
+      }
     });
+  }
+  private executeSubmit(frm: FormGroup) {
+    this.loading = true;
+    const body = this.createBody(frm);
+    const serviceCall = this.isFormCreateable
+      ? this.tls41010Service.insertTLS41010(body)
+      : this.tls41010Service.updateTLS41010(body);
+
+    serviceCall
+      .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.messageService.successBubble(res.Message);
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+          } else if (this.isFormEditable) {
+            this.onCancel();
+          }
+        },
+      });
   }
 
   /** 組裝 Body */
@@ -455,7 +476,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       const date = new Date(rawValue.ECR_SettleHHNN);
       settleHHNN = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
     }
-
+    if (rawValue.ECR_Type === '1') {
+      rawValue.ECR_TLT_No = null;
+      rawValue.ECR_TLT_Name = null;
+    }
     return {
       ...rawValue,
       id: this.isFormEditable ? this.rowdata?.id : undefined,

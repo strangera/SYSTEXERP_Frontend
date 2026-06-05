@@ -317,57 +317,37 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   deletePage() {
     this.messageService.confirm({
-      message: `確定要刪除第 ${this.activeIndex + 1} 頁嗎？此操作無法復原。`,
+      message: `確定要刪除第 ${this.activeIndex + 1} 頁嗎？後續頁面將會往前遞補並重新編號。`,
       header: '刪除確認',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        // 若此頁尚未儲存到後端，直接在前端移除，不呼叫 API
-        const isSaved = !!this.rowdata?.ID && !!this.pageSavedFlags[this.activeIndex];
-        if (!isSaved) {
-          this.pages.splice(this.activeIndex, 1);
-          if (this.pageOriginalNos && this.pageOriginalNos.length > this.activeIndex) {
-            this.pageOriginalNos.splice(this.activeIndex, 1);
-          }
-          if (this.pageSavedFlags && this.pageSavedFlags.length > this.activeIndex) {
-            this.pageSavedFlags.splice(this.activeIndex, 1);
-          }
-          if (this.activeIndex >= this.pages.length) {
-            this.activeIndex = this.pages.length - 1;
-          }
-          this.dataForm.controls.activePage.setValue(this.activeIndex);
-          const currentPage = this.pages[this.activeIndex];
-          if (currentPage?.length) {
-            this.selectKey(currentPage[0]);
-          }
-          this.messageService.successBubble('頁面已刪除');
-          return;
+        // 1. 前端直接移除該頁
+        this.pages.splice(this.activeIndex, 1);
+
+        // 2. 核心：呼叫 Service 重新洗牌後面所有頁面的 code 與 y 座標
+        this.tlsKeyboardService.reindexPages(this.pages, this.xCount, this.yCount);
+
+        // 3. 同步修正長度陣列（因為後續要全刪全寫，這邊維持長度一致即可）
+        if (this.pageOriginalNos.length > this.pages.length) {
+          this.pageOriginalNos.pop();
         }
-        // 已儲存的頁面則呼叫後端刪除
-        const origPageNo = this.pageOriginalNos[this.activeIndex] ?? (this.activeIndex + 1);
-        const payload = {
-          USR_Level: this.rowdata?.USR_Level ?? this.dataForm.controls.USR_Level.value,
-          KB_KeyPage: origPageNo
-        };
-        this.tls42010Service.deletepageTLS42010(payload).pipe(untilDestroyed(this)).subscribe(res => {
-          this.pages.splice(this.activeIndex, 1);// 刪除當前頁（僅在後端成功後）
-          // 同步原始頁碼陣列
-          if (this.pageOriginalNos && this.pageOriginalNos.length > this.activeIndex) {
-            this.pageOriginalNos.splice(this.activeIndex, 1);
-          }
-          if (this.pageSavedFlags && this.pageSavedFlags.length > this.activeIndex) {
-            this.pageSavedFlags.splice(this.activeIndex, 1);
-          }
-          // 調整活動頁面索引
-          if (this.activeIndex >= this.pages.length) {
-            this.activeIndex = this.pages.length - 1;
-          }
-          this.dataForm.controls.activePage.setValue(this.activeIndex);
-          // 選擇新活動頁面的第一個按鍵
-          if (this.pages[this.activeIndex]?.length) {
-            this.selectKey(this.pages[this.activeIndex][0]);
-          }
-          this.messageService.successBubble(res?.Message ?? '頁面已刪除');
-        });
+        // 全部標記為 false（或者你維持原本的，因為 onSubmit 會整批打包送出）
+        this.pageSavedFlags = this.pages.map(() => false);
+
+        // 4. 調整當前停留在哪一頁
+        if (this.activeIndex >= this.pages.length) {
+          this.activeIndex = this.pages.length - 1;
+        }
+        this.dataForm.controls.activePage.setValue(this.activeIndex);
+
+        // 5. 重新選取新頁面的第一個按鍵並重繪
+        const currentPage = this.pages[this.activeIndex];
+        if (currentPage?.length) {
+          this.selectKey(currentPage[0]);
+        }
+
+        this.refreshPageDisplay();
+        this.messageService.successBubble('頁面已刪除並完成重新編號，請記得儲存變更。');
       }
     });
   }
@@ -438,31 +418,55 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 1. 透過 Mapper 產生明細清單
-      const detailList = this.pages.flatMap((page, idx) =>
-        page.map(k => {
-          const baseSize = this.pos1008Map[k.code] ?? this.templateDefaultKeySize;
-          return Tls42010Mapper.toBackend(
-            k,
-            idx + 1,
-            frm.getRawValue(),
-            this.crudstatus,
-            this.rowdata,
-            baseSize, // 這裡傳入的是「單格」的基礎寬高
-            page
-          );
-        })
-      );
-      // 2. ID 防呆
-      detailList.forEach(d => { if (d.ID == null || isNaN(Number(d.ID))) d.ID = 0; });
-      // 3. 重複性檢查
+
+      // 1. 送出前校正：因應 code 改變，重新整理每一個頁面內部的 KB_Merge 關聯
+      this.pages.forEach(page => {
+        page.forEach(k => {
+          // 如果這個按鈕是被合併的 (isHidden = true)，找出現在是哪一個 Master 蓋住它
+          if (this.tlsKeyboardService.calculateIsHidden(k, page)) {
+            const master = this.tlsKeyboardService.findMasterKey(k.x, k.y, page);
+            if (master) {
+              k.KB_Merge = master.code; // 讓他綁定新洗牌後的 Master code
+            }
+          } else {
+            // 如果自己就是 Master 且有合併別人，KB_Merge 就是自己的新 code
+            if ((k.mergeRight && k.mergeRight > 0) || (k.mergeDown && k.mergeDown > 0)) {
+              k.KB_Merge = k.code;
+            } else {
+              k.KB_Merge = '';
+            }
+          }
+        });
+      });
+
+      // 2. 透過 Mapper 產生明細清單 (這時 idx + 1 就會是正確遞補後的頁碼)
+      const detailList = this.pages.flatMap((page, idx) => page.map(k => {
+        const baseSize = this.pos1008Map[k.code] ?? this.templateDefaultKeySize;
+        return Tls42010Mapper.toBackend(
+          k,
+          idx + 1, // 這裡傳入的就是 1, 2, 3 頁碼
+          frm.getRawValue(),
+          this.crudstatus,
+          this.rowdata,
+          baseSize,
+          page
+        );
+      }));
+
+      // 3. ID 防呆
+      detailList.forEach(d => {
+        if (d.ID == null || isNaN(Number(d.ID))) d.ID = 0;
+      });
+
+      // 4. 重複性檢查
       const duplicates = detailList.map(d => `${d.ECR_KBType}-${d.USR_Level}-${d.KB_ScanCode}`).filter((v, i, arr) => arr.indexOf(v) !== i);
       if (duplicates.length) {
         this.messageService.errorBubble(`${duplicates.join(', ')}`, '偵測到重複按鍵：');
         this.loading = false;
         return;
       }
-      // 4. 發送請求
+
+      // 5. 發送請求 (依據你的敘述，後端會對應此 USR_Level 進行全刪全改)
       const payload = {
         ID: this.isFormCreateable ? undefined : this.rowdata?.id,
         ECR_KBType: frm.getRawValue().ECR_KBType,
@@ -472,9 +476,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         POS1004: detailList,
         POS1004Disc: detailList
       };
+
       const response = this.isFormCreateable
         ? this.tls42010Service.insertTLS42010M(payload)
         : this.tls42010Service.updateTLS42010M(payload);
+
       response.pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
         this.onCancel();

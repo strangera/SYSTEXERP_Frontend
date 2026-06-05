@@ -1,37 +1,19 @@
 <div class="grid">
   <div class="col-12 md:col-6 lg:col-4">
-    <app-dropdown
-      label="館別"
-      controlName="tlt_building"
-      [options]="buildingOptions"
-      [optionLabel]="'label'"
-      [optionValue]="'value'"
-      [control]="buildingControl"
-      [submitted]="submitted"
-    ></app-dropdown>
+    <app-dropdown label="館別" controlName="tlt_building" [options]="buildingOptions" [optionLabel]="'label'"
+      [optionValue]="'value'" [control]="buildingControl" [submitted]="submitted"
+      (keydown.enter)="handleEnterKey($event)"></app-dropdown>
   </div>
 
   <div class="col-12 md:col-6 lg:col-4">
-    <app-multi-select
-      label="樓層"
-      controlName="floor_noList"
-      [options]="floorOptions"
-      [optionLabel]="'label'"
-      [optionValue]="'value'"
-      [control]="floorControl"
-      [submitted]="submitted"
-    ></app-multi-select>
+    <app-multi-select label="樓層" controlName="floor_noList" [options]="floorOptions" [optionLabel]="'label'"
+      [optionValue]="'value'" [control]="floorControl" [submitted]="submitted"
+      (keydown.enter)="handleEnterKey($event)"></app-multi-select>
   </div>
 
   <div class="col-12 md:col-6 lg:col-4">
-    <app-multi-select
-      label="區域"
-      controlName="area_noList"
-      [options]="regionOptions"
-      [optionLabel]="'label'"
-      [optionValue]="'value'"
-      [control]="regionControl"
-      [submitted]="submitted"
-    ></app-multi-select>
+    <app-multi-select label="區域" controlName="area_noList" [options]="regionOptions" [optionLabel]="'label'"
+      [optionValue]="'value'" [control]="regionControl" [submitted]="submitted"
+      (keydown.enter)="handleEnterKey($event)"></app-multi-select>
   </div>
 </div>

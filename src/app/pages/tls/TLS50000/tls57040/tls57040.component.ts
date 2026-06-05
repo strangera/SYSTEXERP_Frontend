@@ -9,10 +9,10 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
@@ -24,7 +24,7 @@ import { debounceTime, finalize } from 'rxjs';
   standalone: true,
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, DropdownTableComponent, DropdownComponent,
+    DropdownTableComponent, DropdownComponent,
     TooltipModule, TranslateModule,
     ButtonComponent, CheckboxModule,
     InputTextareaComponent, TableReportComponent
@@ -47,7 +47,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
   totalRecords = 0;
   historyRequestBody?: QueryTLS57040Request;
   data: QueryTLS57040Response[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 新增品牌名稱欄位
@@ -121,6 +121,8 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
 
   // 表單提交處理方法
   onSubmit(frm: FormGroup) {
+    const obj: any = null;
+    obj.hello();
     this.handleSubmit(frm, () => {
       // 檢查是否勾選了「顯示標準進價」
       const showStandardCost = frm.controls['ShowOrderPrc'].value;

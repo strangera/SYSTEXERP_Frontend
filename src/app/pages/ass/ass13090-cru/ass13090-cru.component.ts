@@ -1,206 +1,297 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { DatePipe, NgIf } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-import { NgIf } from '@angular/common';
+import { ASS13090Service } from '@service/api/ass/ass13090.service';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '../../../shared/componentkit/table-report/table-report.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { DetailASS13090DetailItem, DetailASS13090MasterInfo } from '../ass13090/ass13090.model';
 
-//3.1.3.9  資產攤提作業 CRU
+// 3.1.3.9 資產攤提作業 CRU
+@UntilDestroy()
 @Component({
   selector: 'app-ass13090-cru',
   templateUrl: './ass13090-cru.component.html',
   styleUrl: './ass13090-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  providers: [DatePipe],
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    ButtonComponent,
+    TableReportComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
-export class ASS13090CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090MasterInfo> implements OnInit {
+  private validationService = inject(ValidationService);
+  private translate = inject(TranslateService);
+  private ass13090Service = inject(ASS13090Service);
+  private datePipe = inject(DatePipe);
 
-  itemCodeOptions: any[] = [];
-  assetsStatusOptions: any[] = [];
-  assetTypeOptions: any[] = [];
-  accountingCodeOptions: any[] = [];
-  orderNumberOptions: any[] = [
-    { value: 1, label: '201410300001' },
-    { value: 2, label: '201410300002' },
-    { value: 3, label: '201410300003' },
+  /** 攤提紀錄（明細列表，API 就緒後改為查詢結果） */
+  readonly amortRecordTableLoading = signal(false);
+  amortRecordColumns: ReportColumn[] = [
+    { field: 'DEPRE_YM_B', header: '攤提起始', visible: true },
+    { field: 'DEPRE_YM_E', header: '攤提結束', visible: true },
+    {
+      field: 'DEPRE_AMOUNT',
+      header: '攤提金額',
+      visible: true,
+      align: 'right',
+      format: v => (v == null || v === '' ? '' : formatAmount(Number(v))),
+    },
+    { field: 'DEPRE_DATE', header: '攤提日期', visible: true },
+    { field: 'VOUCHER_ID', header: '傳票編號', visible: true },
+    { field: 'REPNOTE', header: '重估單號', visible: true },
   ];
-  filterOptions: any[] = [
-    { value: 1, label: '已設定攤提' },
-    { value: 2, label: '未設定攤提' },
-  ];
-  supplierCodeOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  locationCodeOptions: any[] = [];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    //
-    assetsCode: [, [Validators.maxLength(20)]], // 財產代號
-    itemCode: [], // 	品項編號
-    assetStatus: [, [Validators.maxLength(13)]], // 資產狀態
-    assetType: [, [Validators.maxLength(13)]], // 資產類型
-    // 採購資訊
-    purchaseNumber: [], // 採購單號
-    purchaseDate: [], // 	購入日期
-    purchaseAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 購入金額
-    alteredAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 異動金額
-    supplierCode: [, [Validators.maxLength(10)]], // 	供應商編號
+  amortRecordData: DetailASS13090DetailItem[] = [];
+  amortRecordTotal = 0;
+  /** 取消鈕還原用：進頁當下表單快照 */
+  private formBaseline: Record<string, unknown> | null = null;
 
-    accounting_Borrow: [, [Validators.maxLength(8)]], // 會計科目代號(借)
-    accounting_Credit: [, [Validators.maxLength(8)]], // 會計科目代號(貸)
-    entryDate: [], // 入賬日期
-    amortizedDate: [], // 攤提起始日
-    // 折舊資訊
-    depreciation: [], // 折舊會計科目
-    totalDepreciation: [], // 累計折舊科目
-    depreciationLife: [, [Validators.maxLength(8)]], // 折舊年限
-    alteredLife: [, Validators.maxLength(8)], // 異動年限
-    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]], // 原折舊年限(月)
-    residual: [, [Validators.maxLength(8)]], // 預留殘值
-    amortizedAmount: [, [Validators.maxLength(8)]], // 已攤提金額
-    amortizedMonth: [, [Validators.maxLength(8)]], // 已攤提月數
-    // 保管資訊
-    keepingPerson: [, [Validators.required]], // 保管人
-    keepingUnit: [], // 保管單位
-    user: [], // 使用人
-    userUnit: [], // 使用單位
-    locationCode: [], // 位置編號
-    // 續提資訊
-    renewalNumber: [, [Validators.maxLength(25)]], // 續提號
-    renewalAmount: [, [Validators.required, Validators.maxLength(8)]], // 續提攤入金額
-    remark: [,], // 續提註記
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+  dataForm = this.formBuilder.group({
+    assetsCode: [, [Validators.maxLength(20)]],
+    itemCode: [],
+    assetStatus: [, [Validators.maxLength(13)]],
+    assetType: [, [Validators.maxLength(13)]],
+    purchaseNumber: [],
+    purchaseDate: [],
+    purchaseAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]],
+    alteredAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]],
+    supplierCode: [, [Validators.maxLength(10)]],
+    accounting_Borrow: [, [Validators.maxLength(8)]],
+    accounting_Credit: [, [Validators.maxLength(8)]],
+    entryDate: [],
+    amortizedDate: [],
+    depreciation: [],
+    totalDepreciation: [],
+    depreciationLife: [, [Validators.maxLength(8)]],
+    alteredLife: [, [Validators.maxLength(8)]],
+    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]],
+    residual: [, [Validators.maxLength(8)]],
+    amortizedAmount: [, [Validators.maxLength(8)]],
+    amortizedMonth: [, [Validators.maxLength(8)]],
+    keepingPerson: [, [Validators.required]],
+    keepingUnit: [],
+    user: [],
+    userUnit: [],
+    locationCode: [],
+    renewalNumber: [, [Validators.maxLength(25)]],
+    renewalAmount: [, [Validators.required, Validators.maxLength(8)]],
+    remark: [,],
   });
-  // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-  ) {
-    super();  // 呼叫父類建構子
+
+  constructor() {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310024';
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
+    this.initializePage('ASS13090', this.dataForm);
+    this.loadDetailData();
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // services: ['', [Validators.required, Validators.maxLength(120)]], // 服務項目
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.submitContinued();
+          }
+          break;
+        default:
+          this.loading = false;
+          break;
+      }
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+
+  submitForm(frm: FormGroup): void {
+    this.onSubmit(frm);
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  /** 取消鈕：還原成進入頁面時的原始資料 */
+  onCancelFormReset(): void {
+    if (this.formBaseline == null) {
+      return;
+    }
+    this.dataForm.reset(this.formBaseline);
+    this.submitted = false;
+    this.applyEditFieldLock();
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+  /** 編輯模式僅允許「續攤攤入金額」與「攤提備註」可編輯 */
+  private applyEditFieldLock(): void {
+    if (this.crudstatus !== CRUDStatus.Edit) {
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
+    const editable = new Set(['renewalAmount', 'remark']);
+    for (const key of Object.keys(this.dataForm.controls) as Array<keyof typeof this.dataForm.controls>) {
+      const ctrl = this.dataForm.controls[key];
+      if (editable.has(key as string)) {
+        ctrl.enable({ emitEvent: false });
+      } else {
+        ctrl.disable({ emitEvent: false });
+      }
     }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
+  private captureFormBaseline(): void {
+    try {
+      this.formBaseline = structuredClone(this.dataForm.getRawValue()) as Record<string, unknown>;
+    } catch {
+      this.formBaseline = { ...(this.dataForm.getRawValue() as Record<string, unknown>) };
+    }
+  }
 
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS13090']);
+  private loadDetailData(): void {
+    this.loading = true;
+    this.amortRecordTableLoading.set(true);
+    this.ass13090Service
+      .detailASS13090({
+        STO_NO:
+          this.authService.getUserInfo()?.SYS_StoreNo ??
+          this.authService.currentUserValue?.SYS_StoreNo ??
+          null,
+        DEPRE_ID: this.rowdata?.ASSET_ID ?? '',
+      })
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.amortRecordTableLoading.set(false);
+        }),
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000' || !res.Data) {
+            this.messageService.warnBubble(res.Message || '明細載入失敗');
+            return;
+          }
+          this.applyMasterInfo(res.Data.MasterInfo ?? null);
+          this.applyDetailList(res.Data.DetailList ?? []);
+          this.applyEditFieldLock();
+          queueMicrotask(() => this.captureFormBaseline());
+        },
+        error: () => {
+          this.messageService.warnBubble('明細載入失敗，請稍後再試');
+        },
+      });
+  }
+
+  private toDateOrNull(v?: string | null): Date | null {
+    if (!v) return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  private toYm(v?: string | null): string {
+    if (!v) return '';
+    const d = new Date(v);
+    if (!Number.isNaN(d.getTime())) {
+      return this.datePipe.transform(d, 'yyyyMM') ?? '';
+    }
+    return v.replace(/[^0-9]/g, '');
+  }
+
+  private applyMasterInfo(master: DetailASS13090MasterInfo | null): void {
+    if (!master) return;
+    this.dataForm.patchValue(
+      {
+        assetsCode: master.ASSET_ID ?? null,
+        itemCode: [master.GOODS_ID, master.GOODS_NAME].filter(Boolean).join(' / ') || null,
+        assetStatus: master.ASSET_STATUS_NAME ?? master.ASSET_STATUS ?? null,
+        assetType: master.DEPRE_YN_NAME ?? master.DEPRE_YN ?? null,
+        purchaseNumber: master.SUBPOENA_ID ?? null,
+        purchaseDate: this.toDateOrNull(master.GET_DATE),
+        purchaseAmount: master.GET_COST ?? null,
+        alteredAmount: master.CHANGE_AMT ?? null,
+        supplierCode: master.SUPPLIER_ID ?? null,
+        accounting_Borrow: master.STYPE_D ?? null,
+        accounting_Credit: master.STYPE_C ?? null,
+        entryDate: this.toDateOrNull(master.BILL_DATE),
+        amortizedDate: this.toDateOrNull(master.DEPRE_SDATE),
+        depreciation: master.STYPE_ID ?? null,
+        totalDepreciation: master.STYPE_ID2 ?? null,
+        depreciationLife: master.EXP_YEAR ?? null,
+        alteredLife: master.CHANGE_EXP_YEAR ?? null,
+        depreciationLifeMM: master.EXP_MONTH ?? null,
+        residual: master.RESI_VALUE ?? null,
+        amortizedAmount: master.TAL_DEPRE_AMT ?? null,
+        amortizedMonth: master.TAL_DEPRE_MON ?? null,
+        keepingPerson: master.HOLD_EMP_ID ?? null,
+        keepingUnit: master.HOLD_ORG_ID ?? null,
+        user: master.USE_EMP_ID ?? null,
+        userUnit: master.USE_ORG_ID ?? null,
+        locationCode: master.LOCATION_ID ?? null,
+      } as never,
+      { emitEvent: false },
+    );
+  }
+
+  private applyDetailList(list: DetailASS13090DetailItem[]): void {
+    this.amortRecordData = (list ?? []).map(item => ({
+      ...item,
+      DEPRE_YM_B: this.toYm(item.DEPRE_YM_B),
+      DEPRE_YM_E: this.toYm(item.DEPRE_YM_E),
+      DEPRE_DATE: this.datePipe.transform(this.toDateOrNull(item.DEPRE_DATE), 'yyyy/MM/dd') ?? '',
+    }));
+    this.amortRecordTotal = this.amortRecordData.length;
+  }
+
+  private submitContinued(): void {
+    const assetId = this.rowdata?.ASSET_ID ?? null;
+    if (!assetId) {
+      this.loading = false;
+      this.messageService.warnBubble('缺少資產編號，無法續提');
+      return;
+    }
+    const stoNo =
+      this.authService.getUserInfo()?.SYS_StoreNo ?? null;
+
+    const raw = this.dataForm.getRawValue();
+    this.ass13090Service
+      .continuedASS13090({
+        STO_NO: stoNo,
+        ASSET_ID: assetId,
+        DEPRE_AMOUNT: raw.renewalAmount ?? null,
+        RESI_VALUE: raw.residual ?? null,
+        MEMO: raw.remark ?? null,
+      })
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000' || res.Data?.Result !== 1) {
+            this.messageService.warnBubble(res.Data?.ResultMsg || res.Message || '續提失敗');
+            return;
+          }
+          this.messageService.successBubble(res.Data?.ResultMsg || this.translate.instant('updated-successfully'));
+          this.onCancel();
+        },
+        error: () => this.messageService.warnBubble('續提失敗，請稍後再試'),
+      });
   }
 }

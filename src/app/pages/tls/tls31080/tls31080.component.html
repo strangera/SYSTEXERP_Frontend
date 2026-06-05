@@ -53,6 +53,17 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="專櫃編號"
+              controlName="CounterNos"
+              [options]="CounterNos_Option"
+              optionLabel="label"
+              optionValue="No"
+              [control]="queryForm.controls.CounterNos"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="館別"
               controlName="Buildings"
               [options]="tlt_building_Option"
@@ -134,17 +145,6 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="專櫃編號"
-              controlName="CabinetKinds"
-              [options]="CounterNos_Option"
-              optionLabel="label"
-              optionValue="No"
-              [control]="queryForm.controls.CabinetKinds"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
               label="抽成別"
               controlName="ChargeTypes"
               [options]="tlt_term_type"
@@ -204,6 +204,7 @@
     tableKey="tls31080"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
+    [footerData]="footerData"
     [columns]="columns"
     [columnGroup]="columnGroup"
     [totalRecords]="totalRecords"
@@ -212,7 +213,6 @@
     [showEdit]="false"
     [loading]="loading"
     [showManage]="true"
-    [showReportMode]="false"
     [queryFunction]="tls31080Service.queryTLS31080.bind(tls31080Service)"
   >
     <header>

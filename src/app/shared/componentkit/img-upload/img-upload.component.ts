@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, AfterViewInit, Output, ViewChild, ChangeDetectorRef, OnInit } from '@angular/core';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { NgFor, NgIf } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { trigger, transition, style, animate } from '@angular/animations';
-import { NgIf, NgFor } from '@angular/common';
-import { CarouselModule } from 'primeng/carousel';
 import { PrimeTemplate } from 'primeng/api';
-import { ImageModule } from 'primeng/image';
 import { Button } from 'primeng/button';
+import { CarouselModule } from 'primeng/carousel';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
@@ -75,6 +75,9 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
       this.updateFiles(this.files); // 同步到本地的 files 變數並觸發 uploadFiles
     }
   }
+  trackByUploadFile(index: number, item: any) {
+    return item?._tempId || index;
+  }
   // 更新檔案
   private updateFiles(files: File[]) {
     this.files = files;
@@ -99,25 +102,26 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
     selectedFiles = selectedFiles.filter(file => file.type); // 過濾掉沒有類型的檔案
 
     // 自動裁剪圖片到4:3
-    selectedFiles.forEach(file => { // 遍歷每個選擇的檔案
-      const reader = new FileReader(); // 創建 FileReader 來讀取檔案
-      reader.onload = (e: any) => { // 當檔案讀取完成時
-        const img = new Image(); // 創建 Image 物件
-        img.onload = () => { // 當圖片加載完成時
-          const canvas = document.createElement('canvas'); // 創建 canvas 元素
-          const ctx = canvas.getContext('2d'); // 獲取 canvas 的 2D 繪圖上下文
-          if (!ctx) return; // 如果沒有獲取到上下文，則返回
-          const aspectRatio = 4 / 3; // 設定目標比例為 4:3
-          let cropWidth = img.width; // 初始化裁剪寬度
-          let cropHeight = img.height; // 初始化裁剪高度
-          if (img.width / img.height > aspectRatio) { // 如果圖片寬高比大於目標比例
-            cropWidth = img.height * aspectRatio; // 調整裁剪寬度
-          } else { // 否則
-            cropHeight = img.width / aspectRatio; // 調整裁剪高度
+    // 自動裁剪圖片到4:3
+    selectedFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const aspectRatio = 4 / 3;
+          let cropWidth = img.width;
+          let cropHeight = img.height;
+          if (img.width / img.height > aspectRatio) {
+            cropWidth = img.height * aspectRatio;
+          } else {
+            cropHeight = img.width / aspectRatio;
           }
-          canvas.width = cropWidth; // 設定 canvas 寬度
-          canvas.height = cropHeight; // 設定 canvas 高度
-          ctx.drawImage( // 在 canvas 上繪製圖片
+          canvas.width = cropWidth;
+          canvas.height = cropHeight;
+          ctx.drawImage(
             img,
             (img.width - cropWidth) / 2,
             (img.height - cropHeight) / 2,
@@ -128,25 +132,35 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
             cropWidth,
             cropHeight
           );
-          canvas.toBlob(blob => { // 將 canvas 內容轉換為 Blob
-            if (blob) { // 如果 Blob 存在
-              const croppedFile = new File([blob], file.name, { type: file.type }); // 創建新的裁剪後的檔案
+
+          canvas.toBlob(blob => {
+            if (blob) {
+              const croppedFile = new File([blob], file.name, { type: file.type });
+
               // 檢查文件是否已經存在
-              const isDuplicate = this.files.some(existingFile => existingFile.file.name === croppedFile.name && existingFile.file.size === croppedFile.size);
+              const isDuplicate = this.files.some(existingFile =>
+                existingFile.file.name === croppedFile.name &&
+                existingFile.file.size === croppedFile.size
+              );
+
               if (!isDuplicate) {
-                this.files.push({ // 將裁剪後的檔案加入 files 陣列
+                // 修改點：直接儲存純網址字串與唯一 tempId，完全移除 bypassSecurity
+                const blobUrl = URL.createObjectURL(croppedFile);
+
+                this.files.push({
                   file: croppedFile,
-                  objectURL: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(croppedFile)) // 生成安全的 URL
+                  objectURL: blobUrl, // 這裡存純字串即可
+                  _tempId: `upload_${crypto.randomUUID()}` // 使用安全 UUID 做 trackBy
                 });
-                this.uploadFiles.emit(this.files.map(f => f.file)); // 發送上傳檔案事件
-                this.cdr.detectChanges(); // 觸發變更檢測
+                this.uploadFiles.emit(this.files.map(f => f.file));
+                this.cdr.detectChanges();
               }
             }
-          }, file.type); // 指定 Blob 的類型
+          }, file.type);
         };
-        img.src = e.target.result; // 設定圖片的來源
+        img.src = e.target.result;
       };
-      reader.readAsDataURL(file); // 讀取檔案為 Data URL
+      reader.readAsDataURL(file);
     });
   }
 
@@ -154,6 +168,13 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
   onRemoveFile(event: any, file: File, removeFileCallback: any, index: number) {
     removeFileCallback(event, index);
     const updatedFiles = [...this.files];
+
+    // 順手釋放該圖片佔用的瀏覽器暫存記憶體，防範 Memory Leak
+    const targetFile = updatedFiles[index];
+    if (targetFile?.objectURL) {
+      URL.revokeObjectURL(targetFile.objectURL);
+    }
+
     updatedFiles.splice(index, 1);
     if (updatedFiles.length === 0) {
       this.showDelete = false;

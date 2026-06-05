@@ -196,12 +196,12 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
       .pipe(finalize(() => (this.btnLoading1 = false)))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = '部門科目明細表.pdf';
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });
@@ -217,12 +217,12 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
       .pipe(finalize(() => (this.btnLoading2 = false)))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = '部門科目明細表.xlsx';
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });

@@ -1,19 +1,19 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable, Subject, fromEvent, merge, timer } from 'rxjs';
-import { debounceTime, takeUntil, filter } from 'rxjs/operators';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Observable, Subject, fromEvent, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { WorkflowStep } from '../../core/constants';
 import {
+  CommissionItem,
+  ConditionItem,
   ContractInfo,
   ContractRequest,
   FareItem,
-  CommissionItem,
-  ConditionItem,
   UnifiedCommissionResponse
 } from '../../core/models';
+import { WorkflowNavigationService } from './workflow-navigation.service';
 import { WorkflowStateService } from './workflow-state.service';
 import { WorkflowStorageService } from './workflow-storage.service';
-import { WorkflowNavigationService } from './workflow-navigation.service';
 
 /**
  * 工作流程門面服務
@@ -381,8 +381,8 @@ export class WorkflowFacadeService implements OnDestroy {
       });
 
     // 頁面離開前保存
-    if (typeof window !== 'undefined') {
-      fromEvent(window, 'beforeunload')
+    if (typeof globalThis !== 'undefined') {
+      fromEvent(globalThis, 'beforeunload')
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
           this.saveToStorage();

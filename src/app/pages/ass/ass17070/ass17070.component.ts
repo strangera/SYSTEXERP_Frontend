@@ -115,7 +115,7 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
         this.mClassOptions = [];
         this.sClassOptions = [];
         if (b) {
-          this.dropdownApi.queryFaClass1({ CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((options) => {
+          this.dropdownApi.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((options) => {
             this.mClassOptions = options ?? [];
           });
         }
@@ -129,7 +129,7 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
         this.sClassOptions = [];
         if (m) {
           this.dropdownApi
-            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: m })
+            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, M_CLASS_ID: m })
             .pipe(untilDestroyed(this))
             .subscribe((options) => {
             this.sClassOptions = options ?? [];
@@ -141,13 +141,13 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
     const initialB = bCtrl.value;
     const initialM = mCtrl.value;
     if (initialB) {
-      this.dropdownApi.queryFaClass1({ CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((options) => {
+      this.dropdownApi.queryFaClass1({ B_CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((options) => {
         this.mClassOptions = options ?? [];
       });
     }
     if (initialM && initialB) {
       this.dropdownApi
-        .queryFaClass2({ B_CLASS_ID: initialB, CLASS_ID: initialM })
+        .queryFaClass2({ B_CLASS_ID: initialB, M_CLASS_ID: initialM })
         .pipe(untilDestroyed(this))
         .subscribe((options) => {
           this.sClassOptions = options ?? [];

@@ -62,17 +62,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
   columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '資產編號', visible: true },
     { field: 'AssetName', header: '資產名稱', visible: true },
-    {
-      field: 'UnitName',
-      header: '單位',
-      visible: true,
-      format: (_value, _index, row) => {
-        const unit = row?.Unit ?? '';
-        const unitName = row?.UnitName ?? '';
-        if (unit && unitName) return `${unit} - ${unitName}`;
-        return unit || unitName;
-      },
-    },
+    { field: 'UnitName', header: '單位', visible: true },
     { field: 'ASSET_STATUSName', header: '狀態', visible: true },
     { field: 'PurchaseAmt', header: '購入金額', visible: true },
     { field: 'ChangeAmt', header: '異動金額', visible: true },
@@ -177,7 +167,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
         this.queryForm.controls.sClassId.setValue(null);
         if (!value) return;
         this.dropdownApiService
-          .queryFaClass1({ CLASS_ID: value })
+          .queryFaClass1({ B_CLASS_ID: value })
           .pipe(untilDestroyed(this))
           .subscribe(opts => {
             this.mClassOptions = opts ?? [];
@@ -192,7 +182,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
         if (!value) return;
         const bVal = this.queryForm.controls.bClassId.value ?? undefined;
         this.dropdownApiService
-          .queryFaClass2({ B_CLASS_ID: bVal, CLASS_ID: value })
+          .queryFaClass2({ B_CLASS_ID: bVal, M_CLASS_ID: value })
           .pipe(untilDestroyed(this))
           .subscribe(opts => {
             this.sClassOptions = opts ?? [];

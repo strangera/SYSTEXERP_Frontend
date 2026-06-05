@@ -82,7 +82,7 @@ export class FIN41060CRUComponent extends BasicCruPageComponent<FIN41060QueryRow
                 const msg = res.Message ?? res.Data?.ErrMsg ?? `${label}成功`;
                 this.messageService.successBubble(msg);
                 this.dataForm.patchValue({
-                  Audit_Status_NM: action === 'Y' ? '已審核' : '未審核',
+                  Audit_Status_NM: action === 'Y' ? '是' : '否',
                 });
               }
             },

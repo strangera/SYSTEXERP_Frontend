@@ -1,6 +1,7 @@
 // validation/date-validation.service.ts
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,35 +9,45 @@ import { FormGroup } from '@angular/forms';
 export class DateValidationService {
 
   /**
-   * 設定所有日期驗證器
+   * 設定所有日期驗證器，回傳 Subscription 陣列供呼叫端在 ngOnDestroy 取消訂閱
    */
-  setupDateValidators(form: FormGroup, messageService: any): void {
-    // 合約起始日和截止日監聽
-    form.get('tlt_bdate')?.valueChanges.subscribe(() => {
-      this.validateContractDates(form, messageService);
-    });
+  setupDateValidators(form: FormGroup, messageService: any): Subscription[] {
+    const subs: Subscription[] = [];
 
-    form.get('tlt_edate')?.valueChanges.subscribe(() => {
+    // 合約起始日和截止日監聽
+    const s1 = form.get('tlt_bdate')?.valueChanges.subscribe(() => {
       this.validateContractDates(form, messageService);
     });
+    if (s1) subs.push(s1);
+
+    const s2 = form.get('tlt_edate')?.valueChanges.subscribe(() => {
+      this.validateContractDates(form, messageService);
+    });
+    if (s2) subs.push(s2);
 
     // 營運起始日和截止日監聽
-    form.get('tlt_contract_bdate')?.valueChanges.subscribe(() => {
+    const s3 = form.get('tlt_contract_bdate')?.valueChanges.subscribe(() => {
       this.validateOperationDates(form, messageService);
     });
+    if (s3) subs.push(s3);
 
-    form.get('tlt_contract_edate')?.valueChanges.subscribe(() => {
+    const s4 = form.get('tlt_contract_edate')?.valueChanges.subscribe(() => {
       this.validateOperationDates(form, messageService);
     });
+    if (s4) subs.push(s4);
 
     // 回函日期和截止日監聽
-    form.get('feedback_date')?.valueChanges.subscribe(() => {
+    const s5 = form.get('feedback_date')?.valueChanges.subscribe(() => {
       this.validateFeedbackDates(form, messageService);
     });
+    if (s5) subs.push(s5);
 
-    form.get('due_date')?.valueChanges.subscribe(() => {
+    const s6 = form.get('due_date')?.valueChanges.subscribe(() => {
       this.validateFeedbackDates(form, messageService);
     });
+    if (s6) subs.push(s6);
+
+    return subs;
   }
 
   /**

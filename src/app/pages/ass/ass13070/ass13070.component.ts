@@ -174,7 +174,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           if (!bClassId) {
             return of([] as ClassOption[]);
           }
-          return this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).pipe(
+          return this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).pipe(
             map(midOptions => (midOptions ?? []) as ClassOption[]),
           );
         }),
@@ -197,7 +197,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
             return of([] as ClassOption[]);
           }
           return this.dropdownApi
-            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: mClassId })
+            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, M_CLASS_ID: mClassId })
             .pipe(
             map(smallOptions => (smallOptions ?? []) as ClassOption[]),
           );
@@ -213,7 +213,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
     if (initialBClassId) {
       this.dropdownApi
-        .queryFaClass1({ CLASS_ID: initialBClassId })
+        .queryFaClass1({ B_CLASS_ID: initialBClassId })
         .subscribe(midOptions => {
           const mids = (midOptions ?? []) as ClassOption[];
           this.midClassOptions.set(mids);
@@ -229,7 +229,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           // 再載入小分類
           if (initialMClassId) {
             this.dropdownApi
-              .queryFaClass2({ B_CLASS_ID: initialBClassId ?? undefined, CLASS_ID: initialMClassId })
+              .queryFaClass2({ B_CLASS_ID: initialBClassId ?? undefined, M_CLASS_ID: initialMClassId })
               .subscribe(smallOptions => {
                 const smalls = (smallOptions ?? []) as ClassOption[];
                 this.smallClassOptions.set(smalls);

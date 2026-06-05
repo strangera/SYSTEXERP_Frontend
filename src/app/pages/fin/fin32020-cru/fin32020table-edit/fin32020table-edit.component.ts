@@ -183,7 +183,7 @@ private readonly tableHost?: ElementRef<HTMLElement>;
 
 /** 某列是否應顯示 X（不可選） */
 @Input() isRowMarked: (rowData: any, rowIndex: number, data: any[]) => boolean = () => false;
-
+@Input() showSummary = true;
 /** 點 radio 時是否直接觸發 detail / confirm 類行為 */
 @Output() singleSelect = new EventEmitter<any>();
 @Output() rowDoubleClick = new EventEmitter<{

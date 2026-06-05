@@ -18,6 +18,7 @@ export class TLS21020Service {
   public readonly SYS3100Options = signal<Option[]>([]);
   public readonly GLS1005Options = signal<Option[]>([]);
   public readonly POS2013Options = signal<Option[]>([]);
+  public readonly entryTypeOptions = signal<Option[]>([]);
 
   public readonly SYS3100Map = computed(() =>
     new Map<string, Option>(this.SYS3100Options().map(item => [item.value, item]))
@@ -51,17 +52,16 @@ export class TLS21020Service {
     private readonly dropdownApi: DropdownApiService,
   ) { }
 
-  public getEntryTypes(): Option[] {
-    return [
-      { value: EntryType['SD銷售日傳票'], label: EntryType.SD },
-      // { value: EntryType['WD自營日結傳票'], label: EntryType.WD },
-      { value: EntryType['MR租金傳票'], label: EntryType.MR },
-      { value: EntryType['MD代扣傳票'], label: EntryType.MD },
-      { value: EntryType['PR抽成傳票'], label: EntryType.PR },
-      { value: EntryType['PN進貨帳款-暫估應付'], label: EntryType.PN },
-      { value: EntryType['PNC進貨帳款-成本結轉'], label: EntryType.PNC },
-      { value: EntryType['PT進貨請款'], label: EntryType.PT },
-    ];
+  public getEntryTypes(): void {
+    this.dropdownApi.queryGls1010().pipe(
+      take(1),
+      map(res => res ?? []),
+      tap(res => {
+        // 確保 API 回傳格式對應到 Option 的 label/value
+        this.entryTypeOptions.set(res);
+        this.logger.debug(`entryTypes:`, [res]);
+      })
+    ).subscribe();
   }
 
   public getYNOptions(): Option[] {
@@ -130,7 +130,7 @@ export class TLS21020Service {
       take(1),
       map(res => (res ?? []) as POS2013[]),
       tap(res => {
-        this.POS2013Options.set(res.map(item => ({ value: item.VEN_No!, label: `${item.VEN_No} - ${item.Name}` } as Option)));
+        this.POS2013Options.set(res.map(item => ({ value: item.VEN_No, label: `${item.VEN_No} - ${item.Name}` })));
         this.logger.debug(`POS2013s:`, [res]);
       }),
       finalize(() => this.pos2013Loading.set(!1)),

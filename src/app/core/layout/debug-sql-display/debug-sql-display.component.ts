@@ -6,13 +6,14 @@ import { ButtonModule } from 'primeng/button';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { TableModule } from 'primeng/table';
-import { DebugToggleService } from '../../services/debug-toggle.service';
-
+import { ApiMetrics, DebugToggleService } from '../../services/debug-toggle.service';
 interface FlatSqlDetail {
   apiUrl: string;
   sql: string;
   displaySql: string;
   timestamp: string;
+  isFirstOfApi: boolean;  // 用於控制元件上效能儀表板的顯示
+  metrics?: ApiMetrics;   // 效能指標數據
 }
 
 /** SQL 語法高亮工具 - 強化版 */
@@ -61,19 +62,16 @@ export class DebugSqlDisplayComponent {
   public isDebugEnabled = this.debugService.isDebugEnabled;
 
   public tableData = computed<FlatSqlDetail[]>(() => {
-    const history = this.allApiHistory();
+    // 為了讓最新呼叫的 API 排在最上面，我們先將歷史陣列反轉
+    const history = [...this.allApiHistory()].reverse();
     const flatData: FlatSqlDetail[] = [];
 
     history.forEach(entry => {
-      entry.sqlData.forEach(sqlItem => {
-        // 提取時間
+      entry.sqlData.forEach((sqlItem, index) => {
         const timeMatch = sqlItem.sql.match(/\[時間戳記\]: ([\d-:\. ]+)/);
         const timestamp = timeMatch ? timeMatch[1] : '';
 
-        // 1. 清理：移除註解
         const lines = sqlItem.sql.replace(/^--.*$/gm, '').split('\n');
-
-        // 2. 縮排優化 (Dedent)
         const minIndent = lines
           .filter(l => l.trim().length > 0)
           .reduce((min, line) => {
@@ -86,18 +84,22 @@ export class DebugSqlDisplayComponent {
           .join('\n')
           .trim();
 
-        // 3. 套用語法高亮
         const displaySql = highlightSql(cleanedSql);
 
         flatData.push({
           apiUrl: entry.apiUrl,
           sql: sqlItem.sql,
           displaySql: displaySql,
-          timestamp: timestamp
+          timestamp: timestamp,
+          isFirstOfApi: index === 0,
+          metrics: entry.metrics
         });
       });
     });
-    return flatData.reverse();
+
+    // 注意：因為上面已經事先對 API entry 做了反轉(確保最新的 API 在前)，
+    // 這裡我們直接回傳 flatData，不用在最後再 reverse()，否則 index 旗標與顯示順序會錯亂。
+    return flatData;
   });
 
   public sqlCount = computed(() => this.tableData().length);

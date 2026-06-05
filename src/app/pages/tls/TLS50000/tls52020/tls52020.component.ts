@@ -17,7 +17,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, Column, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -90,9 +91,9 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   data: ITLS52020Data[] = [];
   selectedItems: ITLS52020Data[] = [];
   lastQueryBody: IQueryTLS52020Request | null = null;
-  columns: Column[] = [
-    { field: 'CRN_No', header: '退貨單號', visible: true }, // 退貨單號
-    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
+  columns: ReportColumn[] = [
+    { field: 'CRN_No', header: '退貨單號', visible: true, width: '110px' }, // 退貨單號
+    { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' }, // 廠商編號
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
@@ -100,7 +101,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
     { field: 'CRN_Status', header: '退貨單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 退貨單狀態
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate, width: '80px' }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
     { field: 'CRN_TotalSubQty', header: '退貨數量合計', visible: true, format: formatAmount }, // 退貨數量合計
@@ -109,22 +110,22 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { field: 'CRN_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount }, // 進價合計
     { field: 'CRN_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount }, // 售價合計
     { field: 'CRN_Remark', header: '備註', visible: true }, // 備註
-    { field: 'APRV_Date', header: '核准日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
+    { field: 'APRV_Date', header: '核准日期', visible: true, format: formatDate, width: '80px' }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '核准人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '核准人員姓名', visible: true }, // 核准人員姓名
-    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate }, // 反審核日期 (ISO 格式字串)
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate, width: '80px' }, // 反審核日期 (ISO 格式字串)
     { field: 'ReAPRV_USR_No', header: '反審核人員編號', visible: true }, // 反審核人員編號
     { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true }, // 反審核人員姓名
-    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate }, // 作廢日期 (ISO 格式字串)
+    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate, width: '80px' }, // 作廢日期 (ISO 格式字串)
     { field: 'VOID_USR_No', header: '作廢人員編號', visible: true }, // 作廢人員編號
     { field: 'VOID_USR_Name', header: '作廢人員姓名', visible: true }, // 作廢人員姓名
-    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDate }, // 結案日期 (ISO 格式字串)
+    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDate, width: '80px' }, // 結案日期 (ISO 格式字串)
     { field: 'CLOS_USR_No', header: '結案人員編號', visible: true }, // 結案人員編號
     { field: 'CLOS_USR_Name', header: '結案人員姓名', visible: true }, // 結案人員姓名
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期 (ISO 格式字串)
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime, width: '130px' }, // 建立日期 (ISO 格式字串)
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false }, // 建立人員編號
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期 (ISO 格式字串)
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime, width: '130px' }, // 變更日期 (ISO 格式字串)
     { field: 'UPD_USR_No', header: '變更人員編號', visible: false }, // 變更人員編號
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];

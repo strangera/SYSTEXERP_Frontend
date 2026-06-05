@@ -25,6 +25,7 @@ export interface FIN15030QueryRequest extends BaseQueryRequest {
   Voucher_No_E?: string;       // 傳票編號訖
   SAL_Type?: string[];         // 使用別
   SYS_ORIGIN?: string[];       // 系統別
+  IncludeNextDayVoid?: boolean; // 包含隔日作廢
 }
 
 /**
@@ -38,7 +39,8 @@ export interface FIN15030Data {
   TXN_GUINo?: string;          // 發票號碼
   TXN_Date?: string;           // 退出折讓日期
   Credit_Type?: string;        // 區別
-  INV_YM?: string;             // 申報年月
+  INV_YM?: string;             // 資料所屬年月
+  INV_DeclareYM?: string;      // 申報年月
   TXN_Net?: number;            // 退出折讓單金額
   TXN_Tax?: number;            // 退出折讓單稅額
   TXN_TotalAmt?: number;       // 折讓總金額

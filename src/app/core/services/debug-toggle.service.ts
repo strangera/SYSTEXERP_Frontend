@@ -7,15 +7,22 @@ const DEBUG_KEY = 'AppDebugModeEnabled';
 // 定義 SQL 數據的型別
 export interface ExecutedSqlDetail {
   sql: string;
-  // 如果您在後端還收集了其他資訊，例如 time, params 等，也可以在這裡加上
 }
-
+export interface ApiMetrics {
+  totalTime: number;          // 前端計時的總時間（體感）
+  beforeDbTime: number;       // ✨ 新增：進 DB 前 C# 耗時 (對應 BeforeDbTimeMs)
+  dbTime: number;             // 後端回傳的 DbTimeMs
+  afterDbTime: number;        // ✨ 新增：出 DB 後 C# 耗時 (對應 AfterDbTimeMs)
+  networkTime: number;        // 網路與序列化損耗
+  totalBackendTime?: number;  // 後端總時間 (對應 TotalBackendTimeMs)
+}
 /** 完整 API 呼叫的除錯記錄項目 */
 export interface ApiSqlHistoryEntry {
-  apiUrl: string;           // API 請求路徑
-  sqlData: ExecutedSqlDetail[]; // 該 API 產生的 SQL 列表
-  stackTrace: string | null; // 堆疊追蹤資訊
-  timestamp: Date;          // 記錄時間戳 (可選，但推薦)
+  apiUrl: string;
+  sqlData: ExecutedSqlDetail[];
+  stackTrace: string | null;
+  timestamp: Date;
+  metrics?: ApiMetrics; // 新增選擇性欄位存放效能數據
 }
 
 @Injectable({
@@ -93,52 +100,42 @@ export class DebugToggleService {
     * @param sqlData 來自 Debug API 的 SQL 列表
     * @param stackTrace 來自 Debug API 的 StackTrace
     */
-  setAndShowSqlData(apiUrl: string, sqlData: string[] | ExecutedSqlDetail[], stackTrace: string | null = null) {
+  setAndShowSqlData(
+    apiUrl: string,
+    sqlData: string[] | ExecutedSqlDetail[],
+    stackTrace: string | null = null,
+    metrics?: ApiMetrics // 新增此參數
+  ) {
     let processedSqlData: ExecutedSqlDetail[] = [];
 
-    // 檢查並轉換：如果陣列中的第一個元素是字串 (後端返回的 Data 可能是 string[] 或 ExecutedSqlDetail[])
     if (sqlData.length > 0 && typeof sqlData[0] === 'string') {
-      processedSqlData = (sqlData as string[]).map(sqlString => ({
-        sql: sqlString
-      }));
+      processedSqlData = (sqlData as string[]).map(sqlString => ({ sql: sqlString }));
     } else {
       processedSqlData = sqlData as ExecutedSqlDetail[];
     }
 
-    // 1. 更新最新的 SQL 資訊
     this.latestSqlData.set(processedSqlData);
     this.latestStackTrace.set(stackTrace);
 
-    // 2. 只有當有實際 SQL 數據時才記錄到歷史記錄中
     if (processedSqlData.length > 0) {
-      // 建立新的歷史記錄項目
       const newEntry: ApiSqlHistoryEntry = {
         apiUrl: apiUrl,
         sqlData: processedSqlData,
         stackTrace: stackTrace,
-        timestamp: new Date()
+        timestamp: new Date(),
+        metrics: metrics // 儲存效能數據
       };
-      // 更新 allSqlHistory Signal (追加新的 API 呼叫記錄)
+
       this.allSqlHistory.update(currentHistory => {
-        // === 歷史記錄筆數限制邏輯 ===
-        const MAX_ENTRIES = 15; // 最大記錄 API 呼叫筆數
-        const TRIM_COUNT = 5; 	// 超出限制時，清除的舊筆數
-
+        const MAX_ENTRIES = 15;
+        const TRIM_COUNT = 5;
         const updatedHistory = [...currentHistory, newEntry];
-
         if (updatedHistory.length > MAX_ENTRIES) {
-          console.warn(`[Debug Service] 歷史記錄超過 ${MAX_ENTRIES} 筆，清除最舊的 ${TRIM_COUNT} 筆記錄。`);
-          // 清除最舊的 TRIM_COUNT 筆記錄
           return updatedHistory.slice(TRIM_COUNT);
         }
-        // ===================================
         return updatedHistory;
       });
-      // 這裡可以觸發通知
-      // this.notificationService.show('info', `API 呼叫 [${apiUrl}] 包含 ${processedSqlData.length} 條 SQL 語法`);
-
     } else {
-      // 如果沒有 SQL 數據，清除最新數據 (但保持歷史記錄不變)
       this.latestSqlData.set([]);
       this.latestStackTrace.set(null);
     }

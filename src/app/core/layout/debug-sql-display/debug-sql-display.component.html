@@ -9,11 +9,10 @@
   <p-overlayPanel #op [style]="{ width: '75vw', maxWidth: '1200px' }" [showCloseIcon]="true"
     styleClass="tls-sql-debug-overlay">
     <ng-template pTemplate="content">
-
-      <div class="debug-header flex align-items-center justify-content-between">
+      <div class="debug-header flex align-items-center justify-content-between mb-2">
         <h4 class="m-0 flex align-items-center" style="color: #818cf8;">
           <i class="pi pi-bolt mr-2 text-xl"></i>
-          <span>SQL Monitor ({{ sqlCount() }})</span>
+          <span>SQL & Performance Monitor ({{ sqlCount() }})</span>
         </h4>
         <p-button icon="pi pi-trash" label="Clear Logs" (onClick)="onClearHistory()"
           styleClass="p-button-danger p-button-text p-button-sm" [disabled]="sqlCount() === 0">
@@ -25,7 +24,7 @@
         <ng-template pTemplate="body" let-sqlDetail let-i="rowIndex">
           <tr class="debug-row">
             <td>
-              <div class="flex flex-column gap-2">
+              <div class="flex flex-column gap-2 py-2">
                 <div class="flex align-items-center justify-content-between">
                   <div class="flex align-items-center gap-2">
                     <span class="api-tag">ENDPOINT</span>
@@ -34,10 +33,38 @@
                   <span class="text-xs font-mono text-500">{{ sqlDetail.timestamp }}</span>
                 </div>
 
+                <div class="perf-dashboard flex flex-wrap gap-2 my-1"
+                  *ngIf="sqlDetail.isFirstOfApi && sqlDetail.metrics">
+                  <div class="perf-chip total">
+                    <span class="label">⏱️ 體感總時</span>
+                    <span class="val">{{ sqlDetail.metrics.totalTime }} ms</span>
+                  </div>
+
+                  <div class="perf-chip before-db">
+                    <span class="label">🖥️ DB 前運算</span>
+                    <span class="val">{{ sqlDetail.metrics.beforeDbTime }} ms</span>
+                  </div>
+
+                  <div class="perf-chip database">
+                    <span class="label">💾 DB 執行</span>
+                    <span class="val">{{ sqlDetail.metrics.dbTime }} ms</span>
+                  </div>
+
+                  <div class="perf-chip after-db">
+                    <span class="label">💻 DB 後處理</span>
+                    <span class="val">{{ sqlDetail.metrics.afterDbTime }} ms</span>
+                  </div>
+
+                  <div class="perf-chip network">
+                    <span class="label">🌐 網路與損耗</span>
+                    <span class="val">{{ sqlDetail.metrics.networkTime }} ms</span>
+                  </div>
+                </div>
+
                 <div class="sql-code-wrapper" (click)="copySql(sqlDetail.sql)">
                   <div class="sql-header flex justify-content-between">
-                    <span class="sql-title">Structured Query Language</span>
-                    <div class="flex align-items-center gap-2">
+                    <span class="sql-title">Structured Query Language / Debug Log</span>
+                    <div class="flex align-items-center gap-2" *ngIf="!sqlDetail.sql.startsWith('--')">
                       <span class="copy-hint">CLICK TO COPY</span>
                       <i class="pi pi-copy"></i>
                     </div>
@@ -50,12 +77,10 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <div class="p-5 text-center text-500">
-            <i class="pi pi-inbox block mb-2 text-2xl"></i>
-            目前沒有累積的 SQL 記錄
+            <i class="pi pi-inbox block mb-2 text-2xl"></i> 目前沒有累積的 記錄
           </div>
         </ng-template>
       </p-table>
-
     </ng-template>
   </p-overlayPanel>
 </div>

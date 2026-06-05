@@ -88,7 +88,7 @@
         </p-divider>
         <app-table-report title="銷售商品" class="col-12" [columns]="productColumns" [data]="productDetailList"
           [totalRecords]="productDetailList.length || 0" [showCaption]="false" [showManage]="false"
-          [footerData]="footerData" [showSummary]="false" [showSort]="false">
+          [footerData]="footerData" [showSummary]="false" [showSort]="false" [showReorder]="false">
         </app-table-report>
       </div>
       <div class="card grid p-fluid">
@@ -99,7 +99,7 @@
         </p-divider>
         <app-table-report title="支付工具" class="col-12" [columns]="paymentColumns" [data]="paymentDetailsList"
           [totalRecords]="paymentDetailsList.length || 0" [showCaption]="false" [showManage]="false"
-          [showSummary]="false" [showSort]="false">
+          [showSummary]="false" [showSort]="false" [showReorder]="false">
         </app-table-report>
       </div>
     </form>

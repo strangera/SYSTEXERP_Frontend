@@ -130,12 +130,12 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   override onDetail(row: GroupedFIN55050Detail) {
     const vouNo = row?.VouNo;
     if (!vouNo) { this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。'); return; }
-    const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now(), };
+    const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now(), };
     localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
     localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo);
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
-    window.open(finalUrl, '_blank', 'noopener');
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
   /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {

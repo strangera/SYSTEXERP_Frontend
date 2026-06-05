@@ -205,7 +205,7 @@ export class TLS26080Service {
 
   public dealErrorFilePath(data: TLS26080UploadResult): void {
     const path = data.ErrorFilePath;
-    if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    if (path && !data.Success) globalThis.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
   /**
@@ -228,14 +228,14 @@ export class TLS26080Service {
     }).pipe(
       take(1),
       tap(res => {
-        const url = window.URL.createObjectURL(res);
+        const url = globalThis.URL.createObjectURL(res);
         const link = document.createElement('a');
         link.href = url;
         link.download = haveData ? 'TLS26080_範例檔案.xlsx' : 'TLS26080_空白範本.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.logger.debug(haveData ? `範例下載` : `空白範本下載`);
       })
     );
@@ -246,6 +246,23 @@ export class TLS26080Service {
     const date = typeof value === 'string' ? new Date(value) : value;
     if (isNaN(date.getTime())) return undefined;
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
+  }
+
+  /** 專供 Dialog 查詢專櫃用——不更新 tltTalentOptions，不影響主表格下拉 */
+  public searchTltTalentForDialog(query: { ven_no?: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[]> {
+    const payload: TalentOpenFlagQuery = {
+      VEN_No: query.ven_no ?? '',
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
+    };
+    return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
+      take(1),
+      map(res => res?.map((item: TalentOpenFlagItem) => {
+        const raw = item as unknown as Record<string, unknown>;
+        const talentId = typeof item.talent_id === 'number' ? item.talent_id : Number(raw['Talent_ID']) || 0;
+        return { ...item, value: item.No, label: `${item.No} - ${item.Name}`, talent_id: talentId } as Option & { talent_id: number };
+      }) ?? [])
+    );
   }
 
   public getTLTTalentOptions(query: { ven_no: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[] | null> {

@@ -1,39 +1,38 @@
 import { NgIf } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS13040CRUService } from '@service/api/ass/ass13040-cru.service';
 import {
   ASS13040AssetQueryRow,
   ASS13040DetailItem,
-  ASS13040Header,
   ASS13040DetailItemRequest,
+  ASS13040Header,
   InsertASS13040Request,
   QueryDetailASS13040DetailData,
-  QueryDetailASS13040MasterData,
-  UpdateASS13040Request,
+  UpdateASS13040Request
 } from '@pages/ass/ass13040-cru/ass13040-cru.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ASS13040CRUService } from '@service/api/ass/ass13040-cru.service';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ASS13040AssetDialogComponent } from './ass13040-asset-dialog.component';
-import { environment } from 'src/environments/environment';
 
 interface MediaItem {
   url: string;
@@ -338,7 +337,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           this.assetsTypeOptions = this.mapAndFilterAssetType(assetTypeRaw ?? []);
           this.unitOptions = (units ?? []).map(item => ({
             value: item.No,
-            label: `${item.No} - ${item.Name}`,
+            label: item.Name ?? '',
           }));
 
           // 若明細已先載入（loadDetail 比 loadDropdowns 更早完成），
@@ -465,10 +464,10 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           .pipe(untilDestroyed(this))
           .subscribe({
             next: blob => {
-              const objectUrl = window.URL.createObjectURL(blob);
+              const objectUrl = globalThis.URL.createObjectURL(blob);
               setTimeout(() => {
                 try {
-                  window.URL.revokeObjectURL(objectUrl);
+                  globalThis.URL.revokeObjectURL(objectUrl);
                 } catch {
                   // ignore
                 }

@@ -30,26 +30,7 @@
             [readonly]="true"
           ></app-input-text>
         </div>
-        <!-- Create 模式：點擊開啟查詢對話框，顯示 ven_uniform -->
-        <div
-          *ngIf="isCreateMode"
-          class="col-12 md:col-6 lg:col-4"
-          style="cursor: pointer"
-          tabindex="0"
-          (click)="openSearchDialog.emit()"
-          (keydown.enter)="openSearchDialog.emit()"
-        >
-          <app-input-text
-            label="廠商統一編號"
-            controlName="ven_uniform"
-            [control]="vendorDisplayControl"
-            [submitted]="submitted"
-            [readonly]="true"
-            [customPlaceholder]="'點擊查詢原合約'"
-          ></app-input-text>
-        </div>
-        <!-- Edit / View 模式：原本的下拉選單 -->
-        <div *ngIf="!isCreateMode" class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="廠商統一編號"
             controlName="vendor_ven_no"
@@ -590,7 +571,7 @@
             optionValue="value"
             [control]="$any(form.controls['vip_yn'])"
             [submitted]="submitted"
-            [readonly]="isViewMode"
+            [readonly]="true"
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -607,7 +588,7 @@
             class="block mt-1 text-blue-600 text-base"
             *ngIf="form.get('vip_yn')?.value === 'Y'"
           >
-            配合聯名卡時必填 (例：0.95 為 95折)
+            (95折請輸入0.95)
           </small>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

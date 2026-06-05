@@ -5,13 +5,13 @@
 <p-blockUI [target]="dt" [blocked]="disabled"></p-blockUI>
 
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
-  [selectionMode]="selectionMode" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
-  [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  [selectionMode]="selectionMode" [dataKey]="dataKey" [rowTrackBy]="trackByRow" [resizableColumns]="true"
+  [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   [paginator]="showPaginator && IsPrint && !rowEditing " [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [scrollHeight]="scrollHeight" [rows]="rows" [first]="first"
   (onPage)="onPageChange($event)" (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint" tableStyleClass="h-full"
-  [styleClass]="'p-datatable-sm p-datatable-striped'
+  [styleClass]="'p-datatable-sm '
                 + (IsPrint ? ' p-datatable-gridlines' : '')
                 + ' table-font-md'" [virtualScroll]="!IsPrint && groupRowsByArray.length === 0 && !expansionDataKey"
   [virtualScrollItemSize]="35" [virtualScrollDelay]="250"

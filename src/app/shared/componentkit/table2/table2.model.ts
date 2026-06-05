@@ -45,7 +45,7 @@ export interface Column {
   ) => { isValid: boolean; errorMessage: string[] })[];
 
   /** 欄位型別（補上 autoComplete） */
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default';
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default';
   prefix?: string;
   suffix?: string; // ← 新增
   fractionDigits?: number;

@@ -1,27 +1,26 @@
-import { validateMaxLength } from '@shared/componentkit/table-edit/validate-field.model';
-import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
+import { DecimalPipe, NgClass, NgFor, NgIf, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
+import { ChangeDetectorRef, Component, ContentChild, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
-import { NgIf, NgClass, NgFor, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault, DecimalPipe } from '@angular/common';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
-import { TooltipModule } from 'primeng/tooltip';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { Ripple } from 'primeng/ripple';
+import { Table, TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 // import { DisplayFieldConfig } from '../selector-panel/selector-panel.component';
 // import { Column } from '../table/table.model';
 import { Observable } from 'rxjs';
-import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
-import { TableValidationService } from './table-validation.service';
-import { TableWidthCalculatorService } from './services/table-width-calculator.service';
 import { DateUtils } from 'src/app/core/utils/date-utils';
+import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
+import { TableWidthCalculatorService } from './services/table-width-calculator.service';
+import { TableValidationService } from './table-validation.service';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -426,7 +425,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const rect = container.getBoundingClientRect();
       return Math.max(rect.width - 60, 800);
     }
-    return Math.max(window.innerWidth - 100, 800);
+    return Math.max(globalThis.innerWidth - 100, 800);
   }
 
   private calculateFixedColumnsWidth(): number {

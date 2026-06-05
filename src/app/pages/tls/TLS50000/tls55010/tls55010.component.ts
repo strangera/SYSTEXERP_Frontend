@@ -72,9 +72,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     this.initializePage('TLS55010', '/tls/tls55010cru');
     // 初始化時獲取日期
     this.refreshCloseDate();
-    this.data = getSYS1000Options('IMSCLOSE').map((item: { value: string; label: string }) => ({
-      ...item, check_content: item.label, details: []
-    }));
+    this.data = getSYS1000Options('IMSCLOSE')
+      .filter((item: { value: string; label: string }) => item.value !== '3') // 這裡直接過濾
+      .map((item: { value: string; label: string }) => ({
+        ...item,
+        check_content: item.label,
+        checkStatus: 'init', // 確保狀態初始化
+        details: []
+      }));
   }
   /**
    * 查詢日結紀錄方法 (等待後端 API)

@@ -49,7 +49,7 @@ export interface Label {
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements OnInit {
   baseId = 0; //初始id
-  state = window.history.state; // 接收標頭
+  state = globalThis.history.state; // 接收標頭
   // 查詢 變價歷史紀錄
   queryPriceForm = this.formBuilder.group({
     KeyWord: ['', [Validators.maxLength(20), Validators.required]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出

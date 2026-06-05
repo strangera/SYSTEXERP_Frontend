@@ -1,7 +1,7 @@
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Observable, throwError } from 'rxjs';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +9,7 @@ import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 export class Table2Service {
   apiUrl = `${environment.ApiUrl}`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ✅ 回傳 Observable<Blob>
   exportPDF(data: any): Observable<HttpResponse<Blob>> {

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
@@ -220,7 +219,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   @Input() emptyMessage = '查無資料';
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService,
     private readonly cd: ChangeDetectorRef,
   ) { super(); }
@@ -229,7 +227,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
         this.selectedItems = [];
         this.selectionChange.emit(this.selectedItems);
       });
@@ -237,8 +235,8 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
     if (changes['columns'] && this.columns.length > 0) {
       this.originalColumns = this.columns;
-      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-      this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
+      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.some(c => c.isSubTotal);
+      this.showTotal = this.showTotal ? this.showTotal : this.columns.some(c => c.isTotal);
       if (changes['columns'].firstChange) {
         setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
           this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
@@ -250,7 +248,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
-    fromEvent(window, 'resize')
+    fromEvent(globalThis, 'resize')
       .pipe(debounceTime(300))
       .subscribe(() => {
         this.cd.detectChanges();
@@ -268,7 +266,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   onPageChange(event: TablePageEvent) {
     this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
   }
 
   loadDataLazy(event: TableLazyLoadEvent) {
@@ -295,9 +293,9 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
 
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
-    this.columns.forEach(col => {
+    for (const col of this.columns) {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
-    });
+    }
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
 
@@ -349,11 +347,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   // 欄位Button 選擇 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
 
-  // 防止XSS
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
     return this.tableUtilityService.getColumnSpan(columns, groupField);
@@ -389,12 +382,6 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   getTotal(field: string): number {
     return this.tableUtilityService.getTotal(this.data, field);
   }
-
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined {
-    return this.tableUtilityService.getImage(url);
-  }
-
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];

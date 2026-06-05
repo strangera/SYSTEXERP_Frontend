@@ -17,7 +17,7 @@ export class EncryptionService {
   }
   getPassword(no: string, password: string) {
     const date = new Date();
-    const utc_nowtime = formatDate(date, 'yyyyMMddhhmmss', 'zh-Hant-TW'); // 修正: 使用 HH (24小時制) 而非 hh (12小時制)
+    const utc_nowtime = formatDate(date, 'yyyyMMddHHmmss', 'zh-Hant-TW'); // 修正: 使用 HH (24小時制) 而非 hh (12小時制)
     const { key, iv } = this.buildKeyIV(no, utc_nowtime, environment.PasswordKey);
 
     const encrypted = CryptoJS.AES.encrypt(password, key, {

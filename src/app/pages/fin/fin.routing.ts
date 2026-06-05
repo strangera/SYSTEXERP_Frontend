@@ -59,6 +59,7 @@ export const finRoutes: Routes = [
   { path: 'fin13080', loadComponent: () => import('./fin13080/fin13080.component').then(m => m.FIN13080Component), data: { progNo: 'FIN13080' } },
   //補登進項稅額作業
   { path: 'fin13090', loadComponent: () => import('./fin13090/fin13090.component').then(m => m.FIN13090Component), data: { progNo: 'FIN13090' } },
+  { path: 'fin13090cru', loadComponent: () => import('./fin13090-cru/fin13090-cru.component').then(m => m.FIN13090CRUComponent), data: { progNo: 'FIN13090' } },
   // 申報書維護
   { path: 'fin13100', loadComponent: () => import('./fin13100/fin13100.component').then(m => m.FIN13100Component), data: { progNo: 'FIN13100' } },
   { path: 'fin13100cru', loadComponent: () => import('./fin13100-cru/fin13100-cru.component').then(m => m.FIN13100CRUComponent), data: { progNo: 'FIN13100' } },

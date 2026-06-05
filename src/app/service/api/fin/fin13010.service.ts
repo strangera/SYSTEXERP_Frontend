@@ -57,6 +57,11 @@ export class FIN13010Service {
     return this.http.post<any>('/FIN13010/queryDetailByPURGUINo', param);
   }
 
+  // ✅ 依 ID 查單筆（含原始發票參考欄位，Total_Amt 排除當前筆）
+  queryFIN13010ById(id: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13010ById`, { id });
+  }
+
   // ✅ 對應發票：依對應號碼查
   queryCorrespondByGUINoCorrespond(param: { PUR_GUINo_Correspond: string }): Observable<any> {
     return this.http.post<any>(
@@ -74,5 +79,13 @@ export class FIN13010Service {
       .pipe(
         tap(res => console.log('刪除結果:', res)),
       );
+  }
+
+  // ✅ 審核狀態查詢（用於判斷申報年月是否可異動，共用 FIN14030 endpoint）
+  checkRepAuditStatus(params: { REP_GUIYM: string }): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/FIN0000/INV1000/checkRepAuditStatus`,
+      params
+    );
   }
 }

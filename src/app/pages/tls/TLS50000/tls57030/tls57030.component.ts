@@ -47,8 +47,8 @@ import { finalize } from 'rxjs';
 })
 export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    HOS_No: [null],
-    LOGO_No: [null],
+    HOS_No: [null, [Validators.required]],
+    LOGO_No: [null, [Validators.required]],
     PLU_MagNo: [null, [Validators.maxLength(20)]],
     PLU_No: [null as string | null],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
@@ -73,20 +73,20 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
   historyRequestBody: QueryTLS57030Request | null = null;
   columnGroup = [{ field: '合計', header: '合計' }];
   columns: ReportColumn[] = [
-    { field: 'LOGO_CH_NAME', header: '品牌名稱' },
-    { field: 'HOS_NAME', header: '倉別' },
-    { field: 'PLU_MagNo', header: '管理編號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'CAT_LName', header: '大分類' },
-    { field: 'CAT_MName', header: '中分類' },
-    { field: 'CAT_SName', header: '小分類' },
-    { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmountCN },
-    { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmountCN },
-    { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount },
-    { field: 'sumPLU_OrderPrc', header: '進價(未稅)', groupField: '合計', format: formatAmount },
-    { field: 'sumPLU_SalePrc', header: '售價(含稅)', groupField: '合計', format: formatAmount },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', align: 'left' },
+    { field: 'HOS_NAME', header: '倉別', align: 'left' },
+    { field: 'PLU_MagNo', header: '管理編號', align: 'left' },
+    { field: 'PLU_Name', header: '商品名稱', align: 'left' },
+    { field: 'PLU_No', header: '國際條碼', align: 'left' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號', align: 'left' },
+    { field: 'CAT_LName', header: '大分類', align: 'left' },
+    { field: 'CAT_MName', header: '中分類', align: 'left' },
+    { field: 'CAT_SName', header: '小分類', align: 'left' },
+    { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmountCN, align: 'right' },
+    { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmountCN, align: 'right' },
+    { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount, align: 'right' },
+    { field: 'sumPLU_OrderPrc', header: '進價(未稅)', groupField: '合計', format: formatAmount, align: 'right' },
+    { field: 'sumPLU_SalePrc', header: '售價(含稅)', groupField: '合計', format: formatAmount, align: 'right' },
   ];
 
   constructor(
@@ -147,10 +147,10 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     // 邏輯：檢查目前的輸入內容是否精準匹配 suggestions 中的某個 PLU_MagNo
     // 如果不匹配，則將 PLU_No 清空，避免帶到舊的或錯誤的編號
     const matchedItem = this.suggestions.find(s => s.PLU_MagNo === inputString);
-    if (!matchedItem) {
-      this.queryForm.controls.PLU_No.setValue('');
-    } else {
+    if (matchedItem) {
       this.queryForm.controls.PLU_No.setValue(matchedItem.PLU_No);
+    } else {
+      this.queryForm.controls.PLU_No.setValue('');
     }
 
     const body = {

@@ -1,4 +1,4 @@
 {
-    "sonarQubeUri": "http://127.0.0.1:9000",
-    "projectKey": "TSRDERP"
+    "sonarQubeUri": "http://172.20.10.2:9000",
+    "projectKey": "TSRDERP_Frontend_Angular"
 }

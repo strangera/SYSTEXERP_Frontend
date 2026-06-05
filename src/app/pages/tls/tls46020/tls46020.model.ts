@@ -31,15 +31,15 @@ export const columns: ReportColumn[] = [
   { field: 'ECR_TmplNo', header: '環境變數編號', visible: true },
   { field: 'ECR_TmplDesc', header: '模版備註', visible: true },
   { field: 'ECR_TmplStatus', header: '模版狀態', visible: true, format: value => value === 'A' ? '啟用' : '停用' }, // 資料庫中有此欄位，前端資料也有
-  { field: 'ECR_TmplBegDate', header: '模版有效啟始日期', visible: true, format: formatDate }, // 已有 format
-  { field: 'ECR_TmplEndDate', header: '模版有效截止日期', visible: true, format: formatDate }, // 新增 format
+  { field: 'ECR_TmplBegDate', header: '模版有效啟始日期', visible: true, format: formatDate, width: '80px' }, // 已有 format
+  { field: 'ECR_TmplEndDate', header: '模版有效截止日期', visible: true, format: formatDate, width: '80px' }, // 新增 format
   { field: 'ECR_SernoType', header: '交易序號模式', visible: true, format: value => ECR_SernoType_Option.find(item => item.value === value)?.label || value }, // 修正為資料庫註解的「交易序號模式」
   { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true, format: value => ECR_GUI_Type_Option.find(item => item.value === value)?.label || value }, // 修正為資料庫註解的「發票使用類別」
   { field: 'ECR_TimeTickInvl', header: '系統對時間隔(秒)', visible: true },
   { field: 'ECR_Interval', header: '上下傳異動檔間隔(秒)', visible: true }, // 補上
   { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: true, format: formatAmount },
-  { field: 'ECR_MaxAmt', header: '單筆交易金額上限', visible: true, format: formatAmount },
-  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: true, format: formatAmount }, // 修正為資料庫註解的「單一明細金額上限」
+  { field: 'ECR_MaxAmt', header: '單筆交易金額上限', visible: true, format: formatAmount, width: '80px' },
+  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: true, format: formatAmount, width: '80px' }, // 修正為資料庫註解的「單一明細金額上限」
   { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: true },
   { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: true },
   { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true, format: formatYN }, // 新增 format (Y/N)
@@ -83,12 +83,12 @@ export const columns: ReportColumn[] = [
   { field: 'ECR_ScannerCom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_MSR', header: 'MSR', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_MSR').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_MSRCom', header: '連接埠', visible: true },
-  { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: true }, // 補上
+  { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: true, width: '80px' }, // 補上
   { field: 'ECR_CD', header: '客戶顯示器', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_CD').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_CDCom', header: '連接埠', visible: true }, // 補上
-  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_ExtScr').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', width: '80px', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_ExtScr').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_ExtScrCom', header: '連接埠', visible: true }, // 補上
-  { field: 'ECR_GUIPrn', header: '發票印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_GUIPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_GUIPrn', header: '發票印表機', visible: true, width: '80px', format: (value) => SystemOptionsService.getOptions('ECR_GUIPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_GUICom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_SlipPrn', header: '收據印表機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_SlipPrn').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_SlipPrnCom', header: '連接埠', visible: true }, // 補上
@@ -98,11 +98,11 @@ export const columns: ReportColumn[] = [
   { field: 'ECR_LablePrnCom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_EDC', header: '信用卡刷卡機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_EDCCom', header: '連接埠', visible: true }, // 補上
-  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
+  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機', width: '80px', visible: true, format: (value) => SystemOptionsService.getOptions('ECR_EDC').find(x => x.SYS_Code === value)?.SYS_Name || value }, // 補上
   { field: 'ECR_EDC2Com', header: '連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true, width: '80px' }, // 補上
   { field: 'ECR_ElecSVCrdACom', header: '連接埠', visible: true }, // 補上
-  { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true }, // 補上
+  { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true, width: '80px' }, // 補上
   { field: 'ECR_ElecSVCrdBCom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_ElecSVCrdC', header: '愛金卡', visible: true }, // 補上
   { field: 'ECR_ElecSVCrdCCom', header: '連接埠', visible: true }, // 補上
@@ -110,10 +110,10 @@ export const columns: ReportColumn[] = [
   { field: 'ECR_ElecPayCom', header: '連接埠', visible: true }, // 補上
   { field: 'ECR_Drawer', header: '錢櫃', visible: true }, // 補上
   { field: 'ECR_DrawerCom', header: '連接埠', visible: true }, // 補上
-  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime }, // 新增 format
+  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime, width: '130px' }, // 新增 format
   { field: 'CRT_USR_No', header: '建立人員', visible: true }, // 補上
   { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true }, // 移除了 CRT_USR_Name 上不必要的 format，因為它是字串
-  { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime }, // 新增 format
+  { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime, width: '130px' }, // 新增 format
   { field: 'UPD_USR_No', header: '變更人員', visible: true }, // 補上
   { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true } // 補上
 ];
