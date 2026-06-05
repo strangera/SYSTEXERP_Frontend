@@ -291,6 +291,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_Date: txnDate,
         ECR_No: rowData.ECR_No,
         TXN_No: Number(rowData.TXN_No),
+        TLT_No: rowData.TLT_No,
       };
       this.messageService.confirm({
         header: '刪除交易', message: '交易資料刪除後，將查不到這筆資料，您確認要刪除嗎?',
