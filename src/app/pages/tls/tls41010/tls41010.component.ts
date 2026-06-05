@@ -50,7 +50,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   columns: Column[] = columns;
   queryForm = this.formBuilder.group({
     ECR_No: [null, [Validators.maxLength(10)]],
-    ECR_Type: [null, [Validators.maxLength(2)]], // 收銀機號
+    ECR_Type: [null, [Validators.maxLength(2)]],
     ECR_Name: [null, [Validators.maxLength(20)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_ActiveDateStart: [null as Date | null],
@@ -71,7 +71,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_SrvIP: [null, [Validators.maxLength(20)]],
     ECR_TmplNo: [null, [Validators.maxLength(8)]],
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
 
@@ -83,10 +83,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
-  floorOption: apiOption[] = []; //樓層
+  floorOption: apiOption[] = [];
   ECR_TmplNo_Option: IDropdownItem[] = [];
 
-  // 複製設定 Dialog 相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     Source_ECR_No: ['', [Validators.required]],
@@ -115,8 +114,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   constructor(
     public tls41010Service: TLS41010Service,
-    private readonly tls46010Service: Tls46010Service,
-    private readonly tls11010Service: Tls11010Service,
     private readonly counterNameService: CounterNameService,
     private readonly tls14030Service: Tls14030Service,
     private readonly dropDownListService: DropDownListService,
@@ -131,10 +128,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = res?.map((x: any) => ({
-        No: x.value,              // 編號
-        Name: x.label,            // 名稱
-        formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-        value: x.value            // 存值
+        No: x.value,
+        Name: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value
       })) || [];
     });
 
@@ -142,19 +139,17 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.areaNoOptions = options ?? [];
     });
 
-    //後台主機ip
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.SrvIPOptions = res.Data.map(item => ({
           No: item.No,
           Name: item.Name,
-          label: item.No,   // 顯示 IP    (或改成 item.Name)
-          value: item.No    // 存 IP 編號
+          label: item.No,
+          value: item.No
         }));
       }
     });
 
-    // 環境變數下拉選單
     this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.ECR_TmplNo_Option = res.Data.map(item => ({
@@ -166,48 +161,40 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       }
     });
 
-    //收銀員下拉選單
     this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.CashierOptions = res.Data.map(item => ({
           No: item.No,
           Name: item.Name,
-          label: `${item.No} - ${item.Name}`, // 顯示時更清楚
+          label: `${item.No} - ${item.Name}`,
           value: item.No
         }));
       }
     });
 
-    // 樓層下拉
-    this.tls14030Service
-      .querySYS3900_DropDownList({})
-      .subscribe((response) => {
-        this.floorOption = response.Data.map((item: apiOption) => ({
-          ...item,
-          label: item.Name,
-          value: item.No
-        }));
-      });
+    this.tls14030Service.querySYS3900_DropDownList({}).subscribe((response) => {
+      this.floorOption = response.Data.map((item: apiOption) => ({ ...item, label: item.Name, value: item.No }));
+    });
 
+    // 🌟 初始載入收銀機下拉選單
+    this.loadEcrOptions();
+
+    this.dropDownListService.queryPOS2002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.LocOptions = res.Data.map(item => ({ ...item, value: item.No, label: item.Name }));
+      });
+  }
+
+  // 🌟【新增獨立方法】：負責向後端撈取最新的收銀機清單，更新下拉選單
+  loadEcrOptions(): void {
     this.eCRNoService.getECRNo()
       .pipe(untilDestroyed(this))
       .subscribe(data => {
         this.dialogOptions = data;
       });
-
-    //位置編號
-    this.dropDownListService.queryPOS2002_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.LocOptions = res.Data.map(item => ({
-          ...item,
-          value: item.No,
-          label: item.Name
-        }));
-      });
   }
 
-  //  Submit 查詢
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
@@ -224,71 +211,86 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
             }
             const counter = this.CounterOptions.find(c => c.No === item.ECR_TLT_No);
-            return {
-              ...item,
-              ECR_SettleHHNN: dateValue,
-              ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name
-            };
+            return { ...item, ECR_SettleHHNN: dateValue, ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name };
           });
           this.queryStateService.setQueryState(this.ProgNo, this.ProgNo);
         });
     });
   }
 
-  saveDialog(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.loading = false;
-      if (this.isValid) {
-        return;
-      }
-      const formValue = frm.value;
-      const body: Partial<TLS41010Item> = {
-        ...this.dialogSelectItem,
-        ECR_Group: formValue.ECR_Group,
-        ECR_SubGroup: formValue.ECR_SubGroup,
-        ECR_AreaNo: formValue.ECR_AreaNo,
-        ECR_LocNo: formValue.ECR_LocNo
-      };
-
-      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe({
-        next: (res) => {
-          console.log('更新成功', res);
-          if (res?.Status === '0000') {
-            this.messageService.successBubble('複製設定成功');
-            this.dialogVisible = false;
-            this.onSubmit(this.queryForm);
-          } else {
-            this.messageService.errorBubble(`複製失敗: ${res?.Message ?? '未知錯誤'}`);
-          }
-        },
-        error: (err) => {
-          console.error('更新失敗', err);
-          this.messageService.errorBubble('複製失敗');
-        }
-      });
-    });
-  }
-
+  // =================================================================
+  // 複製設定 Dialog 邏輯優化版
+  // =================================================================
   onDialogChange(event: DropdownChangeEvent) {
     const selectedValue = event.value;
+    if (!selectedValue) return;
+
     const body: QueryTLS41010Request = { ECR_No: selectedValue, PageSize: 10, PageIndex: 0 };
     this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogSelectItem = res.Data[0];
+      if (res?.Data?.length > 0) {
+        this.dialogSelectItem = res.Data[0];
+      }
     });
   }
 
-  onDialogChange2(event: DropdownChangeEvent) {
-    const selectedValue = event.value;
-    const body: QueryTLS41010Request = { ECR_No: selectedValue, PageSize: 10, PageIndex: 0 };
-    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogSelectTargetItem = res.Data[0];
-    });
+  get isSameEcr(): boolean {
+    const source = this.dialogQueryForm.value.Source_ECR_No?.trim() ?? '';
+    const target = this.dialogQueryForm.value.Target_ECR_No?.trim() ?? '';
+    return source !== '' && target !== '' && source === target;
   }
 
-  get isValid(): boolean {
-    const Source_ECR_No = this.dialogQueryForm.value.Source_ECR_No ?? '';
-    const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
-    return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
+  get isEcrDuplicate(): boolean {
+    const target = this.dialogQueryForm.value.Target_ECR_No?.trim() ?? '';
+    if (!target) return false;
+    return this.dialogOptions.some(opt => opt.value?.trim() === target);
+  }
+
+  saveDialog(frm: FormGroup) {
+    this.submitted = true;
+
+    if (frm.invalid || this.isSameEcr || this.isEcrDuplicate || !this.dialogSelectItem) {
+      return;
+    }
+
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      const formValue = frm.value;
+
+      const newEcrBody: any = {
+        ...this.dialogSelectItem,
+        id: 0,
+        ECR_No: formValue.Target_ECR_No.trim(),
+        CRT_Date: null,
+        UPD_Date: null
+      };
+
+      this.tls41010Service.insertTLS41010(newEcrBody)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (res) => {
+            console.log('複製設定成功', res);
+            if (res?.Status === '0000') {
+              this.messageService.successBubble('複製收銀機設定成功');
+              this.dialogVisible = false;
+
+              // 🌟【自動更新選單點】
+              // 複製成功後，立馬觸發重新加載，把剛建好的新機號洗進 dialogOptions 下拉選單中！
+              this.loadEcrOptions();
+
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(`複製失敗: ${res?.Message ?? '未知錯誤'}`);
+            }
+          },
+          error: (err) => {
+            console.error('複製失敗 API 異常', err);
+            this.messageService.errorBubble('複製失敗，請聯絡系統管理員');
+          }
+        });
+    });
   }
 
   openCru(data: TLS41010Item, mode: string): void {
@@ -317,6 +319,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
               if (res.Status === '0000') {
                 this.messageService.successBubble('選中項目刪除成功');
                 this.selectedItems = [];
+
+                // 🌟【加碼防禦點】：如果收銀機被刪除了，下拉選單也順便重新連動洗乾淨！
+                this.loadEcrOptions();
+
                 this.onSubmit(this.queryForm);
               } else {
                 console.error('API error:', res.Status, res.Message);
