@@ -1,5 +1,5 @@
 import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
-import { formatDate } from "@shared/componentkit/table/table.model";
+import { formatDate, formatDateTime } from "@shared/componentkit/table/table.model";
 
 export enum TXN_GUIPAPER {
   補原機台 = 'E',
@@ -33,6 +33,8 @@ export const columns: ReportColumn[] = [
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'TXN_Status', header: '交易型態', format: (value: string) => txnStatusOptions.find(opt => opt.value === value)?.label || value },
+  { field: 'CRT_USR_Name', header: '補登者' },
+  { field: 'CRT_Date', header: '補登日期', format: formatDateTime },
 ];
 
 export const C_columns: ReportColumn[] = [
