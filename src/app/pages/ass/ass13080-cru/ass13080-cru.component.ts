@@ -141,7 +141,11 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   assetsOptions: { value: string; label: string }[] = [];
   goodsOptions: { value: string; label: string }[] = [];
   assetStatusOptions: { value: string; label: string }[] = [];
-  assetTypeOptions: { value: string; label: string }[] = [];
+  /** 資產類型：對應 DEPRE_YN（1:資產 2:列管品），與 ASS13010 保持一致 */
+  assetTypeOptions: { value: string; label: string }[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' },
+  ];
   acpOptions: { value: string; label: string }[] = [];
   orgOptions: { value: string; label: string }[] = [];
   userOptions: { value: string; label: string }[] = [];
@@ -580,14 +584,6 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       .subscribe(res => {
         if (res.Status !== '0000') return;
         this.assetStatusOptions = this.toOpt(res.Data ?? []);
-      });
-
-    this.dropDownListService
-      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_TYPE' } as any)
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Status !== '0000') return;
-        this.assetTypeOptions = this.toOpt(res.Data ?? []);
       });
 
     this.dropDownListService
