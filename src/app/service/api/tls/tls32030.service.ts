@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+import { ApiResponse } from './tls25030.service';
 
 export interface TLS32030QueryRequest {
   PageSize: number;
@@ -71,14 +72,55 @@ export interface TLS32030Data {
   diff_position: number;
 }
 
+export interface TLS32030FooterData {
+  TltNo: string,
+  TltName: string,
+  Org_Name: string,
+  building_desc: string,
+  SYS_Name: string,
+  Base_LocationNo: string,
+  Base_Space: number,
+  Base_SaleAmt: number,
+  Base_PreOrderAmt: number,
+  Base_TxnCnt: number,
+  Base_Target: number,
+  Base_DaySpaceEff: number,
+  Base_AchieveRate: number,
+  Base_AvgTicket: number,
+  Comp_LocationNo: string,
+  Comp_Space: number,
+  Comp_SaleAmt: number,
+  Comp_PreOrderAmt: number,
+  Comp_TxnCnt: number,
+  Comp_Target: number,
+  Comp_DaySpaceEff: number,
+  Comp_AchieveRate: number,
+  Comp_AvgTicket: number,
+  Diff_SaleAmt: number,
+  Diff_PreOrderAmt: number,
+  Diff_TxnCnt: number,
+  Diff_Target: number,
+  Diff_DaySpaceEff: number,
+  Diff_AchieveRate: number,
+  Diff_AvgTicket: number,
+  Growth_SaleAmtPct: number,
+  Growth_PreOrderAmtPct: number,
+  Growth_TxnCntPct: number,
+  Growth_TargetPct: number,
+  Growth_DaySpaceEffPct: number,
+  Growth_AchieveRatePct: number,
+  Growth_AvgTicketPct: number
+}
+
+
 @Injectable({ providedIn: 'root' })
 export class TLS32030Service {
   private apiUrl = environment.ApiUrl + '/TLS0000/TLS3000';
 
   constructor(private http: HttpClient) { }
 
-  queryTLS32030(request: TLS32030QueryRequest): Observable<BaseQueryResponse<TLS32030Data>> {
-    return this.http.post<BaseQueryResponse<TLS32030Data>>(
+  queryTLS32030(request: TLS32030QueryRequest): Observable<ApiResponse<TLS32030Data[], TLS32030FooterData>> {
+    return this.http.post<ApiResponse<TLS32030Data[], TLS32030FooterData>>(
       `${this.apiUrl}/queryTLS32030`,
       request
     );
