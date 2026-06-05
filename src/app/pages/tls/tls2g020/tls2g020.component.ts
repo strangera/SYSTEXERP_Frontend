@@ -53,6 +53,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     { field: 'Contract_subno', header: '合約版次', visible: true },
     { field: 'Contract_bdate', header: '合約起始日', visible: true, format: formatDate },
     { field: 'Contract_edate', header: '合約結束日', visible: true, format: formatDate },
+    { field: 'Mdeatil', header: '月預算明細', hidden: true }
   ];
   expansionColumns: Column[] = [
     {

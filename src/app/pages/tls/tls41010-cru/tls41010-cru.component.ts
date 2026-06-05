@@ -405,16 +405,21 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
   }
 
-  /** 判斷 TLT 必填 */
+  /** 判斷 TLT (專櫃編號) 必填 */
   checkTltNoRequired(value: string) {
     const tltControl = this.dataForm.get('ECR_TLT_No');
     if (!tltControl) return;
-    if (value === '3') {
+
+    // 當機台類型為 '2' (專櫃機台) 時，專櫃編號為必填
+    if (value === '2') {
       tltControl.addValidators(Validators.required);
     } else {
+      // 其他類型 (例如 '1' 集中統收) 則清除必填卡控
       tltControl.clearValidators();
     }
-    tltControl.updateValueAndValidity();
+
+    // 關鍵：必須重新驗證欄位狀態，畫面上的紅框與錯誤提示才會即時更新
+    tltControl.updateValueAndValidity({ emitEvent: false });
   }
 
   /** 送出 */
