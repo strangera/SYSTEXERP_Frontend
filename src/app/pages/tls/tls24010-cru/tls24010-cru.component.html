@@ -78,10 +78,15 @@
         <app-calendar class="col-12 md:col-6 lg:col-3" label="原交易日期" [control]="dataForm.controls.ORG_TXN_Date"
           [submitted]="submitted" controlName="ORG_TXN_Date">
         </app-calendar>
-
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="原收銀機台" [control]="dataForm.controls.ORG_ECR_No"
           [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
           controlName="ORG_ECR_No" />
+        <ng-container *ngIf="!isFormCreateable">
+          <app-input-text class=" col-12 md:col-6 lg:col-3" label="補登者" [control]="dataForm.controls.CRT_USR_Name"
+            controlName="CRT_USR_Name" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-3" label="補登日期" calendarType="dateTimeOne"
+            [control]="dataForm.controls.CRT_Date" controlName="CRT_Date" [submitted]="submitted" />
+        </ng-container>
       </div>
       <div class="grid p-fluid" *ngIf="TXN_GUIPaper === 'E'">
         <p-divider type="solid" class="col-12" />

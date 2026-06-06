@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatPercentage } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -21,7 +22,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 
 @Component({
   selector: 'app-tls32030',
@@ -126,8 +128,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
-    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準' },
-    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準' },
+    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
@@ -135,24 +137,24 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
-    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較' },
-    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較' },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_PreOrderAmt', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_Target', header: '目標差異', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率' },
-    { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率' },
-    { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率' },
-    { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率' },
-    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率' },
-    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率' },
-    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率' }
+    { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount }
   ];
 
   columnGroup = [

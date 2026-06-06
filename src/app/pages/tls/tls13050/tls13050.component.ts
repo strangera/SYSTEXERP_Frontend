@@ -37,10 +37,10 @@ import { Column, formatAmount } from '../../../shared/componentkit/table/table.m
 export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    tlt_bdate_start: [(new Date())],
-    tlt_bdate_end: [(new Date())],
-    tlt_edate_end: [(new Date())],
-    tlt_edate_start: [(new Date())],
+    tlt_bdate_start: [null],
+    tlt_bdate_end: [null],
+    tlt_edate_end: [null],
+    tlt_edate_start: [null],
     cag_bdate_start: [""],
     cag_bdate_end: [""],
     cag_edate_end: [""],
