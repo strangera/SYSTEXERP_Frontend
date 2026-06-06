@@ -176,6 +176,8 @@ export class TableEditDataService {
           }
         }
       }
+      // 建立新的陣列參考，讓 p-table 偵測到變更並重新渲染列
+      this._tableData = [...this._tableData];
     }
   }
 
