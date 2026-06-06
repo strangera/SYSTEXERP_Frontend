@@ -292,45 +292,52 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       });
 
     // 監聽欄位變化
-    this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) {
-        const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
-        if (detail) {
-          const patchObj: Record<string, string | Date | number> = {};
-          for (const key of Object.keys(this.dataForm.controls)) {
-            if (detail[key] !== undefined) {
-              // 特別處理連接埠欄位為 null 的情況
-              if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
-                patchObj[key] = 0;
-                continue;
-              }
+    // 監聽欄位變化：環境變數（範本）切換
+    this.dataForm.get('ECR_TmplNo')?.valueChanges
+      .pipe(untilDestroyed(this)) // 建議加上防記憶體洩漏
+      .subscribe((tmplNo) => {
+        if (tmplNo) {
+          const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
+          if (detail) {
+            const patchObj: Record<string, any> = {};
 
-              // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
-              if (key === 'ECR_SettleHHNN') {
-                const val = detail[key];
-                if (val instanceof Date) {
-                  patchObj[key] = val;
-                } else if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(String(val)))) {
-                  const s = String(val).padStart(4, '0');
-                  const hh = Number.parseInt(s.substring(0, 2), 10);
-                  const mm = Number.parseInt(s.substring(2, 4), 10);
-                  const d = new Date();
-                  d.setHours(hh, mm, 0, 0);
-                  patchObj[key] = d;
-                } else {
-                  patchObj[key] = this.defaultTime1110();
+            // 1. 先用迴圈把所有要更新的欄位值整理到 patchObj 物件中
+            for (const key of Object.keys(this.dataForm.controls)) {
+              if (detail[key] !== undefined) {
+
+                // 特別處理連接埠欄位為 null 的情況
+                if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
+                  patchObj[key] = 0;
+                  continue;
                 }
-                continue;
-              }
 
-              // 其他欄位直接帶入
-              patchObj[key] = detail[key];
+                // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
+                if (key === 'ECR_SettleHHNN') {
+                  const val = detail[key];
+                  if (val instanceof Date) {
+                    patchObj[key] = val;
+                  } else if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(String(val)))) {
+                    const s = String(val).padStart(4, '0');
+                    const hh = Number.parseInt(s.substring(0, 2), 10);
+                    const mm = Number.parseInt(s.substring(2, 4), 10);
+                    const d = new Date();
+                    d.setHours(hh, mm, 0, 0);
+                    patchObj[key] = d;
+                  } else {
+                    patchObj[key] = this.defaultTime1110();
+                  }
+                  continue;
+                }
+
+                // 其他欄位暫存入物件
+                patchObj[key] = detail[key];
+              }
             }
+
+            this.dataForm.patchValue(patchObj, { emitEvent: false });
           }
-          this.dataForm.patchValue(patchObj);
         }
-      }
-    });
+      });
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });
