@@ -29,6 +29,24 @@ export class VendorCategoryOptionsService {
       );
   }
 
+  // 新增/編輯用：value = VEN_No（廠商編號，唯一識別），保留原始行為
+  getVendorCategoryNoNameOptionsForCru(venFlag?: string): Observable<any[]> {
+    const requestBody = { VEN_Flag: venFlag || '' };
+    return this.http
+      .post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, requestBody)
+      .pipe(
+        map((res) => res?.Data?.map((x: any) => ({
+          label: `${x.No} - ${x.Name} - ${x.VEN_No}`,
+          value: x.VEN_No,
+          VEN_No: x.VEN_No,
+          No: x.No,
+          Name: x.Name,
+          VEN_Address: x.VEN_Address
+        })) ?? [])
+      );
+  }
+
+  // 查詢用：value = 統編No（去重，避免同統編多筆）
   getVendorCategoryNoNameOptions(venFlag?: string): Observable<any[]> {
     const requestBody = {
       VEN_Flag: venFlag || ""
@@ -37,14 +55,24 @@ export class VendorCategoryOptionsService {
     return this.http
       .post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, requestBody)
       .pipe(
-        map((res) => res?.Data?.map((x: any) => ({
-          label: `${x.No} - ${x.Name} - ${x.VEN_No}`,
-          value: x.VEN_No,        //  value 用 VEN_No (唯一識別)
-          VEN_No: x.VEN_No,
-          No: x.No,               //  統編
-          Name: x.Name,
-          VEN_Address: x.VEN_Address
-        })) ?? [])
+        map((res) => {
+          const seen = new Set<string>();
+          const items: any[] = [];
+          for (const x of res?.Data ?? []) {
+            const uniform = x.No as string;
+            if (!uniform || seen.has(uniform)) continue;
+            seen.add(uniform);
+            items.push({
+              label: `${x.No} - ${x.Name}`,
+              value: x.No,             // value 用統編
+              VEN_No: x.VEN_No,
+              No: x.No,
+              Name: x.Name,
+              VEN_Address: x.VEN_Address
+            });
+          }
+          return items;
+        })
       );
   }
 }
