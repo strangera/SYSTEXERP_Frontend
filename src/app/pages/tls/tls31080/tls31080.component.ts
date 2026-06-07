@@ -1,7 +1,7 @@
 import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
@@ -21,11 +21,12 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-tls31080',
   templateUrl: './tls31080.component.html',
@@ -53,6 +54,7 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     ButtonModule
   ]
 })
+
 
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
@@ -120,36 +122,26 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
   ];
 
-  //時段控制
-  get columns(): ReportColumn[] {
-    const { TimeMode, TimeFromHH, TimeToHH } = this.queryForm.getRawValue();
+  //時段控制（stored property，避免每次 CD 產生新陣列）
+  columns: ReportColumn[] = this.buildColumns('A', null, null);
 
-    // 先過濾出符合條件的小時欄位
+  private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
-      // 如果不是範圍模式('T')，或者起訖點沒填，就預設全部顯示
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
         return true;
       }
-
-      // 從欄位名稱 (例如 'H08') 轉化成數字 8
       const hourNum = parseInt(col.field.substring(1), 10);
-
-      // 判斷是否在範圍內 (支援跨午夜或正常範圍)
       if (TimeFromHH <= TimeToHH) {
         return hourNum >= TimeFromHH && hourNum <= TimeToHH;
       } else {
-        // 如果填寫 22 到 02 點 (跨日狀況)
         return hourNum >= TimeFromHH || hourNum <= TimeToHH;
       }
     });
 
-    // 3. 重新組合回原本的欄位順序：前置欄位 + 過濾後的小時 + 後置總計欄位
     return [
       { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
-
-      ...filteredHours, // 放入動態過濾後的小時時段
-
+      ...filteredHours,
       { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
       { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
@@ -207,6 +199,15 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
     // 日期表單控制
     this.onTimeModeChange('A');
+
+    // 監聽時段相關欄位，更新 columns（避免用 getter 每次 CD 都產生新陣列）
+    combineLatest([
+      this.queryForm.controls.TimeMode.valueChanges,
+      this.queryForm.controls.TimeFromHH.valueChanges,
+      this.queryForm.controls.TimeToHH.valueChanges,
+    ]).pipe(debounceTime(50), untilDestroyed(this)).subscribe(([mode, from, to]) => {
+      this.columns = this.buildColumns(mode, from, to);
+    });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
