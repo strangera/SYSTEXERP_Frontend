@@ -152,6 +152,11 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     TXN_PayAmt60: 'totalPayAmt60',
     TXN_PayAmt22: 'totalPayAmt22',
     TXN_PayAmt23: 'totalPayAmt23',
+    TXN_PayAmt26: 'totalPayAmt26',
+    TXN_PayAmt27: 'totalPayAmt27',
+    TXN_PayAmt28: 'totalPayAmt28',
+    TXN_PayAmt29: 'totalPayAmt29',
+    TXN_PayAmt61: 'totalPayAmt61',
     TXN_PrePayAmt: 'totalPrePayAmt',
     TXN_OverAmt: 'totalOverAmt',
     TXN_ReturnAmt: 'totalReturnAmt',
@@ -802,6 +807,12 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
+      { field: 'TXN_PayAmt26', header: '品牌已開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt27', header: '品牌未開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt28', header: '外送平台', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt29', header: 'EC', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+      { field: 'TXN_PayAmt61', header: 'PayEasy', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
       { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
       { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
@@ -864,6 +875,12 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
     { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    { field: 'TXN_PayAmt26', header: '品牌已開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt27', header: '品牌未開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt28', header: '外送平台', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt29', header: 'EC', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'TXN_PayAmt61', header: 'PayEasy', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
