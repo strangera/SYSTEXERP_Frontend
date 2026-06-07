@@ -50,7 +50,7 @@
     background: #949494;
   }
 }
-::ng-deep .p-dropdown.p-disabled {
+::ng-deep .app-dropdown .p-dropdown.p-disabled {
   // 1. 讓整塊內聯的內容（箭頭、清除叉叉、文字殘影等）透明度完全變成 0
   opacity: 0 !important;
 }
