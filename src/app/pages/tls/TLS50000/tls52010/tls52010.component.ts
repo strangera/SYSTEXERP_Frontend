@@ -103,9 +103,9 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   columns: ReportColumn[] = [
     { field: 'PO_No', header: '採購單號', visible: true, width: '110px' }, // 採購單號
     { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' }, // 廠商編號
-    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, width: '150px' }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true, width: '80px' }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
@@ -114,11 +114,11 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate, width: '80px' }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
-    { field: 'PO_TotalSubQty', header: '採購數量合計', visible: true, format: formatAmount }, // 採購總數量
-    { field: 'PO_TotalBuyNet', header: '進價未稅小計', visible: true, format: formatAmount }, // 採購總淨額
-    { field: 'PO_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount }, // 採購總稅額
-    { field: 'PO_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount }, // 採購總金額
-    { field: 'PO_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount }, // 銷售總金額
+    { field: 'PO_TotalSubQty', header: '採購數量合計', width: '80px', visible: true, format: formatAmount }, // 採購總數量
+    { field: 'PO_TotalBuyNet', header: '進價未稅小計', width: '80px', visible: true, format: formatAmount }, // 採購總淨額
+    { field: 'PO_TotalBuyTax', header: '進價稅額小計', width: '80px', visible: true, format: formatAmount }, // 採購總稅額
+    { field: 'PO_TotalBuyAmt', header: '進價合計', width: '80px', visible: true, format: formatAmount }, // 採購總金額
+    { field: 'PO_TotalSaleAmt', header: '售價合計', width: '80px', visible: true, format: formatAmount }, // 銷售總金額
     { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate, width: '80px' }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '審核人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true }, // 核准人員姓名
@@ -131,7 +131,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDate, width: '80px' }, // 結案日期 (ISO 格式字串)
     { field: 'CLOS_USR_No', header: '結案人員編號', visible: true }, // 結案人員編號
     { field: 'CLOS_USR_Name', header: '結案人員姓名', visible: true }, // 結案人員姓名
-    { field: 'PO_Remark', header: '採購單備註', visible: true }, // 採購單備註
+    { field: 'PO_Remark', header: '採購單備註', visible: true, width: '150px' }, // 採購單備註
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime, width: '130px' }, // 建立日期 (ISO 格式字串)
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false }, // 建立人員編號
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
