@@ -577,10 +577,17 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         // 填充位置資料 (API 回傳欄位名稱為 Locations)
         if (data['Locations'] && Array.isArray(data['Locations'])) {
+          const contractBdate = this.step1Form.get('tlt_bdate')?.value;
+          const contractEdate = this.step1Form.get('tlt_edate')?.value;
           this.wizardState.locationData = (data['Locations'] as LocationItem[]).map(loc => ({
             ...loc,
             // 轉換 tlt_space 為數值
             tlt_space: typeof loc.tlt_space === 'string' ? parseFloat(loc.tlt_space) : loc.tlt_space,
+            // 轉換日期字串為 Date 物件；若地點本身無日期，fallback 到契約起訖日
+            tlt_bdate: loc.tlt_bdate ? new Date(loc.tlt_bdate as string)
+                     : (contractBdate ? new Date(contractBdate) : undefined),
+            tlt_edate: loc.tlt_edate ? new Date(loc.tlt_edate as string)
+                     : (contractEdate ? new Date(contractEdate) : undefined),
             // 標記為既有資料
             _status: 'original' as const
           }));
@@ -1059,6 +1066,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
         this.messageService.warnBubble('支票付款時請填寫票據抬頭');
         return false;
       }
+    }
+
+    // 地點資訊至少需要一筆
+    const validLocationCount = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim()
+    ).length;
+    if (validLocationCount === 0) {
+      this.messageService.warnBubble('櫃位地點資訊至少需要填寫一筆');
+      return false;
     }
 
     // 地點起訖日必填卡控

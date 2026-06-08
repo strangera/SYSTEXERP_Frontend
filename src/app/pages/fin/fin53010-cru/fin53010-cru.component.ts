@@ -555,6 +555,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionLabel: 'label',
         optionValue: 'value',
         templateLabel: 'label',
+        validate: [this.validateRequired],
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
@@ -588,6 +589,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '借方金額',
         textAlign: 'right',
         type: 'inputNumber',
+        validate: [this.validateRequired],
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
@@ -595,6 +597,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '貸方金額',
         textAlign: 'right',
         type: 'inputNumber',
+        validate: [this.validateRequired],
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
@@ -606,6 +609,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         options: () => this.service.orgNoOptions(),
         optionLabel: 'label',
         optionValue: 'value',
+        validate: [this.validateRequired],
       },
       {
         field: 'PTA',
@@ -718,6 +722,25 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt], textAlign: 'right' },
   ];
 
+  private validateRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
+    if (value === '' || value === null || value === undefined) {
+      return { isValid: false, errorMessage: [`${header}不可為空`] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
+  /** 存款/提款二擇一：同一列只要其中一個有值即通過 */
+  private validateBankAmtEither(_value: unknown, rowData: FIN53010StepBankDeposit): { isValid: boolean, errorMessage: string[] } {
+    const deposit = rowData?.deposit_amt;
+    const withdraw = rowData?.withdraw_amt;
+    const hasDeposit = deposit !== null && deposit !== undefined;
+    const hasWithdraw = withdraw !== null && withdraw !== undefined;
+    if (!hasDeposit && !hasWithdraw) {
+      return { isValid: false, errorMessage: ['存款或提款至少須填一項'] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
   private validateBankRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
     if (value === '' || value === null || value === undefined) {
       return { isValid: false, errorMessage: [`${header}不可為空`] };
@@ -726,11 +749,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public readonly stepBankColumns: EditColumn[] = [
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
-    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
-    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
-    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
-    { field: 'status', header: '狀態', type: 'dropdown', options: [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }], optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateRequired], disabled: () => true, textAlign: 'left' },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankAmtEither.bind(this)], disabled: () => true, textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankAmtEither.bind(this)], disabled: () => true, textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true, textAlign: 'left' },
   ];
@@ -965,7 +987,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const vt = accVt.get(accNo);
           if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
 
-          const venOpt = getVenOpt(String(row.DetailNo ?? ''));
           const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
           const noteDesc = this.resolveNoteDescForStep(row);
 
@@ -992,7 +1013,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           } else if (vt === '7') {
             bk.push({
               ven_no: row.DetailNo,
-              bank_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+              bank_no: accNo || undefined,
               deposit_amt: row.AccAmtD ?? undefined,
               withdraw_amt: row.AccAmtC ?? undefined,
               note_desc: noteDesc,
