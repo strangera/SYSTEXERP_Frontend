@@ -10,7 +10,7 @@ export interface ReportColumn {
   dynamicWidth?: string;
   dynamicMaxWidth?: string;
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-  exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('field'))
+  exportFormat?: 'percentage' | 'decimal2' | Record<string, string>[];
   groupField?: string; //
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
