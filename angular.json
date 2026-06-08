@@ -35,12 +35,7 @@
               "src/favicon.ico",
               "src/assets",
               "src/serve.json",
-              "src/web.config.template",
-              {
-                "glob": "**/*",
-                "input": "public",
-                "output": "/"
-              }
+              "src/web.config.template"
             ],
             "styles": [
               "node_modules/primeng/resources/primeng.min.css",
@@ -88,12 +83,7 @@
                 "src/web.config",
                 "src/favicon.ico",
                 "src/assets",
-                "src/serve.json",
-                {
-                  "glob": "**/*",
-                  "input": "public",
-                  "output": "/"
-                }
+                "src/serve.json"
               ]
             },
             "tsrdwebdev": {
@@ -123,12 +113,7 @@
                 "src/favicon.ico",
                 "src/assets",
                 "src/serve.json",
-                "src/web.config.template",
-                {
-                  "glob": "**/*",
-                  "input": "public",
-                  "output": "/"
-                }
+                "src/web.config.template"
               ]
             },
             "tsrdweb": {
@@ -146,12 +131,7 @@
                 "src/favicon.ico",
                 "src/assets",
                 "src/serve.json",
-                "src/web.config.template",
-                {
-                  "glob": "**/*",
-                  "input": "public",
-                  "output": "/"
-                }
+                "src/web.config.template"
               ]
             },
             "development": {

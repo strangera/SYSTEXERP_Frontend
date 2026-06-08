@@ -19,6 +19,7 @@ export interface TLS21020Data extends Partial<EditColumnExtend> {
   SEQNO: number;
   VEN_No: string;
   id: number;
+  Voucher_Type: string;
 }
 
 export interface TLS21020GLS1005Data {

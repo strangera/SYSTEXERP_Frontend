@@ -116,16 +116,20 @@ export class LocationOptionsService {
           console.log('📥 LocationService API 回應:', res);
 
           const results = res?.Data?.map((x: any) => ({
-            label: x.location_no,           // 下拉選單顯示用
-            value: x.location_no,           // 下拉選單選擇值
-            location_no: x.location_no,     // 確保這個欄位存在
-            tlt_building: x.tlt_building,   // 自動帶入用 - 館別
-            tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
-            area_no: x.area_no,             // 自動帶入用 - 區域
-            tlt_space: x.tlt_space || 0,    // 自動帶入用 - 營業面積
-            building_desc: x.building_desc || '', // 館別描述
-            floor_desc: x.floor_desc || '',   // 樓層描述
-            area_desc: x.area_desc || ''      // 區域描述
+            label: x.location_no,
+            value: x.location_no,
+            location_no: x.location_no,
+            tlt_building: x.tlt_building,
+            tlt_floor: x.tlt_floor,
+            area_no: x.area_no,
+            tlt_space: x.tlt_space || 0,
+            building_desc: x.building_desc || '',
+            floor_desc: x.floor_desc || '',
+            area_desc: x.area_desc || '',
+            occ_tlt_no: x.occ_tlt_no || null,
+            occ_tlt_name: x.occ_tlt_name || null,
+            occ_bdate: x.occ_bdate || null,
+            occ_edate: x.occ_edate || null
           })) ?? [];
 
           // 關鍵：將後端的分頁資訊附加到結果上
@@ -158,18 +162,15 @@ export class LocationOptionsService {
   private buildRequestBody(searchParams?: any): any {
     const body: any = {};
 
-    //  只有在有參數時才加入，不設預設值
-    if (searchParams?.pageSize !== undefined) {
-      body.PageSize = searchParams.pageSize;
+    // 支援 PageSize / pageSize 兩種大小寫
+    const pageSize = searchParams?.PageSize ?? searchParams?.pageSize;
+    if (pageSize !== undefined) {
+      body.PageSize = pageSize;
     }
 
-    if (searchParams?.pageIndex !== undefined) {
-      //  移除 +1，或者根據實際情況調整
-      // 如果前端已經是 1-based，就不需要 +1
-      body.PageIndex = searchParams.pageIndex;
-
-      // 或者如果前端是 0-based，確保正確轉換
-      // body.PageIndex = searchParams.pageIndex > 0 ? searchParams.pageIndex : 1;
+    const pageIndex = searchParams?.PageIndex ?? searchParams?.pageIndex;
+    if (pageIndex !== undefined) {
+      body.PageIndex = pageIndex;
     }
 
     if (searchParams?.SortBy && Array.isArray(searchParams.SortBy)) {
@@ -185,6 +186,20 @@ export class LocationOptionsService {
     }
     if (searchParams?.area_code) {
       body.area_code = searchParams.area_code;
+    }
+    if (searchParams?.location_no) {
+      body.location_no = searchParams.location_no;
+    }
+
+    // 時間衝突過濾條件
+    if (searchParams?.tlt_bdate) {
+      body.tlt_bdate = searchParams.tlt_bdate;
+    }
+    if (searchParams?.tlt_edate) {
+      body.tlt_edate = searchParams.tlt_edate;
+    }
+    if (searchParams?.talent_id != null) {
+      body.talent_id = searchParams.talent_id;
     }
 
     return body;

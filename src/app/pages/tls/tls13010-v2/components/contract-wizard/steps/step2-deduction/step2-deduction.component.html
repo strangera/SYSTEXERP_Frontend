@@ -133,7 +133,7 @@
           <div
             *ngIf="hasDataForType(capType)"
             class="col-12"
-            [ngClass]="{ 'compact-table-d': capType === 'D' }"
+            [ngClass]="{ 'compact-table-d': capType === 'D', 'scroll-table-b': capType === 'B' }"
           >
             <app-expandable-edit-table
               [data]="fareData[capType]"

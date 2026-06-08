@@ -127,6 +127,11 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
     ACT_PayAmt60: 'TotalPayAmt60',
     ACT_PayAmt22: 'TotalPayAmt22',
     ACT_PayAmt23: 'TotalPayAmt23',
+    ACT_PayAmt26: 'TotalPayAmt26',
+    ACT_PayAmt27: 'TotalPayAmt27',
+    ACT_PayAmt28: 'TotalPayAmt28',
+    ACT_PayAmt29: 'TotalPayAmt29',
+    ACT_PayAmt61: 'TotalPayAmt61',
 
     Tot_ACT_PayAmt: 'TotalTotPayAmt',
   };
@@ -525,6 +530,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
     { field: 'ACT_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    { field: 'ACT_PayAmt26', header: '品牌已開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt27', header: '品牌未開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt28', header: '外送平台', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt29', header: 'EC', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt61', header: 'PayEasy', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
