@@ -194,6 +194,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         header: '付款天數',
         type: 'inputNumber',
         validate: [this.validator.bind(this)],
+        disabled: (v, i, r) => r.ABAT_YN === 'N',
         width: '4rem',
       },
       {
