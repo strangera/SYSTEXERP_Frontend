@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
@@ -116,5 +116,25 @@ export class TLS26050Service {
   // 查詢週報表起訖日期
   queryTLS26050Week(data: TLS26050WeekQueryRequest): Observable<BaseQueryResponse<TLS26050WeekResponse>> {
     return this.http.post<BaseQueryResponse<TLS26050WeekResponse>>(`${this.apiUrl}/queryTLS26050Week`, data);
+  }
+
+  /** 匯出 Excel */
+  exportExcelTLS26050(payload: TLS26050QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http
+      .post(`${this.apiUrl}/exportTLS26050_Excel`, payload, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .pipe(take(1));
+  }
+
+  /** 匯出 PDF */
+  exportPDFTLS26050(payload: TLS26050QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http
+      .post(`${this.apiUrl}/exportTLS26050_PDF`, payload, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .pipe(take(1));
   }
 }
