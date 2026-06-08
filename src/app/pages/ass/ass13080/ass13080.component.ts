@@ -105,8 +105,11 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   orgOptions: { value: string; label: string }[] = [];
   /** 保管/使用人：TBLUSER */
   userOptions: { value: string; label: string }[] = [];
-  /** 資產類別：SYS1000(ASSET_TYPE) */
-  assetTypeOptions: { value: string; label: string }[] = [];
+  /** 資產類型：對應 DEPRE_YN（1:資產 2:列管品），與 ASS13010 保持一致 */
+  assetTypeOptions: { value: string; label: string }[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' },
+  ];
   /** 折舊會計科目：queryGLS1005_DropDownList */
   stypeIdOptions: Option[] = [];
 
@@ -143,14 +146,6 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
       .subscribe(res => {
         if (res.Status !== '0000') return;
         this.assetStatusOptions = toOpt(res.Data ?? []);
-      });
-
-    this.dropDownListService
-      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_TYPE' } as any)
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Status !== '0000') return;
-        this.assetTypeOptions = toOpt(res.Data ?? []);
       });
 
     this.dropDownListService

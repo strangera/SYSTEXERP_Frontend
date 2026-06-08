@@ -7,7 +7,7 @@ import { ASS15030Service } from '@service/api/ass/ass15030.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { finalize, map, Observable } from 'rxjs';
+import { distinctUntilChanged, finalize, map, Observable } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -289,7 +289,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   // 避免新欄位套到舊資料形狀上造成空白欄與錯誤總合計
   private setupReportStyleSync(): void {
     this.queryForm.controls.reportStyle.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
       .subscribe(style => {
         this.columns = this.getColumnsByReportStyle(style);
         this.data = [];
