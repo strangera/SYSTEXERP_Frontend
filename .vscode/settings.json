@@ -58,5 +58,5 @@
   "typescript.referencesCodeLens.enabled": false,
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
-  }
+  },
 }

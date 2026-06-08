@@ -3,23 +3,59 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="事件代碼" controlName="Description"
-            [control]="queryForm.controls.Description" [submitted]="submitted" [options]="errotMsg" optionLabel="label"
-            optionValue="value"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者編號" controlName="User_No"
-            [control]="queryForm.controls.User_No" [submitted]="submitted" [options]="userNoOptions" optionLabel="label"
-            optionValue="user_No"></app-dropdown>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="登入者位置" controlName="From_IP"
-            [control]="queryForm.controls.From_IP" [submitted]="submitted" />
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" startLabel="登入時間(起)" endLabel="登入時間(迄)"
-            startControlName="Start_Date" endControlName="End_Date" [startControl]="queryForm.controls.Start_Date"
-            [endControl]="queryForm.controls.End_Date" [submitted]="submitted" />
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="事件代碼"
+            controlName="Description"
+            [control]="queryForm.controls.Description"
+            [submitted]="submitted"
+            [options]="errotMsg"
+            optionLabel="label"
+            optionValue="value"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="使用者編號"
+            controlName="User_No"
+            [control]="queryForm.controls.User_No"
+            [submitted]="submitted"
+            [options]="userNoOptions"
+            optionLabel="label"
+            optionValue="user_No"
+          ></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="登入者位置"
+            controlName="From_IP"
+            [control]="queryForm.controls.From_IP"
+            [submitted]="submitted"
+          />
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            startLabel="登入時間(起)"
+            endLabel="登入時間(迄)"
+            startControlName="Start_Date"
+            endControlName="End_Date"
+            [startControl]="queryForm.controls.Start_Date"
+            [endControl]="queryForm.controls.End_Date"
+            [submitted]="submitted"
+          />
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -28,8 +64,16 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryUserLoginError" tableKey="sys0760" [data]="data" [columns]="columns"
-    [showManage]="false" [totalRecords]="totalRecords" [showDelete]="false" [loading]="loading"
+  <app-table-report
+    [exportContext]="{ apiUrl: 'queryUserLoginError' }"
+    tableKey="sys0760"
+    [data]="data"
+    [columns]="columns"
+    [showManage]="false"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [loading]="loading"
     [lastQueryBody]="lastQueryBody"
-    [queryFunction]="sys0760Service.queryUserLoginError.bind(sys0760Service)"></app-table-report>
+    [queryFunction]="sys0760Service.queryUserLoginError.bind(sys0760Service)"
+  ></app-table-report>
 </div>

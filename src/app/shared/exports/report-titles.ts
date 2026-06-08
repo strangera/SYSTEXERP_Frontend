@@ -1,4 +1,7 @@
-// API名稱
+//TODO: API名稱(未來希望可以都由個別作業定義傳入) -> 報表標題
+// 1. 優先使用傳入的 API（context.reportTitle）
+// 2. 若無，則使用REPORT_TITLES[fallbackTitleKey] 作為 API 名稱
+// 3. 若 REPORT_TITLES 中也沒有對應的 API 名稱，則使用 funInfo?.prog_name 作為 API 名稱
 export const REPORT_TITLES: Record<string, string> = {
   queryTLS13030: '專櫃契約代扣款報表',
   queryTLS13040: '專櫃契約抽成報表',

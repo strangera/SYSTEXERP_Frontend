@@ -31,11 +31,11 @@
     </div>
     <div *ngIf="showExcel" class="flex gap-2 align-items-center">
       <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
-            exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()"
-        [disabled]="!hasPermission('320')" styleClass="p-2" />
+          exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'
+        " (click)="onExportExcel()" [disabled]="!hasPermission('320')" styleClass="p-2" />
       <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic" [chooseIcon]="
-            exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'" styleClass="p-2"
-        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
+          exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'
+        " styleClass="p-2" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
         (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" [disabled]="!hasPermission('130')" />
       <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
         (click)="onImportExcel()" [disabled]="!hasPermission('130')" styleClass="p-2" />
@@ -50,6 +50,29 @@
 </ng-container>
 
 <app-table-export [visible]="exportDialog" header="列印選項" (visibleChange)="exportDialog = $event"
-  [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [exportStatus]="exportStatus"
-  (save)="exportStatus === 'PDF' ? exportPDFDownload($event, selectedColumns, apiUrl, DataKeyName, PrintRemark, Conditions, PrintColumn, footerData, reportTitle, expansionColumns) :
-  exportExcelDownload($event, selectedColumns, apiUrl,DataKeyName,Conditions,PrintColumn,footerData,reportTitle, expansionColumns)"></app-table-export>
+  [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [exportStatus]="exportStatus" (save)="
+    exportStatus === 'PDF'
+      ? exportPDFDownload(
+          $event,
+          selectedColumns,
+          apiUrl,
+          DataKeyName,
+          PrintRemark,
+          Conditions,
+          PrintColumn,
+          footerData,
+          reportTitle,
+          expansionColumns
+        )
+      : exportExcelDownload(
+          $event,
+          selectedColumns,
+          apiUrl,
+          DataKeyName,
+          Conditions,
+          PrintColumn,
+          footerData,
+          reportTitle,
+          expansionColumns
+        )
+  "></app-table-export>

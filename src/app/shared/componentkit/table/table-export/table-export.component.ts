@@ -27,7 +27,72 @@ export interface TableExport {
 
 @Component({
   selector: 'app-table-export',
-  templateUrl: './table-export.component.html',
+  template: `
+  <p-dialog [(visible)]="visible" position="center" [header]="header" [modal]="true"
+  (visibleChange)="visibleChange.emit($event)" contentStyleClass="pt-2" [style]="{ width: '30rem' }">
+    <form [formGroup]="form" (ngSubmit)="saveDialog()">
+      <div class="grid m-0">
+        <div class="card col-12 p-0">
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_reportTitle">是否顯示報表標題</label>
+            <p-inputSwitch class="flex" id="print_reportTitle" formControlName="print_reportTitle" trueValue="Y"
+              falseValue="N" />
+          </div>
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_reportTitle_per_page">每頁顯示報表標題</label>
+            <p-inputSwitch class="flex" id="print_reportTitle_per_page" formControlName="print_reportTitle_per_page"
+              trueValue="Y" falseValue="N" />
+          </div>
+        </div>
+        <div class="card col-12 p-0">
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_eject">是否需要分頁</label>
+            <p-inputSwitch class="flex" id="print_eject" formControlName="print_eject" trueValue="Y" falseValue="N" />
+          </div>
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="page_lines">分頁顯示筆數</label>
+            <p-inputNumber formControlName="page_lines" inputId="page_lines" [min]="10" />
+          </div>
+        </div>
+        <div class="card col-12 p-0">
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_field_title">是否顯示欄位名稱</label>
+            <p-inputSwitch class="flex" id="print_field_title" formControlName="print_field_title" trueValue="Y"
+              falseValue="N" />
+          </div>
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_field_title_per_page">每頁顯示欄位名稱</label>
+            <p-inputSwitch class="flex" id="print_field_title_per_page" formControlName="print_field_title_per_page"
+              trueValue="Y" falseValue="N" />
+          </div>
+        </div>
+        <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_reportFooter">是否顯示報表頁尾</label>
+            <p-inputSwitch class="flex" id="print_reportFooter" formControlName="print_reportFooter" trueValue="Y"
+              falseValue="N" />
+          </div>
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_reportFooter_per_page">是否每頁顯示報表頁尾</label>
+            <p-inputSwitch class="flex" id="print_reportFooter_per_page" formControlName="print_reportFooter_per_page"
+              trueValue="Y" falseValue="N" />
+          </div>
+        </div>
+        <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+          <div class="col-12 flex justify-content-between align-items-center">
+            <label for="print_line_number">是否顯示序號</label>
+            <p-inputSwitch class="flex" id="print_line_number" formControlName="print_line_number" trueValue="Y"
+              falseValue="N" />
+          </div>
+        </div>
+        <div class="flex justify-content-end gap-2 w-full mb-3">
+          <p-button label="取消" [outlined]="true" severity="secondary" (click)="visibleChange.emit(false)" />
+          <p-button label="確定" type="submit" (onClick)="visible = false" [disabled]="disable" />
+        </div>
+      </div>
+    </form>
+  </p-dialog>
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, RadioButtonModule, DropdownModule, NgIf, Button]
