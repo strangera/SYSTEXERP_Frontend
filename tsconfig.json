@@ -23,6 +23,7 @@
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
     "paths": {
+      "src/*": ["./src/*"],
       "@pages/ass/*": ["./src/app/pages/ass/*"],
       "@pages/base/*": ["./src/app/pages/base/*"],
       "@pages/cpm/*": ["./src/app/pages/cpm/*"],
