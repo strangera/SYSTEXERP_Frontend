@@ -1,8 +1,8 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
+    "rootDir": "./",
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -14,69 +14,34 @@
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
     "useDefineForClassFields": false,
-    "lib": [
-      "es2023",
-      "dom"
-    ],
+    "lib": ["es2023", "dom"],
     "incremental": true,
-    "baseUrl": "./",
+    "tsBuildInfoFile": "./.tsbuildinfo",
     "paths": {
-      "@pages/ass/*": [
-        "src/app/pages/ass/*"
-      ],
-      "@pages/base/*": [
-        "src/app/pages/base/*"
-      ],
-      "@pages/cpm/*": [
-        "src/app/pages/cpm/*"
-      ],
-      "@pages/fin/*": [
-        "src/app/pages/fin/*"
-      ],
-      "@pages/sys/*": [
-        "src/app/pages/sys/*"
-      ],
-      "@pages/tls/*": [
-        "src/app/pages/tls/*"
-      ],
-      "@guards/*": [
-        "src/app/guards/*"
-      ],
-      "@interceptors/*": [
-        "src/app/interceptors/*"
-      ],
-      "@service/*": [
-        "src/app/service/*"
-      ],
-      "@shared/*": [
-        "src/app/shared/*"
-      ],
-      "@componentkit/*": [
-        "src/app/shared/componentkit/*"
-      ],
-      "@utils/*": [
-        "src/app/utils/*"
-      ]
+      "@pages/ass/*": ["./src/app/pages/ass/*"],
+      "@pages/base/*": ["./src/app/pages/base/*"],
+      "@pages/cpm/*": ["./src/app/pages/cpm/*"],
+      "@pages/fin/*": ["./src/app/pages/fin/*"],
+      "@pages/sys/*": ["./src/app/pages/sys/*"],
+      "@pages/tls/*": ["./src/app/pages/tls/*"],
+      "@guards/*": ["./src/app/guards/*"],
+      "@interceptors/*": ["./src/app/interceptors/*"],
+      "@service/*": ["./src/app/service/*"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@componentkit/*": ["./src/app/shared/componentkit/*"],
+      "@utils/*": ["./src/app/utils/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tmp",
-    "**/*.spec.ts",
-    "api"
-  ],
+  "exclude": ["node_modules", "dist", "tmp", "**/*.spec.ts", "api"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./.tsbuildinfo"
+    "strictTemplates": true
   }
 }
