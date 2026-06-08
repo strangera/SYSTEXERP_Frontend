@@ -1068,6 +1068,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       }
     }
 
+    // 地點資訊至少需要一筆
+    const validLocationCount = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim()
+    ).length;
+    if (validLocationCount === 0) {
+      this.messageService.warnBubble('櫃位地點資訊至少需要填寫一筆');
+      return false;
+    }
+
     // 地點起訖日必填卡控
     const locationsWithMissingDates = this.wizardState.locationData.filter(
       loc => loc._status !== 'deleted' && loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
