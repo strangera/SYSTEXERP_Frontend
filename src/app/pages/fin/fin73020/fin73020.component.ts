@@ -111,31 +111,33 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
 
   columns: ReportColumn[] = [
     { field: 'SeqNo', header: '序號' },
+    { field: 'PCS_RqstNo', header: '支出請款單號' },
+    { field: 'PCS_RqstDate', header: '產生日期', format: v => this.formatDate(v) },
+    { field: 'PCS_StatusName', header: '狀態' },
+
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: v => this.formatDate(v) },
     { field: 'PCS_UsrNo', header: '申請人代碼' },
     { field: 'PCS_UsrName', header: '申請人姓名' },
-    { field: 'PCS_OrgID', header: '申請人組織代碼' },
-    { field: 'PCS_OrgName', header: '申請人組織名稱' },
+    { field: 'PCS_OrgID', header: '申請人組織代號' },
+
     { field: 'Keep_UsrNo', header: '保管人代碼' },
     { field: 'Keep_UsrName', header: '保管人姓名' },
     { field: 'Keep_OrgID', header: '保管人組織代碼' },
-    { field: 'Keep_OrgName', header: '保管人組織名稱' },
-    { field: 'PCS_StatusName', header: '單據狀態' },
-    { field: 'PCS_RqstNo', header: '支出請款單號' },
-    { field: 'PCS_SeqNo', header: '項次' },
-    { field: 'AccNo', header: '費用科目編號' },
-    { field: 'AccName', header: '費用科目名稱' },
+    { field: 'Keep_OrgName', header: '組織名稱' },
+
+    { field: 'EXP_ACC', header: '費用會計科目' },
+    { field: 'ORG_ID', header: '費用科目組織代號' },
     { field: 'NOTeDesc', header: '項目摘要' },
     { field: 'PCS_DtlTypeName', header: '明細類別' },
     { field: 'PCS_GUINo', header: '發票/收據號碼' },
-    { field: 'ORG_ID', header: '費用科目組織代碼' },
-    { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
-    { field: 'PUR_Date', header: '憑證日期', format: v => this.formatDate(v) },
+    { field: 'PUR_Date', header: '消費日期', format: v => this.formatDate(v) },
+
     { field: 'PCS_Net', header: '未稅金額', align: 'right', format: v => this.money(v) },
     { field: 'PCS_Tax', header: '稅額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Amt', header: '含稅金額', align: 'right', format: v => this.money(v) },
-    { field: 'RowTypeDesc', header: '列別說明' },
+    { field: 'PCS_Amt', header: '總額', align: 'right', format: v => this.money(v) },
+
+    { field: 'Voucher_No', header: '傳票號碼' },
   ];
 
   constructor(
@@ -238,17 +240,13 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   }
 
   private initRows(rows: FIN73020Data[]): FIN73020Data[] {
-    // 徹底移除 crypto.randomUUID() 或 Math.random()，完全不需要隨機數了！
-
     for (const [index, row] of rows.entries()) {
-      // 利用業務唯一欄位組合（請款單號 + 零用金單號 + 項次 + 列別）作為絕對穩定的 Key
       const rqstNo = row.PCS_RqstNo ?? 'NORQST';
       const pcsNo = row.PCS_No ?? 'NOPCS';
-      const seqNo = row.PCS_SeqNo ?? index;
-      const rowType = row.RowType ?? 'NOTYPE';
+      const seqNo = row.SeqNo ?? index;
+      const note = row.NOTeDesc ?? 'NONOTE';
 
-      // 這樣組出來的 Key 永遠固定，不管重新查詢或分頁，都不會導致元件重新渲染
-      (row as any).dataKey = `key_${rqstNo}_${pcsNo}_${seqNo}_${rowType}`;
+      row.dataKey = `key_${rqstNo}_${pcsNo}_${seqNo}_${note}`;
     }
 
     return rows;
@@ -495,16 +493,12 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   private isOnlyGrandTotalRow(rows: FIN73020Data[]): boolean {
     if (rows.length !== 1) return false;
 
-    const row: any = rows[0];
+    const row = rows[0];
 
     return String(row?.NOTeDesc ?? '').trim() === '總計'
-      && Object.keys(row).every(key =>
-        key === 'NOTeDesc' ||
-        key === 'dataKey' ||
-        row[key] === null ||
-        row[key] === undefined ||
-        row[key] === ''
-      );
+      && !row.PCS_RqstNo
+      && !row.PCS_No
+      && row.PCS_Amt == null;
   }
 
   private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
