@@ -3,30 +3,66 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="結帳日期" controlName="TXN_Date" [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              label="結帳日期"
+              controlName="TXN_Date"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
         </div>
         <div class="my-3 flex justify-content-between align-items-center">
-          <p class="m-0">最近關帳日期：{{cls_date}}</p>
-          <app-button btnType="textclear" label="查詢日結紀錄" icon="pi pi-history" (clickEvent)="onQueryHistory()">
-          </app-button>
+          <p class="m-0">最近關帳日期：{{ cls_date }}</p>
+          <app-button
+            btnType="textclear"
+            label="查詢日結紀錄"
+            icon="pi pi-history"
+            (clickEvent)="onQueryHistory()"
+          ></app-button>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button severity="info" icon="pi pi-search-plus" btnType="query" label="日結前檢查" [loading]="loading"
-            (clickEvent)="onQuery(queryForm)"></app-button>
-          <app-button severity="success" icon="pi pi-check" type="button" label="確定日結"
-            (clickEvent)="onSubmit(queryForm)" [loading]="insertLoading"></app-button>
-          <app-button severity="danger" type="button" label="反日結" (clickEvent)="onReverse(queryForm)"
-            [loading]="reverseLoading"></app-button>
-          <app-button icon="pi pi-search" type="button" label="查詢" (clickEvent)="onQueryVou(queryForm)"
-            [loading]="queryLoading"></app-button>
+          <app-button
+            severity="info"
+            icon="pi pi-search-plus"
+            btnType="query"
+            label="日結前檢查"
+            [loading]="loading"
+            (clickEvent)="onQuery(queryForm)"
+          ></app-button>
+          <app-button
+            severity="success"
+            icon="pi pi-check"
+            type="button"
+            label="確定日結"
+            (clickEvent)="onSubmit(queryForm)"
+            [loading]="insertLoading"
+          ></app-button>
+          <app-button
+            severity="danger"
+            type="button"
+            label="反日結"
+            (clickEvent)="onReverse(queryForm)"
+            [loading]="reverseLoading"
+          ></app-button>
+          <app-button
+            icon="pi pi-search"
+            type="button"
+            label="查詢"
+            (clickEvent)="onQueryVou(queryForm)"
+            [loading]="queryLoading"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -35,93 +71,181 @@
 
 <div class="card">
   @if (showHistory) {
-  <p-panel header="日結歷史紀錄">
-    <app-table-report apiUrl="queryTLS55010_OneMonth" [data]="historyData" [columns]="historyColumns"
-      [showManage]="false" [loading]="historyLoading" [totalRecords]="historyData.length || 0" [lazy]="false">
-    </app-table-report>
-  </p-panel>
-  }
-  @else if (!isConfirmDate) {
-  <app-table-report dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showSummary]="false"
-    (detail)="onDetail($event)" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details"
-    [showManage]="false" [showCaption]="false" [showSort]="false" [totalRecords]="0"
-    [customTemplates]="{ 'isPassed': statusTemplate }"></app-table-report>
-  <ng-template #statusTemplate let-rowData>
-    <div class="flex justify-content-center align-items-center" [ngSwitch]="rowData.checkStatus">
-
-      <!-- 1. 轉圈圈動畫：使用 PrimeNG 內建指令或原生 class -->
-      <i *ngSwitchCase="'loading'" class="pi pi-spin pi-spinner text-primary text-xl"></i>
-
-      <!-- 2. 成功狀態：綠色勾勾 -->
-      <i *ngSwitchCase="'success'" class="pi pi-check-circle text-green-500 text-xl animated fadeIn"></i>
-
-      <!-- 3. 失敗狀態：紅色叉叉與文字 -->
-      <div *ngSwitchCase="'error'" class="text-red-500 flex align-items-center gap-1 animated shake">
-        <i class="pi pi-exclamation-circle"></i>
-        <span>有問題</span>
-      </div>
-
-      <!-- 4. 預設狀態 -->
-      <span *ngSwitchDefault class="text-500">待檢查</span>
-
-    </div>
-  </ng-template>
-  }
-  @else {
-  <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">
-    <p-panel header="傳票資料">
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票種類" controlName="VouType" [control]="dataForm.controls.VouType"
-            [options]="VouTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="傳票型態" controlName="SrcSheetType" [control]="dataForm.controls.SrcSheetType"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"
-            [submitted]="submitted"></app-calendar>
-        </div>
-        <div class="col-12 md:col-6">
-          <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="結帳單號" controlName="SrcSheetNo" [control]="dataForm.controls.SrcSheetNo"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票狀態" controlName="PostFlag" [control]="dataForm.controls.PostFlag"
-            [submitted]="submitted" [options]="PostFlagOptions" optionLabel="label" optionValue="value"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="建立人員編號" controlName="CRT_USR_No"
-            [control]="dataForm.controls.CRT_USR_No"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar calendarType="dateTimeOne" label="建立日期" controlName="CRT_Date"
-            [control]="dataForm.controls.CRT_Date" [submitted]="submitted"></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="變更人員編號" controlName="UPD_USR_No"
-            [control]="dataForm.controls.UPD_USR_No"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar calendarType="dateTimeOne" label="變更日期" controlName="UPD_Date"
-            [control]="dataForm.controls.UPD_Date" [submitted]="submitted"></app-calendar>
-        </div>
-      </div>
+    <p-panel header="日結歷史紀錄">
+      <app-table-report
+        [exportContext]="{ apiUrl: 'queryTLS55010_OneMonth' }"
+        [data]="historyData"
+        [columns]="historyColumns"
+        [showManage]="false"
+        [loading]="historyLoading"
+        [totalRecords]="historyData.length || 0"
+        [lazy]="false"
+      ></app-table-report>
     </p-panel>
-    <p-panel header="傳票明細">
-      <app-table-report [data]="data2" [columns]="columns2" [showManage]="false" [showDelete]="false"
-        [showCaption]="false" [totalRecords]="0" [footerData]="footerData2" [showSummary]="false">
-      </app-table-report>
-    </p-panel>
-  </form>
+  } @else if (!isConfirmDate) {
+    <app-table-report
+      dataKey="value"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      [showSummary]="false"
+      (detail)="onDetail($event)"
+      [showDelete]="false"
+      [expansionColumns]="expansionColumns"
+      expansionDataKey="details"
+      [showManage]="false"
+      [showCaption]="false"
+      [showSort]="false"
+      [totalRecords]="0"
+      [customTemplates]="{ isPassed: statusTemplate }"
+    ></app-table-report>
+    <ng-template #statusTemplate let-rowData>
+      <div
+        class="flex justify-content-center align-items-center"
+        [ngSwitch]="rowData.checkStatus"
+      >
+        <!-- 1. 轉圈圈動畫：使用 PrimeNG 內建指令或原生 class -->
+        <i
+          *ngSwitchCase="'loading'"
+          class="pi pi-spin pi-spinner text-primary text-xl"
+        ></i>
+
+        <!-- 2. 成功狀態：綠色勾勾 -->
+        <i
+          *ngSwitchCase="'success'"
+          class="pi pi-check-circle text-green-500 text-xl animated fadeIn"
+        ></i>
+
+        <!-- 3. 失敗狀態：紅色叉叉與文字 -->
+        <div
+          *ngSwitchCase="'error'"
+          class="text-red-500 flex align-items-center gap-1 animated shake"
+        >
+          <i class="pi pi-exclamation-circle"></i>
+          <span>有問題</span>
+        </div>
+
+        <!-- 4. 預設狀態 -->
+        <span *ngSwitchDefault class="text-500">待檢查</span>
+      </div>
+    </ng-template>
+  } @else {
+    <form
+      [formGroup]="dataForm"
+      id="dataForm"
+      class="flex flex-column gap-3"
+      (ngSubmit)="onReverse(dataForm)"
+    >
+      <p-panel header="傳票資料">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="傳票編號"
+              controlName="VouNo"
+              [control]="dataForm.controls.VouNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-dropdown
+              label="傳票種類"
+              controlName="VouType"
+              [control]="dataForm.controls.VouType"
+              [options]="VouTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="傳票型態"
+              controlName="SrcSheetType"
+              [control]="dataForm.controls.SrcSheetType"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-calendar
+              label="傳票日期"
+              controlName="VouDate"
+              [control]="dataForm.controls.VouDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6">
+            <app-input-text
+              label="傳票摘要"
+              controlName="Remark"
+              [control]="dataForm.controls.Remark"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="結帳單號"
+              controlName="SrcSheetNo"
+              [control]="dataForm.controls.SrcSheetNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-dropdown
+              label="傳票狀態"
+              controlName="PostFlag"
+              [control]="dataForm.controls.PostFlag"
+              [submitted]="submitted"
+              [options]="PostFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="建立人員編號"
+              controlName="CRT_USR_No"
+              [control]="dataForm.controls.CRT_USR_No"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-calendar
+              calendarType="dateTimeOne"
+              label="建立日期"
+              controlName="CRT_Date"
+              [control]="dataForm.controls.CRT_Date"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="變更人員編號"
+              controlName="UPD_USR_No"
+              [control]="dataForm.controls.UPD_USR_No"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-calendar
+              calendarType="dateTimeOne"
+              label="變更日期"
+              controlName="UPD_Date"
+              [control]="dataForm.controls.UPD_Date"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+        </div>
+      </p-panel>
+      <p-panel header="傳票明細">
+        <app-table-report
+          [data]="data2"
+          [columns]="columns2"
+          [showManage]="false"
+          [showDelete]="false"
+          [showCaption]="false"
+          [totalRecords]="0"
+          [footerData]="footerData2"
+          [showSummary]="false"
+        ></app-table-report>
+      </p-panel>
+    </form>
   }
 </div>

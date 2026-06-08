@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { SortMeta } from 'primeng/api';
 import { reportType, TableTypes } from '../table/table.model';
@@ -24,6 +25,31 @@ export interface ReportColumn {
   cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;
+}
+
+export interface ExportContext {
+  apiUrl?: string;
+  reportTitle?: string;
+  dataKeyName?: string;
+  conditions?: any;
+  printRemark?: boolean;
+  customFileName?: string;
+  extraParams?: Record<string, any>;
+}
+
+export interface ExportParams {
+  event: any;
+  columns: any[];
+  context: any; // 傳入的 exportContext
+  footerData?: any;
+  expansionColumns?: any[];
+  legacyFallback?: {
+    apiUrl?: string;
+    reportTitle?: string;
+    dataKeyName?: string;
+    conditions?: any;
+    printRemark?: boolean;
+  };
 }
 
 export interface ColumnGroup {
