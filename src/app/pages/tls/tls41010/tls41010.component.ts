@@ -3,14 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls46010Service } from '@service/api/tls/tls46010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
@@ -21,7 +20,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { AddButton } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
@@ -47,7 +46,7 @@ import { columns, TLS41010Data, TLS41010Item } from './tls41010.model';
   ],
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
-  columns: Column[] = columns;
+  columns: ReportColumn[] = columns;
   queryForm = this.formBuilder.group({
     ECR_No: [null, [Validators.maxLength(10)]],
     ECR_Type: [null, [Validators.maxLength(2)]],

@@ -18,7 +18,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, Column } from '@shared/componentkit/table/table.model';
+import { AddButton } from '@shared/componentkit/table/table.model';
 import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -26,6 +26,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, tap } from 'rxjs';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
 
 @Component({
@@ -77,7 +78,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   userOptions = this.dropdown.queryTblUser();     // 申請人員、審核人員
   // table
   data: ITLS52050Data[] = [];
-  columns: Column[] = POS2008M_COLUMNS;
+  columns: ReportColumn[] = POS2008M_COLUMNS;
   lastQueryBody: IQueryTLS52050Request | null = null;
   addButton: AddButton[] = [
     { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) < (new Date().setHours(0, 0, 0, 0)) || !this.hasPermission(Actions.Audit) }, // 審核

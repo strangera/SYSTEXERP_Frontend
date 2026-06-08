@@ -7,7 +7,6 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
@@ -19,7 +18,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent, } from './fin25010-table-report/fin25010-table-report.component';
-import { formatAmount, formatDate } from './fin25010-table-report/fin25010-table-report.model';
+import { formatAmount, formatDate, ReportColumn } from './fin25010-table-report/fin25010-table-report.model';
 @Component({
   selector: 'app-fin25010-cru',
   templateUrl: './fin25010-cru.component.html',

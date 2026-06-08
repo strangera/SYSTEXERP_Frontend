@@ -21,12 +21,13 @@ export interface ExportContext {
   printRemark?: boolean;
   customFileName?: string;
   extraParams?: Record<string, any>;
+  printRemarkText?: string;
 }
 
 export interface ExportParams {
   event: any;
   columns: any[];
-  context: any; // 傳入的 exportContext
+  context: ExportContext;
   footerData?: any;
   expansionColumns?: any[];
 }
@@ -75,6 +76,7 @@ export class ReportExportService {
       footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
       file_name: context.customFileName || `${userInfo?.user_No}_${funInfo?.prog_id || progNo}_${formattedToday}`,
       data_key_name: finalDataKeyName,
+      print_remark_text: context.printRemarkText || undefined
     };
 
     // 【核心修正】通知組件開始轉圈圈
@@ -123,7 +125,8 @@ export class ReportExportService {
       config: event,
       footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
       file_name: context.customFileName || `${userInfo?.user_No}_${funInfo?.prog_id || progNo}_${formattedToday}`,
-      data_key_name: finalDataKeyName
+      data_key_name: finalDataKeyName,
+      print_remark_text: context.printRemarkText || undefined
     };
 
     // 【核心修正】Excel 同步打通 Loading 通訊鏈

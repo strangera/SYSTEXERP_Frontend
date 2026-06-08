@@ -12,11 +12,9 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { TableValidationService } from '@shared/componentkit/table-edit/services/table-validation.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -26,13 +24,13 @@ import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startW
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/componentkit/table-report/table-report.model';
 import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';
+import { formatAmount, formatYYYYMM, ReportColumn } from './tls2f010-table-report.model';
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule]
+  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, InputNumberComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;

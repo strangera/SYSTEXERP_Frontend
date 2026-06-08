@@ -18,7 +18,6 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -28,7 +27,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { TableReportComponent } from './table-report/table-report.component';
-import { formatAmount2 } from './table-report/table-report.model';
+import { formatAmount2, formatDate, ReportColumn } from './table-report/table-report.model';
 
 @Component({
   selector: 'app-tls55070',
