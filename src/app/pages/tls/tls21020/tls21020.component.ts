@@ -127,10 +127,16 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         validate: [this.validator.bind(this)],
         showClear: !1,
         calculate: (_d: TLS21020Data, v: string) => {
-          const ABAT_YN = this.service.GLS1005Map().get(v)?.['ABAT_YN'] || 'N';
-          const updates: Partial<TLS21020Data> = { ABAT_YN };
-          if (ABAT_YN === 'N') { updates.VEN_No = void 0; updates.PAY_days = void 0; }
-          return updates;
+          const glsData = this.service.GLS1005Map().get(v);
+          const ABAT_YN = glsData?.['ABAT_YN'] || 'N';
+          const Voucher_Type = glsData?.['Voucher_Type'];
+          const updates: Partial<TLS21020Data> & { Voucher_Type?: string } = { ABAT_YN, Voucher_Type };
+          // 不是應收帳款 ('4') 時，清空廠商與付款天數
+          if (Voucher_Type !== '4') {
+            updates.VEN_No = void 0;
+            updates.PAY_days = void 0;
+          }
+          return updates as Partial<TLS21020Data>;
         },
       },
       {
@@ -187,14 +193,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         optionValue: 'value',
         templateLabel: 'label',
         validate: [this.validator.bind(this)],
-        disabled: (v, i, r) => r.ABAT_YN === 'N',
+        disabled: (v, i, r) => (r as any).Voucher_Type !== '4',
       },
       {
         field: 'PAY_days',
         header: '付款天數',
         type: 'inputNumber',
         validate: [this.validator.bind(this)],
-        disabled: (v, i, r) => r.ABAT_YN === 'N',
+        disabled: (v, i, r) => (r as any).Voucher_Type !== '4',
         width: '4rem',
       },
       {
@@ -302,12 +308,13 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public validateRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
     // 重複性檢查
     const { ABAT_YN, VEN_No, PAY_days } = rowData;
+    const Voucher_Type = (rowData as any).Voucher_Type;
 
-    // 立沖科目檢查
-    if (ABAT_YN === 'Y') {
+    // 應收帳款檢查
+    if (Voucher_Type === '4') {
       if (this.isEmpty(VEN_No)) return this.fail('應收廠商必須填寫');
       if (this.validateValue(PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
-      if (this.isEmpty(PAY_days)) return this.warn('付款天數必須填寫');
+      if (this.isEmpty(PAY_days)) return this.warn('付款天數建議填寫');
     }
 
     // 欄位級別驗證
@@ -325,15 +332,21 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   /** 欄位級別驗證 */
   private readonly validator = (value: unknown, rowData: TLS21020Data, data: TLS21020Data[], field: keyof TLS21020Data) => {
+    const Voucher_Type = (rowData as any).Voucher_Type;
+
+    // 針對應收帳款的即時驗證
+    if (Voucher_Type === '4') {
+      if (field === 'VEN_No' && this.isEmpty(value)) {
+        return { isValid: !1, errorMessage: ['應收廠商必須填寫'] };
+      }
+      if (field === 'PAY_days') {
+        if (this.validateValue(value)) return { isValid: !1, errorMessage: ['付款天數必須為大於等於0的整數'] };
+        if (this.isEmpty(value)) return { isValid: !0, errorMessage: ['付款天數建議填寫'] };
+      }
+    }
     for (const [key, label, isRequired] of this.validatorField) {
       // 跳過非該欄位
       if (field !== key) continue;
-      // 立沖科目檢查
-      if (field === 'ABAT_YN' && value === 'Y') {
-        if (this.isEmpty(rowData.VEN_No)) return { isValid: !1, errorMessage: ['應收廠商必須填寫'] };
-        if (this.validateValue(rowData.PAY_days)) return { isValid: !1, errorMessage: ['付款天數必須為大於等於0的整數'] };
-        if (this.isEmpty(rowData.PAY_days)) return { isValid: !0, errorMessage: ['付款天數建議填寫'] };
-      }
       // 必填檢查
       if (isRequired && this.isEmpty(value)) return { isValid: !1, errorMessage: [`${label}為必填欄位`] };
       // 選填檢查
