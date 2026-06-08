@@ -12,8 +12,8 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { FileExportService } from '@shared/service/file-export.service';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -174,7 +174,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
       message: `是否確認刪除 ${event.length} 筆資料？`,
       accept: () => {
         this.deleteLoading.set(true);
-        this.service.deleteTLS26080(event.map(v => String(v.id))).pipe(finalize(() => this.deleteLoading.set(false))).subscribe(res => {
+        const podNoList = event.map(v => v.pod_no);
+        this.service.deleteTLS26080(podNoList).pipe(finalize(() => this.deleteLoading.set(false))).subscribe(res => {
           this.messageService.successBubble(res.Message || '刪除成功');
           this.onSubmit(); // 重新查詢
         });

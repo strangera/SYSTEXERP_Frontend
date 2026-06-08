@@ -14,11 +14,11 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { NGXLogger } from 'ngx-logger';
@@ -230,9 +230,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       const rate_D17 = Number(item.tpy_rate_D17);
       if (isNaN(rate_D16) || isNaN(rate_D17)) return true;
 
-      const basisPoint_D16 = Math.round(rate_D16 * 100);
-      const basisPoint_D17 = Math.round(rate_D17 * 100);
-      if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) return true;
+      if (rate_D16 < 0 || rate_D16 > 1 || rate_D17 < 0 || rate_D17 > 1) return true;
 
       return false;
     });
@@ -454,13 +452,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D16',
         header: 'D16',
         groupField: 'groupField1',
-        type: this.isFormReadable ? undefined : 'percent',
+        type: this.isFormReadable ? undefined : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
-        fractionDigits: 2,
+        maxFractionDigits: 6,
+        minFractionDigits: 0,
         min: 0,
-        max: 99,
+        max: 1,
         disabled: (r) => !this.isRowEditable(r),
-        format: v => this.isFormReadable ? String(v) + '%' : v,
+        format: v => (v === null || v === undefined || v === '') ? '' : Number(v).toString(),
         width: '4rem',
         textAlign: 'right',
         cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD16(row) ? 'text-red-500' : ''),
@@ -469,13 +468,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D17',
         header: 'D17',
         groupField: 'groupField1',
-        type: this.isFormReadable ? undefined : 'percent',
+        type: this.isFormReadable ? undefined : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
-        fractionDigits: 2,
+        maxFractionDigits: 6,
+        minFractionDigits: 0,
         min: 0,
-        max: 99,
+        max: 1,
         disabled: (r) => !this.isRowEditable(r),
-        format: v => this.isFormReadable ? String(v) + '%' : v,
+        format: v => (v === null || v === undefined || v === '') ? '' : Number(v).toString(),
         width: '4rem',
         textAlign: 'right',
         cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD17(row) ? 'text-red-500' : ''),
@@ -484,14 +484,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'fare_rate_d16' as const,
         header: 'D16',
         groupField: 'groupField2',
-        format: (v: unknown) => String(v ?? '') + '%',
         textAlign: 'right',
       },
       {
         field: 'fare_rate_d17' as const,
         header: 'D17',
         groupField: 'groupField2',
-        format: (v: unknown) => String(v ?? '') + '%',
         textAlign: 'right',
       },
       {
@@ -654,10 +652,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           return;
         }
 
-        const basisPoint_D16 = Math.round(rate_D16 * 100);
-        const basisPoint_D17 = Math.round(rate_D17 * 100);
-        if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) {
-          this.messageService.errorBubble('D16 和 D17 費用比率必須介於 0% 到 100% 之間，請確認後再送出');
+        if (rate_D16 < 0 || rate_D16 > 1 || rate_D17 < 0 || rate_D17 > 1) {
+          this.messageService.errorBubble('D16 和 D17 費用比率必須介於 0 到 1 之間，請確認後再送出');
           this.tableLoading.set(false);
           return;
         }
@@ -683,8 +679,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             calc_date_type: item.calc_date_type ?? 'Y',
             cap_item_D16: item.cap_item_D16 ?? 'D16',
             cap_item_D17: item.cap_item_D17 ?? 'D17',
-            tpy_rate_D16: item.tpy_rate_D16 / 100,
-            tpy_rate_D17: item.tpy_rate_D17 / 100,
+            tpy_rate_D16: item.tpy_rate_D16,
+            tpy_rate_D17: item.tpy_rate_D17,
             approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
             pod_status: item.pod_status ?? '0',
           };
@@ -1101,17 +1097,32 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   private numVal(value: string | number): ValidationResult {
+    // 將輸入值轉為字串並去除頭尾空白與 % 符號
     const normalized = typeof value === 'number' ? value.toString() : `${value ?? ''}`.trim().replace(/%$/, '');
     if (normalized === '') return { isValid: false, errorMessage: ['請輸入有效的數字'] };
 
-    const decimalPart = normalized.split('.')[1];
-    if (decimalPart && decimalPart.length > 2) return { isValid: false, errorMessage: ['請輸入最多兩位小數的數字'] };
-
+    // 1. 檢查是否為合法數字
     const num = Number(normalized);
     if (isNaN(num) || !isFinite(num)) return { isValid: false, errorMessage: ['請輸入有效的數字'] };
 
-    const bp = Math.round(num * 100);
-    if (bp < 0 || bp > 1e4) return { isValid: false, errorMessage: ['請輸入 0 到 100 之間的數字'] };
+    // 2. 商業邏輯檢查：數值必須介於 0 到 1 之間
+    if (num < 0 || num > 1) return { isValid: false, errorMessage: ['請輸入 0 到 1 之間的數字'] };
+
+    // 3. 資料庫 numeric(8, 6) 長度防呆
+    // 將數字以小數點拆分，例如 "0.010000" 會變成 ["0", "010000"]
+    const parts = normalized.split('.');
+    const integerPart = parts[0].replace('-', ''); // 取整數部分（過濾掉負號，雖然前面已擋掉負數）
+    const decimalPart = parts[1] || '';            // 取小數部分，若無小數則為空字串
+
+    // 整數部分最多 2 位 (8 - 6 = 2)
+    if (integerPart.length > 2) {
+      return { isValid: false, errorMessage: ['整數部分不能超過 2 位數'] };
+    }
+
+    // 小數部分最多 6 位
+    if (decimalPart.length > 6) {
+      return { isValid: false, errorMessage: ['小數部分不能超過 6 位數'] };
+    }
 
     return { isValid: true, errorMessage: [] };
   }
@@ -1185,7 +1196,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const a = Number(imported);
     const b = Number(contract);
     if (Number.isNaN(a) || Number.isNaN(b)) return false;
-    return Number(a.toFixed(2)) !== Number(b.toFixed(2));
+    return Number(a.toFixed(6)) !== Number(b.toFixed(6));
   }
 
   private isRowEditable(rowData: TLS26080EditTable): boolean {
@@ -1196,17 +1207,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (value === undefined || value === null || value === '') return 0;
     const fallback = 0;
     const parsed = Number(value);
-    return isNaN(parsed) ? fallback : parsed * 100;
+    return isNaN(parsed) ? fallback : parsed;
   }
 
   private mapDetailRows(data: TLS26080EditTable[]): TLS26080EditTable[] {
     return data.map(v => ({
       ...v,
       _rowKey: v.id ? String(v.id) : crypto.randomUUID(),
-      tpy_rate_D16: Number(v.tpy_rate_D16) * 100,
-      tpy_rate_D17: Number(v.tpy_rate_D17) * 100,
-      fare_rate_d16: Number(v.fare_rate_d16 ?? 0) * 100,
-      fare_rate_d17: Number(v.fare_rate_d17 ?? 0) * 100,
+      tpy_rate_D16: Number(v.tpy_rate_D16),
+      tpy_rate_D17: Number(v.tpy_rate_D17),
+      fare_rate_d16: Number(v.fare_rate_d16 ?? 0),
+      fare_rate_d17: Number(v.fare_rate_d17 ?? 0),
       approval_action: v.pod_status === '1' ? '1' : '0',
     }));
   }
