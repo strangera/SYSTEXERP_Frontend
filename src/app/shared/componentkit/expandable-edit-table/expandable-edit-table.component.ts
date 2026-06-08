@@ -123,6 +123,7 @@ export interface ColumnDef {
   options?: any[];
 
   buttonLabel?: string;    // 按鈕文字
+  buttonLabelFunction?: (rowData: any) => string;  // 動態按鈕文字（優先於 buttonLabel）
   buttonIcon?: string;     // 按鈕圖示
   buttonClass?: string;    // 按鈕樣式
   buttonTooltip?: string;  // 提示文字
@@ -147,7 +148,7 @@ export interface ColumnDef {
     displayFieldsConfig: DisplayFieldConfig[]; // 顯示欄位配置
     panelTableColumns: SelectorTableColumn[];   // 面板表格欄位
     searchFormFields: any[];  // 搜尋表單欄位配置
-    searchMethod?: (searchParams: any) => Observable<any[]>;  // 搜尋方法
+    searchMethod?: (searchParams: any, rowData?: any) => Observable<any[]>;  // 搜尋方法
     panelDataSource?: any[];  // 面板資料來源
     totalDataCount?: number;  // 總筆數
   };
@@ -1883,7 +1884,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const key = `${rowData[this.dataKey]}_${column.field}`;
 
     if (column.selectorConfig?.searchMethod) {
-      column.selectorConfig.searchMethod(searchParams).subscribe(suggestions => {
+      column.selectorConfig.searchMethod(searchParams, rowData).subscribe(suggestions => {
         this.selectorSuggestions.set(key, suggestions);
       });
     }
@@ -1898,7 +1899,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (column.selectorConfig?.searchMethod) {
       console.log('🚀 準備執行搜尋:', formValue);
 
-      column.selectorConfig.searchMethod(formValue).subscribe({
+      column.selectorConfig.searchMethod(formValue, rowData).subscribe({
         next: (results) => {
           console.log('搜尋成功，結果數量:', results.length);
 

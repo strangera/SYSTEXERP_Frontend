@@ -175,23 +175,38 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         this.loading = false;
         return;
       }
+
       const formValue = this.dataForm.getRawValue();
+
+      // 🌟 核心調整：精準區分 新增(0) 與 既存更新(原本的ID)
       const detailData: TLS42020InsertUpdateDetailData[] = this.data.map((item) => {
         const finalFixPrc = (item.PLU_FixPrc === null || item.PLU_FixPrc === undefined) ? item.PLU_SalePrc : item.PLU_FixPrc;
         const finalPrnName = (!item.PLU_PrnName || item.PLU_PrnName.trim() === '') ? item.PLU_Name : item.PLU_PrnName;
 
+        // 💡 關鍵卡控：判斷目前這筆明細的 ID 狀態
+        // 1. 如果 ID 帶有 'temp-' 字串（前端元件生成的臨時識別碼），代表是網頁上全新建立的
+        // 2. 如果 item.ID 不存在，也是全新建立的
+        // 以上皆賦予後端數值 0，讓後端精準走 INSERT。
+        // 反之，如果是既有的數字（型別可能為 number 或數字字串），則轉回 number 丟給後端做 UPDATE 還有 Delete 排除。
+        let mappedId = 0;
+        if (item.ID && !String(item.ID).startsWith('temp-')) {
+          mappedId = Number(item.ID);
+        }
+
         return {
-          ID: item.ID.toString()?.startsWith('temp-') ? 0 : item.ID ?? 0,
+          ID: mappedId, // 👈 0 代表新增，>0 代表更新
           MID: formValue.MID ?? 0,
           STO_No: formValue.STO_No ?? '',
           SBM_Type: formValue.SBM_Type?.toString() ?? '',
           TLT_No: formValue.TLT_No ?? '',
-          TLT_Name: formValue.TLT_Name ?? '',
           SBM_BegDate: formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '',
           SBM_EndDate: formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '',
+
+          // 💡 信任前端傳回的 SBM_SeqNo（若是新增加的行， mappedId 為 0 的情況下後端會自己重算最大值+1，所以這裡直接帶過去就好）
           SBM_SeqNo: item.SBM_SeqNo ?? 0,
+
           PLU_MagNo: item.PLU_MagNo ?? '',
-          PLU_No: item.PLU_No || item.PLU_MagNo, // 依照後端邏輯，若 PLU_No 為空則補 MagNo
+          PLU_No: item.PLU_No || item.PLU_MagNo,
           PLU_Name: item.PLU_Name,
           PLU_PrnName: finalPrnName,
           PLU_FixPrc: finalFixPrc,
@@ -209,14 +224,15 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         SBM_Type: formValue.SBM_Type?.toString() ?? '',
         SBM_BegDate: formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '',
         SBM_EndDate: formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '',
-        POS10271: detailData
+        POS10271: detailData // 👈 送出洗滌過後的精準分流明細陣列
       };
 
-      const req = this.isFormCreateable
-        ? this.tls42020Service.insertTLS42020(payload)
-        : this.tls42020Service.updateTLS42020(payload);
+      const req = this.isFormCreateable ? this.tls42020Service.insertTLS42020(payload) : this.tls42020Service.updateTLS42020(payload);
 
-      req.pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
+      req.pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false))
+      ).subscribe(res => {
         this.messageService.successBubble(res.Message ?? '更新成功');
         if (this.isFormCreateable) {
           this.dataForm.reset();

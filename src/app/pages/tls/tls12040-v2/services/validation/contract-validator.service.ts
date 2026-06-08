@@ -173,15 +173,15 @@ export class ContractValidatorService {
       if (!form.get('CHECK_TITLE')?.value) errors.push({ field: 'CHECK_TITLE', message: '支票付款時請填寫票據抬頭' });
     }
 
-    // 位置資料
-    const validLocations = locationData.filter(loc => loc._status !== 'deleted');
+    // 位置資料 (必填：至少需要一筆)
+    const validLocations = locationData.filter(loc => loc._status !== 'deleted' && loc.location_no?.trim());
     if (validLocations.length === 0) {
-      warnings.push({ field: 'location', message: '建議設定至少一個櫃位地點' });
+      errors.push({ field: 'location', message: '櫃位地點資訊至少需要填寫一筆' });
     }
 
     // 地點起訖日必填卡控
     const locationsWithMissingDates = validLocations.filter(
-      loc => loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
+      loc => !loc.tlt_bdate || !loc.tlt_edate
     );
     if (locationsWithMissingDates.length > 0) {
       errors.push({ field: 'location_dates', message: '櫃位地點起訖日為必填' });

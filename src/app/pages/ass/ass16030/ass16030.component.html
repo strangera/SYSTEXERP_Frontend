@@ -1,13 +1,17 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-button
+      *ngIf="hasPermission('20')"
+      btnType="create"
+      (click)="onCreate()"
+    ></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
-      class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
       <form
@@ -16,113 +20,125 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="領用單號"
-              controlName="Receiptnumber"
-              [control]="queryForm.controls.Receiptnumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="申請人代號"
-              controlName="Applicantcode"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <!-- 領用單號 -->
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="領用單號"
+            controlName="MTAPPLY_ID"
+            [control]="queryForm.controls.MTAPPLY_ID"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編號"
-              controlName="Itemnumber"
-              [options]="Itemnumber"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Itemnumber"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門代號"
-              controlName="Departmentcode"
-              [options]="Departmentcode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Departmentcode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="申請日期"
-              [startControl]="queryForm.controls.SApplicationdate"
-              [endControl]="queryForm.controls.EApplicationdate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="審核日期"
-              [startControl]="queryForm.controls.SReviewdate"
-              [endControl]="queryForm.controls.EReviewdate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="發料日期"
-              [control]="queryForm.controls.Shippingdate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核者"
-              controlName="reviewer"
-              [options]="reviewer"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.reviewer"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Kurabe"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="領用單狀態"
-              controlName="status"
-              [options]="status"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <!-- 申請人代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="申請人代碼/名稱"
+            controlName="EMP_ID"
+            [options]="userOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.EMP_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <!-- 品項代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="品項代碼/名稱"
+            controlName="FASITEM_ID"
+            [options]="fasitemOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.FASITEM_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <!-- 申請日期（起訖） -->
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="申請日期"
+            [startControl]="queryForm.controls.APPLY_DATE_S"
+            [endControl]="queryForm.controls.APPLY_DATE_E"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
+
+          <!-- 審核日期（起訖） -->
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="審核日期"
+            [startControl]="queryForm.controls.APRV_DATE_S"
+            [endControl]="queryForm.controls.APRV_DATE_E"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
+
+          <!-- 部門代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="部門代碼/名稱"
+            controlName="ORG_ID"
+            [options]="orgOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ORG_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <!-- 審核者代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="審核者代碼/名稱"
+            controlName="APRV_EMP_ID"
+            [options]="userOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.APRV_EMP_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <!-- 倉別代碼/名稱 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="倉別代碼/名稱"
+            controlName="WH_ID"
+            [options]="whOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.WH_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <!-- 發料日期 -->
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            label="發料日期"
+            controlName="CHECK_DATE"
+            calendarType="dateOne"
+            [control]="queryForm.controls.CHECK_DATE"
+            [submitted]="submitted"
+          ></app-calendar>
+
+          <!-- 領用單狀態 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="領用單狀態"
+            controlName="STATUS"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.STATUS"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
+
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            [loading]="loading"
+            [disabled]="!hasPermission('10')"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -130,12 +146,20 @@
 </div>
 
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    tableKey="ASS16030"
+    dataKey="MASTER_ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [showEdit]="true"
+    [showDetail]="true"
+    [showDelete]="false"
+    [editDisabled]="editDisabled"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+  ></app-table-report>
 </div>

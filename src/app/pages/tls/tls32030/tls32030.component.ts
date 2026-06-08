@@ -5,13 +5,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { formatAmount, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatPercentage } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { startWith } from 'rxjs';
-import { TLS32030Data, TLS32030Service } from '../../../service/api/tls/tls32030.service';
+import { finalize, startWith } from 'rxjs';
+import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -21,7 +22,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 
 @Component({
   selector: 'app-tls32030',
@@ -57,7 +59,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     halfYear: [null as number | null],
     CompareDateFrom: [null as Date | null, [Validators.required]],
     CompareDateTo: [null as Date | null, [Validators.required]],
-    CompareYear: [null as Date | null], 
+    CompareYear: [null as Date | null],
     CompareWeek: [null as number | null],
     CompareMonth: [null as number | null],
     CompareHalfYear: [null as number | null],
@@ -70,12 +72,13 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     OrgList: [""],
     TltNoList: [""],
     TermTypeList: [null],
-    AmtTaxMode: ['G'], 
+    AmtTaxMode: ['G'],
     ReceFilter: ['A'],
     ...createPaginationConfig([{ field: 'TltNo', order: -1 }])
   });
 
   data: TLS32030Data[] = [];
+  footerData: TLS32030FooterData | null = null;
   totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
   btnLoading = false;
@@ -114,7 +117,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: 2, label: '下半年' }
   ];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
     { field: 'Org_Name', header: '組織', align: 'left' },
     { field: 'SYS_Name', header: '櫃別', align: 'left' },
@@ -124,32 +127,32 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Base_Target', header: '目標', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準' },
-    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準' },
+    { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
+    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
     { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Comp_Target', header: '目標', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較' },
-    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較' },
+    { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_PreOrderAmt', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_Target', header: '目標差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_Target', header: '目標差異', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: formatAmount },
     { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率', format: formatAmount },
     { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: formatAmount },
     { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: formatAmount },
     { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount }
   ];
@@ -182,7 +185,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   ngOnInit(): void {
     this.initializePage('TLS32030', 'tls/tls32030', this.queryForm, f => this.onSubmit(f));
     this.setWeekOptions(this.queryForm.controls.year.value);
-    
+
     // 【修改】初始化時傳入 null，不再預設計算月報表日期
     this.calculateInitialRanges(null);
 
@@ -195,7 +198,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
       this.queryForm.controls.month.setValue(null, { emitEvent: false });
       this.queryForm.controls.halfYear.setValue(null, { emitEvent: false });
-      
+
       this.queryForm.controls.CompareYear.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareWeek.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareMonth.setValue(null, { emitEvent: false });
@@ -213,7 +216,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
 
     // 訂閱欄位變化後重新計算區間（若有值才計算）
     this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(year => {
-      this.setWeekOptions(year); 
+      this.setWeekOptions(year);
       this.calculateDateRanges(this.queryForm.controls.DayType.value);
     });
     this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
@@ -227,7 +230,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   }
 
   historyRequestBody: any | null = null;
-  
+
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
@@ -235,8 +238,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     }
     const export$ = this.tls32030Service.ExportTLS32030PDF(this.historyRequestBody as any);
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), 
-      '.pdf', 
+      export$.pipe(untilDestroyed(this)),
+      '.pdf',
       (isLoading) => this.btnLoading = isLoading
     ).subscribe();
   }
@@ -248,8 +251,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     }
     const export$ = this.tls32030Service.ExportTLS32030Excel(this.historyRequestBody as any);
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), 
-      '.xlsx', 
+      export$.pipe(untilDestroyed(this)),
+      '.xlsx',
       (isLoading) => this.btnLoading = isLoading
     ).subscribe();
   }
@@ -422,13 +425,10 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       };
 
       this.historyRequestBody = body;
-      this.tls32030Service.queryTLS32030(body as any).pipe(untilDestroyed(this)).subscribe({
-        next: (res) => {
-          this.data = res.Data || [];
-          this.totalRecords = (res as any).TotalCount ?? this.data.length;
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.tls32030Service.queryTLS32030(body as any).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.data = res.Data ?? [];
+        this.footerData = res.footerData ?? null;
+        this.totalRecords = res.TotalCount ?? this.data.length;
       });
     });
   }

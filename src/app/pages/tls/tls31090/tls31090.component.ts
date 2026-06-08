@@ -1,7 +1,7 @@
 import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
@@ -21,12 +21,12 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
-
+@UntilDestroy()
 @Component({
   selector: 'app-tls31090',
   templateUrl: './tls31090.component.html',
@@ -120,21 +120,15 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
   ];
 
-  // 2. 將 columns 改為 Getter，根據表單狀態動態產生
-  get columns(): ReportColumn[] {
-    const { TimeMode, TimeFromHH, TimeToHH } = this.queryForm.getRawValue();
+  //時段控制（stored property，避免每次 CD 產生新陣列）
+  columns: ReportColumn[] = this.buildColumns('A', null, null);
 
-    // 進行小時欄位的範圍篩選
+  private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
-      // 若非範圍模式('T')，或是未同時填寫起訖點，就顯示完整的 24 小時
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
         return true;
       }
-
-      // 從欄位屬性名稱擷取數字 (例如 'H09' -> 9)
       const hourNum = parseInt(col.field.substring(1), 10);
-
-      // 範圍判定 (同時相容常規範圍與跨午夜區間)
       if (TimeFromHH <= TimeToHH) {
         return hourNum >= TimeFromHH && hourNum <= TimeToHH;
       } else {
@@ -142,7 +136,6 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       }
     });
 
-    // 3. 重新組裝回 90 報表的欄位結構（前置欄位為大分類名稱、後置欄位欄位名對齊原規格）
     return [
       { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
@@ -156,39 +149,6 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     ];
   }
 
-  // columns: ReportColumn[] = [
-  //   { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
-  //   { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
-
-  //   { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-  //   { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
-  // ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
     { field: 'sum', header: '營業佔比' },
@@ -239,6 +199,15 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
     // 日期表單控制
     this.onTimeModeChange('A');
+
+    // 監聽時段相關欄位，更新 columns（避免用 getter 每次 CD 都產生新陣列）
+    combineLatest([
+      this.queryForm.controls.TimeMode.valueChanges,
+      this.queryForm.controls.TimeFromHH.valueChanges,
+      this.queryForm.controls.TimeToHH.valueChanges,
+    ]).pipe(debounceTime(50), untilDestroyed(this)).subscribe(([mode, from, to]) => {
+      this.columns = this.buildColumns(mode, from, to);
+    });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;

@@ -40,6 +40,7 @@ export class Tls24010TltnoComponent implements OnChanges {
       templateLabel: 'label',
       optionLabel: this.store_way === STORE_WAY.專櫃 ? 'TLT_No' : 'PLU_MagNo'
     },
+    { field: 'Contract_SubNo', header: '合約版本' },
     { field: 'PLU_Name', header: '商品名稱/櫃位名稱' },
     { field: 'TXN_Qty', header: '數量', format: formatAmount },
     { field: 'PLU_SalePrc', header: '單價金額', format: formatAmount },
