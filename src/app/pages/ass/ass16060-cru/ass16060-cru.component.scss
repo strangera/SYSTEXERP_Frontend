@@ -1,1 +1,6 @@
 /* ASS16060 CRU */
+
+/* 蓋掉 dropdown.component.scss 全域洩漏的 `opacity: 0`，讓明細表 disabled 的下拉能顯示 */
+:host ::ng-deep .p-datatable .p-dropdown.p-disabled {
+  opacity: 1 !important;
+}

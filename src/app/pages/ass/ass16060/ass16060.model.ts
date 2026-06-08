@@ -1,6 +1,6 @@
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
-/** 領用退料作業 — queryASS16060 請求（與後端 QueryASS16060Request 對齊） */
+/** 領用退料作業 共用查詢條件 Request（queryASS16060M 與 queryASS16060 共用） */
 export interface ASS16060QueryRequest extends BaseQueryRequest {
   WH_ID?: string | null;
   /** 退回單狀態 SYS1000: AM_MTRETURNM_STATUS */
@@ -13,8 +13,8 @@ export interface ASS16060QueryRequest extends BaseQueryRequest {
   RETURN_DATE_END?: string | null;
 }
 
-/** 領用退料作業 — queryASS16060 列表列（與後端 QueryASS16060Response 對齊） */
-export interface ASS16060QueryRow {
+/** 主檔列（queryASS16060M Response.Data.QueryData 內每筆） */
+export interface ASS16060MasterRow {
   MTRETURN_ID?: string | null;
   EMP_ID?: string | null;
   EMP_NAME?: string | null;
@@ -24,26 +24,40 @@ export interface ASS16060QueryRow {
   ORG_NAME?: string | null;
   RETURN_DATE?: string | null;
   MTRETURNM_STATUS?: string | null;
-  /** 狀態名稱（SYS1000） */
   STATUS_NAME?: string | null;
   DetailCount?: number | null;
-  /** 後端若於列上回傳總筆數可選用 */
-  TotalCount?: number | null;
 }
 
-/** 列表列 → CRU 表單（控制項名與 ass16060-cru dataForm 一致） */
-export function ass16060QueryRowToCruFormValue(row: ASS16060QueryRow): {
-  WH_ID: string | null;
-  RETURN_EMP_ID: string | null;
-  ORG_ID: string | null;
-  APPLY_DATE: Date | null;
-  REMARK: string | null;
-} {
-  return {
-    WH_ID: row.WH_ID ?? null,
-    RETURN_EMP_ID: row.EMP_ID ?? null,
-    ORG_ID: row.ORG_ID ?? null,
-    APPLY_DATE: row.RETURN_DATE ? new Date(row.RETURN_DATE) : null,
-    REMARK: null,
-  };
+/** 主檔+明細列（queryASS16060 Response.Data.QueryData 內每筆 — flat 結構） */
+export interface ASS16060DetailRow extends ASS16060MasterRow {
+  ID?: number | null;
+  MID?: number | null;
+  STO_NO?: string | null;
+  GOODS_ID?: string | null;
+  LINE_NUM?: number | null;
+  QTY?: number | null;
+  GOODS_PRICE?: number | null;
+  TAX_CODE?: string | null;
+  AMT?: number | null;
+  CHECK_QTY?: number | null;
+  NOTES?: string | null;
+  MTAPPLY_ID?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  CRT_DATE?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  UPD_DATE?: string | null;
+}
+
+/** API Response 包裝（Data.QueryData 結構） */
+export interface ASS16060QueryDataWrapper<T> {
+  QueryData: T[];
+  TotalCount: number;
+  TotalPage: number;
+}
+
+/** 查詢頁顯示用：主檔 + lowercase detailCount（從 DetailCount 轉一致命名） */
+export interface ASS16060MasterDisplayRow extends ASS16060MasterRow {
+  detailCount: number;
 }

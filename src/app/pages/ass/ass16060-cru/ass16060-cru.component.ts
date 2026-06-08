@@ -2,11 +2,14 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
-  ASS16060CruRowData,
   ASS16060DetailItem,
   ASS16060InsertRequest,
   ASS16060Service,
 } from '@service/api/ass/ass16060.service';
+import {
+  ASS16060MasterDisplayRow,
+  ASS16060MasterRow,
+} from '@pages/ass/ass16060/ass16060.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -50,7 +53,7 @@ export interface ASS16060TableItem {
     TableEditComponent,
   ],
 })
-export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowData> implements OnInit {
+export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDisplayRow> implements OnInit {
   public readonly dataForm = this.formBuilder.nonNullable.group({
     WH_ID: new FormControl<string | null>(null, [Validators.required]),
     RETURN_EMP_ID: new FormControl<string | null>(null, [Validators.required]),
@@ -116,19 +119,83 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
     this.initializePage('ASS16060', this.dataForm);
     this.loadDropdownOptions();
 
-    // router state 序列化後日期變字串，檢視時轉回 Date
-    if (this.isFormReadable && this.rowdata?.APPLY_DATE) {
-      const ad = this.rowdata.APPLY_DATE;
-      this.dataForm.patchValue(
-        { APPLY_DATE: ad instanceof Date ? ad : new Date(ad) },
-        { emitEvent: false },
-      );
-    }
-
     // 新增：確保表格有候選列
     if (this.crudstatus === CRUDStatus.Create && this.tableData().length === 0) {
       this.tableData.set([this.defaultNewItem()]);
     }
+
+    // 檢視：先用 router state 的 row 填表頭，再打 queryASS16060 補主檔覆寫+明細
+    if (this.isFormReadable && this.rowdata?.MTRETURN_ID) {
+      this.patchMasterForm(this.rowdata);
+      this.loadDetail(this.rowdata.MTRETURN_ID);
+    }
+  }
+
+  /** router state 的列表 row → 表頭 form（覆寫主檔欄位） */
+  private patchMasterForm(row: ASS16060MasterRow): void {
+    this.dataForm.patchValue({
+      WH_ID: row.WH_ID ?? null,
+      RETURN_EMP_ID: row.EMP_ID ?? null,
+      ORG_ID: row.ORG_ID ?? null,
+      APPLY_DATE: this.toLocalDate(row.RETURN_DATE),
+    });
+  }
+
+  /** 用 MTRETURN_ID 呼叫 queryASS16060 取主檔+明細 — 覆寫表頭並填入明細 table */
+  private loadDetail(mtreturnId: string): void {
+    this.tableLoading.set(true);
+    this.service
+      .queryASS16060({ MTRETURN_ID: mtreturnId, PageSize: 999, PageIndex: 1 })
+      .pipe(
+        finalize(() => this.tableLoading.set(false)),
+        untilDestroyed(this),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status !== '0000') {
+            this.notification.errorBubble(res.Message || '取得明細失敗');
+            return;
+          }
+          const rows = res.Data ?? [];
+          // 用 rows[0] 覆寫主檔欄位（後端為準）；若該欄位後端沒回則保留 router state 帶過來的值
+          if (rows.length > 0) {
+            const head = rows[0];
+            const ctrls = this.dataForm.controls;
+            this.dataForm.patchValue({
+              WH_ID: head.WH_ID ?? ctrls.WH_ID.value,
+              RETURN_EMP_ID: head.EMP_ID ?? ctrls.RETURN_EMP_ID.value,
+              ORG_ID: head.ORG_ID ?? ctrls.ORG_ID.value,
+              APPLY_DATE: head.RETURN_DATE
+                ? this.toLocalDate(head.RETURN_DATE)
+                : ctrls.APPLY_DATE.value,
+              REMARK: head.NOTES ?? null,
+            });
+          }
+          // 把所有 detail rows 轉成明細 table items
+          this.tableData.set(
+            rows.map((row): ASS16060TableItem => ({
+              GOODS_ID: row.GOODS_ID ?? undefined,
+              UNIT: undefined,
+              QTY: row.QTY ?? undefined,
+              NOTES: row.NOTES ?? undefined,
+            })),
+          );
+        },
+        error: () => {
+          this.notification.errorBubble('取得明細失敗');
+        },
+      });
+  }
+
+  /** `YYYY-MM-DD` 純日期 → 當地零時 Date（避免 UTC 漂移）；其他交給 new Date */
+  private toLocalDate(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return new Date(value);
   }
 
   private loadDropdownOptions(): void {
@@ -181,6 +248,10 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
             value: String(o.value),
           })),
         );
+        const current = this.tableData();
+        if (current.length > 0) {
+          this.tableData.set(current.map((item) => ({ ...item })));
+        }
       });
   }
 

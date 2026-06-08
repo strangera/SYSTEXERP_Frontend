@@ -2,7 +2,10 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ass16060QueryRowToCruFormValue, ASS16060QueryRequest, ASS16060QueryRow } from './ass16060.model';
+import {
+  ASS16060MasterDisplayRow,
+  ASS16060QueryRequest,
+} from './ass16060.model';
 import { ASS16060Service } from '@service/api/ass/ass16060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Sys1000Query } from '@service/utility/dropdown-api.model';
@@ -42,7 +45,7 @@ import { map } from 'rxjs/operators';
   ],
 })
 export class ASS16060Component
-  extends BasicQueryPageComponent<ASS16060QueryRow>
+  extends BasicQueryPageComponent<ASS16060MasterDisplayRow>
   implements OnInit {
   readonly defaultPageSize = 30;
 
@@ -60,7 +63,7 @@ export class ASS16060Component
 
   readonly qf = computed(() => this.queryForm.controls);
 
-  readonly tableData = signal<ASS16060QueryRow[]>([]);
+  readonly tableData = signal<ASS16060MasterDisplayRow[]>([]);
   readonly totalRecords = signal<number>(0);
   readonly tableLoading = signal<boolean>(false);
   lastQueryBody?: ASS16060QueryRequest;
@@ -86,7 +89,7 @@ export class ASS16060Component
     },
     { field: 'STATUS_NAME', header: '退回狀態', visible: true },
     {
-      field: 'DetailCount',
+      field: 'detailCount',
       header: '明細筆數',
       visible: true,
       align: 'right',
@@ -186,15 +189,18 @@ export class ASS16060Component
     pageIndex?: number;
     PageIndex?: number;
     SortBy?: unknown;
-  }): Observable<ApiResponse<ASS16060QueryRow[]>> => {
+  }): Observable<ApiResponse<ASS16060MasterDisplayRow[]>> => {
     const request = this.buildRequest(body);
     this.lastQueryBody = request;
-    return this.service.queryASS16060(request).pipe(
+    return this.service.queryASS16060M(request).pipe(
       map((res) => {
         if (res.Status !== '0000') {
-          return { ...res, Data: [] as ASS16060QueryRow[], TotalCount: 0 };
+          return { ...res, Data: [] as ASS16060MasterDisplayRow[], TotalCount: 0 };
         }
-        const rows = res.Data ?? [];
+        const rows: ASS16060MasterDisplayRow[] = (res.Data ?? []).map((row) => ({
+          ...row,
+          detailCount: row.DetailCount ?? 0,
+        }));
         return { ...res, Data: rows, TotalCount: res.TotalCount ?? rows.length };
       }),
     );
@@ -236,9 +242,9 @@ export class ASS16060Component
     });
   }
 
-  /** 管理欄檢視 → CRU Read（表頭由列表可取得欄位帶入；明細待 detail API） */
-  onTableDetail(row: ASS16060QueryRow): void {
+  /** 管理欄檢視 → CRU Read（整筆 row 帶過去，CRU 頁再打 queryASS16060 補明細） */
+  onTableDetail(row: ASS16060MasterDisplayRow): void {
     if (!this.hasPermission(this.Actions.Query)) return;
-    this.navigateWithState(CRUDStatus.Read, ass16060QueryRowToCruFormValue(row));
+    this.navigateWithState(CRUDStatus.Read, row);
   }
 }

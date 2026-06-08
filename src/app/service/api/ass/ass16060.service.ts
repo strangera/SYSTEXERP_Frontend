@@ -1,18 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ASS16060QueryRequest, ASS16060QueryRow } from '@pages/ass/ass16060/ass16060.model';
+import {
+  ASS16060DetailRow,
+  ASS16060MasterRow,
+  ASS16060QueryDataWrapper,
+  ASS16060QueryRequest,
+} from '@pages/ass/ass16060/ass16060.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-/** CRU router state / 表單列資料（與 BasicCruPage rowdata 對齊） */
-export interface ASS16060CruRowData {
-  WH_ID?: string | null;
-  RETURN_EMP_ID?: string | null;
-  ORG_ID?: string | null;
-  APPLY_DATE?: Date | string | null;
-  REMARK?: string | null;
-}
 
 /** insertASS16060 — DetailTable 列（ASS16060DetailItem） */
 export interface ASS16060DetailItem {
@@ -47,13 +43,33 @@ export class ASS16060Service {
 
   constructor(private readonly http: HttpClient) {}
 
+  /**
+   * 查詢主檔列表（給查詢頁用）
+   * 後端原始回傳為 `ApiResponse<{ QueryData[], TotalCount, TotalPage }>`，
+   * service 層攤平為 `ApiResponse<Row[]>` + 頂層 TotalCount，
+   * 與 ASS16050 同模式。
+   */
+  queryASS16060M(
+    body: ASS16060QueryRequest,
+  ): Observable<ApiResponse<ASS16060MasterRow[]>> {
+    return this.http
+      .post<ApiResponse<ASS16060QueryDataWrapper<ASS16060MasterRow>>>(
+        `${this.apiUrl}/queryASS16060M`,
+        body,
+      )
+      .pipe(map((res) => this.flattenWrapper(res)));
+  }
+
+  /** 查詢主檔+明細（給 CRU 頁帶 MTRETURN_ID 取單一單據明細用） */
   queryASS16060(
     body: ASS16060QueryRequest,
-  ): Observable<ApiResponse<ASS16060QueryRow[]>> {
-    return this.http.post<ApiResponse<ASS16060QueryRow[]>>(
-      `${this.apiUrl}/queryASS16060`,
-      body,
-    );
+  ): Observable<ApiResponse<ASS16060DetailRow[]>> {
+    return this.http
+      .post<ApiResponse<ASS16060QueryDataWrapper<ASS16060DetailRow>>>(
+        `${this.apiUrl}/queryASS16060`,
+        body,
+      )
+      .pipe(map((res) => this.flattenWrapper(res)));
   }
 
   insertASS16060(
@@ -63,5 +79,17 @@ export class ASS16060Service {
       `${this.apiUrl}/insertASS16060`,
       body,
     );
+  }
+
+  /** 把 `ApiResponse<Wrapper<T>>` 攤平為 `ApiResponse<T[]>`，並把 TotalCount 提升到頂層 */
+  private flattenWrapper<T>(
+    res: ApiResponse<ASS16060QueryDataWrapper<T>>,
+  ): ApiResponse<T[]> {
+    return {
+      ...res,
+      Data: res.Data?.QueryData ?? [],
+      TotalCount: res.Data?.TotalCount ?? res.TotalCount ?? 0,
+      TotalPage: res.Data?.TotalPage ?? res.TotalPage ?? 0,
+    };
   }
 }
