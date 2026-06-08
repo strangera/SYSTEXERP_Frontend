@@ -85,13 +85,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-table apiUrl="queryTLS24020" tableKey="TLS24010" dataKey="ID" [data]="data" [columns]="columns"
-    [showEdit]="false" [showDetail]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'ID', order: -1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [showManage]="false" [loading]="loading"></app-table> -->
-
   <app-table-report
-    apiUrl="queryTLS24020"
+    [exportContext]="{ apiUrl: 'queryTLS24020' }"
     tableKey="tls24020"
     dataKey="ID"
     [data]="data"

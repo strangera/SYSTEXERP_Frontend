@@ -11,13 +11,13 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { ExportContext } from 'src/app/shared/exports/report-export.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24020.model';
-import { ExportContext } from 'src/app/shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls24020',

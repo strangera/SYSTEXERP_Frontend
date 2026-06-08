@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { saveAs } from 'file-saver';
 import { NgClass, NgFor, NgIf } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import {
   ChangeDetectorRef,
   Component, EventEmitter, inject, Input,
@@ -11,6 +11,8 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { saveAs } from 'file-saver';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { BlockUIModule } from 'primeng/blockui';
@@ -35,7 +37,13 @@ import {
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
+import { AuthService } from 'src/app/service/system/auth.service';
+import { SystemDataService } from 'src/app/service/system/system-data.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
+import { TableService } from '../../exports/report.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { QueryStateService } from '../../service/query-state.service';
+import { REPORT_TITLES2 } from './report-titles2';
 import { TableExpansion2Component } from './table-expansion2/table-expansion2.component';
 import { TableExport2, TableExport2Component } from './table-export2/table-export2.component';
 import { Table2UtilityService } from './table2-utility.service';
@@ -43,14 +51,6 @@ import {
   AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
   RowEditSaveEvent, toggleButtons, validateRowData,
 } from './table2.model';
-import { REPORT_TITLES2 } from './report-titles2';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { HttpResponse } from '@angular/common/http';
-import { TableService } from '../table/report.service';
-import { AuthService } from 'src/app/service/system/auth.service';
-import { SystemDataService } from 'src/app/service/system/system-data.service';
-import { NotificationService } from '../../component/notification-message/notification.service';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
 @Component({
   selector: 'app-table2',

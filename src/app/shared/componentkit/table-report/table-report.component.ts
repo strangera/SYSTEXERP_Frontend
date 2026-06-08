@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
@@ -14,37 +13,48 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { ReportExportService } from '../../service/report-export.service';
-import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
-import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
-import { TableExportComponent } from '../table/table-export/table-export.component';
+import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
+import { SystemDataService } from 'src/app/service/system/system-data.service';
+import { ExportComponent } from '../../exports/export.component';
+import { ExportContext } from '../../exports/report-export.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { QueryStateService } from '../../service/query-state.service';
+import { TableReportCaptionComponent } from './table-report-caption/table-report-caption.component';
+import { TableExpansionComponent } from './table-report-expansion/table-report-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, ExportContext, ReportColumn, TableQueryPayload } from './table-report.model';
+import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
   host: { 'table-report-id': '複製時請自行取唯一名' },
   standalone: true,
-  imports: [TableExportComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [ExportComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [expandAnimation]
 })
-export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt') public dt!: Table;
-  private readonly exportService = inject(ReportExportService, { optional: true });
-  @Input() exportContext?: ExportContext;
-  @Input() lastQueryBody?: any;       // 用來儲存上一次的查詢條件
-  @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
-  @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
-  @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
+export class TableReportComponent implements OnChanges {
+  @ViewChild('dt') public readonly dt!: Table;
+  public readonly tableUtility = inject(TableReportUtilityService);
+  public readonly sanitizer = inject(DomSanitizer);
+  private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly queryState = inject(QueryStateService);
+  private readonly currentPage = inject(CurrentPageService);
+  private readonly systemDataService = inject(SystemDataService);
+  @Input() exportContext?: ExportContext; // 用來儲存匯出相關的額外參數
+  @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
+  @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
+  @Input() lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
+  @Input({ required: true }) totalRecords = 0;             // 用來儲存總筆數
+  @Input({ required: true }) data: any[] = [];             // 用來儲存查詢結果
+  @Input({ required: true }) columns: ReportColumn[] = []; // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
   @Input() ItemSize = 46;
   @Input() lazy = true;
-  @Input() dataKey: string | undefined;         // 用來儲存查詢結果
-  selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
+  @Input() dataKey: string | undefined;                    // 用來儲存查詢結果
+  selectedColumns: ReportColumn[] = [];                    // 用來儲存查詢結果
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
   @Input() loading = false;
@@ -75,8 +85,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showFilter = true;      // 是否顯示 Filter
   @Input() showReportMode = true;    // 是否顯示 匯出按鈕
   @Input() customReport = false;    // 是否自訂報表
-  @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
-  @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;     // 是否顯示刪除按鈕
@@ -136,92 +144,27 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // 連結
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
-
-  // 底層匯出
-  @Input() apiUrl?: string;                         // table API URL (可選)
-  @Input() reportTitle?: string;                    // 自訂報表標題
-  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
-  @Input() Conditions?: any;                         // table 條件 (可選)
-  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
-
   draggedCol: any = null;
   draggedIndex = -1;
 
-  constructor(
-    public readonly tableUtility: TableReportUtilityService,
-    public readonly sanitizer: DomSanitizer,
-    private readonly route: ActivatedRoute,
-  ) {
-    super();
+  constructor() {
+    this.getProgNo();
     this.onScroll = this.onScroll.bind(this);
   }
-  public handleExportPDFDownload(event: any) {
-    const api = this.exportContext?.apiUrl ?? this.apiUrl;
-    const title = this.exportContext?.reportTitle ?? this.reportTitle;
-    const keyName = this.exportContext?.dataKeyName ?? this.DataKeyName;
-    const cond = this.exportContext?.conditions ?? this.Conditions;
-    const remark = this.exportContext?.printRemark ?? this.PrintRemark;
-
-    // 💡 完美分流
-    if (this.exportContext && this.exportService) {
-      console.log(this.exportContext);
-
-      // 🌟 新作業：完全走乾淨的、無繼承依賴的 Service 路線
-      this.exportService.executePdfExport({
-        event,
-        columns: this.columns,
-        context: this.exportContext,
-        footerData: this.footerData,
-        expansionColumns: this.expansionColumns,
-        legacyFallback: {
-          apiUrl: this.apiUrl,
-          reportTitle: this.reportTitle,
-          dataKeyName: this.DataKeyName,
-          conditions: this.Conditions,
-          printRemark: this.PrintRemark
-        }
-      }, (loading) => {
-        // 同步通知 Component 轉圈圈
-        this.exportLoading = loading;
-      });
-    } else {
-      // 舊作業：乖乖走過去的 super 繼承鏈
-      super.exportPDFDownload(
-        event, this.columns, api, keyName, remark, cond, undefined, this.footerData, title, this.expansionColumns
-      );
-    }
+  getProgNo() {
+    this.currentPage.currentPageProgNo$.subscribe(progNo => {
+      if (progNo) {
+        this.funInfo = this.systemDataService.getUserPermissions(progNo);
+        this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
+      } else {
+        this.funInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
+      }
+    });
   }
-
-  public handleExportExcelDownload(event: any) {
-    const api = this.exportContext?.apiUrl ?? this.apiUrl;
-    const title = this.exportContext?.reportTitle ?? this.reportTitle;
-    const keyName = this.exportContext?.dataKeyName ?? this.DataKeyName;
-    const cond = this.exportContext?.conditions ?? this.Conditions;
-
-    if (this.exportContext && this.exportService) {
-      // 🌟 新作業：走新服務 Excel 路線
-      this.exportService.executeExcelExport({
-        event,
-        columns: this.columns,
-        context: this.exportContext,
-        footerData: this.footerData,
-        expansionColumns: this.expansionColumns,
-        legacyFallback: {
-          apiUrl: this.apiUrl,
-          reportTitle: this.reportTitle,
-          dataKeyName: this.DataKeyName,
-          conditions: this.Conditions
-        }
-      }, (loading) => {
-        this.exportLoading = loading;
-      });
-    } else {
-      super.exportExcelDownload(
-        event, this.columns, api, keyName, cond, undefined, this.footerData, title, this.expansionColumns
-      );
-    }
+  public funInfo?: FunsrightInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
+  hasPermission(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-
   /** 將 footerData 正規化為陣列，供 template 依序繪製多列 footer；單一物件時為 [footerData]。 */
   get footerRows(): any[] {
     if (this.footerData == null) return [];
@@ -698,7 +641,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     const ANY_CHAR_WIDTH = 9;
     // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
     const PADDING_BUFFER = 24;
-
+    const sampleData = this.data.slice(0, 100);
     this.columns = this.columns.map(col => {
       // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
       if (col.width) {
@@ -709,7 +652,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       let minLength = Infinity;
 
       // 遍歷第一批資料，純粹找出該欄位內容的最長與最短
-      this.data.forEach(row => {
+      sampleData.forEach(row => {
         // 取得格式化後或原始的內容字串
         const rawValue = row[col.field];
         let displayValue = '';

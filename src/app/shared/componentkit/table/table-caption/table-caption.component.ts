@@ -11,8 +11,7 @@ import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
-import { ReportExportService } from 'src/app/shared/service/report-export.service';
-import { ExportContext } from '../../table-report/table-report.model';
+import { ExportContext, ReportExportService } from 'src/app/shared/exports/report-export.service';
 import { TableExportComponent } from '../table-export/table-export.component';
 import { Column } from '../table.model';
 import { toggleButtons } from './table-caption.model';
@@ -100,7 +99,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() first = 0;                                        // 當前表格的起始索引
   @Input() footerData: any;     // (總計)頁尾資料
   // 底層匯出
-  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() apiUrl?: string;                         // table API URL (可選，若使用舊式匯出才需要)
   @Input() reportTitle?: string;                    // 自訂報表標題，優先於 apiUrl / REPORT_TITLES 查詢
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
@@ -180,47 +179,53 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     }
   }
 
-  override exportPDFDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, printRemark?: boolean, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
-
+  override exportPDFDownload(
+    event: any,
+    selectedColumns: any,
+    apiUrl?: string,
+    dataKeyName?: string,
+    printRemark?: boolean,
+    conditions?: any,
+    printColumn?: any,
+    footerData?: any,
+    reportTitle?: string,
+    expansionColumns?: any
+  ): void {
+    // 💡 2. 只要有傳入新 Context，就連同快照一起打包丟給 Service，Service 就會啟動大熔爐自動對應
     if (this.exportContext && this.exportService) {
       this.exportService.executePdfExport({
         event,
-        columns: selectedColumns,
+        columns: printColumn || selectedColumns, // 如果有特殊的 PrintColumn 則優先使用
         context: this.exportContext,
         footerData: footerData,
         expansionColumns: expansionColumns,
-        // 💡 🌟 核心改動：如果 exportContext 漏傳了任何欄位，Service 會自動回退使用下面這些舊 Input！
-        legacyFallback: {
-          apiUrl: apiUrl || this.apiUrl,
-          reportTitle: reportTitle || this.reportTitle,
-          dataKeyName: dataKeyName || this.DataKeyName,
-          conditions: conditions || this.Conditions,
-          printRemark: printRemark !== undefined ? printRemark : this.PrintRemark
-        }
       }, (loading) => {
         this.exportLoading = loading;
       });
     } else {
+      // 舊作業：因為已經沒有 this.apiUrl 了，所以這裡的 api 參數直接拿方法簽章傳進來的 apiUrl
       super.exportPDFDownload(event, selectedColumns, apiUrl, dataKeyName, printRemark, conditions, printColumn, footerData, reportTitle, expansionColumns);
     }
   }
 
-  override exportExcelDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
-
+  override exportExcelDownload(
+    event: any,
+    selectedColumns: any,
+    apiUrl?: string,
+    dataKeyName?: string,
+    conditions?: any,
+    printColumn?: any,
+    footerData?: any,
+    reportTitle?: string,
+    expansionColumns?: any
+  ): void {
     if (this.exportContext && this.exportService) {
       this.exportService.executeExcelExport({
         event,
-        columns: selectedColumns,
+        columns: printColumn || selectedColumns,
         context: this.exportContext,
         footerData: footerData,
         expansionColumns: expansionColumns,
-        // 💡 🌟 同理，補上 Excel Fallback 安全防禦
-        legacyFallback: {
-          apiUrl: apiUrl || this.apiUrl,
-          reportTitle: reportTitle || this.reportTitle,
-          dataKeyName: dataKeyName || this.DataKeyName,
-          conditions: conditions || this.Conditions
-        }
       }, (loading) => {
         this.exportLoading = loading;
       });

@@ -9,10 +9,10 @@ import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { FileExportService } from '@shared/service/file-export.service';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../service/system/auth.service';
-import { REPORT_TITLES } from '../../componentkit/table/report-titles';
-import { TableService } from '../../componentkit/table/report.service';
 import { TableExport } from '../../componentkit/table/table-export/table-export.component';
 import { Column } from '../../componentkit/table/table.model';
+import { REPORT_TITLES } from '../../exports/report-titles';
+import { TableService } from '../../exports/report.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 

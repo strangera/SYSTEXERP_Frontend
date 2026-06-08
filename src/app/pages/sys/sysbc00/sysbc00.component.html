@@ -4,39 +4,16 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="銀行代號"
-            controlName="bankCode"
-            [control]="queryForm.controls.BNK_No"
-            [submitted]="submitted"
-          />
-          <app-input-text
-            class="col-12 md:col-12 lg:col-4"
-            label="銀行名稱"
-            controlName="bankName"
-            [control]="queryForm.controls.BNK_Name"
-            [submitted]="submitted"
-          />
-          <app-input-text
-            class="col-12 md:col-12 lg:col-4"
-            label="銀行簡稱"
-            controlName="bankSName"
-            [control]="queryForm.controls.BNK_ShortName"
-            [submitted]="submitted"
-          />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行代號" controlName="bankCode"
+            [control]="queryForm.controls.BNK_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-12 lg:col-4" label="銀行名稱" controlName="bankName"
+            [control]="queryForm.controls.BNK_Name" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-12 lg:col-4" label="銀行簡稱" controlName="bankSName"
+            [control]="queryForm.controls.BNK_ShortName" [submitted]="submitted" />
           <!-- <app-input-number-range class="col-12 md:col-12 lg:col-4" label="該行帳號最小長度"
             [startControl]="queryForm.controls.Min_Length_From" [endControl]="queryForm.controls.Min_Length_To"
             [submitted]="submitted" />
@@ -44,9 +21,7 @@
             [startControl]="queryForm.controls.Max_Length_To" [endControl]="queryForm.controls.Max_Length_To"
             [submitted]="submitted" /> -->
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -55,25 +30,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    [exportContext]="{ apiUrl: 'querySYSBC00' }"
-    tableKey="SYSBC00query"
-    dataKey="BNK_No"
-    [data]="data"
-    [columns]="columns"
-    [expansionColumns]="subColumns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showCheckBox]="true"
-    (delete)="onDelete($event)"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows"
-    expansionDataKey="details"
-    [expansionLoadFn]="loadBankDetails"
-    [isRowSelectable]="isRowSelectable"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="sysbc00Service.querySYSBC00.bind(sysbc00Service)"
-  ></app-table-report>
+  <app-table-report [exportContext]="{ apiUrl: 'querySYSBC00' }" tableKey="SYSBC00query" dataKey="BNK_No" [data]="data"
+    [columns]="columns" [expansionColumns]="subColumns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showCheckBox]="true" (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
+    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" expansionDataKey="details"
+    [expansionLoadFn]="loadBankDetails" [isRowSelectable]="isRowSelectable" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="sysbc00Service.querySYSBC00.bind(sysbc00Service)"></app-table-report>
 </div>
