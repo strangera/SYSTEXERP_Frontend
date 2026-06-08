@@ -4,34 +4,81 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="能源類型" controlName="EngTypes" [options]="ENG_TypeOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.EngTypes"
-            [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="錶號/位置編號" controlName="ENG_MeterNo"
-            [options]="ENG_MeterNoOptions | async" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ENG_MeterNo" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="能源類型"
+            controlName="EngTypes"
+            [options]="ENG_TypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.EngTypes"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="錶號/位置編號"
+            controlName="ENG_MeterNo"
+            [options]="ENG_MeterNoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ENG_MeterNo"
+            [submitted]="submitted"
+          ></app-dropdown>
           <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="TLT_No"
             [options]="TLT_NoOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-dropdown> -->
-          <app-dropdown-table class="col-12 md:col-12 lg:col-8" [control]="queryForm.controls.TLT_No"
-            [submitted]="submitted" optionLabel="TltNo" templateLabel="label" [suggestions]="tltNoSuggestions"
-            [fieldsConfig]="tltNoFieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-            [formGroup]="tltNoOpForm" (formValueChanged)="onFormValueChanged($event)" [dialogData]="tltNoOpData"
-            [dialogColumns]="tltNoOpColumns" [loading]="tltNoLoading" [totalRecords]="tltNoOpTotalRecords">
-            <app-input-text class="col-12" label="專櫃編號/名稱/其他" controlName="TLT_No"
-              [control]="tltNoOpForm.controls.TltNo" />
+          <app-dropdown-table
+            class="col-12 md:col-12 lg:col-8"
+            [control]="queryForm.controls.TLT_No"
+            [submitted]="submitted"
+            optionLabel="TltNo"
+            templateLabel="label"
+            [suggestions]="tltNoSuggestions"
+            [fieldsConfig]="tltNoFieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)"
+            [formGroup]="tltNoOpForm"
+            (formValueChanged)="onFormValueChanged($event)"
+            [dialogData]="tltNoOpData"
+            [dialogColumns]="tltNoOpColumns"
+            [loading]="tltNoLoading"
+            [totalRecords]="tltNoOpTotalRecords"
+          >
+            <app-input-text
+              class="col-12"
+              label="專櫃編號/名稱/其他"
+              controlName="TLT_No"
+              [control]="tltNoOpForm.controls.TltNo"
+            />
           </app-dropdown-table>
           <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="營業面積" controlName="NET_SPACE"
             [control]="queryForm.controls.NET_SPACE" [disabled]="true" [submitted]="submitted"></app-input-text> -->
-          <app-input-number class="col-12 md:col-6 lg:col-4" label="面積比例(%)" controlName="ENG_Rate"
-            [control]="queryForm.controls.ENG_Rate" [max]="100" [min]="0" [maxFractionDigits]="0" [suffix]="'%'"
-            [submitted]="submitted"></app-input-number>
+          <app-input-number
+            class="col-12 md:col-6 lg:col-4"
+            label="面積比例(%)"
+            controlName="ENG_Rate"
+            [control]="queryForm.controls.ENG_Rate"
+            [max]="100"
+            [min]="0"
+            [maxFractionDigits]="0"
+            [suffix]="'%'"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -41,10 +88,24 @@
 </div>
 
 <div class="card">
-  <app-table-report apiUrl="queryASS21020" [showCheckBox]="true" [lastQueryBody]="lastQueryBody"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [queryFunction]="service.queryASS21020.bind(service)" [data]="data" dataKey="dataKey" tableKey="ASS21020_Data"
-    [columns]="columns" [totalRecords]="totalRecords" [loading]="loading" [expansionColumns]="extColumns"
-    [expansionDataKey]="'Details'" (edit)="onEdit($event)" (delete)="onDelete($event)"
-    (detail)="onDetail($event)" [isRowSelectable]="isRowSelectable"></app-table-report>
+  <app-table-report
+    [showCheckBox]="true"
+    [lastQueryBody]="lastQueryBody"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [queryFunction]="service.queryASS21020.bind(service)"
+    [data]="data"
+    dataKey="dataKey"
+    tableKey="ASS21020_Data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [expansionColumns]="extColumns"
+    [expansionDataKey]="'Details'"
+    (edit)="onEdit($event)"
+    (delete)="onDelete($event)"
+    (detail)="onDetail($event)"
+    [isRowSelectable]="isRowSelectable"
+    [exportContext]="{ apiUrl: 'queryASS21020', dataKeyName: 'Details' }"
+  ></app-table-report>
 </div>

@@ -183,18 +183,24 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   override exportPDFDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, printRemark?: boolean, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
 
     if (this.exportContext && this.exportService) {
-      // 🌟 新作業：直接分流給新 Service 處理，完全不碰 super！
       this.exportService.executePdfExport({
         event,
-        columns: selectedColumns, // 這裡拿使用者過濾/選中的欄位
+        columns: selectedColumns,
         context: this.exportContext,
         footerData: footerData,
-        expansionColumns: expansionColumns
+        expansionColumns: expansionColumns,
+        // 💡 🌟 核心改動：如果 exportContext 漏傳了任何欄位，Service 會自動回退使用下面這些舊 Input！
+        legacyFallback: {
+          apiUrl: apiUrl || this.apiUrl,
+          reportTitle: reportTitle || this.reportTitle,
+          dataKeyName: dataKeyName || this.DataKeyName,
+          conditions: conditions || this.Conditions,
+          printRemark: printRemark !== undefined ? printRemark : this.PrintRemark
+        }
       }, (loading) => {
-        this.exportLoading = loading; // 控制轉圈圈
+        this.exportLoading = loading;
       });
     } else {
-      // 舊作業：維持原本的 super 繼承鏈行為
       super.exportPDFDownload(event, selectedColumns, apiUrl, dataKeyName, printRemark, conditions, printColumn, footerData, reportTitle, expansionColumns);
     }
   }
@@ -202,18 +208,23 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   override exportExcelDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
 
     if (this.exportContext && this.exportService) {
-      // 🌟 新作業：分流給新 Service
       this.exportService.executeExcelExport({
         event,
         columns: selectedColumns,
         context: this.exportContext,
         footerData: footerData,
-        expansionColumns: expansionColumns
+        expansionColumns: expansionColumns,
+        // 💡 🌟 同理，補上 Excel Fallback 安全防禦
+        legacyFallback: {
+          apiUrl: apiUrl || this.apiUrl,
+          reportTitle: reportTitle || this.reportTitle,
+          dataKeyName: dataKeyName || this.DataKeyName,
+          conditions: conditions || this.Conditions
+        }
       }, (loading) => {
         this.exportLoading = loading;
       });
     } else {
-      // 舊作業：維持原本的 super 繼承鏈行為
       super.exportExcelDownload(event, selectedColumns, apiUrl, dataKeyName, conditions, printColumn, footerData, reportTitle, expansionColumns);
     }
   }

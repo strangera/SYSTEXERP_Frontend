@@ -14,12 +14,12 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
+import { ReportExportService } from '../../service/report-export.service';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableExportComponent } from '../table/table-export/table-export.component';
 import { TableReportUtilityService } from './table-report-utility.service';
 import { AddButton, ColumnGroup, expandAnimation, ExportContext, ReportColumn, TableQueryPayload } from './table-report.model';
-import { ReportExportService } from '../../service/report-export.service';
 
 @Component({
   selector: 'app-table-report',
@@ -172,7 +172,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         columns: this.columns,
         context: this.exportContext,
         footerData: this.footerData,
-        expansionColumns: this.expansionColumns
+        expansionColumns: this.expansionColumns,
+        legacyFallback: {
+          apiUrl: this.apiUrl,
+          reportTitle: this.reportTitle,
+          dataKeyName: this.DataKeyName,
+          conditions: this.Conditions,
+          printRemark: this.PrintRemark
+        }
       }, (loading) => {
         // 同步通知 Component 轉圈圈
         this.exportLoading = loading;
@@ -198,7 +205,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         columns: this.columns,
         context: this.exportContext,
         footerData: this.footerData,
-        expansionColumns: this.expansionColumns
+        expansionColumns: this.expansionColumns,
+        legacyFallback: {
+          apiUrl: this.apiUrl,
+          reportTitle: this.reportTitle,
+          dataKeyName: this.DataKeyName,
+          conditions: this.Conditions
+        }
       }, (loading) => {
         this.exportLoading = loading;
       });

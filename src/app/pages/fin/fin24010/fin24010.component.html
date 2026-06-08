@@ -3,25 +3,48 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- ACP_No: 應付帳款編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="應付帳款編號" controlName="ACP_No" [control]="queryForm.controls.ACP_No"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="應付帳款編號"
+              controlName="ACP_No"
+              [control]="queryForm.controls.ACP_No"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- Org_Id: 組織代碼 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼" controlName="Org_Id" [options]="Org_IdOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Org_Id" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="組織代碼"
+              controlName="Org_Id"
+              [options]="Org_IdOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Org_Id"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- ACP_YYYYMM: 應付帳款年月 -->
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 假設 'dateMonthOne' 是只選年月的功能 -->
-            <app-calendar calendarType="dateMonthOne" label="應付帳款年月" [control]="queryForm.controls.ACP_YYYYMM"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="應付帳款年月"
+              [control]="queryForm.controls.ACP_YYYYMM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
         </div>
 
@@ -29,18 +52,31 @@
         <div class="grid p-fluid">
           <!-- ACP_TermNo: 帳款帳次 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="帳款帳次" controlName="ACP_TermNo"
-              [control]="queryForm.controls.ACP_TermNo" [submitted]="submitted"></app-input-number>
+            <app-input-number
+              [useGrouping]="false"
+              label="帳款帳次"
+              controlName="ACP_TermNo"
+              [control]="queryForm.controls.ACP_TermNo"
+              [submitted]="submitted"
+            ></app-input-number>
           </div>
           <!-- AcpAmt_From / AcpAmt_To: 應付金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="應付金額" [startControl]="queryForm.controls.AcpAmt_From"
-              [endControl]="queryForm.controls.AcpAmt_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="應付金額"
+              [startControl]="queryForm.controls.AcpAmt_From"
+              [endControl]="queryForm.controls.AcpAmt_To"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <!-- PtaAmt_From / PtaAmt_To: 沖帳金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="沖帳金額" [startControl]="queryForm.controls.PtaAmt_From"
-              [endControl]="queryForm.controls.PtaAmt_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="沖帳金額"
+              [startControl]="queryForm.controls.PtaAmt_From"
+              [endControl]="queryForm.controls.PtaAmt_To"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
 
@@ -48,18 +84,30 @@
         <div class="grid p-fluid">
           <!-- BalAmt_From / BalAmt_To: 應付餘額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="應付餘額" [startControl]="queryForm.controls.BalAmt_From"
-              [endControl]="queryForm.controls.BalAmt_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="應付餘額"
+              [startControl]="queryForm.controls.BalAmt_From"
+              [endControl]="queryForm.controls.BalAmt_To"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <!-- Reserve_From / Reserve_To: 保留款金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="保留款金額" [startControl]="queryForm.controls.Reserve_From"
-              [endControl]="queryForm.controls.Reserve_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="保留款金額"
+              [startControl]="queryForm.controls.Reserve_From"
+              [endControl]="queryForm.controls.Reserve_To"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <!-- RetReserve_From / RetReserve_To: 退保留款金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="退保留款金額" [startControl]="queryForm.controls.RetReserve_From"
-              [endControl]="queryForm.controls.RetReserve_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="退保留款金額"
+              [startControl]="queryForm.controls.RetReserve_From"
+              [endControl]="queryForm.controls.RetReserve_To"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
 
@@ -67,19 +115,36 @@
         <div class="grid p-fluid">
           <!-- PayType: 付款方式 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="付款方式" controlName="PayType" [options]="PayTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PayType" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="付款方式"
+              controlName="PayType"
+              [options]="PayTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PayType"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- VEN_BNK_No_Param: 匯款銀行代號 (Dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="匯款銀行代號" controlName="VEN_BNK_No_Param" [options]="VEN_BNK_No_ParamOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_BNK_No_Param"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="匯款銀行代號"
+              controlName="VEN_BNK_No_Param"
+              [options]="VEN_BNK_No_ParamOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.VEN_BNK_No_Param"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- BankAccountNo: 銀行帳號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="銀行帳號" controlName="BankAccountNo" [control]="queryForm.controls.BankAccountNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="銀行帳號"
+              controlName="BankAccountNo"
+              [control]="queryForm.controls.BankAccountNo"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
@@ -87,19 +152,34 @@
         <div class="grid p-fluid">
           <!-- AccountName: 帳戶名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="帳戶名稱" controlName="AccountName" [control]="queryForm.controls.AccountName"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="帳戶名稱"
+              controlName="AccountName"
+              [control]="queryForm.controls.AccountName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- CTRLYN: 票據禁止背書轉讓 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="票據禁止背書轉讓" controlName="CTRLYN" [options]="CTRLYNOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CTRLYN" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="票據禁止背書轉讓"
+              controlName="CTRLYN"
+              [options]="CTRLYNOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CTRLYN"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- CheckTitle: 票據抬頭 -->
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 票據抬頭通常是文字，但沿用您原來的 app-input-number，並設定 useGrouping=false -->
-            <app-input-text label="票據抬頭" controlName="CheckTitle" [control]="queryForm.controls.CheckTitle"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="票據抬頭"
+              controlName="CheckTitle"
+              [control]="queryForm.controls.CheckTitle"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
@@ -107,20 +187,34 @@
         <div class="grid p-fluid">
           <!-- ExpectPayDate_From / ExpectPayDate_To: 預計付款日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="預計付款日" [startControl]="queryForm.controls.ExpectPayDate_From"
-              [endControl]="queryForm.controls.ExpectPayDate_To" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick
+              label="預計付款日"
+              [startControl]="queryForm.controls.ExpectPayDate_From"
+              [endControl]="queryForm.controls.ExpectPayDate_To"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
           <!-- ACP_Date_From / ACP_Date_To: 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="立帳日期"
-              [startControl]="queryForm.controls.ACP_Date_From" [endControl]="queryForm.controls.ACP_Date_To"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick
+              calendarType="dateRange"
+              label="立帳日期"
+              [startControl]="queryForm.controls.ACP_Date_From"
+              [endControl]="queryForm.controls.ACP_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
           <!-- VEN_No_Param: 廠客代號 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠客代號" controlName="VEN_No_Param" [options]="VEN_No_ParamOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No_Param"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="廠客代號"
+              controlName="VEN_No_Param"
+              [options]="VEN_No_ParamOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.VEN_No_Param"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
 
@@ -128,19 +222,33 @@
         <div class="grid p-fluid">
           <!-- VEN_Uniform_Param: 統一編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="統一編號" controlName="VEN_Uniform_Param"
-              [control]="queryForm.controls.VEN_Uniform_Param" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="統一編號"
+              controlName="VEN_Uniform_Param"
+              [control]="queryForm.controls.VEN_Uniform_Param"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- AccNo_Param: 會計科目代號 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="會計科目代號" controlName="AccNo_Param" [options]="AccNo_ParamOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.AccNo_Param"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="會計科目代號"
+              controlName="AccNo_Param"
+              [options]="AccNo_ParamOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.AccNo_Param"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- ACP_SourceNo_Param: 帳款來源單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="帳款來源單號" controlName="ACP_SourceNo_Param"
-              [control]="queryForm.controls.ACP_SourceNo_Param" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="帳款來源單號"
+              controlName="ACP_SourceNo_Param"
+              [control]="queryForm.controls.ACP_SourceNo_Param"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
@@ -148,18 +256,33 @@
         <div class="grid p-fluid">
           <!-- NoteDesc_Param: 摘要 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="摘要" controlName="NoteDesc_Param" [control]="queryForm.controls.NoteDesc_Param"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="摘要"
+              controlName="NoteDesc_Param"
+              [control]="queryForm.controls.NoteDesc_Param"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- VouNo_Param: 傳票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="傳票號碼" controlName="VouNo_Param" [control]="queryForm.controls.VouNo_Param"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="傳票號碼"
+              controlName="VouNo_Param"
+              [control]="queryForm.controls.VouNo_Param"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- VouStatus: 傳票狀態 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="傳票狀態" controlName="VouStatus" [options]="VouStatusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VouStatus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="傳票狀態"
+              controlName="VouStatus"
+              [options]="VouStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.VouStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
 
@@ -167,53 +290,104 @@
         <div class="grid p-fluid">
           <!-- ACP_Status_Param: 應付狀態 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="應付狀態" controlName="ACP_Status_Param" [options]="ACP_Status_ParamOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.ACP_Status_Param"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="應付狀態"
+              controlName="ACP_Status_Param"
+              [options]="ACP_Status_ParamOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ACP_Status_Param"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- SubDetailNo_Param: 對象別編號 (Dropdown/dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="對象別編號" controlName="SubDetailNo_Param" [options]="SubDetailNo_ParamOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.SubDetailNo_Param"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="對象別編號"
+              controlName="SubDetailNo_Param"
+              [options]="SubDetailNo_ParamOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.SubDetailNo_Param"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- HasUnpaid: 是否有未付款 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否有未付款" controlName="HasUnpaid" [options]="HasUnpaidOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.HasUnpaid" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="是否有未付款"
+              controlName="HasUnpaid"
+              [options]="HasUnpaidOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.HasUnpaid"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <!-- 欄位組 10 (是否只顯示銀行資料有差異) -->
         <div class="grid p-fluid">
           <!-- CheckChangedUser: 是否只顯示銀行資料有差異 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否只顯示銀行資料有差異" controlName="CheckChangedUser" [options]="CheckChangedUserOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.CheckChangedUser"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="是否只顯示銀行資料有差異"
+              controlName="CheckChangedUser"
+              [options]="CheckChangedUserOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CheckChangedUser"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-          <app-button label="異動帳號檢核" [loading]="loading" (click)="onCheckChangedUser(queryForm)"
-            [disabled]="!hasPermission(Actions.Check)"></app-button>
+          <app-button
+            label="異動帳號檢核"
+            [loading]="loading"
+            (click)="onCheckChangedUser(queryForm)"
+            [disabled]="!hasPermission(Actions.Check)"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryFIN24010" tableKey="FIN24010query" dataKey="ACP_No" [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showManage]="!isCheckChangedUserMode" [columns]="isCheckChangedUserMode ? checkChangedUserColumns : columns"
-    [loading]="loading" [showDelete]="false" [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"
-    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [editDisabled]="editDisabled">
+  <app-table-report
+    [exportContext]="{ apiUrl: 'queryFIN24010' }"
+    tableKey="FIN24010query"
+    dataKey="ACP_No"
+    [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords"
+    [data]="data"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="!isCheckChangedUserMode"
+    [columns]="isCheckChangedUserMode ? checkChangedUserColumns : columns"
+    [loading]="loading"
+    [showDelete]="false"
+    [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"
+    [showCheckBox]="isCheckChangedUserMode"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [editDisabled]="editDisabled"
+  >
     <header>
       <div class="flex align-items-center gap-2">
-        <p-button *ngIf="isCheckChangedUserMode" styleClass="p-2" label="更新匯款檔資料" [loading]="btnLoading"
-          icon="pi pi-file" (click)="onUpdateRemit()" [disabled]="!selectedItems || selectedItems.length === 0"
-          [loading]="btnLoading"></p-button>
+        <p-button
+          *ngIf="isCheckChangedUserMode"
+          styleClass="p-2"
+          label="更新匯款檔資料"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onUpdateRemit()"
+          [disabled]="!selectedItems || selectedItems.length === 0"
+          [loading]="btnLoading"
+        ></p-button>
       </div>
     </header>
   </app-table-report>

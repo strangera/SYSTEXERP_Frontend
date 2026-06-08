@@ -1,45 +1,83 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="複製費率" (click)="onCopyRate()" [disabled]="!hasPermission(Actions.Copy)"></app-button>
+    <app-button
+      label="複製費率"
+      (click)="onCopyRate()"
+      [disabled]="!hasPermission(Actions.Copy)"
+    ></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="公司銀行科目代號/名稱" controlName="BNK_No" [options]="bankCodeOptions()" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="公司銀行科目代號/名稱"
+              controlName="BNK_No"
+              [options]="bankCodeOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.BNK_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="金額上限" [startControl]="queryForm.controls.Remit_UAmount_Start"
-              [endControl]="queryForm.controls.Remit_UAmount_End" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="金額上限"
+              [startControl]="queryForm.controls.Remit_UAmount_Start"
+              [endControl]="queryForm.controls.Remit_UAmount_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="金額下限" [startControl]="queryForm.controls.Remit_BAmount_Start"
-              [endControl]="queryForm.controls.Remit_BAmount_End" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="金額下限"
+              [startControl]="queryForm.controls.Remit_BAmount_Start"
+              [endControl]="queryForm.controls.Remit_BAmount_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.Remit_Fee_Start"
-              [endControl]="queryForm.controls.Remit_Fee_End" [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              label="廠商負擔電匯手續費"
+              [startControl]="queryForm.controls.Remit_Fee_Start"
+              [endControl]="queryForm.controls.Remit_Fee_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.Comp_Remit_Fee_Start"
-              [endControl]="queryForm.controls.Comp_Remit_Fee_End" [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              label="公司負擔電匯手續費"
+              [startControl]="queryForm.controls.Comp_Remit_Fee_Start"
+              [endControl]="queryForm.controls.Comp_Remit_Fee_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.Cash_Back_Amt_Start"
-              [endControl]="queryForm.controls.Cash_Back_Amt_End" [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              label="廠商負擔電匯手續費回饋收入"
+              [startControl]="queryForm.controls.Cash_Back_Amt_Start"
+              [endControl]="queryForm.controls.Cash_Back_Amt_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -48,43 +86,85 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords" [data]="data" [showCheckBox]="true" (edit)="onEdit($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
-    [columns]="columns" [addButton]="addButton" [buttonsLoading]="btnLoading" (delete)="onDelete($event)"
-    [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)" [loading]="loading"></app-table-report>
+  <app-table-report
+    tableKey="FIN21020query"
+    dataKey="id"
+    [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords"
+    [data]="data"
+    [showCheckBox]="true"
+    (edit)="onEdit($event)"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    (detail)="onDetail($event)"
+    [columns]="columns"
+    [addButton]="addButton"
+    [buttonsLoading]="btnLoading"
+    (delete)="onDelete($event)"
+    [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)"
+    [exportContext]="{ apiUrl: 'queryFIN21020' }"
+    [loading]="loading"
+  ></app-table-report>
 </div>
-<app-dialog [visible]="dialogVisible()" header="費率資料快速複製" (visibleChange)="dialogVisible.set($event)"
-  (save)="saveDialog()" [loading]="saveLoading()">
+<app-dialog
+  [visible]="dialogVisible()"
+  header="費率資料快速複製"
+  (visibleChange)="dialogVisible.set($event)"
+  (save)="saveDialog()"
+  [loading]="saveLoading()"
+>
   <form [formGroup]="dialogForm" id="DialogForm">
     <div class="flex flex-column gap-3 py-3">
-
       <div class="surface-ground p-3 border-round border-1 surface-border">
         <div class="text-primary font-bold mb-2">
-          <i class="pi pi-sign-out mr-2"></i>來源公司銀行科目代號
+          <i class="pi pi-sign-out mr-2"></i>
+          來源公司銀行科目代號
         </div>
-        <app-dropdown controlName="sourceBnkNo" [control]="dialogForm.controls.sourceBnkNo" [options]="sourceOptions()"
-          optionLabel="label" optionValue="value" placeholder="請選擇來源公司銀行科目代號" [submitted]="dialogSubmitted()">
-        </app-dropdown>
+        <app-dropdown
+          controlName="sourceBnkNo"
+          [control]="dialogForm.controls.sourceBnkNo"
+          [options]="sourceOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="請選擇來源公司銀行科目代號"
+          [submitted]="dialogSubmitted()"
+        ></app-dropdown>
       </div>
 
       <div class="flex justify-content-center">
-        <div class="border-circle surface-100 flex align-items-center justify-content-center"
-          style="width: 40px; height: 40px;">
-          <i [class]="saveLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-down'" class="text-2xl text-primary"></i>
+        <div
+          class="border-circle surface-100 flex align-items-center justify-content-center"
+          style="width: 40px; height: 40px"
+        >
+          <i
+            [class]="
+              saveLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-down'
+            "
+            class="text-2xl text-primary"
+          ></i>
         </div>
       </div>
 
-      <div class="surface-card p-3 border-round border-1 border-primary-500 shadow-1">
+      <div
+        class="surface-card p-3 border-round border-1 border-primary-500 shadow-1"
+      >
         <div class="text-orange-600 font-bold mb-2">
-          <i class="pi pi-sign-in mr-2"></i>目的公司銀行科目代號
+          <i class="pi pi-sign-in mr-2"></i>
+          目的公司銀行科目代號
         </div>
-        <app-dropdown controlName="targetBnkNo" [control]="dialogForm.controls.targetBnkNo" [options]="targetOptions()"
-          optionLabel="label" optionValue="value" placeholder="請選擇目的公司銀行科目代號" [submitted]="dialogSubmitted()">
-        </app-dropdown>
-        <small class="text-pink-500 mt-2 block font-medium">* 執行後【目的公司銀行科目代號】之原費率將被刪除並取代</small>
+        <app-dropdown
+          controlName="targetBnkNo"
+          [control]="dialogForm.controls.targetBnkNo"
+          [options]="targetOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="請選擇目的公司銀行科目代號"
+          [submitted]="dialogSubmitted()"
+        ></app-dropdown>
+        <small class="text-pink-500 mt-2 block font-medium">
+          * 執行後【目的公司銀行科目代號】之原費率將被刪除並取代
+        </small>
       </div>
-
     </div>
   </form>
 </app-dialog>

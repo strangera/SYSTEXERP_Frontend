@@ -2,7 +2,6 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { SortMeta } from 'primeng/api';
 import { reportType, TableTypes } from '../table/table.model';
-import { TableExport } from '../table/table-export/table-export.component';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
@@ -34,15 +33,23 @@ export interface ExportContext {
   dataKeyName?: string;
   conditions?: any;
   printRemark?: boolean;
+  customFileName?: string;
   extraParams?: Record<string, any>;
 }
 
 export interface ExportParams {
-  event: TableExport;                  // 彈窗 Y/N、分頁行數等設定
-  columns: ReportColumn[];             // 主表欄位定義
-  context: ExportContext;           // 新增的高擴充性上下文（包含 apiUrl, conditions 等）
-  footerData?: any;                    // 頁尾總計資料
-  expansionColumns?: ReportColumn[];   // 展開細項的欄位定義
+  event: any;
+  columns: any[];
+  context: any; // 傳入的 exportContext
+  footerData?: any;
+  expansionColumns?: any[];
+  legacyFallback?: {
+    apiUrl?: string;
+    reportTitle?: string;
+    dataKeyName?: string;
+    conditions?: any;
+    printRemark?: boolean;
+  };
 }
 
 export interface ColumnGroup {
