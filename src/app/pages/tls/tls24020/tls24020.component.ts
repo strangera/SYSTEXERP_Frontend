@@ -17,6 +17,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24020.model';
+import { ExportContext } from 'src/app/shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls24020',
@@ -61,6 +62,11 @@ export class TLS24020Component extends BasicQueryPageComponent<TLS24020ResultDat
     { label: '是否為預售交易修正', value: 'PreOrderEdit' },
     { label: '交易資料作廢', value: 'VoidEdit' },
   ];
+  exportContext: ExportContext = {
+    apiUrl: 'queryTLS24020',
+    printRemark: true,
+    conditions: []
+  };
   data: TLS24020ResultData[] = [];
   columns: Column[] = TLTNoEditColumn;
   DataKeyName = 'TLTNoEdit';
@@ -83,6 +89,10 @@ export class TLS24020Component extends BasicQueryPageComponent<TLS24020ResultDat
         case 'VoidEdit': this.columns = VoidEditColumn; this.DataKeyName = 'VoidEdit'; break;
         default: this.columns = [];
       }
+      this.exportContext = {
+        ...this.exportContext,
+        dataKeyName: this.DataKeyName
+      };
       setTimeout(() => {
         // 避免在初始化時，由 patchValue 觸發的第一次 valueChange 執行查詢，
         // 所以檢查 this.data 是否已有值 (代表已經執行過一次查詢)
@@ -111,6 +121,11 @@ export class TLS24020Component extends BasicQueryPageComponent<TLS24020ResultDat
         this.data = res.Data
         this.lastQueryBody = body;
         this.totalRecords = res.TotalCount;
+        this.exportContext = {
+          ...this.exportContext,
+          conditions: body, // 或是符合你們後端格式的條件陣列
+          dataKeyName: this.DataKeyName // 確保是最新的
+        };
       })
     });
   }

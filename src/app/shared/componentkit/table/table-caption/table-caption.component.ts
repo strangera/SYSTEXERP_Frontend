@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { QueryStateService } from '@shared/service/query-state.service';
@@ -11,6 +11,8 @@ import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
+import { ReportExportService } from 'src/app/shared/service/report-export.service';
+import { ExportContext } from '../../table-report/table-report.model';
 import { TableExportComponent } from '../table-export/table-export.component';
 import { Column } from '../table.model';
 import { toggleButtons } from './table-caption.model';
@@ -34,6 +36,8 @@ import { toggleButtons } from './table-caption.model';
   templateUrl: './table-caption.component.html',
 })
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
+  private readonly exportService = inject(ReportExportService, { optional: true });
+  @Input() exportContext?: ExportContext;
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   @Input() dataKey: string | undefined = 'ID';                                                      // table 資料key
   @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
@@ -173,6 +177,44 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     this.importExcel.emit(event);
     if (event) {
       this.fileUpload.clear();
+    }
+  }
+
+  override exportPDFDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, printRemark?: boolean, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
+
+    if (this.exportContext && this.exportService) {
+      // 🌟 新作業：直接分流給新 Service 處理，完全不碰 super！
+      this.exportService.executePdfExport({
+        event,
+        columns: selectedColumns, // 這裡拿使用者過濾/選中的欄位
+        context: this.exportContext,
+        footerData: footerData,
+        expansionColumns: expansionColumns
+      }, (loading) => {
+        this.exportLoading = loading; // 控制轉圈圈
+      });
+    } else {
+      // 舊作業：維持原本的 super 繼承鏈行為
+      super.exportPDFDownload(event, selectedColumns, apiUrl, dataKeyName, printRemark, conditions, printColumn, footerData, reportTitle, expansionColumns);
+    }
+  }
+
+  override exportExcelDownload(event: any, selectedColumns: any, apiUrl?: string, dataKeyName?: string, conditions?: any, printColumn?: any, footerData?: any, reportTitle?: string, expansionColumns?: any): void {
+
+    if (this.exportContext && this.exportService) {
+      // 🌟 新作業：分流給新 Service
+      this.exportService.executeExcelExport({
+        event,
+        columns: selectedColumns,
+        context: this.exportContext,
+        footerData: footerData,
+        expansionColumns: expansionColumns
+      }, (loading) => {
+        this.exportLoading = loading;
+      });
+    } else {
+      // 舊作業：維持原本的 super 繼承鏈行為
+      super.exportExcelDownload(event, selectedColumns, apiUrl, dataKeyName, conditions, printColumn, footerData, reportTitle, expansionColumns);
     }
   }
 }

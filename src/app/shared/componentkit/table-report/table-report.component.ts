@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -16,14 +16,16 @@ import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
+import { TableExportComponent } from '../table/table-export/table-export.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayload } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, ExportContext, ReportColumn, TableQueryPayload } from './table-report.model';
+import { ReportExportService } from '../../service/report-export.service';
 
 @Component({
   selector: 'app-table-report',
   host: { 'table-report-id': '複製時請自行取唯一名' },
   standalone: true,
-  imports: [TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [TableExportComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +33,8 @@ import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayloa
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') public dt!: Table;
+  private readonly exportService = inject(ReportExportService, { optional: true });
+  @Input() exportContext?: ExportContext;
   @Input() lastQueryBody?: any;       // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
@@ -131,6 +135,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   expandedRows: Record<string, boolean> = {};
   // 連結
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
+  @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
@@ -138,7 +143,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)
-  @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
 
   draggedCol: any = null;
   draggedIndex = -1;
@@ -150,6 +154,59 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
+  }
+  public handleExportPDFDownload(event: any) {
+    const api = this.exportContext?.apiUrl ?? this.apiUrl;
+    const title = this.exportContext?.reportTitle ?? this.reportTitle;
+    const keyName = this.exportContext?.dataKeyName ?? this.DataKeyName;
+    const cond = this.exportContext?.conditions ?? this.Conditions;
+    const remark = this.exportContext?.printRemark ?? this.PrintRemark;
+
+    // 💡 完美分流
+    if (this.exportContext && this.exportService) {
+      console.log(this.exportContext);
+
+      // 🌟 新作業：完全走乾淨的、無繼承依賴的 Service 路線
+      this.exportService.executePdfExport({
+        event,
+        columns: this.columns,
+        context: this.exportContext,
+        footerData: this.footerData,
+        expansionColumns: this.expansionColumns
+      }, (loading) => {
+        // 同步通知 Component 轉圈圈
+        this.exportLoading = loading;
+      });
+    } else {
+      // 舊作業：乖乖走過去的 super 繼承鏈
+      super.exportPDFDownload(
+        event, this.columns, api, keyName, remark, cond, undefined, this.footerData, title, this.expansionColumns
+      );
+    }
+  }
+
+  public handleExportExcelDownload(event: any) {
+    const api = this.exportContext?.apiUrl ?? this.apiUrl;
+    const title = this.exportContext?.reportTitle ?? this.reportTitle;
+    const keyName = this.exportContext?.dataKeyName ?? this.DataKeyName;
+    const cond = this.exportContext?.conditions ?? this.Conditions;
+
+    if (this.exportContext && this.exportService) {
+      // 🌟 新作業：走新服務 Excel 路線
+      this.exportService.executeExcelExport({
+        event,
+        columns: this.columns,
+        context: this.exportContext,
+        footerData: this.footerData,
+        expansionColumns: this.expansionColumns
+      }, (loading) => {
+        this.exportLoading = loading;
+      });
+    } else {
+      super.exportExcelDownload(
+        event, this.columns, api, keyName, cond, undefined, this.footerData, title, this.expansionColumns
+      );
+    }
   }
 
   /** 將 footerData 正規化為陣列，供 template 依序繪製多列 footer；單一物件時為 [footerData]。 */

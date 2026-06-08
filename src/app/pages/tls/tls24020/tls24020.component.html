@@ -3,39 +3,80 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-5">
-            <app-calendar-range calendarType="dateRange" startLabel="銷售起始日" endLabel="銷售截止日"
-              [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              startLabel="銷售起始日"
+              endLabel="銷售截止日"
+              [startControl]="queryForm.controls.TXN_Date_Start"
+              [endControl]="queryForm.controls.TXN_Date_End"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-5">
-            <app-calendar-range calendarType="dateRange" startLabel="修正起始日" endLabel="修正截止日"
-              [startControl]="queryForm.controls.UPD_Date_Start" [endControl]="queryForm.controls.UPD_Date_End"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              startLabel="修正起始日"
+              endLabel="修正截止日"
+              [startControl]="queryForm.controls.UPD_Date_Start"
+              [endControl]="queryForm.controls.UPD_Date_End"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-5">
-            <app-multi-select class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+            <app-multi-select
+              class="col-12 md:col-6"
+              label="收銀機號"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+              [options]="ECR_NoOptions"
+              optionLabel="label"
+              optionValue="No"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-5">
-            <app-input-number-range startLabel="交易流水號(起)" endLabel="交易流水號(迄)" startControlName="TXN_No_Start"
-              endControlName="TXN_No_End" [startControl]="queryForm.controls.TXN_No_Start" [useGrouping]="false"
-              [endControl]="queryForm.controls.TXN_No_End" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              startLabel="交易流水號(起)"
+              endLabel="交易流水號(迄)"
+              startControlName="TXN_No_Start"
+              endControlName="TXN_No_End"
+              [startControl]="queryForm.controls.TXN_No_Start"
+              [useGrouping]="false"
+              [endControl]="queryForm.controls.TXN_No_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12">
-            <app-radiobutton label="報表型態" controlName="EditType" [options]="EditTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.EditType" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="報表型態"
+              controlName="EditType"
+              [options]="EditTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.EditType"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -49,9 +90,19 @@
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [showManage]="false" [loading]="loading"></app-table> -->
 
-  <app-table-report apiUrl="queryTLS24020" tableKey="tls24020" dataKey="ID" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false"
-    [queryFunction]="tls24020Service.queryTLS24020.bind(this.tls24020Service)" [showManage]="false" [showManage]="false"
-    [loading]="loading" [DataKeyName]="DataKeyName">
-  </app-table-report>
+  <app-table-report
+    apiUrl="queryTLS24020"
+    tableKey="tls24020"
+    dataKey="ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [queryFunction]="tls24020Service.queryTLS24020.bind(this.tls24020Service)"
+    [showManage]="false"
+    [showManage]="false"
+    [loading]="loading"
+    [exportContext]="exportContext"
+  ></app-table-report>
 </div>

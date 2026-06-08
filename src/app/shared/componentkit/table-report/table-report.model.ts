@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { SortMeta } from 'primeng/api';
 import { reportType, TableTypes } from '../table/table.model';
+import { TableExport } from '../table/table-export/table-export.component';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
@@ -24,6 +26,23 @@ export interface ReportColumn {
   cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;
+}
+
+export interface ExportContext {
+  apiUrl?: string;
+  reportTitle?: string;
+  dataKeyName?: string;
+  conditions?: any;
+  printRemark?: boolean;
+  extraParams?: Record<string, any>;
+}
+
+export interface ExportParams {
+  event: TableExport;                  // 彈窗 Y/N、分頁行數等設定
+  columns: ReportColumn[];             // 主表欄位定義
+  context: ExportContext;           // 新增的高擴充性上下文（包含 apiUrl, conditions 等）
+  footerData?: any;                    // 頁尾總計資料
+  expansionColumns?: ReportColumn[];   // 展開細項的欄位定義
 }
 
 export interface ColumnGroup {
