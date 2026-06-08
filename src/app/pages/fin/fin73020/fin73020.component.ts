@@ -110,35 +110,57 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   btnLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '序號' },
-    { field: 'PCS_RqstNo', header: '支出請款單號' },
-    { field: 'PCS_RqstDate', header: '產生日期', format: v => this.formatDate(v) },
-    { field: 'PCS_StatusName', header: '狀態' },
+  { field: 'SeqNo', header: '連續序號' },
 
-    { field: 'PCS_No', header: '零用金單號' },
-    { field: 'PCS_Date', header: '零用金申請日期', format: v => this.formatDate(v) },
-    { field: 'PCS_UsrNo', header: '申請人代碼' },
-    { field: 'PCS_UsrName', header: '申請人姓名' },
-    { field: 'PCS_OrgID', header: '申請人組織代號' },
+  { field: 'PCS_RqstNo', header: '支出請款單號' },
+  { field: 'PCS_RqstDate', header: '產生日期', format: v => this.formatDate(v) },
 
-    { field: 'Keep_UsrNo', header: '保管人代碼' },
-    { field: 'Keep_UsrName', header: '保管人姓名' },
-    { field: 'Keep_OrgID', header: '保管人組織代碼' },
-    { field: 'Keep_OrgName', header: '組織名稱' },
+  { field: 'PCS_StatusName', header: '狀態名稱' },
 
-    { field: 'EXP_ACC', header: '費用會計科目' },
-    { field: 'ORG_ID', header: '費用科目組織代號' },
-    { field: 'NOTeDesc', header: '項目摘要' },
-    { field: 'PCS_DtlTypeName', header: '明細類別' },
-    { field: 'PCS_GUINo', header: '發票/收據號碼' },
-    { field: 'PUR_Date', header: '消費日期', format: v => this.formatDate(v) },
+  { field: 'PCS_No', header: '零用金單號' },
+  { field: 'PCS_Date', header: '零用金申請日期', format: v => this.formatDate(v) },
 
-    { field: 'PCS_Net', header: '未稅金額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Tax', header: '稅額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Amt', header: '總額', align: 'right', format: v => this.money(v) },
+  { field: 'PCS_UsrNo', header: '申請人代碼' },
+  { field: 'PCS_UsrName', header: '申請人姓名' },
+  { field: 'PCS_OrgID', header: '申請人組織代號' },
 
-    { field: 'Voucher_No', header: '傳票號碼' },
-  ];
+  { field: 'Keep_UsrNo', header: '零用金保管人代碼' },
+  { field: 'Keep_UsrName', header: '保管人姓名' },
+  { field: 'Keep_OrgID', header: '零用金保管人組織代碼' },
+  { field: 'Keep_OrgName', header: '組織名稱' },
+
+  { field: 'EXP_ACC', header: '費用會計科目' },
+  { field: 'ORG_ID', header: '費用科目組織代號' },
+
+  { field: 'NOTeDesc', header: '項目摘要' },
+
+  { field: 'PCS_DtlTypeName', header: '明細類別名稱' },
+
+  { field: 'PCS_GUINo', header: '發票收據號碼' },
+
+  { field: 'PUR_Date', header: '消費日期', format: v => this.formatDate(v) },
+
+  {
+    field: 'PCS_Net',
+    header: '未稅金額',
+    align: 'right',
+    format: v => this.money(v),
+  },
+  {
+    field: 'PCS_Tax',
+    header: '稅額',
+    align: 'right',
+    format: v => this.money(v),
+  },
+  {
+    field: 'PCS_Amt',
+    header: '總額',
+    align: 'right',
+    format: v => this.money(v),
+  },
+
+  { field: 'Voucher_No', header: '傳票號碼' },
+];
 
   constructor(
     public readonly service: FIN73020Service,
