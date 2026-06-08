@@ -44,7 +44,7 @@ export interface QueryDetailResponse {
   RelationsCode: string,
   RelationsName: string,
   REC_DATE: Date,
-  BROADCAST_YN: string,
+  BROADCAST_YN?: string | null,
   BROADCAST_SITUAATION: string,
   BROADCAST_DATE: string,
   IsFinished: boolean,

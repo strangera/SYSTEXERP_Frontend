@@ -50,7 +50,28 @@
     background: #949494;
   }
 }
+::ng-deep .app-dropdown .p-dropdown.p-disabled {
+  // 1. 讓整塊內聯的內容（箭頭、清除叉叉、文字殘影等）透明度完全變成 0
+  opacity: 0 !important;
+}
+// 當開啟可編輯模式時，把 PrimeNG 內部本來顯示選中文字的區塊隱形或變透明
+::ng-deep .editable-dropdown-hide-label {
+  .p-dropdown-label {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+}
+// 隱藏下拉面板內建的 filter 搜尋輸入框區塊
+::ng-deep .editable-dropdown-panel {
+  .p-dropdown-header {
+    display: none !important; /* 直接拔掉內建搜尋頭部，因為外層 input 就是搜尋框了 */
+  }
+}
 
+::ng-deep .disabled-input-style {
+  font-size: 12px;
+  padding-left: 10.5px !important;
+}
 // === 以下是新增的 readonly 相關樣式 ===
 
 // readonly dropdown 容器樣式
@@ -75,7 +96,6 @@
 .readonly-field {
   background-color: #f8f9fa !important;
   border: 1px solid #e9ecef !important;
-  color: #495057 !important;
   cursor: text !important;
   font-weight: 500;
 
@@ -100,11 +120,9 @@
 .readonly-field-distinct {
   background-color: #f8f9fa !important;
   border: 1px dashed #6c757d !important;
-  color: #495057 !important;
   cursor: not-allowed !important;
 
   &::placeholder {
-    color: #6c757d !important;
     font-style: italic;
   }
 }

@@ -10,7 +10,6 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin14030Service } from '@service/api/fin/fin14030.service';
-import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
@@ -30,7 +29,7 @@ if (invoiceMonth % 2 !== 0) {
   invoiceMonth += 1;
 
   if (invoiceMonth > 12) {
-    invoiceMonth = 1;
+    invoiceMonth -= 12;
     invoiceYear += 1;
   }
 }
@@ -38,7 +37,7 @@ if (invoiceMonth % 2 !== 0) {
 export const invoiceDate =
   invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
 
-interface REP_TaxNo_list {
+interface REPTaxNolist {
   No: string;
   Label: string;
   STO_Status: string;
@@ -51,21 +50,16 @@ interface REP_TaxNo_list {
 @Component({
   selector: 'app-fin14030',
   templateUrl: './fin14030.component.html',
-  styleUrl: './fin14030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     ButtonComponent,
-    // Button,
-    // JsonPipe,
     DialogModule,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // CalendarComponent,
     CommonModule,
     DropdownComponent,
-    // TableComponent,
     TranslateModule,
     YearMonthComponent,
   ],
@@ -98,14 +92,13 @@ export class FIN14030Component
 
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
-  REP_TaxNo_Options: REP_TaxNo_list[] = [];
+  REP_TaxNo_Options: REPTaxNolist[] = [];
 
   columns: Column[] = [{ field: 'field', header: '欄位' }];
 
   constructor(
-    private fin14030Service: Fin14030Service,
-    private fin15080Service: FIN15080Service,
-    private sanitizer: DomSanitizer
+    private readonly fin14030Service: Fin14030Service,
+    private readonly sanitizer: DomSanitizer,
   ) {
     super();
   }
@@ -142,7 +135,7 @@ export class FIN14030Component
           // 預設第一筆 作為表單內容
           if (this.REP_TaxNo_Options.length > 0) {
             this.queryForm.patchValue({
-              REP_TaxNo: this.REP_TaxNo_Options[0].No as any,
+              REP_TaxNo: this.REP_TaxNo_Options[0].No,
             });
           }
         },
@@ -154,40 +147,6 @@ export class FIN14030Component
       });
   }
 
-  private buildTaxNoOptions(rows: any[]): REP_TaxNo_list[] {
-    const map = new Map<string, REP_TaxNo_list>();
-
-    rows.forEach((x) => {
-      const taxNo = String(x?.STO_TaxNo ?? '').trim();
-      const taxName = String(x?.STO_TaxName ?? '').trim();
-      const status = String(x?.STO_Status ?? '').trim();
-
-      if (!taxNo) return;
-
-      const option: REP_TaxNo_list = {
-        Label: `${taxNo}-${taxName}`,
-        No: taxNo,
-        STO_Status: status,
-        STO_TaxNo: taxNo,
-        STO_TaxName: taxName,
-        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
-        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
-      };
-
-      const exists = map.get(taxNo);
-
-      if (!exists) {
-        map.set(taxNo, option);
-        return;
-      }
-
-      if (status === '1') {
-        map.set(taxNo, option);
-      }
-    });
-
-    return Array.from(map.values());
-  }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -213,8 +172,7 @@ export class FIN14030Component
 
               rawUrl = decodeURIComponent(rawUrl);
 
-              this.pdfUrl =
-                this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+              this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
             }
 
             this.loading = false;
@@ -301,7 +259,7 @@ export class FIN14030Component
     this.loading = false;
   }
 
-  convertDateToYYYYMM(value: any): string {
+  convertDateToYYYYMM(value: string | Date | null): string {
     if (!value) return '';
 
     if (typeof value === 'string' && /^\d{6}$/.test(value)) {

@@ -145,15 +145,15 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010'); // ✅ 存 ProgNo
       const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
-      const finalUrl = `${window.location.origin}${externalUrl}`;
+      const finalUrl = `${globalThis.location.origin}${externalUrl}`;
       // 開新分頁
-      window.open(finalUrl, '_blank', 'noopener');
+      globalThis.open(finalUrl, '_blank', 'noopener');
       console.log('[FIN55010] 已儲存 handoff:', handoff);
     } catch (err) {
       console.error('[FIN55010] handoff save failed:', err);
@@ -195,12 +195,12 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const cd = resp?.headers?.get?.('Content-Disposition') ?? resp?.headers?.get?.('content-disposition');
     const fileName = this.getFilenameFromHeader(cd, ext) ?? `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   private getFilenameFromHeader(contentDisposition: string | null | undefined, ext: string): string | null {

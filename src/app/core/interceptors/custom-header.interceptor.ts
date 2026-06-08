@@ -14,7 +14,7 @@ export const customHeaderInterceptor: HttpInterceptorFn = (
   // 1. TransactionTime 計算
   // 注意：formatDate 函式不需要 DI，可以直接使用。
   // 由於瀏覽器端的 Date() 已經是本地時間，'Z' 結尾表示 UTC 偏移，確保後端能正確解析時間。
-  const utc_now = formatDate(new Date(), 'yyyy/MM/ddThh:mm:ssZ', 'zh-Hant-TW');
+  const utc_now = formatDate(new Date(), 'yyyy/MM/ddTHH:mm:ssZ', 'zh-Hant-TW');
 
   // 2. 設置自定義 Header
   const clonedReq = req.clone({

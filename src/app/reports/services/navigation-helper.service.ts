@@ -31,7 +31,7 @@ export class NavigationHelperService {
     // 組合最終網址：BaseHref + 序列化網址 (並處理可能重疊的斜線)
     const finalUrl = (baseHref + serializedUrl).replace(/\/+/g, '/');
 
-    // 5. 使用 window.open
-    window.open(finalUrl, '_blank', 'noopener');
+    // 5. 使用 globalThis.open
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 }

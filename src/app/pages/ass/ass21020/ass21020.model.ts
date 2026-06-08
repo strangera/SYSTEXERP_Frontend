@@ -12,6 +12,7 @@ export interface ASS21020Data {
   UPD_USR_No?: string;
   UPD_USR_Name?: string;
   Details: ASS21020Detail[];
+  CanDelete?: boolean;
 }
 
 export interface ASS21020Detail {

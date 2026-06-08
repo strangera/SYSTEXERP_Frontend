@@ -13,11 +13,11 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
@@ -119,157 +119,157 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   // === 查詢（送出）===
   // === 查詢（送出）===
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const val = this.queryForm.getRawValue() as any;
 
-    const payload: any = {
-      TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
-      rece_yn: val?.rece_yn ?? undefined,
-      tlt_building: val?.tlt_building ?? undefined,
-      tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
-      org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-      ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
+      const payload: any = {
+        TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
+        rece_yn: val?.rece_yn ?? undefined,
+        tlt_building: val?.tlt_building ?? undefined,
+        tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
+        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+        ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
 
-      // 固定 30（送後端；TableReport 內部分頁不靠這個）
-      pageSize: 30,
-      pageIndex: 1, // ✅ pack 型報表，固定第一頁
-      SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
-    };
+        // 固定 30（送後端；TableReport 內部分頁不靠這個）
+        pageSize: 30,
+        pageIndex: 1, // ✅ pack 型報表，固定第一頁
+        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
+      };
 
-    // 匯出要用（稍後會 remove pageSize/pageIndex）
-    this.historyRequestBody = { ...payload };
+      // 匯出要用（稍後會 remove pageSize/pageIndex）
+      this.historyRequestBody = { ...payload };
 
-    this.loading = true;
-    this.messageService?.blockUi();
+      this.loading = true;
+      this.messageService?.blockUi();
 
-    this.tls23050Service
-      .queryTLS23050(payload)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        }),
-      )
-      .subscribe({
-next: (res: any) => {
-  const first =
-    Array.isArray(res?.Data) && res.Data.length > 0
-      ? res.Data[0]
-      : res?.Data ?? null;
+      this.tls23050Service
+        .queryTLS23050(payload)
+        .pipe(
+          finalize(() => {
+            this.loading = false;
+            this.messageService?.unblockUi();
+          }),
+        )
+        .subscribe({
+          next: (res: any) => {
+            const first =
+              Array.isArray(res?.Data) && res.Data.length > 0
+                ? res.Data[0]
+                : res?.Data ?? null;
 
-  const details = Array.isArray(first?.tLS23050Details)
-    ? first.tLS23050Details
-    : [];
+            const details = Array.isArray(first?.tLS23050Details)
+              ? first.tLS23050Details
+              : [];
 
-  this.data = details.map((r: any, i: number) => ({
-    ...r,
-    _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-  }));
+            this.data = details.map((r: any, i: number) => ({
+              ...r,
+              _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+            }));
 
-  // ✅ 1) totalRecords 改用後端總筆數（依你後端實際欄位擇一）
-  const total =
-    Number(res?.TotalCount ?? res?.TotalRecords ?? first?.totalCount ?? first?.totalRecords ?? this.data.length);
+            // ✅ 1) totalRecords 改用後端總筆數（依你後端實際欄位擇一）
+            const total =
+              Number(res?.TotalCount ?? res?.TotalRecords ?? first?.totalCount ?? first?.totalRecords ?? this.data.length);
 
-  this.totalRecords = total;
+            this.totalRecords = total;
 
-  // Footer 總計
-  this.footerData = this.buildFooterFromPack(first);
+            // Footer 總計
+            this.footerData = this.buildFooterFromPack(first);
 
-  // ✅ 2) 不要再把 pageSize 撐大
-  if (this.historyRequestBody) {
-    this.historyRequestBody = {
-      ...this.historyRequestBody,
-      pageIndex: 1,
-      pageSize: 30,
-    };
+            // ✅ 2) 不要再把 pageSize 撐大
+            if (this.historyRequestBody) {
+              this.historyRequestBody = {
+                ...this.historyRequestBody,
+                pageIndex: 1,
+                pageSize: 30,
+              };
+            }
+          },
+
+          error: () => {
+            this.data = [];
+            this.totalRecords = 0;
+            this.footerData = {};
+          },
+        });
+    });
   }
-},
-
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.footerData = {};
-        },
-      });
-  });
-}
 
 
   // === 提供給 app-table-report 的查詢函式（支援排序 UI，但不做真正分頁；避免無限 loadMore）===
-// === 提供給 app-table-report 的查詢函式（支援排序，但不做分頁；避免無限 loadMore）===
-public queryTLS23050ForReport = (body: any) => {
-  const formVal = this.queryForm.getRawValue() as any;
+  // === 提供給 app-table-report 的查詢函式（支援排序，但不做分頁；避免無限 loadMore）===
+  public queryTLS23050ForReport = (body: any) => {
+    const formVal = this.queryForm.getRawValue() as any;
 
-  const basePayload: any = {
-    TXN_Date: this.toDateOnly(formVal?.TXN_Date),
-    rece_yn: formVal?.rece_yn ?? undefined,
-    tlt_building: formVal?.tlt_building ?? undefined,
-    tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
-    org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
-    ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
+    const basePayload: any = {
+      TXN_Date: this.toDateOnly(formVal?.TXN_Date),
+      rece_yn: formVal?.rece_yn ?? undefined,
+      tlt_building: formVal?.tlt_building ?? undefined,
+      tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+      org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
+      ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
+    };
+
+    const sortBy =
+      Array.isArray(body?.SortBy) && body.SortBy.length
+        ? body.SortBy
+        : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+          ? formVal.SortBy
+          : [{ field: 'ECR_No', order: 1 }];
+
+    // ✅ 重點：用 TableReport 傳進來的 pageIndex/pageSize
+    const pageIndex = Number(body?.pageIndex ?? 1);
+    const pageSize = Number(body?.pageSize ?? 30);
+
+    const payload: any = {
+      ...basePayload,
+      pageIndex,
+      pageSize,
+      SortBy: sortBy,
+    };
+
+    return this.tls23050Service.queryTLS23050(payload).pipe(
+      map((res: any) => {
+        const first =
+          Array.isArray(res?.Data) && res.Data.length > 0
+            ? res.Data[0]
+            : res?.Data ?? null;
+
+        const details = Array.isArray(first?.tLS23050Details)
+          ? first.tLS23050Details
+          : [];
+
+        // ✅ rowKey 要包含 pageIndex，不然不同頁可能撞 key
+        const rows = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${pageIndex}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+        }));
+
+        // ✅ 重點：TotalCount 回真正的 504（讓它知道還有資料可以滾）
+        const totalCount = Number(res?.TotalCount ?? 0);
+
+        // footer：用第一包的總計即可（通常每次都一樣）
+        const grand = first ? this.buildFooterFromPack(first) : (this.footerData ?? {});
+        this.footerData = grand;
+
+        // 同步畫面顯示的 totalRecords
+        this.totalRecords = totalCount;
+
+        // ✅ lastQueryBody 也要同步目前頁碼/大小（讓 TableReport 記住狀態）
+        if (this.historyRequestBody) {
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            ...basePayload,
+            SortBy: sortBy,
+            pageIndex,
+            pageSize,
+          };
+        }
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      }),
+    );
   };
-
-  const sortBy =
-    Array.isArray(body?.SortBy) && body.SortBy.length
-      ? body.SortBy
-      : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
-        ? formVal.SortBy
-        : [{ field: 'ECR_No', order: 1 }];
-
-  // ✅ 重點：用 TableReport 傳進來的 pageIndex/pageSize
-  const pageIndex = Number(body?.pageIndex ?? 1);
-  const pageSize = Number(body?.pageSize ?? 30);
-
-  const payload: any = {
-    ...basePayload,
-    pageIndex,
-    pageSize,
-    SortBy: sortBy,
-  };
-
-  return this.tls23050Service.queryTLS23050(payload).pipe(
-    map((res: any) => {
-      const first =
-        Array.isArray(res?.Data) && res.Data.length > 0
-          ? res.Data[0]
-          : res?.Data ?? null;
-
-      const details = Array.isArray(first?.tLS23050Details)
-        ? first.tLS23050Details
-        : [];
-
-      // ✅ rowKey 要包含 pageIndex，不然不同頁可能撞 key
-      const rows = details.map((r: any, i: number) => ({
-        ...r,
-        _rowKey: `${pageIndex}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-      }));
-
-      // ✅ 重點：TotalCount 回真正的 504（讓它知道還有資料可以滾）
-      const totalCount = Number(res?.TotalCount ?? 0);
-
-      // footer：用第一包的總計即可（通常每次都一樣）
-      const grand = first ? this.buildFooterFromPack(first) : (this.footerData ?? {});
-      this.footerData = grand;
-
-      // 同步畫面顯示的 totalRecords
-      this.totalRecords = totalCount;
-
-      // ✅ lastQueryBody 也要同步目前頁碼/大小（讓 TableReport 記住狀態）
-      if (this.historyRequestBody) {
-        this.historyRequestBody = {
-          ...this.historyRequestBody,
-          ...basePayload,
-          SortBy: sortBy,
-          pageIndex,
-          pageSize,
-        };
-      }
-
-      return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-    }),
-  );
-};
 
   // === 匯出（PDF / Excel）— 不傳 pageSize / pageIndex ===
   private buildExportBody() {
@@ -314,13 +314,13 @@ public queryTLS23050ForReport = (body: any) => {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
@@ -414,6 +414,12 @@ public queryTLS23050ForReport = (body: any) => {
     { field: 'TXN_PayAmt22', header: '[外來提貨單]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt23', header: '[外來禮券]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
+    { field: 'TXN_PayAmt26', header: '品牌已開票券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt27', header: '品牌未開票券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt28', header: '外送平台', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt29', header: 'EC', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt61', header: 'PayEasy', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
     { field: 'TXN_PrePayAmt', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
@@ -478,6 +484,12 @@ public queryTLS23050ForReport = (body: any) => {
 
       TXN_PayAmt22: n(first?.totalPayAmt22),
       TXN_PayAmt23: n(first?.totalPayAmt23),
+
+      TXN_PayAmt26: n(first?.totalPayAmt26),
+      TXN_PayAmt27: n(first?.totalPayAmt27),
+      TXN_PayAmt28: n(first?.totalPayAmt28),
+      TXN_PayAmt29: n(first?.totalPayAmt29),
+      TXN_PayAmt61: n(first?.totalPayAmt61),
 
       TXN_PrePayAmt: n(first?.totalPrePayAmt),
       TXN_OverAmt: n(first?.totalOverAmt),

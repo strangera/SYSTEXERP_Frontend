@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,8 +7,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable } from 'rxjs';
 import { CPM11010Service } from '../../../service/api/cpm/cpm11020.service';
 import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
-import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -30,8 +30,8 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
   queryForm = this.formBuilder.group({
     LoanNo: ['', [Validators.maxLength(14)]], // 借記/歸還編號
     ServiceId: [null], // 服務中心位置編號
-    LoanDateStart: [null], // 出借日期 - 起
-    LoanDateEnd: [null], // 出借日期 - 迄
+    LoanDateStart: [new Date()], // 出借日期 - 起
+    LoanDateEnd: [new Date()], // 出借日期 - 迄
     ReturnDateStart: [null], // 歸還日期 - 起
     ReturnDateEnd: [null], // 歸還日期 - 迄
     UserName: ['', [Validators.maxLength(20)]], // 借用人姓名
@@ -84,8 +84,7 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
     { field: 'LoanPhone', header: '連絡電話', visible: true },
     { field: 'CertTypeName', header: '證件類型', visible: true },
     { field: 'CertNo', header: '證件編號', visible: true },
-    { field: 'DeviceID', header: '設備編號', visible: true },
-    { field: 'DeviceName', header: '設備名稱', visible: true },
+    { field: 'DeviceNames', header: '出借設備', visible: true },
     { field: 'ServiceName', header: '服務中心', visible: true },
     { field: 'LoanUserName', header: '出借處理人員', visible: true },
     { field: 'LoanStatus', header: '出借狀態', visible: true },
@@ -94,7 +93,8 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
   constructor(
     private readonly cpm11040Service: CPM11040Service,
     private readonly cpm11010Service: CPM11010Service,
-    private readonly dropdownApiService: DropdownApiService
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -105,7 +105,12 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.cpm11040Service.queryCPM11040(frm.value)
+      const body = {
+        ...frm.value,
+        LoanDateStart: this.datePipe.transform(frm.value.LoanDateStart, 'yyyy-MM-dd'),
+        LoanDateEnd: this.datePipe.transform(frm.value.LoanDateEnd, 'yyyy-MM-dd'),
+      }
+      this.cpm11040Service.queryCPM11040(body)
         .pipe(
           finalize(() => this.loading = false),
           untilDestroyed(this)

@@ -58,10 +58,10 @@ export interface TLS43040Detail {
 })
 export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   constructor(
-    private locationOptionsService: LocationOptionsService,
-    private sys0110Service: Sys0110Service,
-    private dropDownListService: DropDownListService,
-    private tls43040Service: Tls43040Service
+    private readonly locationOptionsService: LocationOptionsService,
+    private readonly sys0110Service: Sys0110Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly tls43040Service: Tls43040Service
   ) {
     super();
   }
@@ -131,9 +131,10 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   // capture deep copy snapshot of current data for restore on cancel
   private captureOriginalSnapshot(): void {
     try {
-      this.originalDataSnapshot = JSON.parse(JSON.stringify(this.data || []));
+      this.originalDataSnapshot = structuredClone(this.data || []);
     } catch (err) {
       this.originalDataSnapshot = null;
+      console.error('Error capturing snapshot:', err);
     }
   }
 
@@ -151,12 +152,13 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         };
       } catch (err) {
         // ignore
+        console.error('Error capturing snapshot:', err);
       }
     }
 
     if (this.originalDataSnapshot) {
       // deep copy
-      this.data = JSON.parse(JSON.stringify(this.originalDataSnapshot));
+      this.data = structuredClone(this.originalDataSnapshot);
       // ensure statuses are original
       this.data = this.data.map(d => ({ ...d, status: 'original' }));
       this.selectedRows = [];
@@ -167,7 +169,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         } else {
           this.dataForm.markAsPristine();
         }
-      } catch { }
+      } catch (err) {
+        console.error('Error restoring form values:', err);
+      }
     } else {
       // fallback: clear table and selection
       this.resetTable();
@@ -325,7 +329,6 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       setTimeout(() => {
         this.messageService.errorBubble('必填欄位未填');
       }, 50);
-      return;
     }
   }
 
@@ -354,16 +357,16 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     const dataMap = new Map<number | string, TLS43040Detail>();
 
     // 先加入被刪除的資料
-    deletedItems.forEach(item => {
-      const key = item.ID ?? `temp_${Math.random()}`;
+    for (const item of deletedItems) {
+      const key = item.ID ?? `temp_${crypto.randomUUID()}`;
       dataMap.set(key, item);
-    });
+    }
 
     // 再加入處理後的資料（會覆蓋相同 ID 的項目）
-    processedData.forEach(item => {
-      const key = item.ID ?? `temp_${Math.random()}`;
+    for (const item of processedData) {
+      const key = item.ID ?? `temp_${crypto.randomUUID()}`;
       dataMap.set(key, item);
-    });
+    }
 
     this.data = Array.from(dataMap.values());
   }

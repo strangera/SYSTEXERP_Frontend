@@ -63,6 +63,33 @@
   </p-panel>
 </div>
 
+<!-- 選擇專櫃 Dialog -->
+<app-dialog [visible]="displayDialog()" header="選擇專櫃" (visibleChange)="displayDialog.set($event)"
+  (save)="saveDialog()" [disable]="!selectedItemsDialog().length" width="860px">
+
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryDialog()">
+    <div class="grid p-fluid">
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
+        [control]="dqf().tlt_no"></app-input-text>
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃名稱" controlName="tlt_name"
+        [control]="dqf().tlt_name"></app-input-text>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading()"></app-button>
+    </div>
+  </form>
+  <hr />
+
+  <app-table-report tableKey="TLS26080_TalentDialog" dataKey="talent_id"
+    [data]="dialogData()" [columns]="dialogColumns" [totalRecords]="dialogData().length"
+    [selectedItems]="selectedItemsDialog()" (selectionChange)="selectedItemsDialog.set($event)"
+    [showCaption]="false" [showFilter]="false" [showReportMode]="false" [showExcel]="false"
+    [showDelete]="false" [showManage]="false" [showCheckBox]="true"
+    [queryFunction]="queryTalentDialog" [loading]="dialogLoading()">
+  </app-table-report>
+</app-dialog>
+
 <!-- 專櫃資料表格 -->
 <div class="card">
   <div class="grid p-fluid">
@@ -85,7 +112,7 @@
                         [showReorder]="false"
                         [disabled]="isFormReadable"
                         [loading]="tableLoading()"></app-table-edit> -->
-        <app-table #dt [tableKey]="'TLS26080_Counter'" [dataKey]="'id'" [data]="tableData()"
+        <app-table #dt [tableKey]="'TLS26080_Counter'" [dataKey]="'_rowKey'" [data]="tableData()"
           (dataChange)="tableData.set($event)" (fieldChange)="fieldChanges.set($event)"
           [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)"
           [isRowSelectable]="isRowSelectable" [columns]="counterColumns()" [columnGroup]="counterColumnsGroup()"
@@ -93,7 +120,7 @@
           errorMessage="請至少新增一筆專櫃資料"
           [showInsert]="!isFormReadable" [showDelete]="!isFormReadable" [showEdit]="!isFormReadable"
           [showCheckBox]="!isFormReadable" [showRowEdit]="!isFormReadable" [alwaysEdit]="!isFormReadable"
-          (insert)="displayDialog.set(true)" [disabled]="isFormReadable" (delete)="onDelete()"
+          (insert)="openDialog()" [disabled]="isFormReadable" (delete)="onDelete()"
           [loading]="tableLoading()">
           <header>
             <div class="flex align-items-center mb-4">
@@ -116,20 +143,3 @@
     </div>
   </div>
 </div>
-
-
-<app-dialog [visible]="displayDialog()" header="選擇專櫃" (visibleChange)="displayDialog.set($event)" (save)="saveDialog()"
-  [disable]="!selectedItemsDialog().length">
-  <form [formGroup]="dialogQueryForm">
-    <div class="grid p-fluid">
-      <app-input-text class="col-6" label="專櫃編號" controlName="No" [control]="dqf().No"></app-input-text>
-      <app-input-text class="col-6" label="專櫃名稱" controlName="Name" [control]="dqf().Name"></app-input-text>
-    </div>
-  </form>
-  <app-table-report tableKey="tls26080_dialogTable" dataKey="No" [showReportMode]="false" [showDelete]="false"
-    [showCaption]="false" [showManage]="false" [showCheckBox]="true" [data]="filteredDialogData()"
-    [columns]="dialogColumns()" [selectedItems]="selectedItemsDialog()" [lazy]="false"
-    (selectionChange)="selectedItemsDialog.set($event)" [isRowSelectable]="isRowSelectable.bind(this)"
-    [totalRecords]="dialogTotalRecords()" [loading]="dialogLoading()" [lastQueryBody]="getDialogQueryBody()">
-  </app-table-report>
-</app-dialog>

@@ -79,14 +79,14 @@
           </div>
 
           <!-- 第2列 -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="公司代號"
               controlName="CompNo"
               [control]="queryForm.controls.CompNo"
               [submitted]="submitted"
             ></app-input-text>
-          </div>
+          </div> -->
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
@@ -194,14 +194,14 @@
             ></app-input-text>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據抬頭"
               controlName="ChkTitle"
               [control]="queryForm.controls.ChkTitle"
               [submitted]="submitted"
             ></app-input-text>
-          </div>
+          </div> -->
 
           <!-- 第6列 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -291,5 +291,6 @@
     [lazy]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
+    [editDisabled]="isEditDisabled"
   ></app-table>
 </div>

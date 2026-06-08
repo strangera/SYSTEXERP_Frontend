@@ -92,6 +92,7 @@ export class TLS24030CRUComponent extends BasicCruPageComponent<TLS24030Item> im
   });
   productDetailList: ProductDetailList[] = [];
   productColumns: ReportColumn[] = [
+    { field: 'TXN_item', header: '項次' },
     { field: 'PLU_MagNo', header: '商品編號/專櫃編號' },
     { field: 'PLU_Name', header: '商品名稱/櫃位名稱' },
     { field: 'TXN_Qty', header: '數量' },
@@ -105,6 +106,8 @@ export class TLS24030CRUComponent extends BasicCruPageComponent<TLS24030Item> im
   ];
   paymentDetailsList: PaymentDetailsList[] = [];
   paymentColumns: ReportColumn[] = [
+    { field: 'TXN_item', header: '項次' },
+    { field: 'PAY_No', header: '付款別編號' },
     { field: 'PAY_Name', header: '付款別' },
     { field: 'TXN_PayAmt', header: '金額', align: 'right', format: v => '$ ' + v },
     { field: 'CRD_Name', header: '信用卡別' },

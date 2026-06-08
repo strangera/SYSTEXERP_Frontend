@@ -228,11 +228,11 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string): void {
     const blob = resp.body!;
     const fileName = `${name}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

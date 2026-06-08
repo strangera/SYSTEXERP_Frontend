@@ -38,7 +38,6 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
   // 觸發事件
   @Output() startChange = new EventEmitter<string>();
   @Output() endChange = new EventEmitter<string>();
-  // @Output() blurEvent = new EventEmitter<{ start: any, end: any }>(); // 用於觸發輸入框失焦事件
 
   ngOnInit(): void {
     this.checkRequiredValidator(this.startControl, 0);
@@ -52,12 +51,4 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
   onEndInputChange(event: string) {
     this.endChange.emit(event);
   }
-
-  // onStartBlur(event: Event) {
-  //   this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  // }
-
-  // onEndBlur(event: Event) {
-  //   this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  // }
 }

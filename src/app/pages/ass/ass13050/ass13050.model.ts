@@ -14,8 +14,8 @@ export interface QueryASS13050Request extends BaseQueryRequest {
   NEW_USE_ORG_ID?: string | null;
   /** 新使用人 */
   NEW_USE_EMP_ID?: string | null;
-  /** 進貨類型（多選） */
-  PURCHASE_TYPE?: string[] | null;
+  /** 進貨類型 */
+  DEPRE_YN?: string | null;
   /** 大分類編號 */
   B_CLASS_ID?: string | null;
   /** 中分類編號 */
@@ -24,8 +24,6 @@ export interface QueryASS13050Request extends BaseQueryRequest {
   S_CLASS_ID?: string | null;
   /** 財產編號 */
   ASSET_ID?: string | null;
-  /** 標題（1: 交接, 2: 移轉） */
-  TITLE?: number | null;
   /** 保管單位 */
   HOLD_ORG_ID?: string | null;
   /** 保管人 */
@@ -36,8 +34,11 @@ export interface QueryASS13050Request extends BaseQueryRequest {
   USE_EMP_ID?: string | null;
 }
 
-/** 下載報表請求（與查詢條件相同結構） */
-export type DownloadASS13050Request = QueryASS13050Request;
+/** 下載報表請求（多帶標題欄位） */
+export interface DownloadASS13050Request extends QueryASS13050Request {
+  /** 標題（1: 交接, 2: 移轉） */
+  HEADLINE?: string | null;
+}
 
 // ==================== Response 介面 ====================
 

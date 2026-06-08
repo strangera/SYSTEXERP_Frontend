@@ -129,7 +129,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
         switchMap(bId =>
           !bId
             ? of([] as Option[])
-            : this.dropdownApi.queryFaClass1({ CLASS_ID: bId }).pipe(map(o => o ?? [])),
+            : this.dropdownApi.queryFaClass1({ B_CLASS_ID: bId }).pipe(map(o => o ?? [])),
         ),
         untilDestroyed(this),
       )
@@ -148,7 +148,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
             : this.dropdownApi
               .queryFaClass2({
                 B_CLASS_ID: bCtrl.value ?? undefined,
-                CLASS_ID: mId,
+                M_CLASS_ID: mId,
               })
               .pipe(map(o => o ?? [])),
         ),
@@ -161,7 +161,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
     const initM = mCtrl.value;
     if (initB) {
       this.dropdownApi
-        .queryFaClass1({ CLASS_ID: initB })
+        .queryFaClass1({ B_CLASS_ID: initB })
         .pipe(untilDestroyed(this))
         .subscribe(opts => {
           const mids = opts ?? [];
@@ -175,7 +175,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
 
           if (initM) {
             this.dropdownApi
-              .queryFaClass2({ B_CLASS_ID: initB, CLASS_ID: initM })
+              .queryFaClass2({ B_CLASS_ID: initB, M_CLASS_ID: initM })
               .pipe(untilDestroyed(this))
               .subscribe(opts2 => {
                 const smalls = opts2 ?? [];

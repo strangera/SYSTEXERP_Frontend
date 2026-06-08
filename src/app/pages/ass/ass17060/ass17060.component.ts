@@ -123,7 +123,7 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
         this.midCategoryOptions = [];
         this.smallCategoryOptions = [];
         if (!b) return;
-        this.dropdownApiService.queryFaClass1({ CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((opts) => {
+        this.dropdownApiService.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((opts) => {
           this.midCategoryOptions = opts ?? [];
         });
       });
@@ -135,7 +135,7 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
         this.smallCategoryOptions = [];
         if (!m) return;
         this.dropdownApiService
-          .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: m })
+          .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, M_CLASS_ID: m })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
           this.smallCategoryOptions = opts ?? [];
@@ -145,13 +145,13 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
     const initialB = bCtrl.value;
     const initialM = mCtrl.value;
     if (initialB) {
-      this.dropdownApiService.queryFaClass1({ CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((opts) => {
+      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((opts) => {
         this.midCategoryOptions = opts ?? [];
       });
     }
     if (initialM && initialB) {
       this.dropdownApiService
-        .queryFaClass2({ B_CLASS_ID: initialB, CLASS_ID: initialM })
+        .queryFaClass2({ B_CLASS_ID: initialB, M_CLASS_ID: initialM })
         .pipe(untilDestroyed(this))
         .subscribe((opts) => {
         this.smallCategoryOptions = opts ?? [];

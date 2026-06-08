@@ -10,17 +10,24 @@ import { Subscription, distinctUntilChanged, firstValueFrom, of, switchMap } fro
 
 // PrimeNG
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 // 共用組件
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column } from '@shared/componentkit/table/table.model';
 
 // V2 類型
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -37,7 +44,6 @@ import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-step1-contract-info',
@@ -49,7 +55,11 @@ import { Observable } from 'rxjs';
     FormsModule,
     ReactiveFormsModule,
     AccordionModule,
+    ButtonModule,
     CheckboxModule,
+    DialogModule,
+    DropdownModule,
+    SelectButtonModule,
     InputTextComponent,
     InputTextareaComponent,
     DropdownComponent,
@@ -57,7 +67,8 @@ import { Observable } from 'rxjs';
     MultiSelectComponent,
     InputNumberComponent,
     RadiobuttonComponent,
-    ExpandableEditTableComponent
+    TableEditComponent,
+    TableComponent
   ]
 })
 export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy {
@@ -105,41 +116,91 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   // 位置表格
   displayLocationData: LocationItem[] = [];
-  locationColumns: ColumnDef[] = [
-    {
-      field: 'location_no',
-      header: '位置編號',
-      type: 'selector-panel',
-      editable: true,
-      style: 'min-width: 200px',
-      selectorConfig: {
-        valuePropertyName: 'value',
-        labelPropertyName: 'label',
-        displayFieldsConfig: [{ fieldName: 'value', displayLabel: '', isPrimaryField: true }],
-        panelTableColumns: [
-          { field: 'value', header: '位置編號', sortable: true },
-          { field: 'building_desc', header: '館別', sortable: true },
-          { field: 'floor_desc', header: '樓層' },
-          { field: 'area_desc', header: '區域' },
-          { field: 'tlt_space', header: '營業坪數' },
-        ] as SelectorTableColumn[],
-        searchFormFields: [
-          { name: 'building_code', label: '館別', type: 'dropdown', colClass: 'col-4', options: [], placeholder: '選擇館別' },
-          { name: 'floor_code', label: '樓層', type: 'dropdown', colClass: 'col-4', options: [], placeholder: '選擇樓層' },
-          { name: 'area_code', label: '區域代號', type: 'dropdown', options: [], colClass: 'col-4', placeholder: '輸入區域代號' },
-        ],
-        searchMethod: this.searchLocationOptions.bind(this),
-        panelDataSource: [],
-        totalDataCount: 0,
-      }
-    },
-    { field: 'building_desc', header: '館別', type: 'text', editable: false, style: 'min-width: 100px' },
-    { field: 'floor_desc', header: '樓層', type: 'text', editable: false, style: 'min-width: 100px' },
-    { field: 'area_desc', header: '區域', type: 'text', editable: false, style: 'min-width: 100px' },
-    { field: 'tlt_space', header: '營業坪數', type: 'number', editable: false, style: 'min-width: 120px' },
-    { field: 'tlt_bdate', header: '起始日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' },
-    { field: 'tlt_edate', header: '截止日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' }
+  selectedLocationRows: LocationItem[] = [];
+  private isOwnEmit = false;
+
+  locationEditColumns: EditColumn[] = [
+    { field: 'location_no', header: '位置編號', type: 'custom', minWidth: '160px' },
+    { field: 'building_desc', header: '館別', minWidth: '100px' },
+    { field: 'floor_desc', header: '樓層', minWidth: '100px' },
+    { field: 'area_desc', header: '區域', minWidth: '100px' },
+    { field: 'tlt_space', header: '營業坪數', minWidth: '120px' },
+    { field: 'tlt_bdate', header: '起始日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
+    { field: 'tlt_edate', header: '截止日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
   ];
+
+  locationPickerColumns: Column[] = [
+    { field: 'value', header: '位置編號', showSort: true },
+    { field: 'building_desc', header: '館別' },
+    { field: 'floor_desc', header: '樓層' },
+    { field: 'area_desc', header: '區域' },
+    { field: 'tlt_space', header: '坪數' },
+    {
+      field: 'occ_tlt_no' as any,
+      header: '狀態',
+      format: (_val: unknown, _i: unknown, rowData: unknown) => this.isOccupiedInPickerRange(rowData) ? '已使用' : '未使用',
+      cellClass: (rowData: unknown) => this.isOccupiedInPickerRange(rowData) ? 'text-red-500 font-bold' : 'text-green-600'
+    },
+    { field: 'occ_tlt_no', header: '專櫃編號' },
+    { field: 'occ_tlt_name', header: '專櫃名稱' },
+    { field: 'occ_bdate', header: '起始日' },
+    { field: 'occ_edate', header: '截止日' },
+  ];
+
+  locationDefaultInsertData = {
+    location_no: '',
+    tlt_building: '',
+    building_desc: '',
+    tlt_floor: '',
+    floor_desc: '',
+    area_no: '',
+    area_desc: '',
+    tlt_space: 0,
+    tlt_bdate: null,
+    tlt_edate: null
+  };
+
+  /** 判斷位置在當前選擇器的時間區間內是否有佔用衝突 */
+  isOccupiedInPickerRange(rowData: unknown): boolean {
+    const row = rowData as { occ_tlt_no?: string; occ_bdate?: string; occ_edate?: string };
+    if (!row?.occ_tlt_no) return false;
+    const reqStart = this.currentPickerRow?.tlt_bdate ? new Date(this.currentPickerRow.tlt_bdate as string) : null;
+    const reqEnd = this.currentPickerRow?.tlt_edate ? new Date(this.currentPickerRow.tlt_edate as string) : null;
+    const occStart = row.occ_bdate ? new Date(row.occ_bdate) : null;
+    const occEnd = row.occ_edate ? new Date(row.occ_edate) : null;
+    if (!reqStart || !reqEnd || !occStart || !occEnd) return true; // 無法判斷時保守視為佔用
+    // 有重疊：reqStart <= occEnd && reqEnd >= occStart
+    return reqStart <= occEnd && reqEnd >= occStart;
+  }
+
+  isLocationSelectable = (rowData: unknown): boolean => !this.isOccupiedInPickerRange(rowData);
+
+  // 位置選擇 Dialog 狀態
+  locationPickerVisible = false;
+  locationPickerLoading = false;
+  locationPickerData: any[] = [];
+  locationPickerSelectedRow: any = null;
+  private currentPickerRow: LocationItem | null = null;
+  locationStatusFilter = new FormControl('all');
+  locationStatusOptions = [
+    { label: '全部', value: 'all' },
+    { label: '未使用', value: 'available' },
+    { label: '已使用', value: 'occupied' }
+  ];
+
+  // 位置選擇器篩選條件
+  pickerBuildingFilter = new FormControl(null);
+  pickerFloorFilter = new FormControl(null);
+  pickerAreaFilter = new FormControl(null);
+  pickerLocationNoFilter = new FormControl(null);
+
+  get filteredPickerData(): any[] {
+    switch (this.locationStatusFilter.value) {
+      case 'available': return this.locationPickerData.filter(x => !x.occ_tlt_no);
+      case 'occupied': return this.locationPickerData.filter(x => !!x.occ_tlt_no);
+      default: return this.locationPickerData;
+    }
+  }
 
   private subscriptions: Subscription[] = [];
   submitted = false;
@@ -168,9 +229,15 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // 當 locationData 變更時，更新顯示資料
-    if (changes['locationData'] && !changes['locationData'].firstChange) {
-      this.updateDisplayLocationData();
+    // 當 locationData 變更時，更新顯示資料（跳過自己 emit 觸發的回流）
+    if (changes['locationData']) {
+      if (this.isOwnEmit) {
+        this.isOwnEmit = false;
+        return;
+      }
+      if (!changes['locationData'].firstChange) {
+        this.updateDisplayLocationData();
+      }
     }
   }
 
@@ -193,7 +260,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   private async loadVendorOptions(): Promise<void> {
     try {
-      this.pos2013Options = await firstValueFrom(this.vendorCategoryService.getVendorCategoryNoNameOptions());
+      this.pos2013Options = await firstValueFrom(this.vendorCategoryService.getVendorCategoryNoNameOptionsForCru());
     } catch (error) {
       this.pos2013Options = [];
     }
@@ -269,10 +336,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       .subscribe(contractStart => {
         if (contractStart && this.crudstatus !== CRUDStatus.Read) {
           this.form.patchValue({ tlt_contract_bdate: contractStart }, { emitEvent: false });
-          // 自動帶入：地點起始日為空者，填入契約起始日
+          // 更新候選列預設值
+          this.locationDefaultInsertData = { ...this.locationDefaultInsertData, tlt_bdate: contractStart };
+          // 自動帶入：所有非刪除地點的起始日一律同步契約起始日
           let changed = false;
           this.locationData.forEach(loc => {
-            if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+            if (loc._status !== 'deleted') {
               loc.tlt_bdate = contractStart;
               changed = true;
             }
@@ -290,10 +359,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       .subscribe(contractEnd => {
         if (contractEnd && this.crudstatus !== CRUDStatus.Read) {
           this.form.patchValue({ tlt_contract_edate: contractEnd }, { emitEvent: false });
-          // 自動帶入：地點截止日為空者，填入契約截止日
+          // 更新候選列預設值
+          this.locationDefaultInsertData = { ...this.locationDefaultInsertData, tlt_edate: contractEnd };
+          // 自動帶入：所有非刪除地點的截止日一律同步契約截止日
           let changed = false;
           this.locationData.forEach(loc => {
-            if (loc._status !== 'deleted' && !loc.tlt_edate) {
+            if (loc._status !== 'deleted') {
               loc.tlt_edate = contractEnd;
               changed = true;
             }
@@ -324,19 +395,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     if (feedbackDateSub) this.subscriptions.push(feedbackDateSub);
   }
 
-  private updateSelectorPanelOptions(): void {
-    const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
-    if (locationColumn?.selectorConfig?.searchFormFields) {
-      const buildingField = locationColumn.selectorConfig.searchFormFields.find(field => field.name === 'building_code');
-      if (buildingField) buildingField.options = this.dropdownService.buildingOptions || [];
-
-      const floorField = locationColumn.selectorConfig.searchFormFields.find(field => field.name === 'floor_code');
-      if (floorField) floorField.options = this.dropdownService.floorOptions || [];
-
-      const areaField = locationColumn.selectorConfig.searchFormFields.find(field => field.name === 'area_code');
-      if (areaField) areaField.options = this.dropdownService.regionOptions || [];
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private updateSelectorPanelOptions(): void { }
 
   // ========== 廠商變更 ==========
   onVendorChange(vendorVenNo: string): void {
@@ -446,125 +506,176 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
-  searchLocationOptions(searchParams: Record<string, unknown>): Observable<DropdownOption[]> {
-    if (searchParams['SortBy'] && Array.isArray(searchParams['SortBy'])) {
-      searchParams['SortBy'] = (searchParams['SortBy'] as { field: string; order: number }[]).map((sort) => ({
-        field: sort.field === 'value' ? 'location_no' : sort.field,
-        order: sort.order
-      }));
-    }
-    return this.locationOptionsService.getLocationWithDetailsOptions(searchParams);
-  }
+  // ========== 位置表格 dataChange ==========
 
-  addLocation(): void {
-    const newLocation: LocationItem = {
-      id: Date.now(),
-      location_no: '', tlt_building: '', building_desc: '',
-      tlt_floor: '', floor_desc: '', area_no: '', area_desc: '',
-      tlt_space: 0, _status: 'new'
-    };
-    this.locationData = [...this.locationData, newLocation];
-    this.updateDisplayLocationData();
-    this.locationDataChange.emit(this.locationData);
-  }
-
-  onBatchDeleteLocation(items: LocationItem[]): void {
-    items.forEach(item => {
-      const index = this.locationData.findIndex(loc => loc.id === item.id);
-      if (index !== -1) {
-        if (this.locationData[index]._status === 'new') {
-          this.locationData.splice(index, 1);
-        } else {
-          this.locationData[index]._status = 'deleted';
-        }
-      }
+  onLocationDataChange(data: any[]): void {
+    // 保留本次 table-edit 不知道的舊刪除紀錄（例如：前次編輯工作階段已標記 deleted 的行）
+    const emittedKeys = new Set(
+      data.map(d => (d as any)._TABLE_KEY ?? (d.id != null ? String(d.id) : '')).filter(Boolean)
+    );
+    const prevDeleted = this.locationData.filter(
+      loc => loc._status === 'deleted' &&
+        !(loc as any)._TABLE_KEY &&
+        loc.id != null &&
+        !emittedKeys.has(String(loc.id))
+    );
+    // 新列加入時，若日期為空則自動帶入合約起訖日
+    const contractBdate = this.form.get('tlt_bdate')?.value;
+    const contractEdate = this.form.get('tlt_edate')?.value;
+    data.forEach(row => {
+      if (!row.tlt_bdate && contractBdate) row.tlt_bdate = contractBdate;
+      if (!row.tlt_edate && contractEdate) row.tlt_edate = contractEdate;
     });
-    this.locationData = [...this.locationData];
-    this.updateDisplayLocationData();
+    this.locationData = [...prevDeleted, ...data] as LocationItem[];
+    this.displayLocationData = data as LocationItem[];
+    this.isOwnEmit = true;
     this.locationDataChange.emit(this.locationData);
   }
 
-  onLocationSave(event: { oldData: LocationItem, newData: LocationItem }): void {
-    const index = this.locationData.findIndex(loc => loc.id === event.oldData.id);
-    if (index !== -1) {
-      this.locationData[index] = { ...event.newData, _status: event.oldData._status === 'new' ? 'new' : 'modified' };
+  // ========== 位置選擇 Dialog ==========
+
+  openLocationPicker(rowData: any): void {
+    const row = rowData as LocationItem;
+    // 自動帶入合約起訖日（若尚未設定）
+    if (!row.tlt_bdate) row.tlt_bdate = this.form.get('tlt_bdate')?.value || null;
+    if (!row.tlt_edate) row.tlt_edate = this.form.get('tlt_edate')?.value || null;
+    if (!row.tlt_bdate || !row.tlt_edate) {
+      this.messageService.warnBubble('請先填寫位置的起始日與截止日');
+      return;
+    }
+    this.currentPickerRow = row;
+    this.locationPickerSelectedRow = null;
+    this.locationPickerData = [];
+    this.locationStatusFilter.setValue('all');
+    this.pickerBuildingFilter.setValue(null);
+    this.pickerFloorFilter.setValue(null);
+    this.pickerAreaFilter.setValue(null);
+    this.pickerLocationNoFilter.setValue(null);
+    this.locationPickerVisible = true;
+    this.loadLocationPickerData(row);
+  }
+
+  private formatDateParam(d: string | Date | undefined | null): string | null {
+    if (!d) return null;
+    if (d instanceof Date) return d.toLocaleDateString('sv-SE');
+    return d as string;
+  }
+
+  private loadLocationPickerData(row: LocationItem, filters?: { building_code?: string; floor_code?: string; area_code?: string; location_no?: string }): void {
+    this.locationPickerLoading = true;
+    const talentIdVal = this.form.get('talent_id')?.value;
+    const params: any = {
+      PageSize: 9999,
+      PageIndex: 1,
+      tlt_bdate: this.formatDateParam(row.tlt_bdate),
+      tlt_edate: this.formatDateParam(row.tlt_edate),
+      talent_id: talentIdVal ? Number(talentIdVal) : null
+    };
+    if (filters?.building_code) params.building_code = filters.building_code;
+    if (filters?.floor_code) params.floor_code = filters.floor_code;
+    if (filters?.area_code) params.area_code = filters.area_code;
+    if (filters?.location_no) params.location_no = filters.location_no;
+
+    this.locationOptionsService.getLocationWithDetailsOptions(params).subscribe({
+      next: (data) => {
+        this.locationPickerData = data;
+        this.locationPickerLoading = false;
+      },
+      error: () => { this.locationPickerLoading = false; }
+    });
+  }
+
+  onPickerSearch(): void {
+    if (!this.currentPickerRow) return;
+    this.locationPickerSelectedRow = null;
+    this.loadLocationPickerData(this.currentPickerRow, {
+      building_code: this.pickerBuildingFilter.value || undefined,
+      floor_code: this.pickerFloorFilter.value || undefined,
+      area_code: this.pickerAreaFilter.value || undefined,
+      location_no: this.pickerLocationNoFilter.value || undefined,
+    });
+  }
+
+  onLocationPickerConfirm(): void {
+    if (!this.locationPickerSelectedRow || !this.currentPickerRow) return;
+    const location = Array.isArray(this.locationPickerSelectedRow)
+      ? this.locationPickerSelectedRow[0]
+      : this.locationPickerSelectedRow;
+    if (!location) return;
+    const row = this.currentPickerRow;
+
+    // 候選列（尚未轉為真實列）：直接新增一筆真實列
+    if ((row as LocationItem & { _isAutoInsertCandidate?: boolean })._isAutoInsertCandidate) {
+      const isDuplicate = this.locationData.some(item =>
+        item.location_no === location.value && item._status !== 'deleted'
+      );
+      if (isDuplicate) {
+        this.messageService.errorBubble(`位置編號 ${location.value} 已存在!`);
+        return;
+      }
+      const newRow: LocationItem = {
+        location_no: location.value,
+        tlt_building: location.tlt_building || '',
+        tlt_floor: location.tlt_floor || '',
+        area_no: location.area_no || '',
+        building_desc: location.building_desc || '',
+        floor_desc: location.floor_desc || '',
+        area_desc: location.area_desc || '',
+        tlt_space: location.tlt_space || 0,
+        tlt_bdate: row.tlt_bdate,
+        tlt_edate: row.tlt_edate,
+        _status: 'new'
+      };
+      this.locationData = [...this.locationData, newRow];
+      this.displayLocationData = this.locationData.filter(l => l._status !== 'deleted');
+      this.isOwnEmit = true;
+      this.locationDataChange.emit(this.locationData);
+      this.locationPickerVisible = false;
+      this.currentPickerRow = null;
+      return;
+    }
+
+    const rowKey = (row as any)._TABLE_KEY;
+
+    const isDuplicate = this.locationData.some(item =>
+      item.location_no === location.value &&
+      item._status !== 'deleted' &&
+      (rowKey ? (item as any)._TABLE_KEY !== rowKey : String(item.id) !== String(row.id))
+    );
+    if (isDuplicate) {
+      this.messageService.errorBubble(`位置編號 ${location.value} 已存在!`);
+      return;
+    }
+
+    const targetIndex = this.locationData.findIndex(item => {
+      const itemKey = (item as any)._TABLE_KEY;
+      if (rowKey && itemKey) return rowKey === itemKey;
+      return item.id != null && item.id === row.id;
+    });
+
+    if (targetIndex !== -1) {
+      const current = this.locationData[targetIndex];
+      this.locationData[targetIndex] = {
+        ...current,
+        location_no: location.value,
+        tlt_building: location.tlt_building || '',
+        tlt_floor: location.tlt_floor || '',
+        area_no: location.area_no || '',
+        building_desc: location.building_desc || '',
+        floor_desc: location.floor_desc || '',
+        area_desc: location.area_desc || '',
+        tlt_space: location.tlt_space || 0,
+        _status: current._status === 'new' ? 'new' : 'modified'
+      };
+      this.locationData = [...this.locationData];
       this.updateDisplayLocationData();
       this.locationDataChange.emit(this.locationData);
     }
+
+    this.locationPickerVisible = false;
+    this.currentPickerRow = null;
   }
 
-  onLocationDropdownChange(event: { rowData: LocationItem; field: string; newValue: string; selectedOption?: any }): void {
-    const { rowData, field, newValue, selectedOption } = event;
-
-    if (field === 'location_no' && newValue && selectedOption) {
-      const isDuplicate = this.locationData.some(item =>
-        item.location_no === newValue && String(item.id) !== String(rowData.id) && item._status !== 'deleted'
-      );
-
-      if (isDuplicate) {
-        rowData.location_no = '';
-        this.messageService.errorBubble(`位置編號 ${newValue} 已存在!`);
-        return;
-      }
-
-      // 設定位置編號
-      rowData.location_no = selectedOption.value || newValue;
-
-      // 設定代碼欄位 (用於後端儲存)
-      rowData.tlt_building = selectedOption.tlt_building || '';
-      rowData.tlt_floor = selectedOption.tlt_floor || '';
-      rowData.area_no = selectedOption.area_no || '';
-
-      // 設定描述欄位 (用於前端顯示)
-      rowData.building_desc = selectedOption.building_desc || '';
-      rowData.floor_desc = selectedOption.floor_desc || '';
-      rowData.area_desc = selectedOption.area_desc || '';
-
-      // 設定營業坪數
-      rowData.tlt_space = selectedOption.tlt_space || 0;
-
-      // 自動帶入契約起訖日（若尚未設定）
-      if (!rowData.tlt_bdate) {
-        rowData.tlt_bdate = this.form.get('tlt_bdate')?.value || '';
-      }
-      if (!rowData.tlt_edate) {
-        rowData.tlt_edate = this.form.get('tlt_edate')?.value || '';
-      }
-
-      const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
-      if (targetIndex !== -1) {
-        const currentStatus = this.locationData[targetIndex]._status;
-        this.locationData[targetIndex] = {
-          ...this.locationData[targetIndex],
-          ...rowData,
-          _status: currentStatus === 'new' ? 'new' : 'modified'
-        };
-        this.locationData = [...this.locationData];
-        this.updateDisplayLocationData();
-        this.locationDataChange.emit(this.locationData);
-      }
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onLocationTableEdit(_event: LocationItem): void { }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onLocationTableCancel(_event: LocationItem): void { }
-
-  /**
-   * 處理 forceEditMode 下日期欄位直接變更（不走 save event）
-   * 確保 _status 從 'original' 更新為 'modified'，後端才知道要 UPDATE
-   */
-  onLocationFieldChange(event: { fieldName: string; newValue: any; rowData: LocationItem }): void {
-    const { rowData } = event;
-    const index = this.locationData.findIndex(loc => loc.id === rowData.id);
-    if (index !== -1 && this.locationData[index]._status === 'original') {
-      this.locationData[index]._status = 'modified';
-      this.locationData = [...this.locationData];
-      this.locationDataChange.emit(this.locationData);
-    }
-  }
 
 
   // ========== 輔助方法 ==========

@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -52,6 +52,15 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   // 若觸發高權限編輯，則強制允許編輯 (繞過一般權限判斷)
   forceEditAll = false;
 
+  // 手機號碼驗證：若有填寫，必須至少10碼且只能為數字
+  cellPhoneValidator = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value || String(value).trim() === '') return null;
+    const str = String(value).trim();
+    if (!/^\d{10,}$/.test(str)) return { cellPhone: '手機號碼須為至少10碼的純數字' };
+    return null;
+  };
+
   // 當需要強制高權限編輯時，覆寫 canEdit 判斷
   override canEdit(): boolean {
     if (this.forceEditAll) {
@@ -69,19 +78,21 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
     SEX: [null],                                                                  // 性別
     CONTACT_ADDR: [null],                                                         // 聯絡地址
-    CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
-    CELL_PHONE: [null, Validators.maxLength(30)],                                 // 手機號碼
+    CONTACT_TEL: [null, Validators.maxLength(20)],                                // 聯絡電話
+    CELL_PHONE: [null, [Validators.maxLength(10), this.cellPhoneValidator]],       // 手機號碼
     E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
     // SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
     MEMBER_ID: [null],                                                            // 會員編號
     CRT_USR_No: [null as string | null],                                           // 建檔人編號
     CRT_USR_Name: [null as string | null],
-    COMPLAIN_DATE: [null],
+    COMPLAIN_DATE: [new Date() as Date | null],
     ALERT_DATE: [null],
     ANSWER_YN: [null],
     STATUS: [null],
     SUGG_TYPE: [null, Validators.required], // 意見類型（必填）
     CLASS_EMAIL: [null],
+    CLOSE_DATE: [null],                                                          // 結案日期（唯讀，由結案動作帶入）
+    SEQ_ID: [null as string | null],                                             // 客戶意見編號（唯讀顯示用）
   });
   uploadedFiles: any[] = [];
   mediaItems: { url: string; type: 'image' | 'video'; name: string }[] = [];
@@ -148,7 +159,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   data: any[] = [];
   private _originalDetails: any[] = [];
   private _detailCountPrev = 0;
-  private _alertDateInitiallyProvided = false;
   columns: EditColumn[] = [
     {
       field: 'ANSWER',
@@ -203,6 +213,12 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     super();
   }
 
+  /** 把 Date 物件格式化為本地時間的 ISO 字串（避免 toISOString() 轉 UTC 造成日期跑掉） */
+  private toLocalISOString(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T00:00:00`;
+  }
+
   getImageUrl(): string | null {
     if (this.rowdata && this.rowdata.FileName1) {
       return environment.ApiUrl + '/' + this.rowdata.FileName1;
@@ -217,10 +233,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (blob: Blob) => {
-          const objectUrl = window.URL.createObjectURL(blob);
-          window.open(objectUrl, '_blank');
+          const objectUrl = globalThis.URL.createObjectURL(blob);
+          globalThis.open(objectUrl, '_blank');
           // release after a while
-          setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+          setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
         },
 
       });
@@ -232,10 +248,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       if (apiBase && url.startsWith(apiBase)) {
         this.openProtectedUrl(url);
       } else {
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       }
     } catch (e) {
-      window.open(url, '_blank');
+      globalThis.open(url, '_blank');
     }
   }
 
@@ -268,10 +284,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             this.galleriaItems = [{ url: objectUrl, type: 'image', name: full.split('/').pop() || '' }];
             this.visible = true;
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
           },
           error: (err: any) => {
             const msg = err?.status === 404 ? '找不到檔案' : (err?.status === 401 ? '需要授權存取檔案' : '無法載入檔案');
@@ -287,7 +303,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     if (!this.rowdata) return;
     const raws = [this.rawExistingFile1, this.rawExistingFile2, this.rawExistingFile3];
     const clickedIndex = slot - 1;
-    const candidates = raws.map(r => r ?? null).filter((r, idx) => !!r) as string[];
+    const candidates = raws.map(r => r ?? null).filter(r => !!r) as string[];
     if (candidates.length === 0) {
       this.messageService.errorBubble('沒有可預覽的檔案');
       return;
@@ -307,9 +323,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         this.http.get(makeFull(u), { responseType: 'blob', headers: headers as any }).pipe(untilDestroyed(this)).subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             // autoset revoke after 60s
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
             resolve(objectUrl);
           },
           error: (err: any) => reject(err)
@@ -366,44 +382,15 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       try { statusCtrl.setValue('3', { emitEvent: false }); } catch (e) { /* ignore */ }
     }
 
-    const applyRules = (status: any) => {
-      const key = status ? String(status).toUpperCase() : '';
-      const isRequired = key === '1' || key === '2';
-      if (isRequired) {
-        alertCtrl.setValidators([Validators.required]);
-        alertCtrl.updateValueAndValidity({ emitEvent: true });
-        // 不在此處改變 enable/disable，以避免在使用者互動時被自動鎖定
-      } else {
-        alertCtrl.clearValidators();
-        alertCtrl.updateValueAndValidity({ emitEvent: true });
-        // 非必填時由後續邏輯決定是否 enable（例如檢視模式）
-      }
-    };
+    // ALERT_DATE 不設必填
+    alertCtrl.clearValidators();
+    alertCtrl.updateValueAndValidity({ emitEvent: false });
 
-    // 先套用一次當前狀態（只設定驗證規則）
-    applyRules(statusCtrl.value);
-
-    // 當 STATUS 改變時僅更新驗證器，不自動鎖定欄位
-    statusCtrl.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((s: any) => applyRules(s));
-
-    // 不監聽 ALERT_DATE 的 valueChanges 避免在使用者輸入後被自動鎖住
-
-    // 初始化後：若為檢視模式且不允許強制編輯，或是後端載入時已有 ALERT_DATE 且狀態為 Y/Z，則把欄位設為唯讀
+    // 初始化後：只有純檢視模式才 disable
     try {
-      const statusKey = statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
-      const isYorZ = statusKey === '1' || statusKey === '2';
       if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
-        console.log('DEBUG: init disable ALERT_DATE because Read mode');
-        alertCtrl.disable({ emitEvent: false });
-      } else if (this._alertDateInitiallyProvided && isYorZ) {
-        // 如果後端原本就有 ALERT_DATE 且狀態為 Y/Z，則初始化為唯讀
-        console.log('DEBUG: init disable ALERT_DATE because backend provided + status Y/Z');
         alertCtrl.disable({ emitEvent: false });
       } else {
-        // 其他情況（新增、編輯且無後端 ALERT_DATE），保持可編輯
-        console.log('DEBUG: init enable ALERT_DATE');
         alertCtrl.enable({ emitEvent: false });
       }
     } catch (e) {
@@ -435,84 +422,11 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
   ngOnInit(): void {
     this.initializePage('CPM12050', this.dataForm);
-    // 讀取導航 state 是否帶入 forceEditAll
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.forceEditAll = !!state?.['forceEditAll'];
     this.loadOptions();
-    // 若為編輯或檢視狀態，帶回資料
-    if (this.rowdata) {
 
-      // 預先載入下拉選項
-      this.onKindChange(this.rowdata.KIND_ID!);
-      if (this.rowdata.KIND_ID_SUB) this.onKindSubChange(this.rowdata.KIND_ID_SUB);
-      this.onOrgQueryChange(this.rowdata.ORG_ID!);
-      // 設定表單值（帶入 master 欄位）
-      this.dataForm.patchValue({
-        KIND_ID: this.rowdata.KIND_ID,
-        KIND_ID_SUB: this.rowdata.KIND_ID_SUB,
-        ORG_ID: this.rowdata.ORG_ID,
-        CLASS_ID: this.rowdata.CLASS_ID,
-        COMPLAIN_NOTES: this.rowdata.COMPLAIN_NOTES ?? null,
-        CUST_NAME: this.rowdata.CUST_NAME ?? null,
-        SEX: this.rowdata.SEX ?? null,
-        CONTACT_ADDR: this.rowdata.CONTACT_ADDR ?? null,
-        CONTACT_TEL: this.rowdata.CONTACT_TEL ?? null,
-        CELL_PHONE: this.rowdata.CELL_PHONE ?? null,
-        E_MAIL: this.rowdata.E_MAIL ?? null,
-        MEMBER_ID: this.rowdata.MEMBER_ID ?? null,
-        CLASS_EMAIL: (this.rowdata as any).CLASS_EMAIL ?? null,
-        COMPLAIN_DATE: this.rowdata.COMPLAIN_DATE ? new Date(this.rowdata.COMPLAIN_DATE) : null,
-        ALERT_DATE: this.rowdata.ALERT_DATE ? new Date(this.rowdata.ALERT_DATE) : null,
-        ANSWER_YN: (this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)
-          ? String((this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)).toUpperCase()
-          : null,
-        SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
-        STATUS: (this.rowdata as any).STATUS ? String((this.rowdata as any).STATUS).toUpperCase() : null
-      } as any);
-      // 設定既有檔案顯示名稱（取最後檔名）
-      const extractName = (p: any) => {
-        try {
-          if (!p) return null;
-          const s = String(p);
-          return s.split('\\').pop()?.split('/').pop() ?? s;
-        } catch (e) { return null; }
-      };
-      const raw1 = (this.rowdata as any).FileName1;
-      const raw2 = (this.rowdata as any).FileName2;
-      const raw3 = (this.rowdata as any).FileName3;
-      this.rawExistingFile1 = raw1 ?? null;
-      this.rawExistingFile2 = raw2 ?? null;
-      this.rawExistingFile3 = raw3 ?? null;
-      this.existingFile1 = extractName(raw1);
-      this.existingFile2 = extractName(raw2);
-      this.existingFile3 = extractName(raw3);
-      // 記錄載入時 ALERT_DATE 是否存在（若存在代表後端預設已填，則可依規則設為唯讀）
-      this._alertDateInitiallyProvided = !!this.rowdata.ALERT_DATE;
-      // 如果是檢視模式（Read），將 ANSWER_YN 與 STATUS 設為唯讀
-      if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
-        try {
-          (this.dataForm.controls as any).ANSWER_YN.disable();
-          (this.dataForm.controls as any).STATUS.disable();
-        } catch (e) {
-          // ignore if controls not exist
-        }
-      }
-      // 帶回明細資料
-      this.cpm12050Service.queryCPM12050Detail({
-        ID: this.rowdata.ID,
-        SEQ_ID: this.rowdata.SEQ_ID!
-      })
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          // 初始化 prev count
-          this._detailCountPrev = Array.isArray(this.data) ? this.data.length : 0;
-          // 保存原始明細快照以便後續判斷有哪些既有明細被修改（high-privilege 可編輯既有明細）
-          this._originalDetails = Array.isArray(this.data) ? JSON.parse(JSON.stringify(this.data)) : [];
-        });
-    }
-
-    // 隱藏的建檔人欄位需自動帶入目前使用者，送出時傳至後端
+    // 隱藏的建檔人欄位需自動帶入目前使用者
     const user = this.authService.getUserInfo();
     if (user) {
       this.dataForm.patchValue({
@@ -521,12 +435,87 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       });
     }
 
-    // 設定表單控制項的可編輯狀態：
-    // - 若由高權限打開（forceEditAll），則全部可編輯
-    // - 若為 Edit 模式，僅允許特定欄位可編輯，其餘欄位設為唯讀/disabled
-    this.configureFormControls();
-    // 一般情況也要啟動 ALERT_DATE 與 STATUS 的互動規則
-    this.setupAlertDateValidation();
+    // 編輯/檢視模式：打 API 取完整主檔 + 明細資料
+    if (this.rowdata) {
+      this.cpm12050Service.queryCPM12050Detail({
+        ID: this.rowdata.ID,
+        SEQ_ID: this.rowdata.SEQ_ID!
+      })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          const allRows = response.Data ?? [];
+          const master = allRows[0]; // 主檔資料（每筆都相同，取第一筆）
+          if (!master) return;
+
+          // 預先載入下拉選項（需要在 patchValue 前）
+          if (master.KIND_ID) this.onKindChange(master.KIND_ID);
+          if (master.KIND_ID_SUB) this.onKindSubChange(master.KIND_ID_SUB);
+          if (master.ORG_ID) this.onOrgQueryChange(master.ORG_ID);
+
+          // 填主表單
+          this.dataForm.patchValue({
+            KIND_ID: master.KIND_ID ?? null,
+            KIND_ID_SUB: master.KIND_ID_SUB ?? null,
+            SUGG_SOURCE: master.SUGG_SOURCE ?? null,
+            ORG_ID: master.ORG_ID ?? null,
+            CLASS_ID: master.CLASS_ID ?? null,
+            COMPLAIN_NOTES: master.COMPLAIN_NOTES ?? null,
+            CUST_NAME: master.CUST_NAME ?? null,
+            SEX: master.SEX ?? null,
+            CONTACT_ADDR: master.CONTACT_ADDR ?? null,
+            CONTACT_TEL: master.CONTACT_TEL ?? null,
+            CELL_PHONE: master.CELL_PHONE ?? null,
+            E_MAIL: master.E_MAIL ?? null,
+            MEMBER_ID: master.MEMBER_ID ?? null,
+            CLASS_EMAIL: master.CLASS_EMAIL ?? null,
+            SUGG_TYPE: master.SUGG_TYPE ?? null,
+            COMPLAIN_DATE: master.COMPLAIN_DATE ? new Date(master.COMPLAIN_DATE) : null,
+            ALERT_DATE: master.ALERT_DATE ? new Date(master.ALERT_DATE) : null,
+            CLOSE_DATE: master.CLOSE_DATE ? new Date(master.CLOSE_DATE) : null,
+            SEQ_ID: master.SEQ_ID ?? null,
+            ANSWER_YN: master.ANSWER_YN ? String(master.ANSWER_YN).toUpperCase() : null,
+            STATUS: master.STATUS ? String(master.STATUS).toUpperCase() : null
+          } as any);
+
+          // 既有檔案顯示名稱
+          const extractName = (p: any) => {
+            if (!p) return null;
+            const s = String(p);
+            return s.split('\\').pop()?.split('/').pop() ?? s;
+          };
+          this.rawExistingFile1 = master.FileName1 ?? null;
+          this.rawExistingFile2 = master.FileName2 ?? null;
+          this.rawExistingFile3 = master.FileName3 ?? null;
+          this.existingFile1 = extractName(master.FileName1);
+          this.existingFile2 = extractName(master.FileName2);
+          this.existingFile3 = extractName(master.FileName3);
+
+          // 明細 table：只取有 DETAIL_ID 的筆數
+          this.data = allRows.filter(r => r.DETAIL_ID != null).map(r => ({
+            ID: r.DETAIL_ID,
+            SEQ_ID: r.SEQ_ID,
+            ANSWER: r.ANSWER,
+            ANSWER_ID: r.ANSWER_ID,
+            ANSWER_DATE: r.ANSWER_DATE
+          }));
+          this._detailCountPrev = this.data.length;
+          this._originalDetails = JSON.parse(JSON.stringify(this.data));
+
+          if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
+            try {
+              (this.dataForm.controls as any).ANSWER_YN.disable();
+              (this.dataForm.controls as any).STATUS.disable();
+            } catch (e) { }
+          }
+
+          this.configureFormControls();
+          this.setupAlertDateValidation();
+        });
+    } else {
+      // 新增模式
+      this.configureFormControls();
+      this.setupAlertDateValidation();
+    }
   }
 
   // 當 table-edit 發生 dataChange（clean data）時會觸發此處理
@@ -554,23 +543,34 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
   // 依照 crudstatus 與 forceEditAll 設定各 form 控制項 enable/disable
   configureFormControls() {
-    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'ALERT_DATE', 'STATUS'];
-    // 若為高權限，全部啟用
+    // STATUS、CLOSE_DATE、SEQ_ID 在所有模式下皆為唯讀，由系統自動管理
+    const alwaysReadonly = ['STATUS', 'CLOSE_DATE', 'SEQ_ID'];
+    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'ALERT_DATE'];
+    // 若為高權限，除 CLOSE_DATE 外全部啟用
     if (this.forceEditAll) {
       const ctrls: any = this.dataForm.controls as any;
       Object.keys(ctrls).forEach((name: string) => {
-        ctrls[name].enable();
+        if (name === 'CLOSE_DATE') {
+          ctrls[name].disable();
+        } else {
+          ctrls[name].enable();
+        }
       });
       return;
     }
-    // Create：全部啟用； Read：保持現狀（initializePage 會處理 disable）； Edit：只啟用白名單
+    // Create：除 alwaysReadonly 外全部啟用
     if (this.crudstatus === CRUDStatus.Create) {
       const ctrls: any = this.dataForm.controls as any;
       Object.keys(ctrls).forEach((name: string) => {
-        ctrls[name].enable();
+        if (alwaysReadonly.includes(name)) {
+          ctrls[name].disable();
+        } else {
+          ctrls[name].enable();
+        }
       });
       return;
     }
+    // Edit：只啟用白名單，其餘（含 STATUS、CLOSE_DATE）disable
     if (this.crudstatus === CRUDStatus.Edit) {
       const ctrls: any = this.dataForm.controls as any;
       Object.keys(ctrls).forEach((name: string) => {
@@ -629,7 +629,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? '3',
             SUGG_TYPE: formValue.SUGG_TYPE,
             CLASS_EMAIL: formValue.CLASS_EMAIL,
-            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : undefined,
+            COMPLAIN_DATE: formValue.COMPLAIN_DATE ? this.toLocalISOString(new Date(formValue.COMPLAIN_DATE)) : undefined,
+            ALERT_DATE: formValue.ALERT_DATE ? this.toLocalISOString(new Date(formValue.ALERT_DATE)) : undefined,
             USR_NO: formValue.CRT_USR_No,
             USR_NAME: formValue.CRT_USR_Name
           };
@@ -686,7 +687,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
             CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
             STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : '1',
-            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
+            ALERT_DATE: formValue.ALERT_DATE ? this.toLocalISOString(new Date(formValue.ALERT_DATE)) : (this.rowdata?.ALERT_DATE ? this.toLocalISOString(new Date(this.rowdata.ALERT_DATE)) : undefined),
             USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
             USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
           };
@@ -771,7 +772,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   }
 
 
-  onOrgQueryChange(orgId: string) {
+  onOrgQueryChange(_orgId: string) {
     // 不更動 orgIdOptions，讓 ORG_ID 與 ORG_ID_QUERY 完全獨立
     return;
   }

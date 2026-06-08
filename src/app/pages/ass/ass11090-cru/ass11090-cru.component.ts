@@ -77,8 +77,6 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     // 費用結轉科目區塊
     ExpenseAccountCode: [null as string | null], // 費用科目
     ExpenseAccountName: [''],
-    AccumulatedDepreciationCreditCode1: [null as string | null], // 累計折舊科目(貸)
-    AccumulatedDepreciationCreditName1: [''],
     // 折舊攤提科目區塊
     DepreciationDebitCode: [null as string | null], // 折舊科目(借)
     DepreciationDebitName: [''],
@@ -321,8 +319,6 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       // 費用結轉科目區塊
       ExpenseAccountCode: data.FEES_STYPE_ID_ACCNO ?? null,
       ExpenseAccountName: data.FEES_STYPE_ACCNO_NAME ?? '',
-      AccumulatedDepreciationCreditCode1: data.DEPRE_STYPE_ACCNO2 ?? null,
-      AccumulatedDepreciationCreditName1: data.DEPRE_STYPE_ACCNO2_NAME ?? '',
       // 折舊攤提科目區塊
       DepreciationDebitCode: data.DEPRE_STYPE_ACCNO ?? null,
       DepreciationDebitName: data.DEPRE_STYPE_ACCNO_NAME ?? '',

@@ -321,7 +321,7 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
         this.smallOption = [];
         if (!bId) return;
         this.dropdownApi
-          .queryFaClass1({ CLASS_ID: bId })
+          .queryFaClass1({ B_CLASS_ID: bId })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.middleOption = (opts ?? []).map((o) => ({
@@ -339,7 +339,7 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
         if (!mId) return;
         const bId = bCtrl.value ?? undefined;
         this.dropdownApi
-          .queryFaClass2({ B_CLASS_ID: bId, CLASS_ID: mId })
+          .queryFaClass2({ B_CLASS_ID: bId, M_CLASS_ID: mId })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             const mapped = (opts ?? []).map((o) => ({
@@ -357,7 +357,7 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
     const initialM = mCtrl.value;
     if (initialB) {
       this.dropdownApi
-        .queryFaClass1({ CLASS_ID: initialB })
+        .queryFaClass1({ B_CLASS_ID: initialB })
         .pipe(untilDestroyed(this))
         .subscribe((opts) => {
           this.middleOption = (opts ?? []).map((o) => ({
@@ -368,7 +368,7 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
     }
     if (initialB && initialM) {
       this.dropdownApi
-        .queryFaClass2({ B_CLASS_ID: initialB, CLASS_ID: initialM })
+        .queryFaClass2({ B_CLASS_ID: initialB, M_CLASS_ID: initialM })
         .pipe(untilDestroyed(this))
         .subscribe((opts) => {
           this.smallOption = (opts ?? []).map((o) => ({

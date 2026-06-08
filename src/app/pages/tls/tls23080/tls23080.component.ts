@@ -11,18 +11,18 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
@@ -127,6 +127,11 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
     ACT_PayAmt60: 'TotalPayAmt60',
     ACT_PayAmt22: 'TotalPayAmt22',
     ACT_PayAmt23: 'TotalPayAmt23',
+    ACT_PayAmt26: 'TotalPayAmt26',
+    ACT_PayAmt27: 'TotalPayAmt27',
+    ACT_PayAmt28: 'TotalPayAmt28',
+    ACT_PayAmt29: 'TotalPayAmt29',
+    ACT_PayAmt61: 'TotalPayAmt61',
 
     Tot_ACT_PayAmt: 'TotalTotPayAmt',
   };
@@ -432,13 +437,13 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
@@ -525,6 +530,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
     { field: 'ACT_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    { field: 'ACT_PayAmt26', header: '品牌已開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt27', header: '品牌未開票券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt28', header: '外送平台', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt29', header: 'EC', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt61', header: 'PayEasy', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];

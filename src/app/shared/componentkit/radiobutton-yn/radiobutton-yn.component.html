@@ -9,7 +9,8 @@
     <div *ngFor="let option of ynOptions" class="flex align-items-center">
       <p-radioButton [inputId]="controlName + option.value" [name]="controlName" [value]="option.value"
         [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-        [attr.aria-label]="label + ' ' + option.label" [title]="label + ' ' + option.label"></p-radioButton>
+        (keydown.enter)="handleEnterKey($event)" [attr.aria-label]="label + ' ' + option.label"
+        [title]="label + ' ' + option.label"></p-radioButton>
       <label [for]="controlName + option.value" class="ml-2">
         {{ option.label }}
       </label>

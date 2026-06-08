@@ -371,7 +371,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       rent_period: [0],
 
       // 會員卡
-      vip_yn: ['N'],
+      vip_yn: ['Y'],
       credit_card: [null],
 
       // 目標營業額
@@ -516,12 +516,25 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 路由狀態處理 ==========
   private async handleRouterState(): Promise<void> {
-    // 新增模式 - 初始化空表單 + 載入可用代扣款項目
+    // 新增模式（續約）- 從查詢頁帶入的 rowData 直接觸發，不再開 dialog
     if (this.isFormCreateable) {
       this.tlsBaseService.initializeEmptyForm(this.dataForm, 'TLS13020');
+      // initializePage 會把 rowdata（已審核合約）patch 進來，需明確覆蓋為新合約預設值
+      this.dataForm.get('approve_status')?.setValue('1');
       this.dataForm.get('apply_type')?.setValue('2');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
-      this.showContractSearchDialog = true; // 新增模式自動開啟合約查詢
+
+      const rowData = this.rowdata as any;
+      if (rowData?.ven_no && rowData?.tlt_no) {
+        // 從 TLS13020 查詢頁帶入，直接觸發續約資料載入
+        setTimeout(() => {
+          this.step1Component?.triggerRenewalFromSearch(rowData.ven_no, rowData.tlt_no);
+        }, 150);
+      } else {
+        // 沒有 rowData 時（如直接輸入 URL），保留 dialog 作為 fallback
+        this.showContractSearchDialog = true;
+      }
+
       await this.loadFareData('');
       return;
     }
@@ -535,7 +548,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // ========== 資料載入 ==========
   private async loadContractData(rowData: any): Promise<void> {
     try {
-      const talentId = rowData.talent_id || rowData.apply_no;
+      const talentId = String(rowData.talent_id || rowData.apply_no);
       const response = await this.apiService.queryTLS13010Detail(talentId).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
@@ -570,6 +583,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         // 載入位置資料（API 可能用 LocationDetails 或 Locations）
         const locationDetails = data.LocationDetails || data.Locations || [];
+        const contractBdate = this.dataForm.get('tlt_bdate')?.value;
+        const contractEdate = this.dataForm.get('tlt_edate')?.value;
         if (Array.isArray(locationDetails) && locationDetails.length > 0) {
           this.wizardState.locationData = locationDetails.map((item: any) => ({
             id: item.id,
@@ -583,8 +598,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',
-            tlt_bdate: item.tlt_bdate ? item.tlt_bdate.split('T')[0] : '',
-            tlt_edate: item.tlt_edate ? item.tlt_edate.split('T')[0] : '',
+            tlt_bdate: item.tlt_bdate ? new Date(item.tlt_bdate.split('T')[0])
+                     : (contractBdate ? new Date(contractBdate) : undefined),
+            tlt_edate: item.tlt_edate ? new Date(item.tlt_edate.split('T')[0])
+                     : (contractEdate ? new Date(contractEdate) : undefined),
             _status: 'original' as DataStatus
           }));
         }
@@ -795,9 +812,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
-  /**
-   * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
-   */
   /**
    * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
    * 必須明確 map 每種類型所需的欄位，避免多餘欄位（如 limit_amt）

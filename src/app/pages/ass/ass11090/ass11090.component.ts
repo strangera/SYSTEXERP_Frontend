@@ -1,5 +1,6 @@
 import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
@@ -14,11 +15,12 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 import { ASS11090Data, ASS11090QueryRequest } from './ass11090.model';
 import { Option } from '@service/utility/dropdown-api.model';
 
 // 3.1.1.9 資材中分類會計科目維護作業
+@UntilDestroy()
 @Component({
   selector: 'app-ass11090',
   templateUrl: './ass11090.component.html',
@@ -105,8 +107,8 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
   ngOnInit(): void {
     this.initializePage('ASS11090', '/ASS/ASS11090CRU', this.queryForm, this.onSubmit.bind(this));
     this.loadBigClassOptions();
-    this.loadMidClassOptions();
     this.loadAccountingOptions();
+    this.setupClassCascade();
   }
 
   /**
@@ -126,10 +128,10 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
   }
 
   /**
-   * 載入中分類下拉選項
+   * 載入指定大分類底下的中分類下拉選項
    */
-  private loadMidClassOptions(): void {
-    this.ass11020Service.queryASS11020({}).subscribe({
+  private loadMidClassOptions(bClassId: string): void {
+    this.ass11020Service.queryASS11020({ B_CLASS_ID: bClassId }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
@@ -139,6 +141,28 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
         this.midClassOptions.set(options);
       },
     });
+  }
+
+  /**
+   * 大→中分類聯動：大分類變動時清空中分類並重新載入該大分類底下的中分類
+   */
+  private setupClassCascade(): void {
+    this.queryForm.controls.B_CLASS_ID.valueChanges.pipe(
+      distinctUntilChanged(),
+      untilDestroyed(this),
+    ).subscribe(bClassId => {
+      this.queryForm.patchValue({ M_CLASS_ID: null }, { emitEvent: false });
+      this.midClassOptions.set([]);
+      if (bClassId) {
+        this.loadMidClassOptions(bClassId);
+      }
+    });
+
+    // initializePage 回填查詢狀態時，valueChanges 可能已錯過，補一次初始載入
+    const initialBClassId = this.queryForm.controls.B_CLASS_ID.value;
+    if (initialBClassId) {
+      this.loadMidClassOptions(initialBClassId);
+    }
   }
 
   /**

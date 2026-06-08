@@ -421,28 +421,49 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // #reigion Excel匯入
   onImportExcelSubmit(event: FileUploadHandlerEvent) {
     if (!event || !event.files || event.files.length === 0) return;
+    this.excelLoading = true;
     const file = event.files[0];
     const sheetName = this.importForm.get('sheetName')?.value || '';
-    this.tls51070Service.uploadTLS51070(file, sheetName).pipe(untilDestroyed(this), finalize(() => { this.excelUploadComponent.clearFiles(); })).subscribe(res => {
-      const data = res?.Data;
-      // 如果有錯誤檔案路徑，呼叫統一的錯誤報告服務
-      // --- 第一層：處理 ErrorFilePath (資料列內容有誤) ---
-      // 這會處理你之前貼的那種「成功 0 筆，失敗 6 筆」的情況
-      if (data?.ErrorFilePath) {
-        this.messageService.errorBubble(`匯入失敗，請確認錯誤檔：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆。`);
-        this.downloadErrorFile(data.ErrorFilePath);
 
-        if (data.SuccessCount > 0) {
-          this.importDialogVisible = false;
-          this.onSubmit(this.queryForm);
-        }
+    this.tls51070Service.uploadTLS51070(file, sheetName).pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.excelUploadComponent.clearFiles();
+        this.excelLoading = false;
+      })
+    ).subscribe(res => {
+      const data = res?.Data;
+
+      // --- 第一層：處理 ErrorFilePath (匯入失敗，包含錯誤檔案路徑) ---
+      if (data?.ErrorFilePath) {
+        // 拼接後端完整網址連結
+        const fullDownloadUrl = `${environment.ApiUrl}/${data.ErrorFilePath}`;
+
+        this.messageService.confirm({
+          header: '匯入失敗',
+          // 第一行：成功與失敗筆數
+          // 第二行：後端完整位置（以超連結樣式呈現，並設定 target="_blank"）
+          message: `匯入失敗，錯誤筆數：${data.ErrorCount || 0}，正確筆數：${data.SuccessCount || 0}<br>` +
+            `檔案位置：<a href="${fullDownloadUrl}" target="_blank" style="color: var(--primary-color); text-decoration: underline; word-break: break-all;">${fullDownloadUrl}</a>`,
+          icon: 'times-circle',
+          showIcon: true,
+          acceptLabel: '確定',
+          showRejectButton: false, // 只留下一顆確定按鈕
+          accept: () => {
+            // 點擊下方確定按鈕時，一樣貼心幫他觸發下載
+            // this.downloadErrorFile(data.ErrorFilePath);
+
+            if (data.SuccessCount > 0) {
+              this.importDialogVisible = false;
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
         return;
       }
 
-      // --- 第二層：處理 Data.Errors (預檢失敗，例如：找不到工作表) ---
-      // 這會命中你現在貼的這個案例：SuccessCount=0, ErrorCount=0, 但 Errors 有內容
+      // --- 第二層：處理 Data.Errors (預檢失敗，例如找不到工作表) ---
       if (data?.Errors && data.Errors.length > 0) {
-        // 顯示第一條錯誤訊息，或用分號串接
         const errorDetail = data.Errors.join('；');
         this.messageService.errorBubble(errorDetail);
         return;
@@ -503,7 +524,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   //!!! 國際條碼/商品管理編號/廠商貨號

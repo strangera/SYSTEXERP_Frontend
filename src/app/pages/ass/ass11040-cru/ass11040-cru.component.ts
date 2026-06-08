@@ -298,7 +298,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   /** 載入中分類選項 */
   loadMidCategoryOptions(bigCategoryCode: string): void {
     this.dropdownApiService
-      .queryFaClass1({ CLASS_ID: bigCategoryCode })
+      .queryFaClass1({ B_CLASS_ID: bigCategoryCode })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.midCategoryCodeOptions = opts ?? [];
@@ -314,7 +314,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.dropdownApiService
       .queryFaClass2({
         B_CLASS_ID: bigCategoryCode || undefined,
-        CLASS_ID: midCategoryCode,
+        M_CLASS_ID: midCategoryCode,
       })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {

@@ -9,6 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { TreeNode } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -51,6 +52,7 @@ import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sy
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   @ViewChild('multiSelectTemp', { static: true }) multiSelectTemp!: TemplateRef<any>;
+  @ViewChild('table') tableComponent!: TableEditComponent;
   @ViewChild('table2') tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     user_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.englishNumberSymbolValidator]], // 使用者編號
@@ -104,10 +106,12 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   private sysIdOptionsList: any[] = []; // 改為 any[] 因為我們要用到 CRT_USR_Name
   private sysSubModuleList: any[] = [];
 
+  defaultInsertData: Partial<UserSys3700Detail> = {};
+
   data: UserSys3700Detail[] = [];
   selectedRows: UserSys3700Detail[] = [];
   columns: EditColumn[] = [
-    { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value' },
+    { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
     { field: 'Building_No', header: '館別代碼', width: '110px', type: 'dropdown', options: this.SYS3700_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
     { field: 'Floor_No', header: '樓層代碼', width: '110px', type: 'dropdown', options: this.SYS3800_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
     { field: 'Area_No', header: '區域代碼', width: '110px', type: 'dropdown', options: this.SYS3A00_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No' },
@@ -186,9 +190,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       });
     }
     this.dataForm.get('org_ID')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
-      if (this.isFormCreateable && value && this.data.length === 0) {
-        this.data = [{ ID: 0, User_No: this.dataForm.get('user_No')?.value, Org_ID: value, Building_No: null, Floor_No: null, Area_No: null, TLT_No: null, TLT_Kind: null, BUS_Type: null }];
-      }
+      this.defaultInsertData = { Org_ID: value || null };
     });
   }
 
@@ -285,10 +287,11 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      if (this.data.some((item: UserSys3700Detail) => !item.Org_ID && !item.Building_No && !item.Floor_No && !item.Area_No && !item.TLT_No && !item.TLT_Kind && !item.BUS_Type)) {
-        this.messageService.errorBubble('請至少填寫一個組織代碼、館別代碼、樓層代碼、區域代碼、專櫃編號、專櫃類型或大分類代碼');
+      if (this.data.some((item: UserSys3700Detail) => !item.Org_ID)) {
+        this.messageService.errorBubble('專櫃權限清單中，組織代碼為必填');
         return;
       }
+      if (this.tableComponent && !this.tableComponent.validateAndShowErrors()) return;
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);

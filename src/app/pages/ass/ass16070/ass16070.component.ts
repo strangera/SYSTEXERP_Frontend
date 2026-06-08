@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -75,7 +75,7 @@ interface SortItem {
     InputTextModule,
   ],
 })
-export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
+export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> implements OnInit {
   showTable = true;
   data: Ass16070Row[] = [];
   totalRecords = 0;
@@ -196,7 +196,7 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -300,11 +300,11 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -317,15 +317,14 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
   }
 
   private initRows(rows: Ass16070Row[]): Ass16070Row[] {
-    const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
     rows.forEach((r, idx) => {
-      (r as any)._rowKey = `${seed}_${idx}`;
+      // 優先使用調撥單號，萬一為空則用 index 當備援
+      const moveId = r.WHMOVE_ID ?? `fallback_${idx}`;
+      (r as any)._rowKey = `ass16070_${moveId}`;
       (r as any)._detailLoaded = false;
       (r as any).expansionLoading = false;
       r.Details = [];
     });
-
     return rows;
   }
 
@@ -372,12 +371,12 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
       APRV_EMP_ID: raw.APRV_EMP_ID || null,
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }
@@ -480,7 +479,7 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
   }
 
   confirmQueryGoodsSelection(): void {
-    if (!this.queryGoodsSelectedRows || !this.queryGoodsSelectedRows.length) {
+    if (!this.queryGoodsSelectedRows?.length) {
       return;
     }
 

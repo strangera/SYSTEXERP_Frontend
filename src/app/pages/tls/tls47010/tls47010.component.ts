@@ -1,23 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import {
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { TLS47010Service } from '../../../service/api/tls/tls47010.service';
-import { DataTypeService } from '../../../service/basic/queryDEFTBL.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls47010',
   templateUrl: './tls47010.component.html',
-  styleUrls: ['./tls47010.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -27,78 +28,37 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     ReactiveFormsModule,
     MultiSelectComponent,
     TranslateModule,
+    AsyncPipe
   ],
 })
-export class TLS47010Component extends BasicQueryPageComponent<any> implements OnInit {
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  dataTypeOptions: any[] = [];
-
+export class TLS47010Component extends BasicQueryPageComponent<unknown> implements OnInit {
+  private readonly tls47010Service = inject(TLS47010Service);
+  private readonly dropDown = inject(DropdownApiService);
+  ECRNoOptions = this.dropDown.queryPos1002Filtered();
+  dataTypeOptions = this.dropDown.queryDefTbl();
   queryForm = this.formBuilder.group({
-    ECR_No: [[], Validators.required],
-    dataType: [[], Validators.required],
-    ...createPaginationConfig([]),
+    DEFTBL_List: [[], Validators.required],
+    POS1002_List: [[], Validators.required],
   });
-
-  constructor(
-    private dataTypeService: DataTypeService,
-    private tls47010Service: TLS47010Service,
-  ) {
-    super();
-  }
-
+  private allSelected = false;
+  constructor() { super(); }
   ngOnInit(): void {
-    this.initializePage('TLS47010', '/tls/tls47010cru', this.queryForm);
-
-    this.tls47010Service.ECROptions({}).subscribe((res) => {
-      this.ECRNoOptions =
-        res?.Data?.map((x: any) => ({
-          label: `${x.ECR_No} - ${x.ECR_Name} - ${x.ECR_TLT_Name}`,
-          value: x.ECR_No,
-        })) || [];
-    });
-
-    this.dataTypeService.getDataOptions().subscribe((res) => {
-      this.dataTypeOptions = res.map((x: any) => ({
-        label: `${x.No} - ${x.Name}`,
-        value: x.No,
-      }));
-    });
+    this.initializePage('TLS47010');
   }
-
-  onClearForm(): void {
-    this.queryForm.reset();
+  // 用來接收子元件傳上來的全選狀態
+  onEcrNoAllSelected(isAllSelected: boolean): void {
+    console.log('全選狀態:', isAllSelected);
+    this.allSelected = isAllSelected;
   }
-  onDownload(): void {
-    const formValue = this.queryForm.value;
-
-    const DEFTBL_List = formValue.dataType || []; // 資料類別（對應 TBL_Name）
-    const POS1002_List = formValue.ECR_No || [];  // 收銀機號（對應 ECR_No）
-
-    if (!DEFTBL_List.length || !POS1002_List.length) {
-      this.messageService.warnBubble('請選擇收銀機號與資料類別');
-      return;
-    }
-
-    const payload = {
-      DEFTBL_List,
-      POS1002_List,
-    };
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls47010Service.insertTLS47010(payload).subscribe({
-      next: () => {
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const requestBody = {
+        POS1002_List: this.allSelected ? [] : form.value.POS1002_List,
+        DEFTBL_List: form.value.DEFTBL_List
+      }
+      this.tls47010Service.insertTLS47010(requestBody).pipe(finalize(() => this.loading = false)).subscribe(() => {
         this.messageService.successBubble('下傳成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('下傳失敗');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+      });
     });
   }
-
 }

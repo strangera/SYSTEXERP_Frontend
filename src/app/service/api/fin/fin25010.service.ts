@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -19,7 +20,7 @@ export interface QueryFIN25010Request extends BaseQueryRequest {
 // 產生電匯付款資料 Response
 export interface FIN25010Data {
   ID: number;                // 主鍵ID
-  PAM_No?: string;           // 匯款來源單號
+  PAM_No: string;           // 匯款來源單號
   D_Date?: string;           // 建立日期
   PTA_Date?: string;         // 付款日期
   Remit_Status?: string;     // 是否形成電匯(Y/N)
@@ -78,6 +79,16 @@ export interface QueryAddFIN25010Response {
 export interface InsertFIN25010Request {
   D_Date?: string;            // 建立日期
   APS3009?: APS3009Item[];    // APS3009 資料表項目
+}
+
+export interface DeleteFIN25010Item {
+  // 匯款來源單號
+  PAM_No: string;
+}
+
+/** 刪除電匯付款資料請求 */
+export interface DeleteFIN25010Request {
+  selectList: DeleteFIN25010Item[];
 }
 
 export interface APS3009Item {
@@ -141,5 +152,10 @@ export class FIN25010Service {
   // 新增 APS3009 資料表
   insertFIN25010(data: InsertFIN25010Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertFIN25010`, data);
+  }
+
+  // 刪除資料
+  deleteFIN25010(body: DeleteFIN25010Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteFIN25010`, body);
   }
 }

@@ -70,57 +70,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   originalData: IODDetail[] = [];
   data: IODDetail[] = [];
   selectedItems: IODDetail[] = [];
-  editColumns: EditColumn[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'POD_SubQty', header: '應驗數量', format: formatAmount },
-    {
-      field: 'ODD_ConfirmQty',
-      header: '驗收數量',
-      width: '100px',
-      type: 'inputNumber',
-      validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)],
-      // 將所有計算邏輯放在這裡
-      calculate: (row) => {
-        const confirmQty = Number(row.ODD_ConfirmQty ?? 0);
-        const buyPrice = Number(row.ODD_BuyPrc ?? 0);
-        const salePrice = Number(row.ODD_SalePrc ?? 0);
-        const stockTaxType = row.PLU_StockTaxType;
-        const saleTaxType = row.PLU_TaxType;
-
-        const buyNet = Math.round(buyPrice * confirmQty);
-        const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
-        const buyAmt = buyNet + buyTax;
-        const saleAmt = Math.round(salePrice * confirmQty); // 驗收數量 * 含稅售價 (含稅小計)
-
-        let saleTax = 0;
-        if (saleTaxType === '1') {
-          // 假設稅率為 0.05 (5%)
-          // 從含稅金額中計算稅額： 含稅金額 * (稅率 / (1 + 稅率))
-          // 這是更精確的算法 (約等於 1/21)
-          saleTax = Math.round(saleAmt * 0.05 / 1.05);
-        }
-        return {
-          'ODD_BuyNet': buyNet,
-          'ODD_BuyTax': buyTax, // 假設你的資料物件有這個欄位
-          'ODD_BuyAmt': buyAmt, // 假設你的資料物件有這個欄位
-          'ODD_SaleTax': saleTax, // 假設你的資料物件有這個欄位
-          'ODD_SaleAmt': saleAmt,
-        };
-      }
-    },
-    { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
-    { field: 'UNIT_NAME', header: '商品單位' },
-    { field: 'ODD_BuyPrc', header: '採購單價', format: formatAmount },
-    { field: 'ODD_BuyPrc', header: '驗收單價', format: formatAmount },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
-    { field: 'ODD_BuyNet', header: '未稅金額', format: formatAmount }, //ODD_BuyPrc * ODD_ConfirmQty驗收數量，四捨五入取整數
-    { field: 'ODD_SalePrc', header: '售價', format: formatAmount },
-    { field: 'ODD_SaleAmt', header: '售價小計', format: formatAmount }, // ODD_SalePrc * ODD_ConfirmQty驗收數量
-    { field: 'PO_No', header: '採購單編號' },
-    { field: 'ODD_Remark', header: '單項備註', type: 'input', width: '150px' },
-  ]
+  editColumns: EditColumn[] = [];
   constructor(
     public readonly tls52030Service: Tls52030Service,
     private readonly dropdown: DropdownApiService,
@@ -135,12 +85,85 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       // this.dataForm.controls.LOGO_No.disable();
     }
     this.loadDropdownOptions();
+    this.initEditColumns();
     if (!this.isFormCreateable) {
       this.tls52030Service.GetPOS2019({ ODM_No: this.rowdata?.ODM_No }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data.Data;
         this.originalData = JSON.parse(JSON.stringify(response.Data.Data));
       });
     }
+  }
+  initEditColumns() {
+    // 判斷是否為「反審核可修改」狀態：處於編輯模式，且有反審核日期
+    const isReApprovedAndEditable = this.isFormEditable && !!this.rowdata?.ReAPRV_Date;
+
+    this.editColumns = [
+      { field: 'PLU_MagNo', header: '商品管理編號' },
+      { field: 'PLU_Name', header: '商品名稱' },
+      { field: 'PLU_No', header: '國際條碼' },
+      { field: 'POD_SubQty', header: '應驗數量', format: formatAmount },
+      {
+        field: 'ODD_ConfirmQty',
+        header: '驗收數量',
+        width: '100px',
+        type: 'inputNumber',
+        validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)],
+        calculate: (row) => this.ComponentLineCalculate(row) // 抽成共用方法
+      },
+      { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
+      { field: 'UNIT_NAME', header: '商品單位' },
+      // 【核心改動】：現在是「採購單價」開放反審核修改
+      {
+        field: 'ODD_BuyPrc',
+        header: '採購單價',
+        format: formatAmount,
+        // 如果是反審核狀態，切換成可輸入型態
+        type: isReApprovedAndEditable ? 'inputNumber' : undefined,
+        minFractionDigits: 2,
+        // 當使用者修改「採購單價」時，即時重新計算未稅金額、稅額等
+        calculate: (row) => this.ComponentLineCalculate(row)
+      },
+
+      // 驗收單價回復為純顯示（唯讀）
+      {
+        field: 'ODD_BuyPrc',
+        header: '驗收單價',
+        format: formatAmount
+      },
+
+      { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
+      { field: 'ODD_BuyNet', header: '未稅金額', format: formatAmount },
+      { field: 'ODD_SalePrc', header: '售價', format: formatAmount },
+      { field: 'ODD_SaleAmt', header: '售價小計', format: formatAmount },
+      { field: 'PO_No', header: '採購單編號' },
+      { field: 'ODD_Remark', header: '單項備註', type: 'input', width: '150px' },
+    ];
+  }
+  ComponentLineCalculate(row: IODDetail) {
+    const confirmQty = Number(row.ODD_ConfirmQty ?? 0);
+    const buyPrice = Number(row.ODD_BuyPrc ?? 0); // 這邊會即時讀到使用者修改後的驗收單價
+    const salePrice = Number(row.ODD_SalePrc ?? 0);
+    const stockTaxType = row.PLU_StockTaxType;
+    const saleTaxType = row.PLU_TaxType;
+
+    const buyNet = Math.round(buyPrice * confirmQty);
+    const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+    const buyAmt = buyNet + buyTax;
+    const saleAmt = Math.round(salePrice * confirmQty);
+
+    let saleTax = 0;
+    if (saleTaxType === '1') {
+      saleTax = Math.round(saleAmt * 0.05 / 1.05);
+    }
+
+    return {
+      'ODD_BuyPrc': buyPrice, // 確保單價同步回報
+      'ODD_BuyNet': buyNet,
+      'ODD_BuyTax': buyTax,
+      'ODD_BuyAmt': buyAmt,
+      'ODD_SaleTax': saleTax,
+      'ODD_SaleAmt': saleAmt,
+    };
   }
   loadDropdownOptions() {
     // 專門清空資料的共用方法

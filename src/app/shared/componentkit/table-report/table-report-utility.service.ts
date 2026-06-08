@@ -1,6 +1,5 @@
-// table-utility.service.ts
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
@@ -13,7 +12,6 @@ import { ReportColumn } from './table-report.model';
 export class TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
   ) { }
 
@@ -42,7 +40,7 @@ export class TableReportUtilityService {
     return true;
   }
 
-  private safeUrlCache = new Map<string, SafeUrl>();
+  private readonly safeUrlCache = new Map<string, SafeUrl>();
 
   getImage(url: any): SafeUrl | string {
     // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
@@ -60,7 +58,7 @@ export class TableReportUtilityService {
         : environment.ApiUrl;
 
       // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
-      let cleanPath = url.replace(/~/g, '');
+      let cleanPath = url.replaceAll('~', '');
       if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.slice(1);
       }
@@ -68,7 +66,7 @@ export class TableReportUtilityService {
       // 3. 拼接並處理可能的重複斜線
       const finalUrl = `${baseUrl}/${cleanPath}`;
 
-      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+      const safeUrl = finalUrl;
       this.safeUrlCache.set(url, safeUrl);
       return safeUrl;
     } catch (e) {
@@ -174,9 +172,21 @@ export class TableReportUtilityService {
     const groupColumn = columns.find(c => c.field === groupRowsBy);
 
     // 如果該分組欄位有定義 format，就用 format 過的值，否則直接轉字串
-    if (groupColumn && groupColumn.format) {
+    if (groupColumn?.format) {
       return String(groupColumn.format(rawValue, 0, rowData) ?? '');
     }
     return String(rawValue ?? '');
+  }
+
+  /**
+  * 格式化數據(目前可自動抓sys1000的值，未來可擴充其他類型的格式化)
+  */
+  getFormattedValue(col: ReportColumn, val: any, rowIndex: number, rowData: any): any {
+    // 1. 優先使用明確定義的 format
+    if (col.format) {
+      return col.format(val, rowIndex, rowData);
+    }
+    // 2. 預設回傳原始值
+    return val;
   }
 }

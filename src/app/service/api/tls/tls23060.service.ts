@@ -60,6 +60,15 @@ export class TLS23060Service {
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
+  /** 明細表匯出 Excel（不分頁） */
+exportTLS23060DetailExcel(body: any): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23060Detail`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
 
   /**
    * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）

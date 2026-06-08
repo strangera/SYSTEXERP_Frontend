@@ -253,9 +253,9 @@ export class Fin55130TableReportComponent {
 
     // 5. 取得完整網址並開啟
     const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin55130cru?${params.toString()}`);
-    const finalUrl = `${window.location.origin}${externalUrl}`;
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
 
-    window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    globalThis.open(finalUrl, '_blank', 'noopener,noreferrer');
   }
 
   // 分組標題

@@ -31,26 +31,6 @@ export class AppMenulistService {
       ],
       prog_sort: 0 // 給寫死的首頁一個排序值
     },
-    {
-      prog_No: '999',
-      label: '測試',
-      items: [
-        {
-          prog_No: '900001',
-          label: '範例',
-          parent_id: '999',
-          routerLink: '/account/demo',
-          expanded: false,
-          icon: 'pi pi-bookmark',
-          hasChildrenOnly: false,
-          prog_ispage: 'Y',
-          prog_sort: '1',
-          selected: false,
-          isSubModule: true
-        }],
-      icon: 'pi pi-cog',
-      prog_sort: 999 // 給寫死的測試一個排序值
-    }
   ];
 
   // 建立選單模型 (遞迴方式)

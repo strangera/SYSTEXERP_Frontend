@@ -91,8 +91,9 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
       AccNoTo: toAcc,
       DateFrom: this.dateFrom || '',
       DateTo: this.dateTo || '',
+      VouStatusList: ['3'], // 資產負債表只顯示已過帳的資料
       PageSize: 999,
-      PageIndex: 1
+      PageIndex: 1,
     };
 
     this.fin55120Service.queryFIN55050(body).pipe(
@@ -145,8 +146,8 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
       params.set('vou', rowData.VouStatus);
       // 5. 取得完整網址並開啟
       const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin55120detail?${params.toString()}`);
-      const finalUrl = `${window.location.origin}${externalUrl}`;
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+      globalThis.open(finalUrl, '_blank', 'noopener,noreferrer');
       console.log('跳轉到傳票明細:', rowData.VouNo);
     }
   }

@@ -181,7 +181,7 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
           this.onSubmit(this.queryForm);
           const url = res.Data?.Print_URL || '';
           if (url) {
-            window.open(environment.ApiUrl + url);
+            globalThis.open(environment.ApiUrl + url);
           }
         },
       });

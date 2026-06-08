@@ -7,7 +7,7 @@ import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020Det
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -15,6 +15,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31020cru',
@@ -56,7 +57,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     TempCounterAmtRate: [''],//臨時櫃業績佔比
 
     MonthlyBudgetTotal: [''],//月營業目標
-    MonthlySalesTotal: [''],//營業實績
+    MonthlySalesTotal: [''],//月營業實績
     CompletionRate: [''],//完成率
 
   });
@@ -67,41 +68,33 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
 
-  columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-    // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
-    // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
-
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+  columns: ReportColumn[] = [
+    { field: 'building_desc', header: '館別', align: 'left' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
+    { field: 'location_no', header: '位置編號', align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '月營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2) },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
-    { field: 'month', header: '月累計' },
+    { field: '營業額', header: '營業額' },
+    { field: '營業佔比', header: '營業佔比' },
+    { field: '客單價', header: '客單價' },
+    { field: '營業坪效', header: '營業坪效' },
+    { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -136,7 +129,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS31030', this.dataForm);
+    this.initializePage('TLS31020', this.dataForm);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
     console.log('這是前面的查詢條件', this.queryConditions);
@@ -178,7 +171,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     } else {
@@ -188,7 +181,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }
@@ -228,6 +221,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
         AchievementRate: this.footerTotal.AvgAchievementRate,
         CompletionRate: this.footerTotal.AvgCompletionRate,
+        PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
       } : null;
       // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
 

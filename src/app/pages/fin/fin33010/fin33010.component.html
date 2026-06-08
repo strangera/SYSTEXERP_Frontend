@@ -21,8 +21,8 @@
               role="button"
               tabindex="0"
               aria-label="收款單號 選擇"
-              (click)="rcvDialogVisible = true"
-              (keydown.enter)="$event.preventDefault(); rcvDialogVisible = true"
+              (click)="openRcvDialog()"
+              (keydown.enter)="$event.preventDefault(); openRcvDialog()"
             >
               <app-input-text
                 class="flex-1"

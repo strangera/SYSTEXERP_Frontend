@@ -23,6 +23,7 @@
       </rules>
     </rewrite>
   </system.webServer>
+  <!-- 有沒有下這段都不知道 -->
   <location path="index.html">
     <system.webServer>
       <staticContent>

@@ -158,7 +158,7 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
 
   private loadMidCategoryOptions(bClassId: string): void {
     this.dropdownApi
-      .queryFaClass1({ CLASS_ID: bClassId || null })
+      .queryFaClass1({ B_CLASS_ID: bClassId || null })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.midCategoryOptions = opts ?? [];
@@ -171,7 +171,7 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
       return;
     }
     this.dropdownApi
-      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, M_CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.smallCategoryOptions = opts ?? [];

@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { AccordionModule } from 'primeng/accordion';
+import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 //建立查詢項目的interface
 export interface TLTContract {
@@ -72,17 +72,13 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   tlt_openOptions: option[] = [ //營運狀況選單
-    { 'value': "閉店/撤櫃", 'label': '閉店/撤櫃' },
-    { 'value': "營業中", 'label': '營業中' },
-    { 'value': "合約結束", 'label': '合約結束' },
-    { 'value': "核准時合約尚未開始", 'label': '核准時合約尚未開始' },
-    { 'value': "洽談中", 'label': '洽談中' },
-    { 'value': "簽約中", 'label': '簽約中' },
-    { 'value': "已作廢", 'label': '已作廢' }
+    { value: '0', label: '已撤櫃' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' }, // user需求需使用 '合約未生效'
   ];
   statusOptions: option[] = [ // 合約狀態的下拉選單
-    { 'value': "1", 'label': '未審核' },
-    { 'value': "2", 'label': '已審核' },
+    { value: "1", label: '未審核' },
+    { value: "2", label: '已審核' },
   ];
 
   tlt_noOptions: apiOption[] = []; // 專櫃清單的下拉選單
@@ -184,14 +180,14 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
       });
       // 區域(SYS3A00) 下拉選單
       this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
-          this.areaOptions = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
+        this.areaOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
 
-          console.log('areaOptions:', this.areaOptions);
-        });
+        console.log('areaOptions:', this.areaOptions);
+      });
       // 專櫃大分類(TLTBUSTYPE) 下拉選單
       this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
         this.bus_typeOptions = response.Data.map((item: apiOption) => ({

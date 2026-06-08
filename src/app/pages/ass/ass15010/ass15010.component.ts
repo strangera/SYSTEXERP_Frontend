@@ -163,7 +163,7 @@ export class ASS15010Component
         this.midClassOptions = [];
         this.smallClassOptions = [];
         if (!bClassId) return;
-        this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
           this.midClassOptions = (options ?? []).map((item) => ({
             value: String(item.value),
             label: item.label,
@@ -179,7 +179,7 @@ export class ASS15010Component
         if (!mClassId) return;
         const bForSmall = bCtrl.value ?? undefined;
         this.dropdownApi
-          .queryFaClass2({ B_CLASS_ID: bForSmall, CLASS_ID: mClassId })
+          .queryFaClass2({ B_CLASS_ID: bForSmall, M_CLASS_ID: mClassId })
           .pipe(untilDestroyed(this))
           .subscribe((options) => {
           this.smallClassOptions = (options ?? []).map((item) => ({
@@ -192,7 +192,7 @@ export class ASS15010Component
     const initialBClassId = bCtrl.value;
     const initialMClassId = mCtrl.value;
     if (initialBClassId) {
-      this.dropdownApi.queryFaClass1({ CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+      this.dropdownApi.queryFaClass1({ B_CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
         this.midClassOptions = (options ?? []).map((item) => ({
           value: String(item.value),
           label: item.label,
@@ -201,7 +201,7 @@ export class ASS15010Component
     }
     if (initialMClassId && initialBClassId) {
       this.dropdownApi
-        .queryFaClass2({ B_CLASS_ID: initialBClassId, CLASS_ID: initialMClassId })
+        .queryFaClass2({ B_CLASS_ID: initialBClassId, M_CLASS_ID: initialMClassId })
         .pipe(untilDestroyed(this))
         .subscribe((options) => {
         this.smallClassOptions = (options ?? []).map((item) => ({

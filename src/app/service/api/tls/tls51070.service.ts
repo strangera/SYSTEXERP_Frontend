@@ -144,4 +144,9 @@ export class Tls51070Service {
   queryPOS2013_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2013_DropDownList`, body);
   }
+
+  // 查詢 廠商(POS2013) 設定檔(新增時使用)
+  queryTLTTALENT_ActiveStoreWay2(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_ActiveStoreWay2`, body);
+  }
 }

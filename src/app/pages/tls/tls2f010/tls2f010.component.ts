@@ -51,7 +51,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
     COMM_MONEY_TYPE: [null],
-    COMM_YM: [new Date()],
+    COMM_YM: [null],
     sam_termno: [null],
     DEC_YM: [null],
     ven_uniform: [null],
@@ -71,6 +71,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     INV_Type: [null],
     ACP_GUITax_From: [null],
     ACP_GUITax_To: [null],
+    Status: [[]],
     CRT_Date_To: [null],
     CRT_Date_From: [null],
     COMM_NUM_Start: [null],
@@ -112,9 +113,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   ];
 
   statusOptions = [
-    { label: '未拋轉', value: '2' },
-    { label: '已拋轉', value: '3' },
-    { label: '已退回', value: '4' },
+    { label: '未結帳', value: 'N' },
+    { label: '已結帳', value: 'Y' },
   ];
   taxTypeOptions = getSYS1000Options('PLU_TaxType');
   money_typeOptions = getSYS1000Options('money_type');
@@ -206,7 +206,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private readonly dropdown: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
-    private readonly tls2f010Service: Tls2f010Service
+    public readonly tls2f010Service: Tls2f010Service,
   ) {
     super();
   }
@@ -279,20 +279,11 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       const raw = frm.getRawValue() as any;
       // Page-local normalization: compute normalized DEC_YM (YYYYMM) for payload and query-state
       const decYm = this.normalizeYearMonth(raw?.DEC_YM);
-
-      const pageSize = Number(raw.pageSize ?? 30);
-      const pageIndex = Number(raw.pageIndex ?? 1);
-
       const payload: any = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        Offset: (pageIndex - 1) * pageSize,
+        pageIndex: 1,
+        pageSize: 30,
         SortBy: Array.isArray(raw.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
       };
-
-      if (!payload.OrderBy && payload.SortBy[0]?.field) {
-        payload.OrderBy = payload.SortBy[0].field;
-      }
 
       payload.sam_yyymm = this.formatYearMonth(raw.sam_yyymm);
       payload.tlt_no = raw.tlt_no || '';
@@ -303,11 +294,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
       payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
       payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+      payload.sam_termno = raw.sam_termno ?? null;
       payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
       // Ensure DEC_YM is normalized to YYYYMM for payload.
       payload.DEC_YM = decYm;
       payload.ven_uniform = raw.ven_uniform || '';
-      payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
+      payload.PUR_TaxType = raw.PUR_TaxType || [];
       payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
       payload.ACP_GUIAmt_To = raw.ACP_GUIAmt_To ?? null;
       payload.ACP_GUINet_From = raw.ACP_GUINet_From ?? null;
@@ -321,6 +313,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.floor_no = Array.isArray(raw.floor_no)
         ? raw.floor_no
         : (raw.floor_no ? [raw.floor_no] : []);
+      payload.Status = raw.Status || [];
+
 
       this.loading = true;
       const body = this.normalizePayload(payload);
@@ -467,17 +461,17 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         const blob = res.body;
         if (!blob) return;
 
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'TLS2F010_匯入範本.xlsx';
         a.click();
 
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       });
   }
   downloadErrorFile(filePath: string): void {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   private buildExportPayloadFromForm(): any {
@@ -505,10 +499,11 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
     payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
     payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+    payload.sam_termno = raw.sam_termno ?? null;
     payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
     payload.DEC_YM = this.normalizeYearMonth(raw.DEC_YM);
     payload.ven_uniform = raw.ven_uniform || '';
-    payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
+    payload.PUR_TaxType = raw.PUR_TaxType || [];
     payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
     payload.ACP_GUIAmt_To = raw.ACP_GUIAmt_To ?? null;
     payload.ACP_GUINet_From = raw.ACP_GUINet_From ?? null;
@@ -522,6 +517,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.floor_no = Array.isArray(raw.floor_no)
       ? raw.floor_no
       : (raw.floor_no ? [raw.floor_no] : []);
+    payload.Status = raw.Status || [];
 
     return payload;
   }
@@ -545,12 +541,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
           if (m && m[1]) filename = decodeURIComponent(m[1]);
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });
@@ -575,12 +571,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
           if (m && m[1]) filename = decodeURIComponent(m[1]);
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });

@@ -11,13 +11,30 @@
             optionValue="value" [control]="dataForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="類別代碼/名稱" controlName="CLASS_CODE" [control]="dataForm.controls.CLASS_CODE"
-            [options]="CLASS_CODEOptions" optionLabel="displayText" optionValue="value" [submitted]="submitted">
-          </app-dropdown>
+          <app-input-text label="責任單位編號" controlName="CLASS_ID" [control]="dataForm.controls.CLASS_ID">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="責任單位名稱" controlName="CLASS_NAME" [control]="dataForm.controls.CLASS_NAME"
             [submitted]="submitted">
+          </app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid mt-2 border-top-1 surface-border pt-2">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="建立人員" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="變更人員" controlName="UPD_USR_Name" [control]="dataForm.controls.UPD_USR_Name">
           </app-input-text>
         </div>
       </div>

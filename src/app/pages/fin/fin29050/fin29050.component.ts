@@ -104,7 +104,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
 
     const handoff = {
       vouNo,
-      fromRoute: window.location.pathname,
+      fromRoute: globalThis.location.pathname,
       ts: Date.now(),
     };
     this.navHelper.openInNewTab('/reports/fin/fin29050', handoff);
@@ -276,11 +276,11 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string) {
     const blob = resp.body!;
     const fileName = `${name}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

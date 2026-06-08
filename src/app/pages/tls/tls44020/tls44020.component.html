@@ -9,21 +9,21 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號" controlName="TLT_No" [control]="queryForm.controls.TLT_No"
-              [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+              [options]="CounterOptions | async" optionLabel="label" optionValue="value"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building" [options]="buildingNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="館別" controlName="tlt_building" [options]="buildingNoOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="tlt_floor" [options]="floorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="樓層" controlName="tlt_floor" [options]="floorOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機IP" controlName="EDC_IP" [control]="queryForm.controls.EDC_IP"
@@ -38,109 +38,113 @@
     </p-accordionTab>
   </p-accordion>
 
-  <!-- 查詢結果區域 - 移到 accordion 外面 -->
   <div class="card mt-3">
-    <!-- TabMenu -->
     <p-tabMenu [model]="items" [(activeItem)]="activeItem" class="mb-3"
       (activeItemChange)="onTabChange($event)"></p-tabMenu>
 
-    <!-- DataView -->
     <p-dataView [value]="filteredData" [layout]="layout">
-      <!-- Header -->
       <ng-template pTemplate="header">
         <div class="w-full">
-          <!-- 狀態說明 + 切換 layout 同一行 -->
           <div class="flex justify-content-between align-items-center mb-4 mt-2">
-            <!-- 狀態說明 -->
             <div class="status-container">
               <span class="status-label">狀態說明：</span>
-
-              <div class="status-chip shutdown" style="background: #6c757d; color: #fff">
-                <i class="pi pi-desktop" style="color: #fff"></i>
-                關機
+              <div class="status-chip shutdown"
+                style="background: #6c757d; color: #fff; border-radius: 0px !important;">
+                <i class="pi pi-desktop" style="color: #fff"></i> 關機
               </div>
-              <div class="status-chip logout" style="background: #dc3545; color: #fff">
-                <i class="pi pi-sign-out" style="color: #fff"></i>
-                離線
+              <div class="status-chip logout" style="background: #dc3545; color: #fff; border-radius: 0px !important;">
+                <i class="pi pi-sign-out" style="color: #fff"></i> 離線
               </div>
-              <div class="status-chip success" style="background: #28a745; color: #fff">
-                <i class="pi pi-sync" style="color: #fff"></i>
-                交易中
+              <div class="status-chip success" style="background: #28a745; color: #fff; border-radius: 0px !important;">
+                <i class="pi pi-sync" style="color: #fff"></i> 交易中
               </div>
             </div>
-
-            <!-- 切換 layout -->
-            <p-dataViewLayoutOptions (layoutChange)="onLayoutChange($event)"></p-dataViewLayoutOptions>
+            <p-dataViewLayoutOptions></p-dataViewLayoutOptions>
           </div>
         </div>
       </ng-template>
 
-      <!-- List 模式 -->
-      <ng-template pTemplate="list" let-data>
-        <div class="grid grid-nogutter">
-          <div class="col-12" *ngFor="let row of filteredData; let i = index">
-            <div class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border">
-              <div class="flex-1">
-                <div>
-                  <b>位置編號：</b>
-                  {{ row.ECR_LocNo }}
+      <ng-template pTemplate="list" let-items>
+        <div class="grid grid-nogutter list-container">
+          <div class="col-12 list-row-item" *ngFor="let row of filteredData">
+            <div
+              class="flex flex-column sm:flex-row justify-content-between align-items-stretch sm:align-items-center p-3 gap-3">
+              <div class="flex align-items-center gap-3 flex-1">
+                <div class="loc-badge">{{ row.ECR_LocNo || '未定' }}</div>
+                <div class="flex flex-column">
+                  <span class="text-xs text-500 font-bold font-mono">ECR DEVICE</span>
+                  <span class="text-lg font-bold text-900">機號：{{ row.ECR_No }}</span>
                 </div>
-                <div>
-                  <b>收銀機號：</b>
-                  {{ row.ECR_No }}
-                </div>
-                <div>
-                  <b>專櫃編號：</b>
-                  {{ row.TLT_No }}
-                </div>
-                <div>
-                  <b>櫃位名稱：</b>
-                  {{ row.TLT_Name }}
-                </div>
-                <div>
-                  <b>中信：</b>
-                  {{ getBankStatus(row, '中信') }}
-                </div>
-                <div>
-                  <b>聯信：</b>
-                  {{ getBankStatus(row, '聯信') }}
+                <div class="hidden md:block vertical-divider"></div>
+                <div class="flex flex-column">
+                  <span class="text-xs text-500 font-bold">所屬專櫃</span>
+                  <div class="text-sm font-bold text-800 mt-1">
+                    <span class="counter-no-tag">#{{ row.TLT_No }}</span> {{ row.TLT_Name }}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </ng-template>
 
-      <!-- Grid 模式 -->
-      <ng-template pTemplate="grid" let-row>
-        <div class="custom-grid">
-          <div class="custom-grid-item" *ngFor="let row of filteredData">
-            <div class="p-3 border-1 surface-border surface-card relative">
-              <div class="status-container-grid grid-status-fixed">
-                <ng-container *ngIf="isShutdown(row); else edcChips">
-                  <i class="pi pi-desktop shutdown-icon"></i>
+              <div
+                class="flex align-items-center justify-content-start sm:justify-content-end gap-2 min-w-18rem border-top-1 sm:border-top-none pt-2 sm:pt-0 surface-border">
+                <ng-container *ngIf="isShutdown(row); else listEdcChips">
+                  <div class="ux-filled-square-tag shutdown w-full text-center py-2">
+                    <i class="pi pi-desktop mr-2"></i>機台已關機
+                  </div>
                 </ng-container>
-                <ng-template #edcChips>
-                  <span [ngClass]="
-                      getEdcStatusClass(getBankStatus(row, '中信'))
-                    " pTooltip="刷卡機編號-{{ row.EDC_TmID1 }} / IP-{{ row.EDC_IP1 }}" tooltipPosition="top">
-                    中信
-                  </span>
-                  <span [ngClass]="
-                      getEdcStatusClass(getBankStatus(row, '聯信'))
-                    " pTooltip="刷卡機編號-{{ row.EDC_TmID2 }} / IP-{{ row.EDC_IP2 }}" tooltipPosition="top">
-                    聯信
-                  </span>
+                <ng-template #listEdcChips>
+                  <div [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID1 }} / IP-{{ row.EDC_IP1 }}" tooltipPosition="top"
+                    class="ux-filled-square-tag">
+                    <i [ngClass]="getStatusIcon(getBankStatus(row, '中信'))" class="mr-1"></i>
+                    <span>中信：{{ getBankStatus(row, '中信') }}</span>
+                  </div>
+                  <div [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID2 }} / IP-{{ row.EDC_IP2 }}" tooltipPosition="top"
+                    class="ux-filled-square-tag">
+                    <i [ngClass]="getStatusIcon(getBankStatus(row, '聯信'))" class="mr-1"></i>
+                    <span>聯信：{{ getBankStatus(row, '聯信') }}</span>
+                  </div>
                 </ng-template>
               </div>
-              <div class="grid-content">
-                <div class="grid-title">{{ row.ECR_LocNo }}</div>
-                <div class="grid-subtitle">
-                  {{ row.ECR_No }}
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="grid" let-items>
+        <div class="ux-dashboard-grid">
+          <div class="ux-monitor-card" *ngFor="let row of filteredData">
+            <div class="card-indicator-top"
+              [ngClass]="isShutdown(row) ? 'bg-shutdown' : getEdcStatusClass(getBankStatus(row, '中信'))"></div>
+
+            <div class="p-3 w-full">
+              <div class="flex justify-content-between align-items-start mb-2">
+                <div class="flex flex-column">
+                  <span class="text-xs font-bold text-400 font-mono">{{ row.ECR_LocNo || '---' }}</span>
+                  <span class="text-xl font-black text-900 font-mono tracking-tight">{{ row.ECR_No }}</span>
                 </div>
-                <div class="grid-subtitle">
-                  {{ row.TLT_No }} {{ row.TLT_Name }}
-                </div>
+                <i *ngIf="isShutdown(row)" class="pi pi-desktop text-xl text-400"></i>
+              </div>
+
+              <div class="tlt-info-box mb-3 text-ellipse" pTooltip="[{{ row.TLT_No }}] {{ row.TLT_Name }}">
+                <span class="text-xs font-bold text-primary mr-1">[{{ row.TLT_No }}]</span>
+                <span class="text-xs font-bold text-700">{{ row.TLT_Name }}</span>
+              </div>
+
+              <div class="grid-bank-chips-container">
+                <ng-container *ngIf="isShutdown(row); else gridChips">
+                  <div class="ux-filled-square-tag shutdown text-center w-full py-1 text-xs">主機關機</div>
+                </ng-container>
+                <ng-template #gridChips>
+                  <div [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))" class="ux-filled-square-tag grid-mini"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID1 }} / IP-{{ row.EDC_IP1 }}">
+                    <span>中信:{{ getBankStatus(row, '中信') }}</span>
+                  </div>
+                  <div [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))" class="ux-filled-square-tag grid-mini"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID2 }} / IP-{{ row.EDC_IP2 }}">
+                    <span>聯信:{{ getBankStatus(row, '聯信') }}</span>
+                  </div>
+                </ng-template>
               </div>
             </div>
           </div>

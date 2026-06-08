@@ -53,8 +53,7 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
   ];
   // 部門選項 (Sys3100)
   OrgIdOptions = this.dropdownApi.querySys3100();
-  // 活動代碼選項 (假設 API 為 queryTALPORDERM_DropDownList)
-  ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
+  ProjectNoOptions = this.dropdownApi.queryGls3002AcctKey();
 
   data: QueryFIN55080Response[] = [];
   historyRequestBody: QueryFIN55080Request = {} as QueryFIN55080Request;

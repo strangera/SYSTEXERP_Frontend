@@ -128,7 +128,7 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     this.loading = true;
     this.tls55030Service.PrintTLS55030PDF(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
       next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
 
@@ -139,7 +139,7 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
         link.click();
         document.body.removeChild(link);
 
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       },
       error: () => {
         this.messageService.errorBubble('檔案下載失敗，請稍後再試');
