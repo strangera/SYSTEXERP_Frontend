@@ -1,11 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- 列印申請單按鈕（PDF stub — API 尚未上線） -->
+    <!-- 列印申請單 PDF — Edit/Read 模式下才允許列印 -->
     <app-button
-      *ngIf="hasPermission('60')"
+      *ngIf="hasPermission('60') && !isFormCreateable"
       btnType="report"
       label="列印申請單"
+      [loading]="printLoading"
       (click)="onPrint()"
     ></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
@@ -14,17 +15,6 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 領用單號：修改模式顯示（唯讀）；新增模式隱藏 -->
-        <app-input-text
-          *ngIf="crudstatus !== 'Create'"
-          class="col-12 md:col-6 lg:col-4"
-          label="領用單號"
-          controlName="MTAPPLY_ID"
-          [control]="dataForm.controls.MTAPPLY_ID"
-          [submitted]="submitted"
-          [readonly]="true"
-        ></app-input-text>
-
         <!-- 申請人代碼/名稱 -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
@@ -70,7 +60,7 @@
           [control]="dataForm.controls.REQUIRE_DAYS"
           [submitted]="submitted"
           keyFilter="pint"
-          [readonly]="isFormReadable"
+          [disabled]="isFormReadable"
         ></app-input-text>
 
         <!-- 倉別代碼/名稱 -->
@@ -93,7 +83,7 @@
           controlName="NOTES"
           [control]="dataForm.controls.NOTES"
           [submitted]="submitted"
-          [readonly]="isFormReadable"
+          [disabled]="isFormReadable"
         ></app-input-text>
 
         <!-- 品項明細表格 -->

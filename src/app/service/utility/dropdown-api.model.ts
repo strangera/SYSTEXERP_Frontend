@@ -157,6 +157,20 @@ export interface FaSitemItem {
 }
 
 /**
+ * /ASS0000/ASS1000/queryASS11040 回傳項目（SearchASS11040Response 子集）。
+ * 與舊 `FaSitemItem` 並存：本介面含 UNIT 欄位，供 CRU 明細自動帶入單位的頁面使用。
+ */
+export interface FaSitemAss1000Item {
+  RowNum?: number;
+  ID?: number;
+  GOODS_ID: string;
+  GOODS_NAME: string;
+  UNIT?: string | null;
+  MATERIAL_TYPE?: string | null;
+  STATUS?: string | null;
+}
+
+/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {

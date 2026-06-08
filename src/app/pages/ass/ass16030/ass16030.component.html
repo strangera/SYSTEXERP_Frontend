@@ -107,6 +107,16 @@
             [submitted]="submitted"
           ></app-dropdown>
 
+          <!-- 發料日期 -->
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            label="發料日期"
+            controlName="CHECK_DATE"
+            calendarType="dateOne"
+            [control]="queryForm.controls.CHECK_DATE"
+            [submitted]="submitted"
+          ></app-calendar>
+
           <!-- 領用單狀態 -->
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
@@ -138,7 +148,7 @@
 <div class="card">
   <app-table-report
     tableKey="ASS16030"
-    dataKey="ID"
+    dataKey="MASTER_ID"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"

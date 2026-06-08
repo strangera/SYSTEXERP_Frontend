@@ -1,6 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
+  ASS16030DetailQueryData,
   ASS16030ExportRequest,
   ASS16030InsertRequest,
   ASS16030InsertResponse,
@@ -22,19 +23,40 @@ export class ASS16030Service {
   constructor(private http: HttpClient) {}
 
   /**
-   * 查詢領用申請單清單
-   *
-   * 後端實際回傳結構為 `ApiResponse<{ TotalRows, TotalPages, QueryData: T[] }>`，
-   * 與 ass11090 / ass12050 / ass13010 / ass13080 等其他 ASS API 一致；
-   * swagger 雖標示為 `ApiResponse<T[]>`，但 runtime 為 wrapped。
-   * 在此 service 將 `Data.QueryData` 攤平至 `Data`、`Data.TotalRows` 提升至 `TotalCount`，
-   * 對 component 介面則維持 `ApiResponse<ASS16030QueryData[]>` 的契約。
+   * 主檔清單查詢（queryASS16030M）— 查詢頁列表用。
+   * 後端回 `ApiResponse<{ TotalCount, TotalPage, QueryData: ASS16030QueryData[] }>`，
+   * 此處攤平到 `Data` 陣列、`TotalCount` 提升到頂層。
    */
-  queryASS16030(
+  queryASS16030M(
     req: ASS16030QueryRequest,
   ): Observable<ApiResponse<ASS16030QueryData[]>> {
     return this.http
-      .post<ApiResponse<ASS16030QueryResultWrapper>>(
+      .post<ApiResponse<ASS16030QueryResultWrapper<ASS16030QueryData>>>(
+        `${this.apiUrl}/queryASS16030M`,
+        req,
+      )
+      .pipe(
+        map(
+          res =>
+            ({
+              ...res,
+              Data: res.Data?.QueryData ?? [],
+              TotalCount: res.Data?.TotalCount ?? res.TotalCount ?? 0,
+            }) as ApiResponse<ASS16030QueryData[]>,
+        ),
+      );
+  }
+
+  /**
+   * 單據明細查詢（queryASS16030 D endpoint）— CRU edit/read 模式進頁載入用。
+   * 傳 `{ MTAPPLY_ID }`，回傳該單據的 master + 所有 detail 列（扁平化結構）。
+   * 若該單據無 detail，仍會回一列只含 master 欄位（DETAIL_ID 為 null）。
+   */
+  queryASS16030(
+    req: ASS16030QueryRequest,
+  ): Observable<ApiResponse<ASS16030DetailQueryData[]>> {
+    return this.http
+      .post<ApiResponse<ASS16030QueryResultWrapper<ASS16030DetailQueryData>>>(
         `${this.apiUrl}/queryASS16030`,
         req,
       )
@@ -44,8 +66,8 @@ export class ASS16030Service {
             ({
               ...res,
               Data: res.Data?.QueryData ?? [],
-              TotalCount: res.Data?.TotalRows ?? res.TotalCount ?? 0,
-            }) as ApiResponse<ASS16030QueryData[]>,
+              TotalCount: res.Data?.TotalCount ?? res.TotalCount ?? 0,
+            }) as ApiResponse<ASS16030DetailQueryData[]>,
         ),
       );
   }
@@ -60,17 +82,21 @@ export class ASS16030Service {
     );
   }
 
-  /** 修改領用申請單 */
+  /** 修改領用申請單（response: `{ ID }`） */
   updateASS16030(
     payload: ASS16030UpdateRequest,
-  ): Observable<ApiResponse<{ ID: number }>> {
-    return this.http.post<ApiResponse<{ ID: number }>>(
+  ): Observable<ApiResponse<{ ID: string | null }>> {
+    return this.http.post<ApiResponse<{ ID: string | null }>>(
       `${this.apiUrl}/updateASS16030`,
       payload,
     );
   }
 
-  // TODO: 待後端 API 上線 — Swagger 中尚無 /ASS0000/ASS1000/exportPDFASS16030
+  /**
+   * 匯出領用申請單 PDF。
+   * Swagger 中 request 同 `QueryASS16030Request`（傳 `MTAPPLY_ID` 過濾），
+   * response 為 PDF blob，前端需透過 `FileExportService.executeFileExport()` 處理下載。
+   */
   exportPDFASS16030(
     body: ASS16030ExportRequest,
   ): Observable<HttpResponse<Blob>> {

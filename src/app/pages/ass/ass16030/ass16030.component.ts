@@ -10,6 +10,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -19,7 +20,7 @@ import {
   ReportColumn,
 } from '@shared/componentkit/table-report/table-report.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { removeEmptyValues } from '@shared/utils/object-utils';
+import { removeEmptyValues, toLocalIsoString } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -42,6 +43,7 @@ import {
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
+    CalendarComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
     TableReportComponent,
@@ -79,6 +81,9 @@ export class ASS16030Component
   whOptions: Option[] = [];
   statusOptions: Option[] = [];
   fasitemOptions: Option[] = [];
+
+  /** statusOptions 載入後快取「領用申請」對應 code，供 editDisabled 比對 */
+  private applyStatusCode: string | null = null;
 
   columns: ReportColumn[] = [
     { field: 'MTAPPLY_ID', header: '領用單號' },
@@ -133,15 +138,7 @@ export class ASS16030Component
       header: '發料日期',
       format: v => (v ? formatDate(v) : ''),
     },
-    {
-      field: 'LINE_NUM',
-      header: '明細筆數',
-      align: 'right',
-    },
   ];
-
-  // TODO: 確認 MTAPPLY_STATUS code 值；推測 1=領用申請
-  readonly APPLY_STATUS_CODE = '1';
 
   constructor(
     private ass16030Service: ASS16030Service,
@@ -214,11 +211,15 @@ export class ASS16030Component
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         }));
+        // 快取「領用申請」狀態對應 code，editDisabled 不必每次 CD 都重 find
+        this.applyStatusCode =
+          (this.statusOptions.find(o => o['Name'] === '領用申請')
+            ?.value as string | undefined) ?? null;
       });
 
-    // 品項下拉（使用 dropdown-api.service.ts，符合 data-display-conventions skill 規範）
+    // 品項下拉（使用 ASS0000/ASS1000 路由，response 含 UNIT/UNIT_NAME；查詢頁此處不需 UNIT 但與 CRU 頁來源一致）
     this.dropdownApiService
-      .queryFasItemDropdown()
+      .queryFasItemAss1000Dropdown()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.fasitemOptions = res ?? [];
@@ -234,22 +235,12 @@ export class ASS16030Component
       MTAPPLY_ID: raw.MTAPPLY_ID,
       EMP_ID: raw.EMP_ID,
       FASITEM_ID: raw.FASITEM_ID,
-      APPLY_DATE_S: raw.APPLY_DATE_S
-        ? new Date(raw.APPLY_DATE_S).toISOString()
-        : null,
-      APPLY_DATE_E: raw.APPLY_DATE_E
-        ? new Date(raw.APPLY_DATE_E).toISOString()
-        : null,
-      APRV_DATE_S: raw.APRV_DATE_S
-        ? new Date(raw.APRV_DATE_S).toISOString()
-        : null,
-      APRV_DATE_E: raw.APRV_DATE_E
-        ? new Date(raw.APRV_DATE_E).toISOString()
-        : null,
+      APPLY_DATE_S: toLocalIsoString(raw.APPLY_DATE_S),
+      APPLY_DATE_E: toLocalIsoString(raw.APPLY_DATE_E),
+      APRV_DATE_S: toLocalIsoString(raw.APRV_DATE_S),
+      APRV_DATE_E: toLocalIsoString(raw.APRV_DATE_E),
       ORG_ID: raw.ORG_ID,
-      CHECK_DATE: raw.CHECK_DATE
-        ? new Date(raw.CHECK_DATE).toISOString()
-        : null,
+      CHECK_DATE: toLocalIsoString(raw.CHECK_DATE),
       APRV_EMP_ID: raw.APRV_EMP_ID,
       WH_ID: raw.WH_ID,
       STATUS: raw.STATUS,
@@ -257,7 +248,7 @@ export class ASS16030Component
       PageIndex: body?.PageIndex ?? body?.pageIndex ?? 1,
       SortBy: body?.SortBy,
     };
-    return this.ass16030Service.queryASS16030(
+    return this.ass16030Service.queryASS16030M(
       removeEmptyValues(payload) as ASS16030QueryRequest,
     );
   };
@@ -286,8 +277,15 @@ export class ASS16030Component
     });
   }
 
-  /** 修改按鈕 disabled 條件：僅「領用申請」狀態可編輯 */
+  /**
+   * 修改按鈕 disabled 條件：僅「領用申請」狀態可編輯。
+   * applyStatusCode 由 statusOptions 載入後快取，避免每次 CD 都重 find。
+   * 對照表尚未載入時保險 disable，避免錯把其他狀態的單據開放修改。
+   * TODO: 用 Name 中文字串比對 SYS1000 仍是 fragile，待後端在 list response
+   *       或 SYS1000 提供穩定 semantic key（如 IsEditable / STATUS_KEY）後改掉。
+   */
   editDisabled = (row: ASS16030QueryData): boolean => {
-    return row.MTAPPLY_STATUS !== this.APPLY_STATUS_CODE;
+    if (this.applyStatusCode == null) return true;
+    return row.MTAPPLY_STATUS !== this.applyStatusCode;
   };
 }
