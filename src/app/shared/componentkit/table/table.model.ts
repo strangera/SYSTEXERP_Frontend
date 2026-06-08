@@ -28,6 +28,8 @@ export interface Column<T = Record<string, any>> {
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
+  minFractionDigits?: number;
+  maxFractionDigits?: number;
   min?: number; // 最小值 (適用於 inputNumber、percent)
   max?: number; // 最大值 (適用於 inputNumber、percent)
   useGrouping?: boolean;
