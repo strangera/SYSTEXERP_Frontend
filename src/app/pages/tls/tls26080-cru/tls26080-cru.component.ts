@@ -25,6 +25,7 @@ import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, tap } from 'rxjs';
+import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 import * as XLSX from 'xlsx-js-style';
 import { WorkBook, WorkSheet } from 'xlsx-js-style';
 import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
@@ -337,10 +338,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       .subscribe({
         next: res => {
           const data = res?.Data ?? [];
-          for (const item of data) this.updateTltIdOptions(item.talent_id);
+
+          // 【優化】批量查詢
+          const ids = data.map((item: any) => Number(item.talent_id)).filter(Boolean);
+          this.batchFetchTltIdOptions(ids);
+
           this.tableData.set(this.mapDetailRows(data));
           this.totalRecords.set(res?.TotalCount || data.length);
-          this.logger.debug(`createCampaignDetailEffect:`, [selected.CampaignId, data.length]);
         },
       });
   }, { allowSignalWrites: true });
@@ -360,18 +364,19 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (!id) return;
 
     this.tableLoading.set(true);
-    this.logger.debug(`initEffect:`, [this.rowdata]);
     this.service.loadTLS26080Detail(id)
       .pipe(finalize(() => this.tableLoading.set(false)))
       .subscribe({
         next: res => {
-          const data = res.Data;
-          for (const item of data) this.updateTltIdOptions(item.talent_id);
+          const data = res.Data ?? [];
+
+          // 【優化】先收集全部的 talent_id 並一次查詢
+          const ids = data.map((item: any) => Number(item.talent_id)).filter(Boolean);
+          this.batchFetchTltIdOptions(ids);
+
           this.tableData.set(this.mapDetailRows(data));
           this.totalRecords.set(res.TotalCount || 0);
-          console.log('initEffect tableData:', this.tableData());
 
-          this.logger.debug(`inited:`, [this.tltIdList()]);
           this.initEffect.destroy();
         },
       });
@@ -559,6 +564,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
     private readonly logger: NGXLogger,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
@@ -815,9 +821,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     }));
 
     // 預載抽成類別下拉選項
-    for (const item of selected) {
-      this.updateTltIdOptions(item.talent_id);
-    }
+    const ids = selected.map(item => Number(item.talent_id)).filter(Boolean);
+    this.batchFetchTltIdOptions(ids);
 
     this.tableData.update(td => [...td, ...newRows]);
 
@@ -902,6 +907,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       next: res => {
         const data = res.queryTLS26080_DetailResponses || [];
         if (data.length > 0) {
+          const ids = data.map((item: any) => Number(item.talent_id)).filter(Boolean);
+          this.batchFetchTltIdOptions(ids);
           this.tableData.update(td => {
             if (td.length === 0) return data.map(item => ({
               ...item,
@@ -924,10 +931,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
                 tpy_rate_D17: Number(item.tpy_rate_D17),
               })).filter(newItem => !td.some(existingItem => existingItem.tlt_no === newItem.tlt_no && existingItem.tlt_id === newItem.tlt_id)),
             ];
-          });
-
-          data.forEach(item => {
-            this.updateTltIdOptions(item.talent_id);
           });
         }
         if (!res.Success) {
@@ -1245,6 +1248,42 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     );
   }
 
+  public batchFetchTltIdOptions(talentIds: number[]): void {
+    const uniqueIds = Array.from(new Set(talentIds)).filter(id => id && !this.tltIdList().has(id));
+    if (uniqueIds.length === 0) return;
+
+    this.tableLoading.set(true);
+    this.dropdown.batchQueryTltTalentCharge(uniqueIds).pipe(finalize(() => this.tableLoading.set(false))).subscribe({
+      next: (res: any) => {
+
+        if (res && Array.isArray(res)) { // 💡 修正判斷式
+          const groupMap = new Map<number, Option[]>();
+
+          uniqueIds.forEach(id => groupMap.set(id, []));
+
+          res.forEach((item: any) => { // 💡 修正迴圈目標
+            const tId = Number(item.talent_id);
+            if (groupMap.has(tId)) {
+              const opt: Option = {
+                value: item.tlt_id,
+                label: `${item.tlt_id}-${item.tlt_id_desc}`,
+                ...item
+              };
+              groupMap.get(tId)?.push(opt);
+            }
+          });
+
+          this.tltIdList.update(currentMap => {
+            const newMap = new Map(currentMap);
+            groupMap.forEach((options, tId) => {
+              newMap.set(tId, options);
+            });
+            return newMap;
+          });
+        }
+      }
+    });
+  }
 }
 
 interface ValidationResult {

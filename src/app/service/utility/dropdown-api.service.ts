@@ -14,6 +14,7 @@ import {
   Aps1002Item,
   Aps1003Query,
   Ass13010PurchaseNumberDropDownItem,
+  BatchTalentChargeQuery,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -394,11 +395,11 @@ export class DropdownApiService {
           const items = response?.Data?.QueryData ?? null;
           return items
             ? items.map(item => ({
-                ...item,
-                // FASITEM_ID 為 int64（對應 SearchASS11040Response.ID），用於 Insert/Update DETAILS
-                value: item.ID,
-                label: `${item.GOODS_ID} - ${item.GOODS_NAME}`,
-              }))
+              ...item,
+              // FASITEM_ID 為 int64（對應 SearchASS11040Response.ID），用於 Insert/Update DETAILS
+              value: item.ID,
+              label: `${item.GOODS_ID} - ${item.GOODS_NAME}`,
+            }))
             : null;
         }),
         catchError(err => {
@@ -1006,6 +1007,12 @@ export class DropdownApiService {
   /** 查詢專櫃抽成主檔(TLTTALENT_CHARGE) (依照合約編號talent_id查詢) */
   queryTltTalentCharge(body: TalentChargeQuery): Observable<TalentChargeItem[] | null> {
     return this.queryDropdownWithParams<TalentChargeItem, TalentChargeQuery>('/queryTLTTALENT_CHARGE_DropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  batchQueryTltTalentCharge(talentIds: number[]): Observable<any> {
+    return this.queryDropdownWithParams<TalentChargeItem, BatchTalentChargeQuery>('/BatchQueryTLTTALENT_CHARGE', { talent_ids: talentIds }).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
