@@ -47,7 +47,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
     ECR_TmplBegDate: [null], // 環境變數啟用日期
     ECR_TmplEndDate: [null], // 環境變數截止日期
     ECR_TmplDesc: ['', [Validators.maxLength(20)]], // 環境變數備註
-    pageSize: [30],
+    pageSize: [2000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ECR_TmplNo', order: 1 }]],
   });
