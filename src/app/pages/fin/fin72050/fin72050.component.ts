@@ -1,225 +1,194 @@
-import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { FIN72050Service } from '@service/api/fin/fin72050.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import {
+  FIN72050QueryData,
+  FIN72050_STATUS_OPTIONS,
+  QueryFIN72050Request,
+} from '@shared/models/fin/fin72050.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import {
+  ReportColumn,
+  formatAmount2,
+  formatDate,
+} from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-export interface sample72050 {
-  'id': string;
-  'STO_No': string; // 公司編號/店號
-  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
-  'HOS_NAME': string; // 倉庫名稱
-  'org_id': string; // 組織代碼/組織名稱
-  'org_name': string; // 部門名稱
-  'building_no': string; // 館別代碼
-  'HOS_Remark'?: string; // 備註說明
-
-  'CRT_Date': Date;
-  'CRT_USR_No': string;
-  'CRT_USR_Name': string;
-  'UPD_Date': Date;
-  'UPD_USR_No': string;
-  'UPD_USR_Name': string;
-
-  'CanDel': boolean; //能否刪除(僅顯示)
-}
+@UntilDestroy()
 @Component({
   selector: 'app-fin72050',
   templateUrl: './fin72050.component.html',
   styleUrl: './fin72050.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent,
-    ButtonComponent,
-    AccordionModule,
-    CalendarRangeQuickComponent,
+    CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
+    AccordionModule,
+    MenubarComponent,
+    ButtonComponent,
     InputTextComponent,
-    InputNumberRangeComponent,
     DropdownComponent,
-    TableComponent,
-    TranslateModule]
+    InputNumberRangeComponent,
+    CalendarRangeQuickComponent,
+    TableReportComponent,
+  ],
 })
-export class FIN72050Component extends BasicQueryPageComponent<sample72050> implements OnInit {
-  // 查詢
+export class FIN72050Component
+  extends BasicQueryPageComponent<FIN72050QueryData>
+  implements OnInit
+{
+  // ── 查詢表單 ───────────────────────────────────────────
   queryForm = this.formBuilder.group({
-    // 檔案說明:
-    //  POS2064M 收支主檔(I/O)
-    //  POS2064 收支明細檔(I/O) 
-    //  tblUser 使用者資料檔(O)
-
-    type01: [null, [Validators.maxLength(20)]], // 零用金單號
-    type02: [null, [Validators.maxLength(20)]], // 保管人
-    startKeepQuota: [null, Validators.max(9999999999)], // 起始額度
-    endKeepQuota: [null, Validators.max(9999999999)], // 結束額度
-    applyDateFrom: [null], // 變更時間範圍起
-    applyDateTo: [null], // 變更時間範圍迄
-    type03: [null], // 支出請款單號
-    type04: [null], // 盤點單狀態
-    startType05: [null, Validators.max(9999999999)], // 起始盤點餘額
-    endType05: [null, Validators.max(9999999999)], // 結束盤點餘額
-    type06: [null, [Validators.maxLength(100)]], // 說明
-    keepingUnit: [null], // 保管單位
-
-    //分頁查詢
-    ...createPaginationConfig([{ field: 'type01', order: 1 }]), // 分頁和排序參數
+    PCC_No: [null as string | null, [Validators.maxLength(20)]],         // 盤點單號
+    Keep_UsrNo: [null as string | null],                                  // 保管人代碼
+    Keep_QuotaAmt_From: [null as number | null, Validators.max(9999999999)], // 額度起
+    Keep_QuotaAmt_To: [null as number | null, Validators.max(9999999999)],   // 額度迄
+    PCC_DateFrom: [null as Date | string | null],                         // 盤點日期起
+    PCC_DateTo: [null as Date | string | null],                           // 盤點日期迄
+    PCS_RqstNo: [null as string | null],                                  // 支出請款單號
+    PCC_Status: [null as string | null],                                  // 盤點單狀態
+    PCC_DIFF_AMT_From: [null as number | null, Validators.max(9999999999)], // 盤點餘額起
+    PCC_DIFF_AMT_To: [null as number | null, Validators.max(9999999999)],   // 盤點餘額迄
+    PCS_Remark: [null as string | null, Validators.maxLength(100)],       // 說明
+    Keep_OrgID: [null as string | null],                                  // 保管單位
+    // 分頁/排序
+    ...createPaginationConfig([{ field: 'PCC_Date', order: -1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  KeepQuota_Options: apiOption[] = [
-    { No: 'KQ001', Name: '請款單1', Label: 'KQ001 - 請款單1' },
-    { No: 'KQ002', Name: '請款單2', Label: 'KQ002 - 請款單2' },
-    { No: 'KQ003', Name: '請款單3', Label: 'KQ003 - 請款單3' },
+  // ── 表格 ───────────────────────────────────────────────
+  data: FIN72050QueryData[] = [];
+  lastQueryBody: QueryFIN72050Request | null = null;
+  public readonly totalRecords = signal<number>(0);
+
+  columns: ReportColumn[] = [
+    { field: 'SeqNo', header: '序號', visible: true, align: 'right' },
+    { field: 'PCS_PST_No', header: '盤點單號', visible: true },
+    { field: 'PCC_Date', header: '盤點日期', visible: true, format: formatDate },
+    { field: 'Keep_UsrNo', header: '保管人代碼', visible: true },
+    { field: 'Keep_UsrName', header: '保管人姓名', visible: true },
+    { field: 'Keep_QuotaAmt', header: '零用金額度', visible: true, align: 'right', format: formatAmount2 },
+    { field: 'PCC_Status_Name', header: '盤點單狀態', visible: true },
+    { field: 'PCC_ActAmt', header: '盤點金額', visible: true, align: 'right', format: formatAmount2 },
+    { field: 'PCC_NOPAY_AMT', header: '已支付未請款', visible: true, align: 'right', format: formatAmount2 },
+    { field: 'PCC_NOREC_AMT', header: '已請款未撥補', visible: true, align: 'right', format: formatAmount2 },
+    {
+      field: 'PCC_DIFF_AMT',
+      header: '盤點後差異數',
+      visible: true,
+      align: 'right',
+      format: formatAmount2,
+      cellClass: (row: FIN72050QueryData) => (Number(row?.PCC_DIFF_AMT ?? 0) < 0 ? 'text-red-500' : ''),
+    },
+    { field: 'PCS_Remark', header: '備註說明', visible: true },
   ];
 
-  data: sample72050[] = [];
-  columns: Column[] = [
-    { field: 'type01', header: '保管人', visible: false },
-    { field: 'type02', header: '盤點日期', visible: true },
-  ];
-  keepingUnit_Options: apiOption[] = [
-    { No: 'KU001', Name: '保管單位1', Label: 'KU001 - 保管單位1' },
-    { No: 'KU002', Name: '保管單位2', Label: 'KU002 - 保管單位2' },
-    { No: 'KU003', Name: '保管單位3', Label: 'KU003 - 保管單位3' },
-  ];
+  selectedItems: FIN72050QueryData[] = [];
 
-  selectedItems: sample72050[] = [];// 多選項目
+  // ── 下拉資料 ────────────────────────────────────────────
+  keepUser_Options = signal<Option[]>([]);          // 保管人
+  keepingUnit_Options = signal<Option[]>([]);       // 保管單位
+  PCS_RqstNo_Options = signal<Option[]>([]);        // 支出請款單號
+  readonly status_Options = FIN72050_STATUS_OPTIONS;
 
-  // ----------------------------------------------------------------
   constructor(
-    private readonly dropDownListService: DropDownListService,
+    public readonly fin72050Service: FIN72050Service,
+    private readonly dropdownApi: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN72050', 'FIN/FIN72050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      console.log('零用金維護request:', JSON.stringify(frm.value, null, 2));
-      this.loading = false;
-      // this.tls51080Service.queryTLS51080(frm.value).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+  // ── 查詢送出 ─────────────────────────────────────────
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const body = this.buildQueryBody(form);
+      this.lastQueryBody = body;
+      this.fin72050Service.queryFIN72050(body)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.data = res.Data ?? [];
+              this.totalRecords.set(res.TotalCount ?? this.data.length);
+              this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+            } else {
+              this.data = [];
+              this.totalRecords.set(0);
+              this.messageService.errorBubble(res.Message || '查詢失敗');
+            }
+          },
+        });
     });
   }
 
-  //---刪除檢查---
-  onDelete(data: sample72050 | sample72050[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    //確認是否全部都可以刪除
-    const canDelete = items.every((item) => item.CanDel);
-
-    if (!canDelete) {
-      console.error('Some items cannot be deleted');
-      this.messageService.errorBubble('無法刪除：組織階層互相關連');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-    // this.tls51080Service.deleteTLS51080(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
+  // ── 將 form 轉成 API request（包含日期轉字串） ─────────
+  private buildQueryBody(form: FormGroup): QueryFIN72050Request {
+    const raw = form.getRawValue();
+    return {
+      ...raw,
+      PCC_DateFrom: this.toIsoDate(raw.PCC_DateFrom),
+      PCC_DateTo: this.toIsoDate(raw.PCC_DateTo),
+    } as QueryFIN72050Request;
   }
 
-  isRowSelectable(rowData: sample72050): boolean {
-    return rowData.CanDel
+  private toIsoDate(value: Date | string | null | undefined): string | undefined {
+    if (!value) return undefined;
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      const d = String(value.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return String(value);
   }
 
-  // 列印明細
-  btnLoading = false;
-  onBtnToss(rowData: sample72050) {
-    if (!rowData || !rowData.id) {
-      this.messageService.errorBubble('找不到該筆資料的 ID');
-      return;
-    }
+  // ── 載入下拉選單 ─────────────────────────────────────
+  private loadDropdownOptions(): void {
+    // 保管人（TBLUSER_Orgid_DropDownList）
+    this.dropdownApi.queryTblUserOrgid()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (options) => {
+          this.keepUser_Options.set(options ?? []);
+        },
+      });
 
-    // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
-    // const formValue = { ID: rowData.id };
+    // 保管單位（SYS3100_DropDownList）
+    this.dropdownApi.querySys3100()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (options) => {
+          this.keepingUnit_Options.set(options ?? []);
+        },
+      });
 
-    this.btnLoading = true;
-    // this.tls12010Service.exportTLS12010(formValue)
-    //   .pipe(
-    //     finalize(() => this.btnExcelLoading = false),
-    //     untilDestroyed(this)
-    //   )
-    //   .subscribe({
-    //     next: (blob: Blob) => {
-    //       this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
-    //       this.messageService.successBubble('匯出 Excel 成功');
-    //     },
-    //     error: (err) => {
-    //       console.error(err);
-    //       this.messageService.errorBubble('匯出失敗');
-    //     }
-    //   });
+    // 支出請款單號
+    this.dropdownApi.queryPOS2064MPCS_RqstNoDropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (options) => {
+          this.PCS_RqstNo_Options.set(options ?? []);
+        },
+      });
   }
 }
