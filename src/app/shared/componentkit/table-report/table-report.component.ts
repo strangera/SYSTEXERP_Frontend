@@ -141,6 +141,7 @@ export class TableReportComponent implements OnChanges {
   @Input() expansionShowSort = true;
   @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
+  private isNextPagePreloaded = false; // 用於標記是否已預載下一頁資料，避免重複預載
   // 連結
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
@@ -183,6 +184,7 @@ export class TableReportComponent implements OnChanges {
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+      this.isNextPagePreloaded = false; // 每次資料變更都重置預載狀態
       // ====== 新增：第一次拿到資料時，動態計算並固定欄位寬度 ======
       if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
         this.calculateAndFixColumnWidths();
@@ -248,6 +250,11 @@ export class TableReportComponent implements OnChanges {
         this.dataChange.emit(this.data);
         this.virtualData = this.data;
         this.totalRecords = res.TotalCount || this.data.length;
+        // 核心優化：成功併入下一頁資料後，將預載鎖解開，讓新的這一頁重新允許「一有滾動就載入下一頁」
+        this.isNextPagePreloaded = false;
+      } else {
+        // 如果後端沒吐資料，為了防止卡死，也要允許下次滑動可以再試（或代表到頭了）
+        this.isNextPagePreloaded = false;
       }
     });
   }
@@ -292,6 +299,7 @@ export class TableReportComponent implements OnChanges {
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
+        this.isNextPagePreloaded = false;
         this.syncTableSortMeta();
         this.cdr.detectChanges();
 
@@ -367,21 +375,38 @@ export class TableReportComponent implements OnChanges {
     }
   }
   onScroll(event: any) {
-    if (this._loading) return;
-    if (this.lazy) {
-      const target = event.originalEvent.target;
-      const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
-      if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10000;
-        if (isBottom && this.data.length < this.totalRecords) {
+    if (this._loading || !this.lazy) return;
+
+    const target = event.originalEvent?.target;
+    if (!target) return;
+
+    // 取得當前的分頁大小
+    const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
+
+    // 只有當目前的資料量大於等於一頁，且還沒撈完所有後端資料時，才進行滾動偵測
+    if (this.data.length >= pageSize && this.data.length < this.totalRecords) {
+
+      // 1. 偵測滑鼠是否正在「往下捲動」
+      // 如果偵測到使用者有往下捲的意圖，且「這頁還沒預載過」
+      if (!this.isNextPagePreloaded) {
+
+        // 🚀 激進預載條件：
+        // target.scrollTop 代表目前往下滾了多少 px。
+        // 只要使用者一開始往下滾（例如大於 50px），就立刻判定要預載下一頁！
+        if (target.scrollTop > 50) {
+
+          // 立刻鎖定，防止這頁在滾動過程中重複觸發
+          this.isNextPagePreloaded = true;
+
+          // 提早點燃下一次的 API
           this.loadMoreData();
         }
       }
-    }
-    else if (this.selectedItems && this.selectedItems.length > 0) {
+    } else if (this.selectedItems && this.selectedItems.length > 0) {
       this.selectedItems = [...this.selectedItems];
       this.cdr.detectChanges();
     }
+
     this.cdr.markForCheck();
   }
   // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
