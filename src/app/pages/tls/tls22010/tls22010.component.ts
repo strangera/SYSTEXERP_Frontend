@@ -51,7 +51,7 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     ShowStatus: ['1'],
     status1: [''], // TODO: 沒有用到，或者寶玲沒開欄位
     status2: [''], // TODO: 沒有用到，或者寶玲沒開欄位
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1],
   });
   historyRequestBody: TLS22010Query | null = null;

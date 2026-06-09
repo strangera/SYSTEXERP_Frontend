@@ -19,7 +19,6 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls22030',
@@ -38,7 +37,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     `
   ]
 })
-
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     ECR_No: [null],
@@ -46,7 +44,9 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
   data: any[] = [];
   totalRecords = 0;
@@ -58,8 +58,8 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'MIN_TXN_No', header: '後台交易起號' },
-    { field: 'MAX_TXN_No', header: '後台交易迄號' },
+    { field: 'MIN_TXN_No', header: '後台交易起號', format: v => v.toString().padStart(6, '0') }, // 不足六位數的交易號前面補零
+    { field: 'MAX_TXN_No', header: '後台交易迄號', format: v => v.toString().padStart(6, '0') },
     { field: 'SLE_TxnBegNo', header: '前台清機起號' },
     { field: 'SLE_TxnEndNo', header: '前台清機迄號' },
     { field: 'SLE_GUIBegNo', header: '發票起始(起)' },

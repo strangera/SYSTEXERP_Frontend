@@ -45,7 +45,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     BNK_No: ['', [Validators.maxLength(3)]],
     CRD_TypeList: [null],
     CRD_KindList: [null],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'id', order: 1 }]],
   });
