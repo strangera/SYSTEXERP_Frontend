@@ -193,33 +193,41 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
         // 中分類處理：將物件陣列轉換成 [[bus_type, No]] 格式
         bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.bus_type, item.No]) : null
       };
-      let periodText = '';
+      let periodText1 = ''; // 基準日期期間
+      let periodText2 = ''; // 比較日期期間
       const fmtDate = (d: any, fmt = 'yyyy/MM/dd') => this.datePipe.transform(d, fmt) ?? '';
 
       switch (formValue.reportType) {
         case '1': // 日報
-          periodText = fmtDate(formValue.onedatedd);
+          periodText1 = fmtDate(formValue.onedatedd);
+          periodText2 = fmtDate(formValue.onedatedd_c);
           break;
         case '2': // 週報 (拿 API 回填的起迄日)
-          periodText = `${fmtDate(formValue.startdate)} ~ ${fmtDate(formValue.enddate)}`;
+          periodText1 = `${fmtDate(formValue.startdate)} ~ ${fmtDate(formValue.enddate)}`;
+          periodText2 = `${fmtDate(formValue.startdate_c)} ~ ${fmtDate(formValue.enddate_c)}`;
           break;
         case '3': // 月報
-          periodText = fmtDate(formValue.onedatemm, 'yyyy/MM');
+          periodText1 = fmtDate(formValue.onedatemm, 'yyyy/MM');
+          periodText2 = fmtDate(formValue.onedatemm_c, 'yyyy/MM');
           break;
         case '4': // 半年報
           {
             const halfName = formValue.halfyear === '1' ? '上半年' : '下半年';
-            periodText = `${fmtDate(formValue.halfyear_onedateyy, 'yyyy')}年 ${halfName}`;
+            periodText1 = `${fmtDate(formValue.halfyear_onedateyy, 'yyyy')}年 ${halfName}`;
+            periodText2 = `${fmtDate(formValue.halfyear_onedateyy_c, 'yyyy')}年 ${halfName}`;
             break;
           }
         case '5': // 年報
-          periodText = `${fmtDate(formValue.year_onedateyy, 'yyyy')}年度`;
+          periodText1 = `${fmtDate(formValue.year_onedateyy, 'yyyy')}年度`;
+          periodText2 = `${fmtDate(formValue.year_onedateyy_c, 'yyyy')}年度`;
           break;
         case '6': // 區間報表
-          periodText = `${fmtDate(formValue.sad_startdate)} ~ ${fmtDate(formValue.sad_enddate)}`;
+          periodText1 = `${fmtDate(formValue.sad_startdate)} ~ ${fmtDate(formValue.sad_enddate)}`;
+          periodText2 = `${fmtDate(formValue.sad_startdate_c)} ~ ${fmtDate(formValue.sad_enddate_c)}`;
           break;
         case '7': // 活動報表 (拿 API 回填的活動起迄)
-          periodText = `${fmtDate(formValue.event_startdate)} ~ ${fmtDate(formValue.event_enddate)}`;
+          periodText1 = `${fmtDate(formValue.event_startdate)} ~ ${fmtDate(formValue.event_enddate)}`;
+          periodText2 = `${fmtDate(formValue.event_startdate_c)} ~ ${fmtDate(formValue.event_enddate_c)}`;
           break;
       }
       this.tls26060Service.queryTLS26060(payload)
@@ -244,7 +252,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
           this.lastQueryBody = payload;
           this.myExportContext = {
             customFileName: '中分類預售總表',
-            printRemarkText: `查詢業績期間：${periodText}`
+            printRemarkText: `查詢基準日期期間：${periodText1}\n查詢比較日期期間：${periodText2}`
           };
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
