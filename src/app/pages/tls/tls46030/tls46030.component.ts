@@ -34,7 +34,7 @@ export class TLS46030Component extends BasicQueryPageComponent<QueryTLS46030Resp
     ECR_SchFinTime_Start: [null], // 排程作業完成時間(起)
     ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
     ECR_FLD_ID: [null], // 異動類型
-    pageSize: [30],
+    pageSize: [2000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ECR_SchNo', order: 1 }]],
   });

@@ -69,7 +69,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_IP: [null, [Validators.maxLength(20)]],
     ECR_SrvIP: [null, [Validators.maxLength(20)]],
     ECR_TmplNo: [null, [Validators.maxLength(8)]],
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });

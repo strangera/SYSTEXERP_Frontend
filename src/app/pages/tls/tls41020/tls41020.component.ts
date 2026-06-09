@@ -19,7 +19,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls41020',
   templateUrl: './tls41020.component.html',
@@ -74,7 +73,9 @@ export class TLS41020Component extends BasicQueryPageComponent<TLS41020Data> imp
     EDC_IP5: [null, [Validators.maxLength(20), this.validationService.ipValidator]],
     EDC_TmID4: [null, [Validators.maxLength(8)]],
     EDC_TmID5: [null, [Validators.maxLength(8)]],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    pageSize: [500],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
   data: TLS41020Data[] = [];
   selectedItems: TLS41020Data[] = [];

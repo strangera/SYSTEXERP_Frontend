@@ -45,7 +45,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'NOT_No', order: -1 }, { field: 'NOT_Date', order: -1 }]],
   });
