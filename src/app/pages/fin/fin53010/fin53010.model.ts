@@ -808,6 +808,20 @@ export interface Fin53010Aps4023_CByVouNoBucket {
   Total_pur_tax?: number | null;
 }
 
+export interface FIN53010Aps4002ByVouNoRow {
+  BNK_id?: string | null;
+  BNK_AccName?: string | null;
+  DAmt?: number | null;
+  CAmt?: number | null;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  Remark?: string | null;
+}
+
+export interface Fin53010Aps4002ByVouNoBucket {
+  Details?: FIN53010Aps4002ByVouNoRow[] | null;
+}
+
 export interface QueryFIN53010DetailDataByVouNoResponse {
   _APS3001?: Fin53010Aps3001ByVouNoBucket | null;
   _APS2002?: Fin53010Aps2002ByVouNoBucket | null;
@@ -815,6 +829,7 @@ export interface QueryFIN53010DetailDataByVouNoResponse {
   _ARS3001?: Fin53010Ars3001ByVouNoBucket | null;
   _APS4023?: Fin53010Aps4023ByVouNoBucket | null;
   _APS4023_C?: Fin53010Aps4023_CByVouNoBucket | null;
+  _APS4002?: Fin53010Aps4002ByVouNoBucket | null;
 }
 
 export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoResponse>, 'Data'> & {

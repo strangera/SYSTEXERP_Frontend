@@ -214,6 +214,17 @@
 </div>
 }
 
+@if (isFormReadable && !isFormCreateable && aps4002RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="銀行存款" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS4002_related" [columns]="aps4002RelatedColumns"
+      [data]="aps4002RelatedRows()" [totalRecords]="aps4002RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4002Footer()"></app-table-report>
+  </p-panel>
+</div>
+}
+
 @if (isFormReadable && !isFormCreateable && ars3001RelatedRows().length > 0) {
 <div class="card">
   <p-panel header="應收帳款" class="line-height-3 m-0">
