@@ -7,6 +7,8 @@ import { environment } from 'src/environments/environment';
 import {
   CloseFIN72050Request,
   CloseVoidFIN72050Result,
+  DeleteFIN72050Request,
+  DeleteFIN72050Result,
   FIN72050Detail,
   FIN72050QueryData,
   GetPCCNoFIN72050Request,
@@ -78,5 +80,10 @@ export class FIN72050Service {
   /** 作廢：PCC_Status 1 → 9 */
   voidFIN72050(req: VoidFIN72050Request): Observable<ApiResponse<CloseVoidFIN72050Result>> {
     return this.http.post<ApiResponse<CloseVoidFIN72050Result>>(`${this.apiUrl}/voidFIN72050`, req);
+  }
+
+  /** 批次刪除（查詢頁勾選後刪除多筆盤點單） */
+  deleteFIN72050(req: DeleteFIN72050Request): Observable<ApiResponse<DeleteFIN72050Result>> {
+    return this.http.post<ApiResponse<DeleteFIN72050Result>>(`${this.apiUrl}/deleteFIN72050`, req);
   }
 }

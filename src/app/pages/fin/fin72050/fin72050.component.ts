@@ -7,6 +7,7 @@ import { FIN72050Service } from '@service/api/fin/fin72050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import {
+  DeleteFIN72050Request,
   FIN72050QueryData,
   FIN72050_STATUS_OPTIONS,
   QueryFIN72050Request,
@@ -160,6 +161,34 @@ export class FIN72050Component
       return `${y}-${m}-${d}`;
     }
     return String(value);
+  }
+
+  // ── 批次刪除 ──────────────────────────────────────────
+  onBatchDelete(items: FIN72050QueryData[]): void {
+    if (!items?.length) {
+      this.messageService.warnBubble('請先勾選要刪除的資料');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除 ${items.length} 筆資料？`,
+      accept: () => {
+        const req: DeleteFIN72050Request = { PCS_PST_Nos: items.map(x => x.PCS_PST_No) };
+        this.fin72050Service.deleteFIN72050(req)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: res => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+              } else {
+                this.messageService.errorBubble('操作失敗：' + res.Message);
+              }
+            },
+          });
+      },
+    });
   }
 
   // ── 載入下拉選單 ─────────────────────────────────────
