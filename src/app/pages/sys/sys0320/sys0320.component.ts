@@ -34,7 +34,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   queryForm = this.formBuilder.group({
     user_No: ['', [Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'user_No', order: 1 }]],
   });

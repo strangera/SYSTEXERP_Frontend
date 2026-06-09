@@ -34,7 +34,7 @@ export class SYS0240Component extends BasicQueryPageComponent<tblRole>
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.maxLength(10)]], // 角色代號
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'Role_No', order: 1 }]],
   });
