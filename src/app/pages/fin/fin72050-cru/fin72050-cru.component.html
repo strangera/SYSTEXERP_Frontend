@@ -3,39 +3,228 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <!-- 基本資料 顯示畫面 -->
-      <ng-container>
+
+  <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <!-- ────────────────────────────────────────────── -->
+    <!-- Panel 1：基本資料                                -->
+    <!-- ────────────────────────────────────────────── -->
+    <p-panel header="基本資料" class="line-height-3 m-0 mb-3">
+      <!-- Row 1：盤點單號 / 保管人 / 盤點日期 -->
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="盤點單號"
+            controlName="PCS_PST_No"
+            [control]="dataForm.controls.PCS_PST_No"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="保管人代碼/名稱"
+            controlName="Keep_UsrNo"
+            [options]="keepUser_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Keep_UsrNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="盤點日期"
+            [control]="dataForm.controls.PCC_Date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+
+      <!-- Row 2：零用金額度 / 已支付未請款 / 已請款未撥補 -->
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="零用金額度"
+            controlName="Keep_QuotaAmt"
+            [control]="dataForm.controls.Keep_QuotaAmt"
+            [submitted]="submitted"
+            [readonly]="true"
+            [useGrouping]="true"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="已支付未請款"
+            controlName="PCC_NOPAY_AMT"
+            [control]="dataForm.controls.PCC_NOPAY_AMT"
+            [submitted]="submitted"
+            [readonly]="true"
+            [useGrouping]="true"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="已請款未撥補"
+            controlName="PCC_NOREC_AMT"
+            [control]="dataForm.controls.PCC_NOREC_AMT"
+            [submitted]="submitted"
+            [readonly]="true"
+            [useGrouping]="true"
+          ></app-input-number>
+        </div>
+      </div>
+
+      <!-- Row 3：零用金餘額 / 盤點單狀態 / 盤點面額方式 -->
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="零用金餘額"
+            controlName="PCC_DIFF_AMT"
+            [control]="dataForm.controls.PCC_DIFF_AMT"
+            [submitted]="submitted"
+            [readonly]="true"
+            [useGrouping]="true"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="盤點單狀態"
+            controlName="PCC_Status_Name"
+            [control]="dataForm.controls.PCC_Status_Name"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="盤點面額方式"
+            groupname="PCC_Type"
+            [control]="$any(dataForm.controls.PCC_Type)"
+            [options]="pccTypeOptions"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- ────────────────────────────────────────────── -->
+    <!-- Panel 2：盤點清點                                -->
+    <!-- ────────────────────────────────────────────── -->
+    <p-panel header="盤點清點" class="line-height-3 m-0">
+      <!-- 總額模式 -->
+      <ng-container *ngIf="isTotalMode">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保管人"
-              controlName="Pettycashcustodian"
-              [options]="Pettycashcustodian_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.Pettycashcustodian"
+            <app-input-number
+              label="盤點總金額"
+              controlName="PCC_CountAmt"
+              [control]="dataForm.controls.PCC_CountAmt"
               [submitted]="submitted"
-            ></app-dropdown>
+              [useGrouping]="true"
+              [min]="0"
+            ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="盤點日期"
-              [control]="dataForm.controls.applyDate"
+            <app-input-number
+              label="差異"
+              controlName="DiffAmt"
+              [control]="dataForm.controls.DiffAmt"
               [submitted]="submitted"
-            ></app-calendar>
+              [readonly]="true"
+              [useGrouping]="true"
+              [min]="null"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="差異說明"
+              controlName="PCS_Remark"
+              [control]="dataForm.controls.PCS_Remark"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
       </ng-container>
+
+      <!-- 點鈔模式 -->
+      <ng-container *ngIf="isCountMode">
+        <!-- 9 個面額：3x3 -->
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4" *ngFor="let d of denominations">
+            <app-input-number
+              [label]="d.label"
+              [controlName]="d.controlName"
+              [control]="$any(dataForm.get(d.controlName))"
+              [submitted]="submitted"
+              [useGrouping]="true"
+              [min]="0"
+            ></app-input-number>
+          </div>
+        </div>
+
+        <!-- 第 4 列：實際金額 / 差異 / 差異說明 -->
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="實際金額"
+              controlName="ActTotalAmt"
+              [control]="dataForm.controls.ActTotalAmt"
+              [submitted]="submitted"
+              [readonly]="true"
+              [useGrouping]="true"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="差異"
+              controlName="DiffAmt"
+              [control]="dataForm.controls.DiffAmt"
+              [submitted]="submitted"
+              [readonly]="true"
+              [useGrouping]="true"
+              [min]="null"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="差異說明"
+              controlName="PCS_Remark"
+              [control]="dataForm.controls.PCS_Remark"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- 操作按鈕 -->
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <ng-container *ngIf="!isFormReadable">
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
+
+          <ng-container *ngIf="showCloseVoidButtons">
+            <app-button
+              btnType="default"
+              label="結案"
+              icon="pi pi-check-square"
+              severity="success"
+              [loading]="closeLoading"
+              (click)="onClose()"
+            ></app-button>
+            <app-button
+              btnType="default"
+              label="作廢"
+              icon="pi pi-times-circle"
+              severity="danger"
+              [loading]="voidLoading"
+              (click)="onVoid()"
+            ></app-button>
+          </ng-container>
+        </ng-container>
       </div>
-    </form>
-  </p-panel>
+    </p-panel>
+  </form>
 </div>
