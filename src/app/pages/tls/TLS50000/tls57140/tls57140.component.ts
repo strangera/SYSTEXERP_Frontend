@@ -51,7 +51,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     /** 顯示方式 */
     ShowType: [QueryTLS57140ShowType.Summary, Validators.required],
     /** 分頁大小 */
-    pageSize: [30],
+    pageSize: [500],
   });
 
   // Dropdown options
@@ -146,8 +146,8 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
         HOS_No: formValue.HOS_No || undefined,
         LOGO_No: formValue.LOGO_No || undefined,
         PLU_MagNo: formValue.PLU_MagNo || undefined,
-        PageIndex: 1,
-        PageSize: formValue.PageSize || 30,
+        pageIndex: 1,
+        pageSize: formValue.pageSize || 500,
         SortBy: formValue.ShowType === QueryTLS57140ShowType.Summary
           ? [{ field: 'LOGO_No', order: 1 }]
           : [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
@@ -174,7 +174,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     const body = {
       queryNo: event.label || '',
       PLU_MagNo: undefined,
-      pageSize: 30,
+      pageSize: 500,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_No', order: 1 }],
     };
