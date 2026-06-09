@@ -11,7 +11,7 @@ import {
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column } from '@shared/componentkit/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem
@@ -45,7 +45,9 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
   // 查詢表單，包含授權型態和分頁/排序參數
   queryForm = this.formBuilder.group({
     authType: [AuthorizationType.User, [Validators.required]], // 授權型態，預設為 'User'
-    ...createPaginationConfig([{ field: 'User_No', order: 1 }]), // 初始無特定排序，由 authType 決定
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'User_No', order: 1 }]],
   });
   lastQueryBody: QuerySYS0770Request | null = null;
   totalRecords = 0;
