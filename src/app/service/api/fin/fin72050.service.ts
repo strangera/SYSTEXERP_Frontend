@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -15,6 +15,7 @@ import {
   GetPCCNoFIN72050Result,
   InsertFIN72050Request,
   InsertFIN72050Result,
+  PrintBlankFIN72050Request,
   QueryFIN72050DetailRequest,
   QueryFIN72050Request,
   UpdateFIN72050Request,
@@ -85,5 +86,13 @@ export class FIN72050Service {
   /** 批次刪除（查詢頁勾選後刪除多筆盤點單） */
   deleteFIN72050(req: DeleteFIN72050Request): Observable<ApiResponse<DeleteFIN72050Result>> {
     return this.http.post<ApiResponse<DeleteFIN72050Result>>(`${this.apiUrl}/deleteFIN72050`, req);
+  }
+
+  /** 列印空白盤點單 PDF（新增頁兩階段流程使用） */
+  printBlankFIN72050(req: PrintBlankFIN72050Request): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/printBlankFIN72050`, req, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
   }
 }

@@ -12,11 +12,13 @@ import {
   FIN72050_DENOMINATIONS,
   GetPCCNoFIN72050Request,
   InsertFIN72050Request,
+  PrintBlankFIN72050Request,
   QueryFIN72050DetailRequest,
   UpdateFIN72050Request,
   VoidFIN72050Request,
   getFIN72050StatusName,
 } from '@shared/models/fin/fin72050.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
@@ -114,10 +116,10 @@ export class FIN72050CRUComponent
   keepUser_Options: Option[] = [];
 
   // ── 旗標 ─────────────────────────────────────────────
-  /** 是否已透過取號取得四項金額（新增頁面用） */
+  /** 是否已透過取號取得四項金額（用於編輯模式判斷） */
   hasPccNo = false;
-  /** 取號中 */
-  isFetchingPccNo = false;
+  /** 列印空白盤點單 loading */
+  printBlankLoading = false;
   /** 主動操作（結案 / 作廢）loading */
   closeLoading = false;
   voidLoading = false;
@@ -125,6 +127,7 @@ export class FIN72050CRUComponent
   constructor(
     private readonly fin72050Service: FIN72050Service,
     private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -167,6 +170,16 @@ export class FIN72050CRUComponent
     return this.crudstatus === CRUDStatus.Edit && this.dataForm.controls.PCC_Status.value === '1';
   }
 
+  /** 新增模式（兩階段流程：階段 1，只填保管人 + 盤點日期） */
+  get isCreateStage(): boolean {
+    return this.crudstatus === CRUDStatus.Create;
+  }
+
+  /** 編輯 / 檢視模式（兩階段流程：階段 2，輸入面額數量） */
+  get isEditOrReadStage(): boolean {
+    return this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read;
+  }
+
   // ────────────────────────────────────────────────────
   // 下拉
   // ────────────────────────────────────────────────────
@@ -184,7 +197,7 @@ export class FIN72050CRUComponent
   // 表單監聽
   // ────────────────────────────────────────────────────
   private setupValueChangeListeners(): void {
-    // 保管人 + 盤點日期 變更 → 新增模式下自動取號
+    // 保管人變更 → 同步 Keep_UsrName / Keep_OrgID
     this.dataForm.controls.Keep_UsrNo.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((usrNo) => {
@@ -197,17 +210,6 @@ export class FIN72050CRUComponent
             },
             { emitEvent: false }
           );
-        }
-        if (this.crudstatus === CRUDStatus.Create) {
-          this.tryFetchPccNo();
-        }
-      });
-
-    this.dataForm.controls.PCC_Date.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        if (this.crudstatus === CRUDStatus.Create) {
-          this.tryFetchPccNo();
         }
       });
 
@@ -225,40 +227,108 @@ export class FIN72050CRUComponent
   }
 
   // ────────────────────────────────────────────────────
-  // 自動取號（新增第一階段）
+  // 新增模式：兩階段流程 — 階段 1「列印空白盤點單」
+  //   流程：驗證保管人 + 日期 → getPCCNoFIN72050 取號 →
+  //          insertFIN72050 建立空白盤點單 → printBlankFIN72050 下載 PDF
   // ────────────────────────────────────────────────────
-  private tryFetchPccNo(): void {
-    const usrNo = this.dataForm.controls.Keep_UsrNo.value;
-    const dateVal = this.dataForm.controls.PCC_Date.value;
-    if (!usrNo || !dateVal) return;
+  onPrintBlank(): void {
+    this.submitted = true;
+    const usrCtrl = this.dataForm.controls.Keep_UsrNo;
+    const dateCtrl = this.dataForm.controls.PCC_Date;
+    if (usrCtrl.invalid || dateCtrl.invalid) {
+      usrCtrl.markAsTouched();
+      dateCtrl.markAsTouched();
+      this.messageService.warnBubble('請先選擇保管人與盤點日期');
+      return;
+    }
 
-    const req: GetPCCNoFIN72050Request = {
+    const usrNo = usrCtrl.value!;
+    const dateVal = dateCtrl.value!;
+
+    const getNoReq: GetPCCNoFIN72050Request = {
       DateNow: this.toIsoDate(dateVal) ?? '',
       Keep_UsrNo: usrNo,
     };
 
-    this.isFetchingPccNo = true;
-    this.fin72050Service.getPCCNoFIN72050(req)
-      .pipe(untilDestroyed(this), finalize(() => (this.isFetchingPccNo = false)))
+    this.printBlankLoading = true;
+    this.fin72050Service.getPCCNoFIN72050(getNoReq)
+      .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000') {
-            this.messageService.errorBubble(res.Message || '取號失敗');
+        next: (noRes) => {
+          if (noRes.Status !== '0000') {
+            this.printBlankLoading = false;
+            this.messageService.errorBubble(noRes.Message || '取號失敗');
             return;
           }
-          const d = res.Data;
-          const pccNo = d.PCS_PST_No ?? d.PCC_SerialNo ?? '';
+          const noData = noRes.Data;
+          const pccNo = noData.PCS_PST_No ?? noData.PCC_SerialNo ?? '';
+          if (!pccNo) {
+            this.printBlankLoading = false;
+            this.messageService.errorBubble('取號失敗：未取得盤點單號');
+            return;
+          }
+
           this.dataForm.patchValue({
             PCS_PST_No: pccNo,
-            Keep_QuotaAmt: d.Keep_QuotaAmt ?? 0,
-            PCC_NOPAY_AMT: d.PCC_NOPAY_AMT ?? 0,
-            PCC_NOREC_AMT: d.PCC_NOREC_AMT ?? 0,
-            PCC_DIFF_AMT: d.PCC_DIFF_AMT ?? 0,
+            Keep_QuotaAmt: noData.Keep_QuotaAmt ?? 0,
+            PCC_NOPAY_AMT: noData.PCC_NOPAY_AMT ?? 0,
+            PCC_NOREC_AMT: noData.PCC_NOREC_AMT ?? 0,
+            PCC_DIFF_AMT: noData.PCC_DIFF_AMT ?? 0,
             PCC_Status: '1',
             PCC_Status_Name: getFIN72050StatusName('1'),
           });
           this.hasPccNo = true;
-          this.recalcDiff();
+
+          // 建立空白盤點單（9 個面額 = 0）
+          const me = this.user;
+          const insertReq: InsertFIN72050Request = {
+            SYS_StoreNo: me?.SYS_StoreNo ?? '',
+            PCS_PST_No: pccNo,
+            PCC_Date: this.toIsoDate(dateVal) ?? '',
+            Keep_UsrNo: usrNo,
+            Keep_UsrName: this.dataForm.controls.Keep_UsrName.value ?? undefined,
+            Keep_OrgID: this.dataForm.controls.Keep_OrgID.value ?? undefined,
+            Keep_QuotaAmt: Number(noData.Keep_QuotaAmt ?? 0),
+            PCC_Type: '2',
+            PCC_CountAmt: 0,
+            PCC_ActAmt_1: 0,
+            PCC_ActAmt_5: 0,
+            PCC_ActAmt_10: 0,
+            PCC_ActAmt_50: 0,
+            PCC_ActAmt_100: 0,
+            PCC_ActAmt_200: 0,
+            PCC_ActAmt_500: 0,
+            PCC_ActAmt_1000: 0,
+            PCC_ActAmt_2000: 0,
+            PCS_Remark: undefined,
+            CRT_USR_No: me?.user_No ?? undefined,
+            CRT_USR_Name: me?.user_Name ?? undefined,
+          };
+
+          this.fin72050Service.insertFIN72050(insertReq)
+            .pipe(untilDestroyed(this))
+            .subscribe({
+              next: (insRes) => {
+                if (insRes.Status !== '0000' || insRes.Data?.IsSuccess === false) {
+                  this.printBlankLoading = false;
+                  this.messageService.errorBubble(insRes.Data?.ErrMsg || insRes.Message || '建立空白盤點單失敗');
+                  return;
+                }
+
+                // 列印 PDF
+                const printReq: PrintBlankFIN72050Request = { PCS_PST_No: pccNo };
+                this.fileExportService.executeFileExport(
+                  this.fin72050Service.printBlankFIN72050(printReq),
+                  '.pdf',
+                  (loading) => (this.printBlankLoading = loading),
+                ).subscribe({
+                  next: () => {
+                    this.messageService.successBubble('已產生空白盤點單，請列印後進行人工盤點');
+                    this.onCancel();
+                  },
+                });
+              },
+            });
         },
       });
   }
@@ -348,57 +418,17 @@ export class FIN72050CRUComponent
   }
 
   // ────────────────────────────────────────────────────
-  // 送出（新增 / 修改）
+  // 送出（修改）— 新增模式不走 onSubmit，僅有「列印空白盤點單」按鈕
   // ────────────────────────────────────────────────────
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (!this.hasPccNo) {
-            this.messageService.warnBubble('請先選擇保管人與盤點日期以取得盤點單號');
-            this.loading = false;
-            return;
-          }
-          this.doInsert();
-          break;
-        case CRUDStatus.Edit:
-          this.doUpdate();
-          break;
+      if (this.crudstatus === CRUDStatus.Edit) {
+        this.doUpdate();
+      } else {
+        // 新增模式不應走到此處（兩階段流程已由 onPrintBlank 處理）
+        this.loading = false;
       }
     });
-  }
-
-  private doInsert(): void {
-    const raw = this.dataForm.getRawValue();
-    const me = this.user;
-    const payload: InsertFIN72050Request = {
-      SYS_StoreNo: me?.SYS_StoreNo ?? '',
-      PCS_PST_No: raw.PCS_PST_No ?? '',
-      PCC_Date: this.toIsoDate(raw.PCC_Date) ?? '',
-      Keep_UsrNo: raw.Keep_UsrNo ?? '',
-      Keep_UsrName: raw.Keep_UsrName ?? undefined,
-      Keep_OrgID: raw.Keep_OrgID ?? undefined,
-      Keep_QuotaAmt: Number(raw.Keep_QuotaAmt ?? 0),
-      PCC_Type: '2',                                        // 固定
-      PCC_CountAmt: 0,                                      // 固定 0
-      ...this.collectDenominationsForPayload(),
-      PCS_Remark: raw.PCS_Remark ?? undefined,
-      CRT_USR_No: me?.user_No ?? undefined,
-      CRT_USR_Name: me?.user_Name ?? undefined,
-    };
-
-    this.fin72050Service.insertFIN72050(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000' || res.Data?.IsSuccess === false) {
-            this.messageService.errorBubble(res.Data?.ErrMsg || res.Message || '新增失敗');
-            return;
-          }
-          this.messageService.successBubble('新增成功');
-          this.onCancel();
-        },
-      });
   }
 
   private doUpdate(): void {
