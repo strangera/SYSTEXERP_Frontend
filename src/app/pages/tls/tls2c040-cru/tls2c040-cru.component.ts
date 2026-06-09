@@ -41,7 +41,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 })
 export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    VouNo: [{ value: '', disabled: true }],                     // 傳票編號
+    TransVouNo: [{ value: '', disabled: true }],                 // 傳票編號
     VouType: [{ value: '', disabled: true }],                   // 傳票種類
     SrcSheetType: [{ value: '', disabled: true }],              // 傳票型態
     VouDate: [{ value: '', disabled: true }],                   // 傳票日期

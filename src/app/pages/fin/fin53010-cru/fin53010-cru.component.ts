@@ -35,6 +35,7 @@ import {
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
+  FIN53010Aps4002ByVouNoRow,
   FIN53010Aps4023_CRow,
   FIN53010Aps4023Row,
   FIN53010Ars3001Row,
@@ -273,6 +274,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps2002RelatedRows = signal<FIN53010Aps2002Row[]>([]);
   public readonly aps4023_CRelatedRows = signal<FIN53010Aps4023_CRow[]>([]);
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
+  public readonly aps4002RelatedRows = signal<FIN53010Aps4002ByVouNoRow[]>([]);
 
   /** 傳票關聯六表總計（唯讀模式） */
   public readonly readonlyAps3001Total = signal<number>(0);
@@ -288,6 +290,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly readonlyAps2002_CFooter = computed(() => this.readonlyAps2002_CTotal());
   public readonly readonlyAps4023Footer = computed(() => this.readonlyAps4023Total());
   public readonly readonlyAps4023_CFooter = computed(() => this.readonlyAps4023_CTotal());
+  public readonly readonlyAps4002Footer = computed(() => ({
+    DAmt: this.aps4002RelatedRows().reduce((sum, r) => sum + (r.DAmt ?? 0), 0),
+    CAmt: this.aps4002RelatedRows().reduce((sum, r) => sum + (r.CAmt ?? 0), 0),
+  }));
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
@@ -402,6 +408,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'SummaryCount', header: '彙開註記', visible: true, align: 'left' },
     { field: 'AssetFlag', header: '資產註記', visible: true, align: 'left' },
     { field: 'InvoiceType', header: '發票使用別', visible: false, align: 'left' },
+  ];
+
+  public readonly aps4002RelatedColumns: ReportColumn[] = [
+    { field: 'BNK_id', header: '銀行科目代號', visible: true, align: 'left' },
+    { field: 'BNK_AccName', header: '科目名稱', visible: true, align: 'left' },
+    { field: 'DAmt', header: '存款', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'CAmt', header: '提款', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'VEN_No', header: '廠商代號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
+    { field: 'Remark', header: '摘要', visible: true, align: 'left' },
   ];
 
   public selectedItems: FIN53010Data[] = [];
@@ -1385,6 +1401,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.aps2002RelatedRows.set([]);
     this.aps4023_CRelatedRows.set([]);
     this.aps4023RelatedRows.set([]);
+    this.aps4002RelatedRows.set([]);
     this.readonlyAps3001Total.set(0);
     this.readonlyArs3001Total.set(0);
     this.readonlyAps2002Total.set({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
@@ -1490,6 +1507,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.aps2002RelatedRows.set(pick(d._APS2002));
         this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
         this.aps4023RelatedRows.set(pick(d._APS4023));
+        this.aps4002RelatedRows.set(pick(d._APS4002));
         this.readonlyAps3001Total.set(d._APS3001?.Total_ACP_Amt ?? 0);
         this.readonlyArs3001Total.set(d._ARS3001?.Total_ars_amt ?? 0);
         this.readonlyAps2002Total.set({
