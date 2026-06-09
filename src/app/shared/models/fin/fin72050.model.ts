@@ -194,23 +194,35 @@ export const FIN72050_STATUS_OPTIONS: { No: string; Name: string; Label: string 
   { No: '9', Name: '作廢', Label: '9 - 作廢' },
 ];
 
-// 盤點面額方式（PCC_Type）
+/**
+ * 盤點面額方式（PCC_Type）
+ *
+ * @deprecated 對齊舊系統後固定為 '2' 點鈔盤點，已不再提供切換 UI。
+ * 仍保留常數以利日後 API 對接，但前端不會 render radio。
+ */
 export const FIN72050_PCC_TYPE_OPTIONS: { value: '1' | '2'; label: string }[] = [
   { value: '1', label: '總額盤點' },
   { value: '2', label: '點鈔盤點' },
 ];
 
 // 面額（依規格欄位 PCC_ActAmt_{denom}，依使用者要求由大至小顯示）
-export const FIN72050_DENOMINATIONS: { key: string; controlName: string; label: string; amount: number }[] = [
-  { key: '2000', controlName: 'PCC_ActAmt_2000', label: '2000 元金額', amount: 2000 },
-  { key: '1000', controlName: 'PCC_ActAmt_1000', label: '1000 元金額', amount: 1000 },
-  { key: '500',  controlName: 'PCC_ActAmt_500',  label: '500 元金額',  amount: 500 },
-  { key: '200',  controlName: 'PCC_ActAmt_200',  label: '200 元金額',  amount: 200 },
-  { key: '100',  controlName: 'PCC_ActAmt_100',  label: '100 元金額',  amount: 100 },
-  { key: '50',   controlName: 'PCC_ActAmt_50',   label: '50 元金額',   amount: 50 },
-  { key: '10',   controlName: 'PCC_ActAmt_10',   label: '10 元金額',   amount: 10 },
-  { key: '5',    controlName: 'PCC_ActAmt_5',    label: '5 元金額',    amount: 5 },
-  { key: '1',    controlName: 'PCC_ActAmt_1',    label: '1 元金額',    amount: 1 },
+// 新增 `qtyControlName`：對應「數量」FormControl（qty_{denom}），三欄表格使用。
+export const FIN72050_DENOMINATIONS: {
+  key: string;
+  controlName: string;
+  qtyControlName: string;
+  label: string;
+  amount: number;
+}[] = [
+  { key: '2000', controlName: 'PCC_ActAmt_2000', qtyControlName: 'qty_2000', label: '2000 元', amount: 2000 },
+  { key: '1000', controlName: 'PCC_ActAmt_1000', qtyControlName: 'qty_1000', label: '1000 元', amount: 1000 },
+  { key: '500',  controlName: 'PCC_ActAmt_500',  qtyControlName: 'qty_500',  label: '500 元',  amount: 500 },
+  { key: '200',  controlName: 'PCC_ActAmt_200',  qtyControlName: 'qty_200',  label: '200 元',  amount: 200 },
+  { key: '100',  controlName: 'PCC_ActAmt_100',  qtyControlName: 'qty_100',  label: '100 元',  amount: 100 },
+  { key: '50',   controlName: 'PCC_ActAmt_50',   qtyControlName: 'qty_50',   label: '50 元',   amount: 50 },
+  { key: '10',   controlName: 'PCC_ActAmt_10',   qtyControlName: 'qty_10',   label: '10 元',   amount: 10 },
+  { key: '5',    controlName: 'PCC_ActAmt_5',    qtyControlName: 'qty_5',    label: '5 元',    amount: 5 },
+  { key: '1',    controlName: 'PCC_ActAmt_1',    qtyControlName: 'qty_1',    label: '1 元',    amount: 1 },
 ];
 
 export function getFIN72050StatusName(status?: string | null): string {
