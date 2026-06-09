@@ -67,7 +67,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     APRV_Date_Start: [null],   // 審核日期起
     APRV_Date_End: [null],     // 審核日期迄
     showReturnPriceOrdersOnly: [false],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'MAM_No', order: -1 }]],
   });
