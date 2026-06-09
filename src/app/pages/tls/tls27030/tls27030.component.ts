@@ -109,22 +109,8 @@ export class TLS27030Component extends BasicQueryPageComponent<unknown> implemen
     if (event.files && event.files.length > 0) {
       const clientIp = this.authService.getUserInfo()?.client_ip || '';
       this.loading = true;
-      const renamedFiles: File[] = event.files.map(originalFile => {
-        const date = new Date();
-        const year = date.getFullYear().toString().slice(-2); // Get last 2 digits
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        const formattedDate = `${year}${month}${day}`;
-        const extension = originalFile.name.split('.').pop()?.toLowerCase(); // csv or txt
-        const newName = this.getNewName(type, formattedDate, extension);
 
-        return new File([originalFile], newName, {
-          type: originalFile.type,
-          lastModified: originalFile.lastModified,
-        });
-      });
-
-      this.tls27030Service.uploadTLS27030(renamedFiles, clientIp, type).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.tls27030Service.uploadTLS27030(event.files, clientIp, type).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.loading = false;
         this.messageService.successBubble(response.Message);
         switch (type) {
@@ -142,19 +128,6 @@ export class TLS27030Component extends BasicQueryPageComponent<unknown> implemen
             break;
         }
       });
-    }
-  }
-
-  getNewName(type: string, formattedDate: string, extension?: string): string {
-    switch (type) {
-      case 'NCML': // 0101M159.DAT
-        return `${formattedDate.slice(-4)}M159.${extension}`;
-      case 'CTBC': // 20240106GMLOG.TXT
-        return `${formattedDate}GMLOG.${extension}`;
-      case 'CTBCPrk': // mmdd.xls or xlsx
-        return `${formattedDate.slice(-4)}.${extension}`;
-      default:
-        return `unknown`;
     }
   }
 
