@@ -338,6 +338,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     this.columns = [
       { field: 'talent_id', header: '專櫃編號', visible: false, align: 'left' },
       { field: 'tlt_building', header: '館別', visible: true, align: 'left' },
+      { field: 'bus_type_name', header: '大分類', align: 'left' },
       { field: 'team_name', header: 'TEAM', visible: true, align: 'left' },
       { field: 'division_name', header: '組別', visible: true, align: 'left' },
       { field: 'tlt_kind', header: '櫃別', visible: false, align: 'left' },
