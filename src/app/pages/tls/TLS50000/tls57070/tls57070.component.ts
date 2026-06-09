@@ -41,7 +41,7 @@ import { finalize } from 'rxjs';
 export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     pageIndex: [1],
-    pageSize: [30],
+    pageSize: [500],
     STK_YM: [new Date(), [Validators.required]], // 存貨年月
     HOS_NOList: [null], // 倉別條件
     LOGO_NoList: [null], // 品牌條件
