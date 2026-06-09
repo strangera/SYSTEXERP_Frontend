@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
@@ -23,7 +23,7 @@ export interface FieldsConfig {
   templateUrl: './dropdown-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, ButtonModule]
+  imports: [NgClass, NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, ButtonModule]
 })
 export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
   // 表單參數
@@ -55,12 +55,32 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
 
   ngOnInit(): void {
     this.updateControlState(this.control);
+
+    // 1. 直接監聽 control 的值變動，並導流到你的 inputChangeSubject
+    this.control.valueChanges.pipe(
+      debounceTime(300), // 這邊加了 debounce，下面 subject 的就可以拿掉，看你習慣
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      const inputValue = value || '';
+      this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
+
+      // 如果輸入時需要隱藏 overlay
+      if (this.showOverlay) {
+        this.op?.hide();
+      }
+    });
+
     if (this.formGroup) {
       this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
         this.formValueChanged.emit(value);
       });
     }
-    this.inputChangeSubject.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+
+    // 這裡維持你原本對 inputValueChanged 的對外 emit 邏輯
+    this.inputChangeSubject.pipe(
+      // 如果上面已經做過 debounce，這裡可以視情況移除 debounceTime
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
       this.inputValueChanged.emit(value);
     });
   }

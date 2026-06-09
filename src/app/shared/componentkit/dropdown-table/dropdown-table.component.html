@@ -2,45 +2,93 @@
   <ng-container *ngFor="let field of fieldsConfig">
     <div class="col pb-0">
       <ng-container *ngIf="field.mainDataField">
-        <label [for]="field.field">{{ field.header }}
+        <label [for]="field.field">
+          {{ field.header }}
           <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
-        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
-          (click)="onFocusAndInitialLoad($event)" [suggestions]="suggestions" [optionValue]="optionValue"
-          [placeholder]="control.disabled ? '' : placeholder" (keydown.enter)="handleEnterKey($event)">
-
+        <p-autoComplete
+          [formControl]="control"
+          [id]="field.field"
+          [optionLabel]="optionLabel"
+          (click)="onFocusAndInitialLoad($event)"
+          [suggestions]="suggestions"
+          [optionValue]="optionValue"
+          [placeholder]="control.disabled ? '' : placeholder"
+          (keydown.enter)="handleEnterKey($event)"
+          [ngClass]="{
+            'ng-invalid ng-dirty': submitted && control.errors,
+          }"
+        >
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
-              <div>{{ templateLabel !== '' ? options[templateLabel] : options[optionLabel] }}</div>
+              <div>
+                {{
+                  templateLabel !== ""
+                    ? options[templateLabel]
+                    : options[optionLabel]
+                }}
+              </div>
             </div>
           </ng-template>
         </p-autoComplete>
-        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
-          [control]="control"></app-control-messages>
+        <app-control-messages
+          [onerror]="submitted || (control.touched && control.invalid)"
+          [control]="control"
+        ></app-control-messages>
       </ng-container>
 
       <ng-container *ngIf="!field.mainDataField">
         <label for="{{ field.field }}">{{ field.header }}</label>
-        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" />
+        <input
+          type="text"
+          pInputText
+          [disabled]="true"
+          [value]="getFieldValue(field)"
+        />
       </ng-container>
     </div>
   </ng-container>
 </div>
 
-<p-overlayPanel #op [style]="{'min-width': '700px', 'max-width': '90vw'}" [appendTo]="'body'">
+<p-overlayPanel
+  #op
+  [style]="{ 'min-width': '700px', 'max-width': '90vw' }"
+  [appendTo]="'body'"
+>
   <ng-container *ngIf="showOverlay && formGroup">
     <div class="flex justify-content-end mb-1">
-      <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-sm p-button-secondary"
-        (click)="hideOverlay()"></button>
+      <button
+        type="button"
+        pButton
+        icon="pi pi-times"
+        class="p-button-text p-button-sm p-button-secondary"
+        (click)="hideOverlay()"
+      ></button>
     </div>
     <form [formGroup]="formGroup" class="grid p-fluid">
       <ng-content />
-      <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
-        (selectionChange)="onSelectionChange($event)" (itemClick)="onRowClick($event)" [columns]="dialogColumns"
-        [showHeader]="false" [showPage]="false" [showCheckBox]="true" selectionMode="single" [showManage]="false"
-        scrollHeight="400px" [loading]="loading" [totalRecords]="totalRecords" [rows]="30"
-        [rowsPerPageOptions]="[30,60,90]" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
-        [showCaption]="false" />
+      <app-table
+        class="col-12"
+        [dataKey]="optionValue"
+        [data]="dialogData"
+        [selectedItems]="selectedItems"
+        (selectionChange)="onSelectionChange($event)"
+        (itemClick)="onRowClick($event)"
+        [columns]="dialogColumns"
+        [showHeader]="false"
+        [showPage]="false"
+        [showCheckBox]="true"
+        selectionMode="single"
+        [showManage]="false"
+        scrollHeight="400px"
+        [loading]="loading"
+        [totalRecords]="totalRecords"
+        [rows]="30"
+        [rowsPerPageOptions]="[30, 60, 90]"
+        (lazyLoadData)="onLazyLoadData($event, formGroup)"
+        [lazy]="lazy"
+        [showCaption]="false"
+      />
     </form>
   </ng-container>
 </p-overlayPanel>

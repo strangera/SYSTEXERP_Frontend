@@ -180,7 +180,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
         PLU_MagNo: formValue.PLU_MagNo || undefined,
         IsOnlyShowDiff: formValue.IsOnlyShowDiff, // 是否只顯示差異
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 500,
         SortBy: displayMode === 1 ?
           [
             { field: 'PST_Date', order: 1 },
@@ -305,7 +305,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     const body = {
       queryNo: event.label || '',
       PLU_MagNo: undefined, // 不需要傳遞給後端，由 queryNo 負責模糊查詢
-      pageSize: 30,
+      pageSize: 500,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_No', order: 1 }],
     }

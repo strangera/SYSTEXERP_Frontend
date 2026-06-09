@@ -1,27 +1,25 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { Tls57160DataItem, Tls57160FooterItem, Tls57160Request, Tls57160Service } from '@service/api/tls/tls57160.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { AccordionModule } from 'primeng/accordion';
-import { CheckboxModule } from 'primeng/checkbox';
-//  匯入 Tls57160FooterItem 才能用於 footerTotal 的型別
-import { AsyncPipe, DatePipe } from '@angular/common';
-import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
-import { Tls57160DataItem, Tls57160FooterItem, Tls57160Request, Tls57160Service } from '@service/api/tls/tls57160.service';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button'; //  新增匯入 ButtonModule
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -37,7 +35,6 @@ import { finalize } from 'rxjs';
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextComponent,
     CalendarComponent,
     CheckboxModule,
     InputNumberComponent,
@@ -56,7 +53,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     PLU_NO: [null, [Validators.maxLength(20)]],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     stockIsZero: [false],
-    pageSize: [30, [Validators.required, Validators.min(30)]],
+    pageSize: [500, [Validators.required, Validators.min(30)]],
     pageIndex: [1],
   });
   HOS_NOOptions = this.dropdown.queryPos2034();
@@ -267,7 +264,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     const body = {
       queryNo: event.label || '',
       PLU_MagNo: undefined,
-      pageSize: 30,
+      pageSize: 500,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_No', order: 1 }],
     }
