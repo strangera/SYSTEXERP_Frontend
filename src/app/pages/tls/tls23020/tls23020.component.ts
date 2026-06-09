@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
@@ -37,11 +37,9 @@ import {
   LazyLoadEvent,
 } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
-@UntilDestroy()
 @Component({
   selector: 'app-tls23020',
   templateUrl: './tls23020.component.html',
-  styleUrls: ['./tls23020.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -60,14 +58,12 @@ import { ValidationService } from '../../../shared/service/validation.service';
     DialogModule,
     RadioButtonModule,
     TranslateModule,
-    // TableComponent,
-    // Table2Component,
     ButtonModule,
-    TableReportComponent, // ⬅️ 新增
+    TableReportComponent,
     InputTextRangeComponent,
   ],
 })
-export class TLS23020Component extends BasicQueryPageComponent<any> {
+export class TLS23020Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [];
   summaryData: any[] = [];
   readonly groupByField = 'groupKey';
@@ -192,7 +188,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23020');
-    this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
+    this.queryForm.patchValue({ pageSize: 500 }, { emitEvent: false });
     this.queryForm.patchValue(
       { SortBy: this.defaultSort },
       { emitEvent: false },
@@ -284,7 +280,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     const payload = {
       ...condPayload,
       pageIndex: evt.pageIndex ?? 1,
-      pageSize: evt.pageSize ?? 30,
+      pageSize: evt.pageSize ?? 500,
       SortBy: this.toBackendSort(normSort),
     };
 
@@ -407,7 +403,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
         // ✅ 後端可吃的排序
         SortBy: this.toBackendSort(body?.SortBy),
         pageIndex: body?.pageIndex ?? 1,
-        pageSize: body?.pageSize ?? 30,
+        pageSize: body?.pageSize ?? 500,
       })
       .pipe(
         map((res: any) => {
@@ -491,7 +487,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       // ① 組 payload（條件 + 分頁/排序）
       const condPayload = this.buildPayload(this.queryForm.getRawValue());
       const pageIndex = form.value?.pageIndex ?? 1;
-      const pageSize = form.value?.pageSize ?? 30;
+      const pageSize = form.value?.pageSize ?? 500;
 
       // (可能含 groupKey) 的排序，統一轉成後端可吃
       const rawSort = Array.isArray(form.value?.SortBy) ? form.value.SortBy : this.defaultSort;
@@ -717,7 +713,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
     if (this.includePagingAndSorting) {
       o.pageIndex = val?.pageIndex ?? 1;
-      o.pageSize = val?.pageSize ?? 30;
+      o.pageSize = val?.pageSize ?? 500;
       o.SortBy = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
     }
 
@@ -1088,9 +1084,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   private normalizeSortBy(
     input: any,
     groupField: string,
-  ): Array<{ field: string; order: 1 | -1 }> {
+  ): { field: string; order: 1 | -1 }[] {
     const list: any[] = Array.isArray(input) ? input : [];
-    const cleaned: Array<{ field: string; order: 1 | -1 }> = [];
+    const cleaned: { field: string; order: 1 | -1 }[] = [];
 
     for (const s of list) {
       // 1) 取出欄位名稱：若是陣列就拿第一個，最後強制轉字串
@@ -1100,7 +1096,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       if (!field) continue;
 
       // 2) 正規化排序方向：只接受 1/-1
-      const ord: number = Number(s?.order);
+      const ord = Number(s?.order);
       const order: 1 | -1 = ord === -1 ? -1 : 1;
 
       cleaned.push({ field, order });
@@ -1108,7 +1104,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
     // 3) 去除重複 field（保留第一次出現的）
     const seen = new Set<string>();
-    const dedup: Array<{ field: string; order: 1 | -1 }> = [];
+    const dedup: { field: string; order: 1 | -1 }[] = [];
     for (const s of cleaned) {
       if (seen.has(s.field)) continue;
       seen.add(s.field);
