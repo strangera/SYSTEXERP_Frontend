@@ -76,7 +76,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     { No: '3', Name: '過帳' }
   ];
   columns: ReportColumn[] = [
-    { field: 'VouNo', header: '傳票編號', visible: true },
+    { field: 'TransVouNo', header: '傳票編號', visible: true },
     {
       field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => {
         const it = this.srcSheetTypeOptions.find(item => item.No === value);
