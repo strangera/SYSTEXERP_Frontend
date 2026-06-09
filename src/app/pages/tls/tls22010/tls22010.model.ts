@@ -29,6 +29,7 @@ export interface ITxnData {
   SLE_SaleAmt: number;
   TXN_Mode_P: number;
   Status_Code: string;
+  IsCompany?: boolean;
 }
 
 /**
