@@ -51,13 +51,13 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       Validators.pattern(/^\d{8}$/)
     ]],
     VEN_RemitFeeMode: ['', Validators.required],
-    VEN_Name: ['', [Validators.required, Validators.maxLength(60)]],
-    VEN_EngName: ['', Validators.maxLength(60)],
+    VEN_Name: ['', [Validators.required, Validators.maxLength(100)]],
+    VEN_EngName: ['', Validators.maxLength(100)],
     VEN_ShortName: ['', Validators.maxLength(10)],
 
     // 公司資料
     VEN_Post: ['', Validators.maxLength(6)],
-    VEN_Address: ['', Validators.maxLength(100)],
+    VEN_Address: ['', [Validators.required, Validators.maxLength(100)]],
     VEN_GUIAddr: ['', Validators.maxLength(100)],
     VEN_Tel: ['', Validators.maxLength(15)],
     VEN_Fax: ['', Validators.maxLength(15)],
