@@ -32,7 +32,6 @@ import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.mo
 @Component({
   selector: 'app-tls52050',
   templateUrl: './tls52050.component.html',
-  styleUrls: ['./tls52050.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

@@ -27,7 +27,6 @@ import { debounceTime, finalize } from 'rxjs';
 @Component({
   selector: 'app-tls53010-cru',
   templateUrl: './tls53010-cru.component.html',
-  styleUrl: './tls53010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,
