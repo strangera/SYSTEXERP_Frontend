@@ -11,7 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { saveAs } from 'file-saver';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
@@ -52,6 +52,7 @@ import {
   RowEditSaveEvent, toggleButtons, validateRowData,
 } from './table2.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-table2',
   templateUrl: './table2.component.html',

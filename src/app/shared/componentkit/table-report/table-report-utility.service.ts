@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { SafeUrl } from '@angular/platform-browser';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ReportColumn } from './table-report.model';
 
+@UntilDestroy()
 @Injectable({
   providedIn: 'root'
 })

@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, in
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
@@ -15,7 +15,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
 import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
 import { SystemDataService } from 'src/app/service/system/system-data.service';
-import { ExportComponent } from '../../exports/export.component';
 import { ExportContext } from '../../exports/report-export.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { QueryStateService } from '../../service/query-state.service';
@@ -24,11 +23,12 @@ import { TableExpansionComponent } from './table-report-expansion/table-report-e
 import { TableReportUtilityService } from './table-report-utility.service';
 import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table-report.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-table-report',
   host: { 'table-report-id': '複製時請自行取唯一名' },
   standalone: true,
-  imports: [ExportComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
+  imports: [TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
