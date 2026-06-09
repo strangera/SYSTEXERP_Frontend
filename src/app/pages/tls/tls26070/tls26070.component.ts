@@ -1,7 +1,7 @@
 import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownOption } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
@@ -16,6 +16,7 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { debounceTime, finalize, map } from 'rxjs';
+import { ExportContext } from 'src/app/shared/exports/report-export.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { TLS26070Data, TLS26070QueryRequest, TLS26070Service } from '../../../service/api/tls/tls26070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,6 +25,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-tls26070',
   templateUrl: './tls26070.component.html',
@@ -110,6 +112,10 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   selectedItems: TLS26070Data[] = [];
 
   lastQueryBody?: TLS26070QueryRequest;
+  myExportContext: ExportContext = {
+    customFileName: '各櫃預售業績總表',
+    printRemarkText: '查詢業績期間：暫無條件資料'
+  };
 
   columns: ReportColumn[] = [];
 
@@ -205,6 +211,45 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
       const payload = this.buildPayload(formValue);
+
+      let periodText1 = ''; // 基準日期期間
+      let periodText2 = ''; // 比較日期期間
+      const fmtDate = (d: any, fmt = 'yyyy/MM/dd') => this.datePipe.transform(d, fmt) ?? '';
+
+      switch (formValue.reportType) {
+        case '1': // 日報
+          periodText1 = fmtDate(formValue.onedatedd);
+          periodText2 = fmtDate(formValue.onedatedd_c);
+          break;
+        case '2': // 週報 (拿 API 回填的起迄日)
+          periodText1 = `${fmtDate(formValue.startdate)} ~ ${fmtDate(formValue.enddate)}`;
+          periodText2 = `${fmtDate(formValue.startdate_c)} ~ ${fmtDate(formValue.enddate_c)}`;
+          break;
+        case '3': // 月報
+          periodText1 = fmtDate(formValue.onedatemm, 'yyyy/MM');
+          periodText2 = fmtDate(formValue.onedatemm_c, 'yyyy/MM');
+          break;
+        case '4': // 半年報
+          {
+            const halfName1 = formValue.halfyear === '1' ? '上半年' : '下半年';
+            const halfName2 = formValue.halfyear_c === '1' ? '上半年' : '下半年';
+            periodText1 = `${fmtDate(formValue.halfyear_onedateyy, 'yyyy')}年 ${halfName1}`;
+            periodText2 = `${fmtDate(formValue.halfyear_onedateyy_c, 'yyyy')}年 ${halfName2}`;
+            break;
+          }
+        case '5': // 年報
+          periodText1 = `${fmtDate(formValue.year_onedateyy, 'yyyy')}年度`;
+          periodText2 = `${fmtDate(formValue.year_onedateyy_c, 'yyyy')}年度`;
+          break;
+        case '6': // 區間報表
+          periodText1 = `${fmtDate(formValue.sad_startdate)} ~ ${fmtDate(formValue.sad_enddate)}`;
+          periodText2 = `${fmtDate(formValue.sad_startdate_c)} ~ ${fmtDate(formValue.sad_enddate_c)}`;
+          break;
+        case '7': // 活動報表 (拿 API 回填的活動起迄)
+          periodText1 = `${fmtDate(formValue.event_startdate)} ~ ${fmtDate(formValue.event_enddate)}`;
+          periodText2 = `${fmtDate(formValue.event_startdate_c)} ~ ${fmtDate(formValue.event_enddate_c)}`;
+          break;
+      }
       this.tls26070Service.queryTLS26070(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
@@ -216,6 +261,10 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
             : null;
           this.totalRecords = response.TotalCount;
           this.lastQueryBody = payload;
+          this.myExportContext = {
+            customFileName: '各櫃預售業績總表',
+            printRemarkText: `查詢基準日期期間：${periodText1}\n查詢比較日期期間：${periodText2}`
+          };
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -313,8 +362,8 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'preorder_amt_now', header: '當期預售金額', visible: !tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'preorder_namt_now', header: '當期預售金額', visible: tax, format: formatAmount, isTotal: true, align: 'right' },
-      { field: 'Achievement_rate_now', header: '目標達成率', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right' },
-      { field: 'nAchievement_rate_now', header: '目標達成率', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right' },
+      { field: 'Achievement_rate_now', header: '目標達成率', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right', exportFormat: 'percentage' },
+      { field: 'nAchievement_rate_now', header: '目標達成率', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right', exportFormat: 'percentage' },
       { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isTotal: true, format: formatAmount, align: 'right' },
       { field: 'avg_ordervalue_now', header: '當期客單價', visible: !tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'navg_ordervalue_now', header: '當期客單價', visible: tax, format: formatAmount, isTotal: true, align: 'right' },
@@ -323,14 +372,14 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isTotal: true, format: formatAmount, align: 'right' },
       { field: 'avg_ordervalue_last', header: '去年同期客單價', visible: !tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'navg_ordervalue_last', header: '去年同期客單價', visible: tax, format: formatAmount, isTotal: true, align: 'right' },
-      { field: 'Growth', header: '成長比', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right' },
-      { field: 'nGrowth', header: '成長比', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right' },
+      { field: 'Growth', header: '成長比', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right', exportFormat: 'percentage' },
+      { field: 'nGrowth', header: '成長比', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true, align: 'right', exportFormat: 'percentage' },
       { field: 'PerformanceDiff', header: '業績差異', visible: !tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'nPerformanceDiff', header: '業績差異', visible: tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isTotal: true, align: 'right' },
       { field: 'OrdervalueDiff', header: '客單差異', visible: !tax, isTotal: true, align: 'right' },
       { field: 'nOrdervalueDiff', header: '客單差異', visible: tax, isTotal: true, align: 'right' },
-      { field: 'tlt_space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), isTotal: true, align: 'right' },
+      { field: 'tlt_space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), isTotal: true, align: 'right', exportFormat: 'decimal2' },
       { field: 'MonthlyFloorEffect', header: '月坪效', visible: !tax, format: formatAmount, isTotal: true, align: 'right' },
       { field: 'nMonthlyFloorEffect', header: '月坪效', visible: tax, format: formatAmount, isTotal: true, align: 'right' }
     ];

@@ -31,7 +31,7 @@
           <!-- 日營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '1'"
+            *ngIf="queryForm.controls.reportType.value === '1'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -65,7 +65,7 @@
           <!-- 週營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '2'"
+            *ngIf="queryForm.controls.reportType.value === '2'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -137,7 +137,7 @@
           <!-- 月營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '3'"
+            *ngIf="queryForm.controls.reportType.value === '3'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -171,7 +171,7 @@
           <!-- 半年營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '4'"
+            *ngIf="queryForm.controls.reportType.value === '4'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -229,7 +229,7 @@
           <!-- 年營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '5'"
+            *ngIf="queryForm.controls.reportType.value === '5'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -263,7 +263,7 @@
           <!-- 區間營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '6'"
+            *ngIf="queryForm.controls.reportType.value === '6'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -297,7 +297,7 @@
           <!-- 活動區間營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="queryForm.controls.reportType.value == '7'"
+            *ngIf="queryForm.controls.reportType.value === '7'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -485,6 +485,7 @@
 <div class="card">
   <div class="col-12">
     <app-table-report
+      [exportContext]="myExportContext"
       [data]="data"
       dataKey="talent_id"
       tableKey="TLS26070"
