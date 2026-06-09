@@ -359,6 +359,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     const allColumns: ReportColumn[] = [
       { field: 'talent_id', header: '專櫃編號', visible: false, align: 'left' },
       { field: 'tlt_building', header: '館別', align: 'left' },
+      { field: 'bus_class_name', header: '中分類', align: 'left' },
       { field: 'team_name', header: 'TEAM', align: 'left' },
       { field: 'division_name', header: '組別', align: 'left' },
       { field: 'tlt_kind', header: '櫃別', align: 'left' },
