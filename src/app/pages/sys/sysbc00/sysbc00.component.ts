@@ -36,7 +36,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     BNK_No: ['', [Validators.maxLength(10), this.validation.numberValidator]], // 銀行代號
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'BNK_No', order: 1 }]],
   });

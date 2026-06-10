@@ -32,7 +32,7 @@ export class SYS0792Component extends BasicQueryPageComponent<IQueryResponse> im
   queryForm = this.formBuilder.group({
     user_No: ['', [Validators.maxLength(16)]], // 後端 varchar(16)
     user_Name: ['', [Validators.maxLength(20)]], // 後端 nvarchar(20)
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'Login_time', order: 2 }]],
   });

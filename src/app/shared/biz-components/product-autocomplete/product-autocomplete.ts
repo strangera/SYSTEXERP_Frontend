@@ -36,6 +36,7 @@ export class ProductAutocompleteComponent {
   constructor(private productAutocompleteService: ProductAutocompleteService) { }
 
   onAutoCompleteInputChange(event: Record<'label', string>) {
+    console.log('ProductAutocompleteComponent onAutoCompleteInputChange event =', event);
     const body = {
       ...this.extraFilters,
       queryNo: event.label || '',

@@ -33,7 +33,7 @@ export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Respon
   queryForm = this.formBuilder.group({
     Prog_No: ['', [Validators.required, Validators.maxLength(10)]], // 作業代碼，必填且限制長度
     // 預設排序欄位為 Role_No，排序順序為 ASC (1)
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'Role_No', order: 1 }]],
   });
