@@ -43,6 +43,12 @@ export interface QueryFIN32030ARRequest extends BaseQueryRequest {
   DateFrom?: string | null;
   /** 立帳日期迄 */
   DateTo?: string | null;
+  /** 應收金額起 */
+  AmtFrom?: number | null;
+  /** 應收金額迄 */
+  AmtTo?: number | null;
+  /** 摘要 */
+  NoteDesc?: string | null;
 }
 
 /**
