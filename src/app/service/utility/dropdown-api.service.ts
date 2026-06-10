@@ -14,6 +14,7 @@ import {
   Aps1002Item,
   Aps1003Query,
   Ass13010PurchaseNumberDropDownItem,
+  BatchTalentChargeQuery,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -34,6 +35,7 @@ import {
   FaClassMItem,
   FaClassMQuery,
   FaHosItem,
+  FaSitemAss1000Item,
   FasItemDropdownItem,
   FaSitemItem,
   FaSitemQuery,
@@ -366,6 +368,46 @@ export class DropdownApiService {
       'GOODS_NAME',
       payload,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * 查詢品項(FASITEM)下拉（ASS0000/ASS1000 路由）— 透過 ASS11040 主查詢 endpoint，
+   * 同步回傳 UNIT 供明細列自動帶入單位。不加 MATERIAL_TYPE 過濾，全部品項皆出現。
+   *
+   * Endpoint response 為 wrapped 結構 `ApiResponse<{ TotalRows, TotalPages, QueryData: T[] }>`，
+   * 與 `queryAndMapDropdown` 預期的扁平 `ApiResponse<T[]>` 不同，因此直接 inline 處理。
+   * Request 帶 PageSize=9999 以一次取齊所有品項。
+   */
+  queryFasItemAss1000Dropdown(): Observable<Option[] | null> {
+    return this.http
+      .post<
+        ApiResponse<{
+          TotalRows?: number;
+          TotalPages?: number;
+          QueryData?: FaSitemAss1000Item[] | null;
+        }>
+      >(`${this.apiUrl}/ASS0000/ASS1000/queryASS11040`, {
+        PageSize: 9999,
+        PageIndex: 1,
+      })
+      .pipe(
+        map(response => {
+          const items = response?.Data?.QueryData ?? null;
+          return items
+            ? items.map(item => ({
+              ...item,
+              // FASITEM_ID 為 int64（對應 SearchASS11040Response.ID），用於 Insert/Update DETAILS
+              value: item.ID,
+              label: `${item.GOODS_ID} - ${item.GOODS_NAME}`,
+            }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryASS11040 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢商品管理編號(ASS11040)下拉選單 */
@@ -965,6 +1007,12 @@ export class DropdownApiService {
   /** 查詢專櫃抽成主檔(TLTTALENT_CHARGE) (依照合約編號talent_id查詢) */
   queryTltTalentCharge(body: TalentChargeQuery): Observable<TalentChargeItem[] | null> {
     return this.queryDropdownWithParams<TalentChargeItem, TalentChargeQuery>('/queryTLTTALENT_CHARGE_DropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  batchQueryTltTalentCharge(talentIds: number[]): Observable<any> {
+    return this.queryDropdownWithParams<TalentChargeItem, BatchTalentChargeQuery>('/BatchQueryTLTTALENT_CHARGE', { talent_ids: talentIds }).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

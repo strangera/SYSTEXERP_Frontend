@@ -72,7 +72,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     APRV_USR: [null], // 審核人員
     APRV_Date_Start: [null], // 審核(驗收)日期起
     APRV_Date_End: [null], // 審核(驗收)日期迄
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: -1 }]],
   });
@@ -88,10 +88,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   lastQueryBody: IQueryTLS52030Request | null = null;
   columns: ReportColumn[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true, width: '110px' },
-    { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' }, // 廠商編號
-    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'VEN_No', header: '廠商編號', visible: true, width: '90px' }, // 廠商編號
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, width: '150px' }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true, width: '80px' }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     // { field: 'org_id', header: '組織代碼/組織名稱', visible: true },

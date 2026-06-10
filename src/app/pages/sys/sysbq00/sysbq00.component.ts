@@ -11,7 +11,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysbq00',
@@ -32,7 +32,9 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   queryForm = this.formBuilder.group({
     data_type: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]],          // 資料型態
     data_type_desc: ['', [Validators.maxLength(200)]],     // 資料型態的描述 (line1, line2, line3, line4, line5)
-    ...createPaginationConfig([{ field: 'data_type', order: 1 }]) // 分頁和排序
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'data_type', order: 1 }]],
   });
 
   totalRecords = 0;

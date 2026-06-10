@@ -12,7 +12,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -35,7 +34,6 @@ import { finalize } from 'rxjs';
     DropdownComponent,
     InputTextComponent,
     CalendarComponent,
-    InputNumberComponent,
     ButtonComponent,
     TranslateModule,
     TableReportComponent,
@@ -54,8 +52,11 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     STK_Date: [new Date(), [Validators.required]],
     ShowStockRange: ['1'],
-    pageSize: [30],
-    pageIndex: [1]
+    SortBy: [[
+      { field: 'LOGO_CH_NAME', order: 1 },
+      { field: 'HOS_NAME', order: 1 },
+      { field: 'PLU_MagNo', order: 1 },
+    ]],
   });
 
   warehouseOptions = this.dropdown.queryPos2034();
@@ -74,17 +75,17 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
   columnGroup = [{ field: '合計', header: '合計' }];
   columns: ReportColumn[] = [
     { field: 'LOGO_CH_NAME', header: '品牌名稱', align: 'left' },
-    { field: 'HOS_NAME', header: '倉別', align: 'left' },
-    { field: 'PLU_MagNo', header: '管理編號', align: 'left' },
-    { field: 'PLU_Name', header: '商品名稱', align: 'left' },
-    { field: 'PLU_No', header: '國際條碼', align: 'left' },
+    { field: 'HOS_NAME', header: '倉別', align: 'left', width: '55px' },
+    { field: 'PLU_MagNo', header: '商品管理編號', align: 'left', width: '105px' },
+    { field: 'PLU_Name', header: '商品名稱', align: 'left', width: '105px' },
+    { field: 'PLU_No', header: '國際條碼', align: 'left', width: '105px' },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', align: 'left' },
-    { field: 'CAT_LName', header: '大分類', align: 'left' },
-    { field: 'CAT_MName', header: '中分類', align: 'left' },
-    { field: 'CAT_SName', header: '小分類', align: 'left' },
+    { field: 'CAT_LName', header: '大分類', align: 'left', width: '55px' },
+    { field: 'CAT_MName', header: '中分類', align: 'left', width: '55px' },
+    { field: 'CAT_SName', header: '小分類', align: 'left', width: '80px' },
     { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmountCN, align: 'right' },
     { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmountCN, align: 'right' },
-    { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount, align: 'right' },
+    { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount, align: 'right', width: '35px' },
     { field: 'sumPLU_OrderPrc', header: '進價(未稅)', groupField: '合計', format: formatAmount, align: 'right' },
     { field: 'sumPLU_SalePrc', header: '售價(含稅)', groupField: '合計', format: formatAmount, align: 'right' },
   ];

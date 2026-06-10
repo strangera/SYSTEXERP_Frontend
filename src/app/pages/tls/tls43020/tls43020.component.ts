@@ -52,7 +52,7 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     NOT_EndDate_End: [null as null | Date],
     NOT_File: ['', [Validators.maxLength(200)]],
     NOT_Status: [null],
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1],
     SortBy: [[{ field: 'NOT_No', order: 1 }]],
   });

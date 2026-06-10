@@ -21,10 +21,16 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report [apiUrl]="queryForm.value.authType === 'User' ? 'querySYS0770AllUsers' : 'querySYS0770UserRoles'"
-    tableKey="sys0770" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
+  <app-table-report [exportContext]="{
+      apiUrl:
+        queryForm.value.authType === 'User'
+          ? 'querySYS0770AllUsers'
+          : 'querySYS0770UserRoles',
+    }" tableKey="sys0770" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
     [showDetail]="false" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryForm.value.authType === 'User' ? sys0770Service.queryAllUsers.bind(sys0770Service) : sys0770Service.queryUserRoles.bind(sys0770Service)">
-  </app-table-report>
+    [lastQueryBody]="lastQueryBody" [queryFunction]="
+      queryForm.value.authType === 'User'
+        ? sys0770Service.queryAllUsers.bind(sys0770Service)
+        : sys0770Service.queryUserRoles.bind(sys0770Service)
+    "></app-table-report>
 </div>

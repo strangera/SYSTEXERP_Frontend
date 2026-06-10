@@ -29,7 +29,7 @@ export class TLS45030Component extends BasicQueryPageComponent<QueryTLS45030Resp
     Txn_Date_End: [new Date()],
     ECR_No_List: [[]], // 多選清單使用陣列 []
     TLT_No_List: [[]], // 多選清單使用陣列 []
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'TXN_Date', order: -1 }]],
   });

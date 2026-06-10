@@ -1,31 +1,74 @@
 <div class="card">
   <div class="flex align-items-center gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="產生領袋資料" [loading]="loading"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="產生領袋資料"
+      [loading]="loading"
+    ></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-calendar class="col-12 md:col-6 lg:col-3" calendarType="dateOne" label="入帳日期" controlName="TXN_DATE"
-            [control]="queryForm.controls.TXN_DATE" [submitted]="submitted"></app-calendar>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-3"
+            calendarType="dateOne"
+            label="入帳日期"
+            controlName="TXN_DATE"
+            [control]="queryForm.controls.TXN_DATE"
+            [submitted]="submitted"
+          ></app-calendar>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-3" label="狀態" [options]="statusOptions" optionLabel="Name"
-            optionValue="No" controlName="STATUS" [control]="queryForm.controls.STATUS"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-3"
+            label="狀態"
+            [options]="statusOptions"
+            optionLabel="Name"
+            optionValue="No"
+            controlName="STATUS"
+            [control]="queryForm.controls.STATUS"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-3" label="繳袋型態" [options]="bagTypeOptions" optionLabel="Name"
-            optionValue="No" controlName="BAG_TYPE" [control]="queryForm.controls.BAG_TYPE"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-3"
+            label="繳袋型態"
+            [options]="bagTypeOptions"
+            optionLabel="Name"
+            optionValue="No"
+            controlName="BAG_TYPE"
+            [control]="queryForm.controls.BAG_TYPE"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀機號" controlName="ECR_NO"
-            [control]="queryForm.controls.ECR_NO" [options]="queryEcrNoOptions | async" optionLabel="label"
-            optionValue="value" controlName="BAG_TYPE" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-3"
+            label="收銀機號"
+            controlName="ECR_NO"
+            [control]="queryForm.controls.ECR_NO"
+            [options]="queryEcrNoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            controlName="BAG_TYPE"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -35,9 +78,19 @@
 </div>
 
 <div class="card">
-  <app-table-report apiUrl="queryTLS28020" tableKey="tls28020" [data]="data" [columns]="columns" [addButton]="addButton"
-    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [showEdit]="false" [showDetail]="false"
-    [lazy]="false" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls28020Service.queryTLS28020.bind(tls28020Service)">
-  </app-table-report>
+  <app-table-report
+    [exportContext]="{ apiUrl: 'queryTLS28020' }"
+    tableKey="tls28020"
+    [data]="data"
+    [columns]="columns"
+    [addButton]="addButton"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showDelete]="false"
+    [showEdit]="false"
+    [showDetail]="false"
+    [lazy]="false"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls28020Service.queryTLS28020.bind(tls28020Service)"
+  ></app-table-report>
 </div>

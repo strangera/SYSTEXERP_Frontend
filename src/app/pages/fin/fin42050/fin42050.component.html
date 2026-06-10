@@ -17,113 +17,114 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="類別"
-              [control]="queryForm.controls.type"
-              [options]="typeOptions"
+              groupname="reportTypeRadio"
+              [control]="queryForm.controls.ReportType"
+              [options]="ReportType_Options"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
-
-          <!-- 區域 1: 實際值 -->
-          <div class="col-12">
-            <fieldset class="no-border">
-              <legend>實際值</legend>
-              <div class="col-12">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年月"
-                  controlName="year"
-                  [control]="queryForm.controls.year1"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </fieldset>
-          </div>
-
-          <!-- 區域 2: 預算版本1 -->
-          <div class="col-12">
-            <fieldset class="no-border">
-              <legend>預算版本1</legend>
-              <div class="col-12">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年月"
-                  controlName="year"
-                  [control]="queryForm.controls.year2"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12">
-                <app-input-text
-                  label="版本別"
-                  controlName="version1"
-                  [control]="queryForm.controls.version1"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </fieldset>
-          </div>
-
-          <!-- 區域 3: 預算版本2 -->
-          <div class="col-12">
-            <fieldset class="no-border">
-              <legend>預算版本2</legend>
-              <div class="col-12">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年月"
-                  controlName="year"
-                  [control]="queryForm.controls.year"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12">
-                <app-input-text
-                  label="版本別"
-                  controlName="version2"
-                  [control]="queryForm.controls.version2"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </fieldset>
-          </div>
-
-          <!-- 其他表單字段 -->
-          <div class="col-12">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門"
-              controlName="department"
-              [options]="departmentOptions"
+              controlName="Org_ID"
+              [options]="OrgId_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.department"
+              [control]="queryForm.controls.Org_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-
-          <div class="col-12">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="單位金額表示"
-              groupname="systemtyperadio"
-              [control]="queryForm.controls.unit"
-              [options]="unitOptions"
+              groupname="amtUnitRadio"
+              [control]="queryForm.controls.AmtUnit"
+              [options]="AmtUnit_Options"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+
+          <!-- 實際值 -->
+          <div class="col-12">
+            <fieldset>
+              <legend>實際值</legend>
+              <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-calendar
+                    calendarType="dateMonthOne"
+                    label="年月"
+                    controlName="ActualYM"
+                    [control]="queryForm.controls.ActualYM"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- 預算版本1 -->
+          <div class="col-12">
+            <fieldset>
+              <legend>預算版本1</legend>
+              <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-calendar
+                    calendarType="dateMonthOne"
+                    label="年月"
+                    controlName="BudgetYM1"
+                    [control]="queryForm.controls.BudgetYM1"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="版本別"
+                    controlName="BudgetVersion1"
+                    [control]="queryForm.controls.BudgetVersion1"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- 預算版本2 -->
+          <div class="col-12">
+            <fieldset>
+              <legend>預算版本2</legend>
+              <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-calendar
+                    calendarType="dateMonthOne"
+                    label="年月"
+                    controlName="BudgetYM2"
+                    [control]="queryForm.controls.BudgetYM2"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="版本別"
+                    controlName="BudgetVersion2"
+                    [control]="queryForm.controls.BudgetVersion2"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -131,10 +132,42 @@
 <div class="card">
   <div class="col-12">
     <app-table
+      tableKey="FIN42050"
       [data]="data"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90]"
+      [showDelete]="false"
+      [showManage]="false"
+      [showCheckBox]="false"
+      [showSort]="false"
+      [showReportMode]="false"
+      dataKey="SortNo"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+    >
+      <header>
+        <div class="flex justify-content-end align-items-center gap-2">
+          <p-button
+            styleClass="p-2"
+            label="預算版本比較表.PDF"
+            [loading]="btnPDFLoading"
+            (click)="exportPDF()"
+            icon="pi pi-file"
+            [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="預算版本比較表.XLSX"
+            [loading]="btnExcelLoading"
+            icon="pi pi-file-excel"
+            (click)="exportExcel()"
+            [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"
+          ></p-button>
+        </div>
+      </header>
+    </app-table>
   </div>
 </div>

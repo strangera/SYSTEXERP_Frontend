@@ -99,9 +99,11 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="櫃位類型" controlName="store_way" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.store_way"
-              [options]="[{ label: '全部', value: null },{ label: '專櫃', value: '1' }, { label: '自營', value: '2' }]"
-              [submitted]="submitted"></app-radiobutton>
+              [control]="queryForm.controls.store_way" [options]="[
+                { label: '全部', value: null },
+                { label: '專櫃', value: '1' },
+                { label: '自營', value: '2' },
+              ]" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -114,19 +116,23 @@
 </div>
 <div class="flex justify-content-center my-3">
   <p-selectButton [options]="typeOptions" [(ngModel)]="reportType" (onChange)="switchReport($event.value)"
-    optionLabel="label" optionValue="value" [allowEmpty]="false">
-  </p-selectButton>
+    optionLabel="label" optionValue="value" [allowEmpty]="false"></p-selectButton>
 </div>
 
-@if (queryForm.get('store_way')?.value === null || queryForm.get('store_way')?.value === '1') {
+@if (
+queryForm.get("store_way")?.value === null ||
+queryForm.get("store_way")?.value === "1"
+) {
 <div class="card">
   <div class="flex align-items-center mb-2">
     <span class="text-xl font-bold">一般專櫃</span>
   </div>
-  <app-table-report [apiUrl]="apiUrl" tableKey="tls27090_1" [data]="data1" [columns]="columns"
-    [Conditions]="lastQueryBody1" [columnGroup]="columnGroup" [totalRecords]="totalRecords1"
-    [lastQueryBody]="lastQueryBody1" [showDelete]="false" [footerData]="footerData1" [showReportMode]="false"
-    [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading">
+  <app-table-report [exportContext]="{
+        apiUrl: apiUrl,
+        conditions: lastQueryBody1,
+      }" tableKey="tls27090_1" [data]="data1" [columns]="columns" [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords1" [lastQueryBody]="lastQueryBody1" [showDelete]="false" [footerData]="footerData1"
+    [showReportMode]="false" [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
@@ -141,15 +147,20 @@
 </div>
 }
 
-@if (queryForm.get('store_way')?.value === null || queryForm.get('store_way')?.value === '2') {
+@if (
+queryForm.get("store_way")?.value === null ||
+queryForm.get("store_way")?.value === "2"
+) {
 <div class="card mt-4">
   <div class="flex align-items-center mb-2">
     <span class="text-xl font-bold">自營專櫃</span>
   </div>
-  <app-table-report [apiUrl]="apiUrl" tableKey="tls27090_2" [data]="data2" [columns]="columns"
-    [Conditions]="lastQueryBody2" [columnGroup]="columnGroup" [totalRecords]="totalRecords2" [showReportMode]="false"
-    [lastQueryBody]="lastQueryBody2" [showDelete]="false" [footerData]="footerData2"
-    [queryFunction]="getCurrentQueryFunction()" [showManage]="false" [loading]="loading2">
-  </app-table-report>
+  <app-table-report [exportContext]="{
+        apiUrl: apiUrl,
+        conditions: lastQueryBody2,
+      }" tableKey="tls27090_2" [data]="data2" [columns]="columns" [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords2" [showReportMode]="false" [lastQueryBody]="lastQueryBody2" [showDelete]="false"
+    [footerData]="footerData2" [queryFunction]="getCurrentQueryFunction()" [showManage]="false"
+    [loading]="loading2"></app-table-report>
 </div>
 }

@@ -15,7 +15,9 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { DropdownOption } from '@shared/constants/business.constants';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { debounceTime, finalize, map, Observable, tap } from 'rxjs';
+import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { TLS26050Data, TLS26050QueryRequest, TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -42,7 +44,8 @@ import { createPaginationConfig, formatAmount } from '../../../shared/componentk
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     TableReportComponent,
-    DropdownComponent
+    DropdownComponent,
+    ButtonModule
   ]
 })
 export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> implements OnInit {
@@ -110,6 +113,10 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   columns: ReportColumn[] = [];
   lastQueryBody: TLS26050QueryRequest | null = null;
 
+  // 列印按鈕載入狀態
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   //#region 下拉選項定義
   // 1. 日期查詢條件相關下拉選項
   // 報表類型選項（日/週/月/半年/年/區間/活動區間營業報表）
@@ -154,6 +161,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     private sharedDropdownService: SharedDropdownService,
     private counterNameService: CounterNameService,
     private dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -204,6 +212,28 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26050Service.exportExcelTLS26050({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
+  }
+
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26050Service.exportPDFTLS26050({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
   }
 
   /** 提供給 table-report 使用的查詢函式，支援分頁與排序 */
@@ -308,6 +338,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     this.columns = [
       { field: 'talent_id', header: '專櫃編號', visible: false, align: 'left' },
       { field: 'tlt_building', header: '館別', visible: true, align: 'left' },
+      { field: 'bus_type_name', header: '大分類', align: 'left' },
       { field: 'team_name', header: 'TEAM', visible: true, align: 'left' },
       { field: 'division_name', header: '組別', visible: true, align: 'left' },
       { field: 'tlt_kind', header: '櫃別', visible: false, align: 'left' },

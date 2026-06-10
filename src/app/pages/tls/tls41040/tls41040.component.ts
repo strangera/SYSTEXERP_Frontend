@@ -47,7 +47,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Data> imp
     NOT_EndDateTime: [new Date()], // 結束時間
     NOT_Status: ['A'], // 通告狀態
     NOT_Remark: ['', [Validators.maxLength(200)]], // 改成和後端一樣
-    pageSize: [30],
+    pageSize: [100],
     pageIndex: [1], // 你將初始頁碼改為 1
   });
   ECRNoOptions = this.dropDown.queryPos1002();

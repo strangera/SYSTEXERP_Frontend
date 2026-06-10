@@ -13,13 +13,13 @@ export const enum MAMStatus {
 }
 
 export const POS2008M_COLUMNS: ReportColumn[] = [
-  { field: 'MAM_No', header: '變價單號', visible: true, width: '110px' },
+  { field: 'MAM_No', header: '變價單號', visible: true, width: '120px' },
   { field: 'LOGO_No', header: '品牌代碼', visible: true },
-  { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
+  { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true, width: '80px' },
   { field: 'MAM_BegDate', header: '啟用日期', visible: true, format: formatDate },
   { field: 'MAM_EndDate', header: '結束日期', visible: false, format: formatDate },
-  { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' },
-  { field: 'VEN_Name', header: '廠商名稱', visible: true },
+  { field: 'VEN_No', header: '廠商編號', visible: true, width: '90px' },
+  { field: 'VEN_Name', header: '廠商名稱', visible: true, width: '150px' },
   { field: 'MAM_Status', header: '單據狀態', visible: true, format: (value: string) => getSYS1000('MAM_Status', value) },
   // { field: 'MAM_Method', header: '促銷方式', visible: true, format: (value: string) => getSYS1000('MAM_Method', value) },
   { field: 'MAM_TotAmt', header: '組合價格/滿額金額', visible: false, format: formatAmount },

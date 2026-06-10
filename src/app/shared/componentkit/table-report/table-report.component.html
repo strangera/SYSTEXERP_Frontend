@@ -35,7 +35,7 @@
   [loading]="loading"
 >
   <ng-template pTemplate="caption">
-    <app-table-caption
+    <app-table-report-caption
       [data]="data"
       [footerData]="footerData"
       [columns]="columns"
@@ -64,27 +64,25 @@
       (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)"
       [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl"
-      [reportTitle]="reportTitle"
-      [DataKeyName]="DataKeyName"
-      [PrintRemark]="PrintRemark"
       [customReport]="customReport"
       (exportEvent)="exportEvent.emit($event)"
-      [Conditions]="Conditions"
+      [exportContext]="exportContext"
     >
       <header>
         <ng-content select="header"></ng-content>
       </header>
-    </app-table-caption>
+    </app-table-report-caption>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
         <th
           *ngIf="showReorder"
-          class="w-1rem text-center"
+          class="text-center"
           rowspan="2"
           pFrozenColumn
+          [style.min-width]="serialColumnWidth"
+          [style.width]="serialColumnWidth"
         >
           序號
         </th>
@@ -192,7 +190,13 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="showReorder" class="w-1rem text-center" pFrozenColumn>
+        <th
+          *ngIf="showReorder"
+          class="text-center"
+          pFrozenColumn
+          [style.min-width]="serialColumnWidth"
+          [style.width]="serialColumnWidth"
+        >
           序號
         </th>
         <th class="w-1rem text-center" *ngIf="showCheckBox">
@@ -248,7 +252,13 @@
       [pSelectableRowIndex]="rowIndex"
       (click)="itemClick.emit(rowData)"
     >
-      <td *ngIf="showReorder" class="text-center" pFrozenColumn>
+      <td
+        *ngIf="showReorder"
+        class="text-center"
+        pFrozenColumn
+        [style.min-width]="serialColumnWidth"
+        [style.width]="serialColumnWidth"
+      >
         {{ rowIndex + 1 }}
       </td>
       <td *ngIf="showCheckBox">

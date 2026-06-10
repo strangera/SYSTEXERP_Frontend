@@ -170,7 +170,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         ODM_Type: formValue.ODM_Type,
         Status: formValue.Status,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 500,
         SortBy: [{ field: 'ODM_No', order: 1 }],
       };
 

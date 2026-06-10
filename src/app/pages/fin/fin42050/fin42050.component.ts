@@ -1,14 +1,15 @@
+import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN42050Data, FIN42050Service } from '@service/api/fin/fin42050.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -22,138 +23,134 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './fin42050.component.html',
   styleUrl: './fin42050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, CalendarComponent, InputTextComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    RadiobuttonComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    CommonModule,
+    CalendarComponent,
+    ButtonModule,
+  ]
 })
-export class FIN42050Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: [, Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
-    department: [],
-    unit: [],
-    type: [],
-    compareyear: [],
-    version1: [],
-    version2: [],
-    year1: [],
-    year2: [],
+    ActualYM: [null, [Validators.required]],       // 實際值年月
+    BudgetYM1: [null, [Validators.required]],      // 預算版本1年月
+    BudgetVersion1: [null, [Validators.required]], // 預算版本1
+    BudgetYM2: [null, [Validators.required]],      // 預算版本2年月
+    BudgetVersion2: [null, [Validators.required]], // 預算版本2
+    Org_ID: [null],                                // 部門（可空）
+    ReportType: [1, [Validators.required]],        // 類別：1=統制, 2=明細
+    AmtUnit: [1, [Validators.required]],           // 單位金額表示：1=元, 2=千, 3=萬
   });
 
-  // Dropdown options
-
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  departmentOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{ value: 1, label: '是' },
-  { value: 2, label: '否' }];
-  unitOptions: any[] = [{ value: 1, label: '元' },
-  { value: 2, label: '千' },
-  { value: 3, label: '萬' }];
-  typeOptions: any[] = [{ value: 1, label: '統制' },
-  { value: 2, label: '明細' },];
-
-
-
-  // Table data
-  data: any[] = [
-
-    // Other data
+  OrgId_Options: option[] = [];
+  ReportType_Options = [
+    { value: 1, label: '統制' },
+    { value: 2, label: '明細' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'subjectCode', header: '科目代號', visible: true },
-    { field: 'subjectName', header: '科目名稱', visible: true },
-    { field: 'currentMonthActual', header: '2024年09月實際 - 金額', visible: true },
-    { field: 'currentMonthRatio', header: '佔比(%)', visible: true },
-    { field: 'version1', header: '2024年09月 版本1 - 金額', visible: true },
-    { field: 'version1Ratio', header: '佔比(%)', visible: true },
-    { field: 'versionDifference', header: '版本差異值', visible: true }
+  AmtUnit_Options = [
+    { value: 1, label: '元' },
+    { value: 2, label: '千' },
+    { value: 3, label: '萬' },
   ];
 
+  data: FIN42050Data[] = [];
+  columns = [
+    { field: 'AccountCode', header: '科目代號', visible: true },
+    { field: 'AccountName', header: '科目名稱', visible: true },
+    { field: 'ActualAmount', header: '實際金額', visible: true },
+    { field: 'ActualRatio', header: '實際佔比(%)', visible: true },
+    { field: 'Budget1Amount', header: '版本1金額', visible: true },
+    { field: 'Budget1Ratio', header: '版本1佔比(%)', visible: true },
+    { field: 'Budget2Amount', header: '版本2金額', visible: true },
+    { field: 'Budget2Ratio', header: '版本2佔比(%)', visible: true },
+    { field: 'BudgetVersionDiff', header: '版本差異值', visible: true },
+  ];
+
+  totalRecords = 0;
+  lastQueryBody = null;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private readonly fin42050Service: FIN42050Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '140009';
-    // Initialize dropdown options
+    this.initializePage('FIN42050', '', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN4000/FIN42050CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const raw = frm.getRawValue();
+    const payload = {
+      ...raw,
+      ActualYM: raw.ActualYM ? formatDate(raw.ActualYM, 'yyyyMM', 'en-US') : null,
+      BudgetYM1: raw.BudgetYM1 ? formatDate(raw.BudgetYM1, 'yyyyMM', 'en-US') : null,
+      BudgetYM2: raw.BudgetYM2 ? formatDate(raw.BudgetYM2, 'yyyyMM', 'en-US') : null,
+      Org_Name: this.OrgId_Options.find(o => o.value === raw.Org_ID)?.label ?? null,
     };
-    this.router.navigate(['/demoCRU'], extras);
+
+    this.handleSubmit(frm, () => {
+      this.fin42050Service.queryFIN42050(payload)
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe(response => {
+          if (response.Status === '0000') {
+            this.data = response.Data ?? [];
+            this.totalRecords = response.TotalCount;
+            this.lastQueryBody = payload;
+          } else {
+            this.messageService.errorBubble(response.Message);
+          }
+        });
+    });
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  exportPDF() {
+    if (!this.lastQueryBody) return;
+    this.btnPDFLoading = true;
+    this.fin42050Service.exportPDFFIN42050(this.lastQueryBody)
+      .pipe(finalize(() => this.btnPDFLoading = false))
+      .subscribe(blob => this.downloadFile(blob, 'application/pdf', '預算版本比較表.pdf'));
+  }
+
+  exportExcel() {
+    if (!this.lastQueryBody) return;
+    this.btnExcelLoading = true;
+    this.fin42050Service.exportExcelFIN42050(this.lastQueryBody)
+      .pipe(finalize(() => this.btnExcelLoading = false))
+      .subscribe(blob => this.downloadFile(blob, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '預算版本比較表.xlsx'));
+  }
+
+  loadOptions() {
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.OrgId_Options = res.Data.map((item: apiOption) => ({
+          value: item.No,
+          label: item.No + '-' + item.Name,
+        }));
+      });
+  }
+
+  private downloadFile(blob: Blob, type: string, fileName: string) {
+    const newBlob = new Blob([blob], { type });
+    const url = URL.createObjectURL(newBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

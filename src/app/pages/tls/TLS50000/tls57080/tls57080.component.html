@@ -3,42 +3,59 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 查詢日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="查詢日期" [startControl]="queryForm.controls.StartDate"
-              [endControl]="queryForm.controls.EndDate" [submitted]="submitted"></app-calendar-range-quick>
+          <div class="col-12 md:col-8">
+            <app-calendar-range-quick
+              label="查詢日期"
+              [startControl]="queryForm.controls.StartDate"
+              [endControl]="queryForm.controls.EndDate"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-product-autocomplete class="col-12" optionValue="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo"
-            [submitted]="submitted" />
-          <!-- 國際條碼 -->
-          <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"
-            templateLabel="label" [submitted]="submitted" optionLabel="PLU_No" optionValue="PLU_No"
-            [suggestions]="suggestions2" [fieldsConfig]="fieldsConfig2"
-            (inputValueChanged)="onAutoCompleteInputChange2($event)" (formValueChanged)="onformValueChanged2($event)"
-            [formGroup]="opForm2" [dialogData]="opData2" [dialogColumns]="opColumns2" [loading]="opLoading2"
-            [totalRecords]="opTotalRecords2" [showOverlay]="false">
-            <app-input-text class="col-12 md:col-4" label="國際條碼" controlName="PLU_No"
-              [control]="opForm2.controls.PLU_No" />
-            <app-input-text class="col-12 md:col-4" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm2.controls.PLU_Name" />
-            <app-input-text class="col-12 md:col-4" label="品牌代碼" controlName="LOGO_No"
-              [control]="opForm2.controls.LOGO_No" />
-          </app-dropdown-table> -->
+          <app-product-autocomplete
+            class="col-12 md:col-8"
+            optionValue="PLU_MagNo"
+            [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted"
+          />
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="HOS_No" [options]="HOS_NoOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="倉別"
+              controlName="HOS_No"
+              [options]="HOS_NoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.HOS_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品名稱" controlName="PLU_Name" [control]="queryForm.controls.PLU_Name"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="商品名稱"
+              controlName="PLU_Name"
+              [control]="queryForm.controls.PLU_Name"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -47,30 +64,62 @@
   </p-accordion>
 </div>
 <div class="card">
-  <p-divider align="center" type="solid" *ngIf="headerData && historyRequestBody">
-    <span class="font-bold text-2xl">南紡流通事業股份有限公司(南紡購物中⼼)</span>
-    <br>
+  <p-divider
+    align="center"
+    type="solid"
+    *ngIf="headerData && historyRequestBody"
+  >
+    <span class="font-bold text-2xl">
+      南紡流通事業股份有限公司(南紡購物中⼼)
+    </span>
+    <br />
     <span class="font-bold text-lg">庫存數量異動明細表</span>
   </p-divider>
-  <app-table-report tableKey="tls57050" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [showFilter]="false" [showDelete]="false" [showManage]="false" [showReportMode]="false" [loading]="loading"
-    [showSort]="false">
+  <app-table-report
+    tableKey="tls57050"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [showFilter]="false"
+    [showDelete]="false"
+    [showManage]="false"
+    [showReportMode]="false"
+    [loading]="loading"
+    [showSort]="false"
+  >
     <header *ngIf="headerData && historyRequestBody">
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex flex-column gap-2 align-items-start">
-          <span>國際條碼：{{headerData?.PLU_NO + ' / '}}{{headerData?.PLU_Name}}</span>
           <span>
-            異動⽇期區間：{{historyRequestBody.StartDate | date:'yyyy-MM-dd' + ' ~ '}}{{historyRequestBody.EndDate |
-            date:'yyyy-MM-dd'}}
+            國際條碼：{{ headerData?.PLU_NO + " / " }}{{ headerData?.PLU_Name }}
           </span>
-          <span>期初數量：{{headerData?.StockQty | number:'1.2-2'}}</span>
-          <span>期初成本：{{headerData?.TRN_BuyAmt | number:'1.2-2'}}</span>
+          <span>
+            異動⽇期區間：{{
+              historyRequestBody.StartDate | date: "yyyy-MM-dd" + " ~ "
+            }}{{ historyRequestBody.EndDate | date: "yyyy-MM-dd" }}
+          </span>
+          <span>期初數量：{{ headerData?.StockQty | number: "1.2-2" }}</span>
+          <span>期初成本：{{ headerData?.TRN_BuyAmt | number: "1.2-2" }}</span>
         </div>
         <div class="flex align-self-end gap-2">
-          <p-button styleClass="p-2" label="產出庫存數量異動明細表.PDF" [loading]="btnLoading" icon="pi pi-file"
-            (click)="onExportPDF()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="產出庫存數量異動明細表.XLSX" [loading]="btnLoading" icon="pi pi-file"
-            (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+          <p-button
+            styleClass="p-2"
+            label="產出庫存數量異動明細表.PDF"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+            [loading]="btnLoading"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="產出庫存數量異動明細表.XLSX"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportXLSX()"
+            [disabled]="data.length === 0"
+            [loading]="btnLoading"
+          ></p-button>
         </div>
       </div>
     </header>

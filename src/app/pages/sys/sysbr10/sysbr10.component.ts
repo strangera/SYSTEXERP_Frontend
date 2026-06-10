@@ -64,7 +64,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
     Pub_Type: [null],
     pub_enable: [null],
     Pub_Event: [],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'id', order: 1 }]],
   });

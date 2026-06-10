@@ -129,8 +129,8 @@ export class TLS26080Service {
     );
   };
 
-  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
+  public deleteTLS26080(podNoList: string[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { podNoList }).pipe(
       take(1)
     );
   }
@@ -195,8 +195,8 @@ export class TLS26080Service {
           ...rest,
           queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => ({
             ...v,
-            tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
-            tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
+            tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toString(),
+            tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toString(),
           } as TLS26080DetailResult)),
         };
       })

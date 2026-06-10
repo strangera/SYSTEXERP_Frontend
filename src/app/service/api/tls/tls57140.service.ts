@@ -20,9 +20,9 @@ export interface QueryTLS57140Request {
   /** 國際條碼/商品管理編號/廠商貨號 */
   PLU_MagNo?: string;
   /** 分頁索引 */
-  PageIndex: number;
+  pageIndex: number;
   /** 分頁大小 */
-  PageSize: number;
+  pageSize: number;
   /** 排序 */
   SortBy?: SortMeta[];
 }

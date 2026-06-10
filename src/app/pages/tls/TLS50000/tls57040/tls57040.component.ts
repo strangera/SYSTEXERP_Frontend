@@ -48,7 +48,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
   historyRequestBody?: QueryTLS57040Request;
   data: QueryTLS57040Response[] = [];
   columns: ReportColumn[] = [
-    { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
+    { field: 'PLU_Image', header: '圖片', visible: false, type: 'image', showSort: false },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 新增品牌名稱欄位
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
@@ -121,8 +121,6 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
 
   // 表單提交處理方法
   onSubmit(frm: FormGroup) {
-    const obj: any = null;
-    obj.hello();
     this.handleSubmit(frm, () => {
       // 檢查是否勾選了「顯示標準進價」
       const showStandardCost = frm.controls['ShowOrderPrc'].value;
@@ -143,7 +141,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
       const body = {
         ...frm.value,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 1000,
         SortBy: [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
       }
       this.tls57040Service.queryTLS57040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {

@@ -19,7 +19,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -87,7 +87,9 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     ECR_Status: ['A'],            // 收銀機狀態（A=啟用、C=停用...）
     ECR_GUI_PeriodQty: [null],   // 每期電子發票預設配號數量
     ECR_GUI_MinQty: [null],      // 電子發票最小安全存量
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [500],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------

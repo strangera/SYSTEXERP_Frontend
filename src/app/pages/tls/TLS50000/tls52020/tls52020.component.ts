@@ -83,7 +83,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     CLOS_USR: [null], // 強制結案人員 multi-select
     CLOS_Date_Start: [null], // 強制結案日期 起 calendar-range
     CLOS_Date_End: [null], // 強制結案日期 迄
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'CRN_No', order: -1 }]],
   });
@@ -93,10 +93,10 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   lastQueryBody: IQueryTLS52020Request | null = null;
   columns: ReportColumn[] = [
     { field: 'CRN_No', header: '退貨單號', visible: true, width: '110px' }, // 退貨單號
-    { field: 'VEN_No', header: '廠商編號', visible: true, width: '75px' }, // 廠商編號
-    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'VEN_No', header: '廠商編號', visible: true, width: '90px' }, // 廠商編號
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, width: '150px' }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true, width: '80px' }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼

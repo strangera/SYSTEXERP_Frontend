@@ -432,4 +432,7 @@ export const tlsRoutes: Routes = [
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent), data: { progNo: 'TLS46040' } },
 
+  // 中分類預售業績總表
+  { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component), data: { progNo: 'TLS26060' } },
+  { path: 'tls22010', loadComponent: () => import('./tls22010/tls22010.component').then(m => m.TLS22010Component), data: { progNo: 'TLS22010' } },
 ];

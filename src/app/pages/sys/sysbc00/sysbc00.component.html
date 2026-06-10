@@ -30,9 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="querySYSBC00" tableKey="SYSBC00query" dataKey="BNK_No" [data]="data" [columns]="columns"
-    [expansionColumns]="subColumns" (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
+  <app-table-report [exportContext]="{ apiUrl: 'querySYSBC00' }" tableKey="SYSBC00query" dataKey="BNK_No" [data]="data"
+    [columns]="columns" [expansionColumns]="subColumns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showCheckBox]="true" (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
     (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" expansionDataKey="details"
     [expansionLoadFn]="loadBankDetails" [isRowSelectable]="isRowSelectable" [lastQueryBody]="lastQueryBody"
     [queryFunction]="sysbc00Service.querySYSBC00.bind(sysbc00Service)"></app-table-report>

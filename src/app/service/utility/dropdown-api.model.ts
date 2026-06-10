@@ -75,7 +75,7 @@ export interface Pos2064MpcsRqstNoDropDownItem {
   Keep_UsrNo?: string | null;
 }
 
-/** 
+/**
  * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
  */
 export interface FAASSCHKMQuery {
@@ -181,6 +181,20 @@ export interface FaSitemItem {
   RowNo?: string;
   GOODS_ID: string;
   GOODS_NAME: string;
+}
+
+/**
+ * /ASS0000/ASS1000/queryASS11040 回傳項目（SearchASS11040Response 子集）。
+ * 與舊 `FaSitemItem` 並存：本介面含 UNIT 欄位，供 CRU 明細自動帶入單位的頁面使用。
+ */
+export interface FaSitemAss1000Item {
+  RowNum?: number;
+  ID?: number;
+  GOODS_ID: string;
+  GOODS_NAME: string;
+  UNIT?: string | null;
+  MATERIAL_TYPE?: string | null;
+  STATUS?: string | null;
 }
 
 /**
@@ -441,6 +455,10 @@ export interface TalentChargeQuery {
   talent_id: number;
 }
 
+export interface BatchTalentChargeQuery {
+  talent_ids: number[];
+}
+
 /**
  * 查詢 TLTTALENT_tlt_openflag_DropDownList 時的請求 body
  */
@@ -481,6 +499,7 @@ export interface TLTTALENTItem {
  * 查詢 TLTTALENT_CHARGE_DropDownList 回傳的項目型別
  */
 export interface TalentChargeItem {
+  talent_id?: number;
   tlt_id: string;
   tlt_id_desc: string;
   cag_taxtype: string;

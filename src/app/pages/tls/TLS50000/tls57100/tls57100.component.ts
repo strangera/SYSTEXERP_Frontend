@@ -151,7 +151,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         Status: formValue.Status,
         ODM_No: formValue.ODM_No,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 500,
       };
       this.tls57100Service.queryTLS57100(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response: any) => {
         if (response.Data) {

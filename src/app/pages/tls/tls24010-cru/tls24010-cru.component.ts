@@ -101,7 +101,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     ECR_No: [{ value: '', disabled: true }],             //disabled 收銀機號 pos1002.ecr_no
     TLT_No: [{ value: '', disabled: true }],             //disabled 專櫃編號
     TXN_No: [{ value: '系統自動產生', disabled: true }],  //disabled 交易序號
-    TXN_Remark: ['', [Validators.maxLength(20)]],                           //備註
+    TXN_Remark: ['', [Validators.maxLength(60)]],                           //備註
     USR_No: ['8888888', [Validators.required, Validators.maxLength(16)]], //收銀員編號POS2001.USR_No
     TXN_PreOrder: ['N', [Validators.required]], //預售 是/否
     TXN_VIP: ['N', [Validators.required]], //零稅 是/否,YN。若為y，TXN_TaxType變成2

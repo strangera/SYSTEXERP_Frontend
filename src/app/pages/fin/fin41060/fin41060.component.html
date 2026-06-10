@@ -67,6 +67,7 @@
 
 <div class="card">
   <app-table-report
+    [exportContext]="{ conditions: {} }"
     tableKey="FIN41060"
     [data]="data"
     [columns]="columns"
@@ -78,7 +79,6 @@
     [showDelete]="false"
     [lastQueryBody]="lastQueryBody"
     [queryFunction]="queryFIN41060Fn"
-    [Conditions]="{}"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (dataChange)="data = $event"
