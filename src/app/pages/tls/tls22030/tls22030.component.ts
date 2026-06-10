@@ -46,7 +46,12 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
     pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'tlt_no', order: 1 }]],
+    SortBy: [[
+      { field: "TXN_Date", order: 1 },
+      { field: "ECR_No", order: 1 },
+      { field: "TLT_No", order: 1 },
+      { field: "Min_TXN_No", order: 1 }
+    ]],
   });
   data: any[] = [];
   totalRecords = 0;
