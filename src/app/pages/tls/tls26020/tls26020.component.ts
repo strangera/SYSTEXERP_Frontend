@@ -66,7 +66,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     tlt_floor: [[]],
     ECR_No: [[]],
     TLT_No: [[]],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 修正排序欄位
+    pageSize: [1000],
   });
 
   totalRecords = 0;

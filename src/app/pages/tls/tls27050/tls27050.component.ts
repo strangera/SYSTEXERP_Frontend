@@ -27,9 +27,9 @@ export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> im
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, [Validators.required]], // 銷售日期
     PAY_TypeList: [], // 支付工具別
-    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'id', order: 1 }]],
+    pageSize: [1000],
   });
   totalRecords = 0;
   pos1006DropDownList: IDropdownItem[] = [

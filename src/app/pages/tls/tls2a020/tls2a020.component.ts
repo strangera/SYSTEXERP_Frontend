@@ -13,8 +13,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
@@ -27,9 +25,7 @@ import { createPaginationConfig, formatAmount } from '../../../shared/componentk
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    MultiSelectComponent,
     DropdownComponent,
-    RadiobuttonComponent,
     ButtonComponent,
     TableReportComponent,
     TranslateModule,
@@ -45,6 +41,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     ECR_No: [''],
     tlt_building: [''],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    pageSize: [1000],
   });
 
   columns: ReportColumn[] = [
