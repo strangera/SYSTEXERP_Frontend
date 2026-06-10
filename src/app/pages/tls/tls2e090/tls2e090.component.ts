@@ -55,7 +55,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
     isUnderLimitAmt: [false],
     check_day: [],
     invoice_type: [],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
     is_tax: [true],

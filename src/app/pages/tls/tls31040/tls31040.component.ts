@@ -17,7 +17,6 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -32,7 +31,6 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
 @Component({
   selector: 'app-tls31040',
   templateUrl: './tls31040.component.html',
-  styleUrl: './tls31040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -51,7 +49,6 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     TableReportComponent,
     RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
     ButtonModule
   ]
@@ -77,7 +74,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'tlt_kind', order: 1 }]],
     // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])

@@ -31,8 +31,8 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]], // 結帳方式 (使用 string|null 來匹配後端)
     sam_termno: [1, [Validators.required]], // 期別 (使用 number|null)
     tlt_no: ['', [Validators.maxLength(12)]], // 指定專櫃（可不選；不選=全部專櫃）
-    PageSize: [30],
-    PageIndex: [1],
+    pageSize: [1000],
+    pageIndex: [1],
   });
   private readonly SAM_TERMNO_MAP = {
     '10': [1, 2, 3],

@@ -10,9 +10,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
@@ -34,7 +32,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   selector: 'app-tls2f010',
   templateUrl: './tls2f010.component.html',
   standalone: true,
-  imports: [NgIf, ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule, YearMonthComponent]
+  imports: [NgIf, ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule, YearMonthComponent]
 })
 export class TLS2F010Component extends BasicQueryPageComponent<any> implements OnInit {
   // 完整的期別選項映射（參考 tls2e020 的寫法）
@@ -77,7 +75,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     COMM_NUM_Start: [null],
     COMM_NUM_End: [null],
     // 分頁欄位
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
 
@@ -281,7 +279,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       const decYm = this.normalizeYearMonth(raw?.DEC_YM);
       const payload: any = {
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 1000,
         SortBy: Array.isArray(raw.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
       };
 

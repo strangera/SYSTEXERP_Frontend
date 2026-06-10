@@ -41,7 +41,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     VouDate_End: [''],                                         // 傳票日期(迄)
     PostFlagList: [[]],                                        // 傳票狀態(多選)
     No: ['', Validators.maxLength(12)],                         // 結帳單號
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[]]                                               // 建議補上 SortBy 欄位以利分頁排序
   });

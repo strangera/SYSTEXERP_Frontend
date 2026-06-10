@@ -7,12 +7,7 @@ import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.servic
 import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -32,15 +27,10 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    RadiobuttonComponent,
-    CalendarRangeQuickComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
-    MultiSelectComponent,
     ButtonModule
   ],
   templateUrl: './tls31040-cru.component.html'
