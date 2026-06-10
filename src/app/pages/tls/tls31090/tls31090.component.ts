@@ -6,16 +6,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -39,16 +34,11 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     RadiobuttonComponent,
     CommonModule,
     CalendarComponent,
-    CalendarRangeQuickComponent,
-    DropdownComponent,
-    InputTextComponent,
     InputNumberRangeComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
     ButtonModule
   ]

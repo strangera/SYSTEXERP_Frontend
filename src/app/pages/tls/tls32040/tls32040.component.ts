@@ -12,10 +12,8 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -49,10 +47,8 @@ const yesterday = new Date(today);
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     RadiobuttonComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
     ButtonModule,
     ChartModule
