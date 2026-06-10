@@ -39,11 +39,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
-              controlName="ECR_No"
+              [control]="queryForm.controls.ECR_No"
               [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -51,11 +50,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="TLT_No"
+              [control]="queryForm.controls.tlt_no"
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -63,11 +61,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -75,10 +72,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -86,10 +83,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -106,7 +103,6 @@
   </p-accordion>
 </div>
 
-<!-- 主表：收銀機 / 專櫃彙總 -->
 <div class="card">
   <app-table-report
     tableKey="TLS23060_MAIN"
@@ -134,7 +130,6 @@
           [disabled]="data.length === 0"
           (click)="onExportExcel()"
         ></p-button>
-
         <p-button
           styleClass="p-2"
           label="收銀機區間報表.PDF"
@@ -148,7 +143,6 @@
   </app-table-report>
 </div>
 
-<!-- 明細 Dialog：以日期為主 -->
 <app-dialog
   [visible]="dialogVisible"
   header="專櫃/機台日期明細"
@@ -181,7 +175,6 @@
           [disabled]="dialogData.length === 0"
           (click)="onExportDetailExcel()"
         ></p-button>
-
         <p-button
           styleClass="p-2"
           label="匯出明細表.PDF"

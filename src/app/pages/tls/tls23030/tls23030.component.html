@@ -228,6 +228,7 @@
     [queryFunction]="queryTLS23030ForReport"
     [footerData]="detailFooter"
     groupRowsBy="groupKey"
+    [loading]="loading"
   >
     <header>
       <div class="flex justify-content-between align-items-center w-full">
@@ -274,6 +275,7 @@
     [showReportMode]="false"
     [queryFunction]="queryTLS23030SummaryForReport"
     [footerData]="buildSummaryFooter()"
+    [loading]="loading"
   >
     <header>
       <div class="flex justify-content-between align-items-center w-full">
