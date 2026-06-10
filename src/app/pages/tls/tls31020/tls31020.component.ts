@@ -71,7 +71,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'tlt_floor', order: 1 }]],
   });

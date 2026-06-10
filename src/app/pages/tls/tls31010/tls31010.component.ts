@@ -69,7 +69,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     org_id: [[]],
     TaxType: ['0'],
     IsRece_Yn: [null],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_building', order: 1 }]],
   });
