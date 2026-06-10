@@ -221,6 +221,13 @@ export class TableReportComponent implements OnChanges {
         }
       }
     }
+    // 如果總筆數有變更，或者資料有變更，都重新計算序號寬度
+    if (changes['totalRecords'] || changes['data']) {
+      if (this.data && this.data.length > 0) {
+        // 這行會同時計算 columns 寬度與全新的 serialColumnWidth
+        this.calculateAndFixColumnWidths();
+      }
+    }
   }
 
   loadMoreData() {
@@ -660,12 +667,27 @@ export class TableReportComponent implements OnChanges {
   /**
  * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
  */
+  // 1. 在類別屬性區新增一個變數來存放序號欄寬度 (預設給 60px)
+  public serialColumnWidth = '60px';
   private calculateAndFixColumnWidths(): void {
     // 基礎字元寬度估算：中文字大約 16px，英數/符號大約 9px
     const CHINESE_CHAR_WIDTH = 16;
     const ANY_CHAR_WIDTH = 9;
-    // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
     const PADDING_BUFFER = 24;
+    // ================== 新增：動態計算序號欄寬度 ==================
+    if (this.showReorder) {
+      // 估算 "序號" 表頭中文字寬度：16 * 2 + 24 = 56px
+      const headerWidth = (2 * CHINESE_CHAR_WIDTH);
+
+      // 依據後端回傳的總筆數最大值，估算數字寬度（例如 1250 筆就是 4 個數字位數）
+      const maxSerialString = String(this.totalRecords || this.data.length || 1);
+      const bodyWidth = (maxSerialString.length * ANY_CHAR_WIDTH);
+
+      // 取兩者最大值，並設定一個安全底限 55px
+      const finalSerialWidth = Math.max(headerWidth, bodyWidth, 14);
+      this.serialColumnWidth = `${finalSerialWidth}px`;
+    }
+    // ============================================================
     const sampleData = this.data.slice(0, 100);
     this.columns = this.columns.map(col => {
       // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算

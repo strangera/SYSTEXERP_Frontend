@@ -27,11 +27,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
-              controlName="ECR_No"
+              [control]="queryForm.controls.ECR_No"
               [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -50,11 +49,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="TLT_No"
+              [control]="queryForm.controls.TLT_No"
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.TLT_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -62,7 +60,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票起始號碼"
-              controlName="TXN_GUIBegNo"
               [control]="queryForm.controls.TXN_GUIBegNo"
               [submitted]="submitted"
             ></app-input-text>
@@ -71,7 +68,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票結束號碼"
-              controlName="TXN_GUIEndNo"
               [control]="queryForm.controls.TXN_GUIEndNo"
               [submitted]="submitted"
             ></app-input-text>
@@ -80,11 +76,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="交易型態"
-              controlName="TXN_Status"
+              [control]="queryForm.controls.TXN_Status"
               [options]="txnStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.TXN_Status"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -92,11 +87,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="狀態旗標"
-              controlName="TXN_FlagStatus"
+              [control]="queryForm.controls.TXN_FlagStatus"
               [options]="statusFlagOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.TXN_FlagStatus"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -104,11 +98,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="收銀員號碼"
-              controlName="USR_No"
+              [control]="queryForm.controls.USR_No"
               [options]="cashierOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.USR_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -116,7 +109,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="預售/訂金單號"
-              controlName="TXN_PreOrderNo"
               [control]="queryForm.controls.TXN_PreOrderNo"
               [submitted]="submitted"
             ></app-input-text>
@@ -125,7 +117,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="停車卡號"
-              controlName="TXN_PkngUID"
               [control]="queryForm.controls.TXN_PkngUID"
               [submitted]="submitted"
             ></app-input-text>
@@ -134,7 +125,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="會員卡號"
-              controlName="TXN_MemCard"
               [control]="queryForm.controls.TXN_MemCard"
               [submitted]="submitted"
             ></app-input-text>
@@ -143,7 +133,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="統一編號"
-              controlName="TXN_Uniform"
               [control]="queryForm.controls.TXN_Uniform"
               [submitted]="submitted"
             ></app-input-text>
@@ -152,7 +141,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="愛心碼"
-              controlName="TXN_GUILoveCode"
               [control]="queryForm.controls.TXN_GUILoveCode"
               [submitted]="submitted"
             ></app-input-text>
@@ -161,11 +149,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="載具種類"
-              controlName="TXN_GUI_CarrType"
+              [control]="queryForm.controls.TXN_GUI_CarrType"
               [options]="carrierTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.TXN_GUI_CarrType"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -173,7 +160,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="載具號碼"
-              controlName="TXN_GUIVehicle"
               [control]="queryForm.controls.TXN_GUIVehicle"
               [submitted]="submitted"
             ></app-input-text>
@@ -182,11 +168,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否開立業主發票"
-              controlName="rece_yn"
+              [control]="queryForm.controls.rece_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.rece_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -194,11 +179,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否為業主收現"
-              controlName="cash_yn"
+              [control]="queryForm.controls.cash_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.cash_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -206,10 +190,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -217,10 +201,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -228,10 +212,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -249,113 +233,106 @@
 </div>
 
 <div class="card" *ngIf="showTable">
-  <div class="col-12">
-    <!-- ✅ 明細：以 TXN_No 作為唯一鍵 -->
-    <app-table-report
-      *ngIf="!queryForm.get('showSummary')?.value"
-      tableKey="TLS23010"
-      [lastQueryBody]="historyRequestBody"
-      [data]="data"
-      [columns]="columns"
-      [dataKey]="'TXN_No'"
-      [totalRecords]="totalRecords"
-      [showDelete]="false"
-      [showManage]="false"
-      [showReportMode]="false"
-      [queryFunction]="queryTLS23010ForReport"
-      [footerData]="buildFooterFromTotals()"
-      [expansionColumns]="detailcolumns"
-      [expansionLoadFn]="loadDetails"
-      groupRowsBy="tlt_no"
-    >
-      <header>
-        <div class="flex justify-content-between align-items-center w-full">
-          <div class="flex align-items-center">
-            <p-checkbox
-              inputId="showSummary"
-              [formControl]="queryForm.controls.showSummary"
-              binary="true"
-              (onChange)="onToggleSummary()"
-              label="顯示彙總"
-            ></p-checkbox>
-          </div>
-
-          <div class="flex gap-2">
-            <p-button
-              styleClass="p-2"
-              label="型態別報表.PDF"
-              [loading]="btnLoading"
-              icon="pi pi-file"
-              (click)="onExportPDF()"
-              [disabled]="data.length === 0"
-            ></p-button>
-            <p-button
-              styleClass="p-2"
-              label="型態別報表.XLSX"
-              [loading]="btnLoading"
-              icon="pi pi-file"
-              (click)="onExportXLSX()"
-              [disabled]="data.length === 0"
-            ></p-button>
-          </div>
+  <app-table-report
+    *ngIf="!isSummaryMode"
+    tableKey="TLS23010"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    dataKey="TXN_No"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [showManage]="false"
+    [showReportMode]="false"
+    [queryFunction]="queryTLS23010ForReport"
+    [footerData]="buildFooterFromTotals()"
+    [expansionColumns]="detailcolumns"
+    [expansionLoadFn]="loadDetails"
+    groupRowsBy="tlt_no"
+  >
+    <header>
+      <div class="flex justify-content-between align-items-center w-full">
+        <div class="flex align-items-center">
+          <p-checkbox
+            inputId="showSummary"
+            [formControl]="queryForm.controls.showSummary"
+            binary="true"
+            (onChange)="onToggleSummary()"
+            label="顯示彙總"
+          ></p-checkbox>
         </div>
-      </header>
-    </app-table-report>
-
-    <!-- ✅ 彙總 -->
-    <app-table-report
-      *ngIf="queryForm.get('showSummary')?.value"
-      tableKey="TLS23010summary"
-      [data]="summaryData"
-      [columns]="summaryColumns"
-      [totalRecords]="summaryData.length || 0"
-      [showDelete]="false"
-      [showManage]="false"
-      [lazy]="false"
-      [showSort]="true"
-      [showReportMode]="false"
-      [footerData]="buildFooterFromSummaryTotals()"
-    >
-      <header>
-        <div class="flex justify-content-between align-items-center w-full">
-          <div class="flex align-items-center">
-            <p-checkbox
-              inputId="showSummary"
-              [formControl]="queryForm.controls.showSummary"
-              binary="true"
-              (onChange)="onToggleSummary()"
-              label="顯示彙總"
-            ></p-checkbox>
-          </div>
-
-          <div class="flex gap-2">
-            <p-button
-              styleClass="p-2"
-              label="彙總型態別報表.PDF"
-              [loading]="btnLoading"
-              icon="pi pi-file"
-              (click)="onExportPDF()"
-              [disabled]="summaryData.length === 0"
-            ></p-button>
-
-            <p-button
-              styleClass="p-2"
-              label="彙總型態別報表.XLSX"
-              [loading]="btnLoading"
-              icon="pi pi-file-excel"
-              (click)="onExportXLSX()"
-              [disabled]="summaryData.length === 0"
-            ></p-button>
-          </div>
+        <div class="flex gap-2">
+          <p-button
+            styleClass="p-2"
+            label="型態別報表.PDF"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="型態別報表.XLSX"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportXLSX()"
+            [disabled]="data.length === 0"
+          ></p-button>
         </div>
-      </header>
-    </app-table-report>
-  </div>
+      </div>
+    </header>
+  </app-table-report>
+
+  <app-table-report
+    *ngIf="isSummaryMode"
+    tableKey="TLS23010summary"
+    [data]="summaryData"
+    [columns]="summaryColumns"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [showManage]="false"
+    [lazy]="false"
+    [showSort]="true"
+    [showReportMode]="false"
+    [footerData]="buildFooterFromSummaryTotals()"
+  >
+    <header>
+      <div class="flex justify-content-between align-items-center w-full">
+        <div class="flex align-items-center">
+          <p-checkbox
+            inputId="showSummary"
+            [formControl]="queryForm.controls.showSummary"
+            binary="true"
+            (onChange)="onToggleSummary()"
+            label="顯示彙總"
+          ></p-checkbox>
+        </div>
+        <div class="flex gap-2">
+          <p-button
+            styleClass="p-2"
+            label="彙總型態別報表.PDF"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="summaryData.length === 0"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="彙總型態別報表.XLSX"
+            [loading]="btnLoading"
+            icon="pi pi-file-excel"
+            (click)="onExportXLSX()"
+            [disabled]="summaryData.length === 0"
+          ></p-button>
+        </div>
+      </div>
+    </header>
+  </app-table-report>
 </div>
 
 <div
+  class="mt-4 border-t pt-3 text-sm text-red-700 font-medium font-mono"
   *ngIf="pdfSummary.length"
-  class="mt-4 border-t pt-3 text-sm text-red-700 font-medium"
 >
   <div *ngFor="let line of pdfSummary">{{ line }}</div>
 </div>

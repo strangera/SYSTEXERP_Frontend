@@ -284,7 +284,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
     { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
     { field: 'ORG_ID', header: '組織編號', align: 'left' },
-    { field: 'VEN_NO', header: '廠商編號', align: 'left' },
+    { field: 'DetailNo', header: '廠商編號', align: 'left' },
     { field: 'VEN_NAME', header: '廠商名稱', align: 'left' },
     { field: 'ProjectNo', header: '活動代號', align: 'left' },
     { field: 'PTA', header: '立沖代號' },
