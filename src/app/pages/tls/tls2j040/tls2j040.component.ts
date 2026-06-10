@@ -35,6 +35,7 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
     TxnGUINo: ['', [Validators.maxLength(20)]],        // 三聯式發票號碼 (TxnGUINo)
     TxnUniform: ['', [Validators.maxLength(8)]],       // 買受人統一編號 (TxnUniform)
     ...createPaginationConfig([{ field: 'TxnGUINo', order: 1 }]),
+    pageSize: [1000],
   });
 
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
@@ -77,7 +78,7 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
 
   queryFunction = (body: any) => {
     const raw = this.queryForm.getRawValue();
-    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 1000;
     const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
     const payload = {
       TxnDate: raw.TxnDate,
@@ -128,7 +129,7 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
         TxnDate: raw.TxnDate,
         TxnGUINo: raw.TxnGUINo || undefined,
         TxnUniform: raw.TxnUniform || undefined,
-        PageSize: raw.pageSize ?? 30,
+        PageSize: raw.pageSize ?? 1000,
         PageIndex: raw.pageIndex ?? 1,
         SortBy: raw.SortBy,
       };

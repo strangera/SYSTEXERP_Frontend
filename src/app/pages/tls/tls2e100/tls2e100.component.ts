@@ -15,12 +15,10 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls2e100',
   templateUrl: './tls2e100.component.html',
-  styleUrl: './tls2e100.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -30,7 +28,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     MultiSelectComponent,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     CalendarComponent,
     ButtonComponent,
     TranslateModule
@@ -46,7 +43,7 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
     ven_no: [''],
     // 分頁欄位
     pageIndex: [1],
-    pageSize: [30],
+    pageSize: [1000],
     SortBy: [[{ field: 'apply_no,tlt_id', order: 1 }]],
   });
 

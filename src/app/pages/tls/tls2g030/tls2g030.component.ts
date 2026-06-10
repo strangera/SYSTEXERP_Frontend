@@ -29,7 +29,7 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
     budget_yy: [null, [Validators.required]], // 年
     bus_type: [null], // 大分類
     tlt_no: [null], // 專櫃
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
   });
   bus_typeOptions = this.dropdown.queryTltBusType();

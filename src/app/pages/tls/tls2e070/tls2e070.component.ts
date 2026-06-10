@@ -70,8 +70,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   columns: ReportColumn[] = [];
 
   queryForm = this.formBuilder.nonNullable.group({
-    PageSize: [30],
-    PageIndex: [1],
+    pageSize: [1000],
+    pageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
     // 結算
     money_type: [null as string | null],

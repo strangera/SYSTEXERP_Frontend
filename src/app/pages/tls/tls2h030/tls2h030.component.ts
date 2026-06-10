@@ -7,7 +7,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls2h030Service } from '@service/api/tls/tls2h030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
@@ -24,7 +23,6 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.17.1 租金發票套印作業
@@ -44,7 +42,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeComponent,
     DropdownComponent,
     CheckboxModule,
     TranslateModule,
@@ -53,8 +50,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 })
 export class TLS2H030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    // 分頁欄位
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SamYyyymm: [new Date(), Validators.required],
     GuiNoStart: [null],
@@ -86,7 +82,6 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
   constructor(
     public readonly tls2h030Service: Tls2h030Service,
     private readonly dropdown: DropdownApiService,
-    private readonly dropDownListService: DropDownListService,
   ) {
     super();
     this.addButton = [
@@ -291,10 +286,8 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
       };
 
       const body = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        OrderBy: '',
-        Offset: (Math.max(pageIndex - 1, 0) * pageSize),
+        pageSize: pageSize,
+        pageIndex: pageIndex,
         SortBy: raw.SortBy || [],
         SamYyyymm: toYYYYMM(raw.SamYyyymm),
         TltNo: raw.TltNo,
@@ -333,10 +326,8 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     };
 
     const payload = {
-      PageSize: formValue.pageSize || 30,
-      PageIndex: formValue.pageIndex || 1,
-      OrderBy: formValue.SortBy?.[0]?.field || '',
-      Offset: (Math.max((formValue.pageIndex || 1) - 1, 0) * (formValue.pageSize || 30)),
+      pageSize: formValue.pageSize || 1000,
+      pageIndex: formValue.pageIndex || 1,
       SortBy: formValue.SortBy || [],
       SamYyyymm: toYYYYMM(formValue.SamYyyymm),
       TltNo: formValue.TltNo,

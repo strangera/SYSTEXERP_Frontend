@@ -8,8 +8,8 @@ import { environment } from 'src/environments/environment';
 // --- Interface 定義 ---
 
 export interface Tls2e060QueryBody {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy: SortMeta[];
   adj_no: string;
   adj_date: string;
