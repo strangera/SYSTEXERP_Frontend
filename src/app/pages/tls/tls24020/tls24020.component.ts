@@ -47,7 +47,7 @@ export class TLS24020Component extends BasicQueryPageComponent<TLS24020ResultDat
     TXN_No_Start: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 起
     TXN_No_End: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 迄
     EditType: ['TLTNoEdit', [Validators.required]],// 報表型態
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1],
     SortBy: [[{ field: 'ID', order: 1 }]],
   });

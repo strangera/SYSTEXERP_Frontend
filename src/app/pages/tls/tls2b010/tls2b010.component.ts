@@ -116,6 +116,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
     reimbursementType: [[1], Validators.nullValidator],
     reporttype: [1],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    pageSize: [1000],
   });
 
   constructor(
