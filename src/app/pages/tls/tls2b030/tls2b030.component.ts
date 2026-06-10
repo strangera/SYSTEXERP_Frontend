@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -41,7 +41,7 @@ import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Observable, of } from 'rxjs';
 
-type SortItem = { field: string; order: 1 | -1 };
+interface SortItem { field: string; order: 1 | -1 }
 
 @UntilDestroy()
 @Component({
@@ -65,7 +65,7 @@ type SortItem = { field: string; order: 1 | -1 };
     ButtonModule
   ],
 })
-export class TLS2B030Component extends BasicQueryPageComponent<any> {
+export class TLS2B030Component extends BasicQueryPageComponent<any> implements OnInit {
   /* ----------------- 狀態 ----------------- */
   data: TLS2B030Row[] = [];
   columnsReady = false;
@@ -245,7 +245,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
 
       pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
-      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30,
+      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 1000,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
     };
 
@@ -348,7 +348,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         ? Number(body.pageSize)
         : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
           ? Number(base.pageSize)
-          : 30);
+          : 1000);
 
     const loaded = Array.isArray(this.data) ? this.data.length : 0;
 
@@ -551,7 +551,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     const payload = this.buildPayload({
       ...raw,
       pageIndex: 1,
-      pageSize: 30,
+      pageSize: 1000,
       SortBy: this.defaultSort,
     });
 
@@ -588,7 +588,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         tlt_building: '',
         OnlyShowOverAmount: false,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 1000,
         SortBy: this.defaultSort as any,
       },
       { emitEvent: false }

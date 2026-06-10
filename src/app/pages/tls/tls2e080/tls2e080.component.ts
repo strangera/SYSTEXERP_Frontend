@@ -114,7 +114,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
       ...formValue,
       sam_yyymm: sam_yyymm_string,
       pageIndex: 1,
-      pageSize: 30,
+      pageSize: 1000,
       SortBy: [{ field: 'tlt_no', order: 1 }],
     }
     this.handleSubmit(frm, () => {

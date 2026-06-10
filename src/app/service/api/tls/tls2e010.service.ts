@@ -20,8 +20,8 @@ export interface Tls2e010ExecuteData {
 
 // 定義 queryTLS2E010 的 Request Body (包含分頁和排序)
 export interface Tls2e010QueryBody {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: SortMeta[];
   sam_yyymm?: string;
   sam_yyymm_start: string | null;

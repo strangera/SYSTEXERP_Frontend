@@ -28,7 +28,7 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
     CHG_ItemName: ['', [Validators.maxLength(10)]],
     bus_type: [[]],
     Item_TaxType: [['1']],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
   });
 
@@ -92,7 +92,7 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
         bus_type: v.bus_type?.length ? v.bus_type : [],
         CHG_ItemName: v.CHG_ItemName?.trim() || '',
         Item_TaxType: v.Item_TaxType?.length ? v.Item_TaxType : [],
-        pageSize: v.pageSize || 30,
+        pageSize: v.pageSize || 1000,
         pageIndex: v.pageIndex || 1,
         SortBy: v.SortBy || [{ field: 'id', order: 1 }],
       };

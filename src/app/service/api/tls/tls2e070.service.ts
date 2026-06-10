@@ -9,8 +9,8 @@ import { environment } from 'src/environments/environment'; // 確保路徑正�
 
 // 試算 (estTLS2E070) 及 結帳紀錄查詢 (queryRecTLS2E070) 的 Request Body
 export interface Tls2e070QueryRecEstBody {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: SortMeta[];
   sam_yyymm: string;
   sam_termno: number;
@@ -20,8 +20,8 @@ export interface Tls2e070QueryRecEstBody {
 
 // 結算作業查詢 (queryTLS2E070) 的 Request Body
 export interface Tls2e070QueryBody {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: SortMeta[];
   sam_yyymm: string;
 }

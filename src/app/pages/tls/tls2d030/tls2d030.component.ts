@@ -29,7 +29,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
     money_type: [null, [Validators.required]], // 結帳方式 (對應API的 sam_termno)
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null], // 樓層 (對應API的 tlt_floor)
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
   });
   sam_termnoOptions = getSYS1000Options('money_type');

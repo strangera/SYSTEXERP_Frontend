@@ -28,8 +28,8 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
     adj_no: [null, [Validators.maxLength(12)]],
     adj_date: [null],
     sam_yyymm: [null],
-    PageSize: [30],
-    PageIndex: [1],
+    pageSize: [1000],
+    pageIndex: [1],
     SortBy: [[{ field: 'CRT_Date', order: -1 }]],
   });
   lastQueryBody: Tls2e060QueryBody | null = null;
