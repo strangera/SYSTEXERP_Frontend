@@ -2,6 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -15,14 +16,6 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-     <app-calendar
-  label="銷售月份"
-  calendarType="dateMonthOne"
-  [control]="queryForm.controls.TXN_Month"
-  [submitted]="submitted">
-</app-calendar>
-          </div> -->
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -34,11 +27,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="value"
-              optionValue="value"
               [control]="queryForm.controls.ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="formLabel"
+              optionValue="value"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -55,11 +47,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="TLT_No"
+              [control]="queryForm.controls.TLT_No"
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.TLT_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -67,7 +58,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票號碼"
-              controlName="TXN_GUINo"
               [control]="queryForm.controls.TXN_GUINo"
               [submitted]="submitted"
             ></app-input-text>
@@ -86,22 +76,21 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="稅別"
-              controlName="PLU_TaxType"
+              [control]="queryForm.controls.PLU_TaxType"
               [options]="taxableOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PLU_TaxType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="原折扣別"
-              controlName="PRM_TXN_DiscCode"
+              [control]="queryForm.controls.PRM_TXN_DiscCode"
               [options]="discountOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PRM_TXN_DiscCode"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -109,11 +98,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="商品抽成類別"
-              controlName="tlt_id"
+              [control]="queryForm.controls.tlt_id"
               [options]="deductionbigCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_id"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -121,7 +109,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="單品編號"
-              controlName="PLU_MagNo"
               [control]="queryForm.controls.PLU_MagNo"
               [submitted]="submitted"
             ></app-input-text>
@@ -130,17 +117,15 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="歸屬折扣別"
-              controlName="TXN_DiscCode"
+              [control]="queryForm.controls.TXN_DiscCode"
               [options]="discountOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.TXN_DiscCode"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>顯示狀態</label>
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center pt-4">
             <p-checkbox
               label="自營櫃無單品條碼"
               binary="true"
@@ -151,11 +136,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否開立業主發票"
-              controlName="rece_yn"
+              [control]="queryForm.controls.rece_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.rece_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -163,11 +147,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否為業主收現"
-              controlName="cash_yn"
+              [control]="queryForm.controls.cash_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.cash_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -175,11 +158,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -187,10 +169,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -198,10 +180,10 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -210,118 +192,107 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear"  [form]="queryForm"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-     
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-
-
 <div class="card">
   <div class="col-12">
+    <app-table-report
+      *ngIf="!queryForm.get('showSummary')?.value"
+      tableKey="TLS23020"
+      [lastQueryBody]="historyRequestBody"
+      [data]="data"
+      [columns]="columns"
+      dataKey="_rowKey"
+      [totalRecords]="totalRecords"
+      [showDelete]="false"
+      [showManage]="false"
+      [showReportMode]="false"
+      [queryFunction]="queryTLS23020ForReport"
+      [footerData]="buildFooterFromTotals()"
+      groupRowsBy="groupKey"
+    >
+      <header>
+        <div class="flex justify-content-between align-items-center w-full">
+          <div class="flex align-items-center">
+            <p-checkbox
+              inputId="showSummary"
+              [formControl]="queryForm.controls.showSummary"
+              binary="true"
+              (onChange)="onToggleSummary()"
+              label="顯示彙總"
+            ></p-checkbox>
+          </div>
+          <div class="flex gap-2">
+            <p-button
+              styleClass="p-2"
+              label="折扣別報表.PDF"
+              [loading]="btnLoading"
+              icon="pi pi-file"
+              (click)="onExportPDF()"
+              [disabled]="data.length === 0"
+            ></p-button>
+            <p-button
+              styleClass="p-2"
+              label="折扣別報表.XLSX"
+              [loading]="btnLoading"
+              icon="pi pi-file-excel"
+              (click)="onExportXLSX()"
+              [disabled]="data.length === 0"
+            ></p-button>
+          </div>
+        </div>
+      </header>
+    </app-table-report>
 
-<app-table-report
-  *ngIf="!queryForm.get('showSummary')?.value"
-  tableKey="TLS23020"
-  [lastQueryBody]="historyRequestBody"
-  [data]="data"
-  [columns]="columns"
-  [dataKey]="'_rowKey'"
-  [totalRecords]="totalRecords"
-  [showDelete]="false"
-  [showManage]="false"
-  [showReportMode]="false"
-  [queryFunction]="queryTLS23020ForReport"
-  [footerData]="buildFooterFromTotals()"
-  [groupRowsBy]="'groupKey'"
->
-  <header>
-    <!-- 左：顯示彙總；右：匯出按鈕 -->
-    <div class="flex justify-content-between align-items-center w-full">
-      <div class="flex align-items-center">
-        <p-checkbox
-          inputId="showSummary"
-          [formControl]="queryForm.controls.showSummary"
-          binary="true"
-          (onChange)="onToggleSummary()"
-          label="顯示彙總">
-        </p-checkbox>
-      </div>
-
-      <div class="flex gap-2">
-        <p-button
-          styleClass="p-2"
-          label="折扣別報表.PDF"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportPDF()"
-          [disabled]="data.length === 0"
-        ></p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="折扣別報表.XLSX"
-          [loading]="btnLoading"
-          icon="pi pi-file-excel"
-          (click)="onExportXLSX()"
-          [disabled]="data.length === 0"
-        ></p-button>
-      </div>
-    </div>
-  </header>
-</app-table-report>
-
-
-    <!-- ✅ 彙總表 -->
-<app-table-report
-  *ngIf="queryForm.get('showSummary')?.value"
-  tableKey="TLS23020summary"
-  [data]="summaryData"
-  [columns]="summaryColumns"
-  [totalRecords]="summaryData.length"
-  [lazy]="false"
-  [showReportMode]="false"
-  [showDelete]="false"
-  [showManage]="false"
-  [footerData]="summaryFooter"
->
-  <header>
-    <div class="flex justify-content-between align-items-center w-full">
-      <div class="flex align-items-center">
-        <p-checkbox
-          inputId="showSummary"
-          [formControl]="queryForm.controls.showSummary"
-          binary="true"
-          (onChange)="onToggleSummary()"
-          label="顯示彙總">
-        </p-checkbox>
-      </div>
-
-      <div class="flex gap-2">
-        <p-button
-          styleClass="p-2"
-          label="彙總折扣別報表.PDF"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportPDF()"
-          [disabled]="summaryData.length === 0"
-        ></p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="彙總折扣別報表.XLSX"
-          [loading]="btnLoading"
-          icon="pi pi-file-excel"
-          (click)="onExportXLSX()"
-          [disabled]="summaryData.length === 0"
-        ></p-button>
-      </div>
-    </div>
-  </header>
-</app-table-report>
+    <app-table-report
+      *ngIf="queryForm.get('showSummary')?.value"
+      tableKey="TLS23020summary"
+      [data]="summaryData"
+      [columns]="summaryColumns"
+      [totalRecords]="totalRecords"
+      [lazy]="false"
+      [showReportMode]="false"
+      [showDelete]="false"
+      [showManage]="false"
+      [footerData]="summaryFooter"
+    >
+      <header>
+        <div class="flex justify-content-between align-items-center w-full">
+          <div class="flex align-items-center">
+            <p-checkbox
+              inputId="showSummary"
+              [formControl]="queryForm.controls.showSummary"
+              binary="true"
+              (onChange)="onToggleSummary()"
+              label="顯示彙總"
+            ></p-checkbox>
+          </div>
+          <div class="flex gap-2">
+            <p-button
+              styleClass="p-2"
+              label="彙總折扣別報表.PDF"
+              [loading]="btnLoading"
+              icon="pi pi-file"
+              (click)="onExportPDF()"
+              [disabled]="summaryData.length === 0"
+            ></p-button>
+            <p-button
+              styleClass="p-2"
+              label="彙總折扣別報表.XLSX"
+              [loading]="btnLoading"
+              icon="pi pi-file-excel"
+              (click)="onExportXLSX()"
+              [disabled]="summaryData.length === 0"
+            ></p-button>
+          </div>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>
