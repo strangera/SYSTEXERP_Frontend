@@ -47,7 +47,7 @@ export class TLS24030Component extends BasicQueryPageComponent<TLS24030Item> imp
     ECR_No: [null as string | null],
     TLT_No: [null as string | null],
     TXN_No: [null as string | number | null, [Validators.maxLength(8), this.validation.numberValidator]],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'TXN_Date', order: -1 }]],
   });

@@ -102,7 +102,8 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     eventID_c: [null], // 比較活動ID
     event_startdate_c: [null], // 比較活動開始日期
     event_enddate_c: [null], // 比較活動結束日期
-    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
+    ...createPaginationConfig([{ field: 'team_name', order: -1 }]),
+    pageSize: [1000],
   });
 
   totalRecords = 0;
