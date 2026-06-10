@@ -57,7 +57,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     TXN_DateStart: [yesterday],
     TXN_DateEnd: [yesterday],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-
+    pageSize: [1000],
   });
 
   data: any[] = [];
@@ -107,12 +107,12 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
       this.lastQueryBody = {
         ...raw,
         pageIndex: 1,
-        pageSize: raw.pageSize ?? 30,
+        pageSize: raw.pageSize ?? 1000,
       };
 
       const params = {
-        PageSize: this.lastQueryBody.pageSize,
-        PageIndex: this.lastQueryBody.pageIndex,
+        pageIndex: this.lastQueryBody.pageSize,
+        pageSize: this.lastQueryBody.pageIndex,
         SortBy: this.lastQueryBody.SortBy ?? [],
         TXN_DateStart: this.lastQueryBody.TXN_DateStart ? this.formatDate(this.lastQueryBody.TXN_DateStart) : null,
         TXN_DateEnd: this.lastQueryBody.TXN_DateEnd ? this.formatDate(this.lastQueryBody.TXN_DateEnd) : null,
@@ -231,8 +231,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   public queryTLS2A050ForReport = (body: any) =>
     this.tls2A050Service
       .queryTLS2A050({
-        PageSize: body.pageSize ?? 30,
-        PageIndex: body.pageIndex ?? 1,
+        pageSize: body.pageSize ?? 1000,
+        pageIndex: body.pageIndex ?? 1,
         SortBy: body.SortBy ?? [],
         TXN_DateStart: body.TXN_DateStart ? this.formatDate(body.TXN_DateStart) : null,
         TXN_DateEnd: body.TXN_DateEnd ? this.formatDate(body.TXN_DateEnd) : null,
