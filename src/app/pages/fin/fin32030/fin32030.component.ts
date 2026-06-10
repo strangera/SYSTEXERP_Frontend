@@ -74,6 +74,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     DateTo: [null], // 立帳日期迄
     AmtFrom: [null], // 應收金額起
     AmtTo: [null], // 應收金額迄
+    NoteDesc: ['', [Validators.maxLength(160)]], // 摘要
     pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
@@ -198,66 +199,39 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     });
   }
 
-  /** 打開應收未收查詢 Dialog */
-  onOpenARDialog() {
-    // 重置表單
-    this.arQueryForm.reset({
-      ARS_ID: '',
-      VEN_No: null,
-      DateFrom: null,
-      DateTo: null,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'VEN_No', order: 1 }],
-    });
-
-    // 清空資料
-    this.arDialogData = [];
-    this.arDialogTotalRecords = 0;
-    this.arSelectedItems = [];
-
-    // 打開 Dialog
-    this.arDialogVisible = true;
-    this.cdr.detectChanges();
-
-    // 預設顯示全部資料
-    this.onARDialogSubmit();
-  }
-
   /** AR Dialog 查詢 */
-  onARDialogSubmit() {
-    if (this.arQueryForm.invalid) {
-      this.arQueryForm.markAllAsTouched();
-      return;
-    }
+  onARDialogSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      this.loading = false;
+      const formValue = frm.value;
 
-    const formValue = this.arQueryForm.value;
+      const queryParams = {
+        ARS_ID: formValue.ARS_ID || undefined,
+        VEN_No: formValue.VEN_No || undefined,
+        DateFrom: formValue.DateFrom || undefined,
+        DateTo: formValue.DateTo || undefined,
+        AmtFrom: formValue.AmtFrom || undefined,
+        AmtTo: formValue.AmtTo || undefined,
+        NoteDesc: formValue.NoteDesc || undefined,
+        pageIndex: formValue.pageIndex ?? 1,
+        pageSize: formValue.pageSize ?? 30,
+        SortBy: formValue.SortBy || undefined,
+      };
 
-    const queryParams = {
-      ARS_ID: formValue.ARS_ID || undefined,
-      VEN_No: formValue.VEN_No || undefined,
-      DateFrom: formValue.DateFrom || undefined,
-      DateTo: formValue.DateTo || undefined,
-      AmtFrom: formValue.AmtFrom || undefined,
-      AmtTo: formValue.AmtTo || undefined,
-      PageIndex: formValue.pageIndex ?? 1,
-      PageSize: formValue.pageSize ?? 30,
-      SortBy: formValue.SortBy || undefined,
-    };
+      this.arDialogLoading = true;
 
-    this.arDialogLoading = true;
-
-    this.fin32030Service.queryFIN32030AR(queryParams)
-      .pipe(
-        finalize(() => this.arDialogLoading = false),
-        untilDestroyed(this)
-      )
-      .subscribe(response => {
-        this.arDialogData = response.Data;
-        this.arDialogTotalRecords = response.TotalCount;
-        this.queryStateService.setQueryState('queryFIN32030AR', queryParams);
-        this.cdr.detectChanges();
-      });
+      this.fin32030Service.queryFIN32030AR(queryParams)
+        .pipe(
+          finalize(() => this.arDialogLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(response => {
+          this.arDialogData = response.Data;
+          this.arDialogTotalRecords = response.TotalCount;
+          this.queryStateService.setQueryState('queryFIN32030AR', queryParams);
+          this.cdr.detectChanges();
+        });
+    });
   }
 
   /** AR Dialog 取消 */
