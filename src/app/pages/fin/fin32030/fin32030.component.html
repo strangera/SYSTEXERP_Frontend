@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button [type]="'button'" label="應收未收查詢" (clickEvent)="onOpenARDialog()"></app-button>
+    <app-button [type]="'button'" label="應收未收查詢" (clickEvent)="arDialogVisible = true"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
@@ -66,10 +66,14 @@
         <app-input-number-range [useGrouping]="false" label="應收金額" [startControl]="arQueryForm.controls.AmtFrom"
           [endControl]="arQueryForm.controls.AmtTo" [submitted]="submitted"></app-input-number-range>
       </div>
+      <div class="col-12 md:col-6 lg:col-6">
+        <app-input-text label="摘要" controlName="NoteDesc" [control]="arQueryForm.controls.NoteDesc"></app-input-text>
+      </div>
     </div>
 
     <div class="flex justify-content-end gap-2 mt-2">
-      <p-button label="查詢" icon="pi pi-search" [loading]="arDialogLoading" (onClick)="onARDialogSubmit()"></p-button>
+      <app-button btnType="clear" [form]="arQueryForm"></app-button>
+      <app-button btnType="query" [loading]="arDialogLoading" (clickEvent)="onARDialogSubmit(arQueryForm)"></app-button>
     </div>
   </form>
 
@@ -77,8 +81,8 @@
   <app-table tableKey="FIN32030_AR_DIALOG" dataKey="ARS_ID" [data]="arDialogData" [columns]="arDialogColumns"
     [totalRecords]="arDialogTotalRecords" [loading]="arDialogLoading" [showCheckBox]="false" [showSerialNo]="true"
     [showManage]="false" [showReportMode]="true" [showReportExcel]="true" [showReportPDF]="true" [showDelete]="false"
-    [lazy]="true" title="應收未收查詢" [apiUrl]="'queryFIN32030AR'"
-    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onARDialogSubmit()"></app-table>
+    [lazy]="true" title="應收未收查詢" [apiUrl]="'queryFIN32030AR'" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
+    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onARDialogSubmit(arQueryForm)"></app-table>
 
   <!-- <ng-template pTemplate="footer">
     <div class="flex justify-content-end gap-2">

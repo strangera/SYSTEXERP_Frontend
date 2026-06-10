@@ -10,6 +10,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
+import { InputNumberRangeComponent } from 'src/app/shared/componentkit/input-number-range/input-number-range.component';
 import {
   FIN32030Service,
   InsertFIN32030CompleteRequest,
@@ -58,7 +59,8 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
     TableEditComponent,
     TableComponent,
     DialogModule,
-    CalendarRangeComponent
+    CalendarRangeComponent,
+    InputNumberRangeComponent
   ]
 })
 export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Response> implements OnInit {
@@ -90,43 +92,66 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       type: 'input',
       maxLength: 50,
       placeholder: '直接輸入，或雙擊欄位查詢...',
-      // onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
-      //   // 點擊時開啟彈跳視窗
-      //   if (!this.isFormReadable) {
-      //     this.openARDialogForRow(index);
-      //   }
-      // },
-      // 1. 處理手動輸入：當應收ID變更時，自動匹配並帶出廠客、摘要與收款金額
-      calculate: (rowData: ARWithRCVAmt, newValue: string) => {
-        if (!newValue) {
-          return {
+      onBlur: (rowData: ARWithRCVAmt, value: string | null, _col: EditColumn, index: number) => {
+        if (!value) {
+          // 清空欄位
+          this.step4TableData[index] = {
+            ...this.step4TableData[index],
             ARS_ID: null,
             VEN_No: null,
             NoteDesc: null,
             RCV_Amt: null
           };
+          this.step4TableData = [...this.step4TableData];
+          return;
         }
 
-        // 從彈窗所使用的資料集（或當前已被載入的應收明細快取）中尋找完全吻合的 ID
-        // 註：若此處的 arDialogData 在手動輸入時尚未透過 API 載入，
-        // 建議確保對話框資料或後端有預載機制，才能順利在前端 find 匹配。
-        const matchedItem = this.arDialogData.find(item => item.ARS_ID === newValue);
+        // 打 API 精準搜尋這筆 ARS_ID
+        this.fin32030Service.queryFIN32030AR({ ARS_ID: value, PageIndex: 1, PageSize: 10 }).subscribe(res => {
+          const matchedItem = res.Data?.find(item => item.ARS_ID === value);
 
-        if (matchedItem) {
-          return {
-            ARS_ID: matchedItem.ARS_ID || '',
-            VEN_No: matchedItem.VEN_No || null,
-            NoteDesc: matchedItem.NoteDesc || null,
-            RCV_Amt: matchedItem.UnpaidAmt || 0 // 預設收款金額為未收款金額
-          };
-        } else {
-          // 找不到代號時，不清除使用者打的字，但清除或提示其他欄位
-          return {
-            VEN_No: null,
-            NoteDesc: '⚠️ 找不到此應收ID',
-            RCV_Amt: null
-          };
-        }
+          if (matchedItem) {
+            // 檢查是否跟畫面上的其他列重複
+            const isDuplicate = this.step4TableData.some((item, idx) =>
+              item.ARS_ID === value &&
+              idx !== index &&
+              !(item as any)._isAutoInsertCandidate
+            );
+
+            if (isDuplicate) {
+              this.messageService.warnBubble('此應收帳款已存在於其他列');
+              // 擋下來，清空剛剛輸入的字
+              this.step4TableData[index] = {
+                ...this.step4TableData[index],
+                ARS_ID: null,
+                VEN_No: null,
+                NoteDesc: null,
+                RCV_Amt: null
+              };
+            } else {
+              // 成功找到且沒重複，帶入資料！
+              this.step4TableData[index] = {
+                ...this.step4TableData[index],
+                ARS_ID: matchedItem.ARS_ID || '',
+                VEN_No: matchedItem.VEN_No || null,
+                NoteDesc: matchedItem.NoteDesc || null,
+                RCV_Amt: matchedItem.UnpaidAmt || 0
+              };
+            }
+          } else {
+            // 真的找不到時才提示
+            this.step4TableData[index] = {
+              ...this.step4TableData[index],
+              VEN_No: null,
+              NoteDesc: '⚠️ 找不到此應收ID',
+              RCV_Amt: null
+            };
+          }
+
+          // 更新畫面
+          this.step4TableData = [...this.step4TableData];
+          this.cdr.detectChanges();
+        });
       },
       onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
         if (this.isFormReadable) return;
@@ -190,6 +215,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     VEN_No: [null as string | null],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
+    AmtFrom: [null], // 應收金額起
+    AmtTo: [null], // 應收金額迄
+    NoteDesc: ['', [Validators.maxLength(160)]], // 摘要
     pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
@@ -751,24 +779,14 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   /** 打開應收未收查詢對話框 (針對特定列) */
   openARDialogForRow(rowIndex: number): void {
     this.currentEditingRowIndex = rowIndex;
-    this.showARDialog = true;
-    // 重置查詢表單
-    this.arQueryForm.reset({
-      ARS_ID: '',
-      VEN_No: null,
-      DateFrom: null,
-      DateTo: null,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'VEN_No', order: 1 }],
-    });
-    // 清空查詢結果和選中資料
-    this.arDialogData = [];
-    this.arDialogTotalRecords = 0;
     this.arDialogSelectedItem = null;
-    // 預設顯示全部資料，並傳入當前值供預選
-    const currentARS_ID = this.step4TableData[rowIndex]?.ARS_ID;
-    this.onQueryAR(currentARS_ID || undefined);
+    if (this.arDialogTable) {
+      this.arDialogTable.selectedItems = null; // 支援單選或清空陣列
+      if (this.arDialogTable.dt) {
+        this.arDialogTable.dt.selection = null;
+      }
+    }
+    this.showARDialog = true;
   }
 
   /** 打開應收未收查詢對話框 (舊方法，保留相容性) */
@@ -779,8 +797,13 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   /** 關閉應收未收查詢對話框 */
   closeARDialog(): void {
     this.showARDialog = false;
-    this.arDialogData = [];
     this.arDialogSelectedItem = null;
+    if (this.arDialogTable) {
+      this.arDialogTable.selectedItems = null;
+      if (this.arDialogTable.dt) {
+        this.arDialogTable.dt.selection = null;
+      }
+    }
   }
 
   /** 當選擇應收帳款列時 (單選模式) */
@@ -813,6 +836,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       VEN_No: formValue.VEN_No || undefined,
       DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
+      AmtFrom: formValue.AmtFrom != null ? Number(formValue.AmtFrom) : undefined,
+      AmtTo: formValue.AmtTo != null ? Number(formValue.AmtTo) : undefined,
+      NoteDesc: formValue.NoteDesc || undefined,
       PageIndex: formValue.pageIndex ?? 1,
       PageSize: formValue.pageSize ?? 30,
       SortBy: sortBy,
@@ -825,11 +851,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         untilDestroyed(this)
       )
       .subscribe(response => {
-        // 過濾掉已選擇的應收帳款 (不可重複選擇，但排除當前編輯列)
-        const selectedIds = this.step4TableData
-          .filter((_, idx) => idx !== this.currentEditingRowIndex)
-          .map(item => item.ARS_ID);
-        this.arDialogData = response.Data.filter(ar => !selectedIds.includes(ar.ARS_ID));
+        this.arDialogData = response.Data || [];
         this.arDialogTotalRecords = response.TotalCount;
 
         // 預選已選擇的應收帳款
@@ -1596,11 +1618,17 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           finalize(() => this.loading = false)
         )
         .subscribe({
-          next: () => {
-            this.messageService.successBubble('新增收款沖帳成功');
-            setTimeout(() => {
-              this.onCancel();
-            }, 500);
+          next: (res: any) => {
+            this.messageService.confirm({
+              header: '新增成功',
+              message: `收款單號：${res.Data}`,
+              acceptLabel: '回查詢畫面',
+              showRejectButton: false,
+              accept: () => {
+                // 點擊確定後，執行離開回查詢頁的動作
+                this.onCancel();
+              }
+            });
           },
           error: () => {
             this.loading = false;
