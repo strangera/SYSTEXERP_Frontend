@@ -80,9 +80,13 @@ export class TableReportComponent implements OnChanges {
   @Input() showReorder = true;
   @Input() showCheckBox = false;
   @Input() tableHeaderCheckboxLabel?: string;
-
-  // 代理勾選狀態
-  @Input() set selectedItems(val: any[]) { this.selectionService.syncSelectedItems(val || [], this.data, this.isRowSelectable); }
+  @Input() set selectedItems(val: any[]) {
+    // 如果內部服務的已選取筆數跟外部傳入的一模一樣，代表是自己人觸發的更新，直接擋掉，不重複往下算！
+    if (this.selectionService.selectedItems && val && this.selectionService.selectedItems.length === val.length) {
+      return;
+    }
+    this.selectionService.syncSelectedItems(val || [], this.data, this.isRowSelectable);
+  }
   get selectedItems(): any[] { return this.selectionService.selectedItems; }
   @Output() get selectionChange() { return this.selectionService.selectionChange; }
   @Output() get selectAllChange() { return this.selectionService.selectAllChange; }

@@ -30,6 +30,7 @@
     autoSize: true,
     onScroll: onScroll,
     itemSize: 46,
+    numToleratedItems: 12,
   }"
   [expandedRowKeys]="expandedRows"
   [loading]="loading"
@@ -265,7 +266,7 @@
           class="flex justify-content-center"
           [pSelectableRow]="rowData"
           [value]="rowData"
-          [disabled]="!rowSelectableWrapper"
+          [disabled]="!isRowSelectable(rowData)"
         />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
