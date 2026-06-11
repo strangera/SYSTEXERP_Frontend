@@ -221,7 +221,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
     const req$ = this.tls26050Service.exportExcelTLS26050({ ...this.lastQueryBody });
     this.fileExportService
-      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v), '大分類預售業績總表')
       .subscribe();
   }
 
@@ -232,7 +232,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
     const req$ = this.tls26050Service.exportPDFTLS26050({ ...this.lastQueryBody });
     this.fileExportService
-      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v), '大分類預售業績總表')
       .subscribe();
   }
 

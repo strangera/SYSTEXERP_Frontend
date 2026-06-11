@@ -80,6 +80,11 @@ export class TLS46010Component
     { field: 'SYS_SRVDDirClt', header: '前台系統下載目錄', visible: true },
     { field: 'SYS_SRVUDirClt', header: '前台系統上傳目錄', visible: true },
     {
+      field: 'SYS_Master', header: '是否為主要伺服器', visible: true,
+      format: (value: string) =>
+        this.SYS_Master_Option.find((item) => item.no === value)?.name || value,
+    },
+    {
       field: 'CRT_Date',
       header: '建立日期',
       visible: true,
@@ -101,6 +106,11 @@ export class TLS46010Component
   SYS_SrvStatus_Option = [
     { no: 'A', name: '啟用' },
     { no: 'C', name: '停用' },
+  ];
+
+  SYS_Master_Option = [
+    { no: 'Y', name: '是' },
+    { no: 'N', name: '否' }
   ];
 
   constructor(private tls46010Service: Tls46010Service) {
