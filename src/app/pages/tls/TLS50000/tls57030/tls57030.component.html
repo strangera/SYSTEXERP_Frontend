@@ -38,17 +38,13 @@
             ></app-dropdown>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table
+          <app-product-autocomplete
             class="col-12"
-            [showOverlay]="false"
             [control]="queryForm.controls.PLU_MagNo"
             [submitted]="submitted"
-            optionLabel="label"
             optionValue="PLU_No"
-            [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)"
-          ></app-dropdown-table>
+            [extraFilters]="{ LOGO_No: queryForm.controls.LOGO_No.value }"
+          ></app-product-autocomplete>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商貨號"

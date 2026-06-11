@@ -30,6 +30,8 @@
             optionValue="PLU_MagNo"
             [control]="queryForm.controls.PLU_MagNo"
             [submitted]="submitted"
+            [extraFilters]="{ HOS_No: queryForm.controls.HOS_No.value }"
+            [extraFilters]="{ PLU_Name: queryForm.controls.PLU_Name.value }"
           />
         </div>
         <div class="grid p-fluid">

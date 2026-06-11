@@ -38,7 +38,7 @@
       </ng-container>
 
       <ng-container *ngIf="!field.mainDataField">
-        <label for="{{ field.field }}">{{ field.header }}</label>
+        <label [for]="field.field">{{ field.header }}</label>
         <input
           type="text"
           pInputText
@@ -54,41 +54,101 @@
   #op
   [style]="{ 'min-width': '700px', 'max-width': '90vw' }"
   [appendTo]="'body'"
+  [showCloseIcon]="true"
 >
   <ng-container *ngIf="showOverlay && formGroup">
-    <div class="flex justify-content-end mb-1">
-      <button
-        type="button"
-        pButton
-        icon="pi pi-times"
-        class="p-button-text p-button-sm p-button-secondary"
-        (click)="hideOverlay()"
-      ></button>
-    </div>
-    <form [formGroup]="formGroup" class="grid p-fluid">
+    <form [formGroup]="formGroup" class="grid p-fluid pt-2">
       <ng-content />
-      <app-table
-        class="col-12"
-        [dataKey]="optionValue"
-        [data]="dialogData"
-        [selectedItems]="selectedItems"
-        (selectionChange)="onSelectionChange($event)"
-        (itemClick)="onRowClick($event)"
-        [columns]="dialogColumns"
-        [showHeader]="false"
-        [showPage]="false"
-        [showCheckBox]="true"
-        selectionMode="single"
-        [showManage]="false"
-        scrollHeight="400px"
-        [loading]="loading"
-        [totalRecords]="totalRecords"
-        [rows]="30"
-        [rowsPerPageOptions]="[30, 60, 90]"
-        (lazyLoadData)="onLazyLoadData($event, formGroup)"
-        [lazy]="lazy"
-        [showCaption]="false"
-      />
+      <div class="col-12">
+        <p-table
+          #dt
+          [value]="dialogData"
+          [columns]="dialogColumns"
+          [(selection)]="selectedItems"
+          [selectionMode]="selectionMode"
+          [dataKey]="optionValue"
+          [loading]="loading"
+          [paginator]="showPage"
+          [rows]="rows"
+          [totalRecords]="totalRecords"
+          [rowsPerPageOptions]="rowsPerPageOptions"
+          [lazy]="lazy"
+          (onLazyLoad)="onPrimeTableLazyLoad($event)"
+          [scrollable]="true"
+          [scrollHeight]="scrollHeight"
+          styleClass="p-datatable-sm p-datatable-gridlines"
+          (onRowSelect)="onPrimeTableRowSelect($event)"
+        >
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+              <th
+                *ngIf="showCheckBox && selectionMode === 'multiple'"
+                class="w-3rem text-center"
+              >
+                <p-tableHeaderCheckbox />
+              </th>
+              <th
+                *ngIf="showCheckBox && selectionMode === 'single'"
+                class="w-3rem"
+              ></th>
+              <th *ngFor="let col of columns" class="text-center">
+                {{ col.header }}
+              </th>
+            </tr>
+          </ng-template>
+
+          <ng-template
+            pTemplate="body"
+            let-rowData
+            let-columns="columns"
+            let-rowIndex="rowIndex"
+          >
+            <tr
+              [pSelectableRow]="rowData"
+              [pSelectableRowIndex]="rowIndex"
+              (click)="onPrimeTableRowClick(rowData)"
+            >
+              <td
+                *ngIf="showCheckBox && selectionMode === 'multiple'"
+                class="text-center"
+              >
+                <p-tableCheckbox [value]="rowData" />
+              </td>
+              <td
+                *ngIf="showCheckBox && selectionMode === 'single'"
+                class="text-center"
+              >
+                <p-tableRadioButton [value]="rowData" />
+              </td>
+              <td
+                *ngFor="let col of columns"
+                [ngClass]="getTableCellClass(col, rowData)"
+              >
+                {{
+                  col.format
+                    ? col.format(rowData[col.field], rowIndex, rowData)
+                    : rowData[col.field]
+                }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td
+                [attr.colspan]="dialogColumns.length + (showCheckBox ? 1 : 0)"
+              >
+                <div
+                  class="flex justify-content-center align-items-center p-4 font-bold text-500"
+                >
+                  <i class="pi pi-search mr-2"></i>
+                  查無資料
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </form>
   </ng-container>
 </p-overlayPanel>
