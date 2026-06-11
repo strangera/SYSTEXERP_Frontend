@@ -5,7 +5,7 @@ import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplet
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { debounceTime, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { TableComponent } from '../table/table.component';
@@ -52,39 +52,45 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private readonly inputChangeSubject = new Subject<Record<string, string>>();
   private initialLoadDone = false;
   private suppressNextFocus = false;
+  private readonly filterSubject$ = new Subject<string>();
 
   ngOnInit(): void {
     this.updateControlState(this.control);
 
-    // 1. 直接監聽 control 的值變動，並導流到你的 inputChangeSubject
-    this.control.valueChanges.pipe(
-      debounceTime(300), // 這邊加了 debounce，下面 subject 的就可以拿掉，看你習慣
+    // 2. 這裡只專心處理使用者打字防抖，百分之百安全、不卡死
+    this.filterSubject$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
       takeUntil(this.destroy$)
-    ).subscribe(value => {
-      const inputValue = value || '';
-      this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
+    ).subscribe(inputValue => {
+      // 觸發外部 API 查詢
+      this.inputValueChanged.emit({ [this.optionLabel]: inputValue });
 
-      // 如果輸入時需要隱藏 overlay
-      if (this.showOverlay) {
-        this.op?.hide();
+      // 如果有 OverlayPanel 且目前是開啟的，使用者繼續打字時可以選擇關閉它
+      if (this.showOverlay && this.op?.overlayVisible) {
+        this.op.hide();
       }
     });
 
+    // 3. 處理 Overlay 內查詢表單的改變 (維持原樣)
     if (this.formGroup) {
-      this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+      this.formGroup.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+        takeUntil(this.destroy$)
+      ).subscribe(value => {
         this.formValueChanged.emit(value);
       });
     }
-
-    // 這裡維持你原本對 inputValueChanged 的對外 emit 邏輯
-    this.inputChangeSubject.pipe(
-      // 如果上面已經做過 debounce，這裡可以視情況移除 debounceTime
-      takeUntil(this.destroy$)
-    ).subscribe(value => {
-      this.inputValueChanged.emit(value);
-    });
   }
-
+  /**
+   * 4. 新增：當使用者在 p-autoComplete 輸入打字時觸發的標準事件
+   */
+  onCompleteMethod(event: { originalEvent: Event; query: string }): void {
+    const queryText = event.query ? event.query.trim() : '';
+    // 將使用者輸入的核心文字推送給防抖管道
+    this.filterSubject$.next(queryText);
+  }
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -95,7 +101,20 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
     if (this.showOverlay) this.op?.hide();
   }
-
+  /**
+   * 處理點擊 p-autoComplete 下拉建議項目時的事件
+   */
+  onAutoCompleteSelect(event: AutoCompleteSelectEvent): void {
+    // PrimeNG 回傳的 event.value 可能是完整物件，也可能是單一值 (由 optionValue 決定)
+    const selectedValue = typeof event.value === 'object' ? event.value[this.optionValue] : event.value;
+    if (!selectedValue) return;
+    // 從 suggestions 流裡面找到當前點選的這筆完整資料
+    const fullRowData = this.suggestions.find(item => item[this.optionValue] === selectedValue);
+    if (fullRowData) {
+      // 就像點擊彈出 Table 一樣，把完整資料 emit 給父元件的 onVenSelect 觸發連動 API
+      this.select.emit(fullRowData);
+    }
+  }
   getFieldValue(field: FieldsConfig): string {
     // 新增空值檢查
     if (this.control.value === null || this.control.value === undefined) return '';
@@ -201,9 +220,5 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       this.formValueChanged.emit(emitValue);
     }
     this.initialLoadDone = true;
-  }
-
-  onValueChange(event: AutoCompleteSelectEvent) {
-    this.select.emit(event.value);
   }
 }

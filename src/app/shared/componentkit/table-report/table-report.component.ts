@@ -185,11 +185,9 @@ export class TableReportComponent implements OnChanges {
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
       this.isNextPagePreloaded = false; // 每次資料變更都重置預載狀態
-      // ====== 新增：第一次拿到資料時，動態計算並固定欄位寬度 ======
       if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
         this.calculateAndFixColumnWidths();
       }
-      // ========================================================
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
