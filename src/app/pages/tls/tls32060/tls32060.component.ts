@@ -17,6 +17,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -52,6 +53,7 @@ dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
     TranslateModule,
     MultiSelectComponent,
     ButtonModule,
+    CheckboxModule,
   ]
 })
 // 各櫃業績報表
@@ -76,6 +78,9 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
 
     AmtTaxMode: ["G"],  // 銷售金額是否含稅(G:是 N:否 預設含稅)
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
+
+    PreSale: [false],
+    ConsumerNum: [false],
 
     pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
@@ -163,6 +168,9 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
   data: TLS32060Response[] = [];
   historyRequestBody: TLS32060Request | null = null; //歷史查詢條件
 
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   columns: ReportColumn[] = [
     // { field: 'RowType', header: '列別', visible: true },
     { field: 'BuildingName', header: '館別', visible: true, align: 'left' },
@@ -199,7 +207,11 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' }
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
+
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -384,6 +396,13 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -886,5 +905,18 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     weekEnd.setDate(weekStart.getDate() + 6);
 
     return { weekStart, weekEnd };
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }

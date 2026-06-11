@@ -16,6 +16,7 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -53,7 +54,8 @@ interface BusSClassItem {
     RadiobuttonComponent,
     TableReportComponent,
     AsyncPipe,
-    CategorySelectComponent
+    CategorySelectComponent,
+    CheckboxModule,
   ]
 })
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
@@ -69,6 +71,8 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     org_id: [[]],
     TaxType: ['0'],
     IsRece_Yn: [null],
+    PreSale: [false],
+    ConsumerNum: [false],
     pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_building', order: 1 }]],
@@ -79,6 +83,9 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
   footerData: TLS31010TotalData | null = null;
   lastQueryBody: TLS31010Request | null = null;
   btnLoading = false;
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
@@ -153,6 +160,9 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     },
 
     { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
 
   columnGroup: ColumnGroup[] = [
@@ -180,6 +190,12 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
 
   ngOnInit(): void {
     this.initializePage('TLS31010', 'TLS/TLS31010cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
 
   percent(v: number): string {
@@ -252,5 +268,18 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
           globalThis.open(downloadUrl, '_blank');
         }
       });
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }
