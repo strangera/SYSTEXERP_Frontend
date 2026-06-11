@@ -577,8 +577,12 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       .pipe(untilDestroyed(this))
       .subscribe(opts => (this.accountCodeOptions = opts ?? []));
 
+    // 採購單號(SUBPOENA_ID)下拉：用 ASS15070 進貨單號 API（回傳 SUBPOENA_ID），
+    // 與後端 queryASS13090 篩選欄位 SUBPOENA_ID 對齊；
+    // 原 queryFAASSCHKM_DropDownList 回傳的是 SUBCHECK_ID（驗收單號，如 20241017001-01），
+    // 不是採購單號（SUBPOENA_ID，如 20241017001），會造成選了之後查不到資料。
     this.dropdownApiService
-      .queryFAASSCHKM_DropDownList()
+      .queryFAASSCHKMASS15070_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(opts => (this.purchaseNoOptions = opts ?? []));
   }

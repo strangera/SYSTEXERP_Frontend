@@ -12,7 +12,6 @@ import {
   ASS12050MasterRow,
   ASS12050QueryDataWrapper,
   ASS12050QueryRow,
-  ASS12050SubcheckRequest,
   ASS12050TransferListDataWrapper,
   ASS12050TransferRequest,
   ASS12050TransferRow,
@@ -106,15 +105,7 @@ export class ASS12050Service {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/transferASS12050`, body);
   }
 
-  /** 匯出 PDF 報表 */
-  exportPDFASS12050(body: ASS12050SubcheckRequest): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportASS12050`, body, {
-      responseType: 'blob',
-      observe: 'response',
-    });
-  }
-
-  /** 依採購單號匯出 PDF 報表 */
+  /** 依採購單號匯出報表（Excel） */
   exportASS12050(body: { SUBPOENA_ID: string }): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportASS12050`, body, {
       responseType: 'blob',

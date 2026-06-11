@@ -384,8 +384,10 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
               APPLY_DATE: d?.Header?.APPLY_DATE ? new Date(String(d.Header.APPLY_DATE)) : this.dataForm.get('APPLY_DATE')?.value,
               NOTES: d?.Header?.NOTE ?? this.dataForm.get('NOTES')?.value ?? '',
             });
+            const needId = d?.Header?.NEED_ID ?? row.NEED_ID ?? '';
             this.data = (d?.Details ?? []).map(item => ({
               GOODS_ID: item.GOODS_ID,
+              NEED_ID: needId,
               QTY: item.QTY,
               NOTES: item.NOTES,
             }));
