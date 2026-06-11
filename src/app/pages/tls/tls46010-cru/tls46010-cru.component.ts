@@ -63,6 +63,7 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     SYS_MyPOSUDir: ['/MyPOSUp'],
     SYS_SRVDDirClt: ['/PosDown'],
     SYS_SRVUDirClt: ['/PosUp'],
+    SYS_Master: ['N'], // 是否為主要伺服器,「Y.是」與「N.否」,預設值為「N」
     CRT_USR_No: [''],
     CRT_USR_Name: [''],
     CRT_Date: [''],
@@ -75,6 +76,12 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' }
   ];
+
+  SYS_Master_Option: any = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' }
+  ];
+
   private userSubscription: Subscription | undefined; // 使用者訂閱
   userInfo: UserInfo | null = null;
   constructor(

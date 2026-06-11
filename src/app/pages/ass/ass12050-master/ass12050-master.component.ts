@@ -9,6 +9,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileExportService } from '@shared/service/file-export.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
@@ -58,6 +59,7 @@ export class ASS12050MasterComponent implements OnInit {
     private readonly ass12050Service: ASS12050Service,
     private readonly currentPageService: CurrentPageService,
     private readonly messageService: NotificationService,
+    private readonly fileExportService: FileExportService,
   ) {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { rowdata?: { SUBPOENA_ID?: string } } | undefined;
@@ -101,29 +103,16 @@ export class ASS12050MasterComponent implements OnInit {
       this.messageService.warnBubble('無法取得採購單號');
       return;
     }
-    this.loading = true;
-    this.ass12050Service
-      .exportASS12050({ SUBPOENA_ID: this.subpoenaId })
-      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          const blob = res.body;
-          if (!blob) {
-            this.messageService.errorBubble('報表下載失敗');
-            return;
-          }
-          const url = globalThis.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `ASS12050_${this.subpoenaId}.xlsx`;
-          a.click();
-          globalThis.URL.revokeObjectURL(url);
-          this.messageService.successBubble('報表下載成功');
-        },
-        error: () => {
-          this.messageService.errorBubble('報表下載失敗');
-        },
-      });
+    this.fileExportService
+      .executeFileExport(
+        this.ass12050Service
+          .exportASS12050({ SUBPOENA_ID: this.subpoenaId })
+          .pipe(untilDestroyed(this)),
+        '.xlsx',
+        isLoading => (this.loading = isLoading),
+        `ASS12050_${this.subpoenaId}`,
+      )
+      .subscribe();
   }
 
   /** 強制結案 */
