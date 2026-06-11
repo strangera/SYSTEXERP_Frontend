@@ -223,10 +223,6 @@ export class TableReportComponent implements OnChanges {
         this.virtualData = this.data;
         this.dt.virtualScroll = false;
       } else {
-        if (this.data.length === this.totalRecords) {
-          this.dt.lazy = false;
-          this.lazy = false;
-        }
         this.dt.virtualScroll = true;
         this.virtualData = Array.from({ length: this.data.length });
         this.cdr.detectChanges();
