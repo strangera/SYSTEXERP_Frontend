@@ -15,9 +15,9 @@
           [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder"
           (keydown.enter)="handleEnterKey($event)"
-          [ngClass]="{
-            'ng-invalid ng-dirty': submitted && control.errors,
-          }"
+          (completeMethod)="onCompleteMethod($event)"
+          (onSelect)="onAutoCompleteSelect($event)"
+          [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
         >
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
