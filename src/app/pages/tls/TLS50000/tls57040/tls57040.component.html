@@ -25,17 +25,15 @@
             [control]="queryForm.controls.LOGO_No"
             [submitted]="submitted"
           ></app-dropdown>
-          <app-dropdown-table
+          <app-product-autocomplete
             class="col-12"
-            [showOverlay]="false"
             [control]="queryForm.controls.PLU_MagNo"
             [submitted]="submitted"
-            optionLabel="label"
             optionValue="PLU_No"
-            [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)"
-          ></app-dropdown-table>
+            [extraFilters]="{
+              LOGO_No: queryForm.controls.LOGO_No.value,
+            }"
+          ></app-product-autocomplete>
           <app-dropdown
             class="col-12 col-6 lg:col-4"
             label="大分類代碼"

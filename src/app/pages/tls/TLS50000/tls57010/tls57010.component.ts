@@ -4,14 +4,13 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls57010DataItem, Tls57010Request, Tls57010Service } from '@service/api/tls/tls57010.service';
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { Tls57040Service } from '@service/api/tls/tls57040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -22,7 +21,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-
+import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';
 @Component({
   selector: 'app-tls57010',
   templateUrl: './tls57010.component.html',
@@ -40,8 +39,8 @@ import { finalize } from 'rxjs';
     DropdownComponent,
     CalendarRangeQuickComponent,
     InputTextComponent,
-    DropdownTableComponent,
-    TableReportComponent
+    TableReportComponent,
+    ProductAutocompleteComponent
   ],
 })
 export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem> implements OnInit {
@@ -74,6 +73,7 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
   columnGroup: ColumnGroup[] = [
     { field: 'POD', header: '採購金額' },
   ]
+  btnLoading = false;
   constructor(
     public readonly tls57040Service: Tls57040Service,
     public readonly tls57010Service: Tls57010Service,
@@ -152,7 +152,6 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
     const export$ = this.tls57010Service.exportTLS57010PDF(this.lastQueryBody);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
-  btnLoading = false;
   onExportXLSX() {
     if (!this.lastQueryBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
@@ -160,27 +159,5 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
     }
     const export$ = this.tls57010Service.exportTLS57010(this.lastQueryBody);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
-  }
-  // 商品管理編號 (dropdown-table)
-  suggestions: QueryPLUResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-
-  // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      queryNo: event.label || '',
-      PLU_MagNo: undefined,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
-    this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }
