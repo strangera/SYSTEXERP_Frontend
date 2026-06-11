@@ -16,7 +16,7 @@ import { SystemDataService } from "src/app/service/system/system-data.service";
 import { ExportComponent } from 'src/app/shared/exports/export.component';
 import { ExportContext, ReportExportService } from 'src/app/shared/exports/report-export.service';
 import { FunsrightInfo } from "src/app/shared/models/system/funsrightInfo";
-import { ReportColumn } from '../table-report.model';
+import { ReportColumn } from '../../table-report.model';
 
 export const toggleButtons = trigger('toggleButtons', [
   state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),
