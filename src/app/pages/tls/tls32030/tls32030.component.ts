@@ -10,6 +10,7 @@ import { formatPercentage } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
@@ -45,7 +46,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     DropdownComponent,
     MultiSelectComponent,
     RadiobuttonComponent,
-    TableReportComponent
+    TableReportComponent,
+    CheckboxModule,
   ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
@@ -74,6 +76,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     TermTypeList: [null],
     AmtTaxMode: ['G'],
     ReceFilter: ['A'],
+    PreSale: [false],
+    ConsumerNum: [false],
     ...createPaginationConfig([{ field: 'TltNo', order: -1 }])
   });
 
@@ -82,6 +86,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
   btnLoading = false;
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   DayTypeOptions = [
     { value: '1', label: '日營業報表' },
@@ -154,7 +161,10 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: formatAmount },
     { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount }
+    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
 
   columnGroup = [
@@ -227,6 +237,13 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.queryForm.controls.CompareWeek.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareMonth.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
 
   historyRequestBody: any | null = null;
@@ -431,5 +448,18 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         this.totalRecords = res.TotalCount ?? this.data.length;
       });
     });
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }

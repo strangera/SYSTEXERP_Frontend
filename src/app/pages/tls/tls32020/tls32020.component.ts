@@ -18,6 +18,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
 import { formatAmount, ReportColumn } from './tls32020-table/tls32020-report-table.model';
@@ -31,7 +32,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
     CalendarComponent, DropdownComponent, NgIf, DividerModule,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeQuickComponent, CategorySelectComponent
+    MultiSelectComponent, CalendarRangeQuickComponent, CategorySelectComponent, CheckboxModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -72,6 +73,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     TermTypeList: [null],
     TaxMode: ['I'], // 是否含稅 (預設含稅)
     OwnerInvFlag: ['A'],
+
+    PreSale: [false],
+    ConsumerNum: [false],
   });
 
   // 其餘屬性 (沿用 TLS32020)
@@ -81,6 +85,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   footerData: TLS32020Data | null = null;
   subFooterData: TLS32020Data[] = []; // **新增**：用於存放期間小計資料
   btnLoading = false;
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   // **變更**：移除類型 6/7，預設為 '3'
   DayTypeOptions = [
@@ -153,7 +160,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatAmount, isSubTotal: true },
     { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatAmount, isSubTotal: true },
 
-    { field: 'BasePreOrderAmt', header: '預售業績', align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'BasePreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isSubTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [
@@ -228,6 +237,13 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
 
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);// 初始化時先設定一次正確的欄位標頭
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   // 【新增】更新欄位群組標頭的邏輯
   /**
@@ -685,5 +701,18 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       '.xlsx',
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      BasePreOrderAmt: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }
