@@ -23,7 +23,6 @@
   (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper"
   [lazy]="lazy"
-  [virtualScrollItemSize]="ItemSize"
   [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
@@ -246,7 +245,6 @@
       [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined"
       [pSelectableRow]="rowData"
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
-      [style]="{ height: ItemSize + 'px' }"
       [pSelectableRowDisabled]="!isRowSelectable(rowData)"
       [pReorderableRow]="index"
       [pSelectableRowIndex]="rowIndex"
@@ -525,7 +523,7 @@
         _loading && data.length < totalRecords && rowIndex === data.length - 1
       "
     >
-      <tr *ngFor="let i of [0, 1, 2, 3]" style="height: 46px">
+      <tr *ngFor="let i of [0, 1, 2, 3]">
         <td
           [colSpan]="
             (showReorder ? 1 : 0) +
