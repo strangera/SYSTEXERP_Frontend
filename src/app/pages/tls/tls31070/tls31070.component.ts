@@ -21,6 +21,7 @@ import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentki
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -50,7 +51,8 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     TranslateModule,
     TableReportComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    CheckboxModule,
   ]
 })
 
@@ -71,6 +73,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     org_id: [[]],  // 組織
     TaxType: ["1"],  // 銷售金額是否含稅(1:是 0:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+    PreSale: [false],
+    ConsumerNum: [false],
 
     pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
@@ -139,6 +143,9 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31070Request | null = null; //歷史查詢條件
 
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   columns: ReportColumn[] = [
     // { field: 'paper_type', header: '營業形態代號', align: 'left' },
     { field: 'paper_type_desc', header: '營業形態', align: 'left' },
@@ -163,6 +170,9 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
 
     { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -346,6 +356,13 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    });
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
     });
   }
   onSubmit(frm: FormGroup) {
@@ -583,5 +600,18 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
     this.onDetail(event, queryConditions);
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }
