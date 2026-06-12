@@ -8,225 +8,117 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="發票字軌"
-            [control]="dataForm.controls.INV_GUITrack"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="發票字軌" [control]="dataForm.controls.INV_GUITrack"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="發票號碼"
-            [control]="dataForm.controls.INV_GUINumber"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="發票日期"
-            calendarType="dateOne"
-            [control]="dataForm.controls.TXN_Date"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="發票日期" calendarType="dateOne" [control]="dataForm.controls.TXN_Date"
+            [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- ✅ 顯示用 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-year-month
-            label="發票年月"
-            [control]="dataForm.controls.INV_YM_Display"
-            [submitted]="submitted"
-            [readonly]="true"
-          ></app-year-month>
+          <app-year-month label="發票年月" [control]="dataForm.controls.INV_YM_Display" [submitted]="submitted"
+            [readonly]="true"></app-year-month>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-year-month
-            label="申報年月"
-            [control]="dataForm.controls.INV_DeclareYM"
-            [submitted]="submitted"
-            [evenMonth]="true"
-          ></app-year-month>
+          <app-year-month label="申報年月" [control]="dataForm.controls.INV_DeclareYM" [submitted]="submitted"
+            [evenMonth]="true"></app-year-month>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="專櫃編號"
-            controlName="Tlt_No"
-            [options]="CounterOptions"
-            optionLabel="formLabel"
-            optionValue="value"
-            [control]="dataForm.controls.Tlt_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="專櫃編號" controlName="Tlt_No" [options]="CounterOptions" optionLabel="formLabel"
+            optionValue="value" [control]="dataForm.controls.Tlt_No" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="廠商編號"
-            [control]="dataForm.controls.Ven_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-dropdown label="廠商編號" [control]="dataForm.controls.Ven_No" [submitted]="submitted"
+            [options]="venNoOptions" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="格式代號"
-            controlName="INV_GUIType"
-            [options]="INV_GUITypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.INV_GUIType"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="格式代號" controlName="INV_GUIType" [options]="INV_GUITypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.INV_GUIType" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="課稅別"
-            controlName="PLU_TaxType"
-            [options]="taxTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PLU_TaxType"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="課稅別" controlName="PLU_TaxType" [options]="taxTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.PLU_TaxType" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="發票總金額"
-            controlName="TXN_SaleAmt"
-            [control]="dataForm.controls.TXN_SaleAmt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="發票總金額" controlName="TXN_SaleAmt" [control]="dataForm.controls.TXN_SaleAmt"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="發票未稅金額"
-            controlName="TXN_Net"
-            [control]="dataForm.controls.TXN_Net"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="發票未稅金額" controlName="TXN_Net" [control]="dataForm.controls.TXN_Net"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="稅額"
-            controlName="TXN_Tax"
-            [control]="dataForm.controls.TXN_Tax"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="稅額" controlName="TXN_Tax" [control]="dataForm.controls.TXN_Tax"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="憑證單號"
-            [control]="dataForm.controls.Source_Doc_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="憑證單號" [control]="dataForm.controls.Source_Doc_No"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="傳票號碼"
-            [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="傳票號碼" [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="資產註記"
-            [control]="dataForm.controls.AssetType"
-            [options]="AssetNoteOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="備註"
-            controlName="INV_Remark"
-            [control]="dataForm.controls.INV_Remark"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="備註" controlName="INV_Remark" [control]="dataForm.controls.INV_Remark"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="收銀機號"
-            controlName="ECR_No"
-            [options]="ECRNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.ECR_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="交易序號"
-            [control]="dataForm.controls.TXN_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="交易序號" [control]="dataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票種類"
-            [control]="dataForm.controls.TXN_GUIPaper"
-            [options]="TXN_GUIPaperOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="發票種類" [control]="dataForm.controls.TXN_GUIPaper" [options]="TXN_GUIPaperOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="零稅銷售註記"
-            [control]="dataForm.controls.INV_NoneTax"
-            [options]="INV_NoneTaxOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="零稅銷售註記" [control]="dataForm.controls.INV_NoneTax" [options]="INV_NoneTaxOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="是否作廢"
-            [control]="dataForm.controls.INV_Cancel"
-            [options]="INV_CancelOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="是否作廢" [control]="dataForm.controls.INV_Cancel" [options]="INV_CancelOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="系統別"
-            [control]="dataForm.controls.SYS_ORIGIN"
-            [options]="System_IDOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="系統別" [control]="dataForm.controls.SYS_ORIGIN" [options]="System_IDOptions"
+            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
 
-      <div
-        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
