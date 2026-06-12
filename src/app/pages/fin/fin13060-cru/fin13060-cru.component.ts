@@ -23,6 +23,8 @@ import { ValidationService } from '@shared/service/validation.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -109,6 +111,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   System_IDOptions: any[] = [];
   TXN_GUIPaperOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
+  venNoOptions: any[] = [];
 
   private readonly GUI_TYPE_TO_PAPER: Record<string, string> = {
     '31': '3',
@@ -193,6 +196,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     private readonly validationService: ValidationService,
     private readonly ECRNoService: ECRNoService,
     private readonly counterNameService: CounterNameService,
+    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -366,6 +370,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
 
+      let txnUniform: string | null = null;
+      if (raw.Ven_No) {
+        const selectedVendor = this.venNoOptions.find(o => o.value === raw.Ven_No);
+        txnUniform = selectedVendor ? this.normalize(selectedVendor.No) : null;
+      }
       const payload = {
         ID: raw.ID != null ? Number(raw.ID) : 0,
         mid: Number(raw.mid ?? 0),
@@ -399,6 +408,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         INV_Remark: this.normalize(raw.INV_Remark),
         Tlt_No: this.normalize(raw.Tlt_No),
         Ven_No: this.normalize(raw.Ven_No),
+        TXN_Uniform: txnUniform,
       } as const;
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
@@ -752,6 +762,13 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) ?? [];
+    });
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe((res: any) => {
+      this.venNoOptions = (res?.Data ?? []).map((x: any) => ({
+        label: `${x.VEN_No} - ${x.Name}`,
+        value: x.VEN_No,
+        ...x,
+      }));
     });
   }
 }
