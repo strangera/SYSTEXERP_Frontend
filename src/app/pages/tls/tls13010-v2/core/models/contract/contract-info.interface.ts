@@ -38,6 +38,14 @@ export interface ContractInfo {
   contact_USR_No?: string;
   contact_USR_Name?: string;
 
+  // 稽核資訊
+  crt_usr_name?: string;
+  crt_date?: string;
+  upd_usr_name?: string;
+  upd_date?: string;
+  app_usr_name?: string;
+  app_date?: string;
+
   // 狀態設定
   approve_status?: string;
   ven_no?: string;
