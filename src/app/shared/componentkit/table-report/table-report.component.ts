@@ -13,14 +13,17 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
-import { SystemDataService } from 'src/app/service/system/system-data.service';
 import { ExportContext } from '../../exports/report-export.service';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { QueryStateService } from '../../service/query-state.service';
-import { TableReportCaptionComponent } from './table-report-caption/table-report-caption.component';
-import { TableExpansionComponent } from './table-report-expansion/table-report-expansion.component';
-import { TableReportUtilityService } from './table-report-utility.service';
+import { TableReportCaptionComponent } from './components/table-report-caption/table-report-caption.component';
+import { TableExpansionComponent } from './components/table-report-expansion/table-report-expansion.component';
+import { TableReportDataFlowService } from './services/table-report-data-flow.service';
+import { TableReportDragDropService } from './services/table-report-drag-drop.service';
+import { TableReportPermissionService } from './services/table-report-permission.service'; // 新增
+import { TableReportSelectionService } from './services/table-report-selection.service';
+import { TableReportSubtotalService } from './services/table-report-subtotal.service';
+import { TableReportUtilityService } from './services/table-report-utility.service';
+import { TableReportWidthService } from './services/table-report-width.service';
 import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @UntilDestroy()
@@ -32,108 +35,123 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    TableReportWidthService,
+    TableReportSelectionService,
+    TableReportDragDropService,
+    TableReportSubtotalService,
+    TableReportPermissionService,
+    TableReportDataFlowService
+  ]
 })
 export class TableReportComponent implements OnChanges {
   @ViewChild('dt') public readonly dt!: Table;
+
   public readonly tableUtility = inject(TableReportUtilityService);
+  public readonly widthService = inject(TableReportWidthService);
+  public readonly selectionService = inject(TableReportSelectionService);
+  public readonly dragDropService = inject(TableReportDragDropService);
+  public readonly subtotalService = inject(TableReportSubtotalService);
+  public readonly permissionService = inject(TableReportPermissionService);
+  public readonly dataFlowService = inject(TableReportDataFlowService);
   public readonly sanitizer = inject(DomSanitizer);
+
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly queryState = inject(QueryStateService);
-  private readonly currentPage = inject(CurrentPageService);
-  private readonly systemDataService = inject(SystemDataService);
-  @Input() exportContext?: ExportContext; // 用來儲存匯出相關的額外參數
-  @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
-  @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
-  @Input() lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
-  @Input({ required: true }) totalRecords = 0;             // 用來儲存總筆數
-  @Input({ required: true }) data: any[] = [];             // 用來儲存查詢結果
-  @Input({ required: true }) columns: ReportColumn[] = []; // 用來儲存查詢結果
-  @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
+
+  // Inputs & Outputs 宣告
+  @Input() exportContext?: ExportContext;
+  @Input() pageOrientation: string | null = 'Landscape';
+  @Input() pageSizeSetting: string | null = 'A4';
+  @Input() lastQueryBody?: any;
+  @Input({ required: true }) totalRecords = 0;
+  @Input({ required: true }) data: any[] = [];
+  @Input({ required: true }) columns: ReportColumn[] = [];
+  @Input() queryFunction?: (body: any) => Observable<any>;
+
   virtualData: any = [];
   @Input() ItemSize = 46;
   @Input() lazy = true;
-  @Input() dataKey: string | undefined;                    // 用來儲存查詢結果
-  selectedColumns: ReportColumn[] = [];                    // 用來儲存查詢結果
-  // tableKey預設給路由名稱
+  @Input() dataKey: string | undefined;
+  selectedColumns: ReportColumn[] = [];
+
   @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
   @Input() loading = false;
   public _loading = false;
   @Input() showReorder = true;
-  // Checkbox 相關
   @Input() showCheckBox = false;
   @Input() tableHeaderCheckboxLabel?: string;
-  @Input() selectedItems: any = [];
-  @Output() selectionChange = new EventEmitter<any>();
-  @Output() selectAllChange = new EventEmitter<boolean>();
-  /** 資料點選(事件) */
+  @Input() set selectedItems(val: any[]) {
+    // 如果內部服務的已選取筆數跟外部傳入的一模一樣，代表是自己人觸發的更新，直接擋掉，不重複往下算！
+    if (this.selectionService.selectedItems && val && this.selectionService.selectedItems.length === val.length) {
+      return;
+    }
+    this.selectionService.syncSelectedItems(val || [], this.data, this.isRowSelectable);
+  }
+  get selectedItems(): any[] { return this.selectionService.selectedItems; }
+  @Output() get selectionChange() { return this.selectionService.selectionChange; }
+  @Output() get selectAllChange() { return this.selectionService.selectAllChange; }
   @Output() itemClick = new EventEmitter<any>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
-  @Input() isAllSelected = false;           // 是否全選
-  @Output() dataChange = new EventEmitter<any[]>();  // 用來儲存查詢結果
-  @Input() customTemplates: Record<string, TemplateRef<any>> = {};/** 接收外部傳入的自定義模板物件，Key 為 field 名稱 */
-  // Header 相關
-  @Input() showCaption = true;            // 是否顯示 Caption
-  @Input() showSort = true;              // 是否顯示 排序
-  public get multiSortMeta() { // 暴露內部 p-table 的多重排序狀態
-    return this.dt?.multiSortMeta || [];
-  }
+
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => this.isRowSelectable(data);
+
+  @Input() set isAllSelected(val: boolean) { this.selectionService.isAllSelected = val; }
+  get isAllSelected(): boolean { return this.selectionService.isAllSelected; }
+
+  @Output() dataChange = new EventEmitter<any[]>();
+  @Input() customTemplates: Record<string, TemplateRef<any>> = {};
+  @Input() showCaption = true;
+  @Input() showSort = true;
+
+  public get multiSortMeta() { return this.dt?.multiSortMeta || []; }
   private isSyncingSort = false;
-  @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
-  // Header(左) 相關
-  @Input() showFilter = true;      // 是否顯示 Filter
-  @Input() showReportMode = true;    // 是否顯示 匯出按鈕
-  @Input() customReport = false;    // 是否自訂報表
-  @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
-  @Output() delete = new EventEmitter<any>(); // 刪除事件
-  @Input() showDelete = true;     // 是否顯示刪除按鈕
-  @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止刪除條件
-  // Header(右) 相關
-  @Input() showExcel = false;      // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;     // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;     // 是否顯示 匯入Excel按鈕
-  @Input() showCustomExcelImport = false;   // 是否顯示 自訂匯入Excel按鈕
-  @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
-  @Input() exportExcelLoading = false;    // 匯出 Excel loading
-  @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
-  // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];           // table 群組欄位
-  // 管理 欄位
-  @Input() showManage = true;    // 是否顯示 管理欄位
-  @Input() showDetail = true;    // 是否顯示 管理欄位(明細按鈕)
-  @Output() detail = new EventEmitter<any>();// 明細事件
-  @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
+  @Input() allowMultilineHeader = false;
+  @Input() showFilter = true;
+  @Input() showReportMode = true;
+  @Input() customReport = false;
+  @Output() exportEvent = new EventEmitter<string>();
+  @Output() delete = new EventEmitter<any>();
+  @Input() showDelete = true;
+  @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;
+  @Input() showExcel = false;
+  @Input() showExcelExport = true;
+  @Input() showExcelImport = true;
+  @Input() showCustomExcelImport = false;
+  @Output() exportExcel = new EventEmitter<any>();
+  @Input() exportExcelLoading = false;
+  @Output() importExcel = new EventEmitter<FileSelectEvent>();
+  @Input() columnGroup?: ColumnGroup[];
+  @Input() showManage = true;
+  @Input() showDetail = true;
+  @Output() detail = new EventEmitter<any>();
+  @Input() showEdit = true;
   @Input() editTooltip: string | ((rowData: any) => string) = '編輯';
-  // 新增一個輔助方法來解析 Tooltip
-  getEditTooltip(rowData: any): string {
-    if (typeof this.editTooltip === 'function') {
-      return this.editTooltip(rowData);
-    }
-    return this.editTooltip;
-  }
-  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止明細條件
-  @Output() edit = new EventEmitter<any>(); // 編輯事件
-  @Input() addButton: AddButton[] = [];  // 自定義 管理按鈕
-  @Input() buttonsLoading = false;   // 按鈕們 loading
-  @Input() footerData: any;     // (總計)頁尾資料
-  @Input() footerPercentData: any;     // (百分比)頁尾資料
-  @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
-  @Input() groupRowsBy?: string;    // (小計)群組欄位
-  @Input() subTotalLabel = '小計'; // 小計列左側標籤文字
-  @Input() showSubTotalGroupValue = true; // 小計列是否顯示群組值（小計(XXX)）
-  groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
-  @Input() subTotalData: any;    // (小計)頁尾資料
-  @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
-  @Input() showSummary = true; // 是否顯示 總計欄位
-  @Input() footerLabel = '總計'; // 總計列左側標籤文字
-  /** 多列 footer 時，每列第一欄顯示的欄位名（如 group_name）；未設則顯示 footerLabel */
+  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;
+  @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;
+  @Output() edit = new EventEmitter<any>();
+  @Input() addButton: AddButton[] = [];
+  @Input() buttonsLoading = false;
+  @Input() footerData: any;
+  @Input() footerPercentData: any;
+  @Input() extraFooterData: any;
+  @Input() groupRowsBy?: string;
+  @Input() subTotalLabel = '小計';
+  @Input() showSubTotalGroupValue = true;
+
+  // 代理小計快取
+  get groupTotals() { return this.subtotalService.groupTotals; }
+  set groupTotals(val) { this.subtotalService.groupTotals = val; }
+
+  @Input() subTotalData: any;
+  @Output() selectButton = new EventEmitter<any>();
+  @Input() showSummary = true;
+  @Input() footerLabel = '總計';
   @Input() footerLabelField?: string;
-  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 700px）
-  @Input() showFooterTotal = true; // 是否顯示第一列 footer 總計資料
-  @Input() allowFooterHtml = false; // 是否允許 footer 使用 HTML 內嵌呈現（預設 false，避免影響既有頁面）
-  // expansion 收合展開
+  @Input() autoHeight = false;
+  @Input() showFooterTotal = true;
+  @Input() allowFooterHtml = false;
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
@@ -141,587 +159,298 @@ export class TableReportComponent implements OnChanges {
   @Input() expansionShowSort = true;
   @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
-  // 連結
+  private isNextPagePreloaded = false;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
-  @Input() emptyMessage = '查無資料';               // 無資料時顯示訊息 (可選)
-  draggedCol: any = null;
-  draggedIndex = -1;
+  @Input() emptyMessage = '查無資料';
+
+  public hasSearched = false;
 
   constructor() {
-    this.getProgNo();
+    this.permissionService.initPermission(this.tableKey, (newKey) => {
+      this.tableKey = newKey;
+    });
     this.onScroll = this.onScroll.bind(this);
   }
-  getProgNo() {
-    this.currentPage.currentPageProgNo$.subscribe(progNo => {
-      if (progNo) {
-        this.funInfo = this.systemDataService.getUserPermissions(progNo);
-        this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
-      } else {
-        this.funInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
-      }
-    });
-  }
-  public funInfo?: FunsrightInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
+
+  // 權限傳聲筒
   hasPermission(action: string): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
+    return this.permissionService.hasPermission(action);
   }
-  /** 將 footerData 正規化為陣列，供 template 依序繪製多列 footer；單一物件時為 [footerData]。 */
+
   get footerRows(): any[] {
     if (this.footerData == null) return [];
     return Array.isArray(this.footerData) ? this.footerData : [this.footerData];
   }
-  public hasSearched = false; // 是否已搜尋
+
+  public get serialColumnWidth(): string {
+    return this.widthService.serialColumnWidth;
+  }
+
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['data']) {
-      // 只有當資料真的從 API 回來（不論長度是多少）才顯示
-      // 或者是根據你是否有 lastQueryBody 來判斷
-      if (this.lastQueryBody) {
-        this.hasSearched = true;
-      }
-      this.isAllSelected = false;
-      this.selectedItems = [];
-      this.virtualData = [];
-      this.groupTotals = {};
-      this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-      // ====== 新增：第一次拿到資料時，動態計算並固定欄位寬度 ======
-      if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
-        this.calculateAndFixColumnWidths();
-      }
-      // ========================================================
-      if (this.data.length !== 0) {
-        if (this.dt) {
-          this.dt.virtualScroll = false;
-          setTimeout(() => {
-            this.syncTableSortMeta();
-          });
-        }
-        this.cdr.detectChanges();
-        // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
-        if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-        } else {
-          if (this.data.length === this.totalRecords) {
-            this.dt.lazy = false;
-            this.lazy = false;
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-            if (!this.showManage) {
-              this.ItemSize = 46;
-            }
-          } else {
-            this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-          }
-          this.dt.virtualScroll = true;
-          this.virtualData = Array.from({ length: this.data.length });
-          this.cdr.detectChanges();
-          this.virtualData = this.data;
-        }
-      }
+    if (changes['data'] || changes['totalRecords']) {
+      this.handleDataChange(changes);
     }
   }
 
-  loadMoreData() {
-    if (this._loading || !this.queryFunction || !this.lastQueryBody) {
-      return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
+  /**
+   * 核心視圖資料配給大腦
+   */
+  private handleDataChange(changes: SimpleChanges) {
+    if (this.lastQueryBody) {
+      this.hasSearched = true;
     }
-    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+
+    if (changes['data']) {
+      this.selectionService.reset();
+      this.virtualData = [];
+      this.subtotalService.clearGroupTotals();
+      this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
+      this.isNextPagePreloaded = false;
+    }
+
+    if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
+      this.columns = this.widthService.calculateAndFixColumnWidths(
+        this.columns, this.data, this.totalRecords, this.showReorder
+      );
+    }
+
+    // 封裝後的 PrimeNG 視圖狀態與虛擬滾動分配邏輯
+    if (this.data && this.data.length !== 0) {
+      if (this.dt) {
+        this.dt.virtualScroll = false;
+        setTimeout(() => this.syncTableSortMeta());
+      }
+      this.cdr.detectChanges();
+
+      const pageSize = this.lastQueryBody?.pageSize || 30;
+      this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
+
+      if (this.data.length < pageSize) {
+        this.virtualData = this.data;
+        this.dt.virtualScroll = false;
+      } else {
+        this.dt.virtualScroll = true;
+        this.virtualData = Array.from({ length: this.data.length });
+        this.cdr.detectChanges();
+        this.virtualData = this.data;
+      }
+    }
+  }
+  // --- 轉發各分類服務事件門 ---
+
+  getGroupSubtotal(rowData: any, col: ReportColumn): any {
+    return this.subtotalService.getGroupSubtotal(rowData, col, this.columns, this.groupRowsBy, this.subTotalData);
+  }
+
+  updateGroupTotals(newData: any[]): void {
+    this.subtotalService.updateGroupTotals(newData, this.columns, this.groupRowsBy);
+  }
+
+  onSelectionChange(event: any[]) {
+    this.selectionService.handleSelectionChange(event, this.data, this.isRowSelectable);
+  }
+
+  onSelectAllChange(event: TableSelectAllChangeEvent) {
+    this.selectionService.handleSelectAllChange(event, this.data, this.isRowSelectable);
+  }
+
+  onLazyLoad() {
+    this.selectionService.handleLazyLoadSelection(this.data, this.isRowSelectable);
+  }
+
+  public onCustomDragStart(event: DragEvent, col: ReportColumn, index: number) {
+    this.dragDropService.handleDragStart(event, col, index);
+  }
+
+  public onCustomDragOver(event: DragEvent, targetCol: ReportColumn) {
+    this.dragDropService.handleDragOver(event, targetCol);
+  }
+
+  public onCustomDrop(event: DragEvent, targetCol: ReportColumn, targetIndex: number) {
+    this.columns = this.dragDropService.handleDrop(
+      event, targetCol, targetIndex, this.columns, this.tableKey, this.queryState
+    );
+    this.cdr.detectChanges();
+  }
+
+  // --- 後端 API 分頁、排序加載核心邏輯 ---
+
+  loadMoreData() {
+    if (this._loading || !this.queryFunction || !this.lastQueryBody) return;
+    this.lastQueryBody = this.dataFlowService.normalizeQueryBody(this.lastQueryBody);
     const { pageSize } = this.lastQueryBody;
     const currentSort = this.dt?.multiSortMeta;
-    if (currentSort) {
-      this.lastQueryBody.SortBy = currentSort;
-    }
+    if (currentSort) this.lastQueryBody.SortBy = currentSort;
+
     const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / pageSize) + 1,
-      pageSize, // 使用 pageSize 變數
+      pageSize,
       SortBy: currentSort && currentSort.length > 0 ? currentSort : (this.lastQueryBody.SortBy || undefined)
     };
     this._loading = true;
-    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
-      if (res?.Data && res.Data.length > 0) {
-        this.virtualData = Array.from({ length: this.data.length + res.Data.length });
-        this.updateGroupTotals(res.Data);
-        this.cdr.detectChanges();
-        this.data = [...this.data, ...res.Data];
-        this.syncTableSortMeta();
-        this.dataChange.emit(this.data);
-        this.virtualData = this.data;
-        this.totalRecords = res.TotalCount || this.data.length;
-      }
-    });
+    this.queryFunction(body)
+      .pipe(untilDestroyed(this), finalize(() => (this._loading = false)))
+      .subscribe(res => {
+        if (res?.Data && res.Data.length > 0) {
+          this.virtualData = Array.from({ length: this.data.length + res.Data.length });
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
+          this.cdr.detectChanges();
+          this.data = [...this.data, ...res.Data];
+          this.syncTableSortMeta();
+          this.dataChange.emit(this.data);
+          this.virtualData = this.data;
+          this.totalRecords = res.TotalCount || this.data.length;
+        }
+        this.isNextPagePreloaded = false;
+      });
   }
+
   onSort(event: any) {
     if (!this.lazy) {
-      this.groupTotals = {};
-      this.updateGroupTotals(this.data);
+      this.subtotalService.clearGroupTotals();
+      this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
       this.cdr.detectChanges();
       return;
     }
     if (this.isSyncingSort || this._loading) return;
-    if (event.multiSortMeta && event.multiSortMeta.length > 0) {
-      const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
-      this.dt.multiSortMeta = [lastSort];
+
+    // 精準對接 PrimeNG 的全小寫大坑
+    const incomingSorts: any[] = event.multisortmeta || [];
+
+    if (this.groupRowsBy) {
+      // 🟢 1. 動態偵測或繼承小計欄位的排序方向 (order)
+      // 先看這次傳進來的事件有沒有包含小計欄位的排序
+      const incomingGroupSort = incomingSorts.find(s => s.field === this.groupRowsBy);
+      // 再看上一次表格留存的狀態有沒有小計欄位的排序
+      const lastGroupSort = this.dt.multiSortMeta?.find(s => s.field === this.groupRowsBy);
+
+      // 優先級：這次事件的方向 -> 上一次的方向 -> 預設升序 (1)
+      const currentGroupOrder = incomingGroupSort ? incomingGroupSort.order : (lastGroupSort ? lastGroupSort.order : 1);
+
+      const groupSortMeta = { field: this.groupRowsBy, order: currentGroupOrder };
+
+      // 🟢 2. 清洗其餘欄位的排序條件：排除掉重複的小計欄位
+      const cleanUserSorts = incomingSorts.filter(s => s.field !== this.groupRowsBy);
+
+      // 🟢 3. 完美組裝：[ 動態小計分組固定第一, ...其餘無限個使用者多重排序 ]
+      this.dt.multiSortMeta = [groupSortMeta, ...cleanUserSorts];
+
+      // 4. 灌回 PrimeNG 控制核心，讓畫面的箭頭方向跟資料狀態完全對齊
+      this.dt.tableService.onSort(this.dt.multiSortMeta);
+    } else {
+      // 常規無小積分組時：直接信任 PrimeNG 的多欄位排序陣列
+      this.dt.multiSortMeta = [...incomingSorts];
     }
-    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+
+    // --- 以下後端 API 調配與視圖配給完全不變，100% 穩定對接 ---
+    this.lastQueryBody = this.dataFlowService.normalizeQueryBody(this.lastQueryBody);
     const { pageSize } = this.lastQueryBody;
+    if (!this.queryFunction || !this.lastQueryBody || !this.showSort) return;
 
-    // 判斷是否需要重新查詢
-    if (!this.queryFunction || !this.lastQueryBody || !this.showSort) {
-      return;
-    }
-    this.lastQueryBody = {
-      ...this.lastQueryBody,
-      pageIndex: 1,
-      pageSize,
-      SortBy: this.dt.multiSortMeta
-    };
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: 1, // 重新排序時，總是從第一頁開始
-      pageSize, // 使用 pageSize 變數
-      SortBy: this.dt.multiSortMeta ?? undefined // 這裡現在只包含最新的單一排序
-    };
+    this.lastQueryBody = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta };
+    const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
-    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      this.hasSearched = true;
-      if (res?.Data && res.Data.length > 0) {
-        this.virtualData = [];
-        this.dt.virtualScroll = false;
-        this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(res.Data);
-        this.data = res.Data;
-        this.syncTableSortMeta();
-        this.cdr.detectChanges();
 
-        // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
-        if (res.Data.length < pageSize) {
-          this.data = res.Data;
-          this.virtualData = this.data;
+    this.queryFunction(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe(res => {
+        this.hasSearched = true;
+        if (res?.Data && res.Data.length > 0) {
+          this.virtualData = [];
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-        } else {
-          this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '700px';
-          this.virtualData = Array.from({ length: res.Data.length });
+          this.subtotalService.clearGroupTotals();
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.data = res.Data;
+          this.isNextPagePreloaded = false;
+
+          this.syncTableSortMeta();
           this.cdr.detectChanges();
-          this.virtualData = this.data;
+
+          if (res.Data.length < pageSize) {
+            this.virtualData = this.data;
+            this.dt.virtualScroll = false;
+          } else {
+            this.dt.virtualScroll = true;
+            this.virtualData = Array.from({ length: res.Data.length });
+            this.cdr.detectChanges();
+            this.virtualData = this.data;
+          }
+          this.selectedItems = [];
+          this.dataChange.emit(this.data);
         }
-        this.selectedItems = [];
-        this.dataChange.emit(this.data);
-      }
-    });
+      });
   }
+
   customSort(event: TableQueryPayload) {
     if (!event.multiSortMeta) return;
-
-    // 1. 原地排序
-    this.data.sort((data1, data2) => {
-      for (const sortMeta of event.multiSortMeta) {
-        const value1 = data1[sortMeta.field];
-        const value2 = data2[sortMeta.field];
-        let result = 0;
-        if (value1 == null && value2 != null) result = -1;
-        else if (value1 != null && value2 == null) result = 1;
-        else if (value1 == null && value2 == null) result = 0;
-        else if (typeof value1 === 'string' && typeof value2 === 'string')
-          result = value1.localeCompare(value2, undefined, { numeric: true, sensitivity: 'base' });
-        else
-          result = value1 < value2 ? -1 : value1 > value2 ? 1 : 0;
-
-        if (result !== 0) return sortMeta.order * result;
-      }
-      return 0;
-    });
-
-    // 2. 處理勾選參考 (這步很重要，維持高亮的 key)
-    if (this.selectedItems && this.selectedItems.length > 0) {
-      this.selectedItems = [...this.selectedItems];
-    }
-
-    // 3. 更新小計
-    this.groupTotals = {};
-    this.updateGroupTotals(this.data);
+    this.data = this.dataFlowService.executeClientSort(event, this.data);
+    if (this.selectedItems && this.selectedItems.length > 0) this.selectedItems = [...this.selectedItems];
+    this.subtotalService.clearGroupTotals();
+    this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
     this.cdr.detectChanges();
     setTimeout(() => {
-      if (this.dt) {
-        this.dt.restoreState();
-      }
+      if (this.dt) this.dt.restoreState();
       this.cdr.detectChanges();
     }, 0);
   }
-  onLazyLoad() {
-    if (this.isAllSelected) {
-      this.selectedItems = this.data.filter(rowData => {
-        const selectable = this.isRowSelectable(rowData);
-        return selectable ?? true;
-      });
-      this.selectionChange.emit(this.selectedItems);
-      this.selectAllChange.emit(true);
-    } else {
-      this.selectedItems = [...this.selectedItems];
-      this.selectionChange.emit(this.selectedItems);
-      this.selectAllChange.emit(false);
-    }
-  }
+
   onScroll(event: any) {
-    if (this._loading) return;
-    if (this.lazy) {
-      const target = event.originalEvent.target;
-      const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
-      if (this.data.length >= pageSize) {
-        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10000;
-        if (isBottom && this.data.length < this.totalRecords) {
-          this.loadMoreData();
-        }
+    if (this._loading || !this.lazy) return;
+    const target = event.originalEvent?.target;
+    if (!target) return;
+    const pageSize = this.dataFlowService.normalizeQueryBody(this.lastQueryBody)?.pageSize ?? 30;
+    if (this.data.length >= pageSize && this.data.length < this.totalRecords) {
+      if (!this.isNextPagePreloaded && target.scrollTop > 50) {
+        this.isNextPagePreloaded = true;
+        this.loadMoreData();
       }
-    }
-    else if (this.selectedItems && this.selectedItems.length > 0) {
+    } else if (this.selectedItems && this.selectedItems.length > 0) {
       this.selectedItems = [...this.selectedItems];
       this.cdr.detectChanges();
     }
     this.cdr.markForCheck();
   }
-  // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
-  onSelectionChange(event: any[]) {
-    this.selectedItems = [...event];
-
-    // 找出目前資料中真正「可以被勾選」的數量
-    const selectableRows = this.data.filter(rowData => {
-      const selectable = this.isRowSelectable(rowData);
-      return selectable ?? true;
-    });
-    // 如果已選數量 > 0 且等於可選總數，才亮起全選
-    this.isAllSelected = selectableRows.length > 0 && this.selectedItems.length === selectableRows.length;
-
-    this.selectionChange.emit(this.selectedItems);
-    this.selectAllChange.emit(this.isAllSelected);
-  }
-  onSelectAllChange(event: TableSelectAllChangeEvent) {
-    const checked = event.checked;
-
-    if (checked) {
-      // 過濾出可選的資料
-      this.selectedItems = this.data.filter(rowData => {
-        const selectable = this.isRowSelectable(rowData);
-        return selectable ?? true;
-      });
-      // 如果過濾完發現根本沒資料可選，則全選按鈕不應亮起
-      this.isAllSelected = this.selectedItems.length > 0;
-    } else {
-      this.selectedItems = [];
-      this.isAllSelected = false;
-    }
-
-    this.selectionChange.emit(this.selectedItems);
-    this.selectAllChange.emit(this.isAllSelected);
-  }
 
   trackByFn(index: number, item: any) {
-    return this.dataKey && item?.[this.dataKey] || index;
+    return (this.dataKey && item?.[this.dataKey]) || index;
   }
-  // 分組標題
+
   getGroupHeader(groupField: string): string {
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
+
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
-  /**
- * 檢查是否有任何欄位被配置為需要小計。
- * @returns 如果至少一個欄位有 subtotalField 屬性則回傳 true。
- */
+
   hasSubtotalColumns(): boolean {
     return this.columns.some(col => col.isSubTotal && this.groupRowsBy);
   }
+
   isGroupLastRow(rowData: any, rowIndex: number): boolean {
-    if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) {
-      return true; // 如果沒有分組或已經是最後一筆，則視為群組結尾。
-    }
+    if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) return true;
     return this.tableUtility.isGroupLastRow(rowData, rowIndex, this.groupRowsBy, this.data);
   }
 
-  getGroupSubtotal(rowData: any, col: ReportColumn): any {
-    if (!this.groupRowsBy || !col.isSubTotal) {
-      return '';
-    }
-
-    // 獲取用於分組的原始值
-    const rawGroupValue = rowData[this.groupRowsBy];
-
-    // 獲取用於分組的欄位定義
-    const groupColumn = this.columns.find(c => c.field === this.groupRowsBy);
-    const useFormatterForGroupKey = groupColumn?.format;
-
-    let matchKey: string;
-
-    // ** 1. 生成用於匹配的格式化群組鍵 **
-    if (useFormatterForGroupKey) {
-      // 使用欄位定義中的 format 函式來產生匹配鍵
-      matchKey = String(groupColumn.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
-    } else {
-      // 退回到安全轉換
-      matchKey = String(rawGroupValue ?? '').trim() || 'UNKNOWN_GROUP';
-    }
-
-    // ** 2. 優先查找外部傳入的 subTotalData **
-    if (this.subTotalData && this.subTotalData.length > 0 && this.groupRowsBy) {
-      // 假設 subTotalData 中的分組欄位 (item[this.groupRowsBy]) 也是原始值
-      // 為了確保匹配，我們需要對 subTotalData 中的分組欄位進行相同的格式化
-      const subtotalRow = this.subTotalData.find((item: any) => {
-        const itemRawValue = item[this.groupRowsBy!];
-        let itemMatchKey: string;
-
-        if (useFormatterForGroupKey) {
-          itemMatchKey = String(groupColumn.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
-        } else {
-          itemMatchKey = String(itemRawValue ?? '').trim() || 'UNKNOWN_GROUP';
-        }
-        // 使用格式化後的鍵進行比對
-        return itemMatchKey === matchKey;
-      });
-
-      if (subtotalRow) {
-        const subtotal = subtotalRow[col.field] ?? 0;
-        // 對小計值應用格式化
-        return col.format ? col.format(subtotal) : subtotal;
-      }
-    }
-
-    // ** 3. 回退到前端計算的 groupTotals **
-    const total = this.groupTotals[matchKey]?.[col.field] ?? 0;
-    // 對小計值應用格式化
-    return col.format ? col.format(total) : total;
-  }
-
-  // 對新載入的資料進行增量計算，並更新 groupTotals。
-  updateGroupTotals(newData: any[]): void {
-    if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
-      return;
-    }
-
-    // 1. 找出作為分組依據的欄位定義
-    const groupColumn = this.columns.find(col => col.field === this.groupRowsBy);
-    // 檢查分組欄位是否存在且具有 format 函式
-    const useFormatterForGroupKey = groupColumn?.format;
-
-    for (const row of newData) {
-      const rawValue = row[this.groupRowsBy];
-      let groupKey: string;
-
-      if (useFormatterForGroupKey) {
-        // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
-        groupKey = String(groupColumn.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
-      } else {
-        // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
-        groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
-      }
-
-      // 如果 groupKey 為 'UNKNOWN_GROUP' 且原始值為 undefined/null，可以選擇跳過
-      if (groupKey === 'UNKNOWN_GROUP' && (rawValue === undefined || rawValue === null)) {
-        continue;
-      }
-
-      // 初始化該群組的總計物件
-      if (!this.groupTotals[groupKey]) {
-        this.groupTotals[groupKey] = {};
-      }
-
-      // 進行增量加總
-      for (const col of this.columns) {
-        if (col.isSubTotal) {
-          const field = col.field;
-          // 確保值是數字，如果不是則為 0
-          const value = Number(row[field]) || 0;
-
-          // 增量加總
-          this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
-        }
-      }
-    }
-  }
-  /**
- * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
- */
   private syncTableSortMeta() {
     if (!this.dt || !this.lastQueryBody?.SortBy) return;
-
-    this.isSyncingSort = true; // 開啟旗標
+    this.isSyncingSort = true;
     const sortBy = this.lastQueryBody.SortBy;
     const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
     this.dt.multiSortMeta = meta.map(m => ({ field: m.field || m.Field, order: m.order || m.Order }));
-
     setTimeout(() => {
       this.dt.tableService.onSort(this.dt.multiSortMeta || []);
       this.cdr.detectChanges();
-      this.isSyncingSort = false; // 關閉旗標
+      this.isSyncingSort = false;
     }, 0);
   }
-  /** 確保分頁參數統一為小寫，避免 PascalCase 導致重複查詢或參數丟失 */
-  private normalizeQueryBody(body: any) {
-    if (!body) return body;
-    const pageSize = body.pageSize ?? body.PageSize ?? 30;
-    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
-
-    // 移除可能干擾的小寫/大寫重複項，並統一回傳小寫
-    const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
-  }
-
   getBtnLabel(btn: any, rowData: any): string {
-    if (typeof btn.label === 'function') {
-      return btn.label(rowData);
-    }
-    return btn.label;
+    return typeof btn.label === 'function' ? btn.label(rowData) : btn.label;
   }
 
-  // #region 更新: 群組欄位排序處理
-  public onCustomDragStart(event: DragEvent, col: ReportColumn, index: number) {
-    this.draggedCol = col;
-    this.draggedIndex = index;
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-    }
-  }
-
-  public onCustomDragOver(event: DragEvent, targetCol: ReportColumn) {
-    if (!this.draggedCol) return;
-
-    // 規則判斷：
-    // 情況 A：拖曳的是群組欄位 -> 目標欄位必須是同一個群組
-    // 情況 B：拖曳的是非群組欄位 -> 目標欄位也必須是非群組欄位 (groupField 皆為 undefined/null)
-    const isSameGroup = this.draggedCol.groupField === targetCol.groupField;
-
-    if (isSameGroup) {
-      event.preventDefault(); // 只有符合規則，才允許放下 (Drop)
-    }
-  }
-
-  public onCustomDrop(event: DragEvent, targetCol: ReportColumn, targetIndex: number) {
-    event.preventDefault();
-
-    if (!this.draggedCol || this.draggedIndex === -1) return;
-
-    // 再次防呆：若放下的目標跟來源不合規則，不執行任何動作
-    if (this.draggedCol.groupField !== targetCol.groupField) {
-      return;
-    }
-
-    // 產生新陣列進行位置重排
-    const updatedColumns = [...this.columns];
-
-    // 1. 先把拖曳源從舊位置拔掉
-    updatedColumns.splice(this.draggedIndex, 1);
-    // 2. 塞入新位置
-    updatedColumns.splice(targetIndex, 0, this.draggedCol);
-
-    // 更新欄位順序，觸發 PrimeNG 重新渲染
-    this.columns = updatedColumns;
-
-    // 記憶使用者調整後的欄位順序 (沿用您原本的 queryState 機制)
-    if ((this as any).queryState) {
-      (this as any).queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-    }
-
-    // 重置暫存變數
-    this.draggedCol = null;
-    this.draggedIndex = -1;
-    this.cdr.detectChanges();
-  }
-  // ----更新: 欄位群組的排序處理 ---
-  /**
- * 根據第一批資料的內容長度，計算並固定每個欄位的寬度（不計表頭長度）
- */
-  private calculateAndFixColumnWidths(): void {
-    // 基礎字元寬度估算：中文字大約 16px，英數/符號大約 9px
-    const CHINESE_CHAR_WIDTH = 16;
-    const ANY_CHAR_WIDTH = 9;
-    // Padding 緩衝(左右 Padding 加上安全空間)，確保內容完美呈現
-    const PADDING_BUFFER = 24;
-    const sampleData = this.data.slice(0, 100);
-    this.columns = this.columns.map(col => {
-      // 1. 如果外部已經有硬編碼寫死 width (例如 '150px')，則尊重原設定，不重複計算
-      if (col.width) {
-        return col;
-      }
-
-      let maxLength = 0;
-      let minLength = Infinity;
-
-      // 遍歷第一批資料，純粹找出該欄位內容的最長與最短
-      sampleData.forEach(row => {
-        // 取得格式化後或原始的內容字串
-        const rawValue = row[col.field];
-        let displayValue = '';
-        if (col.format) {
-          displayValue = String(col.format(rawValue, 0, row) ?? '');
-        } else {
-          displayValue = String(rawValue ?? '');
-        }
-
-        // 如果是 HTML 類型，過濾掉標籤後再計算長度，避免標籤字串干擾
-        if (col.type === 'html') {
-          displayValue = displayValue.replace(/<[^>]*>/g, '');
-        }
-
-        const textWidth = this.estimateTextWidth(displayValue, CHINESE_CHAR_WIDTH, ANY_CHAR_WIDTH);
-        if (textWidth > maxLength) maxLength = textWidth;
-        if (textWidth < minLength) minLength = textWidth;
-      });
-
-      // 如果完全沒有資料或全是空值，給予預設基礎
-      if (minLength === Infinity || maxLength === 0) {
-        minLength = 50;
-        maxLength = 96;
-      }
-
-      // 加上 padding 核心偏移量
-      let finalMax = maxLength + PADDING_BUFFER;
-      let finalMin = minLength + PADDING_BUFFER;
-
-      // 2.  核心調整邏輯
-      if (col.format) {
-        // 就算有 format，最小寬度也絕對不能低於 55px (防呆：避免空值或極短值擠壓表頭)
-        finalMin = Math.max(finalMax, 55);
-
-        // 標準寬度同步設為 finalMin 確保不換行，同時限制極端髒資料的上限為 800px
-        finalMax = Math.min(finalMin, 800);
-
-        // 確保結構對齊
-        if (finalMin > finalMax) finalMin = finalMax;
-      } else {
-        // 如果沒有下 format：維持一般欄位的彈性安全邊界
-        finalMin = Math.max(finalMin, 55);
-        finalMax = Math.min(Math.max(finalMax, 120), 200);
-        if (finalMin > finalMax) finalMin = finalMax;
-      }
-
-      // 將計算好的寬度字串直接回填到 column 物件中
-      return {
-        ...col,
-        dynamicMinWidth: `${finalMin}px`,
-        dynamicWidth: `${finalMax}px`,     // 用最長的資料當作標準寬度
-        dynamicMaxWidth: `${finalMax}px`
-      };
-    });
-  }
-  /**
- * 估算字串在畫面上實質佔用的像素寬度
- */
-  private estimateTextWidth(text: string, chineseWidth: number, anyWidth: number): number {
-    if (!text) return 0;
-    let width = 0;
-    for (let i = 0; i < text.length; i++) {
-      // 判斷是否為中文字元或全形符號
-      if (text.charCodeAt(i) > 127) {
-        width += chineseWidth;
-      } else {
-        width += anyWidth;
-      }
-    }
-    return width;
+  getEditTooltip(rowData: any): string {
+    return typeof this.editTooltip === 'function' ? this.editTooltip(rowData) : this.editTooltip;
   }
 }

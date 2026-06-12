@@ -1,7 +1,7 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -66,7 +66,8 @@ export const enum POStatus {
     NgStyle,
     NgIf,
     TranslateModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -94,11 +95,36 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
   lastQueryBody: IQueryTLS52010Request | null = null;
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.Audit) }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit) }, // 反審核
-    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); }, disabled: () => !this.hasPermission(Actions.TagPrint) }, // 標籤檔
-    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.hasPermission(Actions.Invalidate) }, // 作廢
-    { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.CancelDocument) }, // 取消單據
+    {
+      label: '單據審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); },
+      disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.permissionsCache.canAudit
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); },
+      disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.permissionsCache.canAntiAudit
+    },
+    {
+      label: '產生標籤檔',
+      icon: 'pi pi-tags',
+      action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); },
+      disabled: () => !this.permissionsCache.canTagPrint
+    },
+    {
+      label: '作廢',
+      icon: 'pi pi-trash text-red-500',
+      action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); },
+      disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.permissionsCache.canInvalidate
+    },
+    {
+      label: '取消單據',
+      icon: 'pi pi-times-circle text-gray-500',
+      action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); },
+      disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.permissionsCache.canCancel
+    }
   ];
   columns: ReportColumn[] = [
     { field: 'PO_No', header: '採購單號', visible: true, width: '110px' }, // 採購單號
@@ -145,6 +171,13 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
   poStatusOptions = getSYS1000Options('PO_Status'); // 採購單狀態 (靜態資料)
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
+  public permissionsCache = {
+    canAudit: false,
+    canAntiAudit: false,
+    canTagPrint: false,
+    canInvalidate: false,
+    canCancel: false
+  };
   constructor(
     public readonly tls52010Service: Tls52010Service, // 注入 TLS52010Service
     private readonly exportLabelService: ExportLabelService,
@@ -153,6 +186,14 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52010', 'TLS/TLS52010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initPermissionsCache();
+  }
+  private initPermissionsCache() {
+    this.permissionsCache.canAudit = this.hasPermission(Actions.Audit);
+    this.permissionsCache.canAntiAudit = this.hasPermission(Actions.AntiAudit);
+    this.permissionsCache.canTagPrint = this.hasPermission(Actions.TagPrint);
+    this.permissionsCache.canInvalidate = this.hasPermission(Actions.Invalidate);
+    this.permissionsCache.canCancel = this.hasPermission(Actions.CancelDocument);
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -221,15 +262,23 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       });
     });
   }
+  // 1. 將原來的 get disabledClose 刪除，改宣告為一個普通變數
+  public disabledClose = false;
 
+  // 2. 新增一個獨立的計算方法
+  private calculateActionsState(selected: ITLS52010Data[]) {
+    // 只有在勾選變更時，才在背景跑這一次的遍歷，平常變更偵測完全不耗能
+    this.disabledClose = selected.some(item => item.PO_Status !== POStatus.部分驗收);
+  }
+
+  // 3. 在外層接收表格勾選變更事件時，主動呼叫它
+  public onSelectionChange(event: ITLS52010Data[]) {
+    this.selectedItems = event;
+    this.calculateActionsState(event); // 即時更新結案按鈕的狀態
+  }
   editDisabled(rowData: ITLS52010Data) {
     return rowData.PO_Status !== POStatus.已申請;
   }
-
-  get disabledClose() {
-    return this.selectedItems.some(item => item.PO_Status !== POStatus.部分驗收);
-  }
-
   get selectedCount() {
     return this.selectedItems.length;
   }

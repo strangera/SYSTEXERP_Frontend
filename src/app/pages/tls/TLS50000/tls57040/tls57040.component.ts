@@ -2,12 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { QueryPLUResponse, QueryTLS57040Request, QueryTLS57040Response, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { QueryTLS57040Request, QueryTLS57040Response, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -17,6 +16,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { debounceTime, finalize } from 'rxjs';
+import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';
 
 @Component({
   selector: 'app-tls57040',
@@ -24,7 +24,7 @@ import { debounceTime, finalize } from 'rxjs';
   standalone: true,
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    DropdownTableComponent, DropdownComponent,
+    DropdownComponent, ProductAutocompleteComponent,
     TooltipModule, TranslateModule,
     ButtonComponent, CheckboxModule,
     InputTextareaComponent, TableReportComponent
@@ -48,7 +48,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
   historyRequestBody?: QueryTLS57040Request;
   data: QueryTLS57040Response[] = [];
   columns: ReportColumn[] = [
-    { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
+    { field: 'PLU_Image', header: '圖片', visible: false, type: 'image', showSort: false },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 新增品牌名稱欄位
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
@@ -141,7 +141,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
       const body = {
         ...frm.value,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 1000,
         SortBy: [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
       }
       this.tls57040Service.queryTLS57040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
@@ -150,27 +150,6 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
-    });
-  }
-
-  // 商品管理編號 (dropdown-table)
-  suggestions: QueryPLUResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'plu_no', order: 1 }],
-    }
-    this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
     });
   }
 }

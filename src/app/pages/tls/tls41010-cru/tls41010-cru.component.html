@@ -1,4 +1,4 @@
-<div class="card">
+app-input-textarea<div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()" />
@@ -97,7 +97,10 @@
           <app-dropdown label="環境變數編號" controlName="ECR_TmplNo" [options]="ECR_TmplNo_Option" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.ECR_TmplNo" [submitted]="submitted"></app-dropdown>
         </div>
-        <hr />
+        <div class="col-12 md:col-8">
+          <app-input-textarea label="備註" controlName="ECR_Desc" [control]="dataForm.controls.ECR_Desc"
+            [submitted]="submitted"></app-input-textarea>
+        </div>
       </div>
 
       <p-accordion>

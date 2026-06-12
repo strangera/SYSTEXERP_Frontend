@@ -52,7 +52,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
     last_loginEnd: [null], // 帳號有效結束日期
     status: [[]], // 使用者狀態 1=有效 2=停用
     user_type: [[]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'user_No', order: 1 }]],
   });

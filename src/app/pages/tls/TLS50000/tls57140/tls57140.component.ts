@@ -2,14 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { QueryTLS57140DetailResponse, QueryTLS57140Request, QueryTLS57140ShowType, QueryTLS57140SummaryResponse, Tls57140Service } from '@service/api/tls/tls57140.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -18,6 +16,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { convertDateToYYYYMM, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';
 
 @Component({
   selector: 'app-tls57140',
@@ -34,8 +33,8 @@ import { finalize } from 'rxjs';
     ButtonComponent,
     TranslateModule,
     TableReportComponent,
-    DropdownTableComponent,
     MultiSelectComponent,
+    ProductAutocompleteComponent
   ]
 })
 export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140DetailResponse | QueryTLS57140SummaryResponse> implements OnInit {
@@ -51,7 +50,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     /** 顯示方式 */
     ShowType: [QueryTLS57140ShowType.Summary, Validators.required],
     /** 分頁大小 */
-    pageSize: [30],
+    pageSize: [500],
   });
 
   // Dropdown options
@@ -75,7 +74,6 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls57140Service: Tls57140Service,
-    private readonly tls57040Service: Tls57040Service,
   ) {
     super();
   }
@@ -146,8 +144,8 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
         HOS_No: formValue.HOS_No || undefined,
         LOGO_No: formValue.LOGO_No || undefined,
         PLU_MagNo: formValue.PLU_MagNo || undefined,
-        PageIndex: 1,
-        PageSize: formValue.PageSize || 30,
+        pageIndex: 1,
+        pageSize: formValue.pageSize || 500,
         SortBy: formValue.ShowType === QueryTLS57140ShowType.Summary
           ? [{ field: 'LOGO_No', order: 1 }]
           : [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
@@ -161,30 +159,6 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
         this.data = response.Data || [];
         this.totalRecords = response.TotalCount || 0;
       });
-    });
-  }
-
-  // 商品管理編號 (Dropdown-Table) 相關屬性
-  suggestions: QueryPLUResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      queryNo: event.label || '',
-      PLU_MagNo: undefined,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    };
-    this.tls57040Service.queryPLUForDropdown(body).pipe(
-      untilDestroyed(this)
-    ).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
     });
   }
 }

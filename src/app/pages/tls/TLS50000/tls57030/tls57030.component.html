@@ -3,41 +3,78 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別代碼/名稱" controlName="HOS_No" [options]="warehouseOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="倉別代碼/名稱"
+              controlName="HOS_No"
+              [options]="warehouseOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.HOS_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代號/名稱" controlName="LOGO_No" [options]="brandCodeOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="品牌代號/名稱"
+              controlName="LOGO_No"
+              [options]="brandCodeOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.LOGO_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-dropdown-table>
+          <app-product-autocomplete
+            class="col-12"
+            [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted"
+            optionValue="PLU_No"
+            [extraFilters]="{ LOGO_No: queryForm.controls.LOGO_No.value }"
+          ></app-product-autocomplete>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="queryForm.controls.PLU_OrgPLUNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="廠商貨號"
+              controlName="PLU_OrgPLUNo"
+              [control]="queryForm.controls.PLU_OrgPLUNo"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="庫存日期" controlName="STK_Date"
-              [control]="queryForm.controls.STK_Date" [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateOne"
+              label="庫存日期"
+              controlName="STK_Date"
+              [control]="queryForm.controls.STK_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="pageSize" [control]="queryForm.controls.pageSize"
-              [submitted]="submitted"></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="顯示庫存範圍" groupname="ShowStockRange" [control]="queryForm.controls.ShowStockRange"
-              [options]="stockRangeOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="顯示庫存範圍"
+              groupname="ShowStockRange"
+              [control]="queryForm.controls.ShowStockRange"
+              [options]="stockRangeOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -46,19 +83,66 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [columnGroup]="columnGroup" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false"
-    [footerData]="footerData" [loading]="loading" [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+  <app-table-report
+    tableKey="tls57030"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [showManage]="false"
+    [lazy]="false"
+    [footerData]="footerData"
+    [loading]="loading"
+    [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)"
+  >
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="商品庫存表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+        <p-button
+          styleClass="p-2"
+          label="商品庫存表.PDF"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
           [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
-          (keydown.enter)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.Print) && onExportPDF()"
-          (keydown.space)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.Print) && onExportPDF()"></p-button>
-        <p-button styleClass="p-2" label="商品庫存表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
+          (keydown.enter)="
+            $event.preventDefault();
+            !btnLoading &&
+              data.length > 0 &&
+              hasPermission(Actions.Print) &&
+              onExportPDF()
+          "
+          (keydown.space)="
+            $event.preventDefault();
+            !btnLoading &&
+              data.length > 0 &&
+              hasPermission(Actions.Print) &&
+              onExportPDF()
+          "
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="商品庫存表.XLSX"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onExportXLSX()"
           [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"
-          (keydown.enter)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.ExportExcel) && onExportXLSX()"
-          (keydown.space)="$event.preventDefault(); !btnLoading && data.length > 0 && hasPermission(Actions.ExportExcel) && onExportXLSX()"></p-button>
+          (keydown.enter)="
+            $event.preventDefault();
+            !btnLoading &&
+              data.length > 0 &&
+              hasPermission(Actions.ExportExcel) &&
+              onExportXLSX()
+          "
+          (keydown.space)="
+            $event.preventDefault();
+            !btnLoading &&
+              data.length > 0 &&
+              hasPermission(Actions.ExportExcel) &&
+              onExportXLSX()
+          "
+        ></p-button>
       </div>
     </header>
   </app-table-report>

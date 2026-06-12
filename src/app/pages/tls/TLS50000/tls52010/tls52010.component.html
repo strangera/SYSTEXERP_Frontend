@@ -164,7 +164,7 @@
     [loading]="loading"
     [showDelete]="false"
     [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
+    (selectionChange)="onSelectionChange($event)"
     [addButton]="addButton"
     [buttonsLoading]="btnLoading"
     [lastQueryBody]="lastQueryBody"

@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <fieldset style="border: none; padding: 0; margin: 0">
   <p-accordion [multiple]="true">
     <!-- 基本資訊 -->
@@ -26,7 +28,7 @@
               [control]="getControl('tlt_no')"
               [customPlaceholder]="'系統自動產生'"
               [alwaysShowPlaceholder]="true"
-              [readonly]="crudstatus !== CRUDStatus.Create"
+              [readonly]="true"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -258,6 +260,54 @@
               [readonly]="isFormReadonly"
             ></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立者"
+              controlName="crt_usr_name"
+              [control]="getControl('crt_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立時間"
+              controlName="crt_date"
+              [control]="getControl('crt_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="修改者"
+              controlName="upd_usr_name"
+              [control]="getControl('upd_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="修改時間"
+              controlName="upd_date"
+              [control]="getControl('upd_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="審核者"
+              controlName="app_usr_name"
+              [control]="getControl('app_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="審核時間"
+              controlName="app_date"
+              [control]="getControl('app_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
         </div>
       </form>
     </p-accordionTab>
@@ -282,13 +332,11 @@
         [disabled]="crudstatus === CRUDStatus.Read"
         (dataChange)="onLocationDataChange($event)"
       >
-        <ng-template
-          #customCell
-          let-rowData="rowData"
-          let-col="col"
-        >
+        <ng-template #customCell let-rowData="rowData" let-col="col">
           <ng-container *ngIf="col.field === 'location_no'">
-            <span *ngIf="crudstatus === CRUDStatus.Read">{{ rowData.location_no }}</span>
+            <span *ngIf="crudstatus === CRUDStatus.Read">
+              {{ rowData.location_no }}
+            </span>
             <button
               *ngIf="crudstatus !== CRUDStatus.Read"
               pButton
@@ -296,8 +344,7 @@
               icon="pi pi-map-marker"
               class="p-button-sm p-button-outlined p-button-secondary w-full text-left"
               (click)="openLocationPicker(rowData)"
-            >
-            </button>
+            ></button>
           </ng-container>
         </ng-template>
       </app-table-edit>
@@ -937,21 +984,19 @@
   header="選擇位置"
   [(visible)]="locationPickerVisible"
   [modal]="true"
-  [style]="{width: '90vw', maxWidth: '1300px'}"
+  [style]="{ width: '90vw', maxWidth: '1300px' }"
   [draggable]="false"
   [resizable]="false"
   styleClass="location-picker-dialog"
 >
-
   <!-- 篩選列 -->
   <div class="flex flex-wrap gap-2 align-items-end mb-3">
     <app-input-text
       label="位置編號"
       controlName="pickerLocationNoFilter"
       [control]="pickerLocationNoFilter"
-      style="min-width:130px"
-    >
-    </app-input-text>
+      style="min-width: 130px"
+    ></app-input-text>
     <app-dropdown
       label="館別"
       controlName="pickerBuildingFilter"
@@ -959,9 +1004,8 @@
       [options]="dropdownService.buildingOptions"
       optionLabel="label"
       optionValue="value"
-      style="min-width:130px"
-    >
-    </app-dropdown>
+      style="min-width: 130px"
+    ></app-dropdown>
     <app-dropdown
       label="樓層"
       controlName="pickerFloorFilter"
@@ -969,9 +1013,8 @@
       [options]="dropdownService.floorOptions"
       optionLabel="label"
       optionValue="value"
-      style="min-width:130px"
-    >
-    </app-dropdown>
+      style="min-width: 130px"
+    ></app-dropdown>
     <app-dropdown
       label="區域"
       controlName="pickerAreaFilter"
@@ -979,9 +1022,8 @@
       [options]="dropdownService.regionOptions"
       optionLabel="label"
       optionValue="value"
-      style="min-width:130px"
-    >
-    </app-dropdown>
+      style="min-width: 130px"
+    ></app-dropdown>
     <app-dropdown
       label="狀態"
       controlName="locationStatusFilter"
@@ -990,9 +1032,8 @@
       optionLabel="label"
       optionValue="value"
       [showClear]="false"
-      style="min-width:120px"
-    >
-    </app-dropdown>
+      style="min-width: 120px"
+    ></app-dropdown>
     <button
       pButton
       label="查詢"
@@ -1000,8 +1041,7 @@
       class="p-button-sm"
       [loading]="locationPickerLoading"
       (click)="onPickerSearch()"
-    >
-    </button>
+    ></button>
   </div>
 
   <app-table
@@ -1016,8 +1056,7 @@
     [dataKey]="'value'"
     [isRowSelectable]="isLocationSelectable"
     [(selectedItems)]="locationPickerSelectedRow"
-  >
-  </app-table>
+  ></app-table>
 
   <ng-template pTemplate="footer">
     <button
@@ -1027,15 +1066,13 @@
       class="p-button-sm"
       [disabled]="!locationPickerSelectedRow?.length"
       (click)="onLocationPickerConfirm()"
-    >
-    </button>
+    ></button>
     <button
       pButton
       label="取消"
       icon="pi pi-times"
       class="p-button-sm p-button-outlined ml-2"
       (click)="locationPickerVisible = false"
-    >
-    </button>
+    ></button>
   </ng-template>
 </p-dialog>

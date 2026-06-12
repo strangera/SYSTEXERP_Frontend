@@ -61,7 +61,8 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     tlt_floor: [[]],                                  // 樓層
     ECR_No: [[]],
     TLT_No: [[]],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }]),
+    pageSize: [1000],
   });
 
   totalRecords = 0;

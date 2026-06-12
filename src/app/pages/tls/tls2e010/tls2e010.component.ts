@@ -28,8 +28,8 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     tlt_no: [null], // 單一專櫃查詢
     sam_yyymm_start: [new Date(), [Validators.required]], // 起迄年月
     sam_yyymm_end: [new Date(), [Validators.required]], // 起迄年月
-    PageSize: [30],
-    PageIndex: [1],
+    pageSize: [1000],
+    pageIndex: [1],
     SortBy: [[{ field: 'sam_yyymm', order: 1 }, { field: 'tlt_no', order: 1 }]],
   });
   tlt_noOptions$ = this.dropdown.queryTltTalent();
@@ -105,8 +105,8 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        PageSize: frm.value.PageSize,
-        PageIndex: frm.value.PageIndex,
+        pageSize: frm.value.pageSize,
+        pageIndex: frm.value.PageIndex,
         SortBy: frm.value.SortBy,
         tlt_no: frm.value.tlt_no,
         sam_yyymm_start: this.datePipe.transform(frm.value.sam_yyymm_start, 'yyyyMM'),

@@ -19,6 +19,7 @@ import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -122,6 +123,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
     private readonly dropDownListService: DropDownListService,
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -305,28 +307,15 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   onDownloadReport(row: ASS12050QueryRow): void {
     const subpoenaId = row.SUBPOENA_ID;
     if (!subpoenaId) return;
-    this.loading = true;
-    this.ass12050Service
-      .exportPDFASS12050({ SUBPOENA_ID: subpoenaId })
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe({
-        next: res => {
-          const blob = res.body;
-          if (!blob) {
-            this.messageService.errorBubble('報表下載失敗');
-            return;
-          }
-          const url = globalThis.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `ASS12050_${subpoenaId}.pdf`;
-          a.click();
-          globalThis.URL.revokeObjectURL(url);
-          this.messageService.successBubble('報表下載成功');
-        },
-        error: () => {
-          this.messageService.errorBubble('報表下載失敗');
-        },
-      });
+    this.fileExportService
+      .executeFileExport(
+        this.ass12050Service
+          .exportASS12050({ SUBPOENA_ID: subpoenaId })
+          .pipe(untilDestroyed(this)),
+        '.xlsx',
+        isLoading => (this.loading = isLoading),
+        `ASS12050_${subpoenaId}`,
+      )
+      .subscribe();
   }
 }

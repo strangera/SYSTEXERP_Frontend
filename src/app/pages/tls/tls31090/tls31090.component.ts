@@ -6,20 +6,16 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -39,18 +35,14 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     RadiobuttonComponent,
     CommonModule,
     CalendarComponent,
-    CalendarRangeQuickComponent,
-    DropdownComponent,
-    InputTextComponent,
     InputNumberRangeComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    CheckboxModule,
   ]
 })
 
@@ -75,6 +67,8 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     Buildings: [[]], //館別代號，多選以逗號分隔 (TLTTALENT_LOCATION.tlt_building)
     IncludeTax: [true], //是否含稅：1=含稅(預設)，0=未稅
     BizInvFlag: ['A'], //是否開立業主發票：'A'=全部(預設)、'Y'=是、'N'=否
+    PreSale: [false],
+    ConsumerNum: [false],
 
     // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
@@ -91,6 +85,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   btnPDFLoading = false;
   btnExcelLoading = false;
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   // 時段column
   private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
@@ -145,6 +142,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
       { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
       { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
     ];
   }
@@ -329,6 +329,13 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -493,4 +500,18 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     // 再傳給明細方法
     this.onDetail(event, formValue);
   }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
+  }
+
 }

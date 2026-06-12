@@ -62,7 +62,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     OVER_Status: [null],
     // invoice: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });

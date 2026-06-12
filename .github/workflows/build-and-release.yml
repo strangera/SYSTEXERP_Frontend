@@ -1,4 +1,4 @@
-name: Build Angular App (Dual Environment)
+name: Build Frontend (Production)
 on:
   push:
     tags:
@@ -23,83 +23,47 @@ jobs:
     - name: Install dependencies
       run: npm install --legacy-peer-deps
 
-    # 🔥 建置生產環境
-    - name: Build Production Environment
+    # 只 build production
+    - name: Build (Production)
       run: npm run build:tsrdweb
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
 
-    - name: Prepare Production files
+    - name: Prepare files
       run: |
         if [ -d "dist/tsrderp-frontend" ]; then
-          mv dist/tsrderp-frontend dist-production
+          mv dist/tsrderp-frontend dist-out
         elif [ -d "dist" ]; then
-          mv dist dist-production
+          mv dist dist-out
         fi
-        echo "Total production files: $(find dist-production -type f | wc -l)"
+        find dist-out -name "*.map" -delete 2>/dev/null || true
+        echo "Total files: $(find dist-out -type f | wc -l)"
 
-    # 🔥 建置測試環境
-    - name: Build Staging Environment
-      run: npm run build:tsrdwebdev
-      env:
-        NODE_OPTIONS: "--max_old_space_size=4096"
-        TZ: Asia/Taipei
+    - name: Resolve version
+      id: ver
+      run: echo "ver=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-    - name: Prepare Staging files
-      run: |
-        if [ -d "dist/tsrderp-frontend" ]; then
-          mv dist/tsrderp-frontend dist-staging
-        elif [ -d "dist" ]; then
-          mv dist dist-staging
-        fi
-        echo "Total staging files: $(find dist-staging -type f | wc -l)"
-
-    - name: Remove source maps
-      run: |
-        find dist-production -name "*.map" -delete 2>/dev/null || true
-        find dist-staging -name "*.map" -delete 2>/dev/null || true
-
-    - name: Get build info
-      id: build_info
-      run: |
-        echo "timestamp=$(TZ=Asia/Taipei date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
-        echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-      env:
-        TZ: Asia/Taipei
-
-    # 寫入版本資訊（讓 n8n clone 後可確認版本）
     - name: Add build-info.json
       run: |
         printf '{"version":"%s","tag":"%s","buildTime":"%s","commit":"%s"}\n' \
-          "${{ steps.build_info.outputs.version }}" \
+          "${{ steps.ver.outputs.ver }}" \
           "${{ github.ref_name }}" \
-          "${{ steps.build_info.outputs.timestamp }}" \
-          "${{ github.sha }}" > dist-production/build-info.json
-        cp dist-production/build-info.json dist-staging/build-info.json
+          "$(TZ=Asia/Taipei date +'%Y-%m-%d %H:%M:%S')" \
+          "${{ github.sha }}" > dist-out/build-info.json
 
-    # 📦 推送 Production 到 releases/production 分支（單一 commit，不累積歷史）
-    - name: Deploy Production to branch
+    # 丟進 releases/production，並順手打 rel-fe-<版本> tag（部署端靠這個抓版本）
+    - name: Deploy to releases/production (+ tag)
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: releases/production
-        folder: dist-production
-        commit-message: "build: ${{ github.ref_name }} (${{ steps.build_info.outputs.timestamp }})"
+        folder: dist-out
         single-commit: true
-
-    # 📦 推送 Staging 到 releases/staging 分支
-    - name: Deploy Staging to branch
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: releases/staging
-        folder: dist-staging
-        commit-message: "build: ${{ github.ref_name }} (${{ steps.build_info.outputs.timestamp }})"
-        single-commit: true
+        commit-message: "build: ${{ github.ref_name }}"
+        tag: rel-fe-${{ steps.ver.outputs.ver }}
 
     - name: Build Summary
       run: |
         echo "✅ 建置完成！"
         echo "🏷️  版本: ${{ github.ref_name }}"
-        echo "📦 Production → 分支: releases/production"
-        echo "📦 Staging   → 分支: releases/staging"
-        echo "⏰ 建置時間: ${{ steps.build_info.outputs.timestamp }}"
+        echo "📦 Production → releases/production  (tag rel-fe-${{ steps.ver.outputs.ver }})"

@@ -17,11 +17,11 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -32,7 +32,6 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
 @Component({
   selector: 'app-tls31040',
   templateUrl: './tls31040.component.html',
-  styleUrl: './tls31040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -51,9 +50,9 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     TableReportComponent,
     RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    CheckboxModule,
   ]
 })
 
@@ -76,8 +75,10 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     org_id: [[]],  // 組織
     TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+    PreSale: [false],
+    ConsumerNum: [false],
 
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'tlt_kind', order: 1 }]],
     // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
@@ -143,6 +144,9 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31040Request | null = null; //歷史查詢條件
 
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   columns: ReportColumn[] = [
     // { field: 'tlt_kind', header: '櫃別代碼', align: 'left' },
     { field: 'tlt_kindName', header: '櫃別名稱', align: 'left' },
@@ -166,6 +170,9 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
 
     { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -349,6 +356,13 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -592,5 +606,18 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
     this.onDetail(event, queryConditions);
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }

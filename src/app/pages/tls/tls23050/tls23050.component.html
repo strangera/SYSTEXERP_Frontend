@@ -8,19 +8,21 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <!-- 銷售日期（單日） -->
           <app-calendar
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
             [control]="queryForm.controls.TXN_Date"
-            [submitted]="submitted">
-          </app-calendar>
+            [submitted]="submitted"
+          ></app-calendar>
 
-          <!-- 類型（是否開立業主發票） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               class="col-12"
@@ -28,62 +30,58 @@
               groupname="rece_yn"
               [control]="queryForm.controls.rece_yn"
               [options]="WhetherOptions"
-              [submitted]="submitted">
-            </app-radiobutton>
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
 
-          <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
-              controlName="ECR_No"
+              [control]="queryForm.controls.ECR_No"
               [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 樓層 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 組織代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -92,7 +90,6 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 單一 app-table-report：明細 + 總計 -->
 <div class="card">
   <app-table-report
     tableKey="TLS23050"
@@ -105,7 +102,8 @@
     [showDelete]="false"
     [showReportMode]="false"
     [queryFunction]="queryTLS23050ForReport"
-    [footerData]="footerData">
+    [footerData]="footerData"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button
@@ -114,17 +112,16 @@
           icon="pi pi-file"
           [loading]="btnLoading"
           [disabled]="data.length === 0"
-          (click)="onExportPDF()">
-        </p-button>
-
+          (click)="onExportPDF()"
+        ></p-button>
         <p-button
           styleClass="p-2"
           label="收銀機日報表.XLSX"
           icon="pi pi-file-excel"
           [loading]="btnLoading"
           [disabled]="data.length === 0"
-          (click)="onExportXLSX()">
-        </p-button>
+          (click)="onExportXLSX()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>

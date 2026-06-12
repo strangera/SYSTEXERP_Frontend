@@ -4,7 +4,7 @@
 </app-table> -->
 
 <app-table-edit title="付款別修正" dataKey="PAY_Name" [data]="payNoData" [columns]="columns"
-  (dataChange)="payNoData = $event" (fieldChange)="onFieldChange($event)" [rowEditDisabled]="rowEditDisabled"
+  (dataChange)="onDataChange($event)" (fieldChange)="onFieldChange($event)" [rowEditDisabled]="rowEditDisabled"
   [isRowSelectable]="isRowSelectable">
   <header>
     @if (hasCheckedData) {

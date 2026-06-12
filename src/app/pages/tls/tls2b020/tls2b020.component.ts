@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -30,7 +30,6 @@ import { Table2Component } from '../../../shared/componentkit/table2/table2.comp
 @Component({
   selector: 'app-tls2b020',
   templateUrl: './tls2b020.component.html',
-  styleUrl: './tls2b020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -46,7 +45,7 @@ import { Table2Component } from '../../../shared/componentkit/table2/table2.comp
     Table2Component,
   ],
 })
-export class TLS2B020Component extends BasicQueryPageComponent<any> {
+export class TLS2B020Component extends BasicQueryPageComponent<any> implements OnInit {
   private fromLazy = false;
   // 預設上個月 yyyy/MM
   readonly lastMonth: string = (() => {
@@ -93,6 +92,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
     cashierDistinction: [null],                   // 收銀員區分
     overflowStatus: [null],                       // 溢欠狀態
     ...createPaginationConfig([{ field: 'cashier', order: 1 }]),
+    pageSize: [1000],
   });
 
   constructor(

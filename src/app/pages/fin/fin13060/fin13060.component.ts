@@ -24,7 +24,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
-type SortMeta = { field: string; order: 1 | -1 | number };
+interface SortMeta { field: string; order: 1 | -1 | number }
 
 @Component({
   selector: 'app-fin13060',
@@ -325,7 +325,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
       ctrl.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
         if (val === null || val === undefined) return;
 
-        let s = String(val).replace(/\D/g, '');
+        const s = String(val).replace(/\D/g, '');
         if (s.length <= 10) return;
 
         const limited = s.slice(0, 10);
@@ -345,7 +345,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     { field: 'INV_GUITrack', header: '字軌', visible: true },
     { field: 'INV_GUINumber', header: '發票號碼', visible: true },
     { field: 'TXN_Date', header: '發票日期', visible: true },
-    { field: 'INV_YM', header: '資料所屬年月', visible: true },
+    { field: 'INV_YM', header: '發票年月', visible: true },
     { field: 'INV_DeclareYM', header: '申報年月', visible: true },
     { field: 'Tlt_No', header: '專櫃編號', visible: true },
     { field: 'Ven_No', header: '廠客代號', visible: true },

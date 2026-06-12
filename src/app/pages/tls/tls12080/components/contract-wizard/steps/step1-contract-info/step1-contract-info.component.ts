@@ -174,7 +174,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   locationStatusOptions = [
     { label: '全部', value: 'all' },
     { label: '未使用', value: 'available' },
-    { label: '已使用', value: 'occupied' }
+    { label: '使用中', value: 'occupied' }
   ];
   pickerBuildingFilter = new FormControl(null);
   pickerFloorFilter = new FormControl(null);
@@ -190,7 +190,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     {
       field: 'occ_tlt_no' as any,
       header: '狀態',
-      format: (_val: unknown, _i: unknown, rowData: unknown) => this.isOccupiedInPickerRange(rowData) ? '已使用' : '未使用',
+      format: (_val: unknown, _i: unknown, rowData: unknown) => this.isOccupiedInPickerRange(rowData) ? '使用中' : '未使用',
       cellClass: (rowData: unknown) => this.isOccupiedInPickerRange(rowData) ? 'text-red-500 font-bold' : 'text-green-600'
     },
     { field: 'occ_tlt_no', header: '專櫃編號' },

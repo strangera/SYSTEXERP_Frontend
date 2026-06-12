@@ -19,8 +19,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
@@ -35,6 +35,7 @@ import {
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
+  FIN53010Aps4002ByVouNoRow,
   FIN53010Aps4023_CRow,
   FIN53010Aps4023Row,
   FIN53010Ars3001Row,
@@ -273,6 +274,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps2002RelatedRows = signal<FIN53010Aps2002Row[]>([]);
   public readonly aps4023_CRelatedRows = signal<FIN53010Aps4023_CRow[]>([]);
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
+  public readonly aps4002RelatedRows = signal<FIN53010Aps4002ByVouNoRow[]>([]);
 
   /** 傳票關聯六表總計（唯讀模式） */
   public readonly readonlyAps3001Total = signal<number>(0);
@@ -288,6 +290,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly readonlyAps2002_CFooter = computed(() => this.readonlyAps2002_CTotal());
   public readonly readonlyAps4023Footer = computed(() => this.readonlyAps4023Total());
   public readonly readonlyAps4023_CFooter = computed(() => this.readonlyAps4023_CTotal());
+  public readonly readonlyAps4002Footer = computed(() => ({
+    DAmt: this.aps4002RelatedRows().reduce((sum, r) => sum + (r.DAmt ?? 0), 0),
+    CAmt: this.aps4002RelatedRows().reduce((sum, r) => sum + (r.CAmt ?? 0), 0),
+  }));
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
@@ -402,6 +408,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'SummaryCount', header: '彙開註記', visible: true, align: 'left' },
     { field: 'AssetFlag', header: '資產註記', visible: true, align: 'left' },
     { field: 'InvoiceType', header: '發票使用別', visible: false, align: 'left' },
+  ];
+
+  public readonly aps4002RelatedColumns: ReportColumn[] = [
+    { field: 'BNK_id', header: '銀行科目代號', visible: true, align: 'left' },
+    { field: 'BNK_AccName', header: '科目名稱', visible: true, align: 'left' },
+    { field: 'DAmt', header: '存款', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'CAmt', header: '提款', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'VEN_No', header: '廠商代號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
+    { field: 'Remark', header: '摘要', visible: true, align: 'left' },
   ];
 
   public selectedItems: FIN53010Data[] = [];
@@ -688,7 +704,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
-    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 32 && +o.value <= 35), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 31 && +o.value <= 35), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
@@ -704,7 +720,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 21 && +o.value <= 25), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validateBankRequired.bind(this)] },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validateBankRequired.bind(this)] },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateBankRequired.bind(this)] },
@@ -1385,6 +1401,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.aps2002RelatedRows.set([]);
     this.aps4023_CRelatedRows.set([]);
     this.aps4023RelatedRows.set([]);
+    this.aps4002RelatedRows.set([]);
     this.readonlyAps3001Total.set(0);
     this.readonlyArs3001Total.set(0);
     this.readonlyAps2002Total.set({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
@@ -1490,6 +1507,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.aps2002RelatedRows.set(pick(d._APS2002));
         this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
         this.aps4023RelatedRows.set(pick(d._APS4023));
+        this.aps4002RelatedRows.set(pick(d._APS4002));
         this.readonlyAps3001Total.set(d._APS3001?.Total_ACP_Amt ?? 0);
         this.readonlyArs3001Total.set(d._ARS3001?.Total_ars_amt ?? 0);
         this.readonlyAps2002Total.set({

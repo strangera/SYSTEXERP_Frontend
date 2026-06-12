@@ -32,7 +32,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> implements OnInit {
   queryForm = this.formBuilder.group({
     user_No: [null, [Validators.required]], // 使用者編號
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'MainSystemCode', order: 1 }]],
   });

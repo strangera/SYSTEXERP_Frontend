@@ -3,7 +3,7 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
 import { TableModule } from 'primeng/table';
-import { TableTypes } from '../../table/table.model';
+import { TableTypes } from '../../../table/table.model';
 
 export interface ExpansionColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
