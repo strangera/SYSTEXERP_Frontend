@@ -1,5 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import {
+  CheckImportASS13020ResponseData,
+  ImportASS13020ResponseData,
+} from '@pages/ass/ass13020/ass13020.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -13,13 +17,30 @@ export class ASS13020Service {
 
   constructor(private readonly http: HttpClient) {}
 
-  // TODO(API 對接): 後端 endpoint 尚未提供，先採 ASS13100 慣用命名作佔位
-  uploadASS13020(file: File, sheetName: string): Observable<ApiResponse<unknown>> {
+  /**
+   * 檢查 Excel 匯入內容（轉入前先檢查格式 / 資料是否合法）
+   */
+  checkImportASS13020(file: File): Observable<ApiResponse<CheckImportASS13020ResponseData>> {
     const formData = new FormData();
-    formData.append('FILENAME', file.name);
-    formData.append('SHEETNAME', sheetName);
     formData.append('File', file, file.name);
 
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/uploadASS13020`, formData);
+    return this.http.post<ApiResponse<CheckImportASS13020ResponseData>>(
+      `${this.apiUrl}/checkImportASS13020`,
+      formData,
+    );
+  }
+
+  /**
+   * 正式匯入 Excel（資產轉入）
+   * TODO: 後端開欄位後補傳工作表名稱
+   */
+  importASS13020(file: File): Observable<ApiResponse<ImportASS13020ResponseData>> {
+    const formData = new FormData();
+    formData.append('File', file, file.name);
+
+    return this.http.post<ApiResponse<ImportASS13020ResponseData>>(
+      `${this.apiUrl}/importASS13020`,
+      formData,
+    );
   }
 }

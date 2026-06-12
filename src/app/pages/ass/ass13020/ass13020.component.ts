@@ -1,16 +1,18 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13020Service } from '@service/api/ass/ass13020.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AccordionModule } from 'primeng/accordion';
+import { ImportASS13020ResponseData } from './ass13020.model';
 
 // 3.1.3.2 資產轉入
 @UntilDestroy()
@@ -31,10 +33,11 @@ import { AccordionModule } from 'primeng/accordion';
   ],
 })
 export class ASS13020Component extends BasicQueryPageComponent<unknown> implements OnInit {
-  @ViewChild('fileUpload') fileUploadComponent?: FileUploadComponent;
+  @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
 
+  // TODO: 後端開欄位後再補傳工作表名稱
   queryForm = this.formBuilder.group({
-    sheetName: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9_-]+$/)]],
+    sheetName: [''],
   });
 
   selectedFile: File | null = null;
@@ -57,11 +60,6 @@ export class ASS13020Component extends BasicQueryPageComponent<unknown> implemen
 
   // 右上「轉入」按鈕入口
   onTransfer(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.errorBubble('請輸入正確的工作表名稱（限英文或數字）');
-      return;
-    }
     if (!this.selectedFile) {
       this.messageService.errorBubble('請先選擇要轉入的 Excel 檔案');
       return;
@@ -71,29 +69,23 @@ export class ASS13020Component extends BasicQueryPageComponent<unknown> implemen
 
   // app-file-upload [customUpload] 觸發 (使用者也可在上傳元件內按「上傳」)
   handleCustomUpload(event: FileUploadHandlerEvent): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.errorBubble('請輸入正確的工作表名稱（限英文或數字）');
-      return;
-    }
     const file = event.files?.[0];
     if (!file) return;
     this.executeUpload(file);
   }
 
   private executeUpload(file: File): void {
-    const sheetName = this.queryForm.controls.sheetName.value ?? '';
     this.loading = true;
     this.messageService.infoBubble('轉入中，請稍後...');
 
     this.ass13020Service
-      .uploadASS13020(file, sheetName)
+      .importASS13020(file)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.loading = false)),
       )
       .subscribe({
-        next: (res) => {
+        next: (res: ApiResponse<ImportASS13020ResponseData>) => {
           if (res?.Status === '0000') {
             this.messageService.successBubble(`檔案 [${file.name}] 轉入成功`);
             this.resetUploadStatus();
@@ -107,7 +99,6 @@ export class ASS13020Component extends BasicQueryPageComponent<unknown> implemen
 
   onClearForm(form?: FormGroup): void {
     (form ?? this.queryForm).reset();
-    this.submitted = false;
     this.resetUploadStatus();
   }
 
