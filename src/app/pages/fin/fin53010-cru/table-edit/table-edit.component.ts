@@ -402,7 +402,7 @@ export class TableEditComponent implements OnChanges {
       rowData,
       col,
       index,
-      disabled: this.disabled,
+      disabled: this.disabled || !!rowData?.isPOS4023,
       onValueChange: this.onValueChange.bind(this),
     };
   }

@@ -9,6 +9,7 @@ import type {
   FIN53010StepBankDeposit,
   FIN53010StepPurchaseInvoiceRow,
   FIN53010StepSalesInvoiceRow,
+  Pos4023,
   QueryFIN53010DetailDataByVouNoForUpdateResponse,
 } from './fin53010.model';
 
@@ -87,6 +88,23 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
   };
 }
 
+export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoiceRow {
+  return {
+    isPOS4023: true,
+    _invoiceValidated: true,
+    invoice_type: row.INV_GUIType ?? undefined,
+    invoice_prefix: row.INV_GUITrack ?? undefined,
+    invoice_no: row.INV_GUINumber ?? undefined,
+    invoice_date: parseYmdToDate(row.TXN_Date ?? undefined),
+    declare_ym: parseYyyyMmToMonthDate(row.INV_YM ?? undefined),
+    buyer_uniform: row.TXN_Uniform ?? undefined,
+    total_amount: row.TXN_SaleAmt ?? undefined,
+    tax_type: row.PLU_TaxType ?? undefined,
+    net_amount: row.TXN_Net ?? undefined,
+    tax_amount: row.TXN_Tax ?? undefined,
+  };
+}
+
 export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoiceRow {
   const invNum = String(row.InvoiceNumber ?? '').trim();
   let prefix = '';
@@ -99,6 +117,7 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
   return {
     ...(id !== undefined ? { id } : {}),
+    _invoiceValidated: true,
     invoice_type: row.InvoiceType ?? undefined,
     invoice_prefix: prefix || undefined,
     invoice_no: inv8.length === 8 ? inv8 : invNum,
@@ -192,7 +211,10 @@ export function mapFin53010ForUpdateResponseToStepRows(
   return {
     stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR).map((r, i) => ({ ...r, SerNo: i + 1 })),
-    stepSalesRows: arr(data._APS4023s).map(mapAps4023RowToStepSales).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepSalesRows: [
+      ...arr(data._APS4023s).map(mapAps4023RowToStepSales),
+      ...arr(data._POS4023s).map(mapPos4023RowToStepSales),
+    ].map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank).map((r, i) => ({ ...r, SerNo: i + 1 })),
   };

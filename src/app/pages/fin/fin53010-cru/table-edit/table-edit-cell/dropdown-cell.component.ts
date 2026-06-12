@@ -44,7 +44,7 @@ import { CellInput } from './table-edit-cell.model';
               [filter]="true"
               [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
               [disabled]="dropdownDisabled"
-              [editable]="false"
+              [editable]="!!cellInput.col.allowCustomValue"
               [loading]="internalLoading"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
               (onFilter)="handleFilter($event, cellInput)"
