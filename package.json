@@ -10,7 +10,6 @@
     "serve:ssr:TSRDERP_Frontend": "node dist/tsrderp-frontend/server/server.mjs",
     "analyze": "source-map-explorer dist/**/*.js",
     "prebuild:version": "node pre-build.js",
-    "build:tsrdwebdev": "npm run prebuild:version && ng build --configuration tsrdwebdev && node post-build.js tsrdwebdev /tsrdwebdev/ && git checkout src/environments/*.ts",
     "build:tsrdweb": "npm run prebuild:version && ng build --configuration tsrdweb && node post-build.js tsrdweb /TSRDWEB/ && git checkout src/environments/*.ts",
     "sonar": "dotenv -- npx sonar-scanner -Dsonar.token=%SONAR_TOKEN%"
   },
