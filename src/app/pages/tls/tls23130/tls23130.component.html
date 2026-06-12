@@ -2,77 +2,78 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <!-- 日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               calendarType="dateRange"
               label="日期"
               [startControl]="queryForm.controls.TXN_DateStart"
               [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted">
-            </app-calendar-range-quick>
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
 
-          <!-- 卡種（銀行代號） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="卡種"
-              controlName="BNK_No"
+              [control]="queryForm.controls.BNK_No"
               [options]="cardTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.BNK_No"
-              [submitted]="submitted">
-            </app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
-          <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 樓層 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 組織代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -81,36 +82,33 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 改用 app-table-report -->
 <div class="card">
-<app-table-report
-  tableKey="TLS23130"
-  [columns]="columns"
-  [data]="data"
-  [totalRecords]="totalRecords"
-  [loading]="loading"
-  dataKey="_rowKey"
-  [showManage]="false"
-  [showDelete]="false"
-  [showReportMode]="false"
-  [lastQueryBody]="historyRequestBody"
-  [queryFunction]="queryTLS23130ForReport"
-  [groupRowsBy]="'CRD_No'"
-      
-  [footerData]="buildFooterFromGrandTotal()"
->
-
-  <header>
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        styleClass="p-2"
-        label="信用卡銷貨月報表 .PDF"
-        icon="pi pi-file"
-        [loading]="btnLoading"
-        [disabled]="!data.length"
-        (click)="onExportPDF()"
-      ></p-button>
-    </div>
-  </header>
-</app-table-report>
+  <app-table-report
+    tableKey="TLS23130"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    dataKey="_rowKey"
+    [showManage]="false"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [lastQueryBody]="historyRequestBody"
+    [queryFunction]="queryTLS23130ForReport"
+    [groupRowsBy]="'CRD_No'"
+    [footerData]="buildFooterFromGrandTotal()"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="信用卡銷貨月報表 .PDF"
+          icon="pi pi-file"
+          [loading]="btnLoading"
+          [disabled]="!data.length"
+          (click)="onExportPDF()"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

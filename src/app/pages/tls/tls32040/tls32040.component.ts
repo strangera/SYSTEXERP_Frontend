@@ -12,14 +12,13 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -49,13 +48,12 @@ const yesterday = new Date(today);
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     RadiobuttonComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
     ButtonModule,
-    ChartModule
+    ChartModule,
+    CheckboxModule,
   ]
 })
 
@@ -80,6 +78,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     AmtTaxMode: ["G"],  // 銷售金額是否含稅(G:是 N:否 預設含稅)
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
+
+    PreSale: [false],
+    ConsumerNum: [false],
 
     pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
@@ -170,6 +171,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   chart_options: any = []; // 圖檔欄位
   historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
 
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   columns: ReportColumn[] = [
     // { field: 'RowType', header: '列別', visible: true },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
@@ -195,7 +199,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     { field: 'Diff_PreOrderAmt', header: '預售差異', visible: true, format: formatAmount, align: 'right' }, // 預售差異 放在客單價差異後面
 
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' }
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
+
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -399,6 +407,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -485,7 +500,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         .subscribe(blob => {
           if (blob) {
             const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
+            globalThis.open(blobUrl, '_blank');
           }
         });
     } else {
@@ -995,5 +1010,18 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     weekEnd.setDate(weekStart.getDate() + 6);
 
     return { weekStart, weekEnd };
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }

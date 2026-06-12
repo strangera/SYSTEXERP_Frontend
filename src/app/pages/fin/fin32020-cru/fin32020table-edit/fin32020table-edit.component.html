@@ -269,7 +269,7 @@
     </ng-template>
 
     <!-- Summary -->
-    <ng-template pTemplate="summary">
+    <ng-template pTemplate="summary" *ngIf="showSummary">
       <div class="flex align-items-center justify-content-end p-2">
         總筆數:
         {{ _tableData.length - (canInsert && _tableData.length > 0 ? 1 : 0) }} 筆

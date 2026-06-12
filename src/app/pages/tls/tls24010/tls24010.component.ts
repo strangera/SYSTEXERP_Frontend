@@ -185,7 +185,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
               action: (rowdata: TLS24010Data) => {
                 if (!rowdata || !rowdata.TXN_Ret_No) return this.messageService.errorBubble('無折讓單號，無法列印折讓單');
                 this.tls24010Service.printTLS24010(rowdata.TXN_Ret_No).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-                  window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
+                  globalThis.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
                   this.onSubmit(this.queryForm);
                 })
               },
@@ -291,6 +291,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_Date: txnDate,
         ECR_No: rowData.ECR_No,
         TXN_No: Number(rowData.TXN_No),
+        TLT_No: rowData.TLT_No,
       };
       this.messageService.confirm({
         header: '刪除交易', message: '交易資料刪除後，將查不到這筆資料，您確認要刪除嗎?',
@@ -358,7 +359,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             accept: () => {
               this.loading = true;
               this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((printRes) => {
-                window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
+                globalThis.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
                 this.onSubmit(this.queryForm);
               });
             }

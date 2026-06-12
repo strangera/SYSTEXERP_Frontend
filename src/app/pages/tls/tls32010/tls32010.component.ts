@@ -18,6 +18,7 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, map } from 'rxjs';
 import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../service/api/tls/tls32010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -29,7 +30,7 @@ import { formatAmount, formatAmountCN } from '../../../shared/componentkit/table
   selector: 'app-tls32010',
   templateUrl: './tls32010.component.html',
   standalone: true,
-  imports: [CategorySelectComponent, ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [CategorySelectComponent, ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CheckboxModule,]
 })
 export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> implements OnInit {
   @ViewChild('dt') tableReport!: TableReportComponent;
@@ -60,10 +61,16 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     OrgList: [null], // 組織代號
     TltNoList: [null], // 專櫃編號
     TaxFlag: ['1'], // 是否含稅
+    PreSale: [false],
+    ConsumerNum: [false],
   });
   totalRecords = 0;
   historyRequestBody: TLS32010QueryRequest | null = null;
   data: TLS32010Data[] = [];
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   columns: ReportColumn[] = [
     { field: 'BuildingDesc', header: '館別', align: 'left' },
     { field: 'OrgName', header: '組織名稱', align: 'left' },
@@ -86,6 +93,9 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
+    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup = [
     { field: '單位', header: '單位' },
@@ -222,6 +232,13 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       if (this.queryForm.controls.reportType.value === '7') {
         this.updateDateRangeByEventID(eventID);
       }
+    });
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
     });
   }
   /**
@@ -441,5 +458,18 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       const currentSort = this.tableReport.multiSortMeta;
       this.historyRequestBody.SortBy = currentSort.length > 0 ? currentSort : undefined;
     }
+  }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 }

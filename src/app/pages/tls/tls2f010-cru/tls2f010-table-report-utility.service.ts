@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
@@ -12,7 +12,6 @@ import { ReportColumn } from './tls2f010-table-report.model';
 export class Tls2f010TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
   ) { }
 
@@ -38,7 +37,7 @@ export class Tls2f010TableReportUtilityService {
     return true;
   }
 
-  private safeUrlCache = new Map<string, SafeUrl>();
+  private readonly safeUrlCache = new Map<string, SafeUrl>();
 
   getImage(url: any): SafeUrl | string {
     if (!url || typeof url !== 'string' || url.trim() === '') {
@@ -54,14 +53,14 @@ export class Tls2f010TableReportUtilityService {
         ? environment.ApiUrl.slice(0, -1)
         : environment.ApiUrl;
 
-      let cleanPath = url.replace(/~/g, '');
+      let cleanPath = url.replaceAll('~', '');
       if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.slice(1);
       }
 
       const finalUrl = `${baseUrl}/${cleanPath}`;
 
-      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+      const safeUrl = finalUrl;
       this.safeUrlCache.set(url, safeUrl);
       return safeUrl;
     } catch (e) {

@@ -227,12 +227,12 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     if (!row?.ID) return;
     this.fin13040Service.printFIN13040({ MID: 0, STO_No: '10', ID: row.ID }).subscribe(res => {
       const blob = new Blob([res.body as Blob], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${row.InvoiceNumber || 'report'}.pdf`;
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
     });
   }
 }

@@ -33,11 +33,6 @@ import {
   FIN73020Query,
 } from './fin73020.model';
 
-interface SortItem {
-  field: string;
-  order: number;
-}
-
 @UntilDestroy()
 @Component({
   selector: 'app-fin73020',
@@ -66,13 +61,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     return d;
   })();
 
-  readonly defaultSort: SortItem[] = [
-    { field: 'PCS_RqstDate', order: -1 },
-    { field: 'PCS_RqstNo', order: 1 },
-  ];
-
-  private _currentSortBy: SortItem[] = [];
-
   public readonly queryForm = this.formBuilder.group({
     PCS_RqstNo: [null as string | null],
     RqstDate_S: [this.yesterday as Date | null, [Validators.required]],
@@ -81,10 +69,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     Keep_UsrNo: [null as string | null],
     PCS_Status: [null as string | null],
     Keep_OrgID: [null as string | null],
-    ...createPaginationConfig([
-      { field: 'PCS_RqstDate', order: -1 },
-      { field: 'PCS_RqstNo', order: 1 },
-    ]),
+    ...createPaginationConfig([]),
   });
 
   applicantOptions: FIN73020Option[] = [];
@@ -110,32 +95,44 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   btnLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '序號' },
+    { field: 'SeqNo', header: '連續序號' },
+    { field: 'PCS_RqstNo', header: '支出請款單號' },
+    { field: 'PCS_RqstDate', header: '產生日期', format: v => this.formatDate(v) },
+    { field: 'PCS_StatusName', header: '狀態名稱' },
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: v => this.formatDate(v) },
     { field: 'PCS_UsrNo', header: '申請人代碼' },
     { field: 'PCS_UsrName', header: '申請人姓名' },
-    { field: 'PCS_OrgID', header: '申請人組織代碼' },
-    { field: 'PCS_OrgName', header: '申請人組織名稱' },
-    { field: 'Keep_UsrNo', header: '保管人代碼' },
+    { field: 'PCS_OrgID', header: '申請人組織代號' },
+    { field: 'Keep_UsrNo', header: '零用金保管人代碼' },
     { field: 'Keep_UsrName', header: '保管人姓名' },
-    { field: 'Keep_OrgID', header: '保管人組織代碼' },
-    { field: 'Keep_OrgName', header: '保管人組織名稱' },
-    { field: 'PCS_StatusName', header: '單據狀態' },
-    { field: 'PCS_RqstNo', header: '支出請款單號' },
-    { field: 'PCS_SeqNo', header: '項次' },
-    { field: 'AccNo', header: '費用科目編號' },
-    { field: 'AccName', header: '費用科目名稱' },
+    { field: 'Keep_OrgID', header: '零用金保管人組織代碼' },
+    { field: 'Keep_OrgName', header: '組織名稱' },
+    { field: 'EXP_ACC', header: '費用會計科目' },
+    { field: 'ORG_ID', header: '費用科目組織代號' },
     { field: 'NOTeDesc', header: '項目摘要' },
-    { field: 'PCS_DtlTypeName', header: '明細類別' },
-    { field: 'PCS_GUINo', header: '發票/收據號碼' },
-    { field: 'ORG_ID', header: '費用科目組織代碼' },
-    { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
-    { field: 'PUR_Date', header: '憑證日期', format: v => this.formatDate(v) },
-    { field: 'PCS_Net', header: '未稅金額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Tax', header: '稅額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Amt', header: '含稅金額', align: 'right', format: v => this.money(v) },
-    { field: 'RowTypeDesc', header: '列別說明' },
+    { field: 'PCS_DtlTypeName', header: '明細類別名稱' },
+    { field: 'PCS_GUINo', header: '發票收據號碼' },
+    { field: 'PUR_Date', header: '消費日期', format: v => this.formatDate(v) },
+    {
+      field: 'PCS_Net',
+      header: '未稅金額',
+      align: 'right',
+      format: v => this.money(v),
+    },
+    {
+      field: 'PCS_Tax',
+      header: '稅額',
+      align: 'right',
+      format: v => this.money(v),
+    },
+    {
+      field: 'PCS_Amt',
+      header: '總額',
+      align: 'right',
+      format: v => this.money(v),
+    },
+    { field: 'Voucher_No', header: '傳票號碼' },
   ];
 
   constructor(
@@ -148,8 +145,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
 
   override ngOnInit(): void {
     this.initializePage('FIN73020', '', this.queryForm, this.onSubmit.bind(this));
-
-    this._currentSortBy = this.defaultSort;
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -208,19 +203,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     return s || null;
   }
 
-  private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
-    const asArr = Array.isArray(input) ? input : [];
-
-    const cleaned = asArr
-      .filter(x => x && typeof x.field === 'string' && typeof x.order === 'number')
-      .map(x => ({
-        field: String(x.field),
-        order: x.order as number,
-      }));
-
-    return cleaned.length ? cleaned : fallback;
-  }
-
   private cleanPayload<T extends Record<string, any>>(payload: T): T {
     for (const key of Object.keys(payload)) {
       const value = payload[key];
@@ -238,17 +220,13 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   }
 
   private initRows(rows: FIN73020Data[]): FIN73020Data[] {
-    // 徹底移除 crypto.randomUUID() 或 Math.random()，完全不需要隨機數了！
-
     for (const [index, row] of rows.entries()) {
-      // 利用業務唯一欄位組合（請款單號 + 零用金單號 + 項次 + 列別）作為絕對穩定的 Key
       const rqstNo = row.PCS_RqstNo ?? 'NORQST';
       const pcsNo = row.PCS_No ?? 'NOPCS';
-      const seqNo = row.PCS_SeqNo ?? index;
-      const rowType = row.RowType ?? 'NOTYPE';
+      const seqNo = row.SeqNo ?? index;
+      const note = row.NOTeDesc ?? 'NONOTE';
 
-      // 這樣組出來的 Key 永遠固定，不管重新查詢或分頁，都不會導致元件重新渲染
-      (row as any).dataKey = `key_${rqstNo}_${pcsNo}_${seqNo}_${rowType}`;
+      row.dataKey = `key_${rqstNo}_${pcsNo}_${seqNo}_${note}`;
     }
 
     return rows;
@@ -267,8 +245,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
         ? base.pageSize
         : 30;
 
-    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
-
     return this.cleanPayload({
       PCS_RqstNo: raw.PCS_RqstNo || null,
       RqstDate_S: this.toYMDOrNull(raw.RqstDate_S),
@@ -279,7 +255,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       Keep_OrgID: raw.Keep_OrgID || null,
       pageIndex,
       pageSize,
-      SortBy: sort,
     });
   }
 
@@ -290,9 +265,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     );
 
     this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
-      currentSortBy: this._currentSortBy?.length
-        ? this._currentSortBy
-        : this.defaultSort,
       lastQueryBody: this.lastQueryBody,
     } as any);
   }
@@ -333,7 +305,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     const payload = this.buildPayload({
       pageIndex: 1,
       pageSize: raw.pageSize || 30,
-      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
 
     this.loading = true;
@@ -360,7 +331,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
             : Number(res?.TotalCount ?? rows.length) || rows.length;
 
           this.lastQueryBody = { ...payload };
-          this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.totalRecords = realTotal;
           this.viewTotalRecords = realTotal;
           this.data = rows;
@@ -388,10 +358,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
         Keep_UsrNo: null,
         PCS_Status: null,
         Keep_OrgID: null,
-        ...createPaginationConfig([
-          { field: 'PCS_RqstDate', order: -1 },
-          { field: 'PCS_RqstNo', order: 1 },
-        ]),
+        ...createPaginationConfig([]),
       } as any,
       { emitEvent: false }
     );
@@ -403,7 +370,6 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     this.viewTotalRecords = 0;
     this.footerData = undefined;
     this.lastQueryBody = null;
-    this._currentSortBy = this.defaultSort;
     this.tableVer++;
 
     this.queryStateService.clearQueryState(this.ProgNo);
@@ -492,19 +458,16 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
 
     return `FIN73020${defaultExt}`;
   }
+
   private isOnlyGrandTotalRow(rows: FIN73020Data[]): boolean {
     if (rows.length !== 1) return false;
 
-    const row: any = rows[0];
+    const row = rows[0];
 
     return String(row?.NOTeDesc ?? '').trim() === '總計'
-      && Object.keys(row).every(key =>
-        key === 'NOTeDesc' ||
-        key === 'dataKey' ||
-        row[key] === null ||
-        row[key] === undefined ||
-        row[key] === ''
-      );
+      && !row.PCS_RqstNo
+      && !row.PCS_No
+      && row.PCS_Amt == null;
   }
 
   private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {

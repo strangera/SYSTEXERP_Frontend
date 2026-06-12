@@ -118,6 +118,7 @@
 
 <div class="card">
   <app-table-report
+    [exportContext]="{ apiUrl: 'queryFIN13020' }"
     tableKey="FIN13020"
     [data]="data"
     [columns]="columns"
@@ -135,11 +136,9 @@
     [buttonsLoading]="buttonsLoading"
     [isRowSelectable]="isRowSelectable"
     [editDisabled]="editDisabled"
-    [apiUrl]="'queryFIN13020'"
     [lastQueryBody]="lastQueryBody"
     [queryFunction]="queryFIN13020Fn"
     (delete)="onDelete($event)"
     (detail)="onDetail($event)"
-    (dataChange)="data = $event"
   ></app-table-report>
 </div>

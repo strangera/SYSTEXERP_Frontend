@@ -364,7 +364,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           if (res.body) {
             const blob = new Blob([res.body], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
 
             // 建立 <a> 元素以觸發下載，檔名使用後端回傳的 Content-Disposition（若無則回退至預設）
             const a = document.createElement('a');
@@ -374,7 +374,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
           }
         },
       });
@@ -407,7 +407,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             const blob = new Blob([res.body], {
               type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             });
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
 
             // 建立 <a> 元素以觸發下載，檔名使用後端回傳的 Content-Disposition（若無則回退至預設）
             const a = document.createElement('a');
@@ -417,7 +417,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
           }
         },
 

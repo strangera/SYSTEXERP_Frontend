@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -41,7 +41,7 @@ import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Observable, of } from 'rxjs';
 
-type SortItem = { field: string; order: 1 | -1 };
+interface SortItem { field: string; order: 1 | -1 }
 
 @UntilDestroy()
 @Component({
@@ -65,7 +65,7 @@ type SortItem = { field: string; order: 1 | -1 };
     ButtonModule
   ],
 })
-export class TLS2B030Component extends BasicQueryPageComponent<any> {
+export class TLS2B030Component extends BasicQueryPageComponent<any> implements OnInit {
   /* ----------------- 狀態 ----------------- */
   data: TLS2B030Row[] = [];
   columnsReady = false;
@@ -245,7 +245,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
 
       pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
-      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30,
+      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 1000,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
     };
 
@@ -338,152 +338,152 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
    *   2) 把資料回填到父層 state（data/total/footer/loading）
    * - 讓你 HTML 的 [loading]="loading" 不會卡住
    */
-private _lastReqKey = '';
+  private _lastReqKey = '';
 
-public queryTLS2B030ForReport = (body: any): Observable<any> => {
-  const base: any = { ...(this.lastQueryBody || {}) };
+  public queryTLS2B030ForReport = (body: any): Observable<any> => {
+    const base: any = { ...(this.lastQueryBody || {}) };
 
-  const pageSize =
-    (Number.isFinite(body?.pageSize) && Number(body.pageSize) > 0
-      ? Number(body.pageSize)
-      : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
-        ? Number(base.pageSize)
-        : 30);
+    const pageSize =
+      (Number.isFinite(body?.pageSize) && Number(body.pageSize) > 0
+        ? Number(body.pageSize)
+        : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
+          ? Number(base.pageSize)
+          : 1000);
 
-  const loaded = Array.isArray(this.data) ? this.data.length : 0;
+    const loaded = Array.isArray(this.data) ? this.data.length : 0;
 
-  const incomingPageIndex =
-    (Number.isFinite(body?.pageIndex) && Number(body.pageIndex) >= 1
-      ? Number(body.pageIndex)
-      : Number.isFinite(base?.pageIndex) && Number(base.pageIndex) >= 1
-        ? Number(base.pageIndex)
-        : 1);
+    const incomingPageIndex =
+      (Number.isFinite(body?.pageIndex) && Number(body.pageIndex) >= 1
+        ? Number(body.pageIndex)
+        : Number.isFinite(base?.pageIndex) && Number(base.pageIndex) >= 1
+          ? Number(base.pageIndex)
+          : 1);
 
-  const knownTotal = Number(this.viewTotalRecords || this.totalRecords || 0);
+    const knownTotal = Number(this.viewTotalRecords || this.totalRecords || 0);
 
-  // A) 已載滿就不再打
-  if (knownTotal > 0 && loaded >= knownTotal) {
-    return of({ Data: [], TotalCount: knownTotal, GrandTotal: null });
-  }
+    // A) 已載滿就不再打
+    if (knownTotal > 0 && loaded >= knownTotal) {
+      return of({ Data: [], TotalCount: knownTotal, GrandTotal: null });
+    }
 
-  // B) 同一頁重覆叫（page=2 常見）
-  if (incomingPageIndex > 1) {
-    const pageStartIndex = (incomingPageIndex - 1) * pageSize;
-    if (loaded > pageStartIndex) {
+    // B) 同一頁重覆叫（page=2 常見）
+    if (incomingPageIndex > 1) {
+      const pageStartIndex = (incomingPageIndex - 1) * pageSize;
+      if (loaded > pageStartIndex) {
+        return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+      }
+    }
+
+    const req: any = {
+      ...base,
+      ...body,
+      pageIndex: incomingPageIndex,
+      pageSize,
+      SortBy: this.normalizeSort(body?.SortBy, base?.SortBy ?? this.defaultSort),
+    };
+
+    const hasRange = !!req?.TXN_Date_Start && !!req?.TXN_Date_End;
+    const hasYM = !!req?.TXN_YearMonth;
+    if (!hasRange && !hasYM) {
+      return of({ Data: [], TotalCount: 0, GrandTotal: null });
+    }
+
+    const reqKey = JSON.stringify({
+      TXN_Date_Start: req.TXN_Date_Start,
+      TXN_Date_End: req.TXN_Date_End,
+      TLT_No_List: req.TLT_No_List,
+      ECR_No_List: req.ECR_No_List,
+      tlt_floor: req.tlt_floor,
+      area_no: req.area_no,
+      ECR_Type: req.ECR_Type,
+      tlt_building: req.tlt_building,
+      OnlyShowOverAmount: req.OnlyShowOverAmount,
+      pageIndex: req.pageIndex,
+      pageSize: req.pageSize,
+      SortBy: req.SortBy,
+    });
+
+    if (reqKey === this._lastReqKey) {
       return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
     }
-  }
+    this._lastReqKey = reqKey;
 
-  const req: any = {
-    ...base,
-    ...body,
-    pageIndex: incomingPageIndex,
-    pageSize,
-    SortBy: this.normalizeSort(body?.SortBy, base?.SortBy ?? this.defaultSort),
-  };
+    this.loading = true;
 
-  const hasRange = !!req?.TXN_Date_Start && !!req?.TXN_Date_End;
-  const hasYM = !!req?.TXN_YearMonth;
-  if (!hasRange && !hasYM) {
-    return of({ Data: [], TotalCount: 0, GrandTotal: null });
-  }
+    return this.tls2b030Service.queryTLS2B030(req).pipe(
+      map((res: any) => {
+        const dataAny = res?.Data as any;
+        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+        const sumRaw = dataAny?.SumPayDiffs ?? null;
 
-  const reqKey = JSON.stringify({
-    TXN_Date_Start: req.TXN_Date_Start,
-    TXN_Date_End: req.TXN_Date_End,
-    TLT_No_List: req.TLT_No_List,
-    ECR_No_List: req.ECR_No_List,
-    tlt_floor: req.tlt_floor,
-    area_no: req.area_no,
-    ECR_Type: req.ECR_Type,
-    tlt_building: req.tlt_building,
-    OnlyShowOverAmount: req.OnlyShowOverAmount,
-    pageIndex: req.pageIndex,
-    pageSize: req.pageSize,
-    SortBy: req.SortBy,
-  });
+        const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
+          const flat: any = { ...r };
 
-  if (reqKey === this._lastReqKey) {
-    return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
-  }
-  this._lastReqKey = reqKey;
+          if (r?.PayDiffs) {
+            Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
+              flat[k] = this.toNumberLoose(v);
+            });
+          }
 
-  this.loading = true;
+          if (flat.PPay_Dif_sum != null) {
+            flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
+          }
 
-  return this.tls2b030Service.queryTLS2B030(req).pipe(
-    map((res: any) => {
-      const dataAny = res?.Data as any;
-      const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-      const sumRaw = dataAny?.SumPayDiffs ?? null;
+          this.formatMoneyFieldsInRow(flat);
+          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+          return flat;
+        });
 
-      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
-        const flat: any = { ...r };
+        const totalCount =
+          Number(res?.TotalCount ?? dataAny?.TotalCount ?? 0) ||
+          (knownTotal > 0 ? knownTotal : (loaded + rows.length));
 
-        if (r?.PayDiffs) {
-          Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
-            flat[k] = this.toNumberLoose(v);
-          });
+        // ✅ 永遠更新（下一次 loadMore 還有條件）
+        this.lastQueryBody = { ...req };
+
+        // ✅ 第一頁：回填畫面資料（因為你 onSubmit 是手動呼叫，不會走 TableReport append）
+        if (Number(req.pageIndex) === 1) {
+          this.data = rows as any;              // ⭐⭐⭐ 你缺的就是這行
+          this.totalRecords = totalCount;
+          this.viewTotalRecords = totalCount;
+
+          if (sumRaw) {
+            const footer: any = {};
+            Object.keys(sumRaw).forEach((k) => {
+              const raw = (sumRaw as any)[k] ?? 0;
+              const num = typeof raw === 'string' ? Number(raw.replace(/,/g, '')) : Number(raw);
+              const safe = Number.isFinite(num) ? num : 0;
+
+              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
+              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
+            });
+            this.footerData = this.formatMoneyFieldsInFooter(footer);
+          } else {
+            this.footerData = undefined;
+          }
         }
 
-        if (flat.PPay_Dif_sum != null) {
-          flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
-        }
+        // ✅ 回傳給 TableReport 做 append（後續捲動會用到）
+        return { Data: rows, TotalCount: totalCount, GrandTotal: sumRaw ?? null };
+      }),
+      catchError((err) => {
+        console.error('TLS2B030 query error:', err);
 
-        this.formatMoneyFieldsInRow(flat);
-        flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-        return flat;
-      });
-
-      const totalCount =
-        Number(res?.TotalCount ?? dataAny?.TotalCount ?? 0) ||
-        (knownTotal > 0 ? knownTotal : (loaded + rows.length));
-
-      // ✅ 永遠更新（下一次 loadMore 還有條件）
-      this.lastQueryBody = { ...req };
-
-      // ✅ 第一頁：回填畫面資料（因為你 onSubmit 是手動呼叫，不會走 TableReport append）
-      if (Number(req.pageIndex) === 1) {
-        this.data = rows as any;              // ⭐⭐⭐ 你缺的就是這行
-        this.totalRecords = totalCount;
-        this.viewTotalRecords = totalCount;
-
-        if (sumRaw) {
-          const footer: any = {};
-          Object.keys(sumRaw).forEach((k) => {
-            const raw = (sumRaw as any)[k] ?? 0;
-            const num = typeof raw === 'string' ? Number(raw.replace(/,/g, '')) : Number(raw);
-            const safe = Number.isFinite(num) ? num : 0;
-
-            if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
-            if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
-          });
-          this.footerData = this.formatMoneyFieldsInFooter(footer);
-        } else {
+        if (Number(req?.pageIndex) === 1) {
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
           this.footerData = undefined;
         }
-      }
 
-      // ✅ 回傳給 TableReport 做 append（後續捲動會用到）
-      return { Data: rows, TotalCount: totalCount, GrandTotal: sumRaw ?? null };
-    }),
-    catchError((err) => {
-      console.error('TLS2B030 query error:', err);
-
-      if (Number(req?.pageIndex) === 1) {
-        this.data = [];
-        this.totalRecords = 0;
-        this.viewTotalRecords = 0;
-        this.footerData = undefined;
-      }
-
-      return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
-    }),
-    finalize(() => {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }),
-  );
-};
+        return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+      }),
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }),
+    );
+  };
 
   /* ----------------- Init ----------------- */
   ngOnInit(): void {
@@ -551,7 +551,7 @@ public queryTLS2B030ForReport = (body: any): Observable<any> => {
     const payload = this.buildPayload({
       ...raw,
       pageIndex: 1,
-      pageSize: 30,
+      pageSize: 1000,
       SortBy: this.defaultSort,
     });
 
@@ -561,7 +561,7 @@ public queryTLS2B030ForReport = (body: any): Observable<any> => {
     this.footerData = undefined;
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
-this._lastReqKey = '';   // ✅ 加這行
+    this._lastReqKey = '';   // ✅ 加這行
     // ✅ 先把 lastQueryBody 設好（給 table-report 後續捲動/排序用）
     this.lastQueryBody = { ...payload };
     this.tableVer++;
@@ -588,7 +588,7 @@ this._lastReqKey = '';   // ✅ 加這行
         tlt_building: '',
         OnlyShowOverAmount: false,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 1000,
         SortBy: this.defaultSort as any,
       },
       { emitEvent: false }
@@ -596,7 +596,7 @@ this._lastReqKey = '';   // ✅ 加這行
 
     this.submitted = false;
     this.loading = false;
- this._lastReqKey = '';   // ✅ 加這行
+    this._lastReqKey = '';   // ✅ 加這行
     this.data = [];
     this.selectedItems = [];
     this.footerData = undefined;
@@ -621,12 +621,12 @@ this._lastReqKey = '';   // ✅ 加這行
   private saveBlob(res: HttpResponse<Blob>, defaultName: string) {
     const blob = new Blob([res.body as Blob], { type: res.body?.type || 'application/octet-stream' });
     const fileName = this.getFilenameFromResponse(res, defaultName);
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   downloadTLS2B030Excel(): void {

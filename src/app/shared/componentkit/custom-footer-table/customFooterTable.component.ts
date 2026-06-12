@@ -364,7 +364,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     const cleanHtml = sanitizedValue ?? '';
 
     // 3. 此時再進行 bypass，因為內容已經被 Angular 清洗過了，這才算是「安全」的 bypass
-    return this.sanitizer.bypassSecurityTrustHtml(cleanHtml);
+    return cleanHtml;
   }
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {

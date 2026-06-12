@@ -23,8 +23,7 @@
             [startControl]="queryForm.controls.TXN_BDate"
             [endControl]="queryForm.controls.TXN_EDate"
             [submitted]="submitted"
-          >
-          </app-calendar-range-quick>
+          ></app-calendar-range-quick>
 
           <!-- 支付別 -->
           <app-multi-select
@@ -36,8 +35,7 @@
             optionValue="value"
             [control]="queryForm.controls.PAY_No"
             [submitted]="submitted"
-          >
-          </app-multi-select>
+          ></app-multi-select>
 
           <!-- 檢視模式（下拉選單） -->
           <app-dropdown
@@ -49,8 +47,20 @@
             optionValue="value"
             [control]="queryForm.controls.reportMode"
             [submitted]="submitted"
-          >
-          </app-dropdown>
+          ></app-dropdown>
+
+          <!-- 收銀機號（機台彙總用） -->
+          <app-multi-select
+            *ngIf="reportMode === 'POS'"
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機號"
+            controlName="ECR_No"
+            [options]="ecrNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted"
+          ></app-multi-select>
         </div>
 
         <div
@@ -67,23 +77,27 @@
 <div class="card">
   <div class="col-12">
     <!-- 全館彙總 -->
-<app-table-report
-  *ngIf="reportMode === 'ALL'"
-  tableKey="CPM13020_ALL"
-  [lastQueryBody]="historyRequestBody"
-  [data]="rows"
-  [columns]="columnsAll"
-  [totalRecords]="totalRecords"
-  [footerData]="grandTotal"
-  [showDelete]="false"
-  [showManage]="false"
-  [showReportMode]="true"
-   [apiUrl]="apiUrl"
->
-</app-table-report>
+    <app-table-report
+      [exportContext]="{
+        apiUrl: apiUrl,
+      }"
+      *ngIf="reportMode === 'ALL'"
+      tableKey="CPM13020_ALL"
+      [lastQueryBody]="historyRequestBody"
+      [data]="rows"
+      [columns]="columnsAll"
+      [totalRecords]="totalRecords"
+      [footerData]="grandTotal"
+      [showDelete]="false"
+      [showManage]="false"
+      [showReportMode]="true"
+    ></app-table-report>
 
     <!-- 機台彙總 -->
     <app-table-report
+      [exportContext]="{
+        apiUrl: apiUrlPOS,
+      }"
       *ngIf="reportMode === 'POS'"
       tableKey="CPM13020_POS"
       [lastQueryBody]="historyRequestBody"
@@ -95,12 +109,10 @@
       [showManage]="false"
       [showReportMode]="true"
       [showCaption]="true"
-       [groupRowsBy]="'groupKey'"
-        [dataKey]="'_rowKey'" 
+      [groupRowsBy]="'groupKey'"
+      [dataKey]="'_rowKey'"
       [queryFunction]="queryPosForReport"
-      [apiUrl]="apiUrlPOS"
-    >
-    </app-table-report>
+    ></app-table-report>
   </div>
 </div>
 本報表金額為含稅金額

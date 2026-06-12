@@ -24,7 +24,6 @@ import { finalize, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.17.1 租金發票套印作業
 @Component({
@@ -43,7 +42,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     CheckboxModule,
     TranslateModule,
     MultiSelectComponent
@@ -52,7 +50,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 export class TLS2H010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     // 分頁欄位
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SamYyyymm: [new Date(), Validators.required],
     GuiNoStart: [null],
@@ -181,7 +179,7 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
           this.onSubmit(this.queryForm);
           const url = res.Data?.Print_URL || '';
           if (url) {
-            window.open(environment.ApiUrl + url);
+            globalThis.open(environment.ApiUrl + url);
           }
         },
       });
@@ -308,8 +306,8 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
     try {
       const raw = this.queryForm.getRawValue();
       this.lastQueryBody = {
-        PageSize: raw.pageSize ?? 30,
-        PageIndex: raw.pageIndex ?? 1,
+        pageSize: raw.pageSize ?? 1000,
+        pageIndex: raw.pageIndex ?? 1,
         SortBy: raw.SortBy ?? [],
       };
     } catch { }
@@ -366,19 +364,14 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
       };
 
       const body = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        OrderBy: '',
-        Offset: (Math.max(pageIndex - 1, 0) * pageSize),
+        pageSize: pageSize,
+        pageIndex: pageIndex,
         SortBy: raw.SortBy || [],
         SamYyyymm: toYYYYMM(raw.SamYyyymm),
         GuiNoStart: raw.GuiNoStart ?? null,
         GuiNoEnd: raw.GuiNoEnd ?? null,
         TltNo: raw.TltNo,
       };
-
-      // Ensure OrderBy is populated from SortBy for back-end compatibility
-      try { body.OrderBy = this.buildOrderByFromSort(body.SortBy); } catch { body.OrderBy = ''; }
 
       this.tls2h010Service.queryTLS2H010(body)
         .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
@@ -399,6 +392,4 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
-
-
 }

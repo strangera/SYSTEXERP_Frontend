@@ -9,7 +9,9 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable, tap } from 'rxjs';
 import {
   TLS26020Data,
@@ -37,7 +39,8 @@ import { createPaginationConfig, formatToSixDigits } from '../../../shared/compo
     TranslateModule,
     CalendarRangeComponent,
     MultiSelectComponent,
-    TableReportComponent
+    TableReportComponent,
+    ButtonModule
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
@@ -63,7 +66,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     tlt_floor: [[]],
     ECR_No: [[]],
     TLT_No: [[]],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 修正排序欄位
+    pageSize: [1000],
   });
 
   totalRecords = 0;
@@ -74,10 +78,10 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   // 修正 columns 根據實際 API 回應
   columns: ReportColumn[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount, isTotal: true }
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount, isTotal: true, align: 'right' }
   ];
 
   // 展開詳細資料的欄位定義
@@ -88,8 +92,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
     { field: 'TXN_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'TXN_GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, format: formatAmount },
-    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount }
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount, align: 'right' }
   ];
 
   // 下拉選單選項
@@ -99,12 +103,17 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   ecrOptions: { label: string; value: string }[] = [];
   tltOptions: { label: string; value: string }[] = [];
 
+  // 列印按鈕載入狀態
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   constructor(
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -193,4 +202,26 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
       Sale_DateEnd: this.datePipe.transform(this.queryForm.controls.Sale_DateEnd.value, 'yyyy-MM-dd') ?? ''
     })
   };
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26020Service.exportExcelTLS26020({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
+  }
+
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26020Service.exportPDFTLS26020({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
+  }
 }

@@ -314,7 +314,7 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
 
       // --- 核心修正點：只要有錯誤，絕對不准更新畫面 ---
       if (result.hasErrors && result.errorBlob) {
-        errorUrl = window.URL.createObjectURL(result.errorBlob);
+        errorUrl = globalThis.URL.createObjectURL(result.errorBlob);
         this.errorReportService.showImportError(errorUrl, '匯入失敗：Excel 資料含有邏輯錯誤，請下載報告修正全部紅字後重新匯入。');
         // 這裡直接中斷，不執行下方的 this.data = result.data
         this.excelBtnLoading.set(false);

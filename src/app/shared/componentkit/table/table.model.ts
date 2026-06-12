@@ -28,6 +28,8 @@ export interface Column<T = Record<string, any>> {
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
+  minFractionDigits?: number;
+  maxFractionDigits?: number;
   min?: number; // 最小值 (適用於 inputNumber、percent)
   max?: number; // 最大值 (適用於 inputNumber、percent)
   useGrouping?: boolean;
@@ -377,7 +379,8 @@ export const formatToSixDigits = (value: string | number | null | undefined): st
 };
 
 export type reportType =
-  'string'; // string 類型，匯出時直接輸出原始值
+  'string' | // string 類型，匯出時直接輸出原始值
+  'percentage' // percentage 類型，匯出時將數值乘以 100 並添加百分號，保留兩位小數
 
 export type TableTypes =
   'input' |

@@ -17,7 +17,7 @@ import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox'; // 引入 Checkbox 模組
-import { debounceTime, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 // TLS57150 專屬匯入
 import {
@@ -31,10 +31,9 @@ import {
 } from '@service/api/tls/tls57150.service';
 
 // 引入商品下拉表格所需的組件和服務
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service'; // 假設使用 Tls57040Service 查詢 PLU
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';
 
 @Component({
   selector: 'app-tls57150',
@@ -53,9 +52,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
     ButtonModule,
     TableReportComponent,
     CheckboxModule, // 新增 Checkbox 模組
-    DropdownTableComponent, // 新增 DropdownTable
     InputTextComponent, // 新增 InputText
-    RadioButtonModule
+    RadioButtonModule,
+    ProductAutocompleteComponent
   ],
   providers: [DatePipe]
 })
@@ -96,7 +95,6 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     private readonly dropDownListService: DropDownListService,
     public readonly tls57150Service: Tls57150Service, // 替換為 150 Service
     private datePipe: DatePipe,
-    private tls57040Service: Tls57040Service,
   ) { super(); } // 傳遞 formBuilder 給父類別
 
   ngOnInit(): void {
@@ -180,7 +178,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
         PLU_MagNo: formValue.PLU_MagNo || undefined,
         IsOnlyShowDiff: formValue.IsOnlyShowDiff, // 是否只顯示差異
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 500,
         SortBy: displayMode === 1 ?
           [
             { field: 'PST_Date', order: 1 },
@@ -254,13 +252,13 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     }
   }
@@ -293,28 +291,5 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     }
 
     return `download${defaultExtension}`;
-  }
-
-  // --- 商品管理編號 (Dropdown-Table) 相關屬性 ---
-  suggestions: QueryPLUResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    // 確保 event.PLU_MagNo 是字串或 null，並將其賦予 queryNo
-    const body = {
-      queryNo: event.label || '',
-      PLU_MagNo: undefined, // 不需要傳遞給後端，由 queryNo 負責模糊查詢
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    // 使用 Tls57040Service 進行商品查詢
-    this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }

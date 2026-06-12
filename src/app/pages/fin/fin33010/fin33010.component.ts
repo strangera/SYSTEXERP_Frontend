@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin33010Service } from '@service/api/fin/fin33010.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
@@ -58,7 +57,6 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private fin33010Service: Fin33010Service,
-    private dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -66,6 +64,11 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('FIN33010', '/FIN/FIN33010CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
+  }
+
+  openRcvDialog(): void {
+    this.rcvDialogVisible = true;
+    this.onQueryRcvNo();
   }
 
   onQueryRcvNo(): void {
@@ -81,21 +84,16 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
     console.log("dialog request", params)
 
     this.dialogLoading = true;
-    this.dropDownListService.queryARS4001RCVNO_DropDownList(params).subscribe({
+    this.fin33010Service.queryFIN33010RCVNODropDown(params).subscribe({
       next: (res: any) => {
-        // console.log('收款單號下拉 response:', res.Data);
         if (res.Status === '0000' || res.Status === '200') {
-          /// 比照您先前的 API 結構描述
-          const resData = res.Data || {};
-          const queryList = resData.QueryData || [];
-
-          this.dialogData = queryList.map((item: any) => ({
+          const queryList: { RCV_No: string; RCV_Date: string; Remark: string }[] = res.Data || [];
+          this.dialogData = queryList.map((item) => ({
             RCV_No: item.RCV_No,
             RCV_Date: item.RCV_Date,
             Remark: item.Remark
           }));
-          // 重要：更新總筆數，Table 底下的分頁器才會顯示正確頁數
-          this.dialogTotalRecords = resData.TotalRows || 0;
+          this.dialogTotalRecords = queryList.length;
           this.queryStateService.setQueryState(this.ProgNo, params);
         } else {
           this.dialogData = [];

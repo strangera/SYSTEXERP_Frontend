@@ -248,7 +248,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
-    fromEvent(window, 'resize')
+    fromEvent(globalThis, 'resize')
       .pipe(debounceTime(300))
       .subscribe(() => {
         this.cd.detectChanges();

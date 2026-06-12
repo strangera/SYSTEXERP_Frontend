@@ -114,6 +114,7 @@ export interface QueryFIN55050Request {
   AccNoTo: string;
   PageSize?: number;
   PageIndex?: number;
+  VouStatusList?: string[];
 }
 
 /**

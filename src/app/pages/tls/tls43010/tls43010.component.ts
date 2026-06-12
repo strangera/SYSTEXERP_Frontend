@@ -3,10 +3,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { QueryTls43010Request, QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -44,7 +45,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'NOT_No', order: -1 }, { field: 'NOT_Date', order: -1 }]],
   });
@@ -55,11 +56,14 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDateTime },
-    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true, format: formatDateTime },
+    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDate },
+    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true, format: formatDate },
     { field: 'NOT_File', header: '媒體檔案名稱', visible: true },
     { field: 'NOT_Status', header: '狀態', visible: true, format: (v: string) => this.NOT_Status_Options.find(o => o.value === v)?.label || v },
     { field: 'NOT_Priority', header: '優先順序', visible: true },
+    { field: 'NOT_PlayTime', header: '媒體檔播放秒數', visible: true },
+    { field: 'NOT_DtlLimit', header: '是否限制播放條件', visible: true, format: v => getSYS1000('NOT_DtlLimit', v) },
+    { field: 'NOT_Note', header: '備註', visible: true },
   ];
   NOT_Status_Options: { value: string, label: string }[] = [ // 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     { value: '0', label: '未審核' },

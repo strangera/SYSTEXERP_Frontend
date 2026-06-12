@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <fieldset style="border: none; padding: 0; margin: 0">
   <p-accordion [multiple]="true">
     <!-- 基本資訊 -->
@@ -26,7 +28,7 @@
               [control]="getControl('tlt_no')"
               [customPlaceholder]="'系統自動產生'"
               [alwaysShowPlaceholder]="true"
-              [readonly]="false"
+              [readonly]="true"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -89,7 +91,7 @@
               optionValue="value"
               [control]="getControl('tlt_openflag')"
               [submitted]="submitted"
-              [readonly]="isFormReadonly"
+              [readonly]="true"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -268,30 +270,36 @@
       [selected]="true"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <div class="col-12">
-        <app-expandable-edit-table
-          [data]="displayLocationData"
-          [mainColumns]="locationColumns"
-          [showCheckBox]="crudstatus !== CRUDStatus.Read"
-          [showPaginator]="false"
-          [showAddButton]="crudstatus !== CRUDStatus.Read"
-          [showBatchDelete]="crudstatus !== CRUDStatus.Read"
-          [showActionColumn]="false"
-          [forceEditMode]="crudstatus !== CRUDStatus.Read"
-          [autoEditOnAdd]="true"
-          [loading]="loading"
-          dataKey="id"
-          detailKey=""
-          emptyMessage="尚未設定位置資訊，請點擊新增按鈕開始設定"
-          (addMainItem)="addLocation()"
-          (batchDelete)="onBatchDeleteLocation($event)"
-          (save)="onLocationSave($event)"
-          (edit)="onLocationTableEdit($event)"
-          (cancel)="onLocationTableCancel($event)"
-          (fieldChange)="onLocationFieldChange($event)"
-          (dropdownChange)="onLocationDropdownChange($event)"
-        ></app-expandable-edit-table>
-      </div>
+      <app-table-edit
+        class="col-12"
+        tableKey="TLS13010Step1Location"
+        [columns]="locationEditColumns"
+        [data]="displayLocationData"
+        (selectionChange)="selectedLocationRows = $event"
+        [selectedItems]="selectedLocationRows"
+        [showCheckBox]="!isFormReadonly"
+        [keepDeletedData]="true"
+        [dataStatusField]="'_status'"
+        [defaultInsertData]="locationDefaultInsertData"
+        [disabled]="crudstatus === CRUDStatus.Read"
+        (dataChange)="onLocationDataChange($event)"
+      >
+        <ng-template #customCell let-rowData="rowData" let-col="col">
+          <ng-container *ngIf="col.field === 'location_no'">
+            <span *ngIf="crudstatus === CRUDStatus.Read">
+              {{ rowData.location_no }}
+            </span>
+            <button
+              *ngIf="crudstatus !== CRUDStatus.Read"
+              pButton
+              [label]="rowData.location_no || '請選擇...'"
+              icon="pi pi-map-marker"
+              class="p-button-sm p-button-outlined p-button-secondary w-full text-left"
+              (click)="openLocationPicker(rowData)"
+            ></button>
+          </ng-container>
+        </ng-template>
+      </app-table-edit>
     </p-accordionTab>
 
     <!-- 商務條件 -->
@@ -553,7 +561,7 @@
               class="block mt-1 text-blue-600 text-base"
               *ngIf="form.get('vip_yn')?.value === 'Y'"
             >
-              配合聯名卡時必填 (例：0.95 為 95折)
+              (95折請輸入0.95)
             </small>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -922,3 +930,101 @@
     </p-accordionTab>
   </p-accordion>
 </fieldset>
+
+<!-- 位置選擇 Dialog -->
+<p-dialog
+  header="選擇位置"
+  [(visible)]="locationPickerVisible"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1300px' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="location-picker-dialog"
+>
+  <!-- 篩選列 -->
+  <div class="flex flex-wrap gap-2 align-items-end mb-3">
+    <app-input-text
+      label="位置編號"
+      controlName="pickerLocationNoFilter"
+      [control]="pickerLocationNoFilter"
+      style="min-width: 130px"
+    ></app-input-text>
+    <app-dropdown
+      label="館別"
+      controlName="pickerBuildingFilter"
+      [control]="pickerBuildingFilter"
+      [options]="dropdownService.buildingOptions"
+      optionLabel="label"
+      optionValue="value"
+      style="min-width: 130px"
+    ></app-dropdown>
+    <app-dropdown
+      label="樓層"
+      controlName="pickerFloorFilter"
+      [control]="pickerFloorFilter"
+      [options]="dropdownService.floorOptions"
+      optionLabel="label"
+      optionValue="value"
+      style="min-width: 130px"
+    ></app-dropdown>
+    <app-dropdown
+      label="區域"
+      controlName="pickerAreaFilter"
+      [control]="pickerAreaFilter"
+      [options]="dropdownService.regionOptions"
+      optionLabel="label"
+      optionValue="value"
+      style="min-width: 130px"
+    ></app-dropdown>
+    <app-dropdown
+      label="狀態"
+      controlName="locationStatusFilter"
+      [control]="locationStatusFilter"
+      [options]="locationStatusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [showClear]="false"
+      style="min-width: 120px"
+    ></app-dropdown>
+    <button
+      pButton
+      label="查詢"
+      icon="pi pi-search"
+      class="p-button-sm"
+      [loading]="locationPickerLoading"
+      (click)="onPickerSearch()"
+    ></button>
+  </div>
+
+  <app-table
+    [data]="filteredPickerData"
+    [columns]="locationPickerColumns"
+    [loading]="locationPickerLoading"
+    [selectionMode]="'single'"
+    [showCheckBox]="true"
+    [showCaption]="false"
+    [showPage]="false"
+    [showManage]="false"
+    [dataKey]="'value'"
+    [isRowSelectable]="isLocationSelectable"
+    [(selectedItems)]="locationPickerSelectedRow"
+  ></app-table>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="確認選擇"
+      icon="pi pi-check"
+      class="p-button-sm"
+      [disabled]="!locationPickerSelectedRow?.length"
+      (click)="onLocationPickerConfirm()"
+    ></button>
+    <button
+      pButton
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-sm p-button-outlined ml-2"
+      (click)="locationPickerVisible = false"
+    ></button>
+  </ng-template>
+</p-dialog>

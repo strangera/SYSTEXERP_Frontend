@@ -583,6 +583,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         // 載入位置資料（API 可能用 LocationDetails 或 Locations）
         const locationDetails = data.LocationDetails || data.Locations || [];
+        const contractBdate = this.dataForm.get('tlt_bdate')?.value;
+        const contractEdate = this.dataForm.get('tlt_edate')?.value;
         if (Array.isArray(locationDetails) && locationDetails.length > 0) {
           this.wizardState.locationData = locationDetails.map((item: any) => ({
             id: item.id,
@@ -596,8 +598,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',
-            tlt_bdate: item.tlt_bdate ? item.tlt_bdate.split('T')[0] : '',
-            tlt_edate: item.tlt_edate ? item.tlt_edate.split('T')[0] : '',
+            tlt_bdate: item.tlt_bdate ? new Date(item.tlt_bdate.split('T')[0])
+                     : (contractBdate ? new Date(contractBdate) : undefined),
+            tlt_edate: item.tlt_edate ? new Date(item.tlt_edate.split('T')[0])
+                     : (contractEdate ? new Date(contractEdate) : undefined),
             _status: 'original' as DataStatus
           }));
         }

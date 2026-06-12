@@ -7,9 +7,6 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
@@ -20,7 +17,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
+import { TableReportComponent, } from './fin25010-table-report/fin25010-table-report.component';
+import { formatAmount, formatDate, ReportColumn } from './fin25010-table-report/fin25010-table-report.model';
 @Component({
   selector: 'app-fin25010-cru',
   templateUrl: './fin25010-cru.component.html',
@@ -141,7 +139,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
  */
   loadDetailData(): void {
     // 從路由 state 取得 rowdata (通常是主檔的資料)
-    if (!this.rowdata || !this.rowdata.PAM_No) {
+    if (!this.rowdata?.PAM_No) {
       this.messageService.errorBubble('缺少單號資訊，無法讀取資料');
       return;
     }
@@ -205,9 +203,18 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       this.messageService.errorBubble('分組小計或總計不可為負數');
       return;
     }
+
+    // 1. 透過 Set 取得不重複的廠商代號數量
+    const uniqueVenCount = new Set(
+      this.selectedItems
+        .map(item => item.ven_no)
+        .filter(venNo => !!venNo) // 過濾掉可能為空的值
+    ).size;
+
     this.messageService.confirm({
       header: `確定要產生電匯資料嗎?`,
-      message: `確定要產生 ${this.selectedItems.length} 筆電匯資料嗎?`,
+      // 2. 將原本的 this.selectedItems.length 改為不重複的廠商數量
+      message: `確定要產生 ${uniqueVenCount} 筆廠商的電匯資料嗎?`,
       accept: () => {
         const aps3009Items: APS3009Item[] = this.selectedItems.map(item => ({
           ID: item.ID,
@@ -222,11 +229,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
           IN_TYPE: item.IN_TYPE,
           Remit_Status: item.Remit_Status
         }));
+
         const request: InsertFIN25010Request = {
           D_Date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           APS3009: aps3009Items
         };
-        this.loading = true; // 記得要打開 loading
+
+        this.loading = true;
         this.fin25010Service.insertFIN25010(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
           this.messageService.successBubble(res.Message);
           this.selectedItems = [];
@@ -250,15 +259,15 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   calculateFooter(): void {
     // 建立當下所有廠商的「零元底圖」
     const groupMap = new Map<string, number>();
-    this.data.forEach(item => {
+    for (const item of this.data) {
       if (item.ven_no && !groupMap.has(item.ven_no)) {
         groupMap.set(item.ven_no, 0);
       }
-    });
+    }
 
     // 累加已勾選
     let total = 0;
-    this.selectedItems.forEach(item => {
+    for (const item of this.selectedItems) {
       const amt = Number(item.ACP_Amt) || 0;
       const weightedAmt = item.IN_TYPE === '3' ? -amt : amt;
 
@@ -269,7 +278,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       if (item.ven_no) {
         groupMap.set(item.ven_no, (groupMap.get(item.ven_no) || 0) + weightedAmt);
       }
-    });
+    }
 
     this.footerData = { ACP_Amt: total } as any;
     this.subTotalData = Array.from(groupMap.entries()).map(([no, sum]) => ({

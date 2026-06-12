@@ -41,7 +41,7 @@ export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResp
     From_IP: [''], // 日期限制 (start-end datetime yyyy/mm/dd)
     Start_Date: [null], // 日期限制 (start-end datetime yyyy/mm/dd)
     End_Date: [null], // Input Text
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'User_No', order: 1 }]],
   });

@@ -57,12 +57,11 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     ECR_No_Start: [null as string | null],
     ECR_No_End: [null as string | null],
     ...createPaginationConfig([{ field: 'PAY_NO', order: 1 }]),
-    pageSize: [30]
+    pageSize: [1000]
   });
 
   footerData: any = null;
   historyRequestBody: any;
-  private skipAutoQueryOnce = false;
   data: SalesRecord[] = [];
   totalRecords = 0;
   selectedItems: SalesRecord[] = [];
@@ -189,12 +188,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
             }
           }
         }
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = customFilename;
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnLoading2 = false;
       },
     });

@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { EditColumn } from '../table-edit.model';
-
+import { validateRequired } from '../validate-field.model';
 // 定義 RowValidationFn 類型，這是 TableEditComponent 的 @Input() rowValidate 參數的類型
 type RowValidationFn = (rowData: any, index?: number) => { isValid: boolean, errorMessage: string; } | undefined;
 
@@ -180,6 +180,7 @@ export class TableValidationService {
    * @returns 是否必填
    */
   public isRequired(col: EditColumn): boolean {
-    return col.validate?.some(validate => validate.name === 'validateRequired') ?? false;
+    // 直接比對函式引用，不受壓縮混淆影響
+    return col.validate?.some(validate => validate === validateRequired) ?? false;
   }
 }

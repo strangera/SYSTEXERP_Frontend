@@ -125,7 +125,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       action: (rowData: ContractItem) => this.onEarlyTermination(rowData),
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
-        rowData.approve_status !== '2'
+        rowData.approve_status !== '2' ||
+        this.isContractExpired(rowData)
     }
   ];
 
@@ -407,6 +408,11 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   onUnapprove(rowData: ContractItem): void {
+    if (rowData.approve_status !== '2') {
+      this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+      return;
+    }
+
     this.messageService.confirm({
       message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
@@ -419,7 +425,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
               this.messageService.errorBubble(`反審核失敗: ${res.Message}`);
             }
           },
-          error: () => this.messageService.errorBubble('反審核失敗')
+          error: (err: any) => this.messageService.errorBubble(err?.error?.Message || '反審核失敗')
         });
       }
     });
@@ -501,6 +507,13 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   // ========== 輔助方法 ==========
+  private isContractExpired(rowData: ContractItem): boolean {
+    if (!rowData.tlt_edate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(rowData.tlt_edate) < today;
+  }
+
   private isVoidDisabled(rowData: ContractItem): boolean {
     // 已作廢的不能再作廢
     if (rowData.approve_status === '3') {

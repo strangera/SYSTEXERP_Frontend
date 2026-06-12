@@ -1,57 +1,65 @@
-::ng-deep {
+:host ::ng-deep {
+  // ==========================================
+  // 1. 自訂表格滾動條 (Scrollbar)
+  // ==========================================
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-
   &::-webkit-scrollbar-track {
     background: transparent;
     border: 5px solid transparent;
   }
-
   &::-webkit-scrollbar-thumb {
     background: #9f9f9f;
     border-radius: 12px;
     border: 2px solid var(--surface-d);
-  }
 
-  &::-webkit-scrollbar-thumb:hover {
-    background: #949494;
+    &:hover {
+      background: #949494;
+    }
   }
-
+  // ==========================================
+  // 2. PrimeNG p-datatable 核心主體與框架覆寫
+  // ==========================================
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
-    // ----------------------------------------------------------------
+    .p-datatable-wrapper {
+      border: 1px solid var(--surface-d);
+    }
+    // --- 表頭區樣式 (thead / header) ---
     .p-datatable-header {
       background: transparent;
       border: none;
       padding: 0;
-      .caption-left p-multiselect {
-        width: 35px;
-        height: 35px;
-      }
-      .caption-left p-multiselect {
-        .p-multiselect-label {
-          display: none;
-        }
-        .p-multiselect-trigger-icon {
-          font-size: 1.4em;
-          color: var(--surface-card);
-        }
-        .p-multiselect {
-          border-radius: 50%;
-          border: 1px solid var(--surface-400);
-          width: 100%;
-          height: 100%;
-          background-color: var(--surface-400);
-        }
-        .p-multiselect-trigger {
-          flex-shrink: unset;
-        }
-        .ng-trigger-overlayContentAnimation {
-          width: 200px;
+
+      .caption-left {
+        p-multiselect {
+          width: 35px;
+          height: 35px;
+
+          .p-multiselect-label {
+            display: none;
+          }
+          .p-multiselect-trigger-icon {
+            font-size: 1.4em;
+            color: var(--surface-card);
+          }
+          .p-multiselect {
+            border-radius: 50%;
+            border: 1px solid var(--surface-400);
+            width: 100%;
+            height: 100%;
+            background-color: var(--surface-400);
+          }
+          .p-multiselect-trigger {
+            flex-shrink: unset;
+          }
+          .ng-trigger-overlayContentAnimation {
+            width: 200px;
+          }
         }
       }
       .button-group {
@@ -64,115 +72,139 @@
         font-size: 1.5em;
       }
     }
-    .p-datatable-tbody > tr .p-highlight.p-disabled {
-      background-color: #38a8ff !important;
+    .p-datatable-thead > tr > th {
+      background: var(--table-header-bg);
+
+      // 支援自訂標題換行類別
+      &.wrap-header {
+        white-space: normal;
+      }
+      &.multiline-header {
+        white-space: pre-line; // 允許 \n 換行
+      }
+      &.group-header {
+        background-color: var(--table-header-bg-group) !important;
+      }
     }
-
-    .p-selectable-row:not(.p-disabled-row):hover {
-      background-color: #d5edff !important;
-      cursor: pointer;
-    }
-
-    .p-disabled-row {
-      // background-color: #ffffffc4 !important;
-      color: #495057 !important;
-      // 禁用的 checkbox 樣式
-      .p-checkbox {
-        opacity: 0.5;
-        cursor: not-allowed !important;
-        position: relative; // 為叉叉定位
-
-        .p-checkbox-box {
-          background-color: #e9ecef !important;
-          border-color: #ced4da !important;
+    // --- 資料列與單元格樣式 (tbody / tr / td) ---
+    .p-datatable-tbody > tr {
+      > td {
+        white-space: normal !important;
+        word-break: break-all !important; // 英文/數字過長強制斷行
+        overflow-wrap: break-word !important;
+      }
+      // 點選/高亮且被禁用的狀態
+      .p-highlight.p-disabled {
+        background-color: #38a8ff !important;
+      }
+      // 一般資料列 Hover 效果 (保留你原有的變數覆寫)
+      &.p-selectable-row:not(.p-disabled-row) {
+        &:hover {
+          background-color: #d5edff !important; // 融合你原本寫的兩種 hover，維持原色調
+          background-color: var(--p-selectable-row-hover) !important;
+          cursor: pointer;
         }
-        // 叉叉效果
-        &::before,
-        &::after {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100%; // 叉叉的宽度覆盖整个框
-          height: 2px; // 叉叉的厚度
-          background-color: #dc3545; // 红色
-          transform-origin: center;
-          z-index: 2;
-        }
-        &::before {
-          transform: translate(-50%, -50%) rotate(45deg);
-        }
-        &::after {
-          transform: translate(-50%, -50%) rotate(-45deg);
+      }
+      // 禁用資料列 (Row Disabled) 與打叉叉效果
+      &.p-disabled-row {
+        color: #495057 !important;
+
+        .p-checkbox {
+          opacity: 0.5;
+          cursor: not-allowed !important;
+          position: relative;
+
+          .p-checkbox-box {
+            background-color: #e9ecef !important;
+            border-color: #ced4da !important;
+          }
+
+          // 核心 CSS 繪製紅色叉叉效果
+          &::before,
+          &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: #dc3545;
+            transform-origin: center;
+            z-index: 2;
+          }
+          &::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+          }
+          &::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+          }
         }
       }
     }
+
+    // --- 表尾與小計/總計區樣式 (tfoot / footer) ---
+    .p-datatable-tfoot > tr > td {
+      background: var(--table-footer-bg);
+    }
+
     .table-footer {
       background-color: #f8f9fa;
       border: 1px solid #e9ecef;
       border-width: 0 1px 1px 1px;
     }
-    .p-datatable-wrapper {
-      border: 1px solid var(--surface-d);
-    }
-    // 可選行的hover效果
-    .p-selectable-row:not(.p-disabled-row) {
-      &:hover {
-        background-color: var(--p-selectable-row-hover) !important;
-        cursor: pointer;
-      }
-    }
-    .p-paginator {
-      padding: 0.2rem 0.2rem;
-      background: transparent;
-    }
+  }
 
-    .p-component-overlay {
-      background-color: rgb(217 217 217 / 40%) !important;
-    }
+  // ==========================================
+  // 3. 分頁與全域遮罩覆寫
+  // ==========================================
+  .p-paginator {
+    padding: 0.2rem 0.2rem;
+    background: transparent;
+  }
 
-    // .p-datatable-thead > tr > th {
-    //   background: var(--table-header-bg);
-    // }
-    .p-datatable-tfoot > tr > td {
-      background: var(--table-footer-bg);
+  .p-component-overlay {
+    background-color: rgb(217 217 217 / 40%) !important;
+  }
+
+  // ==========================================
+  // 4. 自訂擴充欄位樣式 (HTML Cell / Actions)
+  // ==========================================
+
+  // HTML 內嵌呈現（限制一行並自動文字省略 ── 常用於 ERP 摘要）
+  .html-cell {
+    &,
+    * {
+      font-size: 14px !important;
+      line-height: 1.2 !important;
+      font-weight: normal !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: -webkit-inline-box;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 1.2em;
+      word-break: break-word;
+      max-width: 75px;
     }
   }
-  .html-cell,
-  .html-cell * {
-    font-size: 14px !important;
-    line-height: 1.2 !important;
-    font-weight: normal !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: -webkit-inline-box;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 1.2em; /* 限制高度為一行 */
-    // white-space: normal;
-    word-break: break-word;
-    max-width: 75px; /* 可選：限制寬度 */
-  }
+
   .no-wrap {
     white-space: nowrap;
+
     div {
       display: inline;
     }
   }
-  .group-header {
-    background-color: var(--table-header-bg-group) !important;
-  }
-  .p-datatable .p-datatable-thead > tr > th {
-    background: var(--table-header-bg);
-  }
 
+  // 管理欄位的客製化圖標按鈕
   .icon-button button {
     background-color: var(--icon-button-bg);
     border-radius: 5px;
     border: var(--icon-button-border);
+
     &:hover {
       background-color: rgba(0, 123, 255, 0.2);
     }
@@ -180,40 +212,36 @@
       color: var(--icon-button-span);
     }
   }
-  .wrap-header {
-    white-space: normal; /* 讓文字可以正常換行 */
-  }
-  .multiline-header {
-    white-space: pre-line; /* 允許 \n 換行 */
-  }
-  /* 連結啟動狀態 */
+
+  // ==========================================
+  // 5. 欄位超連結狀態 (Link Active / Disabled)
+  // ==========================================
   .link-active {
-    color: #2196f3; /* 使用主題藍色 */
+    color: #2196f3;
     cursor: pointer;
     font-weight: 500;
     text-decoration: none;
     transition: all 0.2s;
     display: inline-block;
+
+    &:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    // 整合外部連結的微互動小圖示 (PrimeIcons)
+    &::after {
+      content: "\e94b";
+      font-family: "primeicons";
+      font-size: 0.75rem;
+      margin-left: 4px;
+      opacity: 0.6;
+    }
   }
 
-  .link-active:hover {
-    color: #1565c0; /* 移入時顏色變深 */
-    text-decoration: underline; /* 增加底線 */
-  }
-
-  /* 連結停用狀態 */
   .link-disabled {
     color: #9e9e9e;
     cursor: not-allowed;
     text-decoration: none;
-  }
-
-  /* 增加一個微互動圖示（選擇性） */
-  .link-active::after {
-    content: "\e94b"; /* PrimeIcons pi-external-link 的代碼，若不需要可移除 */
-    font-family: "primeicons";
-    font-size: 0.75rem;
-    margin-left: 4px;
-    opacity: 0.6;
   }
 }

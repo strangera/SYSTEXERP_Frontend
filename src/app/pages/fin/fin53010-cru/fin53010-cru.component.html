@@ -101,7 +101,7 @@
   <div class="grid p-fluid">
     <div class="col-12">
       <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
-        <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable" [disabled]="isFormReadable"
+        <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="!isFormReadable && !isPostedEdit" [disabled]="isFormReadable || isPostedEdit"
           (fieldChange)="onFieldChange($event)" (dataChange)="onDataChange($event)"
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
           [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
@@ -114,10 +114,10 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
 <div class="card">
   <p-panel header="應付帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [canInsert]="false"
-      [showInsert]="!isFormReadable && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [canInsert]="false"
+      [showInsert]="!isFormReadable && !isPostedEdit && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
       [tableKey]="'FIN53010_step_ap'" (insert)="onInsertStepApRow()"
-      (dataChange)="onStepAPDataChange($event)"></app-table-edit>
+      (dataChange)="onStepAPDataChange($event)" [footerData]="stepAPFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -135,9 +135,9 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 4) {
 <div class="card">
   <p-panel header="應收帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepARRows()"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepARRows()"
       [columns]="stepARColumns" [tableKey]="'FIN53010_step_ar'"
-      (dataChange)="onStepARDataChange($event)"></app-table-edit>
+      (dataChange)="onStepARDataChange($event)" [footerData]="stepARFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -155,10 +155,10 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
-      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
+    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepPurchaseRows()"
+      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'" [defaultInsertData]="{ tax_type: '1', invoice_usage: '1', deduction_code: '1' }"
       (dataChange)="onStepPurchaseDataChange($event)"
-      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
+      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)" [footerData]="stepPurchaseFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -176,9 +176,9 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
 <div class="card">
   <p-panel header="銷項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+    <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepSalesRows()"
       [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
-      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
+      (fieldChange)="onStepSalesInvoiceFieldChange($event)" [footerData]="stepSalesFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -196,9 +196,9 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
 <div class="card">
   <p-panel header="銀行存款" class="line-height-3 m-0">
-    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
+    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepBankRows()"
       [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
-      (dataChange)="onStepBankDataChange($event)"></app-table-edit>
+      (dataChange)="onStepBankDataChange($event)" [footerData]="stepBankFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -214,13 +214,24 @@
 </div>
 }
 
+@if (isFormReadable && !isFormCreateable && aps4002RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="銀行存款" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS4002_related" [columns]="aps4002RelatedColumns"
+      [data]="aps4002RelatedRows()" [totalRecords]="aps4002RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4002Footer()"></app-table-report>
+  </p-panel>
+</div>
+}
+
 @if (isFormReadable && !isFormCreateable && ars3001RelatedRows().length > 0) {
 <div class="card">
   <p-panel header="應收帳款" class="line-height-3 m-0">
     <app-table-report tableKey="FIN53010_ARS3001_related" [columns]="ars3001RelatedColumns"
       [data]="ars3001RelatedRows()" [totalRecords]="ars3001RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyArs3001Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -231,7 +242,7 @@
     <app-table-report tableKey="FIN53010_APS3001_related" [columns]="aps3001RelatedColumns"
       [data]="aps3001RelatedRows()" [totalRecords]="aps3001RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps3001Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -242,7 +253,7 @@
     <app-table-report tableKey="FIN53010_APS2002_C_related" [columns]="aps2002_CRelatedColumns"
       [data]="aps2002_CRelatedRows()" [totalRecords]="aps2002_CRelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps2002_CFooter()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -253,7 +264,7 @@
     <app-table-report tableKey="FIN53010_APS2002_related" [columns]="aps2002RelatedColumns"
       [data]="aps2002RelatedRows()" [totalRecords]="aps2002RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps2002Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -264,7 +275,7 @@
     <app-table-report tableKey="FIN53010_APS4023_C_related" [columns]="aps4023_CRelatedColumns"
       [data]="aps4023_CRelatedRows()" [totalRecords]="aps4023_CRelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4023_CFooter()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -275,7 +286,7 @@
     <app-table-report tableKey="FIN53010_APS4023_related" [columns]="aps4023RelatedColumns"
       [data]="aps4023RelatedRows()" [totalRecords]="aps4023RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4023Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -329,6 +340,80 @@
     </div>
   </div>
 </ng-template>
+
+<!-- 立沖代號選取彈窗 -->
+<p-dialog
+  header="立沖代號查詢"
+  [(visible)]="showPtaDialog"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  (onHide)="closePtaDialog()"
+>
+  <!-- 篩選表單 -->
+  <form [formGroup]="ptaFilterForm" class="grid p-fluid mb-3">
+    <app-input-text
+      class="col-12 md:col-4"
+      label="傳票號碼"
+      controlName="VouNo"
+      [control]="ptaFilterForm.controls.VouNo"
+    />
+    <app-input-text
+      class="col-12 md:col-4"
+      label="立沖代號"
+      controlName="PTA"
+      [control]="ptaFilterForm.controls.PTA"
+    />
+    <app-dropdown
+      class="col-12 md:col-4"
+      label="廠商代號/名稱"
+      controlName="VEN_No"
+      [control]="ptaFilterForm.controls.VEN_No"
+      [options]="service.vendorOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [showClear]="true"
+      [filter]="true"
+    />
+  </form>
+  <div class="flex justify-content-end mb-2">
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      (click)="filterPtaDialog()"
+      [loading]="ptaDialogLoading"
+    ></app-button>
+  </div>
+
+  <!-- 結果表格 -->
+  <app-table
+    #ptaDialogTable
+    tableKey="PtaQuery"
+    dataKey="RowNum"
+    [data]="ptaDialogData"
+    [columns]="ptaDialogColumns"
+    [loading]="ptaDialogLoading"
+    [showPaginator]="false"
+    [scrollable]="true"
+    [scrollHeight]="'400px'"
+    [showCheckBox]="true"
+    [showManage]="false"
+    [showFilter]="false"
+    [showDelete]="false"
+    [showCaption]="false"
+    selectionMode="single"
+    (select)="onPtaRowSelect($event)"
+  ></app-table>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <app-button
+      label="取消"
+      severity="secondary"
+      (click)="closePtaDialog()"
+    ></app-button>
+    <app-button label="確定" (click)="confirmPtaSelection()"></app-button>
+  </ng-template>
+</p-dialog>
 
 <app-dialog [(visible)]="displayDialog" header="選擇常用傳票" [disable]="!selectedDetail().length"
   [loading]="service.vocTempLoading()" (save)="onApplyTemplate()">

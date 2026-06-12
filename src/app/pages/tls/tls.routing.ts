@@ -274,8 +274,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls29010cru', loadComponent: () => import('./tls29010-cru/tls29010-cru.component').then(m => m.TLS29010CRUComponent), data: { progNo: 'TLS29010' } },
   // 各支付工具審核作業 CRU
   { path: 'tls2a010cru', loadComponent: () => import('./tls2a010-cru/tls2a010-cru.component').then(m => m.TLS2A010CRUComponent), data: { progNo: 'TLS2A010' } },
-  // 溢欠彙總表 CRU
-  { path: 'tls2a030cru', loadComponent: () => import('./tls2a030-cru/tls2a030-cru.component').then(m => m.TLS2A030CRUComponent), data: { progNo: 'TLS2A030' } },
   // 第三方支付帳差報表 CRU
   { path: 'tls2a050cru', loadComponent: () => import('./tls2a050-cru/tls2a050-cru.component').then(m => m.TLS2A050CRUComponent), data: { progNo: 'TLS2A050' } },
   // 代扣款補登作業 CRU

@@ -3,24 +3,61 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-dropdown-range class="col-12 md:col-8" startLabel="收銀機號/名稱(起)" endLabel="收銀機號/名稱(迄)"
-            startControlName="ECR_No_Start" endControlName="ECR_No_End" [startControl]="queryForm.controls.ECR_No_Start"
-            [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value" [errorForGroup]="true"
-            [endControl]="queryForm.controls.ECR_No_End" [submitted]="submitted"></app-dropdown-range>
+          <app-dropdown-range
+            class="col-12 md:col-8"
+            startLabel="收銀機號/名稱(起)"
+            endLabel="收銀機號/名稱(迄)"
+            startControlName="ECR_No_Start"
+            endControlName="ECR_No_End"
+            [startControl]="queryForm.controls.ECR_No_Start"
+            [options]="ECR_NoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [errorForGroup]="true"
+            [endControl]="queryForm.controls.ECR_No_End"
+            [submitted]="submitted"
+          ></app-dropdown-range>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示類型" controlName="ShowTypes"
-            [options]="[{value:'1',label:'正常'},{ value:'2',label:'不正確'}]" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ShowTypes" [submitted]="submitted"></app-dropdown>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機群組" controlName="ECR_GrpNos"
-            [options]="ECR_GrpNoOptions | async" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ECR_GrpNos" [submitted]="submitted"></app-multi-select>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="顯示類型"
+            controlName="ShowTypes"
+            [options]="[
+              { value: '1', label: '正常' },
+              { value: '2', label: '不正確' },
+            ]"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ShowTypes"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機群組"
+            controlName="ECR_GrpNos"
+            [options]="ECR_GrpNoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ECR_GrpNos"
+            [submitted]="submitted"
+          ></app-multi-select>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -29,8 +66,17 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls57050" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
-    [queryFunction]="tls46050Service.queryTLS57050.bind(tls46050Service)">
-  </app-table-report>
+  <app-table-report
+    tableKey="tls46050"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [showManage]="false"
+    [loading]="loading"
+    [lazy]="false"
+    [queryFunction]="tls46050Service.queryTLS57050.bind(tls46050Service)"
+    pageSizeSetting="A3"
+  ></app-table-report>
 </div>

@@ -20,7 +20,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { combineLatest, distinctUntilChanged, finalize, map, Observable, startWith } from 'rxjs';
-import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
+import { ASS13050QueryRow, DownloadASS13050Request, QueryASS13050Request } from './ass13050.model';
 
 // 3.1.3.5 移轉交接表
 @UntilDestroy()
@@ -57,7 +57,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     M_CLASS_ID: new FormControl<string | null>(null),
     S_CLASS_ID: new FormControl<string | null>(null),
     ASSET_ID: new FormControl<string | null>(null),
-    GOODS_NAME: new FormControl<number | null>(null),
+    HEADLINE: new FormControl<string | null>(null),
     HOLD_ORG_ID: new FormControl<string | null>(null),
     HOLD_EMP_ID: new FormControl<string | null>(null),
     USE_ORG_ID: new FormControl<string | null>(null),
@@ -140,8 +140,8 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   /** 財產編號下拉選項 */
   readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
   readonly titleOptions = [
-    { value: 1, label: '交接' },
-    { value: 2, label: '移轉' },
+    { value: '交接', label: '交接' },
+    { value: '移轉', label: '移轉' },
   ];
 
   readonly columnGroup: ColumnGroup[] = [
@@ -230,9 +230,10 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     const rawValue = this.queryForm.getRawValue();
     const payload = removeEmptyValues({
       ...this.buildQueryPayload(rawValue),
+      HEADLINE: rawValue.HEADLINE || undefined,
       PageSize: rawValue.PageSize || 30,
       PageIndex: 1,
-    }) as QueryASS13050Request;
+    }) as DownloadASS13050Request;
 
     const download$ = this.ass13050Service.downloadReportASS13050(payload);
     this.fileExportService.executeFileExport(
@@ -254,7 +255,6 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       M_CLASS_ID: rawValue.M_CLASS_ID || undefined,
       S_CLASS_ID: rawValue.S_CLASS_ID || undefined,
       ASSET_ID: rawValue.ASSET_ID || undefined,
-      GOODS_NAME: rawValue.GOODS_NAME ?? undefined,
       HOLD_ORG_ID: rawValue.HOLD_ORG_ID || undefined,
       HOLD_EMP_ID: rawValue.HOLD_EMP_ID || undefined,
       USE_ORG_ID: rawValue.USE_ORG_ID || undefined,
@@ -285,7 +285,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       this.midClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe((opts) => {
+    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe((opts) => {
       this.midClassOptions.set(opts ?? []);
     });
   }
@@ -298,10 +298,10 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       return;
     }
     this.dropdownApi
-      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, M_CLASS_ID: mClassId })
       .subscribe((opts) => {
-      this.smallClassOptions.set(opts ?? []);
-    });
+        this.smallClassOptions.set(opts ?? []);
+      });
   }
 
   private setupClassCascades(): void {

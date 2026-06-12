@@ -14,6 +14,7 @@ import {
   Aps1002Item,
   Aps1003Query,
   Ass13010PurchaseNumberDropDownItem,
+  BatchTalentChargeQuery,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -25,6 +26,8 @@ import {
   EcrQuery,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
+  FAASSCHKMDropDownItem,
+  FAASSCHKMQuery,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -32,10 +35,12 @@ import {
   FaClassMItem,
   FaClassMQuery,
   FaHosItem,
+  FaSitemAss1000Item,
   FasItemDropdownItem,
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
+  Gls3002AcctKeyItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -68,6 +73,8 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Pos2064MpcsNoDropDownItem,
+  Pos2064MpcsRqstNoDropDownItem,
+  queryOwnPOS1002_DropDownListItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
@@ -113,16 +120,17 @@ export class DropdownApiService {
   private queryAndMapDropdown<T, U = object>(
     endpoint: string,
     noKey: keyof T,
-    nameKey: keyof T,
+    nameKey?: keyof T,
     body: U = {} as U // 給予預設值
   ): Observable<Option[] | null> {
     return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
       map(response => {
         const data = response?.Data;
+        const label = nameKey ? (item: T) => `${item[noKey]} - ${item[nameKey]}` : (item: T) => `${item[noKey]}`;
         return data ? data.map(item => ({
           ...item,
           value: item[noKey] as string | number,
-          label: `${item[noKey]} - ${item[nameKey]}`,
+          label: label(item), // 如果 nameKey 為空字串,不顯示
         })) : null;
       }),
       catchError(err => {
@@ -251,32 +259,89 @@ export class DropdownApiService {
 
   /** 查詢資產大分類(FACLASSM)資料表下拉選單 - 回傳 B_CLASS_ID / B_CLASS_NAME */
   queryFaClassM(body: FaClassMQuery = {}): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClassMItem, FaClassMQuery>(
-      '/queryFACLASSM_DropDownList',
-      'B_CLASS_ID',
-      'B_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASSM_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClassMItem[] | null } | FaClassMItem[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClassMItem[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.B_CLASS_ID as string | number,
+            label: `${item.B_CLASS_ID} - ${item.B_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢資產中分類(FACLASS1)資料表下拉選單 - 回傳 M_CLASS_ID / M_CLASS_NAME */
   queryFaClass1(body: FaClass1Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClass1Item, FaClass1Query>(
-      '/queryFACLASS1_DropDownList',
-      'M_CLASS_ID',
-      'M_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASS1_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClass1Item[] | null } | FaClass1Item[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClass1Item[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.M_CLASS_ID as string | number,
+            label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢資產小分類(FACLASS2)資料表下拉選單 - 回傳 S_CLASS_ID / S_CLASS_NAME */
   queryFaClass2(body: FaClass2Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaClass2Item, FaClass2Query>(
-      '/queryFACLASS2_DropDownList',
-      'S_CLASS_ID',
-      'S_CLASS_NAME',
-      body,
-    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    const endpoint = '/ASS0000/ASS1000/queryFACLASS2_DropDownList';
+    return this.http
+      .post<ApiResponse<{ Data?: FaClass2Item[] | null } | FaClass2Item[] | null>>(
+        `${this.apiUrl}${endpoint}`,
+        body,
+      )
+      .pipe(
+        map(response => {
+          const raw: any = response?.Data;
+          const data: FaClass2Item[] | null = Array.isArray(raw)
+            ? raw
+            : (raw?.Data ?? raw?.QueryData ?? null);
+          if (!data) return null;
+          return data.map(item => ({
+            ...item,
+            value: item.S_CLASS_ID as string | number,
+            label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
+          }));
+        }),
+        catchError(err => {
+          console.error(`API ${endpoint} 失敗:`, err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */
@@ -303,6 +368,46 @@ export class DropdownApiService {
       'GOODS_NAME',
       payload,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * 查詢品項(FASITEM)下拉（ASS0000/ASS1000 路由）— 透過 ASS11040 主查詢 endpoint，
+   * 同步回傳 UNIT 供明細列自動帶入單位。不加 MATERIAL_TYPE 過濾，全部品項皆出現。
+   *
+   * Endpoint response 為 wrapped 結構 `ApiResponse<{ TotalRows, TotalPages, QueryData: T[] }>`，
+   * 與 `queryAndMapDropdown` 預期的扁平 `ApiResponse<T[]>` 不同，因此直接 inline 處理。
+   * Request 帶 PageSize=9999 以一次取齊所有品項。
+   */
+  queryFasItemAss1000Dropdown(): Observable<Option[] | null> {
+    return this.http
+      .post<
+        ApiResponse<{
+          TotalRows?: number;
+          TotalPages?: number;
+          QueryData?: FaSitemAss1000Item[] | null;
+        }>
+      >(`${this.apiUrl}/ASS0000/ASS1000/queryASS11040`, {
+        PageSize: 9999,
+        PageIndex: 1,
+      })
+      .pipe(
+        map(response => {
+          const items = response?.Data?.QueryData ?? null;
+          return items
+            ? items.map(item => ({
+              ...item,
+              // FASITEM_ID 為 int64（對應 SearchASS11040Response.ID），用於 Insert/Update DETAILS
+              value: item.ID,
+              label: `${item.GOODS_ID} - ${item.GOODS_NAME}`,
+            }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryASS11040 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢商品管理編號(ASS11040)下拉選單 */
@@ -430,15 +535,15 @@ export class DropdownApiService {
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */
-  queryPos10015(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS10015_DropDownList').pipe(
+  queryPos10015(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS10015_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
 
   /** 查詢環境變數編號(POS1002TML) */
-  queryPos1002Tml(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList').pipe(
+  queryPos1002Tml(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -460,6 +565,13 @@ export class DropdownApiService {
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢收銀機設定檔(POS1002)自營用 */
+  queryOwnPOS1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<queryOwnPOS1002_DropDownListItem>('/queryOwnPOS_DropDownList', 'ECR_No', 'ECR_Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -526,6 +638,30 @@ export class DropdownApiService {
         return items
           .map(item => {
             const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢FAASSCHKM驗收單號下拉選單 */
+  queryFAASSCHKM_DropDownList(body: FAASSCHKMQuery = {}): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<FAASSCHKMDropDownItem, FAASSCHKMQuery>(
+      '/queryFAASSCHKM_DropDownList',
+      body
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBCHECK_ID?.trim() ?? '';
             if (!id) return null;
             return {
               ...item,
@@ -757,6 +893,13 @@ export class DropdownApiService {
     );
   }
 
+  queryPos2002LocationMap(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos2002LocationItem>('/queryPOS2002_Location_DropDownList', 'location_no').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }),
+
+    );
+  }
+
   /** 查詢收銀機(POS1002) (依照館別、樓層、區域、機台類型查詢) */
   queryEcr(body: EcrQuery): Observable<EcrItem[] | null> {
     return this.queryDropdownWithParams<EcrItem, EcrQuery>('/queryECRDropDownList', body).pipe(
@@ -868,6 +1011,12 @@ export class DropdownApiService {
     );
   }
 
+  batchQueryTltTalentCharge(talentIds: number[]): Observable<any> {
+    return this.queryDropdownWithParams<TalentChargeItem, BatchTalentChargeQuery>('/BatchQueryTLTTALENT_CHARGE', { talent_ids: talentIds }).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   /** 查詢專櫃(TLTTALENT) (依照館別、樓層、區域等查詢) */
   queryTalent(body: TalentQuery): Observable<TalentItem[] | null> {
     return this.queryDropdownWithParams<TalentItem, TalentQuery>('/queryTalentDropDownList', body).pipe(
@@ -942,6 +1091,27 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢支出請款單號（FIN70000 / POS2064MPCS_RqstNoDropDownList，TC+YYYYMMDDXXXX） */
+  queryPOS2064MPCS_RqstNoDropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Pos2064MpcsRqstNoDropDownItem>('/FIN0000/FIN70000/POS2064MPCS_RqstNoDropDownList').pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const pcsRqstNo = String(item.PCS_RqstNo ?? '').trim();
+            if (!pcsRqstNo) return null;
+            return {
+              ...item,
+              value: pcsRqstNo,
+              label: pcsRqstNo,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004) */
   queryAps1001(body: Aps1001Query): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Aps1001Item, Aps1001Query>('/queryAPS1001_DropDownList', 'No', 'Name', body).pipe(
@@ -983,6 +1153,35 @@ export class DropdownApiService {
       'GOODS_NAME',
       { MATERIAL_TYPE: '3' }
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * queryFASITEM_DropDownList — 取得原始 row（含 ID / GOODS_ID / GOODS_NAME / UNIT_NAME 等）。
+   * 後端回傳為巢狀 `Data: { Data: [...], TotalCount, TotalPages }`，此 method 已展平。
+   * 用於 ASS16040 CRU 頁明細「單位」欄位 lookup（FASITEM_ID → UNIT_NAME）。
+   */
+  queryFasItemRawList(body: FaSitemQuery = {}): Observable<FasItemDropdownItem[]> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.http
+      .post<ApiResponse<{ Data?: FasItemDropdownItem[] | null; TotalCount?: number; TotalPages?: number } | FasItemDropdownItem[] | null>>(
+        `${this.apiUrl}/ASS0000/ASS1000/queryFASITEM_DropDownList`,
+        payload,
+      )
+      .pipe(
+        map(res => {
+          const raw: any = res?.Data;
+          if (Array.isArray(raw)) return raw as FasItemDropdownItem[];
+          return (raw?.Data ?? raw?.QueryData ?? []) as FasItemDropdownItem[];
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryFASITEM_DropDownList 失敗:', err);
+          return of([] as FasItemDropdownItem[]);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
@@ -1063,6 +1262,21 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+
+  /** * 查詢對帳 Key 值(GLS3002.ACCT_KEY) 下拉選單
+   * Value: ACCT_KEY, Label: ACCT_KEY - ACCT_KEY
+   */
+  queryGls3002AcctKey(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Gls3002AcctKeyItem>(
+      '/queryGLS3002_DropDownList', // 對應後端 Controller 的路由
+      'ACCT_KEY',
+      'ACCT_KEY'
+    ).pipe(
+      map(options => options?.map(opt => ({ ...opt, label: opt.value })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
   queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(

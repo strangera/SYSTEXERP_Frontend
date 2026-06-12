@@ -4,8 +4,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2f020Service } from '@service/api/tls/tls2f020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -16,14 +14,13 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 // 2.2.15.2 專櫃暫存應付帳款產生作業
 @Component({
   selector: 'app-tls2f020',
   templateUrl: './tls2f020.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule, MultiSelectComponent]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2F020Component extends BasicQueryPageComponent<any> implements OnInit {
   private readonly SAM_TERMNO_MAP: Record<string, number[]> = {
@@ -36,7 +33,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     sam_termno: [1],
     COMM_MONEY_TYPE: ['30'],
     // 分頁欄位
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'VouDate', order: 1 }]],
   });
@@ -48,7 +45,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    { field: 'VouNo', header: '傳票編號', visible: true },
+    // { field: 'VouNo', header: '暫存編號', visible: true },
     { field: 'SrcSheetType', header: '傳票型態代碼', visible: true },
     { field: 'Voucher_Name', header: '傳票型態名稱', visible: true },
     { field: 'PostFlag_Desc', header: '傳票狀態', visible: true },
@@ -58,8 +55,6 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
 
   constructor(
-    private readonly dropdown: DropdownApiService,
-    private readonly dropDownListService: DropDownListService,
     private readonly tlsService: Tls2f020Service,
 
   ) {

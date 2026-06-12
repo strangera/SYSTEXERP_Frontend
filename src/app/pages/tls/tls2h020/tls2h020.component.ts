@@ -6,7 +6,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2h020Service } from '@service/api/tls/tls2h020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
@@ -23,8 +22,6 @@ import { finalize, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.17.1 租金發票套印作業
 @Component({
@@ -43,8 +40,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeComponent,
-    DropdownComponent,
     CheckboxModule,
     TranslateModule,
     MultiSelectComponent
@@ -53,7 +48,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 export class TLS2H020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     // 分頁欄位
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SamYyyymm: [new Date(), Validators.required],
     GuiNoStart: [null],
@@ -83,7 +78,6 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
   constructor(
     public readonly tls2h020Service: Tls2h020Service,
     private readonly dropdown: DropdownApiService,
-    private readonly dropDownListService: DropDownListService,
   ) {
     super();
     this.addButton = [
@@ -95,7 +89,6 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     ];
   }
 
-  // Wrapper for table-report: convert SortBy array into OrderBy string for backend
   queryWithSort(body: any) {
     const params = { ...body };
     try {
@@ -289,7 +282,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
           this.onSubmit(this.queryForm);
           const url = res.Data?.Print_URL || '';
           if (url) {
-            window.open(environment.ApiUrl + url);
+            globalThis.open(environment.ApiUrl + url);
           }
         },
         error: (err: any) => {
@@ -336,8 +329,8 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     try {
       const raw = this.queryForm.getRawValue();
       this.lastQueryBody = {
-        PageSize: raw.pageSize ?? 30,
-        PageIndex: raw.pageIndex ?? 1,
+        pageSize: raw.pageSize ?? 1000,
+        pageIndex: raw.pageIndex ?? 1,
         SortBy: raw.SortBy ?? [],
       };
     } catch { }
@@ -360,18 +353,14 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
       };
 
       const body = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        OrderBy: '',
-        Offset: (Math.max(pageIndex - 1, 0) * pageSize),
+        pageSize: pageSize,
+        pageIndex: pageIndex,
         SortBy: raw.SortBy || [],
         SamYyyymm: toYYYYMM(raw.SamYyyymm),
         TltNo: raw.TltNo,
         GuiNoStart: raw.GuiNoStart,
         GuiNoEnd: raw.GuiNoEnd,
       };
-
-      try { body.OrderBy = this.buildOrderByFromSort(body.SortBy); } catch { body.OrderBy = ''; }
 
       this.tls2h020Service.queryTLS2H020(body)
         .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
@@ -412,10 +401,8 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     };
 
     const payload = {
-      PageSize: formValue.pageSize || 30,
-      PageIndex: formValue.pageIndex || 1,
-      OrderBy: formValue.SortBy?.[0]?.field || '',
-      Offset: (Math.max((formValue.pageIndex || 1) - 1, 0) * (formValue.pageSize || 30)),
+      pageSize: formValue.pageSize || 1000,
+      pageIndex: formValue.pageIndex || 1,
       SortBy: formValue.SortBy || [],
       SamYyyymm: toYYYYMM(formValue.SamYyyymm),
       TltNo: formValue.TltNo,

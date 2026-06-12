@@ -60,7 +60,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<unknown> implemen
       this.messageService.infoBubble('匯出檔產生中，請稍後...');
       this.tls2g010Service.generateExportFile(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         const url = `${environment.ApiUrl}${res.Data.PrintBudgetURL}`;
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       });
     });
   }
@@ -127,7 +127,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<unknown> implemen
       this.messageService.infoBubble('組織範本下載中，請稍後...');
       this.tls2g010Service.downloadOrgTemplate(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       });
     });
   }
@@ -142,7 +142,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<unknown> implemen
       this.messageService.infoBubble('空白範本下載中，請稍後...');
       this.tls2g010Service.downloadEmptyTemplate(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       });
     });
   }

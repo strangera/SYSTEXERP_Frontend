@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import {
-  Component, EventEmitter, Input,
+  ChangeDetectorRef,
+  Component, EventEmitter, inject, Input,
   OnChanges,
   OnDestroy, OnInit,
   Output,
@@ -9,7 +11,8 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer } from '@angular/platform-browser';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { saveAs } from 'file-saver';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { BlockUIModule } from 'primeng/blockui';
@@ -34,18 +37,22 @@ import {
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
+import { AuthService } from 'src/app/service/system/auth.service';
+import { SystemDataService } from 'src/app/service/system/system-data.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
-import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
+import { TableService } from '../../exports/report.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { QueryStateService } from '../../service/query-state.service';
+import { REPORT_TITLES2 } from './report-titles2';
 import { TableExpansion2Component } from './table-expansion2/table-expansion2.component';
-import { TableExport2Component } from './table-export2/table-export2.component';
+import { TableExport2, TableExport2Component } from './table-export2/table-export2.component';
 import { Table2UtilityService } from './table2-utility.service';
 import {
   AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
   RowEditSaveEvent, toggleButtons, validateRowData,
 } from './table2.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-table2',
   templateUrl: './table2.component.html',
@@ -65,7 +72,6 @@ import {
   ],
 })
 export class Table2Component
-  extends BasicPrintData2Component
   implements OnInit, OnChanges, OnDestroy {
   trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
 
@@ -74,20 +80,17 @@ export class Table2Component
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   private ngUnsubscribe = new Subject<void>();
-  public funInfo: FunsrightInfo | undefined;
 
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly currentPageService: CurrentPageService,
     private readonly table2UtilityService: Table2UtilityService,
-    private readonly sanitizer: DomSanitizer,
-    private readonly messageService: NotificationService,
-  ) { super(); }
+  ) { }
 
   /* ======================= Inputs/Outputs ======================= */
   // 基本
   @Input() dataKey = 'ID';
-  @Input() tableKey?: string;
+  @Input() tableKey = '';
   @Input() apiUrl?: string;
   @Input() title?: string;
 
@@ -246,6 +249,7 @@ export class Table2Component
   private _suppressNextLazy = false;  // 程式性改 first/rows 的 echo
   private lastEmitKey: string | null = null; // 去重鍵：pageIndex|pageSize|sortJson
   private lastSortSig = '';                  // 排序簽章（偵測排序變更→回第1頁）
+  public funInfo: FunsrightInfo | undefined;
 
   /* ======================= 生命週期 ======================= */
   ngOnInit(): void {
@@ -558,7 +562,7 @@ export class Table2Component
     this.selectedItems = [];
     this.selectionChange.emit(this.selectedItems);
   }
-
+  private readonly messageService = inject(NotificationService);
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
     if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return;
 
@@ -617,7 +621,13 @@ export class Table2Component
       ? col.options(rowData) || undefined
       : col.options || undefined;
   }
-
+  hasPermission(action: string): boolean {
+    return (
+      this.funInfo?.PrivilegeBehavior?.some(
+        (behavior) => behavior.function_code === action,
+      ) || false
+    );
+  }
   onFieldChange(rowData: any, field: string, value: any) {
     this.fieldChange.emit({ rowData, field, value } as FieldChangeEvent);
   }
@@ -679,14 +689,6 @@ export class Table2Component
       this.dataChange.emit(this.data);
       this.selectedItems = [];
     }
-  }
-
-  hasPermission(action: string): boolean {
-    return (
-      this.funInfo?.PrivilegeBehavior?.some(
-        (behavior) => behavior.function_code === action,
-      ) || false
-    );
   }
 
   /* ======================= 欄位群組 / 小計 / 總計 ======================= */
@@ -860,7 +862,6 @@ export class Table2Component
     this.exportStatus = type;
     this.exportDialog = true;
   }
-
   /**
    * 子元件（TableExport2Component）呼叫的實際匯出邏輯：
    * - baseRequest 只需要帶 query_condition / report_title / file_name / config ...
@@ -1008,5 +1009,167 @@ export class Table2Component
   }
   // 在 Table2Component 裡新增或修改這個方法
 
+  IsPrint = true;
+  exportDialog = false;
+  exportStatus: 'PDF' | 'Excel' = 'PDF';
 
+  cdr = inject(ChangeDetectorRef);
+  queryState = inject(QueryStateService);
+  currentPage = inject(CurrentPageService);
+  tableService = inject(TableService);
+  authService = inject(AuthService);
+  systemDataService = inject(SystemDataService);
+
+  /**
+   * PDF 匯出
+   * columns 由 Table2 傳進來，會帶有 exportFormat（若有設定）
+   * 這裡只在 exportFormat 是「字串」時才送給後端
+   */
+  exportPDFDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
+    const userInfo = this.authService.currentUserValue;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+
+    const pdfColumns = columns.map(col => {
+      const c: any = {
+        field: col.field,
+        header: col.header,
+        visible: col.visible !== false
+      };
+
+      // ⭐ 只有在 exportFormat 是非空字串時才加到 body
+      if (typeof (col as any).exportFormat === 'string' && (col as any).exportFormat.trim() !== '') {
+        c.exportFormat = (col as any).exportFormat.trim();
+      }
+
+      return c;
+    });
+
+    const body = {
+      query_condition: {
+        ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
+        Conditions: queryState?.value || []
+      },
+      report_title: REPORT_TITLES2[`query${ProgNo}`] || funInfo?.prog_name,
+      columns: pdfColumns,
+      config: {
+        ...event,
+        footer_DataType: ProgNo
+      },
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
+    };
+
+    this.tableService.exportPDF(body).pipe(untilDestroyed(this)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${body.file_name}.pdf`;
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.pdf)?$|filename="(.+?)(?:\.pdf)?"$/;
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/pdf' });
+          saveAs(blob, filename);
+        } else {
+          console.error('Response body is empty!');
+        }
+        this.exportDialog = false;
+      },
+      error: (err: any) => {
+        console.error('Error downloading PDF:', err);
+        this.exportDialog = false;
+      }
+    });
+  }
+
+  /**
+   * Excel 匯出
+   * 同樣只在 exportFormat 是「字串」時才送給後端
+   */
+  exportExcelDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
+    const userInfo = this.authService.currentUserValue;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+
+    const excelColumns = columns.map(col => {
+      const c: any = {
+        field: col.field,
+        header: col.header,
+        visible: col.visible !== false
+      };
+
+      // ⭐ 只有在 exportFormat 是非空字串時才加到 body
+      if (typeof (col as any).exportFormat === 'string' && (col as any).exportFormat.trim() !== '') {
+        c.exportFormat = (col as any).exportFormat.trim();
+      }
+
+      return c;
+    });
+
+    const body = {
+      query_condition: {
+        ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
+        Conditions: queryState?.value || []
+      },
+      report_title: REPORT_TITLES2[`query${ProgNo}`] || funInfo?.prog_name,
+      columns: excelColumns,
+      config: event,
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
+    };
+
+    this.tableService.exportExcel(body).pipe(untilDestroyed(this)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${body.file_name}.xlsx`;
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob(
+            [response.body],
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+          );
+          saveAs(blob, filename);
+        } else {
+          console.error('Response body is empty!');
+        }
+        this.exportDialog = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('Error downloading Excel:', err);
+        this.exportDialog = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleVisibility(): void {
+    this.IsPrint = !this.IsPrint;
+  }
 }

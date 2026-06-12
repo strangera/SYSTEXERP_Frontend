@@ -30,22 +30,43 @@
   </p-accordion>
 </div>
 
-<div class="card">
-  <!-- 右上角工具列：匯出 PDF & Excel -->
-  <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="廠商應付對應科目明細表.PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
-      [disabled]="loading || (data.length || 0) === 0">
-    </app-button>
+<app-table
+  tableKey="FIN29070"
+  dataKey="VoucherNo"
+  [data]="data"
+  [columns]="columns"
+  [showCheckBox]="false"
+  [showDelete]="false"
+  [selectedItems]="selectedItems"
+  (selectionChange)="selectedItems = $event"
+  [multiSortMeta]="[{ field: 'VendorNo', order: 1 }]"
+  [totalRecords]="totalRecords"
+  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  [lazy]="true"
+  [loading]="loading"
+  [showManage]="false"
+  [showReportMode]="false"
+>
 
-    <app-button label="廠商應付對應科目明細表.Excel" icon="pi pi-file-excel" (click)="onExportExcel(queryForm)"
-      [loading]="exportExcelbtnLoading" [disabled]="loading || (data.length || 0) === 0">
-    </app-button>
-  </div>
+  <header>
+    <div class="flex justify-content-end gap-2">
+      <app-button
+        label="廠商應付對應科目明細表.PDF"
+        icon="pi pi-file-pdf"
+        (click)="onExportPDF(queryForm)"
+        [loading]="exportPDFbtnLoading"
+        [disabled]="loading || (data.length || 0) === 0">
+      </app-button>
 
-  <app-table tableKey="FIN29070" dataKey="VoucherNo" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'VendorNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showReportMode]="false">
-  </app-table>
-</div>
+      <app-button
+        label="廠商應付對應科目明細表.xlsx"
+        icon="pi pi-file-excel"
+        (click)="onExportExcel(queryForm)"
+        [loading]="exportExcelbtnLoading"
+        [disabled]="loading || (data.length || 0) === 0">
+      </app-button>
+    </div>
+  </header>
+
+</app-table>
+

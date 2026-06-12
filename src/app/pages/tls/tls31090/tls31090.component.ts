@@ -1,32 +1,28 @@
 import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
-
+@UntilDestroy()
 @Component({
   selector: 'app-tls31090',
   templateUrl: './tls31090.component.html',
@@ -39,18 +35,14 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     RadiobuttonComponent,
     CommonModule,
     CalendarComponent,
-    CalendarRangeQuickComponent,
-    DropdownComponent,
-    InputTextComponent,
     InputNumberRangeComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    CheckboxModule,
   ]
 })
 
@@ -58,6 +50,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -74,6 +67,8 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     Buildings: [[]], //館別代號，多選以逗號分隔 (TLTTALENT_LOCATION.tlt_building)
     IncludeTax: [true], //是否含稅：1=含稅(預設)，0=未稅
     BizInvFlag: ['A'], //是否開立業主發票：'A'=全部(預設)、'Y'=是、'N'=否
+    PreSale: [false],
+    ConsumerNum: [false],
 
     // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
@@ -85,15 +80,25 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   totalRecords = 0;
   data: TLS31090Response[] = [];
+  footerData: TLS31090Response | null = null;
   historyRequestBody: TLS31090Request | null = null; //歷史查詢條件
 
   btnPDFLoading = false;
   btnExcelLoading = false;
 
-  columns: ReportColumn[] = [
-    { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
-    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
+  // 時段column
+  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -110,11 +115,40 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
-    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
   ];
+
+  //時段控制（stored property，避免每次 CD 產生新陣列）
+  columns: ReportColumn[] = this.buildColumns('A', null, null);
+
+  private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
+    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
+      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
+        return true;
+      }
+      const hourNum = parseInt(col.field.substring(1), 10);
+      if (TimeFromHH <= TimeToHH) {
+        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
+      } else {
+        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
+      }
+    });
+
+    return [
+      { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
+      { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
+
+      ...filteredHours, // 注入動態過濾後的小時區間
+
+      { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+      { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    ];
+  }
+
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
     { field: 'sum', header: '營業佔比' },
@@ -165,6 +199,15 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
     // 日期表單控制
     this.onTimeModeChange('A');
+
+    // 監聽時段相關欄位，更新 columns（避免用 getter 每次 CD 都產生新陣列）
+    combineLatest([
+      this.queryForm.controls.TimeMode.valueChanges,
+      this.queryForm.controls.TimeFromHH.valueChanges,
+      this.queryForm.controls.TimeToHH.valueChanges,
+    ]).pipe(debounceTime(50), untilDestroyed(this)).subscribe(([mode, from, to]) => {
+      this.columns = this.buildColumns(mode, from, to);
+    });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
@@ -286,6 +329,13 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+
+    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
+    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -314,8 +364,41 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
       console.log('送出request請求', formValue);
       this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
-        this.totalRecords = res.Data.length;      // 長度計算筆數
+        this.data = res.Data.Data ?? [];               // 查詢資料
+        this.footerData = {
+          BusTypeName: '營業實績',
+          TimeType: '',
+          H00: res.Data.TotalData?.TotalH00 ?? 0,
+          H01: res.Data.TotalData?.TotalH01 ?? 0,
+          H02: res.Data.TotalData?.TotalH02 ?? 0,
+          H03: res.Data.TotalData?.TotalH03 ?? 0,
+          H04: res.Data.TotalData?.TotalH04 ?? 0,
+          H05: res.Data.TotalData?.TotalH05 ?? 0,
+          H06: res.Data.TotalData?.TotalH06 ?? 0,
+          H07: res.Data.TotalData?.TotalH07 ?? 0,
+          H08: res.Data.TotalData?.TotalH08 ?? 0,
+          H09: res.Data.TotalData?.TotalH09 ?? 0,
+          H10: res.Data.TotalData?.TotalH10 ?? 0,
+          H11: res.Data.TotalData?.TotalH11 ?? 0,
+          H12: res.Data.TotalData?.TotalH12 ?? 0,
+          H13: res.Data.TotalData?.TotalH13 ?? 0,
+          H14: res.Data.TotalData?.TotalH14 ?? 0,
+          H15: res.Data.TotalData?.TotalH15 ?? 0,
+          H16: res.Data.TotalData?.TotalH16 ?? 0,
+          H17: res.Data.TotalData?.TotalH17 ?? 0,
+          H18: res.Data.TotalData?.TotalH18 ?? 0,
+          H19: res.Data.TotalData?.TotalH19 ?? 0,
+          H20: res.Data.TotalData?.TotalH20 ?? 0,
+          H21: res.Data.TotalData?.TotalH21 ?? 0,
+          H22: res.Data.TotalData?.TotalH22 ?? 0,
+          H23: res.Data.TotalData?.TotalH23 ?? 0,
+
+          Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
+          PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
+          Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
+          AVN_PreOrderAmt: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
+        };
+        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
@@ -349,24 +432,24 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       console.log('匯出Excel');
       this.btnExcelLoading = true;
       this.tls31090Service.exportTLS31090(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之大分類之營業報表.xlsx';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
       this.btnPDFLoading = true;
       this.tls31090Service.exportTLS31090PDF(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之大分類之營業報表.pdf';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnPDFLoading = false;
       });
     }
@@ -417,4 +500,18 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     // 再傳給明細方法
     this.onDetail(event, formValue);
   }
+
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
+  }
+
 }

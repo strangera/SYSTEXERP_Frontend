@@ -66,10 +66,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
     this.initializePage('ASS11030', this.dataForm);
     this.logger.debug(`ASS11030 CRU init:`, [this.user, this.rowdata]);
 
-    // 1. 先設定 valueChanges 監聽（避免 patchValue 觸發時清除資料）
-    this.setupBigClassFilterSync();
-
-    // 2. 再 patchValue（這樣 valueChanges 會被觸發，但有保護條件）
+    // 先 patchValue（此時尚未綁 valueChanges，不會被連動 listener 清掉 M_CLASS_ID）
     if (this.rowdata) {
       this.dataForm.patchValue({
         CLASS_ID: this.rowdata.S_CLASS_ID ?? '',
@@ -80,7 +77,10 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       });
     }
 
-    // 3. 最後載入下拉選項
+    // 再綁定大分類連動監聽（只處理使用者後續手動切換大分類的情境）
+    this.setupBigClassFilterSync();
+
+    // 最後載入下拉選項
     this.loadBigClassOptions();
     this.loadInitialMidClassOptions();
   }
@@ -112,7 +112,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
         this.dataForm.controls.M_CLASS_ID.patchValue('', { emitEvent: false });
         this.midClassOptions.set([]);
         if (!bClassId) return;
-        this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe(options => {
+        this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
           this.midClassOptions.set(
             (options ?? []).map(item => ({
               value: String(item.value),
@@ -129,7 +129,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       this.midClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe(options => {
+    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
       this.midClassOptions.set(
         (options ?? []).map(item => ({
           value: String(item.value),

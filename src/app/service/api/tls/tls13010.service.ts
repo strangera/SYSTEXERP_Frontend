@@ -227,12 +227,19 @@ export class TLS13010Service {
             warnings: response.Data?.Warnings || []
           };
         } else {
-          throw new Error(response.Message || '提交失敗');
+          // 業務邏輯失敗（Status !== '0000'）：回傳 success: false，不拋出例外
+          // 避免觸發 catchError 導致重複顯示錯誤通知
+          return {
+            success: false,
+            message: response.Message || response.Data?.Message || '提交失敗'
+          };
         }
       }),
       catchError((error) => {
+        // 此處只會接到 HTTP 層錯誤（interceptor 已顯示通知並 rethrow）
+        // 不再重複呼叫 handleError，直接 rethrow
         console.error('❌ TLS13010Service: 提交契約資料失敗:', error);
-        return this.errorHandler.handleError(error);
+        return throwError(() => error);
       })
     );
   }

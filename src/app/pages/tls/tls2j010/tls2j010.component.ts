@@ -14,7 +14,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-tls2j010',
   templateUrl: './tls2j010.component.html',
-  styleUrl: './tls2j010.component.scss',
   standalone: true,
   imports: [
     InputTextComponent,
@@ -31,7 +30,7 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
 
   queryForm = this.formBuilder.nonNullable.group({
     CHG_ItemName: ['', [Validators.maxLength(10)]],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'CHG_ItemName', order: 1 }]],
   });
@@ -64,33 +63,25 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-
       const payload = {
-        pageSize: formValue.pageSize || 30,
+        pageSize: formValue.pageSize || 1000,
         pageIndex: formValue.pageIndex || 1,
-        OrderBy: '',
-        Offset: 0,
         SortBy: formValue.SortBy || [{ field: 'CHG_ItemName', order: 1 }],
         CHG_ItemName: formValue.CHG_ItemName?.trim() || '',
       };
-
-      this.lastQueryBody = payload;
-      this.loading = true;
       this.tls2j010Service.queryTLS2J010(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (res) => {
-            if (res?.Status === '0000') {
-              this.data = res.Data || [];
-              this.totalRecords = res.TotalCount ?? this.data.length;
-              // 保存查詢狀態
-              this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            } else {
-              this.data = [];
-              this.totalRecords = 0;
-            }
-          },
-
+        .subscribe((res) => {
+          if (res?.Status === '0000') {
+            this.lastQueryBody = payload;
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount ?? this.data.length;
+            // 保存查詢狀態
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+          }
         });
     });
   }
@@ -125,19 +116,14 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
         this.loading = true;
         this.tls2j010Service.deleteTLS2J010(payload)
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (res) => {
-              if (res?.Status === '0000') {
-                this.selectedItems = []; // 清空選中項目
-                this.messageService.successBubble('刪除成功');
-                this.onSubmit(this.queryForm);
-              }
-            },
+          .subscribe((res) => {
+            if (res?.Status === '0000') {
+              this.selectedItems = []; // 清空選中項目
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            }
           });
       },
-      reject: () => {
-        console.log('用戶取消刪除');
-      }
     });
   }
 }

@@ -625,12 +625,12 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       type: res.body?.type || 'application/octet-stream',
     });
     const fileName = this.getFilenameFromResponse(res, defaultName);
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   // 匯出按鈕 loading 狀態

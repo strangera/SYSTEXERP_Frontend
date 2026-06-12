@@ -101,7 +101,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     ECR_No: [{ value: '', disabled: true }],             //disabled 收銀機號 pos1002.ecr_no
     TLT_No: [{ value: '', disabled: true }],             //disabled 專櫃編號
     TXN_No: [{ value: '系統自動產生', disabled: true }],  //disabled 交易序號
-    TXN_Remark: ['', [Validators.maxLength(20)]],                           //備註
+    TXN_Remark: ['', [Validators.maxLength(60)]],                           //備註
     USR_No: ['8888888', [Validators.required, Validators.maxLength(16)]], //收銀員編號POS2001.USR_No
     TXN_PreOrder: ['N', [Validators.required]], //預售 是/否
     TXN_VIP: ['N', [Validators.required]], //零稅 是/否,YN。若為y，TXN_TaxType變成2
@@ -125,6 +125,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_PrintTimes: [0], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     IsHaveGUILoveCode: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若IsHaveGUILoveCode為Y，則必須輸入此欄位
+    CRT_USR_Name: [{ value: '', disabled: true }], // 補登者
+    CRT_Date: [{ value: null as Date | null, disabled: true }], // 補登日期
   });
   ECR_NoOptions = this.dropDown.queryPos1002();     //dropdown 下拉選單 收銀機號
   USR_NoOptions = this.dropDown.queryPos2001();     //dropdown 下拉選單 收銀員

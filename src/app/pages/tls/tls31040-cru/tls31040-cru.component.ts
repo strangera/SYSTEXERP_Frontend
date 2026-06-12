@@ -7,12 +7,7 @@ import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.servic
 import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040PrintDetailRequest, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -32,15 +27,10 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    RadiobuttonComponent,
-    CalendarRangeQuickComponent,
     ButtonComponent,
     TableModule,
     TableReportComponent,
-    RadiobuttonYNComponent,
     TranslateModule,
-    TableComponent,
-    MultiSelectComponent,
     ButtonModule
   ],
   templateUrl: './tls31040-cru.component.html'
@@ -77,25 +67,25 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
   historyRequestBody: TLS31040DetailRequest | null = null; //歷史查詢條件
 
   columns: ReportColumn[] = [
-    { field: 'building_desc', header: '館別', visible: true, align: 'left' },
-    { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
-    { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
-    { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'MonthlySalesTotal', header: '月營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+    { field: 'building_desc', header: '館別', align: 'left' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
+    { field: 'location_no', header: '位置編號', align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
+    { field: 'budget', header: '營業目標', groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', groupField: 'space', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '月營業實績', groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -177,7 +167,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
+          globalThis.open(downloadUrl, '_blank');
         }
       });
   }

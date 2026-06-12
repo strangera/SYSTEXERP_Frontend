@@ -30,11 +30,15 @@ export interface Pos2002LocationItem {
   area_desc?: string | null;
 }
 
-/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME / UNIT_NAME / ID） */
 export interface FasItemDropdownItem {
   RowNo?: string;
+  RowNum?: number;
+  ID?: number | null;
   GOODS_ID?: string | null;
   GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  UNIT_NAME?: string | null;
 }
 
 /**
@@ -64,6 +68,28 @@ export interface Pos2064MpcsNoDropDownItem {
   PCS_UsrNo?: string | null;
 }
 
+/** FIN70000 / POS2064MPCS_RqstNoDropDownList 回傳列 */
+export interface Pos2064MpcsRqstNoDropDownItem {
+  PCS_RqstNo?: string | null;
+  PCS_RqstDate?: string | null;
+  Keep_UsrNo?: string | null;
+}
+
+/**
+ * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
+ */
+export interface FAASSCHKMQuery {
+  Keyword?: string;
+}
+
+/**
+ * 查詢驗收單號下拉選單 queryFAASSCHKM_DropDownList
+ * 後端回傳欄位：SUBCHECK_ID
+ */
+export interface FAASSCHKMDropDownItem {
+  SUBCHECK_ID?: string | null;
+}
+
 /**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
@@ -88,7 +114,8 @@ export interface FaClassMItem {
  * 查詢 FACLASS1_DropDownList 時的請求 body（資材大分類代碼 = FACLASSM.CLASS_ID）
  */
 export interface FaClass1Query {
-  CLASS_ID?: string | null;
+  /** 大分類代碼（對應 swagger B_CLASS_ID） */
+  B_CLASS_ID?: string | null;
 }
 
 /**
@@ -109,8 +136,8 @@ export interface FaClass1Item {
 export interface FaClass2Query {
   /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  /** 資材中分類代碼 */
-  CLASS_ID?: string | null;
+  /** 中分類代碼（對應 swagger M_CLASS_ID） */
+  M_CLASS_ID?: string | null;
 }
 
 /**
@@ -154,6 +181,20 @@ export interface FaSitemItem {
   RowNo?: string;
   GOODS_ID: string;
   GOODS_NAME: string;
+}
+
+/**
+ * /ASS0000/ASS1000/queryASS11040 回傳項目（SearchASS11040Response 子集）。
+ * 與舊 `FaSitemItem` 並存：本介面含 UNIT 欄位，供 CRU 明細自動帶入單位的頁面使用。
+ */
+export interface FaSitemAss1000Item {
+  RowNum?: number;
+  ID?: number;
+  GOODS_ID: string;
+  GOODS_NAME: string;
+  UNIT?: string | null;
+  MATERIAL_TYPE?: string | null;
+  STATUS?: string | null;
 }
 
 /**
@@ -414,6 +455,10 @@ export interface TalentChargeQuery {
   talent_id: number;
 }
 
+export interface BatchTalentChargeQuery {
+  talent_ids: number[];
+}
+
 /**
  * 查詢 TLTTALENT_tlt_openflag_DropDownList 時的請求 body
  */
@@ -454,6 +499,7 @@ export interface TLTTALENTItem {
  * 查詢 TLTTALENT_CHARGE_DropDownList 回傳的項目型別
  */
 export interface TalentChargeItem {
+  talent_id?: number;
   tlt_id: string;
   tlt_id_desc: string;
   cag_taxtype: string;
@@ -642,6 +688,13 @@ export interface TALPORDERMQueryForShare {
 }
 
 /**
+ * 查詢 GLS3002 對帳 Key 值下拉式選單回傳項目
+ */
+export interface Gls3002AcctKeyItem {
+  ACCT_KEY: string;
+}
+
+/**
  * 查詢 queryLOGOaccorHOS 時的請求 body (品牌對應倉別)
  */
 export interface LogoAccorHosQuery {
@@ -780,6 +833,14 @@ export interface queryPOS1002_DropDownListItem {
   No: string;
   Name: string;
   ECR_TLT_No?: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別(自營)
+ */
+export interface queryOwnPOS1002_DropDownListItem {
+  ECR_No: string;
+  ECR_Name: string;
 }
 
 /**

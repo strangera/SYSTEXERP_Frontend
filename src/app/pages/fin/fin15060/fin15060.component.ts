@@ -13,8 +13,6 @@ import { FIN15060Data, FIN15060PrintRequest, FIN15060QueryRequest, FIN15060Servi
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
@@ -155,6 +153,6 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
 
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank');
+    globalThis.open(downloadUrl, '_blank');
   }
 }

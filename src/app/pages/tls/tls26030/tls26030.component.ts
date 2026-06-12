@@ -61,7 +61,8 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     tlt_floor: [[]],                                  // 樓層
     ECR_No: [[]],
     TLT_No: [[]],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }]),
+    pageSize: [1000],
   });
 
   totalRecords = 0;
@@ -74,10 +75,10 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true, align: 'right' },
     { field: 'Batch_No', header: '認列批號', visible: true },
     { field: 'Preorder_status', header: '預售狀態', visible: true },
     { field: 'CANCEL_Date', header: '作廢日期', visible: true, format: formatDate },

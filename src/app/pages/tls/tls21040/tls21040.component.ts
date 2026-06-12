@@ -45,7 +45,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     BNK_No: ['', [Validators.maxLength(3)]],
     CRD_TypeList: [null],
     CRD_KindList: [null],
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
     SortBy: [[{ field: 'id', order: 1 }]],
   });
@@ -140,7 +140,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
           res.Message
         );
         if (res.Data.ErrorFilePath) {
-          window.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
+          globalThis.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
         }
       }
     })
@@ -155,6 +155,6 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
 
   /** 自動下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }

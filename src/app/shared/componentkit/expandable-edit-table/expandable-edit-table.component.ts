@@ -1,27 +1,26 @@
-import { validateMaxLength } from '@shared/componentkit/table-edit/validate-field.model';
-import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
+import { DecimalPipe, NgClass, NgFor, NgIf, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
+import { ChangeDetectorRef, Component, ContentChild, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
-import { NgIf, NgClass, NgFor, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault, DecimalPipe } from '@angular/common';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
-import { TooltipModule } from 'primeng/tooltip';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { Ripple } from 'primeng/ripple';
+import { Table, TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 // import { DisplayFieldConfig } from '../selector-panel/selector-panel.component';
 // import { Column } from '../table/table.model';
 import { Observable } from 'rxjs';
-import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
-import { TableValidationService } from './table-validation.service';
-import { TableWidthCalculatorService } from './services/table-width-calculator.service';
 import { DateUtils } from 'src/app/core/utils/date-utils';
+import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
+import { TableWidthCalculatorService } from './services/table-width-calculator.service';
+import { TableValidationService } from './table-validation.service';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -124,6 +123,7 @@ export interface ColumnDef {
   options?: any[];
 
   buttonLabel?: string;    // 按鈕文字
+  buttonLabelFunction?: (rowData: any) => string;  // 動態按鈕文字（優先於 buttonLabel）
   buttonIcon?: string;     // 按鈕圖示
   buttonClass?: string;    // 按鈕樣式
   buttonTooltip?: string;  // 提示文字
@@ -148,7 +148,7 @@ export interface ColumnDef {
     displayFieldsConfig: DisplayFieldConfig[]; // 顯示欄位配置
     panelTableColumns: SelectorTableColumn[];   // 面板表格欄位
     searchFormFields: any[];  // 搜尋表單欄位配置
-    searchMethod?: (searchParams: any) => Observable<any[]>;  // 搜尋方法
+    searchMethod?: (searchParams: any, rowData?: any) => Observable<any[]>;  // 搜尋方法
     panelDataSource?: any[];  // 面板資料來源
     totalDataCount?: number;  // 總筆數
   };
@@ -426,7 +426,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const rect = container.getBoundingClientRect();
       return Math.max(rect.width - 60, 800);
     }
-    return Math.max(window.innerWidth - 100, 800);
+    return Math.max(globalThis.innerWidth - 100, 800);
   }
 
   private calculateFixedColumnsWidth(): number {
@@ -1884,7 +1884,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const key = `${rowData[this.dataKey]}_${column.field}`;
 
     if (column.selectorConfig?.searchMethod) {
-      column.selectorConfig.searchMethod(searchParams).subscribe(suggestions => {
+      column.selectorConfig.searchMethod(searchParams, rowData).subscribe(suggestions => {
         this.selectorSuggestions.set(key, suggestions);
       });
     }
@@ -1899,7 +1899,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (column.selectorConfig?.searchMethod) {
       console.log('🚀 準備執行搜尋:', formValue);
 
-      column.selectorConfig.searchMethod(formValue).subscribe({
+      column.selectorConfig.searchMethod(formValue, rowData).subscribe({
         next: (results) => {
           console.log('搜尋成功，結果數量:', results.length);
 

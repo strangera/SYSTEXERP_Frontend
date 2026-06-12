@@ -161,7 +161,7 @@ export function getDeductionAColumns(contractDates?: { bdate?: string; edate?: s
 
 /**
  * B 類型 (每月扣款) 欄位定義
- * 與舊版 next1 完全一致
+ * 欄位較多，設定明確寬度避免格子過小
  */
 export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: string }): ColumnDef[] {
   return [
@@ -173,7 +173,7 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       editable: true,
       dateFormat: 'year-month',
       required: true,
-      autoWidth: true,
+      style: 'min-width: 110px;',
       defaultValueFunction: () => contractDates?.bdate ? new Date(contractDates.bdate) : null
     },
     {
@@ -183,6 +183,7 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       editable: true,
       dateFormat: 'year-month',
       required: true,
+      style: 'min-width: 110px;',
       defaultValueFunction: () => contractDates?.edate ? new Date(contractDates.edate) : null
     },
     {
@@ -192,14 +193,15 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       required: true,
-      autoWidth: true
+      style: 'min-width: 120px;'
     },
     {
       field: 'tpy_unitamt',
       header: '單價',
       type: 'number',
       editable: true,
-      required: true
+      required: true,
+      style: 'min-width: 80px;'
     },
     {
       field: 'tpy_qty',
@@ -207,13 +209,15 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       type: 'number',
       editable: true,
       required: true,
-      allowDecimal: true
+      allowDecimal: true,
+      style: 'min-width: 70px;'
     },
     {
       field: 'tpy_amount',
       header: '扣款金額(未稅)',
       type: 'number',
-      editable: false
+      editable: false,
+      style: 'min-width: 110px;'
     },
     {
       field: 'gui_flag',
@@ -224,7 +228,8 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
       ],
-      required: true
+      required: true,
+      style: 'min-width: 100px;'
     },
     {
       field: 'day_account',
@@ -235,14 +240,16 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
         { label: '是', value: 'Y' },
         { label: '否', value: 'N' }
       ],
-      required: true
+      required: true,
+      style: 'min-width: 100px;'
     },
     {
       field: 'interval',
       header: '扣款週期數(月)',
       type: 'number',
       editable: true,
-      required: true
+      required: true,
+      style: 'min-width: 100px;'
     }
   ];
 }

@@ -3,9 +3,10 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
+      [header]="'query-conditions' | translate"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
@@ -13,94 +14,95 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        (ngSubmit)="onSubmit()"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="warehouse"
-              [options]="warehouse"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouse"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="退回狀態"
-              controlName="returnStatus"
-              [options]="returnStatus"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.returnStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="退回單號"
-              controlName="returnNote"
-              [control]="queryForm.controls.returnNote"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="退回人代號"
-              controlName="returnerCode"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.returnerCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門代號"
-              controlName="departmentCode"
-              [options]="departmentCode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.departmentCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="退回日期"
-              [startControl]="queryForm.controls.SReturnDate"
-              [endControl]="queryForm.controls.EReturnDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="倉別"
+            controlName="whId"
+            [options]="warehouseOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().whId"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="退回狀態"
+            controlName="returnStatus"
+            [options]="returnStatusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().returnStatus"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="退回單號"
+            controlName="returnNo"
+            [control]="qf().returnNo"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="退回人代號"
+            controlName="returnEmpId"
+            [options]="returnEmpOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().returnEmpId"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="部門代號"
+            controlName="orgId"
+            [options]="orgOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().orgId"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateRange"
+            label="退回日期"
+            [startControl]="qf().returnDateFrom"
+            [endControl]="qf().returnDateTo"
+            [submitted]="submitted"
+          ></app-calendar-range>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="clear" [form]="queryForm"></app-button>
-        <app-button
-          btnType="query"
-          [loading]="loading"
-          (click)="onSubmit(queryForm)"
-        ></app-button>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
+    <app-table-report
+      tableKey="ASS16060"
+      [data]="tableData()"
+      [dataKey]="'MTRETURN_ID'"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+      [totalRecords]="totalRecords()"
+      [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
+      [showManage]="true"
+      [showEdit]="false"
+      [showDetail]="true"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      [lazy]="true"
+      (detail)="onTableDetail($event)"
+    >
+    </app-table-report>
   </div>
 </div>

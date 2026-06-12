@@ -85,8 +85,10 @@
 @if (displayMode === 1) {
   <div class="card">
     <app-table-report
+      [exportContext]="{
+        reportTitle: 'POS電子發票配號作業 - 明細表',
+      }"
       tableKey="fin11200"
-      reportTitle="POS電子發票配號作業 - 明細表"
       dataKey="ID"
       [data]="data"
       [columns]="columns"
@@ -129,8 +131,11 @@
 @if (displayMode === 2) {
   <div class="card">
     <app-table-report
-      reportTitle="POS電子發票配號作業 - 機號彙總(依機台)"
-      apiUrl="queryFIN11200_ECRSummary"
+      [exportContext]="{
+        reportTitle: 'POS電子發票配號作業 - 機號彙總(依機台)',
+        apiUrl: 'queryFIN11200_ECRSummary',
+        conditions: summaryExportConditions,
+      }"
       [data]="summaryData"
       [columns]="ecrSummaryColumns"
       [showEdit]="false"
@@ -141,7 +146,7 @@
       [loading]="loading"
       [lazy]="false"
       [totalRecords]="summaryData.length"
-      [Conditions]="summaryExportConditions"
+      [footerData]="summaryFooter"
     ></app-table-report>
   </div>
 }
@@ -150,8 +155,11 @@
 @if (displayMode === 3) {
   <div class="card">
     <app-table-report
-      reportTitle="POS電子發票配號作業 - 機號彙總(依機台+連續號)"
-      apiUrl="queryFIN11200_ECRTrackSummary"
+      [exportContext]="{
+        reportTitle: 'POS電子發票配號作業 - 機號彙總(依機台+連續號)',
+        apiUrl: 'queryFIN11200_ECRTrackSummary',
+        conditions: summaryExportConditions,
+      }"
       [data]="summaryData"
       [columns]="ecrTrackSummaryColumns"
       [showEdit]="false"
@@ -159,10 +167,10 @@
       [showDelete]="false"
       [showCheckBox]="false"
       [showManage]="false"
-      [Conditions]="summaryExportConditions"
       [loading]="loading"
       [lazy]="false"
       [totalRecords]="summaryData.length"
+      [footerData]="summaryFooter"
     ></app-table-report>
   </div>
 }

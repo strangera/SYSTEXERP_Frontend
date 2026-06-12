@@ -4,9 +4,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
+import { Column } from 'src/app/shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls57110-cru',
@@ -34,7 +34,7 @@ export class TLS57110CRUComponent extends BasicCruPageComponent<any> implements 
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
-  columns: ReportColumn[] = [
+  columns: Column[] = [
     { field: 'brand', header: '品牌', visible: true },
     { field: 'initialInventory', header: '期初存貨', visible: true },
     { field: 'purchaseQuantity', header: '進貨量', visible: true },

@@ -1,6 +1,10 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls57160DataItem, Tls57160FooterItem, Tls57160Request, Tls57160Service } from '@service/api/tls/tls57160.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -8,28 +12,20 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { AccordionModule } from 'primeng/accordion';
-import { CheckboxModule } from 'primeng/checkbox';
-//  匯入 Tls57160FooterItem 才能用於 footerTotal 的型別
-import { AsyncPipe, DatePipe } from '@angular/common';
-import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
-import { Tls57160DataItem, Tls57160FooterItem, Tls57160Request, Tls57160Service } from '@service/api/tls/tls57160.service';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button'; //  新增匯入 ButtonModule
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
+import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';
 
 @Component({
   selector: 'app-tls57160',
   templateUrl: './tls57160.component.html',
   standalone: true,
   imports: [
-    DropdownTableComponent,
     AsyncPipe,
     TableReportComponent,
     MenubarComponent,
@@ -37,13 +33,13 @@ import { finalize } from 'rxjs';
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextComponent,
     CalendarComponent,
     CheckboxModule,
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
-    ButtonModule //  匯入 p-button 所需的模組
+    ButtonModule, //  匯入 p-button 所需的模組
+    ProductAutocompleteComponent
   ],
   providers: [DatePipe] //  確保 DatePipe 存在
 })
@@ -56,7 +52,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     PLU_NO: [null, [Validators.maxLength(20)]],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     stockIsZero: [false],
-    pageSize: [30, [Validators.required, Validators.min(30)]],
+    pageSize: [500, [Validators.required, Validators.min(30)]],
     pageIndex: [1],
   });
   HOS_NOOptions = this.dropdown.queryPos2034();
@@ -119,7 +115,6 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
   constructor(
     public readonly tls57160Service: Tls57160Service,
     private readonly dropdown: DropdownApiService,
-    private readonly tls57040Service: Tls57040Service,
     private readonly datePipe: DatePipe
   ) { super(); }
 
@@ -211,13 +206,13 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     }
   }
@@ -253,29 +248,5 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     }
 
     return `download${defaultExtension}`;
-  }
-
-
-  // --- 商品管理編號 (dropdown-table) 相關方法 (保持不變) ---
-
-  suggestions: QueryPLUResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      queryNo: event.label || '',
-      PLU_MagNo: undefined,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }

@@ -1,106 +1,109 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="default" label="結案" icon="undefined"></app-button>
+    <app-button
+      *ngIf="isFormReadable && canDispatch"
+      label="結案"
+      btnType="default"
+      icon="pi pi-check"
+      [loading]="dispatchLoading"
+      (click)="onDispatch()"
+    ></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <!-- 領用單號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="領用單號"
-            controlName="issueNo"
-            [control]="dataForm.controls.issueNo"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 部門代號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="部門代號"
-            controlName="departmentCode"
-            [control]="dataForm.controls.departmentCode"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 申請人代號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="申請人代號"
-            controlName="applicantCode"
-            [control]="dataForm.controls.applicantCode"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 申請日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="申請日期"
-            controlName="applicationDate"
-            [control]="dataForm.controls.applicationDate"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 發料日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="發料日期"
-            controlName="shippingDate"
-            [control]="dataForm.controls.shippingDate"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 驗收單狀態 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="驗收單狀態"
-            controlName="receiptStatus"
-            [control]="dataForm.controls.receiptStatus"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <!-- 明細筆數 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="明細筆數"
-            controlName="detailCount"
-            [control]="dataForm.controls.detailCount"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
 
-        <!-- 動態表單欄位... -->
-        <app-table-edit
-          tableKey="ASS16050Detail"
-          class="col-12"
-          [data]="data"
-          [columns]="columns"
-          [showCheckBox]="true"
-          (delete)="onDelete($event)"
-          (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows"
-          [showCheckBox]="!isFormReadable"
-          (dataChange)="data = $event"
-          [disabled]="isFormReadable"
-          [tableRequired]="true"
-        ></app-table-edit>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm">
+      <div class="grid p-fluid">
+        <!-- 領料單號 -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="領料單號"
+          controlName="MTAPPLY_ID"
+          [control]="dataForm.controls.MTAPPLY_ID"
+          [submitted]="submitted"
+        ></app-input-text>
+
+        <!-- 部門代號 -->
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="部門代號"
+          controlName="ORG_ID"
+          [options]="orgOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.ORG_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+
+        <!-- 申請人代號 -->
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="申請人代號"
+          controlName="EMP_ID"
+          [options]="userOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.EMP_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+
+        <!-- 申請日期 -->
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          label="申請日期"
+          calendarType="dateOne"
+          [control]="dataForm.controls.APPLY_DATE"
+          [submitted]="submitted"
+        ></app-calendar>
+
+        <!-- 發料日期 -->
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          label="發料日期"
+          calendarType="dateOne"
+          [control]="dataForm.controls.CHECK_DATE"
+          [submitted]="submitted"
+        ></app-calendar>
+
+        <!-- 領用單狀態（規格「驗收單狀態」係筆誤） -->
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="領用單狀態"
+          controlName="MTAPPLY_STATUS"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.MTAPPLY_STATUS"
+          [submitted]="submitted"
+        ></app-dropdown>
+
+        <!-- 明細筆數 -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="明細筆數"
+          controlName="detailCount"
+          [control]="dataForm.controls.detailCount"
+          [submitted]="submitted"
+        ></app-input-text>
       </div>
     </form>
 
-    <!-- 提交和取消按鈕 -->
-    <div class="col pt-4">
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="cancel" (click)="resetTable()"></app-button>
-        <app-button
-          btnType="submit"
-          (click)="submitForm(dataForm)"
-        ></app-button>
-      </div>
+    <!-- 品項明細表格 -->
+    <div class="col-12 mt-3">
+      <app-table-report
+        tableKey="ASS16050_DETAIL"
+        [data]="detailItems"
+        [columns]="detailColumns"
+        [totalRecords]="detailItems.length"
+        [lazy]="false"
+        [showManage]="false"
+        [showEdit]="false"
+        [showDelete]="false"
+        [showDetail]="false"
+        [showReportMode]="false"
+        [showCaption]="false"
+      ></app-table-report>
     </div>
   </p-panel>
 </div>

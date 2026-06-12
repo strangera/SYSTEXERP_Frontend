@@ -41,7 +41,7 @@ import { finalize } from 'rxjs';
 export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     pageIndex: [1],
-    pageSize: [30],
+    pageSize: [500],
     STK_YM: [new Date(), [Validators.required]], // 存貨年月
     HOS_NOList: [null], // 倉別條件
     LOGO_NoList: [null], // 品牌條件
@@ -271,13 +271,13 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');

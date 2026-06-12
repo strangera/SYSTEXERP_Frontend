@@ -174,5 +174,79 @@
         }
       }
     }
+    .perf-dashboard {
+      background: rgba(0, 0, 0, 0.2) !important;
+      padding: 6px 10px !important;
+      border-radius: 6px !important;
+      border: 1px dashed #333 !important;
+
+      .perf-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 4px 10px !important;
+        border-radius: 4px !important;
+        font-family: "Fira Code", "Consolas", monospace !important;
+        font-size: 11px !important;
+        border: 1px solid transparent !important;
+
+        .label {
+          opacity: 0.8;
+          color: #aaa;
+        }
+
+        .val {
+          font-weight: 700 !important;
+        }
+
+        /* 針對不同指標賦予精緻的極客配色 */
+        &.total {
+          background: rgba(139, 92, 246, 0.1) !important; // 紫色
+          border-color: rgba(139, 92, 246, 0.2) !important;
+          .val {
+            color: #a78bfa !important;
+          }
+        }
+
+        &.backend {
+          background: rgba(59, 130, 246, 0.1) !important; // 藍色
+          border-color: rgba(59, 130, 246, 0.2) !important;
+          .val {
+            color: #60a5fa !important;
+          }
+        }
+
+        &.database {
+          background: rgba(16, 185, 129, 0.1) !important; // 綠色
+          border-color: rgba(16, 185, 129, 0.2) !important;
+          .val {
+            color: #34d399 !important;
+          }
+        }
+
+        &.network {
+          background: rgba(245, 158, 11, 0.1) !important; // 橘黃色
+          border-color: rgba(245, 158, 11, 0.2) !important;
+          .val {
+            color: #fbbf24 !important;
+          }
+        }
+
+        &.before-db {
+          background-color: #e0f2fe;
+          color: #0369a1; // 藍色：代表前置邏輯處理
+          .label {
+            color: #000;
+          }
+        }
+        &.after-db {
+          background-color: #f3e8ff;
+          color: #6b21a8; // 紫色：代表後置序列化與轉型
+          .label {
+            color: #000;
+          }
+        }
+      }
+    }
   }
 }

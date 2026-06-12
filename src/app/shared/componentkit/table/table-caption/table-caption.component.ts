@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { QueryStateService } from '@shared/service/query-state.service';
@@ -11,6 +11,7 @@ import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
+import { ExportContext, ReportExportService } from 'src/app/shared/exports/report-export.service';
 import { TableExportComponent } from '../table-export/table-export.component';
 import { Column } from '../table.model';
 import { toggleButtons } from './table-caption.model';
@@ -34,6 +35,8 @@ import { toggleButtons } from './table-caption.model';
   templateUrl: './table-caption.component.html',
 })
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
+  private readonly exportService = inject(ReportExportService, { optional: true });
+  @Input() exportContext?: ExportContext;
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   @Input() dataKey: string | undefined = 'ID';                                                      // table 資料key
   @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
@@ -96,7 +99,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() first = 0;                                        // 當前表格的起始索引
   @Input() footerData: any;     // (總計)頁尾資料
   // 底層匯出
-  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() apiUrl?: string;                         // table API URL (可選，若使用舊式匯出才需要)
   @Input() reportTitle?: string;                    // 自訂報表標題，優先於 apiUrl / REPORT_TITLES 查詢
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
@@ -173,6 +176,61 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     this.importExcel.emit(event);
     if (event) {
       this.fileUpload.clear();
+    }
+  }
+
+  override exportPDFDownload(
+    event: any,
+    selectedColumns: any,
+    apiUrl?: string,
+    dataKeyName?: string,
+    printRemark?: boolean,
+    conditions?: any,
+    printColumn?: any,
+    footerData?: any,
+    reportTitle?: string,
+    expansionColumns?: any
+  ): void {
+    // 💡 2. 只要有傳入新 Context，就連同快照一起打包丟給 Service，Service 就會啟動大熔爐自動對應
+    if (this.exportContext && this.exportService) {
+      this.exportService.executePdfExport({
+        event,
+        columns: printColumn || selectedColumns, // 如果有特殊的 PrintColumn 則優先使用
+        context: this.exportContext,
+        footerData: footerData,
+        expansionColumns: expansionColumns,
+      }, (loading) => {
+        this.exportLoading = loading;
+      });
+    } else {
+      // 舊作業：因為已經沒有 this.apiUrl 了，所以這裡的 api 參數直接拿方法簽章傳進來的 apiUrl
+      super.exportPDFDownload(event, selectedColumns, apiUrl, dataKeyName, printRemark, conditions, printColumn, footerData, reportTitle, expansionColumns);
+    }
+  }
+
+  override exportExcelDownload(
+    event: any,
+    selectedColumns: any,
+    apiUrl?: string,
+    dataKeyName?: string,
+    conditions?: any,
+    printColumn?: any,
+    footerData?: any,
+    reportTitle?: string,
+    expansionColumns?: any
+  ): void {
+    if (this.exportContext && this.exportService) {
+      this.exportService.executeExcelExport({
+        event,
+        columns: printColumn || selectedColumns,
+        context: this.exportContext,
+        footerData: footerData,
+        expansionColumns: expansionColumns,
+      }, (loading) => {
+        this.exportLoading = loading;
+      });
+    } else {
+      super.exportExcelDownload(event, selectedColumns, apiUrl, dataKeyName, conditions, printColumn, footerData, reportTitle, expansionColumns);
     }
   }
 }

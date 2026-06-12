@@ -1,11 +1,10 @@
 /// <reference types="@angular/localize" />
 import { DatePipe } from '@angular/common';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
+import { ErrorHandler, importProvidersFrom } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { PreloadAllModules, provideRouter, UrlSerializer, withPreloading } from '@angular/router';
-import { provideServiceWorker } from '@angular/service-worker';
 import { JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -20,6 +19,7 @@ import { debugHeaderInterceptor } from './app/core/interceptors/debug-header.int
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { httpRequestInterceptor } from './app/core/interceptors/http-request.interceptor';
 import { queryCacheInterceptor } from './app/core/interceptors/query-cache.interceptor';
+import { GlobalErrorHandler } from './app/core/services/global-error-handler/global-error-handler';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
 
@@ -83,11 +83,7 @@ bootstrapApplication(AppComponent, {
     ...primeNgProviders,
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
-    provideServiceWorker('ngsw-worker.js', {
-      // enabled: !isDevMode(),
-      enabled: false,
-      registrationStrategy: 'registerWhenStable:30000'
-    }),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler }
   ]
 })
   .catch((err) => console.error(err));

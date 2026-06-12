@@ -150,7 +150,7 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
       return;
     }
     this.dropdownApi
-      .queryFaClass1({ CLASS_ID: bClassId || undefined })
+      .queryFaClass1({ B_CLASS_ID: bClassId || undefined })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         const list = opts ?? [];
@@ -167,7 +167,7 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
       return;
     }
     this.dropdownApi
-      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, M_CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         const list = opts ?? [];

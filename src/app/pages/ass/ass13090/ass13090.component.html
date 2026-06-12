@@ -3,11 +3,13 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
-    <div >
-      <app-button btnType="create" label="攤提設定" class="col"></app-button>
+    <div class="col-fixed">
+      <app-button
+        btnType="create"
+        label="攤提設定"
+        [loading]="loading"
+        (clickEvent)="onAmortizationSettingClick(queryForm)"
+      ></app-button>
     </div>
   </div>
   <p-accordion>
@@ -24,13 +26,12 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="攤提代號"
-              controlName="shareCode"
-              [control]="queryForm.controls.shareCode"
+              controlName="amortCode"
+              [control]="queryForm.controls.amortCode"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -47,26 +48,27 @@
             <app-calendar-range
               calendarType="dateRange"
               label="購入日期"
-              [startControl]="queryForm.controls.purchaseDateFrom"
-              [endControl]="queryForm.controls.purchaseDateTo"
+              descLabel="(起訖)"
+              [startControl]="queryForm.controls.inputDateFrom"
+              [endControl]="queryForm.controls.inputDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="資產狀態"
               controlName="assetStatus"
-              [options]="assetsStatusOptions"
+              [options]="assetStatusOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.assetStatus"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="資產類型"
               controlName="assetType"
               [options]="assetTypeOptions"
@@ -74,61 +76,64 @@
               optionValue="value"
               [control]="queryForm.controls.assetType"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="會計科目代號"
-              controlName="accountingCode"
-              [options]="accountingCodeOptions"
+              controlName="accountCode"
+              [options]="accountCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.accountingCode"
+              [control]="queryForm.controls.accountCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="購入金額"
-              [startControl]="queryForm.controls.purchaseAmountFrom"
-              [endControl]="queryForm.controls.purchaseAmountTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
+          <app-input-number-range
+            class="col-12 md:col-6 lg:col-4"
+            label="購入金額"
+            [startControl]="queryForm.controls.inputAmountFrom"
+            [endControl]="queryForm.controls.inputAmountTo"
+            [submitted]="submitted"
+          ></app-input-number-range>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="採購單號"
-              controlName="purchaseNumber"
-              [options]="orderNumberOptions"
+              controlName="purchaseNo"
+              [options]="purchaseNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.purchaseNumber"
+              [control]="queryForm.controls.purchaseNo"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="攤提年月"
+              controlName="amortYearMonth"
+              [control]="queryForm.controls.amortYearMonth"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <app-radiobutton
             label="條件篩選"
-            groupname="filter"
-            [control]="queryForm.controls.filter"
-            [options]="filterOptions"
+            groupname="conditionFilter"
+            [control]="queryForm.controls.conditionFilter"
+            [options]="conditionFilterOptions"
             [submitted]="submitted"
           ></app-radiobutton>
         </div>
         <hr />
         <div>
           <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
+            <app-button btnType="clear" [form]="queryForm"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
@@ -137,11 +142,63 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
+    <div *ngIf="isUnamortizedResultLayout && data.length" class="mb-2">
+      <app-button
+        btnType="default"
+        label="攤提"
+        [disabled]="!selectedRows.length"
+        (clickEvent)="onBatchAmortize()"
+      ></app-button>
+    </div>
+    <app-table-report
+      tableKey="ASS13090_Data"
       [data]="data"
       [columns]="columns"
+      [totalRecords]="totalRecords"
+      dataKey="ASSET_ID"
+      [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryASS13090ForReport"
+      [lazy]="true"
+      [showDelete]="false"
+      [showManage]="!isUnamortizedResultLayout"
+      [tableHeaderCheckboxLabel]="
+        isUnamortizedResultLayout ? '是否攤提' : undefined
+      "
+      [showCheckBox]="isUnamortizedResultLayout"
+      [selectedItems]="selectedRows"
+      (selectionChange)="onSelectionChange($event)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="匯出 PDF"
+            icon="pi pi-file-pdf"
+            (click)="onExportPdf()"
+            [disabled]="
+              tableLoading() ||
+              exportPdfLoading ||
+              exportExcelLoading ||
+              data.length === 0
+            "
+            [loading]="exportPdfLoading"
+          ></p-button>
+          <p-button
+            label="匯出 XLSX"
+            icon="pi pi-file-excel"
+            (click)="onExportExcel()"
+            [disabled]="
+              tableLoading() ||
+              exportExcelLoading ||
+              exportPdfLoading ||
+              data.length === 0
+            "
+            [loading]="exportExcelLoading"
+          ></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS45030Request, QueryTLS45030ResponseData, Tls45030Service } from '@service/api/tls/tls45030.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -21,7 +21,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   selector: 'app-tls45030',
   templateUrl: './tls45030.component.html',
   standalone: true,
-  imports: [CalendarRangeQuickComponent, MultiSelectComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, ButtonComponent, TableReportComponent, TranslateModule]
+  imports: [CalendarRangeComponent, MultiSelectComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, ButtonComponent, TableReportComponent, TranslateModule]
 })
 export class TLS45030Component extends BasicQueryPageComponent<QueryTLS45030ResponseData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -29,7 +29,7 @@ export class TLS45030Component extends BasicQueryPageComponent<QueryTLS45030Resp
     Txn_Date_End: [new Date()],
     ECR_No_List: [[]], // 多選清單使用陣列 []
     TLT_No_List: [[]], // 多選清單使用陣列 []
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'TXN_Date', order: -1 }]],
   });

@@ -9,7 +9,7 @@ import { environment } from 'src/environments/environment';
 
 // 查詢 Request
 export interface QueryFIN72020Request extends BaseQueryRequest {
-  PCS_No?: string;   // 零用金單號 (C+YYYYMMDDXXXX)
+  PCS_RqstNo?: string;   // 支出請款單號 (TC+YYYYMMDDXXXX)
   PCS_RqstDate?: string;   // 請款產生日期
   PCS_UsrNo?: string;   // 零用金申請人員代碼
   Keep_UsrNo?: string;   // 零用金保管人代碼

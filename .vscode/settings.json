@@ -7,30 +7,26 @@
     ".angulardoc.json": true,
     ".prettierrc": true,
     "package-lock.json": true,
-    "deploy_TSRD_前端.bat": true,
-    "deploy_TSRDdev_前端.bat": true,
     ".gitignore": true,
     "node_modules/": true,
     ".angular/": true,
     "CLAUDE.md": true,
     "src/favicon.ico": true,
     "src/index.html": true,
-    "src/main.ts": true,
+    // "src/main.ts": true,
     "tsconfig.app.json": true,
     "tsconfig.spec.json": true,
     "tsconfig.json": true,
     "instructions.md": true,
     ".eslintrc.json": true,
     // "sonar-project.properties": true,
-    "ngsw-config.json": true,
-    "src/assets": true,
+    // "src/assets": true,
     // ".sonarlint": true,
     ".scannerwork": true,
     "public": true,
     ".vscode/extensions.json": true,
     ".vscode/launch.json": true,
     ".vscode/tasks.json": true,
-    "src/app/core": true,
     "src/styles.scss": true
   },
   // "html.format.wrapAttributes": "auto",
@@ -48,8 +44,8 @@
   // 可選：當檔案儲存時是否自動重新載入
   "liveServer.settings.reloadBrowserWhenSaved": true,
   "sonarlint.connectedMode.project": {
-    "connectionId": "http-127-0-0-1-9000-",
-    "projectKey": "TSRDERP"
+    "connectionId": "http-172-20-10-2-9000-",
+    "projectKey": "TSRDERP_Frontend_Angular"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
@@ -59,5 +55,8 @@
   "javascript.suggest.paths": true,
   "typescript.suggest.paths": true,
   "html.suggest.paths": true,
-  "typescript.referencesCodeLens.enabled": false
+  "typescript.referencesCodeLens.enabled": false,
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
 }

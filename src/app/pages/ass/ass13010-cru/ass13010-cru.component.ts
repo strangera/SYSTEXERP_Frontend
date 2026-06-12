@@ -38,7 +38,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
-    assetsCode: [, [Validators.required, Validators.maxLength(10)]], // 資產代號
+    // 資產代號：新增時由後端 SP 自動產生（disabled 不參與 validation 也不送 API），最大長度 20。
+    assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產代號
     itemCode: [, [Validators.required]], // 品項編號
     assetsStatus: [, [Validators.required]], // 資產狀態
     assetsType: ['', [Validators.required, Validators.maxLength(10)]], // 資產類型
@@ -373,7 +374,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   private buildInsertPayload(raw: Record<string, unknown>): InsertASS13010Request {
     // 表單欄位名稱 => API request 欄位（InsertASS13010Request）
     return {
-      ASSET_ID: raw['assetsCode'] != null && raw['assetsCode'] !== '' ? String(raw['assetsCode']) : null,
+      // 新增時資產代號由後端 SP 自動產生，前端不送（送 null）。
+      ASSET_ID: null,
       GOODS_ID: raw['itemCode'] != null && raw['itemCode'] !== '' ? String(raw['itemCode']) : null,
       ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
       DEPRE_YN: raw['assetsType'] != null && raw['assetsType'] !== '' ? String(raw['assetsType']) : null,

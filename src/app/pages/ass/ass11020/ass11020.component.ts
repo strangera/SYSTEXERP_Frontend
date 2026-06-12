@@ -118,12 +118,17 @@ export class ASS11020Component extends BasicQueryPageComponent<ASS11020Data> imp
    */
   public queryFunction = (body: ASS11020QueryRequest): Observable<ApiResponse<ASS11020Data[]>> => {
     const rawFormValue = this.queryForm.getRawValue();
+    // table-report lazy load 只 patch camelCase pageIndex/pageSize（PascalCase 會殘留舊值），故 camelCase 優先
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const pageSize: number = (body as any).pageSize ?? body.PageSize ?? 30;
+    const pageIndex: number = (body as any).pageIndex ?? body.PageIndex ?? 1;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     const payload: ASS11020QueryRequest = {
       M_CLASS_ID: rawFormValue.M_CLASS_ID || undefined,
       B_CLASS_ID: rawFormValue.B_CLASS_ID || undefined,
       NOTES_KEYWORD: rawFormValue.NOTES_KEYWORD || undefined,
-      PageSize: body.PageSize,
-      PageIndex: body.PageIndex,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       SortBy: body.SortBy,
     };
     // 移除空值

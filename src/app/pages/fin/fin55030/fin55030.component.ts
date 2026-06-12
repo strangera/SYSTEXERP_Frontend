@@ -19,8 +19,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 import { FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
+import { Fin55030TableSubheaderComponent } from './fin55030-table-subheader/fin55030-table-subheader.component';
 
 export interface GroupedFIN55030Detail extends FIN55030Detail {
   AccNo: string;
@@ -39,7 +39,7 @@ export interface GroupedFIN55030Detail extends FIN55030Detail {
     ButtonModule,
     MenubarComponent,
     FormsModule,
-    Fin29060TableSubheaderComponent,
+    Fin55030TableSubheaderComponent,
     ReactiveFormsModule,
     CalendarRangeComponent,
     DropdownComponent,
@@ -79,8 +79,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     { field: 'Org_Name', header: '部門名稱', visible: true, align: 'left' },
     { field: 'PTA', header: '立沖編號', visible: true, align: 'left' },
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
-    { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
+    { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true, align: 'right' },
+    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true, align: 'right' }
   ];
   data: fin55030response[] = [];
   totalRecords = 0;
@@ -151,7 +151,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     if (event.col.field === 'VouNo') {
       // 範例：導向傳票維護介面
       const vouNo = event.row?.VouNo;
-      const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now() };
+      const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now() };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       // ... 導向邏輯
     }
@@ -249,7 +249,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
@@ -261,9 +261,9 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     }
 
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open(finalUrl, '_blank', 'noopener');
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 
   // 下載pdf/excel

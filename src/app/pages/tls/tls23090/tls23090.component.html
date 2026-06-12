@@ -8,160 +8,152 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <!-- 銷售日期 -->
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted">
-          </app-calendar-range-quick>
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
-          <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
-              controlName="ECR_No"
+              [control]="queryForm.controls.ECR_No"
               [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
+              [control]="queryForm.controls.tlt_no"
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 信用卡卡別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="信用卡別"
-              controlName="CRD_Type"
+              [control]="queryForm.controls.CRD_Type"
               [options]="cardTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.CRD_Type"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 信用卡卡號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="信用卡號"
-              controlName="CRD_No"
               [control]="queryForm.controls.CRD_No"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
-          <!-- 金額 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="金額"
-              controlName="TXN_PayAmt"
               [control]="queryForm.controls.TXN_PayAmt"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
-          <!-- 是否分期 / 期別 / 收單行 / 連線狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否分期"
-              controlName="IsHaveTERM_No"
+              [control]="queryForm.controls.IsHaveTERM_No"
               [options]="WhetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.IsHaveTERM_No"
-              [submitted]="submitted">
-            </app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="期別"
-              controlName="TERM_No"
+              [control]="queryForm.controls.TERM_No"
               [options]="installmentPeriodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.TERM_No"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收單行"
-              controlName="Acquirer"
+              [control]="queryForm.controls.Acquirer"
               [options]="acquiringBankOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Acquirer"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="連線狀態"
-              controlName="ConnStatus"
+              [control]="queryForm.controls.ConnStatus"
               [options]="connectionStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ConnStatus"
-              [submitted]="submitted">
-            </app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
-          <!-- 館別 / 樓層 / 組織 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              [control]="queryForm.controls.tlt_building"
               [options]="BUILDING_NO_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
+              [control]="queryForm.controls.tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <!-- 查詢按鈕區 -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -170,32 +162,29 @@
   </p-accordion>
 </div>
 
-<!-- 檢視模式切換 -->
 <div class="col-12 md:col-6 lg:col-4 mt-2">
   <div class="flex align-items-center gap-3">
     <p-radioButton
       name="viewMode"
       inputId="vmCredit"
-      [value]="'credit'"
+      value="credit"
       [(ngModel)]="viewMode"
       [ngModelOptions]="{ standalone: true }"
-      (onChange)="onModeChange()">
-    </p-radioButton>
-    <label for="vmCredit">信用卡明細</label>
-
+      (onChange)="onModeChange()"
+    ></p-radioButton>
+    <label for="vmCredit" class="cursor-pointer text-sm">信用卡明細</label>
     <p-radioButton
       name="viewMode"
       inputId="vmCounter"
-      [value]="'counter'"
+      value="counter"
       [(ngModel)]="viewMode"
       [ngModelOptions]="{ standalone: true }"
-      (onChange)="onModeChange()">
-    </p-radioButton>
-    <label for="vmCounter">專櫃卡別分析</label>
+      (onChange)="onModeChange()"
+    ></p-radioButton>
+    <label for="vmCounter" class="cursor-pointer text-sm">專櫃卡別分析</label>
   </div>
 </div>
 
-<!-- 信用卡明細：app-table-report（✅ 總計列） -->
 <div class="card" *ngIf="viewMode === 'credit'">
   <app-table-report
     tableKey="TLS23090_credit"
@@ -210,32 +199,30 @@
     [lastQueryBody]="historyRequestBody"
     [queryFunction]="queryTLS23090CreditForReport"
     [footerData]="buildFooterFromGrandTotal()"
-    >
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-<p-button
-  styleClass="p-2"
-  label="信用卡明細表.PDF"
-  icon="pi pi-file-pdf"
-  [loading]="btnLoading"
-  [disabled]="data.length === 0"
-  (click)="onExportCreditPDF()">
-</p-button>
-
-<p-button
-  styleClass="p-2"
-  label="信用卡明細表.XLSX"
-  icon="pi pi-file-excel"
-  [loading]="btnLoading"
-  [disabled]="data.length === 0"
-  (click)="onExportCreditExcel()">
-</p-button>
+        <p-button
+          styleClass="p-2"
+          label="信用卡明細表.PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportCreditPDF()"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="信用卡明細表.XLSX"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportCreditExcel()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
 
-<!-- 專櫃卡別分析：app-table-report（✅ 總計列） -->
 <div class="card" *ngIf="viewMode === 'counter'">
   <app-table-report
     tableKey="TLS23090_counter"
@@ -250,27 +237,25 @@
     [lastQueryBody]="historyRequestBody"
     [queryFunction]="queryTLS23090CounterForReport"
     [footerData]="buildFooterFromGrandTotal()"
-    [showReportMode]="false"
-    >
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-<p-button
-  styleClass="p-2"
-  label="專櫃卡別分析.PDF"
-  icon="pi pi-file-pdf"
-  [loading]="btnLoading"
-  [disabled]="data.length === 0"
-  (click)="onExportCounterPDF()">
-</p-button>
-
-<p-button
-  styleClass="p-2"
-  label="專櫃卡別分析.XLSX"
-  icon="pi pi-file-excel"
-  [loading]="btnLoading"
-  [disabled]="data.length === 0"
-  (click)="onExportCounterExcel()">
-</p-button>
+        <p-button
+          styleClass="p-2"
+          label="專櫃卡別分析.PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportCounterPDF()"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="專櫃卡別分析.XLSX"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportCounterExcel()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>

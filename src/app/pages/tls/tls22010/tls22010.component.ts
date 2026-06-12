@@ -1,25 +1,25 @@
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownModule } from 'primeng/dropdown';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
-import { ButtonModule } from 'primeng/button';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { NgIf, DatePipe, AsyncPipe } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { finalize } from 'rxjs';
-import { columns, columnscru, ITxnData, ITxnDataDetail, ITxnDataDetailSum, TLS22010Query, toApiDate } from "./tls22010.model";
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton } from '@shared/componentkit/table-report/table-report.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
+import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { columns, columnscru, ITxnData, ITxnDataDetail, ITxnDataDetailSum, TLS22010Query, toApiDate } from "./tls22010.model";
 
 @Component({
   templateUrl: './tls22010.component.html',
@@ -51,7 +51,7 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     ShowStatus: ['1'],
     status1: [''], // TODO: 沒有用到，或者寶玲沒開欄位
     status2: [''], // TODO: 沒有用到，或者寶玲沒開欄位
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1],
   });
   historyRequestBody: TLS22010Query | null = null;
@@ -162,14 +162,14 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     this.tls22010Service.exportTLS22010Detail(body).subscribe({
       next: (res: Blob) => {
         const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `收銀機對帳明細_${raw.TXN_DATE || 'unknown'}.xlsx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         console.log(' Excel 檔案下載完成');
       },
     });
@@ -184,14 +184,14 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     this.tls22010Service.exportTLS22010DetailPDF(body).subscribe({
       next: (res: Blob) => {
         const blob = new Blob([res], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `收銀機對帳明細_${raw.TXN_DATE || 'unknown'}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       },
     });
   }

@@ -5,7 +5,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -39,7 +38,8 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
     GUI_Status: [''],
     TXN_Uniform: [''],
-    ...createPaginationConfig([{ field: 'CHG_No', order: 1 }])
+    ...createPaginationConfig([{ field: 'CHG_No', order: 1 }]),
+    pageSize: [1000],
   });
 
   totalRecords = 0;
@@ -86,7 +86,6 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   detailItemData: any[] = [];     // 換開發票明細
 
   constructor(
-    private dropDownListService: DropDownListService,
     public readonly tls2j030Service: TLS2j030Service,
     private readonly dropdown: DropdownApiService,
   ) {
@@ -121,7 +120,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const req = {
-        PageSize: frm.value.pageSize || 30,
+        PageSize: frm.value.pageSize || 1000,
         PageIndex: frm.value.pageIndex || 1,
         CHG_No: frm.value.CHG_No ?? "",
         GUI_InputDate_Start: formatDateToYYYY_MM_DD(frm.value.GUI_INPUTDATE_Start),
@@ -151,7 +150,6 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           } else {
             // API 回傳錯誤狀態
-            console.error('API Error:', response);
             this.messageService?.errorBubble(`查詢失敗：${response.Message || '系統錯誤'}`);
             this.data = [];
             this.totalRecords = 0;
@@ -197,17 +195,14 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
           this.loading = false;
         })
       )
-      .subscribe({
-        next: (res) => {
-          console.log('Delete API Response:', res);
-          if (res?.Status === '0001' || res?.Message === '成功') {
-            this.messageService.successBubble(`刪除成功 (處理了 ${res?.Data || deleteItems.length} 筆資料)`, '刪除成功');
-            this.onSubmit(this.queryForm);
-            this.selectedItems = [];
-          } else {
-            this.messageService.errorBubble(`刪除失敗：${res?.Message || '系統錯誤'}`);
-          }
-        },
+      .subscribe((res) => {
+        if (res?.Status === '0001' || res?.Message === '成功') {
+          this.messageService.successBubble(`刪除成功 (處理了 ${res?.Data || deleteItems.length} 筆資料)`, '刪除成功');
+          this.onSubmit(this.queryForm);
+          this.selectedItems = [];
+        } else {
+          this.messageService.errorBubble(`刪除失敗：${res?.Message || '系統錯誤'}`);
+        }
       });
   }
 
@@ -247,12 +242,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       .pipe(finalize(() => (this.btnLoading2 = false)))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
           link.download = `發票換開報表_${formatDateToYYYY_MM_DD(new Date())}.pdf`;
           link.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
 
           this.messageService.successBubble('PDF 匯出成功');
         },

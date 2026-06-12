@@ -184,7 +184,8 @@
 
               <ng-container *ngSwitchCase="'button'">
                 <button *ngIf="!col.showCondition || col.showCondition(rowData, data)" pButton pRipple type="button"
-                  [label]="col.buttonLabel ?? ''" [icon]="col.buttonIcon || ''"
+                  [label]="col.buttonLabelFunction ? col.buttonLabelFunction(rowData) : (col.buttonLabel ?? '')"
+                  [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
                   (click)="onButtonClick(rowData, col.field)"></button>
               </ng-container>
@@ -220,7 +221,8 @@
               <!-- 按鈕在非編輯狀態下也要顯示 -->
               <ng-container *ngSwitchCase="'button'">
                 <button *ngIf="!col.showCondition || col.showCondition(rowData, data)" pButton pRipple type="button"
-                  [label]="col.buttonLabel ?? ''" [icon]="col.buttonIcon || ''"
+                  [label]="col.buttonLabelFunction ? col.buttonLabelFunction(rowData) : (col.buttonLabel ?? '')"
+                  [icon]="col.buttonIcon || ''"
                   [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
                   (click)="onButtonClick(rowData, col.field)"></button>
               </ng-container>

@@ -70,7 +70,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="廠商統一編號"
+              label="統編"
               [options]="vendorUIDOptions"
               optionLabel="label"
               optionValue="value"
@@ -102,14 +102,14 @@
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="合約狀態"
-              [options]="approvalStatusOptions"
+            <app-multi-select
+              label="館別"
+              [options]="buildingOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.approve_statusList"
+              [control]="queryForm.controls.tlt_buildingList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
         </div>
 
@@ -319,6 +319,16 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.store_wayList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="營運狀況"
+              [options]="openFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>

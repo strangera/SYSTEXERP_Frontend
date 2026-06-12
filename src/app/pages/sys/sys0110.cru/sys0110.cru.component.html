@@ -36,7 +36,7 @@
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />
         <app-table-edit title="專櫃權限清單" #table class="col-12" [columns]="columns" [data]="data"
           (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" (dataChange)="data = $event"
-          [disabled]="isFormReadable"></app-table-edit>
+          [disabled]="isFormReadable" [defaultInsertData]="defaultInsertData"></app-table-edit>
         <hr />
 
         <div class="col-12">

@@ -9,7 +9,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
@@ -41,7 +40,9 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
   queryForm = this.formBuilder.group({
     USR_Level: [null, Validators.maxLength(6)],
     ECR_KBDesc: [null],
-    ...createPaginationConfig([{ field: 'USR_Level', order: 1 }]),
+    pageSize: [500],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'USR_Level', order: 1 }]],
   });
   data: POS1004Master[] = [];
   totalRecords = 0;

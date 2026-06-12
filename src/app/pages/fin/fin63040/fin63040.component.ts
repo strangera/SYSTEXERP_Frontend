@@ -2,17 +2,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { AfterViewInit, ChangeDetectorRef, Component } from '@angular/core';
-import { NavigationStart } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationStart } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { filter, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { SortMeta } from 'primeng/api';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -23,9 +22,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { Aps1002BankDropDownRow, Fin26010Service } from '../../../service/api/fin/fin26010.service';
 import {
@@ -606,13 +605,13 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
@@ -670,16 +669,16 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
         complete: () => (this.btnLoading = false),
       });
   }
-editDisabled = (row: QueryFIN63040Row): boolean => {
-  const status = String(row?.CheckStatus ?? '').trim();
+  editDisabled = (row: QueryFIN63040Row): boolean => {
+    const status = String(row?.CheckStatus ?? '').trim();
 
-  // 禁止編輯狀態
-  return (
-    status === '3' ||   // 兌現(代碼)
-    status === '2' ||   // 到期(代碼)
-    status === '兌現' || 
-    status === '到期'
-  );
-};
+    // 禁止編輯狀態
+    return (
+      status === '3' ||   // 兌現(代碼)
+      status === '2' ||   // 到期(代碼)
+      status === '兌現' ||
+      status === '到期'
+    );
+  };
 
 }
