@@ -18,7 +18,6 @@ import {
   UpdateFIN72050Request,
   UpdateFIN72050Result,
   VoidFIN72050Request,
-  getFIN72050StatusName,
 } from '@shared/models/fin/fin72050.model';
 
 /**
@@ -47,9 +46,11 @@ export class FIN72050Service {
     }
     return this.http.post<RawResponse>(`${this.apiUrl}/queryFIN72050`, req).pipe(
       map(res => {
+        // queryFIN72050 後端的 PCC_Status 直接回中文（swagger 描述：盤點單狀態名稱），
+        // 與 detailFIN72050 回代碼不同。前端統一以 PCC_Status_Name 顯示中文。
         const items = (res.Data?.QueryData ?? []).map(item => ({
           ...item,
-          PCC_Status_Name: getFIN72050StatusName(item.PCC_Status),
+          PCC_Status_Name: item.PCC_Status ?? '',
         }));
         return {
           Status: res.Status,

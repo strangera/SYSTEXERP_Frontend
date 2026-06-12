@@ -26,8 +26,8 @@ export interface FIN72050QueryData {
   PCC_Date: string;          // 盤點日期
   Keep_UsrName: string;      // 保管人姓名（swagger 未回 Keep_UsrNo，故省略）
   Keep_QuotaAmt: number;     // 零用金額度
-  PCC_Status: string;        // 狀態代碼
-  PCC_Status_Name?: string;  // 狀態名稱（由前端 map）
+  PCC_Status: string;        // 狀態名稱（queryFIN72050 後端直接回中文：盤點中/已結案/作廢）
+  PCC_Status_Name?: string;  // 狀態名稱（前端 map 自 PCC_Status，便於 columns 統一用此欄位）
   PCC_ActAmt: number;        // 盤點金額
   PCC_NOPAY_AMT: number;     // 已支付未請款金額
   PCC_NOREC_AMT: number;     // 已請款未撥補金額
