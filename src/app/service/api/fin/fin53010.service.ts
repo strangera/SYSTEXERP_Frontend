@@ -219,6 +219,21 @@ export class FIN53010Service {
     });
   }
 
+  /** 驗證銷項發票號碼是否在配號範圍內（31/32→APS2001，35→POS1017） */
+  public validateSalesInvoice(
+    body: { InvoiceType: string; InvoicePrefix: string; InvoiceNo: string }
+  ): Observable<ApiResponse<boolean>> {
+    return this.http
+      .post<ApiResponse<boolean>>(`${apiUrl}/validateSalesInvoice`, body)
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API validateSalesInvoice 失敗:', err);
+          return of({ Status: '9999', Data: false, Message: '驗證失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<boolean>);
+        }),
+      );
+  }
+
   public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
     this.calculatedPayDateLoading.set(true);
     return this.http.post<GetCalculatedPayDateResult>(`${apiUrl}/getCalculatedPayDate`, payload).pipe(

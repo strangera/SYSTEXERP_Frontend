@@ -704,12 +704,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
-    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 31 && +o.value <= 35), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => o.value === '31' || o.value === '32' || o.value === '35'), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
-    { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, showClear: true },
     { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
@@ -1182,25 +1182,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (this.isFormReadable) return;
     if (index < 0) return;
     if (prefix.length !== 2 || no.length !== 8) return;
+
+    const row = this.stepSalesRows()[index];
+    const invoiceType = String(row?.invoice_type ?? '').trim();
+    if (!['31', '32', '35'].includes(invoiceType)) return;
+
     const full = `${prefix}${no}`;
     if (this.lastSalesInvoiceLookupKey.get(index) === full) return;
+    this.lastSalesInvoiceLookupKey.set(index, full);
 
-    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
-      next: res => {
-        // 查無資料（9102）屬正常情境（新發票），靜默跳過不報錯
-        if (res.Status !== '0000') return;
-        const d = res.Data;
-        if (!d) return;
-        this.lastSalesInvoiceLookupKey.set(index, full);
-        const patch = this.mapAps4023ToSalesRow(d, prefix, no);
-        this.stepSalesRows.update(rows => {
-          const next = [...rows];
-          if (!next[index]) return rows;
-          next[index] = { ...next[index], ...patch };
-          return next;
-        });
-      },
-    });
+    this.service.validateSalesInvoice({ InvoiceType: invoiceType, InvoicePrefix: prefix, InvoiceNo: no })
+      .pipe(take(1))
+      .subscribe({
+        next: res => {
+          const isValid = res.Status === '0000' && res.Data === true;
+          this.stepSalesRows.update(rows => {
+            const next = [...rows];
+            if (!next[index]) return rows;
+            next[index] = { ...next[index], _invoiceValidated: isValid };
+            return next;
+          });
+          if (!isValid) {
+            this.messageService.errorBubble(`銷項發票第 ${(row?.SerNo ?? index + 1)} 筆：字軌 ${prefix} 號碼 ${no} 不在配號範圍內`);
+          }
+        },
+      });
   }
 
   private hydratePurchaseRowByInvoice(index: number, prefix: string, no: string): void {
@@ -1565,7 +1571,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (this.activeVoucherSteps().includes(6)) {
       const invalidRows = this.stepSalesRows()
         .map((r, i) => ({ r, i }))
-        .filter(({ r }) => !r.id || r.id === 0);
+        .filter(({ r }) => !r.isPOS4023 && !r._invoiceValidated);
       if (invalidRows.length > 0) {
         const serNos = invalidRows.map(({ r, i }) => r.SerNo ?? (i + 1)).join('、');
         this.messageService.errorBubble(`銷項發票第 ${serNos} 筆發票號碼在系統中查無資料，請確認字軌及發票號碼是否正確`);
@@ -1873,31 +1879,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.hydratePurchaseRowByInvoice(idx, prefix, no);
   }
 
-  private mapAps4023ToSalesRow(
-    d: Aps4023DetailDataByInvoiceNumberData,
-    prefix: string,
-    no: string,
-  ): Partial<FIN53010StepSalesInvoiceRow> {
-    const invYm = d.INV_DeclareYM;
-    const declareYm = invYm
-      ? new Date(Number(String(invYm).slice(0, 4)), Number(String(invYm).slice(4, 6)) - 1, 1)
-      : null;
-    return {
-      id: d.ID,
-      invoice_type: d.InvoiceType ?? undefined,
-      invoice_prefix: prefix,
-      invoice_no: no,
-      invoice_date: d.InvoiceDate ? parseApiDateToLocal(d.InvoiceDate) : null,
-      declare_ym: declareYm,
-      buyer_uniform: d.Buyer_Uniform ?? undefined,
-      total_amount: d.PUR_Amt,
-      tax_type: d.PUR_TaxType ?? undefined,
-      net_amount: d.PUR_Net,
-      tax_amount: d.PUR_Tax,
-      source_doc_no: d.Source_Doc_No ?? undefined,
-      asset_flag: d.AssetType ?? undefined,
-    };
-  }
 
   private mapAps4023ToPurchaseRow(
     d: Aps4023DetailDataByInvoiceNumberData,

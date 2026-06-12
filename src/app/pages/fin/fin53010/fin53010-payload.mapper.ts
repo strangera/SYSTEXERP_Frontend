@@ -126,9 +126,23 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
   };
 }
 
-function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow): InsertAPS4023DataBody {
+function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow, deps: Fin53010PayloadDepsWithVou): InsertAPS4023DataBody {
   const id = row.id;
-  return { ID: typeof id === 'number' && !Number.isNaN(id) ? id : 0 };
+  return {
+    ID: typeof id === 'number' && !Number.isNaN(id) ? id : 0,
+    InvoiceType: row.invoice_type ?? null,
+    InvoicePrefix: row.invoice_prefix ?? null,
+    InvoiceNo: row.invoice_no ?? null,
+    InvoiceDate: toYmd(row.invoice_date ?? undefined, deps.datePipe) ?? null,
+    INV_DeclareYM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe) ?? null,
+    Buyer_Uniform: row.buyer_uniform ?? null,
+    PUR_Amt: row.total_amount ?? null,
+    PUR_TaxType: row.tax_type ?? null,
+    PUR_Net: row.net_amount ?? null,
+    PUR_Tax: row.tax_amount ?? null,
+    Source_Doc_No: row.source_doc_no ?? null,
+    AssetType: row.asset_flag ?? null,
+  };
 }
 
 function mapStepPurchaseToInsert2002(
@@ -201,7 +215,7 @@ function buildInsertNext(
         : [],
     insertAPS4023Datas:
       activeSteps.includes(6) && stepSales.length
-        ? stepSales.map(r => mapStepSalesToInsert4023(r))
+        ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToInsert4023(r, deps))
         : [],
     insertAPS2002Datas:
       activeSteps.includes(5) && stepPurchase.length
@@ -292,10 +306,8 @@ function mapStepArToUpdate(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
   return { ...mapStepArToInsert(row, deps), id };
 }
 
-function mapStepSalesToUpdate4023(row: FIN53010StepSalesInvoiceRow): UpdateAPS4023DataBody {
-  const n = row.id;
-  const id = typeof n === 'number' && !Number.isNaN(n) ? n : 0;
-  return { ID: id };
+function mapStepSalesToUpdate4023(row: FIN53010StepSalesInvoiceRow, deps: Fin53010PayloadDepsWithVou): UpdateAPS4023DataBody {
+  return mapStepSalesToInsert4023(row, deps);
 }
 
 function mapStepPurchaseToUpdate2002(
@@ -329,7 +341,7 @@ function buildUpdateNext(
     next.updateARS3001Datas = stepAR.map(r => mapStepArToUpdate(r, deps, r.id));
   }
   if (activeSteps.includes(6) && stepSales.length) {
-    next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));
+    next.updateAPS4023Datas = stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToUpdate4023(r, deps));
   }
   if (activeSteps.includes(5) && stepPurchase.length) {
     next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));

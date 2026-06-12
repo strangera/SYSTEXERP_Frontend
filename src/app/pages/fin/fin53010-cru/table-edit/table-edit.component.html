@@ -157,7 +157,7 @@
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="
-            !isRowSelectable(rowData, rowIndex, _tableData) || disabled
+            !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowData.isPOS4023
           " />
       </td>
       <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
