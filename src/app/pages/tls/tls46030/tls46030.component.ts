@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS46030Request, QueryTLS46030Response, Tls46030Service } from '@service/api/tls/tls46030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -13,20 +13,20 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from './table-report/table-report.component';
-import { formatDate, formatDateTime, ReportColumn } from './table-report/table-report.model';
+import { TLS46030TableReportComponent } from './tls46030-table-report/tls46030-table-report.component';
+import { formatDate, formatDateTime, ReportColumn } from './tls46030-table-report/tls46030-table-report.model';
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46030',
   templateUrl: './tls46030.component.html',
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, DropdownComponent, AccordionModule, FormsModule, ReactiveFormsModule, TableReportComponent, CalendarRangeComponent, TranslateModule, InputTextComponent]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, DropdownComponent, AccordionModule, FormsModule, ReactiveFormsModule, TLS46030TableReportComponent, CalendarRangeComponent, TranslateModule, InputTextComponent]
 })
 export class TLS46030Component extends BasicQueryPageComponent<QueryTLS46030Response> implements OnInit {
   private readonly dropDown = inject(DropdownApiService);
   public tls46030Service = inject(Tls46030Service);
   queryForm = this.formBuilder.group({
-    ECR_SchNo: [null], // 排程編號
+    ECR_SchNo: [null, [Validators.maxLength(13)]], // 排程編號ESC2511060003
     ECR_SchDate_Start: [null], // 設定啟用日期(起)
     ECR_SchDate_End: [null], // 設定啟用日期(訖)
     ECR_SchStatus: [null], // 排程狀態
