@@ -260,6 +260,54 @@
               [readonly]="isFormReadonly"
             ></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立者"
+              controlName="crt_usr_name"
+              [control]="getControl('crt_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立時間"
+              controlName="crt_date"
+              [control]="getControl('crt_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="修改者"
+              controlName="upd_usr_name"
+              [control]="getControl('upd_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="修改時間"
+              controlName="upd_date"
+              [control]="getControl('upd_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="審核者"
+              controlName="app_usr_name"
+              [control]="getControl('app_usr_name')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="審核時間"
+              controlName="app_date"
+              [control]="getControl('app_date')"
+              [readonly]="true"
+            ></app-input-text>
+          </div>
         </div>
       </form>
     </p-accordionTab>

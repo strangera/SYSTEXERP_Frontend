@@ -1,7 +1,9 @@
 <p-blockUI [blocked]="loading">
   <div class="absolute top-50 left-50" style="transform: translate(-50%, -50%)">
     <p-progressSpinner strokeWidth="4" fill="var(--surface-ground)" animationDuration=".5s"></p-progressSpinner>
-    <div class="text-white text-xl font-bold text-center mt-2">處理中，請稍候...</div>
+    <div class="text-white text-xl font-bold text-center mt-2">
+      處理中，請稍候...
+    </div>
   </div>
 </p-blockUI>
 <div class="card">
@@ -13,7 +15,8 @@
     <form *ngIf="renderComponent" [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <!-- 付款別修正 -->
       <div *ngIf="type === EDIT_TYPES.PAY_NO" class="grid p-fluid card">
-        <app-tls24010-payno [data]="PaymentDetailsList" class="col-12"></app-tls24010-payno>
+        <app-tls24010-payno [data]="PaymentDetailsList" class="col-12"
+          (payChange)="updateTxnTotGUI()"></app-tls24010-payno>
       </div>
       <!-- 類別修正 -->
       <div *ngIf="type === EDIT_TYPES.TLT_ID" class="grid p-fluid card">
@@ -62,27 +65,27 @@
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票號碼" [control]="dataForm.controls.TXN_GUIBegNo"
           [copyControl]="dataForm.controls.TXN_GUIEndNo" [submitted]="submitted" [errorForGroup]="true"
           controlName="TXN_GUIBegNo" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="發票金額" [control]="dataForm.controls.TXN_TotGUI"
+          [submitted]="submitted" controlName="TXN_TotGUI" />
         <app-input-number class="col-12 md:col-6 lg:col-3" label="交易客次" [control]="dataForm.controls.TXN_CustCnt"
           [submitted]="submitted" [max]="9999" [useGrouping]="false" controlName="TXN_CustCnt" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="會員編號" [control]="dataForm.controls.TXN_MemCard"
           [submitted]="submitted" controlName="TXN_MemCard" />
-        <app-input-text class=" col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
           [submitted]="submitted" controlName="TXN_Uniform" />
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
           [submitted]="submitted" calendarType="timeOne" controlName="TXN_Time" customPlaceholder="HH:MM" />
         <div class="col-12 md:col-6 lg:col-3 flex align-items-center">
           <p-checkbox [binary]="true" label="是否為負項交易" [formControl]="dataForm.controls.isNegativeTXN"
-            inputId="isNegativeTXN">
-          </p-checkbox>
+            inputId="isNegativeTXN"></p-checkbox>
         </div>
         <app-calendar class="col-12 md:col-6 lg:col-3" label="原交易日期" [control]="dataForm.controls.ORG_TXN_Date"
-          [submitted]="submitted" controlName="ORG_TXN_Date">
-        </app-calendar>
+          [submitted]="submitted" controlName="ORG_TXN_Date"></app-calendar>
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="原收銀機台" [control]="dataForm.controls.ORG_ECR_No"
           [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
           controlName="ORG_ECR_No" />
         <ng-container *ngIf="!isFormCreateable">
-          <app-input-text class=" col-12 md:col-6 lg:col-3" label="補登者" [control]="dataForm.controls.CRT_USR_Name"
+          <app-input-text class="col-12 md:col-6 lg:col-3" label="補登者" [control]="dataForm.controls.CRT_USR_Name"
             controlName="CRT_USR_Name" [submitted]="submitted" />
           <app-calendar class="col-12 md:col-6 lg:col-3" label="補登日期" calendarType="dateTimeOne"
             [control]="dataForm.controls.CRT_Date" controlName="CRT_Date" [submitted]="submitted" />
@@ -98,17 +101,24 @@
         <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票防偽隨機碼" [control]="dataForm.controls.TXN_GUIRemark"
           [submitted]="submitted" controlName="TXN_GUIRemark" />
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
-          [submitted]="submitted" [options]="[{label:'是',value:1},{label:'否',value:0}]" optionLabel="label"
-          optionValue="value" controlName="TXN_PrintTimes" />
+          [submitted]="submitted" [options]="[
+            { label: '是', value: 1 },
+            { label: '否', value: 0 },
+          ]" optionLabel="label" optionValue="value" controlName="TXN_PrintTimes" />
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.IsHaveGUILoveCode"
-          [submitted]="submitted" [options]="[{label:'是',value:'Y'},{label:'否',value:'N'}]" optionLabel="label"
-          optionValue="value" controlName="IsHaveGUILoveCode" />
+          [submitted]="submitted" [options]="[
+            { label: '是', value: 'Y' },
+            { label: '否', value: 'N' },
+          ]" optionLabel="label" optionValue="value" controlName="IsHaveGUILoveCode" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
           [submitted]="submitted" controlName="TXN_GUILoveCode" />
       </div>
       <hr />
-      <div *ngIf="type !== EDIT_TYPES.DISC_CODE && type !== EDIT_TYPES.TLT_ID && type !== EDIT_TYPES.TLT_NO"
-        class="grid p-fluid card">
+      <div *ngIf="
+          type !== EDIT_TYPES.DISC_CODE &&
+          type !== EDIT_TYPES.TLT_ID &&
+          type !== EDIT_TYPES.TLT_NO
+        " class="grid p-fluid card">
         <app-tls24010-pos5007 [data]="ProductDetailList" class="col-12" [TXN_GUIPaper]="TXN_GUIPaper"
           [TLT_Name]="TLT_Name" [store_way]="store_way" [talent_id]="talent_id"
           [TXN_Date]="this.dataForm.controls.TXN_Date.value" [TLT_No]="this.dataForm.get('TLT_No')?.value"
@@ -119,10 +129,11 @@
         <app-tls24010-pos5008 [data]="PaymentDetailsList" [queryInfo]="{
             TXN_Date: dataForm.get('TXN_Date')?.value,
             ECR_No: dataForm.get('ECR_No')?.value,
-            Talent_ID: talent_id
+            Talent_ID: talent_id,
           }" class="col-12" [rece_yn]="rece_yn" [submitted]="submitted" [isFormCreateable]="isFormCreateable"
           [isFormEditable]="isFormEditable" [type]="type" [isFormReadable]="isFormReadable"
-          [totalSaleAmt]="currentTotalSaleAmt"></app-tls24010-pos5008>
+          [totalSaleAmt]="currentTotalSaleAmt"
+          (payChange)="(isFormCreateable || type === EDIT_TYPES.PAY_NO) ? updateTxnTotGUI() : null"></app-tls24010-pos5008>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (click)="onClear()" />
@@ -137,7 +148,6 @@
     <label for="Void_Date" class="font-bold block">作廢日期</label>
     <p-calendar inputId="Void_Date" [(ngModel)]="ctx.selectedDate" [showTime]="true" [timeOnly]="false"
       [showSeconds]="false" hourFormat="24" appendTo="body" styleClass="w-full" dateFormat="yy/mm/dd" view="date"
-      placeholder="請選擇作廢日期">
-    </p-calendar>
+      placeholder="請選擇作廢日期"></p-calendar>
   </div>
 </ng-template>

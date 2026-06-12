@@ -110,6 +110,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     GUI_Track: ['', [Validators.maxLength(2), Validators.minLength(2), this.validationService.alphanumericValidator]], //發票字軌
     TXN_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.numberValidator]], //起始發票號碼
     TXN_GUIEndNo: [''], //結束發票號碼
+    TXN_TotGUI: [{ value: 0, disabled: true }],
     TXN_CustCnt: [1, [Validators.required, Validators.min(-99999999), Validators.max(99999999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
@@ -279,6 +280,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       controls.GUI_Track.updateValueAndValidity({ emitEvent: false });
       controls.TXN_GUIBegNo.updateValueAndValidity({ emitEvent: false });
     }
+    // 發票號碼變動，觸發計算發票金額
+    if (this.isFormCreateable || this.type === FIX_TYPE.付款別修正) {
+      controls.TXN_GUIBegNo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+        this.updateTxnTotGUI();
+      });
+    }
     // 監聽是否為負項交易
     controls.isNegativeTXN.valueChanges.pipe(untilDestroyed(this)).subscribe(isNeg => {
       if (isNeg) {
@@ -347,18 +354,46 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       if (Math.floor(Math.abs(totalSaleAmt)).toString().length > MAX_DIGITS) {
         return this.messageService.errorBubble(`銷售總金額 (${totalSaleAmt}) 超過系統允許的最大值`, '金額超出限制');
       }
-      // --- 4. 金額平衡檢核 ---
+      // --- 4. 金額少於檢核 ---
       const diff = totalPayAmt - totalSaleAmt;
       if (totalSaleAmt > 0) {
         if (diff < -0.001) {
           return this.messageService.errorBubble(`支付總額不足，尚差 ${Math.abs(diff).toFixed(2)} 元。`, '金額檢核失敗');
         }
+        else if (diff > 0.001) {
+          // 溢收檢核 (總金額超過銷售額時)
+          const hasOverPay = pos5008Data.some(item => item.PAY_OverPay === 'Y');
+          if (!hasOverPay) {
+            this.loading = false;
+            return this.messageService.errorBubble('未包含可溢收的付款方式，不可溢收', '付款別檢核失敗');
+          }
+        }
       } else {
+        // 負項交易必須平帳
         if (Math.abs(diff) > 0.001) {
-          return this.messageService.errorBubble(`支付總額 (${totalPayAmt}) 與銷售總額 (${totalSaleAmt}) 不符。`, '金額檢核失敗');
+          return this.messageService.errorBubble(`負項交易支付總額 (${totalPayAmt}) 必須等於 銷售總額 (${totalSaleAmt})。`, '金額檢核失敗');
         }
       }
-      // --- 5. 準備送出 ---
+      // --- 5. 發票金額與支付工具(未開支付 = 稅別0)檢核 ---
+      const guiBegNo = this.dataForm.getRawValue().TXN_GUIBegNo;
+
+      // 只有在「有填發票號碼」且「不為 00000000」的情況下才檢核
+      if (guiBegNo && guiBegNo !== '00000000') {
+        const taxType0Sum = pos5008Data
+          .filter(item => item.PAY_TaxType === '0')
+          .reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+
+        const txnTotGUI = Number(this.dataForm.getRawValue().TXN_TotGUI) || 0;
+
+        if (Math.abs(taxType0Sum - txnTotGUI) > 0.001) {
+          this.loading = false;
+          return this.messageService.errorBubble(
+            `未開支付總額 (${taxType0Sum})不等於發票金額 (${txnTotGUI})`,
+            '金額檢核失敗'
+          );
+        }
+      }
+      // --- 6. 準備送出 ---
       const txnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd');
       const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd');
       // === 支付邏輯卡控結束，如果成功則繼續執行 confirm ===
@@ -582,6 +617,60 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             this.onCancel();
           });
         } else if (this.type === FIX_TYPE.付款別修正) {
+          const payNoData = this.paynoComp?.payNoData || [];
+
+          // 1. 檢查是否至少有一筆支付工具
+          if (payNoData.length === 0) {
+            this.loading = false;
+            return this.messageService.errorBubble('請至少填入一筆支付工具', '支付工具驗證失敗');
+          }
+
+          // 2. 計算銷售總額 (POS5007) 與 支付總額 (POS5008)
+          const totalSaleAmt = this.ProductDetailList.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+          const totalPayAmt = payNoData.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+
+          // 3. 金額少於檢核
+          const diff = totalPayAmt - totalSaleAmt;
+          if (totalSaleAmt > 0) {
+            if (diff < -0.001) {
+              this.loading = false;
+              return this.messageService.errorBubble(`支付總額不足，尚差 ${Math.abs(diff).toFixed(2)} 元。`, '金額檢核失敗');
+            }
+            else if (diff > 0.001) {
+              // 溢收檢核 (總金額超過銷售額時)
+              const hasOverPay = payNoData.some(item => item.PAY_OverPay === 'Y');
+              if (!hasOverPay) {
+                this.loading = false;
+                return this.messageService.errorBubble('未包含可溢收的付款方式，不可溢收', '付款別檢核失敗');
+              }
+            }
+          }
+          else {
+            // 銷售額 <= 0 (例如負項交易) 時，必須完全平帳，不可溢收
+            if (Math.abs(diff) > 0.001) {
+              this.loading = false;
+              return this.messageService.errorBubble(`負項交易支付總額 (${totalPayAmt}) 必須等於 銷售總額 (${totalSaleAmt})。`, '金額檢核失敗');
+            }
+          }
+          // 4. 發票金額與支付工具(未開=稅別0)檢核
+          const guiBegNo = this.dataForm.getRawValue().TXN_GUIBegNo;
+
+          // 只有在「有填發票號碼」且「不為 00000000」的情況下才檢核
+          if (guiBegNo && guiBegNo !== '00000000') {
+            const taxType0Sum = payNoData
+              .filter(item => item.PAY_TaxType === '0')
+              .reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+
+            const txnTotGUI = Number(this.dataForm.getRawValue().TXN_TotGUI) || 0;
+
+            if (Math.abs(taxType0Sum - txnTotGUI) > 0.001) {
+              this.loading = false;
+              return this.messageService.errorBubble(
+                `未開支付總額 (${taxType0Sum})不等於發票金額 (${txnTotGUI})`,
+                '金額檢核失敗'
+              );
+            }
+          }
           const data = {
             ...body,
             EditType: TLS24010_EDIT_TYPE.付款別修正,
@@ -660,6 +749,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     controls.ORG_TXN_Date.updateValueAndValidity();
     controls.ORG_ECR_No.updateValueAndValidity();
+    if (this.isFormCreateable || this.type === FIX_TYPE.付款別修正) {
+      this.updateTxnTotGUI(); // 更新(未開)發票金額
+    }
   }
 
   get currentTotalSaleAmt(): number {
@@ -668,6 +760,53 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   renderComponent = true;
   onClear() {
     this.loadInitialData();
+  }
+
+  /** 自動計算(未開)發票金額 */
+  updateTxnTotGUI() {
+    const guiBegNo = this.dataForm.controls.TXN_GUIBegNo.value;
+
+    // 如果發票號碼沒填或是填 '00000000'，發票金額直接給 0
+    if (!guiBegNo || guiBegNo === '00000000') {
+      this.dataForm.controls.TXN_TotGUI.setValue(0, { emitEvent: false });
+      return;
+    }
+
+    let txnTotSaleAmt = 0;
+    let txnTotHaveTax = 0;
+
+    if (this.isFormCreateable) {
+      // --- 情境 1：新增 ---
+      // 取得銷售總額
+      txnTotSaleAmt = this.currentTotalSaleAmt;
+
+      // 取得稅別為 '1' 的支付總額 (從 pos5008Comp)
+      const pos5008DataList = this.pos5008Comp?.POS5008Data || [];
+
+      txnTotHaveTax = pos5008DataList.reduce((sum, item, index) => {
+        // 只有被勾選且稅別為 '1' 的才加總
+        if (item.selected && item.PAY_TaxType === '1') {
+          const formGroup = this.pos5008Comp?.posFormArrayControls[index];
+          const payAmt = Number(formGroup?.get('TXN_PayAmt')?.value) || 0;
+          return sum + payAmt;
+        }
+        return sum;
+      }, 0);
+
+    } else if (this.type === this.EDIT_TYPES.PAY_NO) {
+      // --- 情境 2：付款別修正 ---
+      // 取得銷售總額 (編輯狀態下商品不變，直接從 ProductDetailList 加總)
+      txnTotSaleAmt = this.ProductDetailList.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+      // 取得稅別為 '1' 的支付總額 (從 paynoComp)
+      const payNoData = this.paynoComp?.payNoData || [];
+      txnTotHaveTax = payNoData
+        .filter(item => item.PAY_TaxType === '1')
+        .reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+    }
+    // 套用公式： 總銷售額-已開總金額
+    const totGUI = Math.max(0, txnTotSaleAmt - txnTotHaveTax);
+    // 更新 FormControl
+    this.dataForm.controls.TXN_TotGUI.setValue(totGUI, { emitEvent: false });
   }
 }
 
