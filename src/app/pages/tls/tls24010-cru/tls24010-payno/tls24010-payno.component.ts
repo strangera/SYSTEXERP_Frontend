@@ -1,9 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, POS1006Item } from '@service/utility/dropDownList.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -21,17 +21,18 @@ import { forkJoin } from 'rxjs';
 })
 export class Tls24010PaynoComponent implements OnInit, OnChanges {
   @Input() data: POS5008Data[] = [];
+  @Output() payChange = new EventEmitter<void>();
   messageService = inject(NotificationService);
   payNoData: POS5008Data[] = [];
   checkPayNoList: string[] = []; // 已審核的付款別清單
   private previousData: POS5008Data[] = [];
-  PAY_TypeOptions: IDropdownItem[] = [];
+  PAY_TypeOptions: POS1006Item[] = [];
   columns: EditColumn[] = [
     {
       field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No',
       onChange: (rowData: any, value: any, col: EditColumn, index: number) => this.handlePayNoChange(rowData)
     },
-    { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber', disabled: () => true },
+    { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
     { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: getSYS1000Options('CRD_Type'), optionLabel: 'label', optionValue: 'value', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" },
     { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_No === "10" },
     { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" || rowData.PAY_No === "12" || rowData.PAY_No === "14" },
@@ -120,7 +121,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     this.payNoData = newData.map((item) => {
       const selectedOption = this.PAY_TypeOptions.find(i => i.No === item.PAY_No);
       const mappedPAYType = selectedOption?.PAY_Type;
-
+      const mappedPAYTaxType = selectedOption?.PAY_TaxType;
       let crdNoTxnCouponNoTxnPayDesc = '';
       if (mappedPAYType === '0') {
         crdNoTxnCouponNoTxnPayDesc = item.CRD_No || '';
@@ -135,7 +136,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
         PAY_OverPay: selectedOption?.PAY_OverPay,
         TERM_No: item.TERM_No != null ? String(item.TERM_No) : null,
         PAY_Type: mappedPAYType,
-
+        PAY_TaxType: mappedPAYTaxType || item.PAY_TaxType,
         // 將選定的值賦予給欄位顯示用屬性
         CRD_NoTXN_CouponNoTXN_PayDesc: crdNoTxnCouponNoTxnPayDesc,
 
@@ -148,6 +149,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
 
     this.previousData = newData;
     this.cdr.markForCheck();
+    this.payChange.emit();
   }
 
   handlePayNoChange(rowData: POS5008Data): void {
@@ -179,6 +181,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     if (selectedItem) {
       event.rowData.PAY_Type = selectedItem.PAY_Type;
       event.rowData.PAY_OverPay = selectedItem.PAY_OverPay;
+      event.rowData.PAY_TaxType = selectedItem.PAY_TaxType;
 
       if (event.field === 'PAY_No') {
         // ... (清空邏輯保持不變)
@@ -224,6 +227,11 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
       // Immutable 更新 payNoData，確保父元件讀取時能偵測到變動
       this.payNoData = [...this.payNoData];
     }
+
+    // 只要金額或付款別有異動，就通知父元件重算發票金額！
+    if (event.field === 'TXN_PayAmt' || event.field === 'PAY_No') {
+      this.payChange.emit();
+    }
   }
   rowEditDisabled = (row: any): boolean => row.Check_Status === 'Y'; // 已審核disabled資料
   isRowSelectable = (row: any): boolean => row.Check_Status !== 'Y'; // 已審核禁用選取
@@ -231,5 +239,10 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   /** 有已審核資料才顯示提示訊息 */
   get hasCheckedData(): boolean {
     return this.checkPayNoList.length > 0;
+  }
+
+  onDataChange(newData: POS5008Data[]): void {
+    this.payNoData = newData;
+    this.payChange.emit(); // 通知父元件重算
   }
 }
