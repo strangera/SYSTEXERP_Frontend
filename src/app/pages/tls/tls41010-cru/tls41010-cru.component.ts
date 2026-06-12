@@ -7,6 +7,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { InputTextareaComponent } from "src/app/shared/componentkit/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -36,6 +37,7 @@ import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
     InputNumberComponent,
     NgIf,
     TranslateModule,
+    InputTextareaComponent
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
@@ -70,6 +72,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_IP: [null, [Validators.maxLength(20)]],
     ECR_SrvIP: [null, [Validators.maxLength(20)]],
     ECR_TmplNo: [null, [Validators.maxLength(8)]],
+    ECR_Desc: [null, [Validators.maxLength(256)]],
     ECR_SernoType: ['2', [Validators.required, Validators.maxLength(1)]],
     ECR_GUI_Type: ['07', [Validators.required, Validators.maxLength(2)]],
     ECR_TimeTickInvl: [1, [Validators.required, Validators.min(1), Validators.max(999999)]],
