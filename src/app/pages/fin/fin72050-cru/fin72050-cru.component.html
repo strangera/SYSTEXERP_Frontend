@@ -7,7 +7,7 @@
   <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
 
     <!-- ──────────────────────────────────────────────────────────────── -->
-    <!-- 階段 1：新增模式（只填保管人 + 盤點日期 → 列印空白盤點單）        -->
+    <!-- 階段 1：新增模式（只填保管人 + 盤點日期 → 建立空白盤點單）        -->
     <!-- ──────────────────────────────────────────────────────────────── -->
     <ng-container *ngIf="isCreateStage">
       <p-panel header="新增盤點單" class="line-height-3 m-0 mb-3">
@@ -37,11 +37,11 @@
           <app-button btnType="back" label="離開" (click)="onCancel()"></app-button>
           <app-button
             btnType="default"
-            label="列印空白盤點單"
-            icon="pi pi-print"
+            label="建立"
+            icon="pi pi-check"
             severity="primary"
-            [loading]="printBlankLoading"
-            (click)="onPrintBlank()"
+            [loading]="createLoading"
+            (click)="onCreate()"
           ></app-button>
         </div>
       </p-panel>

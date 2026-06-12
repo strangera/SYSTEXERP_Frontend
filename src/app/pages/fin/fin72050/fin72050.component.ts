@@ -7,7 +7,6 @@ import { FIN72050Service } from '@service/api/fin/fin72050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import {
-  DeleteFIN72050Request,
   FIN72050QueryData,
   FIN72050_STATUS_OPTIONS,
   QueryFIN72050Request,
@@ -81,7 +80,6 @@ export class FIN72050Component
     { field: 'SeqNo', header: '序號', visible: true, align: 'right' },
     { field: 'PCS_PST_No', header: '盤點單號', visible: true },
     { field: 'PCC_Date', header: '盤點日期', visible: true, format: formatDate },
-    { field: 'Keep_UsrNo', header: '保管人代碼', visible: true },
     { field: 'Keep_UsrName', header: '保管人姓名', visible: true },
     { field: 'Keep_QuotaAmt', header: '零用金額度', visible: true, align: 'right', format: formatAmount2 },
     { field: 'PCC_Status_Name', header: '盤點單狀態', visible: true },
@@ -98,8 +96,6 @@ export class FIN72050Component
     },
     { field: 'PCS_Remark', header: '備註說明', visible: true },
   ];
-
-  selectedItems: FIN72050QueryData[] = [];
 
   // ── 下拉資料 ────────────────────────────────────────────
   keepUser_Options = signal<Option[]>([]);          // 保管人
@@ -161,34 +157,6 @@ export class FIN72050Component
       return `${y}-${m}-${d}`;
     }
     return String(value);
-  }
-
-  // ── 批次刪除 ──────────────────────────────────────────
-  onBatchDelete(items: FIN72050QueryData[]): void {
-    if (!items?.length) {
-      this.messageService.warnBubble('請先勾選要刪除的資料');
-      return;
-    }
-    this.messageService.confirm({
-      header: '確認刪除',
-      message: `是否確認刪除 ${items.length} 筆資料？`,
-      accept: () => {
-        const req: DeleteFIN72050Request = { PCS_PST_Nos: items.map(x => x.PCS_PST_No) };
-        this.fin72050Service.deleteFIN72050(req)
-          .pipe(untilDestroyed(this))
-          .subscribe({
-            next: res => {
-              if (res.Status === '0000') {
-                this.messageService.successBubble('刪除成功');
-                this.selectedItems = [];
-                this.onSubmit(this.queryForm);
-              } else {
-                this.messageService.errorBubble('操作失敗：' + res.Message);
-              }
-            },
-          });
-      },
-    });
   }
 
   // ── 載入下拉選單 ─────────────────────────────────────

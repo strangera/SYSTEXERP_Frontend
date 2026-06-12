@@ -1,4 +1,4 @@
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -7,15 +7,12 @@ import { environment } from 'src/environments/environment';
 import {
   CloseFIN72050Request,
   CloseVoidFIN72050Result,
-  DeleteFIN72050Request,
-  DeleteFIN72050Result,
   FIN72050Detail,
   FIN72050QueryData,
   GetPCCNoFIN72050Request,
   GetPCCNoFIN72050Result,
   InsertFIN72050Request,
   InsertFIN72050Result,
-  PrintBlankFIN72050Request,
   QueryFIN72050DetailRequest,
   QueryFIN72050Request,
   UpdateFIN72050Request,
@@ -37,25 +34,37 @@ export class FIN72050Service {
 
   /** 列表查詢 */
   queryFIN72050(req: QueryFIN72050Request): Observable<BaseQueryResponse<FIN72050QueryData>> {
-    return this.http
-      .post<BaseQueryResponse<FIN72050QueryData>>(`${this.apiUrl}/queryFIN72050`, req)
-      .pipe(
-        map(res => ({
-          ...res,
-          Data: (res.Data ?? []).map(item => ({
-            ...item,
-            // 若後端未回 PCC_Status_Name，前端 map 一次；有則保留後端值
-            PCC_Status_Name: item.PCC_Status_Name?.trim()
-              ? item.PCC_Status_Name
-              : getFIN72050StatusName(item.PCC_Status),
-          })),
-        }))
-      );
+    // 後端回傳：{ Status, Data: { QueryData: T[], TotalCount, TotalPage }, Message, ... }
+    // 為符合前端規範（元件用 res.Data / res.TotalCount），在此 map 拍平。
+    interface RawResponse {
+      Status: string;
+      Message: string;
+      Data?: {
+        QueryData?: FIN72050QueryData[];
+        TotalCount?: number;
+        TotalPage?: number;
+      };
+    }
+    return this.http.post<RawResponse>(`${this.apiUrl}/queryFIN72050`, req).pipe(
+      map(res => {
+        const items = (res.Data?.QueryData ?? []).map(item => ({
+          ...item,
+          PCC_Status_Name: getFIN72050StatusName(item.PCC_Status),
+        }));
+        return {
+          Status: res.Status,
+          Message: res.Message,
+          Data: items,
+          TotalCount: res.Data?.TotalCount ?? items.length,
+          TotalPage: res.Data?.TotalPage ?? 0,
+        } as BaseQueryResponse<FIN72050QueryData>;
+      })
+    );
   }
 
   /** 查詢單筆詳細（編輯 / 檢視） */
   queryFIN72050Detail(req: QueryFIN72050DetailRequest): Observable<ApiResponse<FIN72050Detail>> {
-    return this.http.post<ApiResponse<FIN72050Detail>>(`${this.apiUrl}/queryFIN72050Detail`, req);
+    return this.http.post<ApiResponse<FIN72050Detail>>(`${this.apiUrl}/detailFIN72050`, req);
   }
 
   /** 自動取號（新增第一階段：保管人+盤點日期 → 盤點單號 + 四個金額） */
@@ -81,18 +90,5 @@ export class FIN72050Service {
   /** 作廢：PCC_Status 1 → 9 */
   voidFIN72050(req: VoidFIN72050Request): Observable<ApiResponse<CloseVoidFIN72050Result>> {
     return this.http.post<ApiResponse<CloseVoidFIN72050Result>>(`${this.apiUrl}/voidFIN72050`, req);
-  }
-
-  /** 批次刪除（查詢頁勾選後刪除多筆盤點單） */
-  deleteFIN72050(req: DeleteFIN72050Request): Observable<ApiResponse<DeleteFIN72050Result>> {
-    return this.http.post<ApiResponse<DeleteFIN72050Result>>(`${this.apiUrl}/deleteFIN72050`, req);
-  }
-
-  /** 列印空白盤點單 PDF（新增頁兩階段流程使用） */
-  printBlankFIN72050(req: PrintBlankFIN72050Request): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/printBlankFIN72050`, req, {
-      observe: 'response',
-      responseType: 'blob' as 'json',
-    }) as Observable<HttpResponse<Blob>>;
   }
 }

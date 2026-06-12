@@ -18,19 +18,16 @@ export interface QueryFIN72050Request extends BaseQueryRequest {
   PCS_Remark?: string;          // 說明（模糊）
   PCC_DateFrom?: string;        // 盤點日期（起）
   PCC_DateTo?: string;          // 盤點日期（迄）
-  SortColumn?: string;          // 排序欄位
-  SortDirection?: 'ASC' | 'DESC';
 }
 
 export interface FIN72050QueryData {
   SeqNo: number;
   PCS_PST_No: string;        // 盤點單號
   PCC_Date: string;          // 盤點日期
-  Keep_UsrNo: string;        // 保管人代碼
-  Keep_UsrName: string;      // 保管人姓名
+  Keep_UsrName: string;      // 保管人姓名（swagger 未回 Keep_UsrNo，故省略）
   Keep_QuotaAmt: number;     // 零用金額度
   PCC_Status: string;        // 狀態代碼
-  PCC_Status_Name?: string;  // 狀態名稱
+  PCC_Status_Name?: string;  // 狀態名稱（由前端 map）
   PCC_ActAmt: number;        // 盤點金額
   PCC_NOPAY_AMT: number;     // 已支付未請款金額
   PCC_NOREC_AMT: number;     // 已請款未撥補金額
@@ -48,7 +45,7 @@ export interface QueryFIN72050DetailRequest {
 
 export interface FIN72050Detail {
   id: number;
-  MID: string;
+  MID: number;
   SYS_StoreNo: string;
   PCS_PST_No: string;
   PCC_Date: string;
@@ -86,7 +83,7 @@ export interface FIN72050Detail {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 自動取號（新增第一階段）                                                    */
+/* 自動取號(新增第一階段)                                                       */
 /* -------------------------------------------------------------------------- */
 
 export interface GetPCCNoFIN72050Request {
@@ -95,9 +92,7 @@ export interface GetPCCNoFIN72050Request {
 }
 
 export interface GetPCCNoFIN72050Result {
-  // 兩鍵備援（依 Q-005 自決）：後端可能以 PCC_SerialNo 或 PCS_PST_No 命名
-  PCC_SerialNo?: string;
-  PCS_PST_No?: string;
+  PCC_SerialNo: string;
   Keep_QuotaAmt: number;
   PCC_NOPAY_AMT: number;
   PCC_NOREC_AMT: number;
@@ -129,8 +124,6 @@ export interface InsertFIN72050Request {
   PCC_ActAmt_1000?: number;
   PCC_ActAmt_2000?: number;
   PCS_Remark?: string;
-  CRT_USR_No?: string;
-  CRT_USR_Name?: string;
 }
 
 export interface UpdateFIN72050Request {
@@ -147,13 +140,9 @@ export interface UpdateFIN72050Request {
   PCC_ActAmt_1000?: number;
   PCC_ActAmt_2000?: number;
   PCS_Remark?: string;
-  UPD_USR_No?: string;
-  UPD_USR_Name?: string;
 }
 
 export interface InsertFIN72050Result {
-  IsSuccess: boolean;
-  ErrMsg?: string;
   PCS_PST_No: string;
   PCC_NOPAY_AMT?: number;
   PCC_NOREC_AMT?: number;
@@ -163,42 +152,19 @@ export interface InsertFIN72050Result {
 export type UpdateFIN72050Result = InsertFIN72050Result;
 
 /* -------------------------------------------------------------------------- */
-/* 批次刪除（查詢頁）                                                          */
-/* -------------------------------------------------------------------------- */
-
-export interface DeleteFIN72050Request {
-  PCS_PST_Nos: string[];
-}
-
-export interface DeleteFIN72050Result {
-  DeletedCount: number;
-}
-
-/* -------------------------------------------------------------------------- */
-/* 列印空白盤點單（新增頁兩階段流程）                                          */
-/* -------------------------------------------------------------------------- */
-
-export interface PrintBlankFIN72050Request {
-  PCS_PST_No: string;
-}
-
-/* -------------------------------------------------------------------------- */
 /* 結案 / 作廢                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export interface CloseFIN72050Request {
   PCS_PST_No: string;
-  UserNo?: string;
-  UserName?: string;
 }
 
 export interface VoidFIN72050Request {
   PCS_PST_No: string;
-  VoidUsrNo?: string;
-  VoidUsrName?: string;
 }
 
 export interface CloseVoidFIN72050Result {
+  PCS_PST_No?: string;
   ReturnCode: number;   // 0=成功, -1=狀態錯誤/找不到, -99=系統錯誤
   ReturnMsg: string;
 }
@@ -214,19 +180,8 @@ export const FIN72050_STATUS_OPTIONS: { No: string; Name: string; Label: string 
   { No: '9', Name: '作廢', Label: '9 - 作廢' },
 ];
 
-/**
- * 盤點面額方式（PCC_Type）
- *
- * @deprecated 對齊舊系統後固定為 '2' 點鈔盤點，已不再提供切換 UI。
- * 仍保留常數以利日後 API 對接，但前端不會 render radio。
- */
-export const FIN72050_PCC_TYPE_OPTIONS: { value: '1' | '2'; label: string }[] = [
-  { value: '1', label: '總額盤點' },
-  { value: '2', label: '點鈔盤點' },
-];
-
 // 面額（依規格欄位 PCC_ActAmt_{denom}，依使用者要求由大至小顯示）
-// 新增 `qtyControlName`：對應「數量」FormControl（qty_{denom}），三欄表格使用。
+// qtyControlName 對應「數量」FormControl（qty_{denom}），三欄表格使用。
 export const FIN72050_DENOMINATIONS: {
   key: string;
   controlName: string;
