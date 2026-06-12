@@ -1,13 +1,14 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { environment } from 'src/environments/environment';
-// import { HttpClient } from '@angular/common/http'; // 如果要在服務中呼叫 Debug API，需要這個
 
 const DEBUG_KEY = 'AppDebugModeEnabled';
+
 // 定義 SQL 數據的型別
 export interface ExecutedSqlDetail {
   sql: string;
 }
+
 export interface ApiMetrics {
   totalTime: number;          // 前端計時的總時間（體感）
   beforeDbTime: number;       // ✨ 新增：進 DB 前 C# 耗時 (對應 BeforeDbTimeMs)
@@ -16,6 +17,7 @@ export interface ApiMetrics {
   networkTime: number;        // 網路與序列化損耗
   totalBackendTime?: number;  // 後端總時間 (對應 TotalBackendTimeMs)
 }
+
 /** 完整 API 呼叫的除錯記錄項目 */
 export interface ApiSqlHistoryEntry {
   apiUrl: string;
@@ -31,40 +33,38 @@ export interface ApiSqlHistoryEntry {
 export class DebugToggleService {
   public readonly showDebugToggleInMenu: boolean = environment.showDebugToggleInMenu;
   private readonly initialDebugState = localStorage.getItem(DEBUG_KEY) === 'true';
+
   // 專門用於控制是否要顯示除錯資訊的開關狀態 (預設關閉)
   public isDebugEnabled = signal<boolean>(this.initialDebugState);
-
   // 儲存最近一次 API 呼叫所收集到的 SQL 資訊
   public latestSqlData = signal<ExecutedSqlDetail[]>([]);
-
   // 儲存所有歷史 SQL 語法記錄的 Signal (儲存完整的 ApiSqlHistoryEntry 陣列)
   public allSqlHistory = signal<ApiSqlHistoryEntry[]>([]);
-
   // 儲存最近一次 API 呼叫所收集到的 StackTrace
   public latestStackTrace = signal<string | null>(null);
+
   private readonly notificationService = inject(NotificationService);
-  // private readonly http = inject(HttpClient); // 如果需要在服務中發出 HTTP 請求，則需要這個
 
   constructor() {
-    // 方便開發者：將指令公開到瀏覽器全域變數 (僅限非生產環境)
-    if (!environment.production) {
-      (window as any).SQL_ON = () => this.enableDebugByCommand(true);
-      (window as any).SQL_OFF = () => this.enableDebugByCommand(false);
+    // 💡 原本邏輯：只在非正式環境綁定全域指令
+    // if (!environment.production) { ... }
 
-      // 如果服務已經初始化時發現 Local Storage 是開啟的，我們就 Log 一下
-      if (this.initialDebugState) {
-        console.log(`[Debug Service] 偵測到 Local Storage 啟用，SQL 偵錯模式自動開啟。`);
-      } else {
-        console.log('[Debug Service] 已啟用全域除錯指令：SQL_ON() / SQL_OFF()');
-      }
+    // 🛠️ 調整：前端一律允許，讓生產環境也可以在 F12 Console 呼叫指令。改由後端權限控管是否真正回傳 SQL 資料。
+    (window as any).SQL_ON = () => this.enableDebugByCommand(true);
+    (window as any).SQL_OFF = () => this.enableDebugByCommand(false);
+
+    if (this.initialDebugState) {
+      console.log(`[Debug Service] 偵測到 Local Storage 啟用，SQL 偵錯模式自動開啟。`);
+    } else {
+      console.log('[Debug Service] 已啟用全域除錯指令：SQL_ON() / SQL_OFF()');
     }
   }
+
   /**
-    * 切換除錯開關狀態。
-    */
+   * 切換除錯開關狀態。
+   */
   toggleDebug(enable: boolean) {
     this.isDebugEnabled.set(enable);
-
     // 關鍵：每次切換都必須將最新狀態寫入 Local Storage
     localStorage.setItem(DEBUG_KEY, enable.toString());
 
@@ -79,35 +79,31 @@ export class DebugToggleService {
   }
 
   /**
-      * 供 Console 指令呼叫的方法，強制開啟或關閉除錯模式。
-      */
+   * 供 Console 指令呼叫的方法，強制開啟或關閉除錯模式。
+   */
   public enableDebugByCommand(enable: boolean): void {
-    if (environment.production && enable) {
-      console.error('生產環境下不允許使用指令強制開啟除錯模式！');
-      this.notificationService.errorBubble('生產環境下不允許開啟除錯模式。');
-      return;
-    }
-    this.toggleDebug(enable);
+    // 💡 原本邏輯：正式環境下阻斷並拒絕開啟除錯模式
+    // if (environment.production && enable) {
+    //   console.error('生產環境下不允許使用指令強制開啟除錯模式！');
+    //   this.notificationService.errorBubble('生產環境下不允許開啟除錯模式。');
+    //   return;
+    // }
 
-    // 可以在這裡做額外的 Log 或通知
+    // 🛠️ 調整：前端一律放行，是否回傳效能與 SQL 數據改由後端 API 依帳號權限或環境判斷。
+    this.toggleDebug(enable);
     console.log(`[Debug] 偵錯模式已透過指令設定為: ${enable ? '開啟' : '關閉'}`);
   }
 
   /**
-    * 在 Interceptor 中呼叫，用於儲存並顯示 SQL 資訊。
-    * 修正邏輯：將完整的 API 呼叫記錄到 allSqlHistory 中。
-    * @param apiUrl API 請求路徑
-    * @param sqlData 來自 Debug API 的 SQL 列表
-    * @param stackTrace 來自 Debug API 的 StackTrace
-    */
+   * 在 Interceptor 中呼叫，用於儲存並顯示 SQL 資訊。
+   */
   setAndShowSqlData(
     apiUrl: string,
     sqlData: string[] | ExecutedSqlDetail[],
     stackTrace: string | null = null,
-    metrics?: ApiMetrics // 新增此參數
+    metrics?: ApiMetrics
   ) {
     let processedSqlData: ExecutedSqlDetail[] = [];
-
     if (sqlData.length > 0 && typeof sqlData[0] === 'string') {
       processedSqlData = (sqlData as string[]).map(sqlString => ({ sql: sqlString }));
     } else {
@@ -123,13 +119,14 @@ export class DebugToggleService {
         sqlData: processedSqlData,
         stackTrace: stackTrace,
         timestamp: new Date(),
-        metrics: metrics // 儲存效能數據
+        metrics: metrics
       };
 
       this.allSqlHistory.update(currentHistory => {
         const MAX_ENTRIES = 15;
         const TRIM_COUNT = 5;
         const updatedHistory = [...currentHistory, newEntry];
+
         if (updatedHistory.length > MAX_ENTRIES) {
           return updatedHistory.slice(TRIM_COUNT);
         }
@@ -140,9 +137,10 @@ export class DebugToggleService {
       this.latestStackTrace.set(null);
     }
   }
+
   /**
-      * 新增功能：清除所有歷史 SQL 記錄
-      */
+   * 清除所有歷史 SQL 記錄
+   */
   public clearHistory(): void {
     this.allSqlHistory.set([]);
     this.latestSqlData.set([]);
@@ -150,9 +148,10 @@ export class DebugToggleService {
     this.notificationService.infoBubble('所有 SQL 歷史記錄已清除。');
     console.log('[Debug Service] 所有 SQL 歷史記錄已手動清除。');
   }
+
   /**
-    * 為了保持向下相容性，但請注意此函數現在回傳的是 ApiSqlHistoryEntry[]
-    */
+   * 為了保持向下相容性，但請注意此函數現在回傳的是 ApiSqlHistoryEntry[]
+   */
   getAllSqlHistory(): ApiSqlHistoryEntry[] {
     return this.allSqlHistory();
   }
