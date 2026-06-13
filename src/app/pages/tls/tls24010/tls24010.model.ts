@@ -21,10 +21,10 @@ export enum TXN_STATUS {
   退貨交易 = 'E',
   作廢交易 = 'D'
 }
-export const txnStatusOptions = [
-  { label: '一般交易', value: 'N' },
-  { label: '退貨交易', value: 'E' },
-  { label: '作廢交易', value: 'D' },
+export const TxnTypeOptions = [
+  { label: '銷貨', value: '01' },
+  { label: '退貨', value: '02' },
+  { label: '作廢', value: '03' },
 ];
 export const columns: ReportColumn[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
@@ -32,7 +32,15 @@ export const columns: ReportColumn[] = [
   { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(6, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
-  { field: 'TXN_Status', header: '交易型態', format: (value: string) => txnStatusOptions.find(opt => opt.value === value)?.label || value },
+  {
+    field: 'TXN_Type',
+    header: '交易型態',
+    format: (value: string, _, rowData: any) => {
+      const label = TxnTypeOptions.find(opt => opt.value === value)?.label || value;
+
+      return rowData?.TXN_Status === 'D' ? `${label}(取消)` : label;
+    }
+  },
   { field: 'CRT_USR_Name', header: '補登者' },
   { field: 'CRT_Date', header: '補登日期', format: formatDateTime },
 ];

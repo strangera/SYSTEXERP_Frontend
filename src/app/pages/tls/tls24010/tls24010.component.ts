@@ -30,7 +30,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 import { FileExportService } from './../../../shared/service/file-export.service';
-import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
+import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, TxnTypeOptions } from './tls24010.model';
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
@@ -75,7 +75,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   });
   // Options
   TXN_GUIPaperOptions = TXN_GUIPaperOptions
-  txnStatusOptions = txnStatusOptions
+  TxnTypeOptions = TxnTypeOptions
   ECR_NoOptions = this.dropDown.queryPos1002();
   TLT_NoOptions: IDropdownItem[] = [];
   // Table
@@ -196,6 +196,13 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             {
               label: (rowData: TLS24010Data) => {
                 if (this.isSpecialPaper) {
+                  const today = new Date();
+                  const txnDate = new Date(rowData.TXN_Date);
+                  const isToday = today.toDateString() === txnDate.toDateString();
+
+                  if (isToday) {
+                    return '此筆作廢交易請至收銀機台執行取消';
+                  }
                   return rowData.Check_Status === 'Y' ? '已審核不可取消作廢' : '取消作廢';
                 }
 
@@ -218,6 +225,13 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
                 if (rowData.TXN_Status === TXN_STATUS.作廢交易) return true;
                 //「取消作廢」模式要多判斷是否已審核
                 if (this.isSpecialPaper) {
+                  // 判斷 TXN_Date 是否為當天
+                  const today = new Date();
+                  const txnDate = new Date(rowData.TXN_Date);
+                  const isToday = today.toDateString() === txnDate.toDateString();
+
+                  if (isToday) return true; // 當天作廢交易，停用按鈕
+
                   return rowData.Check_Status === 'Y';
                 }
                 return false;
