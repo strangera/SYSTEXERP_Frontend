@@ -6,7 +6,7 @@ import { Column, formatAmount, formatDate } from '@shared/componentkit/table/tab
 // 換開狀態選項
 export const GUI_STATUS_OPTIONS = [
   { label: '正常', value: '0' },
-  { label: '刪除', value: '1' }
+  { label: '作廢', value: '1' }
 ];
 // 發票聯式選項
 export const GUI_PAPER_OPTIONS = [
