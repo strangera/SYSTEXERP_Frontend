@@ -87,11 +87,25 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   private updateColumnsChange(): void {
     // 基礎欄位
     let baseColumns: EditColumn[] = [
-      { field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px' },
+      {
+        field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px',
+        disabled: (v: any, i?: number, row?: any) => String(row?.['TXN_GUIPaper']) === 'E'
+      },
       {
         field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS,
         optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
-        onChange: () => this.updateColumnsChange(),
+        onChange: (value: any, rowData: any) => {
+          if (value === 'E' && rowData) {
+            // 當選擇 'E' 時，強制將日期設為當日
+            const today = new Date();
+            const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            rowData.TXN_Date = todayLocal as unknown as string;
+
+            // 強制更新陣列參考，以確保 table-edit 畫面正確重繪
+            this.changeEditData = [...this.changeEditData];
+          }
+          this.updateColumnsChange();
+        },
       },
     ];
     // 判斷是否要顯示發票號碼
