@@ -352,34 +352,32 @@ export class TableReportComponent implements OnChanges {
     const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
 
-    this.queryFunction(body)
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe(res => {
-        this.hasSearched = true;
-        if (res?.Data && res.Data.length > 0) {
-          this.virtualData = [];
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
+      this.hasSearched = true;
+      if (res?.Data && res.Data.length > 0) {
+        this.virtualData = [];
+        this.dt.virtualScroll = false;
+        this.subtotalService.clearGroupTotals();
+        this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
+        this.data = res.Data;
+        this.isNextPagePreloaded = false;
+
+        this.syncTableSortMeta();
+        this.cdr.detectChanges();
+
+        if (res.Data.length < pageSize) {
+          this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.subtotalService.clearGroupTotals();
-          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-          this.data = res.Data;
-          this.isNextPagePreloaded = false;
-
-          this.syncTableSortMeta();
+        } else {
+          this.dt.virtualScroll = true;
+          this.virtualData = Array.from({ length: res.Data.length });
           this.cdr.detectChanges();
-
-          if (res.Data.length < pageSize) {
-            this.virtualData = this.data;
-            this.dt.virtualScroll = false;
-          } else {
-            this.dt.virtualScroll = true;
-            this.virtualData = Array.from({ length: res.Data.length });
-            this.cdr.detectChanges();
-            this.virtualData = this.data;
-          }
-          this.selectedItems = [];
-          this.dataChange.emit(this.data);
+          this.virtualData = this.data;
         }
-      });
+        this.selectedItems = [];
+        this.dataChange.emit(this.data);
+      }
+    });
   }
 
   customSort(event: TableQueryPayload) {
