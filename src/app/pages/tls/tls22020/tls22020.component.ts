@@ -50,11 +50,16 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     ECR_No_Start: [null],
     ECR_No_End: [null],
     IsZeroShow: [null],
+    rece_yn: [null],
     TXN_DateStart: [null as Date | null],
     TXN_DateEnd: [null as Date | null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
     pageSize: [30],
   });
+  statusOptions = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' }
+  ];
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   // 表格資料
   data: TLS22020Data[] = [];
@@ -70,10 +75,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   exportExcelLoading = false;
   // 下拉選單選項
   totalRecords = 0;
-  statusOptions = [
-    { label: '是', value: 'Y' },
-    { label: '否', value: 'N' }
-  ];
   selectedColumns = creditCardColumns;
   columnGroup = creditCardGroup;
   total: Record<string, number> = {
