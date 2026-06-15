@@ -191,6 +191,23 @@
     }
   }
 
+  // 多行 HTML 欄位（用於需要換行顯示的欄位，如多張卡號）
+  .html-cell-multiline .html-cell {
+    &,
+    * {
+      display: block !important;
+      -webkit-line-clamp: unset !important;
+      line-clamp: unset !important;
+      -webkit-box-orient: unset !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      max-height: none !important;
+      max-width: none !important;
+      white-space: normal !important;
+      word-break: break-all !important;
+    }
+  }
+
   .no-wrap {
     white-space: nowrap;
 

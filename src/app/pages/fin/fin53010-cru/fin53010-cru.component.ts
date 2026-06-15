@@ -605,7 +605,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '借方金額',
         textAlign: 'right',
         type: 'inputNumber',
-        validate: [this.validateRequired],
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
@@ -613,7 +612,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '貸方金額',
         textAlign: 'right',
         type: 'inputNumber',
-        validate: [this.validateRequired],
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
