@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,6 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
+import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -29,6 +30,42 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-tls32030',
   templateUrl: './tls32030.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+
+      // 比較群組 - 帶有朝氣的清新莫蘭迪綠（柔和舒適）
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+
+      // 差異群組 - 溫暖溫潤的莫蘭迪落日橘黃（醒目不刺眼）
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+
+      // 成長率群組 - 氣質迷人的莫蘭迪微醺紫（點綴效果佳）
+      .bg-group-growth {
+        background-color: #f3e9f7 !important;
+      }
+
+      // 小技巧：讓表格滑鼠滑過時的 hover 效果依舊自然
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-growth {
+        background-color: #ebd9f2 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     AsyncPipe,
@@ -48,6 +85,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     RadiobuttonComponent,
     TableReportComponent,
     CheckboxModule,
+    NgFor,
+    LocationSplitPipe
   ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
@@ -130,7 +169,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'SYS_Name', header: '櫃別', align: 'left' },
     { field: 'TltNo', header: '專櫃編號', align: 'left' },
     { field: 'TltName', header: '專櫃名稱', align: 'left' },
-    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
+    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' }, // 👈 拿掉 type 和 format
     { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
@@ -139,7 +178,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
+    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' }, // 👈 拿掉 type 和 format
     { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
@@ -152,7 +191,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_Target', header: '目標差異', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: (value) => formatPercentage(value, 2) },
     { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: formatAmount },
@@ -194,6 +233,20 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS32030', 'tls/tls32030', this.queryForm, f => this.onSubmit(f));
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.groupField) {
+          case '基準': return 'bg-group-base';
+          case '比較': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '成長率': return 'bg-group-growth';
+          default: return '';
+        }
+      },
+      // 確保如果有個別欄位自己寫的 format，就優先用它自己的（位置編號需要這行生效）
+      format: col.format ? col.format : undefined
+    }));
     this.setWeekOptions(this.queryForm.controls.year.value);
 
     // 【修改】初始化時傳入 null，不再預設計算月報表日期
