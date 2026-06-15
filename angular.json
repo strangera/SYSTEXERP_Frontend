@@ -86,36 +86,6 @@
                 "src/serve.json"
               ]
             },
-            "tsrdwebdev": {
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.staging.ts"
-                }
-              ],
-              "outputHashing": "all",
-              "optimization": true,
-              "aot": true,
-              "baseHref": "/tsrdwebdev/",
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "2mb",
-                  "maximumError": "5mb"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "2mb",
-                  "maximumError": "5mb"
-                }
-              ],
-              "assets": [
-                "src/favicon.ico",
-                "src/assets",
-                "src/serve.json",
-                "src/web.config.template"
-              ]
-            },
             "tsrdweb": {
               "fileReplacements": [
                 {
@@ -166,9 +136,6 @@
             },
             "development": {
               "buildTarget": "TSRDERP_Frontend:build:development"
-            },
-            "staging": {
-              "buildTarget": "TSRDERP_Frontend:build:staging"
             },
             "leo": {
               "buildTarget": "TSRDERP_Frontend:build:leo"
