@@ -14,7 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProgressBarModule } from 'primeng/progressbar';
 
 // 自定義組件與服務
-import { FIN51011Data, FIN51011Service } from '@service/api/fin/fin51011.service';
+import { FIN51011Data, FIN51011QueryPayload, FIN51011Service } from '@service/api/fin/fin51011.service';
 import { TLS27010Service } from '@service/api/tls/tls27010.service'; // 保留原本的 Service
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -60,6 +60,7 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
   searchFileName = '';
   fileList: FIN51011Data[] = [];
   selectedFiles: FIN51011Data[] = [];
+  lastQueryBody: FIN51011QueryPayload | null = null;
   totalRecords = 0;
   isProcessing = false;
   processProgress = 0;
@@ -94,7 +95,7 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
       });
   }
   constructor(
-    private fin51011Service: FIN51011Service,
+    public fin51011Service: FIN51011Service,
     private tls27010Service: TLS27010Service
   ) {
     super();
@@ -150,8 +151,12 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onSearch() {
+    const body: FIN51011QueryPayload = {
+      FileName: this.searchFileName,
+      SortBy: [{ field: "FileName", order: -1 }]
+    };
     this.loading = true;
-    this.fin51011Service.queryFIN51011({ FileName: this.searchFileName })
+    this.fin51011Service.queryFIN51011(body)
       .pipe(
         untilDestroyed(this),
         finalize(() => this.loading = false)
@@ -159,6 +164,7 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
       .subscribe(res => {
         this.fileList = res?.Data || [];
         this.totalRecords = this.fileList.length;
+        this.lastQueryBody = body;
       });
   }
 

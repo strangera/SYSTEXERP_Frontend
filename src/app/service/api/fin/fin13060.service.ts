@@ -9,6 +9,12 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { DropDownItem } from './fin13050.service';
 
 export type QueryResponse<T> = ApiResponse<T[]>;
+export interface TalentDropDown {
+  tlt_no: string;
+  tlt_name: string;
+  ven_no: string;
+  ven_uniform: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class FIN13060Service {
@@ -89,6 +95,9 @@ export class FIN13060Service {
         payload
       )
       .pipe(tap(res => console.log('刪除結果:', res)));
+  }
+  queryFIN13060TalentDropDown(): Observable<ApiResponse<TalentDropDown[]>> {
+    return this.http.post<ApiResponse<TalentDropDown[]>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060TalentDropDown`, {});
   }
 }
 
