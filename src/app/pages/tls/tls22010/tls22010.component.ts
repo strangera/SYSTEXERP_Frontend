@@ -49,8 +49,8 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     floor_noList: [null],
     ECR_NoList: [null],
     ShowStatus: ['1'],
-    status1: [''], // TODO: 沒有用到，或者寶玲沒開欄位
-    status2: [''], // TODO: 沒有用到，或者寶玲沒開欄位
+    SysAccountStatus: ['0'],   // 💡 初始值改為 '0' (全部)
+    CloseAccountStatus: ['0'], // 💡 初始值改為 '0' (全部)
     pageSize: [500],
     pageIndex: [1],
   });
@@ -65,9 +65,9 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     NoTxnMachine: 0
   };
   statusOptions = [
-    { label: '全部', value: 'all' },
-    { label: '正常', value: 'normal' },
-    { label: '異常', value: 'abnormal' },
+    { label: '全部', value: '0' },
+    { label: '正常', value: '1' },
+    { label: '異常', value: '2' },
   ];
   floorOptions = this.dropdown.querySys3900()
   ECRNoOptions = this.dropdown.queryPos1002();
@@ -91,18 +91,26 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
+
       const payload = {
         ...raw,
         TXN_Date: this.datePipe.transform(raw.TXN_Date, 'yyyy-MM-dd'),
-        ShowStatus: raw.ShowStatus ?? 'all',   // 預設一個值避免漏掉
+        ShowStatus: raw.ShowStatus ?? '1',
+        // 💡 修正：直接帶入前端選擇的 '0' / '1' / '2'，並做基本防呆
+        SysAccountStatus: raw.SysAccountStatus || '0',
+        CloseAccountStatus: raw.CloseAccountStatus || '0'
       };
-      this.tls22010Service.queryTLS22010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+
+      this.tls22010Service.queryTLS22010(payload).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
         this.data = response.Data ?? [];
         this.footerData = { ...response.footerData[0] ?? {} };
         this.totalRecords = response.TotalCount ?? this.data.length;
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         this.historyRequestBody = payload;
-        this.TXN_Date = this.datePipe.transform(raw.TXN_Date, 'yyyy/MM/dd')
+        this.TXN_Date = this.datePipe.transform(raw.TXN_Date, 'yyyy/MM/dd');
       });
     });
   }
