@@ -233,7 +233,7 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls32050" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false" [showEdit]="false"
+    [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false" [showEdit]="false" [lazy]="false"
     [showManage]="true" [queryFunction]="tls32050Service.queryTLS32050.bind(tls32050Service)" [loading]="loading">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

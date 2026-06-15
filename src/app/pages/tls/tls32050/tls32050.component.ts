@@ -155,28 +155,28 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   columns: ReportColumn[] = [
     { field: 'BuildingName', header: '館別', visible: true, align: 'left' },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
-    { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },
+    { field: 'TeamName', header: '單位名稱', visible: true, align: 'left', width: '100px' },
     { field: 'OrgId', header: '樓組代碼', visible: true, align: 'left' },
-    { field: 'OrgName', header: '樓組名稱', visible: true, align: 'left' },
-    { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left' },
-    { field: 'Bus_Class', header: '中分類代碼', visible: true, align: 'left' },
+    { field: 'OrgName', header: '樓組名稱', visible: true, align: 'left', width: '100px' },
+    { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left', width: '100px' },
+    { field: 'Bus_Class', header: '中分類代碼', visible: true, align: 'left', width: '55px' },
     { field: 'BusClassName', header: '中分類名稱', visible: true, align: 'left' },
 
-    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', width: '100px' },
+    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right', width: '100px' },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
 
-    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right', width: '100px' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right', width: '100px' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right', width: '100px' },
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
     { field: 'AVN_PreOrderAmt', header: '預售金額', visible: true, format: formatAmount, align: 'right' },
 
@@ -223,8 +223,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32050Service: TLS32050Service,
-    private tls26050Service: TLS26050Service,
-    private datePipe: DatePipe,
+    private readonly tls26050Service: TLS26050Service,
+    private readonly datePipe: DatePipe,
   ) { super(); }
 
   ngOnInit(): void {

@@ -29,15 +29,15 @@ export interface TLS32050Request extends BaseQueryRequest {
 // 主檔 response
 export interface TLS32050Response extends BaseQueryRequest {
   "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
-  "BuildingName": string, // 館別
-  "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
+  "BuildingName": string | null, // 館別
+  "TeamId": string | null, // 單位代碼（TEAM / 館別 / 總計用)
   "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
-  "OrgId": string, // 樓組代碼
-  "OrgName": string, // 樓組名稱
+  "OrgId": string | null, // 樓組代碼
+  "OrgName": string | null, // 樓組名稱
 
-  "TltKindName": string, // 櫃別名稱
-  "BusClassName": string, // 中分類(商品類別)名稱
-  "Bus_Class": string, // 中分類代碼（TEAM 有值，小計/合計/總計為 NULL）
+  "TltKindName": string | null, // 櫃別名稱
+  "BusClassName": string | null, // 中分類(商品類別)名稱
+  "Bus_Class": string | null, // 中分類代碼（TEAM 有值，小計/合計/總計為 NULL）
 
   "Base_Target": number, // 本期銷售目標
   "Base_SaleAmt": number, // 本期銷售金額
