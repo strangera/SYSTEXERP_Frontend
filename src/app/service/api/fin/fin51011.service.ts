@@ -7,6 +7,7 @@ import { environment } from 'src/environments/environment';
 /** 查詢條件介面 */
 export interface FIN51011QueryPayload {
   FileName: string;
+  SortBy?: { field: string; order: number }[];
 }
 
 /** 查詢結果單筆資料介面 */
