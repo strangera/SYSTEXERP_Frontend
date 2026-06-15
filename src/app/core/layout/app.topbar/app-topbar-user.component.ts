@@ -3,7 +3,6 @@ import { NgIf, NgStyle } from '@angular/common';
 import { Component, inject, Input, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@service/system/auth.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -37,7 +36,8 @@ interface UserInfo {
            [style]="{'width': '14rem'}" appendTo="body">
 
           <ng-template pTemplate="start">
-            <div class="p-menuitem p-0" *ngIf="showDebugToggleInMenu">
+            <!-- 先暫時用admin判斷，UAT/平測區不應該跟正式區用相同的environment...我的天 (= =|||) -->
+            <div class="p-menuitem p-0" *ngIf="showDebugToggleInMenu && user?.user_No === 'admin'">
               <div class="flex justify-content-between align-items-center p-menuitem-link hover:surface-100 p-2 cursor-pointer">
                 <i class="pi pi-bolt"></i>
                 <span class="ml-2 w-full">SQL 偵錯模式</span>
@@ -49,7 +49,7 @@ interface UserInfo {
                 </p-button>
               </div>
             </div>
-            <li class="p-menu-separator" *ngIf="showDebugToggleInMenu"></li>
+            <li class="p-menu-separator" *ngIf="showDebugToggleInMenu && user?.user_No === 'admin'"></li>
           </ng-template>
 
           <ng-template pTemplate="submenuheader" let-item>
@@ -79,7 +79,6 @@ export class AppTopbarUserComponent {
 
   public readonly debugService = inject(DebugToggleService);
 
-  private readonly notemessage = inject(NotificationService);
   public readonly showDebugToggleInMenu = this.debugService.showDebugToggleInMenu;
   @ViewChild('menu') menu!: OverlayPanel;
   @ViewChild('op') op!: OverlayPanel;
