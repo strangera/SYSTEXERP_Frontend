@@ -237,7 +237,7 @@ function buildInsertDetails(
     const AccAmtC = rest.AccAmtC;
     const noteResolved = deps.resolveNoteDesc(rest.NoteDesc, rest);
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
-    const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
+    const accDc = AccAmtD != null ? 'D' : AccAmtC != null ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
     const pta = rest.PTA != null ? String(rest.PTA) : (rest.recKey == null ? undefined : String(rest.recKey));
     const body: InsertFIN53010DetailBody = {
@@ -370,7 +370,7 @@ function buildUpdateDetails(
     const AccAmtC = rest.AccAmtC;
     const noteResolved = deps.resolveNoteDesc(rest.NoteDesc, rest);
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
-    const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
+    const accDc = AccAmtD != null ? 'D' : AccAmtC != null ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
     const pta = rest.PTA == null ? undefined : String(rest.PTA);
     const id = typeof rest.id === 'number' ? rest.id : undefined;
