@@ -179,62 +179,89 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   onInput(event: any) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    const config = FORMAT_RULES[this.calendarType];
+    const maxLen = this.maxLength ?? 0;
 
-    if (!config) {
-      this.inputChange.emit(value);
-      return;
-    }
-
+    // 1. 如果是刪除鍵，放行讓使用者刪除
     if (event.inputType === 'deleteContentBackward') {
       this.inputChange.emit(value);
       return;
     }
 
+    // 2. 處理複製貼上，或是多字元輸入的情境
     if (event.inputType === 'insertFromPaste' || (event.data && event.data.length > 1)) {
-      input.value = this.formatFullString(value, this.calendarType);
+      const formatted = this.formatFullString(value, this.calendarType);
+      input.value = maxLen > 0 ? formatted.substring(0, maxLen) : formatted;
+
+      // 🌟 同步更新 FormControl 值與驗證狀態
+      this.control.setValue(input.value, { emitEvent: false });
+      this.control.updateValueAndValidity({ emitEvent: false });
+
       this.inputChange.emit(input.value);
       return;
     }
 
-    const index = config.lengths.indexOf(value.length);
-    if (index !== -1) {
-      const charToAppend = config.chars[index];
-      if (value.charAt(value.length - 1) !== charToAppend) {
-        if (!/[！-～　]/.test(value)) {
-          input.value = value + charToAppend;
+    // 3. 🌟 關鍵修正：如果當前長度已經超過 maxLength
+    if (maxLen > 0 && value.length > maxLen) {
+      const truncatedValue = value.substring(0, maxLen);
+
+      // (1) 修正 HTML 畫面的顯示
+      input.value = truncatedValue;
+
+      // (2) 修正 Angular FormControl 的值，不觸發 valueChanges 避免無窮迴圈
+      this.control.setValue(truncatedValue, { emitEvent: false });
+
+      // (3) 強制 Angular 重新驗證該欄位，這會把 maxlength 的錯誤洗掉，讓紅框消失！
+      this.control.updateValueAndValidity({ emitEvent: false });
+
+      this.inputChange.emit(truncatedValue);
+      this.cdr.markForCheck(); // 確保畫面即時重繪
+      return;
+    }
+
+    // 4. 自動補符號邏輯（/ 或 :）
+    const config = FORMAT_RULES[this.calendarType];
+    if (config) {
+      const index = config.lengths.indexOf(value.length);
+      if (index !== -1) {
+        const charToAppend = config.chars[index];
+        if (value.charAt(value.length - 1) !== charToAppend) {
+          if (!/[！-～ ]/.test(value)) {
+            const newValue = value + charToAppend;
+            if (maxLen === 0 || newValue.length <= maxLen) {
+              input.value = newValue;
+              // 補完符號也順便幫 FormControl 更新，保持同步
+              this.control.setValue(newValue, { emitEvent: false });
+            }
+          }
         }
       }
     }
+
     this.inputChange.emit(input.value);
   }
 
   private formatFullString(value: string, type: CalendarType): string {
     const nums = value.replace(/\D/g, '');
+    const maxLen = this.calendarMaxLength[type];
+    let result = value;
+
     switch (type) {
       case 'dateOne':
-        if (nums.length >= 8) {
-          return `${nums.substring(0, 4)}/${nums.substring(4, 6)}/${nums.substring(6, 8)}`;
-        }
-        return value;
+        if (nums.length >= 8) result = `${nums.substring(0, 4)}/${nums.substring(4, 6)}/${nums.substring(6, 8)}`;
+        break;
       case 'dateMonthOne':
-        if (nums.length >= 6) {
-          return `${nums.substring(0, 4)}/${nums.substring(4, 6)}`;
-        }
-        return value;
+        if (nums.length >= 6) result = `${nums.substring(0, 4)}/${nums.substring(4, 6)}`;
+        break;
       case 'timeOne':
-        if (nums.length >= 4) {
-          return `${nums.substring(0, 2)}:${nums.substring(2, 4)}`;
-        }
-        return value;
+        if (nums.length >= 4) result = `${nums.substring(0, 2)}:${nums.substring(2, 4)}`;
+        break;
       case 'dateTimeOne':
-        if (nums.length >= 12) {
-          return `${nums.substring(0, 4)}/${nums.substring(4, 6)}/${nums.substring(6, 8)} ${nums.substring(8, 10)}:${nums.substring(10, 12)}`;
-        }
-        return value;
-      default:
-        return value;
+        if (nums.length >= 12) result = `${nums.substring(0, 4)}/${nums.substring(4, 6)}/${nums.substring(6, 8)} ${nums.substring(8, 10)}:${nums.substring(10, 12)}`;
+        break;
     }
+
+    // 回傳前切齊該型態的最大長度
+    return result.substring(0, maxLen);
   }
 
   onBlur(event: any) {
