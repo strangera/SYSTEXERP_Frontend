@@ -22,50 +22,50 @@ interface UserInfo {
   template: `
     <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
         <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
-      (click)="menu.toggle($event)">
+          (click)="menu.toggle($event)">
             <i *ngIf="debugService.isDebugEnabled()"
-        class="pi pi-bug mr-1"
-        pTooltip="SQL 偵錯模式已開啟"
-        style="color: red;">
-      </i>
+              class="pi pi-bug mr-1"
+              pTooltip="SQL 偵錯模式已開啟"
+              style="color: red;">
+            </i>
             <span class="text-sm block" style="color: var(--text-color-secondary);">{{ user?.user_No }}</span>
-      <span class="text-lg font-bold block" style="color: var(--text-color);">{{ user?.user_Name }}</span>
-      <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
-    </button>
+            <span class="text-lg font-bold block" style="color: var(--text-color);">{{ user?.user_Name }}</span>
+            <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
+        </button>
 
-    <p-menu #menu [model]="userMenuItems" [popup]="true" class="static" styleClass="border-round-xl p-2"
-      [style]="{'width': '14rem'}" appendTo="body">
+        <p-menu #menu [model]="userMenuItems" [popup]="true" class="static" styleClass="border-round-xl p-2"
+           [style]="{'width': '14rem'}" appendTo="body">
 
-      <ng-template pTemplate="start">
+          <ng-template pTemplate="start">
             <div class="p-menuitem p-0" *ngIf="showDebugToggleInMenu">
-       <div class="flex justify-content-between align-items-center p-menuitem-link hover:surface-100 p-2 cursor-pointer">
-         <i class="pi pi-bolt"></i>
-         <span class="ml-2 w-full">SQL 偵錯模式</span>
-         <p-button
-           (onClick)="toggleDebugMode()"
-           [label]="debugService.isDebugEnabled() ? '關閉' : '開啟'"
-           [severity]="debugService.isDebugEnabled() ? 'danger' : 'success'"
-           [style]="{'font-size': '0.75rem', 'padding': '0.2rem 0.5rem'}">
-         </p-button>
-       </div>
-     </div>
-                 <li class="p-menu-separator" *ngIf="showDebugToggleInMenu"></li>
-   </ng-template>
-
-      <ng-template pTemplate="submenuheader" let-item>
-          <span class="font-bold text-lg text-primary">{{ item.label }}</span>
-      </ng-template>
-
-      <ng-template pTemplate="item" let-item>
-          <a pRipple class="flex justify-content-between align-items-center p-menuitem-link" tabindex="0"
-            (click)="item.command()" (keydown.enter)="item.command()" (keydown.space)="item.command()">
-              <span [class]="item.icon"></span>
-              <div class="w-full">
-                  <span class="ml-2">{{ item.label }}</span>
+              <div class="flex justify-content-between align-items-center p-menuitem-link hover:surface-100 p-2 cursor-pointer">
+                <i class="pi pi-bolt"></i>
+                <span class="ml-2 w-full">SQL 偵錯模式</span>
+                <p-button
+                  (onClick)="toggleDebugMode()"
+                  [label]="debugService.isDebugEnabled() ? '關閉' : '開啟'"
+                  [severity]="debugService.isDebugEnabled() ? 'danger' : 'success'"
+                  [style]="{'font-size': '0.75rem', 'padding': '0.2rem 0.5rem'}">
+                </p-button>
               </div>
-          </a>
-      </ng-template>
-    </p-menu>
+            </div>
+            <li class="p-menu-separator" *ngIf="showDebugToggleInMenu"></li>
+          </ng-template>
+
+          <ng-template pTemplate="submenuheader" let-item>
+              <span class="font-bold text-lg text-primary">{{ item.label }}</span>
+          </ng-template>
+
+          <ng-template pTemplate="item" let-item>
+              <a pRipple class="flex justify-content-between align-items-center p-menuitem-link" tabindex="0"
+                (click)="item.command()" (keydown.enter)="item.command()" (keydown.space)="item.command()">
+                  <span [class]="item.icon"></span>
+                  <div class="w-full">
+                      <span class="ml-2">{{ item.label }}</span>
+                  </div>
+              </a>
+          </ng-template>
+        </p-menu>
     </div>
     `,
   standalone: true,
