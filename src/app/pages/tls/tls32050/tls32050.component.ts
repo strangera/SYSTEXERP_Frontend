@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe, formatDate } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,16 +20,11 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { yesterday } from 'src/app/shared/models/system/query-form.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
-
-const today = new Date();
-const yesterday = new Date(today);
-yesterday.setDate(yesterday.getDate() - 1);
-const dayBeforeYesterday = new Date(yesterday);
-dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls32050',
@@ -58,8 +53,8 @@ dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
 })
 export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    BaseDateFrom: [today],  //交易日期開始
-    BaseDateTo: [today],  // 交易日期結束
+    BaseDateFrom: [new Date()],  //交易日期開始
+    BaseDateTo: [new Date()],  // 交易日期結束
     CompareDateFrom: [yesterday as Date | null],// 比較日期開始
     CompareDateTo: [yesterday as Date | null],//比較日期結束
 
@@ -83,37 +78,29 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
     pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
-    // SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
   dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
-
     // --- 日報（type 1）使用的單一基準 / 比較日期
-    onedatedd: [today],        // 基準日期 (日)
-
+    onedatedd: [new Date()],        // 基準日期 (日)
     // --- 週報（type 2）相關
     onedateyy: [new Date()],      // 基準年度 (年字串)
     weeks: [''],                                           // 基準週數 (輸入)
     startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
     enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
-
     // --- 月報（type 3）
     onedatemm: [null],       // 基準年月 (可由 calendar 取值)
-
     // --- 半年報（type 4）
     halfyear_onedateyy: [new Date()],
     halfyear: ['1'],         // 上/下半年
-
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
-
     // --- 區間報（type 6）
     sad_startdate: [null],
     sad_enddate: [null],
-
     // --- 活動區間報（type 7）
     eventID: [null],
     event_startdate: [null as Date | null],
@@ -124,23 +111,18 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   c_dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
-
     // --- 日報（type 1）使用的單一基準 / 比較日期
     onedatedd: [yesterday as Date | null],        // 基準日期 (日)
-
     // --- 週報（type 2）相關
     onedateyy: [new Date()],      // 基準年度 (年字串)
     weeks: [''],                                           // 基準週數 (輸入)
     startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
     enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
-
     // --- 月報（type 3）
     onedatemm: [null as Date | null],       // 基準年月 (可由 calendar 取值)
-
     // --- 半年報（type 4）
     halfyear_onedateyy: [new Date()],
     halfyear: ['1' as string | null],         // 上/下半年
-
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
   });
@@ -161,7 +143,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
-    // { value: '6', label: '區間營業報表' }, //本作業不使用
   ];
 
   totalRecords = 0;
@@ -172,7 +153,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   columns: ReportColumn[] = [
-    // { field: 'RowType', header: '列別', visible: true },
     { field: 'BuildingName', header: '館別', visible: true, align: 'left' },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },
@@ -243,18 +223,15 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32050Service: TLS32050Service,
-    private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
+    private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
-    private cd: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS32050', 'TLS/TLS32050cru', this.queryForm, (frm) => this.onSubmit(frm));
-
     // 1. 初始化 UI 狀態與驗證器
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
-
     // 2. 【關鍵】先從 State 還原資料（純資料 patchValue）
     // 處理基準日期表單
     const savedDate = this.queryStateService.getQueryStateValue('tls32050_Date');
@@ -263,18 +240,15 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
       const dateVal = savedDate.value ? savedDate.value : savedDate;
       this.dateForm.patchValue(dateVal, { emitEvent: false });
     }
-
     // 處理自定義比較表單
     const savedCDate = this.queryStateService.getQueryStateValue('tls32050_CDate');
     if (savedCDate) {
       const cDateVal = savedCDate.value ? savedCDate.value : savedCDate;
       this.c_dateForm.patchValue(cDateVal, { emitEvent: false });
     }
-
     // 3. 【關鍵】還原後手動執行同步，確保 queryForm 拿到正確的初始日期
     this.syncDateToQueryForm();
     this.syncCDateToQueryForm();
-
     // 4. 最後才啟動監聽 (這時後的監聽才會持續有效且不會被覆蓋)
     this.dateForm.valueChanges
       .pipe(untilDestroyed(this))
@@ -287,7 +261,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
       .subscribe(() => {
         this.syncCDateToQueryForm();
       });
-
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
     })
@@ -848,7 +821,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     //dateForm設定為日營業報，日期今天
     this.dateForm.reset({
       reportType: '1',
-      onedatedd: today,
+      onedatedd: new Date(),
     });
 
     //c_dateForm設定為日營業報，日期昨天
