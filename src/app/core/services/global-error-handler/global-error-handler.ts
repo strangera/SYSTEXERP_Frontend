@@ -36,7 +36,7 @@ export class GlobalErrorHandler implements ErrorHandler {
 
       // 5. 用非同步的方式，悄悄把錯誤丟回後端剛建好的 API
       // 請更換成你們正式或測試環境的後端實體 Domain BaseUrl
-      const backendApiUrl = environment.ApiUrl + '/TSRDERP_Main/Controllers/api/ClientLog/record-error';
+      const backendApiUrl = environment.ApiUrl + '/BasicEIP_Core/DiagnosticsModule/api/ClientLog/record-error';
 
       http.post(backendApiUrl, errorPayload).subscribe({
         error: (err) => console.error('無法將錯誤日誌回傳至後端:', err)
