@@ -15,6 +15,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { InputTextComponent } from 'src/app/shared/componentkit/input-text/input-text.component';
 import { environment } from '../../../../environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -50,7 +51,8 @@ export interface Option {
     CommonModule,
     TableReportComponent,
     YearMonthComponent,
-    CheckboxModule
+    CheckboxModule,
+    InputTextComponent,
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
