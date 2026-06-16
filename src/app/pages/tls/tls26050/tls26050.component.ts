@@ -178,6 +178,9 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     const formValue = frm.getRawValue();
     const payload: TLS26050QueryRequest = {
       ...formValue,
+      // 日營業報表 - 日期格式化 (yyyy-MM-dd)，並處理 null 值
+      onedatedd: formValue.onedatedd ? this.datePipe.transform(formValue.onedatedd, 'yyyy-MM-dd') : null,
+      onedatedd_c: formValue.onedatedd_c ? this.datePipe.transform(formValue.onedatedd_c, 'yyyy-MM-dd') : null,
       // 週營業報表 - 年度格式化 (yyyy)
       onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
       onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
