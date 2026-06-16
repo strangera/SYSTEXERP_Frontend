@@ -153,6 +153,13 @@ export const formatTime = (value: any): string => {
   return value;
 };
 
+export const formatISOToHHMMSS = (val: string): string => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+};
+
 // 000,000,000
 export const formatAmount = (val: number | string): string => {
   const num = Number(val);
