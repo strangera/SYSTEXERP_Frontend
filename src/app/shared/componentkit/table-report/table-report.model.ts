@@ -5,9 +5,6 @@ export interface ReportColumn {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   width?: string;    // 欄位寬度，例如 '80px'、'10rem'
-  dynamicMinWidth?: string;
-  dynamicWidth?: string;
-  dynamicMaxWidth?: string;
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: 'percentage' | 'decimal2' | Record<string, string>[];
   groupField?: string; //
@@ -151,6 +148,13 @@ export const formatTime = (value: any): string => {
   }
 
   return value;
+};
+
+export const formatISOToHHMMSS = (val: string): string => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
 };
 
 // 000,000,000

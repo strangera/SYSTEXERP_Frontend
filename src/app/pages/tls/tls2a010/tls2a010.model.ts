@@ -1,4 +1,4 @@
-import { Column, ColumnGroup, formatAmount } from "@shared/componentkit/table/table.model";
+import { ColumnGroup, formatAmount, ReportColumn } from "src/app/shared/componentkit/table-report/table-report.model";
 
 export interface TLS2A010Data {
   TXN_Date: string;         // 日期，例如：'2024/05/08'
@@ -28,7 +28,7 @@ export interface TLS2A010Query {
 }
 
 
-export const defaultColumns: Column[] = [
+export const defaultColumns: ReportColumn[] = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '櫃位名稱', field: 'tlt_name' },
@@ -55,8 +55,7 @@ export const defaultColumns: Column[] = [
 
 ];
 
-export const creditCardColumns: Column[] = [
-  { header: '總計', field: 'group_name', hidden: true },
+export const creditCardColumns: ReportColumn[] = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '櫃位名稱', field: 'tlt_name' },

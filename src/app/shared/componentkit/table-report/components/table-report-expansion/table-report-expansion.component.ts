@@ -3,23 +3,12 @@ import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
 import { TableModule } from 'primeng/table';
-import { TableTypes } from '../../../table/table.model';
-
-export interface ExpansionColumn {
-  field: string;     // 欄位名稱 (資料的欄位名稱)
-  header: string;    // 欄位標題 (顯示在表格上的標題)
-  align?: 'left' | 'center' | 'right';
-  visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
-  hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
-  type?: TableTypes; // 欄位類型
-  format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-}
-
+import { ReportColumn } from '../../table-report.model';
 @Component({
   selector: 'app-table-expansion',
   template: `
   <div>
-    <p-table class="w-full" [value]="localRowData" [columns]="getFilterColumns(expansionColumns)"
+    <p-table class="w-full" [value]="localRowData" [columns]="expansionColumns"
       [multiSortMeta]="expansionMultiSortMeta" [scrollable]="true" [scrollHeight]="scrollHeight" sortMode="multiple"
       [paginator]="showPaginator" [rows]="rows" [totalRecords]="totalRecords" [(first)]="first"
       (onPage)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" [showCurrentPageReport]="true"
@@ -31,7 +20,7 @@ export interface ExpansionColumn {
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngIf="expansionShowReorder" class="w-1rem">序號</th>
-          <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field"
+          <th *ngFor="let col of expansionColumns" [pSortableColumn]="col.field"
             [pSortableColumnDisabled]="expansionShowSort === false" class="text-center">
             {{ col.header }}
             <p-sortIcon *ngIf="expansionShowSort" [field]="col.field"></p-sortIcon>
@@ -43,7 +32,7 @@ export interface ExpansionColumn {
       <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
         <tr>
           <td *ngIf="expansionShowReorder" class="text-center">{{ first + rowIndex + 1 }}</td>
-          <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
+          <td *ngFor="let col of expansionColumns" class="text-center">
             <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
               {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
             </span>
@@ -62,7 +51,7 @@ export interface ExpansionColumn {
       <!-- 空資料訊息 -->
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td [attr.colspan]="getFilterColumns(expansionColumns).length + (expansionShowReorder ? 1 : 0)">
+          <td [attr.colspan]="expansionColumns.length + (expansionShowReorder ? 1 : 0)">
             <div class="flex justify-content-center align-items-center" [style.height]="scrollHeight">
               <p class="text-xl font-bold">查無展開資料</p>
             </div>
@@ -78,7 +67,7 @@ export interface ExpansionColumn {
 })
 export class TableExpansionComponent implements OnInit {
   @Input() expansionDataKey = 'id';
-  @Input() expansionColumns: ExpansionColumn[] = [];
+  @Input() expansionColumns: ReportColumn[] = [];
   @Input() rowData: any;
   @Input() expansionMultiSortMeta: SortMeta[] = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionShowSort = true;
@@ -105,10 +94,6 @@ export class TableExpansionComponent implements OnInit {
       // 強制觸發變更偵測
       this.cdr.detectChanges();
     });
-  }
-
-  getFilterColumns(columns: ExpansionColumn[]): ExpansionColumn[] {
-    return columns.filter(col => !col.hidden);
   }
 
   // 分頁變更事件
