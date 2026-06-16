@@ -21,7 +21,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { finalize, switchMap } from 'rxjs';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { creditCardColumns, creditCardGroup, defaultColumns, overStatusOptions, TLS2A010Query } from './tls2a010.model';
 const yesterday = new Date();
@@ -126,7 +127,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   isAllSelected = false; // 是否全選
   IsPrint = true;
-  selectedColumns: Column[] = [];     // 顯示哪些資料欄位
+  selectedColumns: ReportColumn[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
   defaultColumns = defaultColumns;
   creditCardGroup = creditCardGroup;

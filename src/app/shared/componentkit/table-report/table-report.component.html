@@ -302,7 +302,7 @@
     </ng-container>
   </ng-template>
 
-  <ng-template pTemplate="footer" let-columns let-rowData>
+  <ng-template pTemplate="footer" let-rowData>
     <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">
       <td class="text-center" [colSpan]="
           (showReorder ? 1 : 0) +
