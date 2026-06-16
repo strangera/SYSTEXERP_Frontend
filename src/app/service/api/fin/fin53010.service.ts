@@ -95,7 +95,7 @@ export class FIN53010Service {
   public readonly postFlagOptions = [
     { value: '0', label: '作廢' },
     { value: '1', label: '建立' },
-    // { value: '2', label: '確認' },
+    { value: '2', label: '確認' },
     { value: '3', label: '過帳' },
   ];
   /** 發票選項 */

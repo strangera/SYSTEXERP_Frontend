@@ -211,11 +211,23 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     const vns = this.qf().VouNoStart.value;
     const vne = this.qf().VouNoEnd.value;
 
+    const formatDate = (v: Date | string | null | undefined | void): string | undefined => {
+      if (!v) return undefined;
+      if (v instanceof Date) return this.date.transform(v, 'yyyy-MM-dd') ?? undefined;
+      return String(v);
+    };
+
     const raw = {
       ...this.queryForm.getRawValue(),
       VouNoStart: String(vns ?? ''),
       VouNoEnd: String(vne ?? ''),
       VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
+      VouDateStart: formatDate(this.qf().VouDateStart.value),
+      VouDateEnd: formatDate(this.qf().VouDateEnd.value),
+      CrtDateStart: formatDate(this.qf().CrtDateStart.value),
+      CrtDateEnd: formatDate(this.qf().CrtDateEnd.value),
+      UpdDateStart: formatDate(this.qf().UpdDateStart.value),
+      UpdDateEnd: formatDate(this.qf().UpdDateEnd.value),
     };
 
     const cleanedEntries = Object.entries(raw).filter(([, v]) =>
