@@ -1,52 +1,46 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
-    <div>
-      <app-button btnType="create" label="轉入" class="col"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2 align-items-center">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="轉入" icon="pi pi-upload" [loading]="loading"
+      [disabled]="!checkPassed" (clickEvent)="onTransfer()"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="工作表名稱" controlName="folderName" [control]="queryForm.controls.folderName"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="工作表名稱" controlName="sheetName"
+              [control]="queryForm.controls.sheetName" [submitted]="submitted"></app-input-text>
           </div>
         </div>
+
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-file-upload></app-file-upload>
+          <div class="col-12">
+            <app-file-upload #fileUpload name="File" accept=".xlsx,.xls" [multiple]="false" [auto]="false"
+              [customUpload]="true" mode="advanced" chooseLabel="選擇檔案" uploadLabel="上傳" cancelLabel="清除"
+              [loading]="loading"
+              emptyMessage="拖曳檔案到此處或點擊「選擇檔案」按鈕。" (select)="onFileSelect($event)"
+              (remove)="onFileRemove()" (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
           </div>
         </div>
+
         <hr />
         <ul>
-          <li>
-            檔案名稱與工作表名稱須為英文或數字格式,工作表名稱即為Excel內的sheet名
-          </li>
+          <li>檔案名稱與工作表名稱須為英文或數字格式,工作表名稱即為Excel內的sheet名</li>
           <li>日期格式：YYYY/MM/DD</li>
           <li>保管人格式請輸入代號</li>
-          <li>範本下載</li>
+          <li>
+            <a href="assets/AssetUploadSample.xls" download="AssetUploadSample.xls"
+              class="text-primary cursor-pointer">範本下載</a>
+          </li>
         </ul>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-          </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" (clickEvent)="onClearForm(queryForm)"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
-</div>
-<div class="card">
-  <div class="col-13">
-    <app-table-report [data]="data" [columns]="columns" (edit)="onEdit($event)"
-      (detail)="onDetail($event)"></app-table-report>
-  </div>
 </div>
