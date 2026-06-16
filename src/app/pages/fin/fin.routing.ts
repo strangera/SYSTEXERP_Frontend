@@ -356,7 +356,6 @@ export const finRoutes: Routes = [
   { path: 'fin64030', loadComponent: () => import('./fin64030/fin64030.component').then(m => m.FIN64030Component), data: { progNo: 'FIN64030' } },
   // 應收票據退票作業
   { path: 'fin64050', loadComponent: () => import('./fin64050/fin64050.component').then(m => m.FIN64050Component), data: { progNo: 'FIN64050' } },
-  { path: 'fin64050cru', loadComponent: () => import('./fin64050-cru/fin64050-cru.component').then(m => m.FIN64050CRUComponent), data: { progNo: 'FIN64050' } },
   // 應付票據簽回單
   // { path: 'fin65010', loadComponent: () => import('./fin65010/fin65010.component').then(m => m.FIN65010Component),data:{progNo:'FIN65010'} },
   // { path: 'fin65010cru', loadComponent: () => import('./fin65010-cru/fin65010-cru.component').then(m => m.FIN65010CRUComponent),data: { progNo: 'FIN65010'} },
