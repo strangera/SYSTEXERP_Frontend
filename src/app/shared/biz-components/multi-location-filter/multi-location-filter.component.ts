@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { DropdownComponent } from '../dropdown/dropdown.component';
-import { MultiSelectComponent } from '../multi-select/multi-select.component';
+import { DropdownComponent } from '../../componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../componentkit/multi-select/multi-select.component';
 import { MultiLocationFilterService } from './multi-location-filter.service';
 
 @Component({

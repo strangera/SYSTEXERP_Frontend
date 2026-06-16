@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
@@ -22,13 +22,13 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @UntilDestroy()
@@ -52,7 +52,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     CalendarRangeComponent,
   ],
 })
-export class TLS13030Component extends BasicQueryPageComponent<any> {
+export class TLS13030Component extends BasicQueryPageComponent<any> implements OnInit {
   // ===== 排序 / lazy 相關 =====
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }];
@@ -62,13 +62,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   private readonly includePagingAndSorting = true;
   lastQueryBody: any = null;
   queryTLS13030Fn = (body: any) =>
-  this.tls13030Service.queryTLS13030(body).pipe(
-    map((res: any) => ({
-      Data: res?.Data?.QueryData ?? [],
-      TotalCount: res?.TotalCount ?? res?.Data?.TotalCount ?? 0,
-      QueryDataSum: res?.Data?.QueryDataSum ?? null,
-    }))
-  );
+    this.tls13030Service.queryTLS13030(body).pipe(
+      map((res: any) => ({
+        Data: res?.Data?.QueryData ?? [],
+        TotalCount: res?.TotalCount ?? res?.Data?.TotalCount ?? 0,
+        QueryDataSum: res?.Data?.QueryDataSum ?? null,
+      }))
+    );
   private readonly allowedSortFields = new Set<string>([
     'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
     'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
@@ -226,18 +226,18 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
 
 
- private calculateFooter(data: any[]): void {
-  const total = {
-    tpy_totalamt: data.reduce((sum, row) => sum + Number(row.tpy_totalamt || 0), 0),
-    down_payment: data.reduce((sum, row) => sum + Number(row.down_payment || 0), 0),
-    period_nos: data.reduce((sum, row) => sum + Number(row.period_nos || 0), 0),
-    tpy_amount: data.reduce((sum, row) => sum + Number(row.tpy_amount || 0), 0),
-    defSalesAmt: data.reduce((sum, row) => sum + Number(row.defSalesAmt || 0), 0),
-    commRate: data.reduce((sum, row) => sum + Number(row.commRate || 0), 0),
-  };
+  private calculateFooter(data: any[]): void {
+    const total = {
+      tpy_totalamt: data.reduce((sum, row) => sum + Number(row.tpy_totalamt || 0), 0),
+      down_payment: data.reduce((sum, row) => sum + Number(row.down_payment || 0), 0),
+      period_nos: data.reduce((sum, row) => sum + Number(row.period_nos || 0), 0),
+      tpy_amount: data.reduce((sum, row) => sum + Number(row.tpy_amount || 0), 0),
+      defSalesAmt: data.reduce((sum, row) => sum + Number(row.defSalesAmt || 0), 0),
+      commRate: data.reduce((sum, row) => sum + Number(row.commRate || 0), 0),
+    };
 
-  this.footerData = [total];
-}
+    this.footerData = [total];
+  }
   // ===== lazy 事件（分頁/排序）=====
   // ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
@@ -398,33 +398,33 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     this.messageService.blockUi();
 
     this.tls13030Service
-  .queryTLS13030(payload)
-  .pipe(untilDestroyed(this))
-  .subscribe({
- next: (res: any) => {
-  const rows = res?.Data?.QueryData ?? [];
-  const sum = res?.Data?.QueryDataSum ?? null;
+      .queryTLS13030(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          const rows = res?.Data?.QueryData ?? [];
+          const sum = res?.Data?.QueryDataSum ?? null;
 
-  this.data = this.processResultData(rows);
-  this.totalRecords = res?.TotalCount ?? res?.Data?.TotalCount ?? 0;
+          this.data = this.processResultData(rows);
+          this.totalRecords = res?.TotalCount ?? res?.Data?.TotalCount ?? 0;
 
-  this.footerData = sum ? [sum] : [];
+          this.footerData = sum ? [sum] : [];
 
-  this.loading = false;
-  this.messageService.unblockUi();
-},
-error: (err) => {
-  console.error('queryTLS13030 error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err) => {
+          console.error('queryTLS13030 error:', err);
 
-  this.data = [];
-  this.totalRecords = 0;
-  this.footerData = [];
+          this.data = [];
+          this.totalRecords = 0;
+          this.footerData = [];
 
-  this.loading = false;
-  this.messageService.unblockUi();
-}
-  });
-  
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+
   }
 
 

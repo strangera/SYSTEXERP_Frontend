@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'locationSplit',
-  standalone: true // 15版以後推薦用 standalone，方便直接 import
+  standalone: true
 })
 export class LocationSplitPipe implements PipeTransform {
   transform(value: string | null | undefined): string[] {

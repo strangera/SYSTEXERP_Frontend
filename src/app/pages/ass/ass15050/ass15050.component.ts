@@ -10,7 +10,6 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CheckboxComponent } from '@shared/componentkit/checkbox/checkbox.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -20,6 +19,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
+import { CheckboxComponent } from 'src/app/pages/ass/ass15050/checkbox/checkbox.component';
 import {
   QueryASS15050ApiResponse,
   QueryASS15050Request,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -7,28 +7,28 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // options services
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { RegionService } from '../../../service/basic/querySYS3A00.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 // api service
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
 
 // UI
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
 
 @UntilDestroy()
 @Component({
@@ -50,7 +50,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     TableReportComponent,
   ],
 })
-export class TLS13040Component extends BasicQueryPageComponent<any> {
+export class TLS13040Component extends BasicQueryPageComponent<any> implements OnInit {
   // ▼ 多欄位排序狀態
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }];
@@ -353,7 +353,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
                 : this.defaultSort.map((s: any) => ({ ...s }));
             }
           },
-          error: () => {},
+          error: () => { },
           complete: () => {
             this.loading = false;
             this.messageService.unblockUi();

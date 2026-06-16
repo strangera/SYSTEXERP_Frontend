@@ -11,7 +11,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CategorySelectComponent } from '@shared/componentkit/category-select/category-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -21,6 +20,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
+import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { formatAmount, ReportColumn } from './tls32020-table/tls32020-report-table.model';
 import { TableReportComponent } from './tls32020-table/tls32020-table.component';
 

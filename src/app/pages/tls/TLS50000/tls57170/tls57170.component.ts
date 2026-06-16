@@ -12,13 +12,13 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { FieldsConfig, MultiselectTableComponent } from '@shared/componentkit/multiselect-table/multiselect-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
+import { FieldsConfig, MultiselectTableComponent } from './multiselect-table/multiselect-table.component';
 
 @Component({
   selector: 'app-tls57170',
