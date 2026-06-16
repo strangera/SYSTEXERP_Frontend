@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2 align-items-center">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button label="轉入" icon="pi pi-upload" [loading]="loading"
-      (clickEvent)="onTransfer()"></app-button>
+      [disabled]="!checkPassed" (clickEvent)="onTransfer()"></app-button>
   </div>
 
   <p-accordion>

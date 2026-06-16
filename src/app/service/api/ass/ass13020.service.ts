@@ -20,9 +20,13 @@ export class ASS13020Service {
   /**
    * 檢查 Excel 匯入內容（轉入前先檢查格式 / 資料是否合法）
    */
-  checkImportASS13020(file: File): Observable<ApiResponse<CheckImportASS13020ResponseData>> {
+  checkImportASS13020(
+    file: File,
+    sheetName: string,
+  ): Observable<ApiResponse<CheckImportASS13020ResponseData>> {
     const formData = new FormData();
     formData.append('File', file, file.name);
+    formData.append('SHEET_NAME', sheetName);
 
     return this.http.post<ApiResponse<CheckImportASS13020ResponseData>>(
       `${this.apiUrl}/checkImportASS13020`,
@@ -32,11 +36,14 @@ export class ASS13020Service {
 
   /**
    * 正式匯入 Excel（資產轉入）
-   * TODO: 後端開欄位後補傳工作表名稱
    */
-  importASS13020(file: File): Observable<ApiResponse<ImportASS13020ResponseData>> {
+  importASS13020(
+    file: File,
+    sheetName: string,
+  ): Observable<ApiResponse<ImportASS13020ResponseData>> {
     const formData = new FormData();
     formData.append('File', file, file.name);
+    formData.append('SHEET_NAME', sheetName);
 
     return this.http.post<ApiResponse<ImportASS13020ResponseData>>(
       `${this.apiUrl}/importASS13020`,

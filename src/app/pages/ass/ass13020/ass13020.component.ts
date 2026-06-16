@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13020Service } from '@service/api/ass/ass13020.service';
@@ -8,11 +8,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { ImportASS13020ResponseData } from './ass13020.model';
 
 // 3.1.3.2 資產轉入
 @UntilDestroy()
@@ -35,12 +33,12 @@ import { ImportASS13020ResponseData } from './ass13020.model';
 export class ASS13020Component extends BasicQueryPageComponent<unknown> implements OnInit {
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
 
-  // TODO: 後端開欄位後再補傳工作表名稱
   queryForm = this.formBuilder.group({
-    sheetName: [''],
+    sheetName: [null as string | null, Validators.required],
   });
 
   selectedFile: File | null = null;
+  checkPassed = false;
 
   constructor(private readonly ass13020Service: ASS13020Service) {
     super();
@@ -48,62 +46,107 @@ export class ASS13020Component extends BasicQueryPageComponent<unknown> implemen
 
   ngOnInit(): void {
     this.initializePage('ASS13020');
+
+    // 工作表名稱變動時，需重新檢查
+    this.queryForm.controls.sheetName.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => (this.checkPassed = false));
   }
 
   onFileSelect(event: FileSelectEvent): void {
     this.selectedFile = event.files?.[0] ?? null;
+    this.checkPassed = false;
   }
 
   onFileRemove(): void {
     this.selectedFile = null;
+    this.checkPassed = false;
   }
 
-  // 右上「轉入」按鈕入口
-  onTransfer(): void {
-    if (!this.selectedFile) {
-      this.messageService.errorBubble('請先選擇要轉入的 Excel 檔案');
-      return;
-    }
-    this.executeUpload(this.selectedFile);
-  }
-
-  // app-file-upload [customUpload] 觸發 (使用者也可在上傳元件內按「上傳」)
+  // file-upload 元件內「上傳」按鈕觸發 → 跑前置檢查
   handleCustomUpload(event: FileUploadHandlerEvent): void {
     const file = event.files?.[0];
     if (!file) return;
-    this.executeUpload(file);
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.messageService.errorBubble('請輸入工作表名稱');
+      return;
+    }
+    this.executeCheck(file);
   }
 
-  private executeUpload(file: File): void {
+  // 「轉入」按鈕入口
+  onTransfer(): void {
+    if (!this.checkPassed || !this.selectedFile) return;
+    this.executeImport(this.selectedFile);
+  }
+
+  private executeCheck(file: File): void {
+    const sheetName = this.queryForm.controls.sheetName.value!;
     this.loading = true;
-    this.messageService.infoBubble('轉入中，請稍後...');
 
     this.ass13020Service
-      .importASS13020(file)
+      .checkImportASS13020(file, sheetName)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.loading = false)),
       )
       .subscribe({
-        next: (res: ApiResponse<ImportASS13020ResponseData>) => {
-          if (res?.Status === '0000') {
-            this.messageService.successBubble(`檔案 [${file.name}] 轉入成功`);
+        next: res => {
+          if (res?.Status !== '0000') {
+            this.checkPassed = false;
+            this.messageService.errorBubble(res?.Message ?? '檢查失敗');
+            return;
+          }
+          if (res.Data?.ResultCode !== 0) {
+            this.checkPassed = false;
+            this.messageService.errorBubble(res.Data?.Message ?? '檔案格式檢查未通過');
+            return;
+          }
+          this.checkPassed = true;
+          this.messageService.successBubble(res.Data?.Message ?? '檢查通過，可點擊「轉入」進行匯入');
+        },
+      });
+  }
+
+  private executeImport(file: File): void {
+    const sheetName = this.queryForm.controls.sheetName.value!;
+    this.loading = true;
+
+    this.ass13020Service
+      .importASS13020(file, sheetName)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: res => {
+          if (res?.Status !== '0000') {
+            this.messageService.errorBubble(res?.Message ?? '轉入失敗');
+            return;
+          }
+          const data = res.Data;
+          if (data?.ResultCode === 0) {
+            this.messageService.successBubble(
+              `轉入完成（成功 ${data.SuccessCount ?? 0} 筆 / 失敗 ${data.FailCount ?? 0} 筆）`,
+            );
             this.resetUploadStatus();
           } else {
-            this.messageService.errorBubble(res?.Message || res?.Error?.Message || '轉入失敗');
+            this.messageService.errorBubble(data?.Message ?? '轉入失敗');
           }
         },
-        error: () => this.messageService.errorBubble('轉入失敗，請洽系統管理員'),
       });
   }
 
   onClearForm(form?: FormGroup): void {
     (form ?? this.queryForm).reset();
+    this.submitted = false;
     this.resetUploadStatus();
   }
 
   private resetUploadStatus(): void {
     this.selectedFile = null;
+    this.checkPassed = false;
     this.fileUploadComponent?.clearFiles();
   }
 }

@@ -7,8 +7,8 @@
  *
  * FormData 共同欄位（依 Swagger / multipart/form-data）：
  *   - File：上傳 Excel 檔（必填）
- *   - STO_NO：分店編號（待後端開欄位）
- *   - 工作表名稱：待後端開欄位
+ *   - SHEET_NAME：工作表名稱
+ *   - STO_NO：分店編號（由後端處理）
  */
 
 /**
