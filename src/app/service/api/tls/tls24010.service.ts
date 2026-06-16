@@ -276,6 +276,15 @@ export interface queryTLS24010CheckStatusPayload {
   ECR_No: string,
   Talent_ID: number;
 }
+export interface queryTLS24010EcrNoListPayload {
+  TXN_Date: string,
+}
+export interface queryTLS24010EcrNoListItem {
+  ECR_No: string;
+  ECR_Name: string;
+  ECR_TLT_No: string;
+  ECR_Type: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -375,5 +384,9 @@ export class Tls24010Service {
   /** 查詢銷售日期是否已關帳 */
   queryTLS24010CheckStatus(payload: queryTLS24010CheckStatusPayload): Observable<ApiResponse<{ payNoList: string[] }>> {
     return this.http.post<ApiResponse<{ payNoList: string[] }>>(`${this.apiUrl}/queryTLS24010CheckStatus`, payload);
+  }
+  /** 查詢收銀機下拉(POS1002) */
+  queryTLS24010EcrNoList(payload: queryTLS24010EcrNoListPayload): Observable<ApiResponse<queryTLS24010EcrNoListItem[]>> {
+    return this.http.post<ApiResponse<queryTLS24010EcrNoListItem[]>>(`${this.apiUrl}/queryTLS24010EcrNoList`, payload);
   }
 }
