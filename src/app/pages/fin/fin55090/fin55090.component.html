@@ -3,88 +3,34 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 日期範圍 (DateFrom/DateTo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateMonthRange"
-              label="日期"
-              [startControl]="queryForm.controls.DateFrom"
-              [endControl]="queryForm.controls.DateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateMonthRange" label="日期" [startControl]="queryForm.controls.DateFrom"
+              [endControl]="queryForm.controls.DateTo" [submitted]="submitted"></app-calendar-range>
           </div>
-
-          <!-- 類別 (Ledger_MD) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="類別"
-              [control]="queryForm.controls.Ledger_MD"
-              [options]="Ledger_MDOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="類別" [control]="queryForm.controls.Ledger_MD" [options]="Ledger_MDOptions"
+              [submitted]="submitted"></app-radiobutton>
           </div>
-
-          <!-- 部門 (OrgId) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門"
-              controlName="OrgId"
-              [options]="OrgIdOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.OrgId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="部門" controlName="OrgId" [options]="OrgIdOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OrgId" [submitted]="submitted"></app-dropdown>
           </div>
-
-          <!-- 對帳 Key 值 (ACCT_KEY) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="對帳 Key 值"
-              controlName="ProjectNo"
-              [options]="ProjectNoOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ProjectNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-input-text label="對帳 Key 值" controlName="ProjectNo" [control]="queryForm.controls.ProjectNo"
+              [submitted]="submitted"></app-input-text>
           </div>
-
-          <!-- 是否列印簽核欄 (PrintSign) -->
           <div class="col-12 md:col-4 lg:col-4 mt-4">
-            <p-checkbox
-              inputId="PrintSign"
-              label="列印簽核欄"
-              formControlName="PrintSign"
-              [binary]="true"
-            ></p-checkbox>
+            <p-checkbox inputId="PrintSign" label="列印簽核欄" formControlName="PrintSign" [binary]="true"></p-checkbox>
           </div>
-
-          <!-- 是否顯示餘額為零的科目 (ShowZero) - 額外加入，使表單完整 -->
           <div class="col-12 md:col-4 lg:col-4 mt-4">
-            <p-checkbox
-              inputId="ShowZero"
-              label="顯示零餘額科目"
-              formControlName="ShowZero"
-              [binary]="true"
-            ></p-checkbox>
+            <p-checkbox inputId="ShowZero" label="顯示零餘額科目" formControlName="ShowZero" [binary]="true"></p-checkbox>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -92,19 +38,12 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="flex justify-content-end align-items-center gap-2 p-2">
-    <p-button
-      styleClass="p-2"
-      label="產出損益比較表PDF"
-      [loading]="btnLoading"
-      icon="pi pi-file"
-      (click)="onExportPDF()"
-      [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
-    ></p-button>
+    <p-button styleClass="p-2" label="產出損益比較表PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+      [disabled]="data.length === 0 || !hasPermission(Actions.Print)"></p-button>
   </div>
-  <app-table-subheader-grouping
-    [data]="data"
-    [footerData]="footerData"
-  ></app-table-subheader-grouping>
+  <app-table-subheader-grouping [data]="data" [footerData]="footerData"
+    [historyRequestBody]="historyRequestBody"></app-table-subheader-grouping>
 </div>
