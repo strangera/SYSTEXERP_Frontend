@@ -109,7 +109,7 @@ export class ErrorHandlerService {
     }
     // --- 【結束新增的後端訊息拆分邏輯】 ---
 
-    console.error('HTTP Error Details:', error);
+    // console.error('HTTP Error Details:', error);
 
     // 使用拆分後的 header 和 details 呼叫 notificationService
     this.notificationService.errorBubble(notificationDetails, notificationHeader);
