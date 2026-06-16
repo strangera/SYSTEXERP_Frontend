@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { OverlayPanel } from 'primeng/overlaypanel';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableUtilityService } from '../services/table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../table-edit.model';
@@ -13,6 +15,54 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-dropdown-cell',
   host: { 'table-edit-id': 'FIN53010-CRU' },
   template: `
+<ng-container *ngIf="useInputWithDropdown(); else existingLogicTpl">
+  <div class="p-dropdown p-component p-inputwrapper w-full"
+       [class.p-disabled]="dropdownDisabled"
+       [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+       tooltipPosition="bottom"
+       [ngClass]="{ 'ng-invalid ng-dirty': !!cellInput.rowData._validationErrors?.[cellInput.col.field] }"
+       style="display:flex;min-width:0">
+    <input type="text"
+           class="p-dropdown-label p-inputtext"
+           style="flex:1;border:none;outline:none;background:transparent;min-width:0"
+           [placeholder]="dropdownDisabled ? '' : '請輸入' + cellInput.col.header"
+           [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+           [ngModelOptions]="{ standalone: true }"
+           [disabled]="dropdownDisabled"
+           (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
+           [maxlength]="cellInput.col.maxLength || null" />
+    <div class="p-dropdown-trigger"
+         [style.cursor]="dropdownDisabled ? 'default' : 'pointer'"
+         (click)="!dropdownDisabled && togglePickerPanel($event)">
+      <span class="p-dropdown-trigger-icon pi pi-chevron-down"></span>
+    </div>
+  </div>
+
+  <p-overlayPanel #inputWithDropdownPanel [dismissable]="true" appendTo="body" styleClass="p-0">
+    <div style="width:260px;padding:0.5rem">
+      <input type="text" placeholder="搜尋..."
+             class="p-inputtext p-component p-element w-full"
+             style="margin-bottom:0.4rem"
+             [(ngModel)]="pickerFilter"
+             [ngModelOptions]="{ standalone: true }"
+             (input)="onPickerFilterInput()" />
+      <div style="max-height:220px;overflow-y:auto">
+        <div *ngFor="let opt of filteredPickerOptions"
+             class="p-dropdown-item"
+             style="white-space:normal"
+             (click)="onPickOption(opt); inputWithDropdownPanel.hide()">
+          {{ getOptLabel(opt) }}
+        </div>
+        <div *ngIf="!filteredPickerOptions.length"
+             class="p-2 text-color-secondary">
+          無符合選項
+        </div>
+      </div>
+    </div>
+  </p-overlayPanel>
+</ng-container>
+
+<ng-template #existingLogicTpl>
 <ng-container *ngIf="shouldRenderAsInput(); else dropdownTpl">
   <p-iconField iconPosition="right">
     <input type="text"
@@ -70,6 +120,7 @@ import { CellInput } from './table-edit-cell.model';
                tooltipPosition="bottom" />
 </p-iconField>
 </ng-template>
+</ng-template>
   `,
   styles: [`
     /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
@@ -94,6 +145,7 @@ import { CellInput } from './table-edit-cell.model';
     DropdownModule,
     IconFieldModule,
     InputIconModule,
+    OverlayPanelModule,
     TooltipModule
   ]
 })
@@ -110,6 +162,43 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
 
   /** 快取後綁定 p-dropdown，避免每次 CD 重算觸發 PrimeNG disabled setter 內的 detectChanges 連鎖 */
   public dropdownDisabled = false;
+
+  @ViewChild('inputWithDropdownPanel') private inputWithDropdownPanel?: OverlayPanel;
+  protected pickerFilter = '';
+  protected filteredPickerOptions: Record<string, unknown>[] = [];
+
+  protected useInputWithDropdown(): boolean {
+    return !!this.cellInput.col.inputWithDropdown;
+  }
+
+  protected togglePickerPanel(event: Event): void {
+    this.pickerFilter = '';
+    this.filteredPickerOptions = (this.getOptions(this.cellInput.rowData, this.cellInput.col) ?? []) as Record<string, unknown>[];
+    this.inputWithDropdownPanel?.toggle(event);
+  }
+
+  protected onPickerFilterInput(): void {
+    const all = (this.getOptions(this.cellInput.rowData, this.cellInput.col) ?? []) as Record<string, unknown>[];
+    const term = this.pickerFilter.trim().toLowerCase();
+    const labelKey = this.cellInput.col.optionLabel ?? 'label';
+    this.filteredPickerOptions = term
+      ? all.filter(o => String(o[labelKey] ?? '').toLowerCase().includes(term))
+      : all;
+    this.cdr.markForCheck();
+  }
+
+  protected getOptLabel(opt: Record<string, unknown>): string {
+    const col = this.cellInput.col;
+    return col.optionLabel ? String(opt[col.optionLabel] ?? '') : String(opt ?? '');
+  }
+
+  protected onPickOption(opt: Record<string, unknown>): void {
+    const col = this.cellInput.col;
+    const val = col.optionValue ? opt[col.optionValue] : opt;
+    this.cellInput.rowData[col.field] = val;
+    this.cellInput.onValueChange(this.cellInput.rowData, val, col, this.cellInput.index);
+    this.cdr.markForCheck();
+  }
 
   isDisabled(): boolean {
     const col = this.cellInput.col;

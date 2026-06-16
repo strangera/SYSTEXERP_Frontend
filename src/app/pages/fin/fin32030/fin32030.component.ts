@@ -13,6 +13,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -34,6 +35,7 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
     ReactiveFormsModule,
     CalendarRangeComponent,
     DropdownComponent,
+    InputNumberComponent,
     InputNumberRangeComponent,
     InputTextComponent,
     TableComponent,
@@ -72,8 +74,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     VEN_No: [null as string | null], // 廠客代號
     DateFrom: [null], // 立帳日期起
     DateTo: [null], // 立帳日期迄
-    AmtFrom: [null], // 應收金額起
-    AmtTo: [null], // 應收金額迄
+    Amt: [null], // 應收金額
     NoteDesc: ['', [Validators.maxLength(160)]], // 摘要
     pageSize: [30],
     pageIndex: [1],
@@ -210,8 +211,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
         VEN_No: formValue.VEN_No || undefined,
         DateFrom: formValue.DateFrom || undefined,
         DateTo: formValue.DateTo || undefined,
-        AmtFrom: formValue.AmtFrom || undefined,
-        AmtTo: formValue.AmtTo || undefined,
+        Amt: formValue.Amt || undefined,
         NoteDesc: formValue.NoteDesc || undefined,
         pageIndex: formValue.pageIndex ?? 1,
         pageSize: formValue.pageSize ?? 30,
