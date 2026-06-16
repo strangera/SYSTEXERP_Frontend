@@ -41,6 +41,8 @@ export interface EditColumn {
   allowCustomValue?: boolean; // 允許輸入不在選項中的自訂值
   /** 下拉欄位若值不在 options 中則改用 input 文字輸入框（預設 false：維持下拉） */
   dropdownFallbackToInput?: boolean;
+  /** 輸入框優先：預設顯示文字輸入框，右側按鈕可選開啟選項清單 */
+  inputWithDropdown?: boolean;
   /** 判斷該列的 options 是否已載入完成（避免 async 載入中誤判 fallback） */
   isOptionsLoaded?: (rowData: any) => boolean;
   // date
