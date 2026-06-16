@@ -14,6 +14,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { InputTextComponent } from 'src/app/shared/componentkit/input-text/input-text.component';
 import { environment } from '../../../../environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -49,7 +50,8 @@ export interface Option {
     MultiSelectComponent,
     CommonModule,
     TableReportComponent,
-    YearMonthComponent
+    YearMonthComponent,
+    InputTextComponent,
   ]
 })
 export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> implements OnInit {
