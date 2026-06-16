@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -23,7 +24,11 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 @Component({
   selector: 'app-tls2a050',
   templateUrl: './tls2a050.component.html',
-  styleUrls: ['./tls2a050.component.scss'],
+  styles: [`
+    :host ::ng-deep .p-datatable .OVER_PayAmt_RED {
+      color: red !important;
+    }
+  `],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -41,16 +46,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   ],
 })
 export class TLS2A050Component extends BasicQueryPageComponent<any> implements OnInit {
-  // 總計列型別：key 為欄位名稱，value 為數值或顯示文字
   private static readonly emptyFooter: Record<string, number | string | null> = { TXN_Date: null };
-
-  formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}/${month}/${day}`;
-  }
-
   queryForm = this.formBuilder.group({
     POS_TypeList: [[] as string[]],
     salesDate: [new Date()],
@@ -59,14 +55,12 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
     pageSize: [1000],
   });
-
   data: any[] = [];
   totalRecords = 0;
   POS_TypeListOptions = [
     { label: '一般', value: '' },
     { label: '停管', value: 'PKNG' },
   ];
-
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
   columns: ReportColumn[] = [];
@@ -77,7 +71,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   exportExcelLoading = false;
 
   constructor(
-    private tls2A050Service: Tls2A050Service,
+    private readonly tls2A050Service: Tls2A050Service,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -103,42 +98,25 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
-      // 儲存查詢條件給 app-table-report 做 lazy 載入
-      this.lastQueryBody = {
-        ...raw,
-        pageIndex: 1,
-        pageSize: raw.pageSize ?? 1000,
-      };
-
       const params = {
-        pageIndex: this.lastQueryBody.pageSize,
-        pageSize: this.lastQueryBody.pageIndex,
-        SortBy: this.lastQueryBody.SortBy ?? [],
-        TXN_DateStart: this.lastQueryBody.TXN_DateStart ? this.formatDate(this.lastQueryBody.TXN_DateStart) : null,
-        TXN_DateEnd: this.lastQueryBody.TXN_DateEnd ? this.formatDate(this.lastQueryBody.TXN_DateEnd) : null,
-        POS_TypeList: this.lastQueryBody.POS_TypeList?.includes('all') ? [] : this.lastQueryBody.POS_TypeList
+        pageIndex: raw.pageIndex,
+        pageSize: raw.pageSize,
+        SortBy: raw.SortBy ?? [],
+        TXN_DateStart: raw.TXN_DateStart ? this.datePipe.transform(raw.TXN_DateStart, 'yyyy/MM/dd') : null,
+        TXN_DateEnd: raw.TXN_DateEnd ? this.datePipe.transform(raw.TXN_DateEnd, 'yyyy/MM/dd') : null,
+        POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList
       };
-
-      this.tls2A050Service.queryTLS2A050(params).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe({
-        next: (res) => {
-          const { flatData, payNames } = this.buildFlatData(res);
-          const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
-
-          this.columns = columns;
-          this.columnGroup = columnGroup;
-          this.data = flatData;
-
-          this.sumData = res.Data?.SumData ?? {};
-
-          // 依照動態欄位與 SumData 建立總計列資料，給 app-table-report 顯示 footer
-          this.footerData = this.buildFooterData(payNames, this.sumData);
-
-          this.totalRecords = res.TotalCount ?? 0;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        },
+      this.tls2A050Service.queryTLS2A050(params).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        const { flatData, payNames } = this.buildFlatData(res);
+        const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
+        this.lastQueryBody = params;
+        this.columns = columns;
+        this.columnGroup = columnGroup;
+        this.data = flatData;
+        this.sumData = res.Data?.SumData ?? {};
+        this.footerData = this.buildFooterData(payNames, this.sumData);
+        this.totalRecords = res.TotalCount ?? 0;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
@@ -149,10 +127,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   private buildFlatData(res: any): { flatData: any[]; payNames: string[] } {
     const flatData: any[] = [];
     const payNameSet = new Set<string>();
-
     (res.Data?.QueryData ?? []).forEach((entry: any) => {
       const row: any = { TXN_Date: entry.TXN_Date };
-
       (entry._DetailList ?? []).forEach((detail: any, index: number) => {
         const name = detail.PAY_Name;
         payNameSet.add(name);
@@ -161,12 +137,10 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
         row[`${index}_ACT_PayCnt`] = detail.ACT_PayCnt;
         row[`${index}_BOOK_PayAmt`] = detail.BOOK_PayAmt;
         row[`${index}_ACT_PayAmt`] = detail.ACT_PayAmt;
-        row[`${index}_OVER_PayAmt`] =
-          detail.OVER_PayAmt !== 0
-            ? `<span class="OVER_PayAmt_RED">${formattedAmt}</span>`
-            : `<span>${formattedAmt}</span>`;
+        row[`${index}_OVER_PayAmt`] = detail.OVER_PayAmt !== 0
+          ? `<span class="OVER_PayAmt_RED">${formattedAmt}</span>`
+          : `<span>${formattedAmt}</span>`;
       });
-
       flatData.push(row);
     });
 
@@ -187,19 +161,10 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
         { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name, format: formatAmount, align: 'right' },
         { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name, format: formatAmount, align: 'right' },
         { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name, format: formatAmount, align: 'right' },
-        {
-          field: `${index}_OVER_PayAmt`,
-          header: '帳差 (實收-系統)',
-          visible: true,
-          groupField: name,
-          format: formatAmount,
-          align: 'right',
-          type: 'html',
-        },
+        { field: `${index}_OVER_PayAmt`, header: '帳差 (實收-系統)', visible: true, groupField: name, format: formatAmount, align: 'right', type: 'html', },
       );
       columnGroup.push({ field: name, header: `[${name}] 行動支付` });
     });
-
     return { columns, columnGroup };
   }
 
@@ -208,12 +173,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
    * key 需對應到 columns 裡的 field
    */
   private buildFooterData(payNames: string[], sumData: Record<string, number>): Record<string, number | string | null> | null {
-    if (!sumData) {
-      return null;
-    }
-
+    if (!sumData) { return null; }
     const footer: Record<string, number | string | null> = { ...TLS2A050Component.emptyFooter };
-
     payNames.forEach((name, index) => {
       footer[`${index}_BOOK_PayCnt`] = sumData[`BOOK_PayCnt_${name}`] ?? 0;
       footer[`${index}_ACT_PayCnt`] = sumData[`ACT_PayCnt_${name}`] ?? 0;
@@ -221,7 +182,6 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
       footer[`${index}_ACT_PayAmt`] = sumData[`ACT_PayAmt_${name}`] ?? 0;
       footer[`${index}_OVER_PayAmt`] = sumData[`OVER_PayAmt_${name}`] ?? 0;
     });
-
     return footer;
   }
 
@@ -229,41 +189,29 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
    * 給 app-table-report 做 lazy 載入 / 重新排序 使用的查詢函式
    */
   public queryTLS2A050ForReport = (body: any) =>
-    this.tls2A050Service
-      .queryTLS2A050({
-        pageSize: body.pageSize ?? 1000,
-        pageIndex: body.pageIndex ?? 1,
-        SortBy: body.SortBy ?? [],
-        TXN_DateStart: body.TXN_DateStart ? this.formatDate(body.TXN_DateStart) : null,
-        TXN_DateEnd: body.TXN_DateEnd ? this.formatDate(body.TXN_DateEnd) : null,
-        POS_TypeList: body.POS_TypeList?.includes('all') ? [] : body.POS_TypeList
-      })
-      .pipe(
-        map((res) => {
-          const { flatData, payNames } = this.buildFlatData(res);
-          const totalCount = res.TotalCount ?? flatData.length;
-
-          // 只有第一頁時更新 columns / footerData，避免無限捲動時一直重算
-          const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
-          if (isFirstPage) {
-            const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
-            this.columns = columns;
-            this.columnGroup = columnGroup;
-            this.sumData = res.Data?.SumData ?? {};
-            this.footerData = this.buildFooterData(payNames, this.sumData);
-          }
-
-          return {
-            Data: flatData,
-            TotalCount: totalCount,
-          };
-        })
-      );
-
-
+    this.tls2A050Service.queryTLS2A050({
+      pageSize: body.pageSize ?? 1000,
+      pageIndex: body.pageIndex ?? 1,
+      SortBy: body.SortBy ?? [],
+      TXN_DateStart: body.TXN_DateStart ? this.datePipe.transform(body.TXN_DateStart, 'yyyy/MM/dd') : null,
+      TXN_DateEnd: body.TXN_DateEnd ? this.datePipe.transform(body.TXN_DateEnd, 'yyyy/MM/dd') : null,
+      POS_TypeList: body.POS_TypeList?.includes('all') ? [] : body.POS_TypeList
+    }).pipe(map((res) => {
+      const { flatData, payNames } = this.buildFlatData(res);
+      const totalCount = res.TotalCount ?? flatData.length;
+      // 只有第一頁時更新 columns / footerData，避免無限捲動時一直重算
+      const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
+      if (isFirstPage) {
+        const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
+        this.columns = columns;
+        this.columnGroup = columnGroup;
+        this.sumData = res.Data?.SumData ?? {};
+        this.footerData = this.buildFooterData(payNames, this.sumData);
+      }
+      return { Data: flatData, TotalCount: totalCount, };
+    }));
   exportReport = () => {
     const raw = this.queryForm.getRawValue();
-
     // === 修正開始 ===
     const now = new Date();
     const dateString =
@@ -288,27 +236,25 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     }
 
     this.exportExcelLoading = true;
-    this.tls2A050Service.exportTLS2A050(payload).subscribe({
-      next: (res: HttpResponse<Blob>) => {
-        if (res.body) {
-          const contentDisposition = res.headers.get('content-disposition');
-          let filename = `unknown.xlsx`; // 副檔名改為 .xlsx
-          if (contentDisposition) {
-            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
-            const matches = contentDisposition.match(filenameRegex);
-            if (matches) {
-              filename = matches[1] || matches[2] || filename;
-              filename = decodeURIComponent(filename);
-            }
-            filename = filename.replace(/["']/g, '');
+    this.tls2A050Service.exportTLS2A050(payload).subscribe((res: HttpResponse<Blob>) => {
+      if (res.body) {
+        const contentDisposition = res.headers.get('content-disposition');
+        let filename = `unknown.xlsx`; // 副檔名改為 .xlsx
+        if (contentDisposition) {
+          const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
+          const matches = contentDisposition.match(filenameRegex);
+          if (matches) {
+            filename = matches[1] || matches[2] || filename;
+            filename = decodeURIComponent(filename);
           }
-          const blob = new Blob([res.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          saveAs(blob, filename);
-        } else {
-          console.error("Response body is empty!");
+          filename = filename.replace(/["']/g, '');
         }
-        this.exportExcelLoading = false;
-      },
+        const blob = new Blob([res.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, filename);
+      } else {
+        console.error("Response body is empty!");
+      }
+      this.exportExcelLoading = false;
     });
   };
 }
