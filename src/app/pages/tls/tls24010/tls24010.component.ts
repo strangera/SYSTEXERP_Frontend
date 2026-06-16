@@ -155,21 +155,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.isClosed = (closeData.Data === 'Y');
     });
   }
-  // onECRNoChanged(ecrNo: string): void {
-  //   if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null), this.queryForm.get('TLT_No')?.enable();
-  //   this.tLS41010Service.queryTLS41010({ ECR_No: ecrNo }).pipe(untilDestroyed(this)).subscribe(res => {
-  //     if (res.Data.length !== 0) {
-  //       const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
-  //       this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
-  //       // 自收機台只能補登對應的櫃位
-  //       if (this.queryForm.get('TXN_GUIPaper')?.value === 'E' && res.Data[0].ECR_Type === '2' && ECR_TLT_No.length > 0) {
-  //         this.queryForm.get('TLT_No')?.disable();
-  //       } else {
-  //         this.queryForm.get('TLT_No')?.enable();
-  //       }
-  //     }
-  //   });
-  // }
   onECRNoChanged(ecrNo: string): void {
     // 1. 如果清空收銀機號，就清空並解鎖專櫃編號
     if (!ecrNo) {
