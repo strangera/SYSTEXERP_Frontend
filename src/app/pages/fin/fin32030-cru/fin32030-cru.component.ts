@@ -10,7 +10,6 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
-import { InputNumberRangeComponent } from 'src/app/shared/componentkit/input-number-range/input-number-range.component';
 import {
   FIN32030Service,
   InsertFIN32030CompleteRequest,
@@ -60,7 +59,6 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
     TableComponent,
     DialogModule,
     CalendarRangeComponent,
-    InputNumberRangeComponent
   ]
 })
 export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Response> implements OnInit {
@@ -215,8 +213,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     VEN_No: [null as string | null],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
-    AmtFrom: [null], // 應收金額起
-    AmtTo: [null], // 應收金額迄
+    Amt: [null], // 應收金額
     NoteDesc: ['', [Validators.maxLength(160)]], // 摘要
     pageSize: [30],
     pageIndex: [1],
@@ -836,8 +833,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       VEN_No: formValue.VEN_No || undefined,
       DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
-      AmtFrom: formValue.AmtFrom != null ? Number(formValue.AmtFrom) : undefined,
-      AmtTo: formValue.AmtTo != null ? Number(formValue.AmtTo) : undefined,
+      Amt: formValue.Amt != null ? Number(formValue.Amt) : undefined,
       NoteDesc: formValue.NoteDesc || undefined,
       PageIndex: formValue.pageIndex ?? 1,
       PageSize: formValue.pageSize ?? 30,
