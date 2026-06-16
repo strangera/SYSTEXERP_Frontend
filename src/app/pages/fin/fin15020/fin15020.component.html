@@ -49,16 +49,13 @@
           ></app-year-month>
 
           <!-- 字軌 -->
-          <app-dropdown
+          <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="字軌"
             controlName="GUI_Track"
-            [options]="guiTrackOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
             [control]="queryForm.controls.GUI_Track"
             [submitted]="submitted"
-          ></app-dropdown>
+          ></app-input-text>
 
           <!-- 發票號碼起迄 -->
           <app-input-text-range
