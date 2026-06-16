@@ -41,6 +41,14 @@ export interface FasItemDropdownItem {
   UNIT_NAME?: string | null;
 }
 
+/** queryGLS1005_AccNo_DropDownList（資材攤提會計科目）回傳列 */
+export interface FasAccNoDropdownItem {
+  ROWNO?: string | null;
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccDisplay?: string | null;
+}
+
 /**
  * 查詢採購單號下拉選單(ASS13010)
  * 後端回傳欄位：ID、APPLY_DATE
