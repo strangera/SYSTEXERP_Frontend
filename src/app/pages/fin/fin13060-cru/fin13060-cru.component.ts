@@ -23,6 +23,9 @@ import { ValidationService } from '@shared/service/validation.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -109,6 +112,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   System_IDOptions: any[] = [];
   TXN_GUIPaperOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
+  venNoOptions: any[] = [];
 
   private readonly GUI_TYPE_TO_PAPER: Record<string, string> = {
     '31': '3',
@@ -193,6 +197,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     private readonly validationService: ValidationService,
     private readonly ECRNoService: ECRNoService,
     private readonly counterNameService: CounterNameService,
+    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -248,11 +253,14 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
 
     sys1000('SYS_ORIGIN').subscribe((res: any) => {
       const list = res?.Data ?? [];
+      const allowedOrigins = new Set(['2', 'E', 'G', 'T', 'V']);
 
-      this.System_IDOptions = list.map((x: any) => ({
-        value: String(x.No ?? ''),
-        label: `${x.No ?? ''}-${x.Name ?? ''}`,
-      }));
+      this.System_IDOptions = list
+        .filter((x: any) => allowedOrigins.has(String(x.No)))
+        .map((x: any) => ({
+          value: String(x.No ?? ''),
+          label: `${x.No ?? ''}-${x.Name ?? ''}`,
+        }));
 
       if (this.crudstatus === CRUDStatus.Create) {
         const ctrl = this.dataForm.controls.SYS_ORIGIN;
@@ -329,6 +337,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.setupInputMasks();
     this.setupTaxCalculation();
     this.setupInvoiceDateToYM();
+    this.setupTltNoToVenNo();
 
     if (this.crudstatus === CRUDStatus.Create) {
       this.setDefaultDeclareYM();
@@ -366,6 +375,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
 
+      let txnUniform: string | null = null;
+      if (raw.Ven_No) {
+        const selectedVendor = this.venNoOptions.find(o => o.value === raw.Ven_No);
+        txnUniform = selectedVendor ? this.normalize(selectedVendor.No) : null;
+      }
       const payload = {
         ID: raw.ID != null ? Number(raw.ID) : 0,
         mid: Number(raw.mid ?? 0),
@@ -399,12 +413,13 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         INV_Remark: this.normalize(raw.INV_Remark),
         Tlt_No: this.normalize(raw.Tlt_No),
         Ven_No: this.normalize(raw.Ven_No),
+        TXN_Uniform: txnUniform,
       } as const;
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         const { ID, ...insertPayload } = payload;
 
-        this.fin13060Service.insertFIN13060(insertPayload).subscribe(() => {
+        this.fin13060Service.insertFIN13060(insertPayload).pipe(finalize(() => { this.loading = false; this.messageService.unblockUi(); })).subscribe(() => {
           this.messageService.successBubble('新增成功');
 
           this.dataForm.reset();
@@ -422,7 +437,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           );
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        this.fin13060Service.updateFIN13060(payload).subscribe(() => {
+        this.fin13060Service.updateFIN13060(payload).pipe(finalize(() => { this.loading = false; this.messageService.unblockUi(); })).subscribe(() => {
           this.messageService.successBubble('更新成功');
           this.onCancel();
         });
@@ -600,16 +615,49 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   private setupInvoiceDateToYM(): void {
     this.dataForm.controls.TXN_Date.valueChanges.subscribe((dateValue) => {
       if (!dateValue) {
-        this.dataForm.controls.INV_YM.setValue(null, { emitEvent: false });
-        this.dataForm.controls.INV_YM_Display.setValue(null, { emitEvent: false });
+        this.dataForm.patchValue({
+          INV_YM: null,
+          INV_YM_Display: null
+        });
         return;
       }
 
       const realYM = this.toInvoiceRealYM(dateValue);
       const displayYM = this.toInvoiceDisplayYM(dateValue);
 
-      if (realYM) this.dataForm.controls.INV_YM.setValue(realYM, { emitEvent: false });
-      if (displayYM) this.dataForm.controls.INV_YM_Display.setValue(displayYM, { emitEvent: false });
+      this.dataForm.patchValue({
+        INV_YM: realYM,
+        INV_YM_Display: displayYM
+      });
+    });
+  }
+  private checkVendorDisableState(): void {
+    if (this.crudstatus === CRUDStatus.Read) return; // Read 模式本來就會全鎖定，不處理
+
+    const tltCtrl = this.dataForm.controls.Tlt_No;
+    const venCtrl = this.dataForm.controls.Ven_No;
+    const selectedTltNo = tltCtrl.value;
+
+    if (!selectedTltNo) {
+      venCtrl.enable({ emitEvent: false });
+      return;
+    }
+
+    // 在下拉選單資料中尋找目前選中的專櫃
+    const selectedCounter = this.CounterOptions.find(c => c.value === selectedTltNo);
+
+    if (selectedCounter && selectedCounter.ven_no) {
+      // 確保廠商值有帶入，並 disable
+      venCtrl.setValue(selectedCounter.ven_no, { emitEvent: false });
+      venCtrl.disable({ emitEvent: false });
+    } else {
+      venCtrl.enable({ emitEvent: false });
+    }
+  }
+
+  private setupTltNoToVenNo(): void {
+    this.dataForm.controls.Tlt_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.checkVendorDisableState();
     });
   }
 
@@ -745,13 +793,24 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   //下拉
   loadOptions() {
     // 專櫃
-    this.counterNameService.getCounters().subscribe((res: any) => {
+    this.fin13060Service.queryFIN13060TalentDropDown().subscribe((res: any) => {
+      const list = res?.Data ?? [];
       this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) ?? [];
+        list.map((x: any) => ({
+          label: x.tlt_name,
+          formLabel: `${x.tlt_no} - ${x.tlt_name}`,
+          value: x.tlt_no,
+          ven_no: x.ven_no,
+          ven_uniform: x.ven_uniform,
+        }));
+      this.checkVendorDisableState();
+    });
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe((res: any) => {
+      this.venNoOptions = (res?.Data ?? []).map((x: any) => ({
+        label: `${x.VEN_No} - ${x.Name}`,
+        value: x.VEN_No,
+        ...x,
+      }));
     });
   }
 }

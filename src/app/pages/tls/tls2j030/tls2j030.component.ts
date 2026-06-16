@@ -31,10 +31,13 @@ import { GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';
 export class TLS2J030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     CHG_No: ['', [Validators.maxLength(12)]],
-    TXN_Date_Start: [''],
-    TXN_Date_End: [''],
     GUI_INPUTDATE_Start: [new Date(), Validators.required],//換開日期起,必填
     GUI_INPUTDATE_End: [new Date(), Validators.required],//換開日期迄,必填
+    TXN_Date_Start: [''],
+    TXN_Date_End: [''],
+    TXN_GUINo: ['', [Validators.maxLength(10)]],
+    ORG_TXN_Date_Start: [''],
+    ORG_TXN_Date_End: [''],
     TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
     GUI_Status: [''],
     TXN_Uniform: [''],
@@ -44,6 +47,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
 
   totalRecords = 0;
   data: any[] = [];
+  footerData: any = [];
   selectedItems: any[] = [];
   isNotECR = true;
   changeEcrNo = ''; // 目前使用的換開收銀機號
@@ -54,11 +58,11 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   GUI_STATS_Options = GUI_STATUS_OPTIONS;
   columns: ReportColumn[] = [
     { field: 'CHG_No', header: '換開編號', visible: true },
-    { field: 'TXN_Date', header: '換開日期', visible: true, format: formatDate },
-    // { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'GUI_InputDate', header: '換開日期', visible: true, format: formatDate },
+    { field: 'TXN_Date', header: '換開發票日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (value: number) => String(value ?? '').padStart(6, '0') },
+    { field: 'TXN_GUINo', header: '換開發票號碼', visible: true },
     { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount, align: 'right' },
@@ -78,7 +82,13 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
 
-  formatStatus(value: string | number) {
+  formatStatus(value: string | number | null | undefined) {
+    // 防呆：如果是 null, undefined 或空字串，直接回傳空字串
+    if (value == null || value === '') {
+      return '';
+    }
+
+    // 正常處理
     return GUI_STATUS_OPTIONS.find(o => o.value === String(value))?.label ?? String(value);
   }
   detailNaturalData: any[] = [];  // 來源發票
@@ -127,6 +137,9 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         GUI_InputDate_End: formatDateToYYYY_MM_DD(frm.value.GUI_INPUTDATE_End),
         TXN_Date_Start: formatDateToYYYY_MM_DD(frm.value.TXN_Date_Start),
         TXN_Date_End: formatDateToYYYY_MM_DD(frm.value.TXN_Date_End),
+        TXN_GUINo: frm.value.TXN_GUINo ?? "",
+        ORG_TXN_Date_Start: formatDateToYYYY_MM_DD(frm.value.ORG_TXN_Date_Start),
+        ORG_TXN_Date_End: formatDateToYYYY_MM_DD(frm.value.ORG_TXN_Date_End),
         TXN_GUIBegNo: frm.value.TXN_GUIBegNo ?? "",
         TXN_Uniform: frm.value.TXN_Uniform ?? "",
         GUI_Status: frm.value.GUI_Status ?? ""
@@ -140,6 +153,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
+            this.footerData = response.footerData;
             this.totalRecords = response.TotalCount || 0;
             const last = { ...req } as any;
             delete last.PageIndex;
@@ -226,14 +240,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       CHG_No: this.queryForm.value.CHG_No ?? '',
       GUI_InputDate_Start: startDate,
       GUI_InputDate_End: endDate,
-      TXN_Date_Start: this.queryForm.value.TXN_Date_Start
-        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_Start)
-        : '',
-      TXN_Date_End: this.queryForm.value.TXN_Date_End
-        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_End)
-        : '',
+      TXN_Date_Start: this.queryForm.value.TXN_Date_Start ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_Start) : '',
+      TXN_Date_End: this.queryForm.value.TXN_Date_End ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_End) : '',
+      TXN_GUINo: this.queryForm.value.TXN_GUINo ?? '',
+      ORG_TXN_Date_Start: this.queryForm.value.ORG_TXN_Date_Start ? formatDateToYYYY_MM_DD(this.queryForm.value.ORG_TXN_Date_Start) : '',
+      ORG_TXN_Date_End: this.queryForm.value.ORG_TXN_Date_End ? formatDateToYYYY_MM_DD(this.queryForm.value.ORG_TXN_Date_End) : '',
       TXN_GUIBegNo: this.queryForm.value.TXN_GUIBegNo ?? '',
-
       GUI_Status: this.queryForm.value.GUI_Status ?? '',
       TXN_Uniform: this.queryForm.value.TXN_Uniform ?? '',
     };

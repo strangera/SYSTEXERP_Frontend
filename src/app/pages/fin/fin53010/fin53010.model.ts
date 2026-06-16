@@ -187,9 +187,21 @@ export interface InsertARS3001DataBody {
   NoteDesc?: string | null;
 }
 
-/** Swagger insertAPS4023Data（目前僅 ID） */
+/** Swagger insertAPS4023Data */
 export interface InsertAPS4023DataBody {
   ID?: number;
+  InvoiceType?: string | null;
+  InvoicePrefix?: string | null;
+  InvoiceNo?: string | null;
+  InvoiceDate?: string | null;
+  INV_DeclareYM?: string | null;
+  Buyer_Uniform?: string | null;
+  PUR_Amt?: number | null;
+  PUR_TaxType?: string | null;
+  PUR_Net?: number | null;
+  PUR_Tax?: number | null;
+  Source_Doc_No?: string | null;
+  AssetType?: string | null;
 }
 
 /** Swagger insertAPS4002Data */
@@ -839,11 +851,37 @@ export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN530
 
 export type QueryFIN53010DetailDataByVouNoForUpdateRequest = QueryFIN53010DetailDataByVouNoRequest;
 
+export interface Pos4023 {
+  ID?: number | null;
+  mid?: number | null;
+  SYS_StoreNo?: string | null;
+  TXN_Date?: string | null;
+  ECR_No?: string | null;
+  TXN_No?: number | null;
+  TXN_GUINo?: string | null;
+  TXN_GUIPaper?: string | null;
+  TXN_SaleAmt?: number | null;
+  TXN_SaleTax?: number | null;
+  TXN_SaleNoTax?: number | null;
+  TXN_Net?: number | null;
+  TXN_Tax?: number | null;
+  PLU_TaxType?: string | null;
+  TXN_Uniform?: string | null;
+  INV_Cancel?: string | null;
+  INV_YM?: string | null;
+  INV_GUITrack?: string | null;
+  INV_GUINumber?: string | null;
+  INV_GUIType?: string | null;
+  INV_TXNType?: string | null;
+  Voucher_No?: string | null;
+}
+
 export interface QueryFIN53010DetailDataByVouNoForUpdateResponse {
   _APS3001s?: APS3001[] | null;
   _APS2002s?: APS2002[] | null;
   _ARS3001s?: ARS3001[] | null;
   _APS4023s?: APS4023[] | null;
+  _POS4023s?: Pos4023[] | null;
   _APS4002s?: APS4002[] | null;
   Total_ACP_Amt?: number;
   Total_ARS_Amt?: number;
@@ -915,6 +953,10 @@ export interface FIN53010StepSalesInvoiceRow {
   source_doc_no?: string;
   summary_count?: number;
   asset_flag?: string;
+  /** 來自 POS4023（手開發票），唯讀，不送 insert/update API */
+  isPOS4023?: boolean;
+  /** 已通過 APS2001/POS1017 配號驗證，submit 時必須為 true */
+  _invoiceValidated?: boolean;
 }
 
 /** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */

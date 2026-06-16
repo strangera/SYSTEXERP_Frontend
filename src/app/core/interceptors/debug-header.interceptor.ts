@@ -14,7 +14,7 @@ import { DebugToggleService, ExecutedSqlDetail } from '../services/debug-toggle.
 
 const DEBUG_ID_HEADER = 'X-Debug-Id';
 const BASE_URL_TO_REMOVE = environment.BaseUrl;
-const DEBUG_API_PATH = '/TSRDERP_Main/Controllers/Debug/';
+const DEBUG_API_PATH = '/BasicEIP_Core/DiagnosticsModule/Debug/';
 
 /**
  * 偵錯標頭功能型攔截器 (更新為使用 Debug ID 呼叫新 API)

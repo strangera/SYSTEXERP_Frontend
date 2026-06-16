@@ -17,6 +17,7 @@ import { ExportContext } from '../../exports/report-export.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { TableReportCaptionComponent } from './components/table-report-caption/table-report-caption.component';
 import { TableExpansionComponent } from './components/table-report-expansion/table-report-expansion.component';
+import { TableReportDataFlowService } from './services/table-report-data-flow.service';
 import { TableReportDragDropService } from './services/table-report-drag-drop.service';
 import { TableReportPermissionService } from './services/table-report-permission.service'; // 新增
 import { TableReportSelectionService } from './services/table-report-selection.service';
@@ -39,19 +40,20 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
     TableReportSelectionService,
     TableReportDragDropService,
     TableReportSubtotalService,
-    TableReportPermissionService // 注入權限分類服務
+    TableReportPermissionService,
+    TableReportDataFlowService
   ]
 })
 export class TableReportComponent implements OnChanges {
   @ViewChild('dt') public readonly dt!: Table;
 
-  // 專業服務注入鏈
   public readonly tableUtility = inject(TableReportUtilityService);
   public readonly widthService = inject(TableReportWidthService);
   public readonly selectionService = inject(TableReportSelectionService);
   public readonly dragDropService = inject(TableReportDragDropService);
   public readonly subtotalService = inject(TableReportSubtotalService);
-  public readonly permissionService = inject(TableReportPermissionService); // 新增
+  public readonly permissionService = inject(TableReportPermissionService);
+  public readonly dataFlowService = inject(TableReportDataFlowService);
   public readonly sanitizer = inject(DomSanitizer);
 
   private readonly route = inject(ActivatedRoute);
@@ -275,7 +277,7 @@ export class TableReportComponent implements OnChanges {
 
   loadMoreData() {
     if (this._loading || !this.queryFunction || !this.lastQueryBody) return;
-    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+    this.lastQueryBody = this.dataFlowService.normalizeQueryBody(this.lastQueryBody);
     const { pageSize } = this.lastQueryBody;
     const currentSort = this.dt?.multiSortMeta;
     if (currentSort) this.lastQueryBody.SortBy = currentSort;
@@ -312,10 +314,37 @@ export class TableReportComponent implements OnChanges {
       return;
     }
     if (this.isSyncingSort || this._loading) return;
-    if (event.multiSortMeta && event.multiSortMeta.length > 0) {
-      this.dt.multiSortMeta = [event.multiSortMeta[event.multiSortMeta.length - 1]];
+
+    // 精準對接 PrimeNG 的全小寫大坑
+    const incomingSorts: any[] = event.multisortmeta || [];
+
+    if (this.groupRowsBy) {
+      // 🟢 1. 動態偵測或繼承小計欄位的排序方向 (order)
+      // 先看這次傳進來的事件有沒有包含小計欄位的排序
+      const incomingGroupSort = incomingSorts.find(s => s.field === this.groupRowsBy);
+      // 再看上一次表格留存的狀態有沒有小計欄位的排序
+      const lastGroupSort = this.dt.multiSortMeta?.find(s => s.field === this.groupRowsBy);
+
+      // 優先級：這次事件的方向 -> 上一次的方向 -> 預設升序 (1)
+      const currentGroupOrder = incomingGroupSort ? incomingGroupSort.order : (lastGroupSort ? lastGroupSort.order : 1);
+
+      const groupSortMeta = { field: this.groupRowsBy, order: currentGroupOrder };
+
+      // 🟢 2. 清洗其餘欄位的排序條件：排除掉重複的小計欄位
+      const cleanUserSorts = incomingSorts.filter(s => s.field !== this.groupRowsBy);
+
+      // 🟢 3. 完美組裝：[ 動態小計分組固定第一, ...其餘無限個使用者多重排序 ]
+      this.dt.multiSortMeta = [groupSortMeta, ...cleanUserSorts];
+
+      // 4. 灌回 PrimeNG 控制核心，讓畫面的箭頭方向跟資料狀態完全對齊
+      this.dt.tableService.onSort(this.dt.multiSortMeta);
+    } else {
+      // 常規無小積分組時：直接信任 PrimeNG 的多欄位排序陣列
+      this.dt.multiSortMeta = [...incomingSorts];
     }
-    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+
+    // --- 以下後端 API 調配與視圖配給完全不變，100% 穩定對接 ---
+    this.lastQueryBody = this.dataFlowService.normalizeQueryBody(this.lastQueryBody);
     const { pageSize } = this.lastQueryBody;
     if (!this.queryFunction || !this.lastQueryBody || !this.showSort) return;
 
@@ -323,52 +352,37 @@ export class TableReportComponent implements OnChanges {
     const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
 
-    this.queryFunction(body)
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe(res => {
-        this.hasSearched = true;
-        if (res?.Data && res.Data.length > 0) {
-          this.virtualData = [];
-          this.dt.virtualScroll = false;
-          this.subtotalService.clearGroupTotals();
-          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-          this.data = res.Data;
-          this.isNextPagePreloaded = false;
-          this.syncTableSortMeta();
-          this.cdr.detectChanges();
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
+      this.hasSearched = true;
+      if (res?.Data && res.Data.length > 0) {
+        this.virtualData = [];
+        this.dt.virtualScroll = false;
+        this.subtotalService.clearGroupTotals();
+        this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
+        this.data = res.Data;
+        this.isNextPagePreloaded = false;
 
-          if (res.Data.length < pageSize) {
-            this.virtualData = this.data;
-            this.dt.virtualScroll = false;
-          } else {
-            this.dt.virtualScroll = true;
-            this.virtualData = Array.from({ length: res.Data.length });
-            this.cdr.detectChanges();
-            this.virtualData = this.data;
-          }
-          this.selectedItems = [];
-          this.dataChange.emit(this.data);
+        this.syncTableSortMeta();
+        this.cdr.detectChanges();
+
+        if (res.Data.length < pageSize) {
+          this.virtualData = this.data;
+          this.dt.virtualScroll = false;
+        } else {
+          this.dt.virtualScroll = true;
+          this.virtualData = Array.from({ length: res.Data.length });
+          this.cdr.detectChanges();
+          this.virtualData = this.data;
         }
-      });
+        this.selectedItems = [];
+        this.dataChange.emit(this.data);
+      }
+    });
   }
 
   customSort(event: TableQueryPayload) {
     if (!event.multiSortMeta) return;
-    this.data.sort((data1, data2) => {
-      for (const sortMeta of event.multiSortMeta) {
-        const value1 = data1[sortMeta.field];
-        const value2 = data2[sortMeta.field];
-        let result = 0;
-        if (value1 == null && value2 != null) result = -1;
-        else if (value1 != null && value2 == null) result = 1;
-        else if (value1 == null && value2 == null) result = 0;
-        else if (typeof value1 === 'string' && typeof value2 === 'string')
-          result = value1.localeCompare(value2, undefined, { numeric: true, sensitivity: 'base' });
-        else result = value1 < value2 ? -1 : value1 > value2 ? 1 : 0;
-        if (result !== 0) return sortMeta.order * result;
-      }
-      return 0;
-    });
+    this.data = this.dataFlowService.executeClientSort(event, this.data);
     if (this.selectedItems && this.selectedItems.length > 0) this.selectedItems = [...this.selectedItems];
     this.subtotalService.clearGroupTotals();
     this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
@@ -383,7 +397,7 @@ export class TableReportComponent implements OnChanges {
     if (this._loading || !this.lazy) return;
     const target = event.originalEvent?.target;
     if (!target) return;
-    const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
+    const pageSize = this.dataFlowService.normalizeQueryBody(this.lastQueryBody)?.pageSize ?? 30;
     if (this.data.length >= pageSize && this.data.length < this.totalRecords) {
       if (!this.isNextPagePreloaded && target.scrollTop > 50) {
         this.isNextPagePreloaded = true;
@@ -430,15 +444,6 @@ export class TableReportComponent implements OnChanges {
       this.isSyncingSort = false;
     }, 0);
   }
-
-  private normalizeQueryBody(body: any) {
-    if (!body) return body;
-    const pageSize = body.pageSize ?? body.PageSize ?? 30;
-    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
-    const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
-  }
-
   getBtnLabel(btn: any, rowData: any): string {
     return typeof btn.label === 'function' ? btn.label(rowData) : btn.label;
   }

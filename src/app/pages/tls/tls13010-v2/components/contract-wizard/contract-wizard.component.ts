@@ -427,6 +427,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       contact_Date: [''],
       contact_USR_No: ['', [Validators.maxLength(16)]],
       contact_USR_Name: ['', [Validators.maxLength(20)]],
+      crt_usr_name: [''],
+      crt_date: [''],
+      upd_usr_name: [''],
+      upd_date: [''],
+      app_usr_name: [''],
+      app_date: [''],
       feedback_date: [''],
       due_date: [''],
 
@@ -511,6 +517,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   private async initializeMode(): Promise<void> {
     // 從 query params 或 state 取得模式與資料
     const state = history.state;
+    const now = new Date();
+    const today = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+    const userName = this.user?.user_Name ?? '';
 
     if (state?.mode === 'view') {
       this.crudstatus = CRUDStatus.Read;
@@ -520,11 +529,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       this.crudstatus = CRUDStatus.Edit;
       this.wizardState.queryRowData = state.data;
       await this.loadContractData(state.data.talent_id);
+      // 編輯模式：覆蓋修改者與修改時間為當前登入者與今天
+      this.step1Form.patchValue({ upd_usr_name: userName, upd_date: today }, { emitEvent: false });
     } else {
       // 新增模式
       this.crudstatus = CRUDStatus.Create;
       this.tlsBaseService.initializeEmptyForm(this.step1Form, 'TLS13010');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.step1Form);
+      // 新增模式：建立者與建立時間帶入當前登入者與今天
+      this.step1Form.patchValue({ crt_usr_name: userName, crt_date: today }, { emitEvent: false });
     }
   }
 

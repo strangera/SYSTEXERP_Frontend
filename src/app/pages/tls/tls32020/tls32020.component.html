@@ -26,11 +26,12 @@
           </div>
         </div>
 
+        <!-- 註記: 比較日期基準日期呈現字眼互換，TS主邏輯皆無改動 -->
         <B class="block mb-2"><u>日期查詢條件</u></B>
         <div class="flex w-full mb-4">
           <div class="flex-1 p-2">
             <div class="text-center mb-2">
-              <B><u>基準資料查詢條件</u></B>
+              <B><u>比較資料查詢條件</u></B>
             </div>
 
             <div
@@ -41,7 +42,7 @@
                 <div class="grid p-fluid" [hidden]="true">
                   <div class="col-12">
                     <app-calendar-range-quick
-                      label="基準日期區間"
+                      label="比較日期區間"
                       [startControl]="queryForm.controls.BaseDateFrom"
                       [endControl]="queryForm.controls.BaseDateTo"
                       [submitted]="submitted"
@@ -149,7 +150,7 @@
 
           <div class="flex-1 p-2">
             <div class="text-center mb-2">
-              <B><u>比較資料查詢條件</u></B>
+              <B><u>基準資料查詢條件</u></B>
             </div>
 
             <div
@@ -160,7 +161,7 @@
                 <div class="grid p-fluid" [hidden]="true">
                   <div class="col-12">
                     <app-calendar-range-quick
-                      label="比較日期區間"
+                      label="基準日期區間"
                       [startControl]="queryForm.controls.CompareDateFrom"
                       [endControl]="queryForm.controls.CompareDateTo"
                       [submitted]="submitted"

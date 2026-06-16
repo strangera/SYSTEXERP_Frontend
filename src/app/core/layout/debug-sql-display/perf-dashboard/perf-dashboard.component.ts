@@ -132,7 +132,7 @@ export class PerfDashboardComponent implements OnInit {
   }
 
   loadAllLogs(): void {
-    this.http.get<any[]>(`${environment.ApiUrl}/TSRDERP_Main/Controllers/api/ClientLog/get-perf-summary`).subscribe({
+    this.http.get<any[]>(`${environment.ApiUrl}/BasicEIP_Core/DiagnosticsModule/api/ClientLog/get-perf-summary`).subscribe({
       next: (res) => {
         this.backendPerfList = res.filter(x => x.MainModule !== 'Frontend');
         this.frontendErrorList = res.filter(x => x.MainModule === 'Frontend');
@@ -144,7 +144,7 @@ export class PerfDashboardComponent implements OnInit {
   openLogDetails(row: any): void {
     this.selectedLogTitle = `📄 原始日誌 ── 【${row.SubTask} > ${row.ActionName.replace('Client_', '')}】`;
 
-    this.http.get<any>(`${environment.ApiUrl}/TSRDERP_Main/Controllers/api/ClientLog/get-log-content?relativePath=${row.RelativePath}`).subscribe({
+    this.http.get<any>(`${environment.ApiUrl}/BasicEIP_Core/DiagnosticsModule/api/ClientLog/get-log-content?relativePath=${row.RelativePath}`).subscribe({
       next: (res) => {
         this.selectedLogContent = res.Content;
         this.displayDialog = true;

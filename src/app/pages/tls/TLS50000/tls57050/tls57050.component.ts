@@ -130,7 +130,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         PLU_No: formValue.PLU_No,
         PLU_OrgPLUNo: formValue.PLU_OrgPLUNo,
         pageIndex: 1,
-        pageSize: 30,
+        pageSize: 500,
       };
 
       this.tls57050Service.queryTLS57050(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {

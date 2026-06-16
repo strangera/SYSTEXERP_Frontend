@@ -262,6 +262,13 @@ export interface IAPS1003Item {
   CAP_Type: string;
   org_id?: string;
 }
+export interface POS1006Item {
+  PAY_Type?: string;
+  PAY_OverPay?: string;
+  PAY_TaxType?: string;
+  No: string;
+  Name: string;
+}
 export interface TLTTALENTDropDownRequest {
   tlt_noList?: string[]; // 查指定專櫃編號
   isNewData?: boolean;   // 是否僅查詢合約有效期內（當日介於契約起迄日）的專櫃資料，後端預設false

@@ -24,6 +24,12 @@
             <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value" formControlName="IsZeroShow"
               placeholder="請選擇"></p-dropdown>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="IsOpenInvoice">是否開立業主發票</label>
+            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value" formControlName="rece_yn"
+              placeholder="請選擇"></p-dropdown>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

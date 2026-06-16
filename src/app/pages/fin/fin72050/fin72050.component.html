@@ -7,6 +7,7 @@
       label="{{ 'create' | translate }}"
     ></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -19,98 +20,104 @@
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
       >
+        <!-- Row 1 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="盤點單號"
-              controlName="type01"
-              [control]="queryForm.controls.type01"
+              controlName="PCC_No"
+              [control]="queryForm.controls.PCC_No"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="保管人"
-              controlName="type02"
-              [options]="KeepQuota_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.type02"
+              label="保管人代碼/名稱"
+              controlName="Keep_UsrNo"
+              [options]="keepUser_Options()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Keep_UsrNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
+              [useGrouping]="true"
               label="額度"
-              [startControl]="queryForm.controls.startKeepQuota"
-              [endControl]="queryForm.controls.endKeepQuota"
+              [startControl]="queryForm.controls.Keep_QuotaAmt_From"
+              [endControl]="queryForm.controls.Keep_QuotaAmt_To"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
         </div>
+
+        <!-- Row 2 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
-              label="變更時間範圍"
-              [startControl]="queryForm.controls.applyDateFrom"
-              [endControl]="queryForm.controls.applyDateTo"
+              label="盤點日期"
+              [startControl]="queryForm.controls.PCC_DateFrom"
+              [endControl]="queryForm.controls.PCC_DateTo"
               [submitted]="submitted"
             />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="支出請款單號"
-              controlName="type03"
-              [options]="KeepQuota_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.type03"
+              controlName="PCS_RqstNo"
+              [options]="PCS_RqstNo_Options()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PCS_RqstNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="盤點單狀態"
-              controlName="type04"
-              [options]="KeepQuota_Options"
+              controlName="PCC_Status"
+              [options]="status_Options"
               optionLabel="Label"
               optionValue="No"
-              [control]="queryForm.controls.type04"
+              [control]="queryForm.controls.PCC_Status"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
+
+        <!-- Row 3 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
+              [useGrouping]="true"
               label="盤點餘額"
-              [startControl]="queryForm.controls.startType05"
-              [endControl]="queryForm.controls.endType05"
+              [startControl]="queryForm.controls.PCC_DIFF_AMT_From"
+              [endControl]="queryForm.controls.PCC_DIFF_AMT_To"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="說明"
-              controlName="type06"
-              [control]="queryForm.controls.type06"
+              controlName="PCS_Remark"
+              [control]="queryForm.controls.PCS_Remark"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="保管單位"
-              controlName="keepingUnit"
-              [options]="keepingUnit_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.keepingUnit"
+              label="保管單位代碼/名稱"
+              controlName="Keep_OrgID"
+              [options]="keepingUnit_Options()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Keep_OrgID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
+
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
@@ -121,29 +128,22 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="col-13">
-    <app-table
+    <app-table-report
       tableKey="FIN72050"
       [data]="data"
       [columns]="columns"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      dataKey="PCS_PST_No"
+      [totalRecords]="totalRecords()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="fin72050Service.queryFIN72050.bind(fin72050Service)"
       [lazy]="true"
       [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
-    ></app-table>
+      [showDelete]="false"
+    ></app-table-report>
   </div>
 </div>

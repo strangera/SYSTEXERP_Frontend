@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SortMeta } from 'primeng/api';
-import { reportType, TableTypes } from '../table/table.model';
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -24,6 +23,27 @@ export interface ReportColumn {
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;
 }
+
+export type reportType =
+  'string' | // string 類型，匯出時直接輸出原始值
+  'percentage' // percentage 類型，匯出時將數值乘以 100 並添加百分號，保留兩位小數
+
+export type TableTypes =
+  'input' |
+  'inputNumber' |
+  'percent' |
+  'dropdown' |
+  'button' |
+  'html' |
+  'date' |
+  'autoComplete' |
+  'image' |
+  'default' |
+  'dropdownTable' |
+  'dropdownTableTemplate' |
+  'template' |
+  'detail' |
+  'link';
 
 export interface ColumnGroup {
   field: string;

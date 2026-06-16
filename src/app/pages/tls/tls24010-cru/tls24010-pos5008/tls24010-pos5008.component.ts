@@ -1,5 +1,5 @@
 import { DatePipe, NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
@@ -44,6 +44,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   @Input() submitted?: boolean;
   @Input() totalSaleAmt = 0; // 接收父層傳來的銷售總金額
   @Input() queryInfo?: { TXN_Date?: string | Date, ECR_No?: string, Talent_ID?: number }; // 接收父層傳來的查詢條件資訊
+  @Output() payChange = new EventEmitter<void>();
   get currentTotalPaid(): number {
     return this.posFormArrayControls.reduce((sum, group, index) => {
       // 如果該行被勾選，則計入其金額
@@ -82,6 +83,9 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   ngOnInit(): void {
     // 預先加載下拉選單基礎資料
     this.loadInitialOptions();
+    this.POS5008FormArray.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.payChange.emit();
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -160,6 +164,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
         TXN_PayDesc: '',
         TERM_No: '',
         PAY_Type: item.PAY_Type,
+        PAY_TaxType: item.PAY_TaxType,
         selected: false,
         PAY_OverPay: item.PAY_OverPay,
         isLocked: false // 自定義屬性標示是否已審核
@@ -357,6 +362,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     });
 
     this.cdr.markForCheck();
+    this.payChange.emit(); // 通知父元件重算發票金額
   }
   onRowUnselect(event: TableRowUnSelectEvent): void {
     this.submitted = false;
@@ -383,6 +389,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     }, { emitEvent: false });
     formGroup.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
+    this.payChange.emit(); // 通知父元件重算發票金額
   }
   validate(): boolean {
     this.submitted = true;

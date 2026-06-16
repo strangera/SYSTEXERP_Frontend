@@ -1,7 +1,7 @@
 // 生產環境的 API 路徑
 export const environment = {
   production: true,
-  showDebugToggleInMenu: false,
+  showDebugToggleInMenu: true,
   version: '@@BUILD_VERSION@@', // 手動設定的預設值
   BaseUrl: '/TSRD_WEBAPI',
   ApiUrl: '/TSRD_WEBAPI',
