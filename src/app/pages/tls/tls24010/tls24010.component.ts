@@ -20,7 +20,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { Menu, MenuModule } from 'primeng/menu';
 import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, map, Observable, startWith, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { queryTLS24010EcrNoListItem, TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -76,7 +76,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // Options
   TXN_GUIPaperOptions = TXN_GUIPaperOptions
   TxnTypeOptions = TxnTypeOptions
-  ECR_NoOptions = this.dropDown.queryPos1002();
+  ECR_NoOptions: queryTLS24010EcrNoListItem[] = [];
   TLT_NoOptions: IDropdownItem[] = [];
   // Table
   data: TLS24010Data[] = [];
@@ -132,11 +132,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       switchMap(dateString =>
         forkJoin({
           options: this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString!),
-          closeData: this.tls24010Service.queryTLS24010IsClose(dateString!)
+          ecrData: this.tls24010Service.queryTLS24010EcrNoList({ TXN_Date: dateString! }),
+          closeData: this.tls24010Service.queryTLS24010IsClose(dateString!),
         })
       ),
       untilDestroyed(this)
-    ).subscribe(({ options, closeData }) => {
+    ).subscribe(({ options, ecrData, closeData }) => {
       // 下拉選單處理
       this.TLT_NoOptions = options.Data.map(item => ({
         ...item,
@@ -144,24 +145,57 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         value: item.No
       }));
 
+      this.ECR_NoOptions = ecrData.Data.map(item => ({
+        ...item,
+        label: `${item.ECR_No}- ${item.ECR_Name}`, // 下拉顯示文字
+        value: item.ECR_No  // 實際存入表單的值
+      }));
+
       // 已關帳=Y，不可異動
       this.isClosed = (closeData.Data === 'Y');
     });
   }
+  // onECRNoChanged(ecrNo: string): void {
+  //   if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null), this.queryForm.get('TLT_No')?.enable();
+  //   this.tLS41010Service.queryTLS41010({ ECR_No: ecrNo }).pipe(untilDestroyed(this)).subscribe(res => {
+  //     if (res.Data.length !== 0) {
+  //       const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
+  //       this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
+  //       // 自收機台只能補登對應的櫃位
+  //       if (this.queryForm.get('TXN_GUIPaper')?.value === 'E' && res.Data[0].ECR_Type === '2' && ECR_TLT_No.length > 0) {
+  //         this.queryForm.get('TLT_No')?.disable();
+  //       } else {
+  //         this.queryForm.get('TLT_No')?.enable();
+  //       }
+  //     }
+  //   });
+  // }
   onECRNoChanged(ecrNo: string): void {
-    if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null), this.queryForm.get('TLT_No')?.enable();
-    this.tLS41010Service.queryTLS41010({ ECR_No: ecrNo }).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Data.length !== 0) {
-        const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
-        this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
-        // 自收機台只能補登對應的櫃位
-        if (this.queryForm.get('TXN_GUIPaper')?.value === 'E' && res.Data[0].ECR_Type === '2' && ECR_TLT_No.length > 0) {
-          this.queryForm.get('TLT_No')?.disable();
-        } else {
-          this.queryForm.get('TLT_No')?.enable();
-        }
+    // 1. 如果清空收銀機號，就清空並解鎖專櫃編號
+    if (!ecrNo) {
+      this.queryForm.get('TLT_No')?.setValue(null);
+      this.queryForm.get('TLT_No')?.enable();
+      return;
+    }
+
+    // 2. 直接從前端存好的收銀機下拉陣列中，找出這台收銀機的完整資料
+    const selectedEcr = this.ECR_NoOptions.find(option => option.ECR_No === ecrNo);
+
+    if (selectedEcr) {
+      // 3. 在專櫃下拉選單中尋找是否有對應的專櫃編號
+      const matchingTlt = this.TLT_NoOptions.find(option => option.No === selectedEcr.ECR_TLT_No);
+
+      // 自動帶入專櫃編號 (如果有找到就帶入 No，沒有就填 null)
+      this.queryForm.get('TLT_No')?.setValue(matchingTlt ? matchingTlt.No : null);
+
+      // 4. 判斷是否鎖定專櫃編號欄位 (自收機台限制)
+      // 條件：補登類別為 E 且 機台類型為 2 且 確實有找到對應的專櫃
+      if (this.queryForm.get('TXN_GUIPaper')?.value === 'E' && selectedEcr.ECR_Type === '2' && matchingTlt) {
+        this.queryForm.get('TLT_No')?.disable();
+      } else {
+        this.queryForm.get('TLT_No')?.enable();
       }
-    });
+    }
   }
   tableQueryFunction(body: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> {
     return this.tls24010Service.queryTLS24010(body, this.TLT_NoOptions);
