@@ -29,7 +29,6 @@ export interface TLS2A010Query {
 
 
 export const defaultColumns: Column[] = [
-  { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '櫃位名稱', field: 'tlt_name' },
