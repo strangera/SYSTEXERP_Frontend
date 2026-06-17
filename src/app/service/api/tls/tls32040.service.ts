@@ -55,7 +55,10 @@ export interface TLS32040Response extends BaseQueryRequest {
   "Diff_TxnCnt": number, // 交易筆數差異
   "Diff_AvgTicket": number, // 客單價差異
   "Space": number, // 營業坪數（坪）
-  "Base_DaySpaceEff": number // 本期日平均坪效（每坪每日銷售）
+  "Base_DaySpaceEff": number, // 本期日平均坪效（每坪每日銷售）
+  "PrePerformance": number; // 預售業績
+  "ConsumerNum": number; // 消費人數
+  "ConsumerOrder": number; // 消費客單
 }
 
 // 明細 request

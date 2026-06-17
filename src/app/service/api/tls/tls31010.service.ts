@@ -68,7 +68,10 @@ export interface TLS31010TotalData {
   TotalMonthlyBudget: number,
   TotalMonthlySales: number,
   AvgCompletionRate: number,
-  TotalPreOrderAmt: number
+  TotalPreOrderAmt: number,
+  TotalPrePerformance: number, // 預售業績總計
+  TotalConsumerNum: number, // 消費人數總計
+  TotalConsumerOrder: number, // 消費客單總計
 }
 
 export interface TLS31010Response {
@@ -103,6 +106,10 @@ export class Tls31010Service {
           MonthlySalesTotal: res.Data.TotalData.TotalMonthlySales,
           CompletionRate: res.Data.TotalData.AvgCompletionRate,
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt,
+
+          PrePerformance: res.Data.TotalData.TotalPrePerformance,
+          ConsumerNum: res.Data.TotalData.TotalConsumerNum,
+          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder,
         } : null;
 
         return {

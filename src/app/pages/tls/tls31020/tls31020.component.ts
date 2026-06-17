@@ -520,6 +520,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
           CompletionRate: this.footerTotal.AvgCompletionRate,
           PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
+
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder,
         } : null;
         this.footershowPercent = this.footerTotal ? {
           AchievementRate: this.footerTotal.AvgAchievementRate,

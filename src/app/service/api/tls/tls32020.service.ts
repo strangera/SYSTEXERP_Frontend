@@ -54,6 +54,11 @@ export interface TLS32020Data {
   DiffTicket: number,
   DiffPyeff: number,
   DiffPyContrib: number,
+
+  // ======================= 狀態 欄位 =======================
+  PrePerformance?: number; // 預售業績
+  ConsumerNum?: number; // 消費人數
+  ConsumerOrder?: number; // 消費客單
 }
 
 @Injectable({
