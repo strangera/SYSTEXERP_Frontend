@@ -109,7 +109,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
     VouType: new FormControl<'1' | '2' | '3' | void>('3', [Validators.required]),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
-    PostFlag: new FormControl<'0' | '1' | '3' | void>('1', [Validators.required]),
+    PostFlag: new FormControl<'0' | '1' | '2' | '3' | void>('1', [Validators.required]),
     /** 傳票種類(SYS1000.VoucherType) */
     VoucherType: new FormControl<string>('GL', [Validators.required]),
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
@@ -494,7 +494,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.dataForm.patchValue({
       VouNo: data.VouNo,
       VouType: ['1', '2', '3'].includes(String(data.VouType)) ? String(data.VouType) as '1' | '2' | '3' : '1',
-      PostFlag: ['0', '1', '3'].includes(String(data.PostFlag)) ? String(data.PostFlag) as '0' | '1' | '3' : '0',
+      PostFlag: ['0', '1', '2', '3'].includes(String(data.PostFlag)) ? String(data.PostFlag) as '0' | '1' | '2' | '3' : '0',
       VoucherType: voucherTypeLabel,
       VouDate: data.VouDate ? new Date(data.VouDate) : new Date(),
       Remark: data.Remark,
