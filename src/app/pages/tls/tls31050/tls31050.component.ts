@@ -21,7 +21,6 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -392,7 +391,11 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           CompletionRate: this.footerTotal.AvgCompletionRate,
 
-          PreOrderSaleAmt: this.footerTotal.TotalPreOrderSaleAmt
+          PreOrderSaleAmt: this.footerTotal.TotalPreOrderSaleAmt,
+
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder,
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件

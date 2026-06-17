@@ -126,6 +126,9 @@ export interface TLS31050Total {
   TotalMonthlySales: number;
   AvgCompletionRate: number;
   TotalPreOrderSaleAmt: number;
+  TotalPrePerformance: number; // 預售業績
+  TotalConsumerNum: number; // 消費人數
+  TotalConsumerOrder: number; // 消費客單
 }
 
 export interface footer31050Total {
@@ -148,6 +151,10 @@ export interface footer31050Total {
   CompletionRate?: number;       //AvgCompletionRate 平均完成率
 
   PreOrderSaleAmt?: number; // 預售實績
+
+  PrePerformance?: number; // 預售業績總計
+  ConsumerNum?: number; // 消費人數總計
+  ConsumerOrder?: number; // 消費客單總計
 }
 
 @Injectable({

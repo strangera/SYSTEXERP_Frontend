@@ -397,6 +397,10 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
           CompletionRate: this.footerTotal.AvgCompletionRate,
 
           PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
+
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder,
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
