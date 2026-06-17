@@ -38,7 +38,9 @@
         </div>
       </div>
     </div>
-    <ng-content></ng-content>
+    <div class="caption-center">
+      <ng-content></ng-content>
+    </div>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
