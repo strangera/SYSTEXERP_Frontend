@@ -33,8 +33,13 @@ export const defaultColumns: ReportColumn[] = [
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '櫃位名稱', field: 'tlt_name' },
   { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
-  { header: '實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
-  { header: '調整後實收帳', field: 'MOD_PayAmt', isTotal: true, format: formatAmount },
+  { header: '原始實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
+  {
+    header: '現行實收帳', field: 'MOD_PayAmt', isTotal: true, format: formatAmount,
+    cellClass: (row) => {
+      return row.MOD_PayAmt !== row.ACT_PayAmt ? 'text-blue-600 font-bold' : '';
+    }
+  },
   { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
   {
     header: '審核狀態',
@@ -70,7 +75,12 @@ export const creditCardColumns: ReportColumn[] = [
   // { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT', isTotal: true, format: formatAmount },
   // { header: '總金額', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
 
-  { header: '信用卡', field: 'MOD_PayAmt1', groupField: 'MOD', isTotal: true, format: formatAmount },
+  {
+    header: '信用卡', field: 'MOD_PayAmt1', groupField: 'MOD', isTotal: true, format: formatAmount,
+    cellClass: (row) => {
+      return row.MOD_PayAmt1 !== row.ACT_PayAmt1 ? 'text-blue-600 font-bold' : '';
+    }
+  },
   // { header: 'AE', field: 'MOD_PayAmt2', groupField: 'MOD', isTotal: true, format: formatAmount },
   // { header: 'DINER', field: 'MOD_PayAmt3', groupField: 'MOD', isTotal: true, format: formatAmount },
   // { header: '總金額', field: 'MOD_PayAmt', isTotal: true, format: formatAmount },
@@ -100,9 +110,9 @@ export const creditCardColumns: ReportColumn[] = [
 
 export const creditCardGroup: ColumnGroup[] = [
   { field: 'BOOK', header: '系統帳' },
-  { field: 'ACT', header: '實收帳' },
-  { field: 'MOD', header: '調整後實收帳' },
-  { field: 'OVER', header: '實收帳 - 系統帳' },
+  { field: 'ACT', header: '原始實收帳' },
+  { field: 'MOD', header: '現行實收帳' },
+  { field: 'OVER', header: '系統/實收帳差異' },
 ];
 
 export const overStatusOptions = [

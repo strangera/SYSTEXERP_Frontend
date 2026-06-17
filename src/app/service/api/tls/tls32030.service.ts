@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { ApiResponse } from './tls25030.service';
 
 export interface TLS32030QueryRequest {
@@ -70,6 +69,10 @@ export interface TLS32030Data {
   diff_conversionRate: number;
   diff_averageSpend: number;
   diff_position: number;
+
+  PrePerformance?: number; // 預售業績
+  ConsumerNum?: number; // 消費人數
+  ConsumerOrder?: number; // 消費客單
 }
 
 export interface TLS32030FooterData {
@@ -109,7 +112,11 @@ export interface TLS32030FooterData {
   Growth_TargetPct: number,
   Growth_DaySpaceEffPct: number,
   Growth_AchieveRatePct: number,
-  Growth_AvgTicketPct: number
+  Growth_AvgTicketPct: number,
+
+  TotalPrePerformance: number; // 預售業績總計
+  TotalConsumerNum: number; // 消費人數總計
+  TotalConsumerOrder: number; // 消費客單總計
 }
 
 

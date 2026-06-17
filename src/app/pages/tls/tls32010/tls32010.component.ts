@@ -92,8 +92,8 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'AvgTicketAmtRank', header: '客單價', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
-    { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
+    // { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
+    { field: 'PreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
@@ -462,7 +462,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
 
   setColumns() {
     const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      PreOrderAmt: this.queryForm.get('PreSale')?.value === true,
       ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
       ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
     };

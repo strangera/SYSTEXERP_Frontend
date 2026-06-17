@@ -49,6 +49,10 @@ export interface TLS32010Data {
   AvgTicketAmtRank: number | null;
   MonthlySpaceEfficiencyRank: number | null;
   AchievementRateRank: number | null;
+
+  PreOrderAmt: number | null; // 預售實績
+  ConsumerNum: number | null; // 消費人數
+  ConsumerOrder: number | null; // 消費客單
 }
 
 @Injectable({
