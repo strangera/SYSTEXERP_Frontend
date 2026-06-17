@@ -7,7 +7,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'account', pathMatch: 'full', },
   {
     path: 'login',
-    loadComponent: () => import('./pages/base/login/login.component').then(m => m.LoginComponent),
+    loadComponent: () => import('./pages/base/login.component').then(m => m.LoginComponent),
     canActivate: [PublicGuard]
   },
   {
