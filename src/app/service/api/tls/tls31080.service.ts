@@ -52,6 +52,9 @@ export interface TLS31080Response {
   Reentry: number;
   PreOrderAmt: number;
   PresaleCheckout: number,
+  PrePerformance?: number; // 預售業績
+  ConsumerNum?: number; // 消費人數
+  ConsumerOrder?: number; // 消費客單
   Subtotal: number;
   TotalCount: number;
   TotalPage?: number;

@@ -55,6 +55,9 @@ export interface TLS32050Response extends BaseQueryRequest {
   "Space": number, // 營業坪數（坪）
   "Base_DaySpaceEff": number // 本期日平均坪效（每坪每日銷售）
   "AVN_PreOrderAmt": number; // 預售金額
+  "PrePerformance": number; // 預售業績
+  "ConsumerNum": number; // 消費人數
+  "ConsumerOrder": number; // 消費客單
 }
 
 // 明細 request

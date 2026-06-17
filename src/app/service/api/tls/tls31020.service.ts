@@ -112,6 +112,10 @@ export interface TLS31020Total {
   TotalMonthlySales: number;
   AvgCompletionRate: number;
   TotalPreOrderAmt: number;
+
+  TotalPrePerformance: number; // 預售業績總計
+  TotalConsumerNum: number; // 消費人數總計
+  TotalConsumerOrder: number; // 消費客單總計
 }
 export interface footerShowTotal {
   budget?: number;
@@ -137,6 +141,10 @@ export interface footerShowTotal {
 
   CompletionRate?: number;
   PreOrderAmt?: number;
+
+  PrePerformance?: number; // 預售業績
+  ConsumerNum?: number; // 消費人數
+  ConsumerOrder?: number; // 消費客單
 }
 
 export interface TLS31020Response {

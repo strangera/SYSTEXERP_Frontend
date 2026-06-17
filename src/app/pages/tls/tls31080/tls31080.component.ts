@@ -370,6 +370,10 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
           PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
 
+          PrePerformance: res.Data.TotalData.TotalPrePerformance,
+          ConsumerNum: res.Data.TotalData.TotalConsumerNum,
+          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder,
+
           H00: res.Data.TotalData.TotalH00 ?? 0,
           H01: res.Data.TotalData.TotalH01 ?? 0,
           H02: res.Data.TotalData.TotalH02 ?? 0,
