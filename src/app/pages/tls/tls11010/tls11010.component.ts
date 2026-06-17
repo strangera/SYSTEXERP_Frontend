@@ -1,34 +1,22 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
-// UI
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators, } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-// until-destroy
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-
-@UntilDestroy()
 @Component({
   selector: 'app-tls11010',
   templateUrl: './tls11010.component.html',
-  styleUrls: ['./tls11010.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -43,14 +31,14 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     TranslateModule,
   ],
 })
-export class TLS11010Component extends BasicQueryPageComponent<any> {
+export class TLS11010Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
   lastQueryBody: any = null;
-queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
+  queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
 
   // Options
   floorOptions: any[] = [];
@@ -130,10 +118,6 @@ queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
   }
 
   ngOnInit(): void {
-    // ✅ 改成跟 TLS11020 一樣的 initializePage 模式
-    //    讓 BasicQueryPageComponent 自己處理：
-    //    - 初次進入：保持初始條件
-    //    - 從 CRU 回來，有 QueryState 的話自動還原＋自動查詢
     this.initializePage(
       'TLS11010',
       'tls/tls11010cru',
@@ -218,8 +202,8 @@ queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
       this.loading = true;
       this.messageService.blockUi();
       const rawFormValue = frm.getRawValue();
-const payload = this.buildApiPayload(rawFormValue);
-this.lastQueryBody = { ...payload };
+      const payload = this.buildApiPayload(rawFormValue);
+      this.lastQueryBody = { ...payload };
 
       this.tls11010Service
         .queryData(payload)
@@ -348,7 +332,6 @@ this.lastQueryBody = { ...payload };
     return found ? found.label : trimmedValue;
   }
 
-  /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
   /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
   onClear(): void {
     const form = this.queryForm;

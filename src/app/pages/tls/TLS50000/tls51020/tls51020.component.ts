@@ -1,145 +1,95 @@
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS5000Service } from '@service/api/tls/tls5000.service';
-import { Tls51010DropDownListService } from '@service/api/tls/tls51010-dropdown.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, take } from 'rxjs';
+import { QueryTLS51020Request, QueryTLS51020Response, Tls51020Service } from 'src/app/service/api/tls/tls51020.service';
+import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 
-interface CategoryItem {
-  id: number;
-  CAT_LNo: string;
-  CAT_LName: string;
-  CAT_MNo: string;
-  CAT_MName: string;
-  CAT_MRemark: string;
-  CRT_Date: string;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date: string;
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
-  CAT_LDisplay?: string; // 組合 CAT_LNo 和 CAT_LName
-  CanDel: boolean;
-}
-// 2.5.1.2  中分類維護作業
 @Component({
   selector: 'app-tls51020',
   templateUrl: './tls51020.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    TableReportComponent,
+    TranslateModule,
+    AsyncPipe
+  ]
 })
-export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
-  // ProgNo: string = '250002';
-  bigCategoryOptions: { value: string, label: string }[] = []; // 用於下拉選單
-  queryForm = this.formBuilder.nonNullable.group({
-    CAT_MNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]], // 中分類代碼
-    CAT_MName: ['', [Validators.maxLength(32)]], // 中分類名稱
-    CAT_LNo: [[] as string[]],  //大分類代碼
-    // CAT_MRemark: [,], // 說明
-    ...createPaginationConfig([{ field: 'CAT_MNo', order: 1 }]), // 分頁和排序參數
+export class TLS51020Component extends BasicQueryPageComponent<QueryTLS51020Response> implements OnInit {
+  private readonly validationService = inject(ValidationService);
+  private readonly dropDown = inject(DropdownApiService);
+  private readonly tls51020Service = inject(Tls51020Service);
+
+  // 定義嚴格型態的表單
+  readonly queryForm = this.formBuilder.nonNullable.group({
+    CAT_MNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]],
+    CAT_MName: ['', [Validators.maxLength(32)]],
+    CAT_LNo: [[] as string[]],
+    pageSize: [100],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'CAT_MNo', order: 1 }]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: CategoryItem[] = [];
-  filteredData: CategoryItem[] = [...this.data];
-  //篩選表格的欄位
-  columns: Column[] = [
+  readonly query = (payload: QueryTLS51020Request) => this.tls51020Service.queryTLS51020(payload);
+  readonly data = signal<QueryTLS51020Response[]>([]);
+  readonly selectedItems = signal<QueryTLS51020Response[]>([]);
+  readonly totalRecords = signal(0);
+  readonly lastQueryBody = signal<QueryTLS51020Request | null>(null);
+
+  readonly columns: ReportColumn[] = [
     { field: 'CAT_MNo', header: '中分類代碼', visible: true },
     { field: 'CAT_MName', header: '中分類名稱', visible: true },
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
-    { field: 'CAT_MRemark', header: '備註', visible: true }, // 說明
+    { field: 'CAT_MRemark', header: '備註', visible: true },
   ];
 
-  totalRecords = 0;
+  // 下拉選單數據流
+  readonly bigCategoryOptions$ = this.dropDown.queryPos2003();
 
-  // 多選項目
-  selectedItems: CategoryItem[] = [];
-
-  constructor(
-    private validationService: ValidationService,
-    private dropdownListService: Tls51010DropDownListService,
-    private apiService: TLS5000Service,
-  ) {
+  constructor() {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51020', '/TLS/TLS51020cru', this.queryForm, (form) => this.onSubmit(form));
-    // 獲取大分類代碼
-    this.dropdownListService.getSystemTypes().subscribe({
-      next: (response) => {
-        this.bigCategoryOptions = response;
-      },
-      error: (error) => {
-        console.error('獲取大分類代碼失敗:', error);
-        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
-      }
-    });
   }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // 處理多選大分類代碼的查詢參數
-      const queryParams = { ...frm.value };
-
-      // 處理多選大分類代碼陣列
-      if (queryParams.CAT_LNo && Array.isArray(queryParams.CAT_LNo)) {
-        // 如果是空陣列，根據後端需求處理
-        if (queryParams.CAT_LNo.length === 0) {
-          // 選擇以下其中一種處理方式（根據您的後端 API 需求）：
-          queryParams.CAT_LNo = null; // 設為 null
-          // delete queryParams.CAT_LNo; // 或刪除參數
-        }
-        // 如果有值，保持陣列格式不變
-      }
-
-      console.log('查詢參數:', queryParams); // 除錯用，上線時可移除
-
-      this.apiService.queryTLS51020(queryParams).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data.map((item: CategoryItem) => ({
-              ...item,
-              CAT_LDisplay: `${item.CAT_LNo || ''} - ${item.CAT_LName || ''}`
-            }));
-            this.filteredData = [...this.data];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            if (this.data.length === 0) {
-              console.log('查詢結果為空');
-            }
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
+      const formValue = frm.getRawValue() as QueryTLS51020Request;
+      this.query(formValue)
+        .pipe(
+          take(1),
+          finalize(() => this.loading = false)
+        )
+        .subscribe((response) => {
+          this.data.set(response.Data || []);
+          this.totalRecords.set(response.TotalCount || 0);
+          this.lastQueryBody.set(formValue);
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        });
     });
   }
 
-
-  onDelete(data: CategoryItem | CategoryItem[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) return;
-
-    const idList = items
-      .filter(item => item && item.id != null)
-      .map(item => item.id);
-
+  onDelete(itemsToDelete: QueryTLS51020Response[]): void {
+    const idList = itemsToDelete.flatMap(item => item?.id ?? []);
     if (idList.length === 0) {
       this.messageService.warnBubble('未找到有效的刪除項目');
       return;
@@ -150,28 +100,21 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       header: '確認刪除',
       accept: () => {
         this.loading = true;
-        this.apiService.deleteTLS51020({ idList }).subscribe({
-          next: (response) => {
-            if (response.Status === '0000') {
-              this.messageService.successBubble('刪除成功');
-              this.selectedItems = [];
-              this.onSubmit(this.queryForm);
-            } else {
-              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-            }
-          },
-          error: () => {
-            this.messageService.errorBubble('刪除失敗');
-          },
-          complete: () => {
-            this.loading = false;
-          },
-        });
+        this.tls51020Service.deleteTLS51020({ idList })
+          .pipe(
+            take(1),
+            finalize(() => this.loading = false)
+          )
+          .subscribe((response) => {
+            this.messageService.successBubble(response.Message || '刪除成功');
+            this.selectedItems.set([]); // 清空多選狀態
+            this.onSubmit(this.queryForm); // 重新查詢
+          });
       }
     });
   }
 
-  isRowSelectable(rowData: CategoryItem): boolean {
-    return rowData.CanDel
+  isRowSelectable(rowData: QueryTLS51020Response): boolean {
+    return rowData.CanDel;
   }
 }

@@ -222,10 +222,9 @@ export class TableReportComponent implements OnChanges {
       }
       this.cdr.detectChanges();
 
-      const pageSize = this.lastQueryBody?.pageSize || 30;
       this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
 
-      if (this.data.length < pageSize) {
+      if (this.data.length < 30) {
         this.virtualData = this.data;
         this.dt.virtualScroll = false;
       } else {
