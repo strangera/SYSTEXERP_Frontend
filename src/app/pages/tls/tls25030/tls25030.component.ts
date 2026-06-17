@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { forkJoin, of } from 'rxjs';
@@ -34,12 +34,10 @@ import {
   UpdateTLS25030StatusRequest,
 } from '../../../service/api/tls/tls25030.service';
 
-import { DeductionService } from '@service/basic/queryAPS1003.service';
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { Actions } from '@shared/service/permission-guard.service';
 
 interface SortItem { field: string; order: number }
 
@@ -47,7 +45,6 @@ interface SortItem { field: string; order: number }
 @Component({
   selector: 'app-tls25030',
   templateUrl: './tls25030.component.html',
-  styleUrls: ['./tls25030.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -69,7 +66,7 @@ interface SortItem { field: string; order: number }
     TableReportComponent,
   ],
 })
-export class TLS25030Component extends BasicQueryPageComponent<any> {
+export class TLS25030Component extends BasicQueryPageComponent<any> implements OnInit {
   @ViewChild('tableReport') tableReport?: TableReportComponent;
 
   data: QueryTLS25030Row[] = [];
@@ -149,7 +146,6 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     private cdr: ChangeDetectorRef,
     private counterNameService: CounterNameService,
     private readonly dropdown: DropdownApiService,
-    private deductionService: DeductionService,
     private floorService: FloorService
   ) {
     super();
@@ -341,7 +337,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
       })
     );
 
-    const capItems$ = this.deductionService.getAPS1003DropDownList({ cap_typeList: ['Z'] }).pipe(
+    const capItems$ = this.dropdown.queryAps1003({ cap_typeList: ['Z'] }).pipe(
       take(1),
       catchError((err) => {
         console.error('APS1003 dropdown load error:', err);
@@ -368,7 +364,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
 
         this.capItemOptions = (capList || []).map((x: any) => ({
           value: String(x.value),
-          label: `${x.value} - ${x.label}`,
+          label: x.label,
         }));
 
         // ✅ 下拉完成後：只有從 CRU 回來才 restore + auto query
@@ -572,130 +568,130 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
   }
 
 
-// =========================
-// ✅ 作廢按鈕（含 confirm）
-// =========================
+  // =========================
+  // ✅ 作廢按鈕（含 confirm）
+  // =========================
 
-// ⚠️ 請改成你們系統「作廢」實際的權限碼（跟 TableReport 的 '10'/'30' 同格式）
-private readonly INVALIDATE_PERMISSION = '40'; // <== 例：請自行改成正確代碼
+  // ⚠️ 請改成你們系統「作廢」實際的權限碼（跟 TableReport 的 '10'/'30' 同格式）
+  private readonly INVALIDATE_PERMISSION = '40'; // <== 例：請自行改成正確代碼
 
-private canInvalidate(): boolean {
-  return this.hasPermission(this.INVALIDATE_PERMISSION);
-}
+  private canInvalidate(): boolean {
+    return this.hasPermission(this.INVALIDATE_PERMISSION);
+  }
 
-private isVoided(row: QueryTLS25030Row): boolean {
-  const s: any = (row as any)?.fine_status;
-  // fine_status 可能是 '0' / 0
-  return String(s ?? '').trim() === '0';
-}
+  private isVoided(row: QueryTLS25030Row): boolean {
+    const s: any = (row as any)?.fine_status;
+    // fine_status 可能是 '0' / 0
+    return String(s ?? '').trim() === '0';
+  }
 
-addButton: AddButton[] = [
-  {
-    label: '作廢',
-    icon: 'pi pi-ban', // ✅ 不用垃圾桶，改禁止符號
+  addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-ban', // ✅ 不用垃圾桶，改禁止符號
 
-    action: (rowData: QueryTLS25030Row, _event?: any) => {
-      const fineNo = String((rowData as any)?.fine_no ?? '').trim();
-      if (!fineNo) return;
+      action: (rowData: QueryTLS25030Row, _event?: any) => {
+        const fineNo = String((rowData as any)?.fine_no ?? '').trim();
+        if (!fineNo) return;
 
-      // 已作廢不允許再作廢
-      if (this.isVoided(rowData)) return;
+        // 已作廢不允許再作廢
+        if (this.isVoided(rowData)) return;
 
-      // 權限不足
-      if (!this.canInvalidate()) {
-        this.messageService.warnBubble('您沒有作廢權限');
-        return;
-      }
+        // 權限不足
+        if (!this.canInvalidate()) {
+          this.messageService.warnBubble('您沒有作廢權限');
+          return;
+        }
 
-      this.messageService.confirm({
-        header: '作廢確認',
-        message: `確定要作廢單據【${fineNo}】嗎？`,
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: '確定',
-        rejectLabel: '取消',
-        accept: () => {
-          const req: UpdateTLS25030StatusRequest = {
-            fine_status: '0',
-            fine_noList: [fineNo],
-          };
-          this.statusChange(req);
+        this.messageService.confirm({
+          header: '作廢確認',
+          message: `確定要作廢單據【${fineNo}】嗎？`,
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: '確定',
+          rejectLabel: '取消',
+          accept: () => {
+            const req: UpdateTLS25030StatusRequest = {
+              fine_status: '0',
+              fine_noList: [fineNo],
+            };
+            this.statusChange(req);
+          },
+        });
+      },
+
+      disabled: (rowData: QueryTLS25030Row) => {
+        // ✅ 已作廢 or 沒權限 => disable
+        return this.isVoided(rowData) || !this.canInvalidate();
+      },
+    },
+  ];
+
+  // =========================
+  // ✅ 作廢 API 呼叫 + 作廢後刷新列表（維持原查詢條件）
+  // =========================
+  private statusChange(req: UpdateTLS25030StatusRequest): void {
+    if (!req?.fine_noList?.length) return;
+
+    this.btnLoading = true;
+    this.loading = true;
+
+    this.tls25030Service
+      .updateTLS25030Status(req)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.btnLoading = false;
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          this.messageService.successBubble(res?.Message ?? '作廢成功');
+
+          // ✅ 作廢後刷新：維持原條件/頁碼/排序
+          const payload = this.buildQueryPayload({
+            ...(this.lastQueryBody || this.queryForm.getRawValue()),
+            SortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+          });
+
+          this.tls25030Service
+            .queryTLS25030(payload)
+            .pipe(
+              untilDestroyed(this),
+              finalize(() => this.cdr.detectChanges())
+            )
+            .subscribe({
+              next: (response: ApiResponse<QueryTLS25030Row[]>) => {
+                const rows: QueryTLS25030Row[] = Array.isArray(response?.Data) ? response.Data : [];
+
+                rows.forEach((r, idx) => {
+                  (r as any)._rowKey = idx + 1;
+                });
+
+                this.data = rows;
+
+                const realTotal = Number((response as any)?.TotalCount ?? rows.length) || rows.length;
+                this.totalRecords = realTotal;
+                this.viewTotalRecords = realTotal;
+
+                this.lastQueryBody = { ...payload };
+                this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+                this.saveQueryState();
+                this.tableVer++;
+              },
+              error: (err) => {
+                console.error('TLS25030 refresh after invalidate error:', err);
+              },
+            });
+        },
+        error: (err: any) => {
+          console.error('updateTLS25030Status error:', err);
+          this.messageService.errorBubble('作廢失敗，請稍後再試');
         },
       });
-    },
-
-    disabled: (rowData: QueryTLS25030Row) => {
-      // ✅ 已作廢 or 沒權限 => disable
-      return this.isVoided(rowData) || !this.canInvalidate();
-    },
-  },
-];
-
-// =========================
-// ✅ 作廢 API 呼叫 + 作廢後刷新列表（維持原查詢條件）
-// =========================
-private statusChange(req: UpdateTLS25030StatusRequest): void {
-  if (!req?.fine_noList?.length) return;
-
-  this.btnLoading = true;
-  this.loading = true;
-
-  this.tls25030Service
-    .updateTLS25030Status(req)
-    .pipe(
-      untilDestroyed(this),
-      finalize(() => {
-        this.btnLoading = false;
-        this.loading = false;
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: (res: any) => {
-        this.messageService.successBubble(res?.Message ?? '作廢成功');
-
-        // ✅ 作廢後刷新：維持原條件/頁碼/排序
-        const payload = this.buildQueryPayload({
-          ...(this.lastQueryBody || this.queryForm.getRawValue()),
-          SortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
-        });
-
-        this.tls25030Service
-          .queryTLS25030(payload)
-          .pipe(
-            untilDestroyed(this),
-            finalize(() => this.cdr.detectChanges())
-          )
-          .subscribe({
-            next: (response: ApiResponse<QueryTLS25030Row[]>) => {
-              const rows: QueryTLS25030Row[] = Array.isArray(response?.Data) ? response.Data : [];
-
-              rows.forEach((r, idx) => {
-                (r as any)._rowKey = idx + 1;
-              });
-
-              this.data = rows;
-
-              const realTotal = Number((response as any)?.TotalCount ?? rows.length) || rows.length;
-              this.totalRecords = realTotal;
-              this.viewTotalRecords = realTotal;
-
-              this.lastQueryBody = { ...payload };
-              this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-              this.saveQueryState();
-              this.tableVer++;
-            },
-            error: (err) => {
-              console.error('TLS25030 refresh after invalidate error:', err);
-            },
-          });
-      },
-      error: (err: any) => {
-        console.error('updateTLS25030Status error:', err);
-        this.messageService.errorBubble('作廢失敗，請稍後再試');
-      },
-    });
-}
+  }
 
 
 }

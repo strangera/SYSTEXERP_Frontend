@@ -10,7 +10,7 @@
     ".gitignore": true,
     "node_modules/": true,
     ".angular/": true,
-    "CLAUDE.md": true,
+    // "CLAUDE.md": true,
     "src/favicon.ico": true,
     "src/index.html": true,
     "tsconfig.app.json": true,
@@ -18,11 +18,6 @@
     "tsconfig.json": true,
     "instructions.md": true,
     ".eslintrc.json": true,
-    ".scannerwork": true,
-    "public": true,
-    ".vscode/extensions.json": true,
-    ".vscode/launch.json": true,
-    ".vscode/tasks.json": true,
     "src/styles.scss": true
   },
   "search.exclude": {

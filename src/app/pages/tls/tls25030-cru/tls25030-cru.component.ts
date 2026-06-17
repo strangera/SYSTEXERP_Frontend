@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ActivatedRoute } from '@angular/router';
 
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 import {
   ApiResponse,
@@ -26,14 +26,12 @@ import {
   TLS25030Service,
 } from '../../../service/api/tls/tls25030.service';
 
-import { DeductionService } from '@service/basic/queryAPS1003.service';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 @UntilDestroy()
 @Component({
   selector: 'app-tls25030-cru',
   templateUrl: './tls25030-cru.component.html',
-  styleUrl: './tls25030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -50,17 +48,17 @@ import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 })
 export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
-    CounterOptions: OptionItem[] = [];
+  CounterOptions: OptionItem[] = [];
 
   // ✅ 下拉 options
   violationTypeOptions: OptionItem[] = getSYS1000Options('Violation_type') as any;
   capItemOptions: OptionItem[] = [];
   orgOptions: OptionItem[] = [];
   payTypeOptions: OptionItem[] = [
-  { value: '1', label: '1-扣款' },
-  { value: '2', label: '2-現金' },
-  { value: '9', label: '9-其他' },
-];
+    { value: '1', label: '1-扣款' },
+    { value: '2', label: '2-現金' },
+    { value: '9', label: '9-其他' },
+  ];
 
   dataForm = this.formBuilder.group({
     fine_no: [{ value: '' as string, disabled: true }],
@@ -82,7 +80,6 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private tls25030Service: TLS25030Service,
-    private deductionService: DeductionService,
     private dropdown: DropdownApiService,
     private counterNameService: CounterNameService,
     private route: ActivatedRoute
@@ -93,7 +90,7 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS25030', this.dataForm);
     this.updateDisabledState();
-        // 2) Counter
+    // 2) Counter
     this.counterNameService
       .getCounters()
       .pipe(untilDestroyed(this))
@@ -118,14 +115,14 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
       });
 
     // ✅ 2) capItemOptions（APS1003）
-    this.deductionService
-      .getAPS1003DropDownList({ cap_typeList: ['Z'] })
+    this.dropdown
+      .queryAps1003({ cap_typeList: ['Z'] })
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (list) => {
           this.capItemOptions = (list || []).map((x: any) => ({
             value: String(x.value),
-            label: `${x.value} - ${x.label}`,
+            label: x.label,
           }));
         },
         error: () => (this.capItemOptions = []),
@@ -293,16 +290,16 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
   }
-override onCancel(): void {
-  this.router.navigate(['/account/tls', 'tls25030'], {
-    state: { fromCru: true },
-  });
-}
-goBack(): void {
-  this.router.navigate(['/account/tls', 'tls25030'], {
-    state: { fromCru: true },
-  });
-}
+  override onCancel(): void {
+    this.router.navigate(['/account/tls', 'tls25030'], {
+      state: { fromCru: true },
+    });
+  }
+  goBack(): void {
+    this.router.navigate(['/account/tls', 'tls25030'], {
+      state: { fromCru: true },
+    });
+  }
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }

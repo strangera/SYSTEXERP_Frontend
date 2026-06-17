@@ -15,7 +15,6 @@ import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
-import { DeductionService } from '../../../service/basic/queryAPS1003.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 // UI
 import { AccordionModule } from 'primeng/accordion';
@@ -169,7 +168,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private bigCategoryCodeService: BigCategoryCodeService,
-    private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
     private tls13030Service: TLS13030Service,
     private counterNameService: CounterNameService,
