@@ -1,4 +1,4 @@
-import { NgStyle } from '@angular/common';
+import { DatePipe, NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { AddButton, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AddButton, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -51,7 +51,7 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     NOT_EndDate_Start: [null as null | Date],
     NOT_EndDate_End: [null as null | Date],
     NOT_File: ['', [Validators.maxLength(200)]],
-    NOT_Status: [null],
+    NOT_Status: ['0'],
     pageSize: [500],
     pageIndex: [1],
     SortBy: [[{ field: 'NOT_No', order: 1 }]],
@@ -103,8 +103,8 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
   columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDateTime },
-    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true, format: formatDateTime },
+    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDate },
+    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true, format: formatDate },
     { field: 'NOT_File', header: '媒體檔案名稱', visible: true },
     { field: 'NOT_Status', header: '狀態', visible: true, format: (v: string) => this.NOT_Status_Options.find(o => o.value == v)?.label || v },
     { field: 'NOT_Priority', header: '優先順序', visible: true },
@@ -121,6 +121,7 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
 
   constructor(
     public readonly tls43020Service: Tls43020Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -133,11 +134,11 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        NOT_Date: frm.value.NOT_Date ? frm.value.NOT_Date.toISOString() : null,
-        NOT_BegDate_Start: frm.value.NOT_BegDate_Start ? frm.value.NOT_BegDate_Start.toISOString() : null,
-        NOT_BegDate_End: frm.value.NOT_BegDate_End ? frm.value.NOT_BegDate_End.toISOString() : null,
-        NOT_EndDate_Start: frm.value.NOT_EndDate_Start ? frm.value.NOT_EndDate_Start.toISOString() : null,
-        NOT_EndDate_End: frm.value.NOT_EndDate_End ? frm.value.NOT_EndDate_End.toISOString() : null
+        NOT_Date: this.datePipe.transform(frm.value.NOT_Date, 'yyyy-MM-dd') || null,
+        NOT_BegDate_Start: this.datePipe.transform(frm.value.NOT_BegDate_Start, 'yyyy-MM-dd') || null,
+        NOT_BegDate_End: this.datePipe.transform(frm.value.NOT_BegDate_End, 'yyyy-MM-dd') || null,
+        NOT_EndDate_Start: this.datePipe.transform(frm.value.NOT_EndDate_Start, 'yyyy-MM-dd') || null,
+        NOT_EndDate_End: this.datePipe.transform(frm.value.NOT_EndDate_End, 'yyyy-MM-dd') || null
       };
       this.tls43020Service.queryTls43020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
