@@ -13,21 +13,25 @@
     "CLAUDE.md": true,
     "src/favicon.ico": true,
     "src/index.html": true,
-    // "src/main.ts": true,
     "tsconfig.app.json": true,
     "tsconfig.spec.json": true,
     "tsconfig.json": true,
     "instructions.md": true,
     ".eslintrc.json": true,
-    // "sonar-project.properties": true,
-    // "src/assets": true,
-    // ".sonarlint": true,
     ".scannerwork": true,
     "public": true,
     ".vscode/extensions.json": true,
     ".vscode/launch.json": true,
     ".vscode/tasks.json": true,
     "src/styles.scss": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/*/**": true,
+    "**/dist/**": true
   },
   // "html.format.wrapAttributes": "auto",
   "editor.formatOnSave": true, // 設置自動格式化
@@ -52,8 +56,7 @@
     "source.organizeImports": "explicit"
   },
   "editor.bracketPairColorization.enabled": true,
-  "javascript.suggest.paths": true,
-  "typescript.suggest.paths": true,
-  "html.suggest.paths": true,
-  "typescript.referencesCodeLens.enabled": false
+  "js.suggest.paths": true,
+  "ts.suggest.paths": true,
+  "html.suggest.paths": true
 }

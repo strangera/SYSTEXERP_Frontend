@@ -1,37 +1,37 @@
-// tls51010-cru.component.ts 修改版本
-
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS5000Service } from '@service/api/tls/tls5000.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-
-interface CategoryItem {
-  id: number;
-  CAT_LNo: string;
-  CAT_LName: string;
-  CAT_LRemark: string | null;
-  CRT_USR_No: string | "";
-  CRT_USR_Name: string | "";
-  CanDel?: boolean; // 新增 CanDel 屬性
-}
+import { finalize, take } from 'rxjs';
+import { InsertTLS51010Request, QueryTLS51010Response, Tls51010Service, UpdateTLS51010Request } from 'src/app/service/api/tls/tls51010.service';
 
 @Component({
   selector: 'app-tls51010-cru',
   templateUrl: './tls51010-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextareaComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputTextareaComponent,
+    NgIf,
+    TranslateModule
+  ]
 })
-export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
-  dataForm = this.formBuilder.nonNullable.group({
+export class TLS51010CRUComponent extends BasicCruPageComponent<QueryTLS51010Response> implements OnInit {
+  private readonly validationService = inject(ValidationService);
+  private readonly tls51010Service = inject(Tls51010Service);
+  readonly dataForm = this.formBuilder.nonNullable.group({
     id: [0],
     CAT_LNo: ['', [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.required, Validators.maxLength(32)]],
@@ -39,88 +39,30 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     CRT_USR_No: [''],
     CRT_USR_Name: ['']
   });
-
-  // 修正：判斷是否可以編輯大分類代碼
-  // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
-  // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
-  get isCATLNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Read ||
-      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
-  }
-
-  constructor(
-    private validationService: ValidationService,
-    private apiService: TLS5000Service
-  ) {
+  constructor() {
     super();
   }
-
   ngOnInit(): void {
     this.initializePage('TLS51010', this.dataForm);
-
-    // 新增：在初始化後立即設置大分類代碼的禁用狀態
-    this.updateCATLNoDisabledState();
-  }
-
-  // 修正：更新大分類代碼欄位的禁用狀態
-  private updateCATLNoDisabledState(): void {
-    const field = this.dataForm.get('CAT_LNo');
-    if (field) {
-      // 編輯模式且 CanDel = false 時才禁用大分類代碼
-      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
-        field.disable();
-      } else {
-        field.enable();
-      }
+    if (this.isFormEditable && this.rowdata?.CanDel === false) {
+      this.dataForm.controls.CAT_LNo.disable();
     }
   }
 
-  // 新增：自定義清空方法，保留大分類代碼
-  clearFormExceptCATLNo(): void {
-    const catLNoControl = this.dataForm.get('CAT_LNo');
-    const isCAT_LNoDisabled = catLNoControl?.disabled || false;  // 新增：檢查是否被禁用
-    const currentCATLNo = catLNoControl?.value;
-
-    this.dataForm.reset();
-
-    // 修正：只有在欄位被禁用且有值時才恢復
-    if (isCAT_LNoDisabled && currentCATLNo) {
-      this.dataForm.patchValue({
-        CAT_LNo: currentCATLNo,
-        id: 0
-      });
-    } else {
-      this.dataForm.patchValue({
-        id: 0
-      });
-    }
-
-    this.updateCATLNoDisabledState();
-  }
-
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // 修正：使用 getRawValue() 來獲取包含禁用欄位的完整表單值
       const formValue = frm.getRawValue();
-
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.apiService.insertTLS51010(formValue).subscribe((response: any) => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.apiService.updateTLS51010(formValue).subscribe((response: any) => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
-          }
-          break;
-      }
+      const apiCall =
+        this.isFormCreateable
+          ? { obs: this.tls51010Service.insertTLS51010(formValue as InsertTLS51010Request), msg: '新增成功', after: () => this.dataForm.reset() }
+          : this.isFormEditable
+            ? { obs: this.tls51010Service.updateTLS51010(formValue as UpdateTLS51010Request), msg: '更新成功', after: () => this.onCancel() }
+            : null;
+      if (!apiCall) return;
+      apiCall.obs.pipe(take(1), finalize(() => this.loading = false)).subscribe(() => {
+        this.messageService.successBubble(apiCall.msg);
+        apiCall.after();
+      });
     });
   }
 }

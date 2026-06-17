@@ -690,8 +690,8 @@ export class DropdownApiService {
   }
 
   /** 查詢大分類(POS2003) */
-  queryPos2003(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS2003_DropDownList').pipe(
+  queryPos2003(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS2003_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

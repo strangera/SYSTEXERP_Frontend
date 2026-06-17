@@ -1,47 +1,43 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS5000Service } from '@service/api/tls/tls5000.service';
-import { Tls51010DropDownListService } from '@service/api/tls/tls51010-dropdown.service';
-import { Tls51020DropDownService } from '@service/api/tls/tls51020-dropdown.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime } from 'rxjs';
-
-interface CategoryItem {
-  id: number;
-  CAT_LNo: string;
-  CAT_LName?: string;
-  CAT_MNo: string;
-  CAT_MName?: string;
-  CAT_SNo: string;
-  CAT_SName: string;
-  CAT_SRemark: string | null;
-  CRT_Date?: string;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date?: string;
-  UPD_USR_No?: string;
-  UPD_USR_Name?: string;
-  CanDel?: boolean; // 新增 CanDel 屬性
-}
-
+import { Observable, debounceTime, finalize, map, of, switchMap, take, tap } from 'rxjs';
+import { InsertTLS51030Request, QueryTLS51030Response, Tls51030Service, UpdateTLS51030Request } from 'src/app/service/api/tls/tls51030.service';
 @Component({
   selector: 'app-tls51030-cru',
   templateUrl: './tls51030-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    InputTextareaComponent,
+    TranslateModule,
+    AsyncPipe
+  ]
 })
-export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
-  dataForm = this.formBuilder.nonNullable.group({
+export class TLS51030CRUComponent extends BasicCruPageComponent<QueryTLS51030Response> implements OnInit {
+  private readonly validationService = inject(ValidationService);
+  private readonly tls51030Service = inject(Tls51030Service);
+  private readonly dropdownApiService = inject(DropdownApiService);
+
+  // 定義嚴格型態的資料表單
+  readonly dataForm = this.formBuilder.nonNullable.group({
     id: [0],
     CAT_SNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]],
     CAT_SName: ['', [Validators.required, Validators.maxLength(32)]],
@@ -50,140 +46,89 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     CAT_SRemark: ['', [Validators.maxLength(200)]],
   });
 
-  // 修正：判斷是否可以編輯大分類代碼
-  // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
-  // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
-  get isCATSNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Read ||
-      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
-  }
+  // 下拉選單數據流：大分類直接綁定
+  readonly bigCategoryOptions$ = this.dropdownApiService.queryPos2003();
 
-  bigCategoryOptions: { value: string, label: string }[] = [];
-  middleCategoryOptions: { value: string, label: string }[] = [];
+  // 核心最佳實踐：將中分類選項設計為響應式數據流 (Reactive Data Stream)
+  middleCategoryOptions$!: Observable<any[] | null>;
 
-  constructor(
-    private validationService: ValidationService,
-    private apiService: TLS5000Service,
-    private bigCategoryCodeService: Tls51010DropDownListService,
-    private middleCategoryCodeService: Tls51020DropDownService,
-  ) {
+  constructor() {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51030', this.dataForm);
-    this.bigCategoryCodeService.getSystemTypes().subscribe({
-      next: (response) => {
-        this.bigCategoryOptions = response;
-        this.loadInitialData();
-      },
-      error: (error) => {
-        console.error('獲取大分類代碼失敗:', error);
-        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
-      }
-    });
 
-    this.dataForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
-      if (catLNo) {
-        // 直接傳遞字串陣列
-        this.middleCategoryCodeService.getSystemTypesByCatLNo([catLNo]).subscribe({
-          next: (response) => {
-            this.middleCategoryOptions = response;
-            const currentCatMNo = this.dataForm.controls.CAT_MNo.value;
-            if (currentCatMNo && !response.find(opt => opt.value === currentCatMNo)) {
-              this.dataForm.controls.CAT_MNo.setValue('');
-            }
-          },
-          error: (error) => {
-            console.error('獲取中分類代碼失敗:', error);
-            this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-            this.middleCategoryOptions = [];
-            this.dataForm.controls.CAT_MNo.setValue('');
-          }
-        });
-      } else {
-        this.middleCategoryOptions = [];
-        this.dataForm.controls.CAT_MNo.setValue('');
-      }
-    });
+    // 防呆機制：若已審核或不可刪除項目，編輯模式下禁用金鑰欄位
+    if (this.isFormEditable && this.rowdata?.CanDel === false) {
+      this.dataForm.controls.CAT_SNo.disable();
+    }
 
-    // 新增：在初始化後立即設置大分類代碼的禁用狀態
-    // this.updateCATSNoDisabledState();
-  }
-
-  private loadInitialData(): void {
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      if (this.rowdata) {
-        const catLNo = this.rowdata.CAT_LNo;
-        if (catLNo) {
-          // 修改：傳遞字串陣列，與 valueChanges 中保持一致
-          this.middleCategoryCodeService.getSystemTypesByCatLNo([catLNo]).subscribe({
-            next: (response) => {
-              this.middleCategoryOptions = response;
-            },
-            error: (error) => {
-              console.error('初始載入中分類代碼失敗:', error);
-              this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-              this.middleCategoryOptions = [];
-              this.dataForm.controls.CAT_MNo.setValue('');
-            }
-          });
+    // 頂級實踐：利用 RxJS 算子鏈完爆大中小分類的動態連動，不寫任何重複的 subscribe
+    this.middleCategoryOptions$ = this.dataForm.controls.CAT_LNo.valueChanges.pipe(
+      debounceTime(300),
+      switchMap((catLNo) => {
+        if (!catLNo) {
+          this.dataForm.controls.CAT_MNo.setValue('');
+          return of([]);
         }
-      } else {
-        console.error('rowdata is missing in Edit/View mode');
-        this.messageService.errorBubble('無法載入資料，請返回查詢頁面重試');
-        this.onCancel();
-      }
+        // 帶入大分類陣列參數查詢中分類
+        return this.dropdownApiService.queryPos20031({ CAT_LNo: [catLNo] }).pipe(
+          tap((response) => {
+            // 自動清洗邏輯：如果目前選中的中分類，不在新載入的大分類選項中，自動清空
+            const currentCatMNo = this.dataForm.controls.CAT_MNo.value;
+            if (currentCatMNo && !response?.some(opt => opt.No === currentCatMNo || opt.No === currentCatMNo)) {
+              this.dataForm.controls.CAT_MNo.setValue('');
+            }
+          }),
+          // 轉化格式為共用元件所需要的 value / label
+          map((response) => response?.map(item => ({ value: item.No, label: `${item.No} - ${item.Name}` })) || [])
+        );
+      })
+    );
+
+    // 初始進入頁面時 (Edit / Read 模式)，主動觸發一次大分類的變更，讓中分類下拉選單正確回填
+    const initCatLNo = this.dataForm.controls.CAT_LNo.value;
+    if (initCatLNo) {
+      // 延遲發送確保 middleCategoryOptions$ 數據鏈已被接收
+      setTimeout(() => this.dataForm.controls.CAT_LNo.setValue(initCatLNo, { emitEvent: true }));
     }
   }
 
-  // // 修正：更新大分類代碼欄位的禁用狀態
-  // private updateCATSNoDisabledState(): void {
-  //   const field = this.dataForm.get('CAT_SNo');
-  //   if (field) {
-  //     // 編輯模式且 CanDel = false 時才禁用大分類代碼
-  //     if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
-  //       field.disable();
-  //     } else {
-  //       field.enable();
-  //     }
-  //   }
-  // }
-
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.apiService.insertTLS51030(frm.value).subscribe({
-              next: (response: any) => {
-                if (response.Status === '0000') {
-                  this.messageService.successBubble('新增成功');
-                  this.dataForm.reset();
-                } else {
-                  console.error('API error:', response.Status, response.Message);
-                  this.messageService.errorBubble(`新增失敗: ${response.Message || '未知錯誤'}`);
-                }
-              }
-            });
+      this.loading = true;
+      const formValue = frm.getRawValue();
+
+      // 採用你最喜歡的策略物件組合式 API 調用
+      const apiCall = this.isFormCreateable
+        ? {
+          obs: this.tls51030Service.insertTLS51030(formValue as InsertTLS51030Request),
+          msg: '新增成功',
+          after: () => this.dataForm.reset(),
+        }
+        : this.isFormEditable
+          ? {
+            obs: this.tls51030Service.updateTLS51030(formValue as UpdateTLS51030Request),
+            msg: '更新成功',
+            after: () => this.onCancel(),
           }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.apiService.updateTLS51030(frm.value).subscribe({
-              next: (response: any) => {
-                if (response.Status === '0000') {
-                  this.messageService.successBubble('更新成功');
-                  this.onCancel();
-                } else {
-                  console.error('API error:', response.Status, response.Message);
-                  this.messageService.errorBubble(`更新失敗: ${response.Message || '未知錯誤'}`);
-                }
-              },
-            });
-          }
-          break;
+          : null;
+
+      if (!apiCall) {
+        this.loading = false;
+        return;
       }
+
+      apiCall.obs
+        .pipe(
+          take(1),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(() => {
+          this.messageService.successBubble(apiCall.msg);
+          apiCall.after();
+        });
     });
   }
 }
