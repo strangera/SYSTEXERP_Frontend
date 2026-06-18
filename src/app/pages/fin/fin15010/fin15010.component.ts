@@ -94,22 +94,21 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   btnLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'No', header: '序號', visible: false },
-    { field: 'PUR_VoucherType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'GUI_Track', header: '字軌', visible: true },
-    { field: 'InvoiceNo', header: '發票號碼', visible: true },
-    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: formatDate },
-    { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', visible: true },
-    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
-    { field: 'PUR_VenUniform', header: '廠商統一編號', visible: true },
-    { field: 'PUR_Net', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'PUR_DirectType', header: '直接扣抵法稅額分攤種類', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PUR_VoucherType', header: '發票格式', align: 'left', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'GUI_Track', header: '字軌', align: 'left', visible: true },
+    { field: 'InvoiceNo', header: '發票號碼', align: 'left', visible: true },
+    { field: 'PUR_GUIDate', header: '發票日期', align: 'left', visible: true, format: formatDate },
+    { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', align: 'left', visible: true },
+    { field: 'PUR_RepYYYYMM', header: '申報年月', align: 'left', visible: true },
+    { field: 'PUR_VenUniform', header: '廠商統一編號', align: 'left', visible: true },
+    { field: 'PUR_Net', header: '發票金額', align: 'right', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_Tax', header: '發票稅額', align: 'right', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_Amt', header: '發票總金額', align: 'right', visible: true, format: formatAmount, isTotal: true },
+    { field: 'PUR_TaxType', header: '課稅別', align: 'left', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'Source_Doc_No', header: '憑證單號', align: 'left', visible: true },
+    { field: 'Voucher_No', header: '傳票號碼', align: 'left', visible: true },
+    { field: 'SYS_ORIGIN', header: '系統別', align: 'left', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
+    { field: 'PUR_DirectType', header: '直接扣抵法稅額分攤種類', align: 'left', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
   ];
 
   //#region 下拉選項
