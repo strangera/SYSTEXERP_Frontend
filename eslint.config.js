@@ -2,16 +2,23 @@
 const eslint = require("@eslint/js");
 const tseslint = require("typescript-eslint");
 const angular = require("angular-eslint");
+const unusedImports = require("eslint-plugin-unused-imports");
 
 module.exports = tseslint.config(
   {
     files: ["**/*.ts"],
     extends: [
       eslint.configs.recommended,
+      // @ts-ignore
       ...tseslint.configs.recommended,
+      // @ts-ignore
       ...tseslint.configs.stylistic,
+      // @ts-ignore
       ...angular.configs.tsRecommended,
     ],
+    plugins: {
+      "unused-imports": unusedImports,
+    },
     processor: angular.processInlineTemplates,
     rules: {
       "@angular-eslint/directive-selector": [
@@ -30,6 +37,7 @@ module.exports = tseslint.config(
           style: "kebab-case",
         },
       ],
+      "unused-imports/no-unused-imports": "error",
     },
   },
   {
@@ -39,5 +47,5 @@ module.exports = tseslint.config(
       ...angular.configs.templateAccessibility,
     ],
     rules: {},
-  }
+  },
 );
