@@ -10,9 +10,7 @@ import { finalize, map, take } from 'rxjs/operators';
 // 服務與模型
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // 修正為指定的共通 Table 欄位型態與格式化工具路徑
 import {
@@ -114,9 +112,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly tls23080Service: TLS23080Service,
-    private readonly floorService: FloorService,
-    private readonly ECRNoService: ECRNoService,
-    private readonly counterNameService: CounterNameService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly tls11010Service: Tls11010Service
   ) {
     super();
@@ -127,11 +123,11 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
 
     // 下拉選單整合 forkJoin 載入
     forkJoin({
-      floors: this.floorService.getFloors().pipe(take(1)),
+      floors: this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), take(1)),
       buildings: this.tls11010Service.getBuildingOptions().pipe(take(1)),
-      orgs: this.tls11010Service.getOrgOptions().pipe(take(1)),
-      ecrs: this.ECRNoService.getECRNo().pipe(take(1)),
-      counters: this.counterNameService.getCounters().pipe(take(1)),
+      orgs: this.dropdownApiService.querySys3100().pipe(take(1)),
+      ecrs: this.dropdownApiService.queryPos1002().pipe(take(1)),
+      counters: this.dropdownApiService.queryTltTalent().pipe(take(1)),
     }).pipe(untilDestroyed(this)).subscribe({
       next: ({ floors, buildings, orgs, ecrs, counters }) => {
         this.floorOptions = floors ?? [];
@@ -139,7 +135,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> implements O
 
         const mapStandardOption = (x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: `${x.label}`,
           value: x.value,
         });
 

@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { FIN11090Data, FIN11090RestoreAndUploadRequest, Fin11090Service } from '../../../service/api/fin/fin11090.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -61,7 +61,7 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
   totalRecords = 0;
   data: FIN11090Data[] = [];
   selectedItems: FIN11090Data[] = [];
-  POS_NOSOptions: { value: string; label: string; }[] = [];
+  POS_NOSOptions: any = [];
 
   // 表格欄位定義
   columns: Column[] = [
@@ -119,7 +119,7 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
 
   constructor(
     private fin11090Service: Fin11090Service,
-    private eCRNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private validationService: ValidationService
   ) {
     super();
@@ -130,12 +130,12 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
     this.initializePage('FIN11090', 'fin/fin11090cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 載入收銀機選項
-    this.eCRNoService.getECRNo()
+    this.dropdownApiService.queryPos1002()
       .pipe(untilDestroyed(this))
       .subscribe(data => {
-        this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({
+        this.POS_NOSOptions = data?.map((item: { value: string; label: string; }) => ({
           ...item,
-          label: `${item.value} - ${item.label}`
+          label: `${item.label}`
         }));
       });
   }

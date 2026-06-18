@@ -3,7 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -86,7 +86,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private locationOptionsService: LocationOptionsService,
-    private ECRNoService: ECRNoService,
+    private dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
     private tls2a040Service: Tls2a040Service
   ) {
@@ -96,8 +96,8 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2A040', '/TLS/TLS2A040cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
+    this.dropdownApiService.queryPos1002().subscribe((data) => {
+      this.ECRNoOptions = data ?? [];
     });
 
     this.locationOptionsService.getFloorOptions().subscribe({

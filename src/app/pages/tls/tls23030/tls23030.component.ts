@@ -17,9 +17,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, timeout } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23030Service, TLS23030SumPayNoRow } from '../../../service/api/tls/tls23030.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -126,11 +124,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
   private dropdownInit$?: Observable<any>;
 
   constructor(
-    private readonly floorService: FloorService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly tls23030Service: TLS23030Service,
     private readonly tls11010Service: Tls11010Service,
-    private readonly ECRNoService: ECRNoService,
-    private readonly counterNameService: CounterNameService,
     private readonly dropDownListService: DropDownListService,
   ) {
     super();
@@ -149,10 +145,10 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     this.dropdownInit$ ??= forkJoin({
       paymentTypes: this.dropDownListService.queryPOS1006_DropDownList().pipe(catchError(() => of({ Data: [] }))),
       buildings: this.tls11010Service.getBuildingOptions().pipe(catchError(() => of([]))),
-      orgs: this.tls11010Service.getOrgOptions().pipe(catchError(() => of([]))),
-      ecrs: this.ECRNoService.getECRNo().pipe(catchError(() => of([]))),
-      counters: this.counterNameService.getCounters().pipe(catchError(() => of([]))),
-      floors: this.floorService.getFloors().pipe(catchError(() => of([]))),
+      orgs: this.dropdownApiService.querySys3100().pipe(catchError(() => of([]))),
+      ecrs: this.dropdownApiService.queryPos1002().pipe(catchError(() => of([]))),
+      counters: this.dropdownApiService.queryTltTalent().pipe(catchError(() => of([]))),
+      floors: this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), catchError(() => of([]))),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -170,7 +166,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
 
       const mapStandardOption = (x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       });
 

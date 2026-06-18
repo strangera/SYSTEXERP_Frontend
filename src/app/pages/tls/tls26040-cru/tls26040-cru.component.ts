@@ -13,7 +13,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { TLS26040Data, TLS26040DetailData, TLS26040Service } from '../../../service/api/tls/tls26040.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -97,7 +97,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     private tls26040Service: TLS26040Service,
     private dropDownListService: DropDownListService,
     private validationService: ValidationService,
-    private ECRNoService: ECRNoService,
+    private dropdownApiService: DropdownApiService,
     private datePipe: DatePipe
   ) {
     super();
@@ -167,7 +167,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       }));
     });
     // 載入收銀機號選項
-    this.ECRNoService.getECRNo().subscribe((data) => {
+    this.dropdownApiService.queryPos1002().subscribe((data) => {
       this.ECRNoOptions = (data ?? []).map((x: any) => ({
         label: x.label,
         value: x.value,

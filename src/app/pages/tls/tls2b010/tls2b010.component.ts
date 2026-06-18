@@ -17,11 +17,10 @@ import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -122,10 +121,8 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private tls2B010Service: TLS2B010Service,
     public override messageService: NotificationService,
-    private ECRNoService: ECRNoService,
-    private counterNameService: CounterNameService,
+    private dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
-    private floorService: FloorService,
     public datePipe: DatePipe,
   ) {
     super();
@@ -153,25 +150,27 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
       (form) => this.onSubmit(form),
     );
 
-    this.ECRNoService.getECRNo().subscribe((res) => {
+    this.dropdownApiService.queryPos1002().subscribe((res) => {
       this.ECRNoOptions =
-        res?.map((x: any) => ({
+        (res ?? []).map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: x.label,
           value: x.value,
-        })) || [];
+        }));
     });
 
-    this.counterNameService.getCounters().subscribe((res) => {
+    this.dropdownApiService.queryTltTalent().subscribe((res) => {
       this.CounterOptions =
-        res?.map((x: any) => ({
+        (res ?? []).map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: x.label,
           value: x.value,
-        })) || [];
+        }));
     });
 
-    this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
+    this.dropdownApiService.querySys3900().pipe(
+      map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name })))
+    ).subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
 
     this.queryForm.get('reimbursementType')?.valueChanges.subscribe((val) => {

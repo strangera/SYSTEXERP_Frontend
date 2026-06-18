@@ -1,9 +1,8 @@
-import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -50,13 +49,12 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
   ];
 
   // 下拉選單 options
-  cashierNoOptions: any[] = [];
+  cashierNoOptions: any = [];
   invoiceStatusOptions: any[] = [];
 
   constructor(
     private fin13070Service: FIN13070Service,
-    private ecrNoService: ECRNoService,
-    private datePipe: DatePipe,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -80,7 +78,7 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
 
   loadOptions() {
     // 取得收銀機號選項
-    this.ecrNoService.getECRNo().subscribe((res) => {
+    this.dropdownApiService.queryPos1002().subscribe((res) => {
       this.cashierNoOptions = res;
     });
   }

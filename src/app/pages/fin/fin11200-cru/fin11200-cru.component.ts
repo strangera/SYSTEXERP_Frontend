@@ -7,7 +7,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -52,7 +52,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ]
 
   constructor(
-    private eCRNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private fin11200Service: Fin11200Service,
     private validationService: ValidationService
   ) {
@@ -68,8 +68,8 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
       // minDate 仍然保留，用來在 UI 上擋掉 2025 (讓使用者根本不能選舊年份)
       this.minDate = this.setMinDate();
     }
-    this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
-      const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
+    this.dropdownApiService.queryPos1002Bill().pipe(untilDestroyed(this)).subscribe(data => {
+      const mappedData = (data ?? []).map((item: { No: string; Name: string }) => ({
         ECR_No: item.No,
         ECR_Name: item.Name
       }));

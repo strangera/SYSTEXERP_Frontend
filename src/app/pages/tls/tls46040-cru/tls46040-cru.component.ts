@@ -1,14 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -59,10 +58,8 @@ export class TLS46040CRUComponent extends BasicCruPageComponent<any> implements 
   ECR_TmplNo_Option: IDropdownItem[] = [];
 
   constructor(
-    private ECRNoService: ECRNoService,
-    private translate: TranslateService,
+    private dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
-    private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
   ) {
     super();
@@ -71,8 +68,8 @@ export class TLS46040CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS46040', this.dataForm);
     // 收銀機號下拉
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
+    this.dropdownApiService.queryPos1002().subscribe((data) => {
+      this.ECRNoOptions = (data ?? []).map((x: any) => ({ value: x.value, label: x.label }));
     });
 
     // 串 SYS1000 下拉選單 (異動類型)
@@ -116,12 +113,12 @@ export class TLS46040CRUComponent extends BasicCruPageComponent<any> implements 
         break;
       case 'ECR_TLT_No':
 
-        this.counterNameService.getCounters().subscribe((res) => {
+        this.dropdownApiService.queryTltTalent().subscribe((res) => {
           this.orgValDropdownOptions =
-            res?.map((x: any) => ({
-              label: `${x.value} - ${x.label}`, // 下拉顯示
-              value: x.value,                   // 存值
-            })) || [];
+            (res ?? []).map((x: any) => ({
+              label: `${x.No} - ${x.Name}`,
+              value: x.No,
+            }));
         });
         break;
       case 'ECR_LocNo': {

@@ -34,8 +34,6 @@ import {
   UpdateTLS25030StatusRequest,
 } from '../../../service/api/tls/tls25030.service';
 
-import { FloorService } from '@service/basic/querySYS3900.service';
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
@@ -144,9 +142,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private tls25030Service: TLS25030Service,
     private cdr: ChangeDetectorRef,
-    private counterNameService: CounterNameService,
     private readonly dropdown: DropdownApiService,
-    private floorService: FloorService
   ) {
     super();
   }
@@ -321,7 +317,8 @@ export class TLS25030Component extends BasicQueryPageComponent<any> implements O
     // ✅ 先載入下拉 options，再決定是否 restore
     this.loading = true;
 
-    const floors$ = this.floorService.getFloors().pipe(
+    const floors$ = this.dropdown.querySys3900().pipe(
+      map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))),
       take(1),
       catchError((err) => {
         console.error('getFloors error:', err);
@@ -329,7 +326,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> implements O
       })
     );
 
-    const counters$ = this.counterNameService.getCounters().pipe(
+    const counters$ = this.dropdown.queryTltTalent().pipe(
       take(1),
       catchError((err) => {
         console.error('getCounters error:', err);
@@ -358,7 +355,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> implements O
 
         this.CounterOptions = (counters || []).map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: `${x.label}`,
           value: x.value,
         }));
 

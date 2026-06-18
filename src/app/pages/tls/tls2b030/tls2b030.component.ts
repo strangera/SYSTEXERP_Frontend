@@ -28,10 +28,7 @@ import { ReportColumn } from '../../../shared/componentkit/table-report/table-re
 import { ButtonModule } from 'primeng/button';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { RegionService } from '../../../service/basic/querySYS3A00.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
@@ -131,12 +128,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls2b030Service: TLS2B030Service,
-    private floorService: FloorService,
-    private regionService: RegionService,
+    private dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
-    private ecrNoService: ECRNoService,
     private cdr: ChangeDetectorRef,
-    private counterNameService: CounterNameService
   ) {
     super();
   }
@@ -513,26 +507,32 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe(() => this.clearMonthIfNotExactRange());
 
-    this.ecrNoService.getECRNo().pipe(untilDestroyed(this)).subscribe((res) => {
+    this.dropdownApiService.queryPos1002().pipe(untilDestroyed(this)).subscribe((res) => {
       this.ECRNoOptions =
-        res?.map((x: any) => ({
+        (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
-        })) || [];
+        }));
     });
 
-    this.counterNameService.getCounters().pipe(untilDestroyed(this)).subscribe((res) => {
+    this.dropdownApiService.queryTltTalent().pipe(untilDestroyed(this)).subscribe((res) => {
       this.CounterOptions =
-        res?.map((x: any) => ({
+        (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
-        })) || [];
+        }));
     });
 
-    this.regionService.getRegionOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.regionOptions = data));
-    this.floorService.getFloors().pipe(untilDestroyed(this)).subscribe((data) => (this.floorOptions = data));
+    this.dropdownApiService.querySys3A00().pipe(
+      map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))),
+      untilDestroyed(this)
+    ).subscribe((data) => (this.regionOptions = data));
+    this.dropdownApiService.querySys3900().pipe(
+      map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))),
+      untilDestroyed(this)
+    ).subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.BUILDING_NO_Options = data));
   }
 

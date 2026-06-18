@@ -3,8 +3,8 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -83,13 +83,13 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
 
   // 下拉選單 options
   invoiceTypeOptions: any[] = [];
-  cashierNoOptions: any[] = [];
+  cashierNoOptions: any = [];
   invoiceStatusOptions: any[] = [];
   usageTypeOptions: any[] = getSYS1000Options('T205');
 
   constructor(
     private fin12020Service: FIN12020Service,
-    private ecrNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private datePipe: DatePipe
   ) {
     super();
@@ -198,7 +198,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     ];
 
     // 取得收銀機號選項
-    this.ecrNoService.getECRNo().subscribe((res) => {
+    this.dropdownApiService.queryPos1002().subscribe((res) => {
       this.cashierNoOptions = res;
     });
 

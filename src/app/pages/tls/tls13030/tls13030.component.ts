@@ -15,7 +15,6 @@ import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
-import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 // UI
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,10 +23,10 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @UntilDestroy()
@@ -118,7 +117,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
     { value: '9', label: '合約未生效' },
   ];
 
-  bus_typeOptions: any[] = [];
+  bus_typeOptions: any = [];
   deductionCategoryOptions = [
     { value: 'A', label: 'A-一次扣款' },
     { value: 'B', label: 'B-每月扣款' },
@@ -167,10 +166,9 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private bigCategoryCodeService: BigCategoryCodeService,
+    private dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
     private tls13030Service: TLS13030Service,
-    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -180,8 +178,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS13030', '', this.queryForm);
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
-    this.bigCategoryCodeService
-      .getSystemTypes()
+    this.dropdownApiService
+      .queryTltBusType()
       .pipe(untilDestroyed(this))
       .subscribe(data => this.bus_typeOptions = data);
 
@@ -201,12 +199,12 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
       )
       .subscribe(opts => (this.organizationOptions = opts));
 
-    this.counterNameService.getCounters()
+    this.dropdownApiService.queryTltTalent()
       .pipe(untilDestroyed(this))
       .subscribe(v => {
         this.CounterOptions = (v || []).map((x) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: `${x.label}`,
           value: x.value,
         }));
       });
@@ -222,20 +220,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-
-
-  private calculateFooter(data: any[]): void {
-    const total = {
-      tpy_totalamt: data.reduce((sum, row) => sum + Number(row.tpy_totalamt || 0), 0),
-      down_payment: data.reduce((sum, row) => sum + Number(row.down_payment || 0), 0),
-      period_nos: data.reduce((sum, row) => sum + Number(row.period_nos || 0), 0),
-      tpy_amount: data.reduce((sum, row) => sum + Number(row.tpy_amount || 0), 0),
-      defSalesAmt: data.reduce((sum, row) => sum + Number(row.defSalesAmt || 0), 0),
-      commRate: data.reduce((sum, row) => sum + Number(row.commRate || 0), 0),
-    };
-
-    this.footerData = [total];
-  }
   // ===== lazy 事件（分頁/排序）=====
   // ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {

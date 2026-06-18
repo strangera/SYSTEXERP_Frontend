@@ -11,10 +11,6 @@ import { catchError, debounceTime, distinctUntilChanged, finalize, map, shareRep
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { RegionService } from '../../../service/basic/querySYS3A00.service';
-import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 // 修正為指定的共通 Table 欄位型態與格式化工具路徑
 import {
@@ -127,10 +123,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   constructor(
     public readonly tls23120Service: TLS23120Service,
     public readonly dropdown: DropdownApiService,
-    private readonly counterNameService: CounterNameService,
-    private readonly bigCategoryCodeService: BigCategoryCodeService,
-    private readonly floorService: FloorService,
-    private readonly regionService: RegionService,
     private readonly tls11010Service: Tls11010Service,
   ) {
     super();
@@ -169,12 +161,12 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
    */
   private initDropdownData(): void {
     this.dropdownInit$ ??= forkJoin({
-      regions: this.regionService.getRegionOptions().pipe(catchError(() => of([]))),
-      floors: this.floorService.getFloors().pipe(catchError(() => of([]))),
+      regions: this.dropdown.querySys3A00().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), catchError(() => of([]))),
+      floors: this.dropdown.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), catchError(() => of([]))),
       buildings: this.tls11010Service.getBuildingOptions().pipe(catchError(() => of([]))),
-      busTypes: this.bigCategoryCodeService.getSystemTypes().pipe(catchError(() => of([]))),
-      orgs: this.tls11010Service.getOrgOptions().pipe(catchError(() => of([]))),
-      counters: this.counterNameService.getCounters().pipe(catchError(() => of([]))),
+      busTypes: this.dropdown.queryTltBusType().pipe(catchError(() => of([]))),
+      orgs: this.dropdown.querySys3100().pipe(catchError(() => of([]))),
+      counters: this.dropdown.queryTltTalent().pipe(catchError(() => of([]))),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -185,7 +177,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
 
       const mapStandardOption = (x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       });
 

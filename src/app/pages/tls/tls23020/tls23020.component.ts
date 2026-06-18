@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -18,9 +18,7 @@ import { debounceTime, finalize, map, shareReplay } from 'rxjs/operators';
 import { formatAmount, formatDate, ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -136,12 +134,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly tls23020Service: TLS23020Service,
-    private readonly floorService: FloorService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly tls11010Service: Tls11010Service,
-    private readonly ECRNoService: ECRNoService,
-    private readonly counterNameService: CounterNameService,
     private readonly validationService: ValidationService,
-    private readonly cdr: ChangeDetectorRef,
   ) {
     super();
   }
@@ -178,10 +173,10 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   private initDropdownData(): void {
     this.dropdownInit$ ??= forkJoin({
       buildings: this.tls11010Service.getBuildingOptions(),
-      floors: this.floorService.getFloors(),
-      orgs: this.tls11010Service.getOrgOptions(),
-      ecrs: this.ECRNoService.getECRNo(),
-      counters: this.counterNameService.getCounters(),
+      floors: this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name })))),
+      orgs: this.dropdownApiService.querySys3100(),
+      ecrs: this.dropdownApiService.queryPos1002(),
+      counters: this.dropdownApiService.queryTltTalent(),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -190,7 +185,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
 
       const mapStandardOption = (x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       });
 

@@ -10,7 +10,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 import { PanelModule } from 'primeng/panel';
@@ -76,7 +76,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     private translate: TranslateService,
     private validationService: ValidationService,
     private tls11020Service: TLS11020Service,
-    private accountingaccountService: AccountingaccountService
+    private dropdownApiService: DropdownApiService
   ) {
     super();
   }
@@ -88,8 +88,8 @@ ngOnInit(): void {
     this.dataForm.get('CAP_Type')?.disable();
   }
 
-  this.accountingaccountService.getOptions().subscribe((data) => {
-    this.accountOptions = (data || []).map((x: any) => ({
+  this.dropdownApiService.queryGls1005().subscribe((data) => {
+    this.accountOptions = (data ?? []).map((x: any) => ({
       label: `${x.No} - ${x.Name}`,
       formLabel: `${x.No} - ${x.Name}`,
       value: x.No,

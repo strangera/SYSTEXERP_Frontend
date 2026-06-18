@@ -6,7 +6,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { TLS2A020Service } from '../../../service/api/tls/tls2a020.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -60,7 +60,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private locationOptionsService: LocationOptionsService,
-    private ecrNoService: ECRNoService,
+    private dropdownApiService: DropdownApiService,
     public tls2a020Service: TLS2A020Service
   ) {
     super();
@@ -69,8 +69,8 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2A020', '/TLS/TLS2A020cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 下拉選單資料載入
-    this.ecrNoService.getECRNo().subscribe({
-      next: (res) => this.ECRNoOptions = res,
+    this.dropdownApiService.queryPos1002().subscribe({
+      next: (res) => this.ECRNoOptions = res ?? [],
       error: () => this.messageService.errorBubble('載入收銀機號失敗')
     });
 

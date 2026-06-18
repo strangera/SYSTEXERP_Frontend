@@ -26,7 +26,6 @@ import {
   TLS25030Service,
 } from '../../../service/api/tls/tls25030.service';
 
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 @UntilDestroy()
 @Component({
@@ -81,7 +80,6 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private tls25030Service: TLS25030Service,
     private dropdown: DropdownApiService,
-    private counterNameService: CounterNameService,
     private route: ActivatedRoute
   ) {
     super();
@@ -91,14 +89,14 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('TLS25030', this.dataForm);
     this.updateDisabledState();
     // 2) Counter
-    this.counterNameService
-      .getCounters()
+    this.dropdown
+      .queryTltTalent()
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (v) => {
           this.CounterOptions = (v || []).map((x) => ({
             label: x.label,
-            formLabel: `${x.value} - ${x.label}`,
+            formLabel: `${x.label}`,
             value: x.value,
           }));
         },

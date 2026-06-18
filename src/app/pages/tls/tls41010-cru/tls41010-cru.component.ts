@@ -9,7 +9,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { InputTextareaComponent } from "src/app/shared/componentkit/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -176,14 +176,14 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls41010Service: TLS41010Service,
-    private readonly counterNameService: CounterNameService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
-    this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || []; });
+    this.dropdownApiService.queryTltTalent().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: x.label, value: x.value })) || []; });
 
     // Disable 一些欄位
     for (const field of [

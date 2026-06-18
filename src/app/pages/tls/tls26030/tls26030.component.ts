@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { TLS26030Data, TLS26030QueryRequest, TLS26030Service } from '@service/api/tls/tls26030.service';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { FloorService } from '@service/basic/querySYS3900.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -103,7 +103,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   constructor(
     private tls26030Service: TLS26030Service,
     private tls11010Service: Tls11010Service,
-    private floorService: FloorService,
+    private dropdownApiService: DropdownApiService,
     private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
@@ -152,7 +152,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     });
 
     // 加載樓層選項
-    this.floorService.getFloors().subscribe((data) => {
+    this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name })))).subscribe((data) => {
       this.floorOptions = data;
     });
 
