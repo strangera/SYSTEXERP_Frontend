@@ -21,7 +21,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-i="rowIndex">
-    <tr [formGroup]="posFormArrayControls[i]" [ngClass]="{'row-selected': rowData.selected}">
+    <tr [formGroup]="posFormArrayControls[i]" [class.row-selected]="rowData.selected">
       <td class="text-center">{{ i + 1 }}</td>
 
       <td class="text-center">
@@ -33,67 +33,74 @@
       </td>
 
       <td class="text-center">
-        <app-input-text *ngIf="isFormCreateable" controlName="PAY_Name"
-          [control]="getFormControl(posFormArrayControls[i], 'PAY_Name')" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" />
-        <span *ngIf="!isFormCreateable">
-          {{ rowData.PAY_Name }}
-        </span>
+        @if (isFormCreateable) {
+          <app-input-text controlName="PAY_Name"
+            [control]="getFormControl(posFormArrayControls[i], 'PAY_Name')" [submitted]="submitted && rowData.selected"
+            [showLabel]="false" [showErrorMessage]="false" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.PAY_Name }}</span>
+        }
       </td>
 
       <td class="text-right">
-        <app-input-number *ngIf="isFormCreateable" controlName="TXN_PayAmt"
-          [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999"
-          [customPlaceholder]="rowData.isLocked ? '' : '請輸入金額'" />
-        <span *ngIf="!isFormCreateable">
-          $ {{ rowData.TXN_PayAmt }}
-        </span>
+        @if (isFormCreateable) {
+          <app-input-number controlName="TXN_PayAmt"
+            [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')" [submitted]="submitted && rowData.selected"
+            [showLabel]="false" [showErrorMessage]="false" [max]="9999999999"
+            [customPlaceholder]="rowData.isLocked ? '' : '請輸入金額'" />
+        }
+        @if (!isFormCreateable) {
+          <span>$ {{ rowData.TXN_PayAmt }}</span>
+        }
       </td>
 
       <td class="text-center">
-        <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_Type"
-          [control]="getFormControl(posFormArrayControls[i], 'CRD_Type')" placeholder="請選擇信用卡別"
-          [options]="CRD_TypeOptions" [disabled]="rece_yn === 'N'" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" optionLabel="label" optionValue="value" />
-
-        <span *ngIf="!isFormCreateable">
-          {{ rowData.CRD_Name }}
-        </span>
+        @if (rowData.PAY_Type === '0' && isFormCreateable) {
+          <app-dropdown controlName="CRD_Type"
+            [control]="getFormControl(posFormArrayControls[i], 'CRD_Type')" placeholder="請選擇信用卡別"
+            [options]="CRD_TypeOptions" [disabled]="rece_yn === 'N'" [submitted]="submitted && rowData.selected"
+            [showLabel]="false" [showErrorMessage]="false" optionLabel="label" optionValue="value" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.CRD_Name }}</span>
+        }
       </td>
 
       <td class="text-center">
-        <app-input-text *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_No"
-          [control]="getFormControl(posFormArrayControls[i], 'CRD_No')" [disabled]="rece_yn === 'N'"
-          [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
-          [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入信用卡卡號'" />
-
-        <app-input-text
-          *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A' && isFormCreateable && rowData.PAY_No !== '10'"
-          controlName="TXN_CouponNo" [control]="getFormControl(posFormArrayControls[i], 'TXN_CouponNo')"
-          [disabled]="rece_yn === 'N'" [submitted]="submitted && rowData.selected" [showLabel]="false"
-          [showErrorMessage]="false" [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入券號'" />
-
-        <app-input-text *ngIf="rowData.PAY_Type === 'A' && isFormCreateable" controlName="TXN_PayDesc"
-          [control]="getFormControl(posFormArrayControls[i], 'TXN_PayDesc')" [disabled]="rece_yn === 'N'"
-          [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
-          [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入應收付款對象'" />
-
-        <span *ngIf="!isFormCreateable">
-          {{ rowData.CRD_No || rowData.TXN_CouponNo || rowData.TXN_PayDesc }}
-        </span>
+        @if (rowData.PAY_Type === '0' && isFormCreateable) {
+          <app-input-text controlName="CRD_No"
+            [control]="getFormControl(posFormArrayControls[i], 'CRD_No')" [disabled]="rece_yn === 'N'"
+            [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
+            [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入信用卡卡號'" />
+        }
+        @if (rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A' && isFormCreateable && rowData.PAY_No !== '10') {
+          <app-input-text
+            controlName="TXN_CouponNo" [control]="getFormControl(posFormArrayControls[i], 'TXN_CouponNo')"
+            [disabled]="rece_yn === 'N'" [submitted]="submitted && rowData.selected" [showLabel]="false"
+            [showErrorMessage]="false" [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入券號'" />
+        }
+        @if (rowData.PAY_Type === 'A' && isFormCreateable) {
+          <app-input-text controlName="TXN_PayDesc"
+            [control]="getFormControl(posFormArrayControls[i], 'TXN_PayDesc')" [disabled]="rece_yn === 'N'"
+            [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
+            [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入應收付款對象'" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.CRD_No || rowData.TXN_CouponNo || rowData.TXN_PayDesc }}</span>
+        }
       </td>
 
       <td class="text-center">
-        <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="TERM_No"
-          [disabled]="rece_yn === 'N'" [control]="getFormControl(posFormArrayControls[i], 'TERM_No')"
-          placeholder="請選擇分期數" [options]="sys_typeOptions" optionLabel="label" optionValue="value"
-          [submitted]="submitted && rowData.selected" />
-
-
-        <span *ngIf="!isFormCreateable">
-          {{ rowData.TERM_Name }}
-        </span>
+        @if (rowData.PAY_Type === '0' && isFormCreateable) {
+          <app-dropdown controlName="TERM_No"
+            [disabled]="rece_yn === 'N'" [control]="getFormControl(posFormArrayControls[i], 'TERM_No')"
+            placeholder="請選擇分期數" [options]="sys_typeOptions" optionLabel="label" optionValue="value"
+            [submitted]="submitted && rowData.selected" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.TERM_Name }}</span>
+        }
       </td>
     </tr>
   </ng-template>

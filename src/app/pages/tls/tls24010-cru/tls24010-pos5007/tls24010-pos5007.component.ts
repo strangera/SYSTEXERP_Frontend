@@ -1,5 +1,5 @@
-import { DecimalPipe, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -22,7 +22,6 @@ import { STORE_WAY } from '../tls24010-cru.model';
     InputTextModule,
     InputNumberModule,
     DropdownModule,
-    NgIf,
     FormsModule,
     ButtonModule,
     DecimalPipe
@@ -52,11 +51,9 @@ export class Tls24010Pos5007Component implements OnChanges {
     { label: '應稅', value: '1' },
     { label: '免稅', value: '0' }
   ];
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly messageService = inject(NotificationService);
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    private readonly messageService: NotificationService
-  ) { }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && changes['data'].currentValue.length > 0 && !this.isFormCreateable) {
       this.POS5007Data = [...this.data.map((item, index) => ({
@@ -79,7 +76,6 @@ export class Tls24010Pos5007Component implements OnChanges {
       if (this.TXN_Date) {
         this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
           this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-          console.log(this.TLT_NoOptions);
         });
       }
     }
