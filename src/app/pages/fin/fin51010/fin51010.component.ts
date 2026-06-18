@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010CountResponse, QueryFIN51010Request, QueryFIN51010Response } from '@service/api/fin/fin51010.service';
+import { toLocalDateTimeString } from '@shared/utils/object-utils';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -113,8 +114,8 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     this.handleSubmit(frm, () => {
       const body: QueryFIN51010Request = {
         ...frm.value,
-        VouDate_From: frm.value.VouDate_From ? frm.value.VouDate_From : null,
-        VouDate_To: frm.value.VouDate_To ? frm.value.VouDate_To : null
+        VouDate_From: toLocalDateTimeString(frm.value.VouDate_From),
+        VouDate_To: toLocalDateTimeString(frm.value.VouDate_To, true)
       };
       this.fin51010Service.queryFIN51010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
