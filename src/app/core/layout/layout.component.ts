@@ -5,7 +5,6 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { AuthService } from '@service/system/auth.service';
 import { UserInfo } from '@shared/models/system/userInfo';
-import { LoadingService } from '@shared/service/loading.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TabViewModule } from 'primeng/tabview';
 import { filter } from 'rxjs';
@@ -33,7 +32,6 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
   private readonly authService = inject(AuthService);
   private readonly renderer = inject(Renderer2);
   public layoutService = inject(LayoutService);
-  public loadingService = inject(LoadingService);
   public readonly selectedTopMenuProgNo = signal<string | null>(null);
   // 將使用者狀態從 Property 轉換為 Signal，以獲得響應式追蹤
   // 如果 AuthService.user 已經是 Observable，這裡可以使用 toSignal()

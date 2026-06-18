@@ -2,17 +2,15 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
+import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { ASS17040Service } from '../../../service/api/ass/ass17040.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { SystemDataService } from '../../../service/system/system-data.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { QueryStateService } from '../../../shared/service/query-state.service';
-import { FormStatusService } from '../../../shared/service/form-status.service';
-import { LoadingService } from '../../../shared/service/loading.service';
-import { PermissionGuardService } from '../../../shared/service/permission-guard.service';
-import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { of } from 'rxjs';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { PermissionGuardService } from '../../../shared/service/permission-guard.service';
+import { QueryStateService } from '../../../shared/service/query-state.service';
 import { ASS17040Component } from './ass17040.component';
 
 describe('ASS17040Component', () => {
@@ -56,21 +54,21 @@ describe('ASS17040Component', () => {
         },
         {
           provide: NotificationService,
-          useValue: { blockUi: (): void => {}, unblockUi: (): void => {} },
+          useValue: { blockUi: (): void => { }, unblockUi: (): void => { } },
         },
         { provide: AuthService, useValue: { currentUserValue: {} } },
         {
           provide: QueryStateService,
           useValue: {
             getQueryState: () => of(null),
-            setQueryState: (): void => {},
+            setQueryState: (): void => { },
             getQueryStateValue: () => null,
           },
         },
         {
           provide: CurrentPageService,
           useValue: {
-            setCurrentProgNo: (): void => {},
+            setCurrentProgNo: (): void => { },
             getCurrentProgNo: () => 'ASS17040',
             currentPageProgNo$: of('ASS17040'),
           },
@@ -84,15 +82,6 @@ describe('ASS17040Component', () => {
           },
         },
         { provide: PermissionGuardService, useValue: { hasPermission: () => true } },
-        {
-          provide: FormStatusService,
-          useValue: {
-            resetStatus: (): void => {},
-            waitForReady: () => of(undefined),
-            notifyReady: (): void => {},
-          },
-        },
-        { provide: LoadingService, useValue: { show: (): void => {}, hide: (): void => {} } },
       ],
     }).compileComponents();
 

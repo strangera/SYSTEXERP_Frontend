@@ -61,7 +61,6 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
 
   data: QueryASS17080DetailRow[] = [];
   totalRecords = 0;
-  /** 僅表格／查詢按鈕 loading，不觸發全畫面 LoadingService */
   readonly tableLoading = signal(false);
 
   /** 供 app-table-report 捲動載入／排序重查 */
