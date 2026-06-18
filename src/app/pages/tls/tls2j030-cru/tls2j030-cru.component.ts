@@ -10,6 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DividerModule } from "primeng/divider";
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs'; // 引入 of
@@ -37,7 +38,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
   imports: [
     TableEditComponent, MenubarComponent, NgIf,
     PanelModule, ReactiveFormsModule, FormsModule, ButtonComponent, TranslateModule, InputTextComponent, TableComponent,
-    DropdownModule
+    DropdownModule,
+    DividerModule
   ],
 })
 export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> implements OnInit {
@@ -448,6 +450,16 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const changeTotalCheck = Number(changeData.TXN_SaleAmt) || 0;
     if (Math.abs(sourceSum - changeTotalCheck) > 0.01) {
       errors.push(`來源發票銷售金額 (應稅+免稅) (${sourceSum.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
+    }
+
+    if (String(changeData.PLU_TaxType) === '1') {
+      const net = Number(changeData.TXN_Net) || 0;
+      const tax = Number(changeData.TXN_Tax) || 0;
+      const saleTax = Number(changeData.TXN_SaleTax) || 0;
+      // 判斷 未稅 + 稅額 是否等於 應稅
+      if (Math.abs((net + tax) - saleTax) > 0.01) {
+        errors.push(`未稅發票金額(${net}) + 稅額(${tax}) 須等於應稅發票金額(${saleTax})`);
+      }
     }
 
     // 2. 商品明細總計 vs. 換開發票銷售金額

@@ -22,18 +22,33 @@
       </div>
 
       <!-- 來源發票 table -->
-      <app-table title="來源發票" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsnatural"
-        dataKey="TXN_GUIBegNo" [showCaption]="false" [showManage]="false" [showCheckBox]="false"
-        dataStatusField="status" [showReportMode]="false" [loading]="queryLoading">
+      <p-divider align="left" type="solid" styleClass="pb-2 mb-0">
+        <span class="text-center text-xl font-bold text-primary">
+          來源發票
+        </span>
+      </p-divider>
+      <app-table tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsnatural" dataKey="TXN_GUIBegNo"
+        [showCaption]="false" [showManage]="false" [showCheckBox]="false" dataStatusField="status"
+        [showReportMode]="false" [loading]="queryLoading">
       </app-table>
 
       <!-- 編輯兩個 table-edit -->
       <div class="card">
-        <app-table-edit #changeEdit title="換開發票" tableKey="ChangeEdit" class="col-12" [data]="changeEditData"
+        <p-divider align="left" type="solid" styleClass="pb-2 mb-0">
+          <span class="text-center text-xl font-bold text-primary">
+            換開發票
+          </span>
+        </p-divider>
+        <app-table-edit #changeEdit tableKey="ChangeEdit" class="col-12" [data]="changeEditData"
           [columns]="columnschange" dataStatusField="status" [tableRequired]="true" [showDelete]="false"
           [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false" [showCheckBox]="false">
         </app-table-edit>
-        <app-table-edit #detailEdit title="換開發票明細" tableKey="DetailEdit" class="col-12" [(data)]="detailEditData"
+        <p-divider align="left" type="solid" styleClass="pb-2 mb-0">
+          <span class="text-center text-xl font-bold text-primary">
+            換開發票明細
+          </span>
+        </p-divider>
+        <app-table-edit #detailEdit tableKey="DetailEdit" class="col-12" [(data)]="detailEditData"
           [columns]="columnsdetail" dataStatusField="status" [tableRequired]="true" [showDelete]="true"
           [showInsert]="false" [canInsert]="true" [showCheckBox]="true" (dataChange)="onDetailEditDataChange($event)"
           (fieldChange)="onDetailFieldChange($event)">
