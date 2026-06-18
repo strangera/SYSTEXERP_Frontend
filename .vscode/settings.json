@@ -1,24 +1,20 @@
 {
   // 隱藏部分禁止修改
   "files.exclude": {
-    "src/serve.json": true,
-    "eslint.config.js": true,
-    ".editorconfig": true,
-    ".angulardoc.json": true,
     ".prettierrc": true,
-    "package-lock.json": true,
-    ".gitignore": true,
-    "node_modules/": true,
-    ".angular/": true,
-    // "CLAUDE.md": true,
-    "src/favicon.ico": true,
-    "src/index.html": true,
     "tsconfig.app.json": true,
-    "tsconfig.spec.json": true,
     "tsconfig.json": true,
-    "instructions.md": true,
-    ".eslintrc.json": true,
-    "src/styles.scss": true
+    "tsconfig.spec.json": true,
+    ".editorconfig": true,
+    "eslint.config.js": true,
+    "post-build.js": true,
+    "pre-build.js": true,
+    "node_modules": true,
+    ".sonarlint": true,
+    ".vscode/extensions.json": true,
+    ".vscode/launch.json": true,
+    ".vscode/tasks.json": true,
+    "sonar-project.properties": true
   },
   "search.exclude": {
     "**/node_modules": true,
