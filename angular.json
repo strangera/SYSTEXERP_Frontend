@@ -27,7 +27,6 @@
             "outputPath": "dist/tsrderp-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "aot": true,
             "polyfills": ["zone.js", "@angular/localize/init"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -77,7 +76,6 @@
                 }
               ],
               "outputHashing": "all",
-              "aot": true,
               "optimization": true,
               "assets": [
                 "src/web.config",
@@ -94,7 +92,6 @@
                 }
               ],
               "outputHashing": "all",
-              "aot": true,
               "optimization": true,
               "baseHref": "/TSRDWEB/",
               "assets": [
