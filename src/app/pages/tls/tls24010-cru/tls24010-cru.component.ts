@@ -1,5 +1,5 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,12 +9,8 @@ import { BlockUIModule } from 'primeng/blockui';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem, POS2004Item } from '../../../service/utility/dropDownList.service';
@@ -49,7 +45,6 @@ import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.componen
     ReactiveFormsModule,
     CalendarComponent,
     InputNumberComponent,
-    NgIf,
     AsyncPipe,
     TranslateModule,
     InputTextComponent,
@@ -57,10 +52,6 @@ import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.componen
     RadiobuttonYNComponent,
     DropdownComponent,
     DividerModule,
-    TableModule,
-    InputNumberModule,
-    InputTextModule,
-    DropdownModule,
     Tls24010Pos5008Component,
     Tls24010Pos5007Component,
     Tls24010PaynoComponent,
@@ -70,7 +61,7 @@ import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.componen
     CalendarModule,
     BlockUIModule,
     ProgressSpinnerModule,
-    CheckboxModule
+    CheckboxModule,
   ],
 })
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
@@ -81,6 +72,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   @ViewChild(Tls24010DiscodeComponent) discodeComp?: Tls24010DiscodeComponent;
   @ViewChild(Tls24010PaynoComponent) paynoComp?: Tls24010PaynoComponent;
   @ViewChild('customTimeTemp') customTimeTemp!: TemplateRef<any>;
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly validationService = inject(ValidationService);
+  private readonly tls24010Service = inject(Tls24010Service);
+  private readonly dropDown = inject(DropdownApiService);
+  private readonly datePipe = inject(DatePipe);
   readonly EDIT_TYPES = {
     TLT_NO: '01',   // 專櫃編號修正
     DISC_CODE: '02',// 折扣別修正
@@ -134,13 +130,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   txnStatusOptions = txnStatusOptions               //dropdown 下拉選單 交易型態
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;//dropdown 下拉選單 電子載具種類
   TLT_NoOptions: IDropdownItem[] = [];              //dropdown 下拉選單 專櫃編號
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    private readonly validationService: ValidationService,
-    private readonly tls24010Service: Tls24010Service,
-    private readonly dropDown: DropdownApiService,
-    private readonly datePipe: DatePipe
-  ) { super(); }
   ngOnInit(): void {
     this.loadInitialData();
   }

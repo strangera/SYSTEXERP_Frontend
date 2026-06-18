@@ -5,21 +5,25 @@
 <p-table class="tls24010-pos5007" [value]="POS5007Data" [(selection)]="POS5007SelectedItems" dataKey="id"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" styleClass="p-datatable-sm  p-datatable-gridlines">
 
-  <ng-template pTemplate="caption" *ngIf="isFormCreateable">
-    <div class="grid align-items-center justify-content-between mx-0">
-      <div class="caption-left button-group flex gap-2 py-2">
-        <p-button (click)="insertRow()" pTooltip="新增" tooltipPosition="top" icon="pi pi-plus" severity="success"
-          class="p-button-text" [rounded]="true" />
-        <p-button (click)="deleteRow(POS5007SelectedItems)" pTooltip="刪除" tooltipPosition="top" icon="pi pi-trash"
-          severity="danger" class="p-button-text" [rounded]="true" [disabled]="POS5007SelectedItems.length <= 0" />
+  @if (isFormCreateable) {
+    <ng-template pTemplate="caption">
+      <div class="grid align-items-center justify-content-between mx-0">
+        <div class="caption-left button-group flex gap-2 py-2">
+          <p-button (click)="insertRow()" pTooltip="新增" tooltipPosition="top" icon="pi pi-plus" severity="success"
+            class="p-button-text" [rounded]="true" />
+          <p-button (click)="deleteRow(POS5007SelectedItems)" pTooltip="刪除" tooltipPosition="top" icon="pi pi-trash"
+            severity="danger" class="p-button-text" [rounded]="true" [disabled]="POS5007SelectedItems.length <= 0" />
+        </div>
       </div>
-    </div>
-  </ng-template>
+    </ng-template>
+  }
 
   <ng-template pTemplate="header">
     <tr>
       <th class="w-1rem">序號</th>
-      <th class="w-1rem" *ngIf="isFormCreateable"><p-tableHeaderCheckbox /></th>
+      @if (isFormCreateable) {
+        <th class="w-1rem"><p-tableHeaderCheckbox /></th>
+      }
       <th class="text-center">商品編號/專櫃編號</th>
       <th class="text-center">商品名稱/櫃位名稱</th>
       <th class="text-center">數量</th>
@@ -27,65 +31,87 @@
       <th class="text-center">單價小計金額</th>
       <th class="text-center">單價折扣讓金額(負數)</th>
       <th class="text-center">單價銷售金額</th>
-      <ng-container *ngIf="store_way === '1'">
+      @if (store_way === '1') {
         <th class="text-center">類別</th>
         <th class="text-center">稅別</th>
         <th class="text-center">折扣別</th>
-      </ng-container>
+      }
     </tr>
   </ng-template>
 
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData>
     <tr style="height:35px">
       <td class="text-center">{{ rowIndex + 1 }}</td>
-      <td *ngIf="isFormCreateable">
-        <p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" />
-      </td>
+      @if (isFormCreateable) {
+        <td>
+          <p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" />
+        </td>
+      }
       <td class="text-center">
-        <p-dropdown *ngIf="isFormCreateable && store_way !== '1'" [(ngModel)]="rowData.PLU_MagNo" styleClass="w-full"
-          placeholder="請選擇商品" [options]="POS2004Options" optionLabel="PLU_MagNo" [filter]="true" appendTo="body"
-          [showClear]="true" (onChange)="onChangePLU_MagNo(rowData)" required [virtualScroll]="true"
-          [virtualScrollItemSize]="40">
-          <ng-template let-options pTemplate="item">
-            <div class="flex align-items-center gap-2">
-              <div>
-                {{ options['label'] }}
+        @if (isFormCreateable && store_way !== '1') {
+          <p-dropdown [(ngModel)]="rowData.PLU_MagNo" styleClass="w-full"
+            placeholder="請選擇商品" [options]="POS2004Options" optionLabel="PLU_MagNo" [filter]="true" appendTo="body"
+            [showClear]="true" (onChange)="onChangePLU_MagNo(rowData)" required [virtualScroll]="true"
+            [virtualScrollItemSize]="40">
+            <ng-template let-options pTemplate="item">
+              <div class="flex align-items-center gap-2">
+                <div>
+                  {{ options['label'] }}
+                </div>
               </div>
-            </div>
-          </ng-template>
-        </p-dropdown>
-        <span *ngIf="store_way === '1' || !isFormCreateable">
-          {{ (rowData.PLU_MagNo?.PLU_MagNo) || rowData.PLU_MagNo || rowData.PLU_No }}
-        </span>
+            </ng-template>
+          </p-dropdown>
+        }
+        @if (store_way === '1' || !isFormCreateable) {
+          <span>
+            {{ (rowData.PLU_MagNo?.PLU_MagNo) || rowData.PLU_MagNo || rowData.PLU_No }}
+          </span>
+        }
       </td>
       <td class="text-center">
         {{ store_way === '1' ? getPLU_Name(rowData) : rowData.PLU_Name }}
       </td>
       <td class="text-center">
-        <p-inputNumber *ngIf="isFormCreateable" class="min-w-max" [(ngModel)]="rowData.TXN_Qty"
-          (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" [max]="9999999999" />
-        <span *ngIf="!isFormCreateable">{{ rowData.TXN_Qty }}</span>
+        @if (isFormCreateable) {
+          <p-inputNumber class="min-w-max" [(ngModel)]="rowData.TXN_Qty"
+            (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" [max]="9999999999" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.TXN_Qty }}</span>
+        }
       </td>
       <td class="text-right">
-        <p-inputNumber *ngIf="isFormCreateable" class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
-          [disabled]="store_way === '2'" [min]="0" [max]="9999999999" [minFractionDigits]="2" [maxFractionDigits]="5"
-          (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" />
-        <span *ngIf="!isFormCreateable">$ {{ rowData.PLU_SalePrc }}</span>
+        @if (isFormCreateable) {
+          <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
+            [disabled]="store_way === '2'" [min]="0" [max]="9999999999" [minFractionDigits]="2" [maxFractionDigits]="5"
+            (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" />
+        }
+        @if (!isFormCreateable) {
+          <span>$ {{ rowData.PLU_SalePrc }}</span>
+        }
       </td>
       <td class="text-right">$ {{ rowData.TXN_Amt | number:'1.0-0' }}</td>
       <td class="text-right">
-        <p-inputNumber *ngIf="isFormCreateable" [(ngModel)]="rowData.TXN_Disc" (onInput)="onInput(rowData)"
-          (onBlur)="onInput(rowData)" [max]="9999999999" />
-        <span *ngIf="!isFormCreateable">{{ rowData.TXN_Disc }}</span>
+        @if (isFormCreateable) {
+          <p-inputNumber [(ngModel)]="rowData.TXN_Disc" (onInput)="onInput(rowData)"
+            (onBlur)="onInput(rowData)" [max]="9999999999" />
+        }
+        @if (!isFormCreateable) {
+          <span>{{ rowData.TXN_Disc }}</span>
+        }
       </td>
       <td class="text-right">$ {{ rowData.TXN_SaleAmt | number:'1.0-0' }}</td>
 
-      <ng-container *ngIf="store_way === '1'">
+      @if (store_way === '1') {
         <td class="text-center">
-          <p-dropdown *ngIf="isFormCreateable" [(ngModel)]="rowData.tlt_id" styleClass="w-full"
-            [options]="tlt_idOptions" optionLabel="label" optionValue="tlt_id" appendTo="body"
-            (onChange)="onChangeTLT_ID(rowData)" required />
-          <span *ngIf="!isFormCreateable">{{ rowData.tlt_id }} - {{ rowData.tlt_id_desc }}</span>
+          @if (isFormCreateable) {
+            <p-dropdown [(ngModel)]="rowData.tlt_id" styleClass="w-full"
+              [options]="tlt_idOptions" optionLabel="label" optionValue="tlt_id" appendTo="body"
+              (onChange)="onChangeTLT_ID(rowData)" required />
+          }
+          @if (!isFormCreateable) {
+            <span>{{ rowData.tlt_id }} - {{ rowData.tlt_id_desc }}</span>
+          }
         </td>
         <td class="text-center">
           {{ rowData.PLU_TaxType === '1' ? '應稅' : '免稅' }}
@@ -93,7 +119,7 @@
         <td class="text-center">
           {{ rowData.TXN_DiscCode_Name || rowData.TXN_DiscName }}
         </td>
-      </ng-container>
+      }
     </tr>
   </ng-template>
 
@@ -107,7 +133,9 @@
         $ {{ TXN_SaleAmtTotal | number:'1.0-0' }}
       </td>
 
-      <td *ngIf="store_way === '1'" colspan="3"></td>
+      @if (store_way === '1') {
+        <td colspan="3"></td>
+      }
     </tr>
   </ng-template>
 </p-table>

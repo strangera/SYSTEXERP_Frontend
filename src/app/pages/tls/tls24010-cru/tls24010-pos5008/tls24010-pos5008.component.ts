@@ -1,9 +1,8 @@
-import { DatePipe, NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
-import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { POS5008Data, Tls24010Service } from '../../../../service/api/tls/tls24010.service';
 import { getSYS1000Options } from '../../../../service/system/sys1000.service';
@@ -21,20 +20,22 @@ import { POS5008Columns } from '../tls24010-cru.model';
   imports: [
     TableModule,
     DividerModule,
-    InputTextModule,
     InputTextComponent,
     InputNumberComponent,
     DropdownComponent,
-    NgIf,
     ReactiveFormsModule,
     FormsModule,
-    NgClass
   ],
   templateUrl: './tls24010-pos5008.component.html',
   styleUrls: ['./tls24010-pos5008.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Tls24010Pos5008Component implements OnInit, OnChanges {
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly fb = inject(FormBuilder);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly datePipe = inject(DatePipe);
+  private readonly tls24010Service = inject(Tls24010Service);
   @Input() rece_yn?: string // 是否開立業主發票 'Y':是 'N':否
   @Input() data: POS5008Data[] = [];
   @Input() type?: string;
@@ -55,8 +56,8 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     }, 0);
   }
 
-  form?: FormGroup;
   POS5008FormArray: FormArray = this.fb.array([]);
+  form = this.fb.group({ POS5008: this.POS5008FormArray });
   POS5008Data: POS5008Data[] = [];
   POS5008SelectedItems: POS5008Data[] = [];
   POS5008Columns: Column[] = POS5008Columns;
@@ -67,18 +68,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   CRD_TypeOptions = getSYS1000Options('CRD_Type');
   PAY_TypeOptions: IDropdownItem[] = [];
   sys_typeOptions = getSYS1000Options('T109');
-
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    private readonly fb: FormBuilder,
-    private readonly cdr: ChangeDetectorRef,
-    private readonly datePipe: DatePipe,
-    private readonly tls24010Service: Tls24010Service
-  ) {
-    this.form = this.fb.group({
-      POS5008: this.POS5008FormArray
-    });
-  }
 
   ngOnInit(): void {
     // 預先加載下拉選單基礎資料
@@ -230,8 +219,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
         } else {
           compositeValue = item.TXN_CouponNo || '';
         }
-        console.log(compositeValue);
-
         // ------------------------------------
 
         const patchedData = {
