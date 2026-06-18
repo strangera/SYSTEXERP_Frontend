@@ -4,7 +4,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -130,7 +129,6 @@ export class ASS12040Component extends BasicQueryPageComponent<ASS12040QueryRow>
   constructor(
     public readonly service: ASS12040Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
     private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
@@ -215,19 +213,12 @@ export class ASS12040Component extends BasicQueryPageComponent<ASS12040QueryRow>
       },
     });
 
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-          .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
-          }));
-        this.goodsIdOptions.set(options);
-      },
-    });
+    this.dropdownApiService
+      .queryASS11040_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.goodsIdOptions.set(options ?? []);
+      });
   }
 
   public queryFunction = (
