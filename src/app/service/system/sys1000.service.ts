@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { filter, map, Observable } from 'rxjs';
 
 interface Sys1000Base {
   ID: number;
@@ -117,8 +118,30 @@ export class SystemOptionsService {
     return found ? found.SYS_Name : value;
   }
 
+  static isReady(): boolean {
+    return Object.keys(SystemOptionsService.optionsCache).length > 0;
+  }
+
   // 強制更新快取
   static refreshCache() {
     this.loadOptionsFromSession();
   }
+}
+
+/**
+ * 需要等待 SYS1000 資料載入完成時使用（reactive 版本）。
+ * 適合用在 dropdown 初始化、表單預填等需要確保資料就緒的場景。
+ *
+ * 用法：
+ *   private systemData = inject(SystemDataService);
+ *   options$ = getSYS1000Options$(this.systemData, 'MAM_Status');
+ */
+export function getSYS1000Options$(
+  systemDataService: { sys1000: Observable<unknown[]> },
+  sysType: string
+): Observable<{ value: string; label: string }[]> {
+  return systemDataService.sys1000.pipe(
+    filter(data => data.length > 0),
+    map(() => SystemOptionsService.getOptionsAsValueLabel(sysType))
+  );
 }

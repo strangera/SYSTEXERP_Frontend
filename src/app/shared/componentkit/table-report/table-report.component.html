@@ -260,21 +260,21 @@
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
-          tableUtility.getFirstSubtotalIndex(columns)
+          tableUtility.getFirstSubtotalIndex(selectedColumns)
         ">
         <span class="font-bold">
           {{ subTotalLabel }}
           {{
           groupRowsBy && showSubTotalGroupValue
           ? "(" +
-          tableUtility.getGroupValue(rowData, groupRowsBy, columns) +
+          tableUtility.getGroupValue(rowData, groupRowsBy, selectedColumns) +
           ")"
           : ""
           }}
         </span>
       </td>
-      <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstSubtotalIndex(columns)"
+      <ng-container *ngFor="let col of selectedColumns; let i = index">
+        <td *ngIf="i >= tableUtility.getFirstSubtotalIndex(selectedColumns)"
           [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }" [ngClass]="[
             col.cellClass ? col.cellClass(rowData, 'subtotal') || '' : '',
           ]">
@@ -308,7 +308,7 @@
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
-          tableUtility.getFirstFooterIndex(columns, row)
+          tableUtility.getFirstFooterIndex(selectedColumns, row)
         ">
         <span class="font-bold">
           {{
@@ -318,8 +318,8 @@
           }}
         </span>
       </td>
-      <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstFooterIndex(columns, row)"
+      <ng-container *ngFor="let col of selectedColumns; let i = index">
+        <td *ngIf="i >= tableUtility.getFirstFooterIndex(selectedColumns, row)"
           [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }" [ngClass]="[
             col.cellClass ? col.cellClass(rowData, 'footer') || '' : '',
           ]">
@@ -348,7 +348,7 @@
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
-          columns.length +
+          selectedColumns.length +
           (showManage ? 1 : 0)
         ">
         <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">

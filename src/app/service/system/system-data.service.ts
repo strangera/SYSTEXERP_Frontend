@@ -107,10 +107,9 @@ export class SystemDataService {
     return this.http.post<ApiResponse<QuerySystemCodeResponse[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
       tap((response: ApiResponse<QuerySystemCodeResponse[]>) => {
         if (response.Status === '0000' && response.Data) {
-          // 1. 將資料儲存到 localStorage
           localStorage.setItem('SYS1000', JSON.stringify(response.Data));
-          // 2. 更新 BehaviorSubject
           this._sys1000.next(response.Data);
+          SystemOptionsService.refreshCache();
         }
       }),
       shareReplay(1)
