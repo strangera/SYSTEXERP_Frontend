@@ -4,10 +4,10 @@ import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
 import { FormStatusService } from '@shared/service/form-status.service';
-import { LoadingService } from '@shared/service/loading.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { take } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
+import { LoadingService } from '../../../core/services/loading.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
@@ -49,9 +49,9 @@ export abstract class BasicQueryPageComponent<T> {
   set loading(value: boolean) {
     this._loading = value;
     if (value) {
-      this.loadingService.show();
+      this.loadingService.startLoading();
     } else {
-      this.loadingService.hide();
+      this.loadingService.stopLoading();
     }
   }
   submitted = false;

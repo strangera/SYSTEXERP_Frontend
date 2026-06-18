@@ -155,7 +155,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       };
 
       this.fin13050Service.queryFIN13050(payload).pipe(
-        finalize(() => this.loading = false), // 底層的 loading = false 會自動關閉 LoadingService
+        finalize(() => this.loading = false),
         untilDestroyed(this)
       ).subscribe(res => {
         this.data = res?.Data ?? [];

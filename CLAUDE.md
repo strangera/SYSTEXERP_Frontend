@@ -1,192 +1,99 @@
-# CLAUDE.md
+# CLAUDE.md - TSRDERP Frontend Rules
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Core Commands
 
-> **For detailed development patterns, code examples, and API references, see [DEV_PATTERNS.md](./DEV_PATTERNS.md)**
+- Dev Server (Requires High Memory): `npm start`
+- Production Build (TSRDWEB): `npm run build:tsrdweb`
+- Standard Build: `npm run build`
+- Run Tests: `npm run test`
+- Bundle Analyze: `npm run analyze`
 
-## Project Overview
+## Tech Stack & Architecture
 
-TSRDERP_Frontend is an Angular 18 application for a Taiwan ERP (Enterprise Resource Planning) system built with TypeScript, PrimeNG UI components, and SCSS styling. The application serves as the frontend for南紡ERP (Tainan Spinning ERP) with multiple business modules including Asset Management (ASS), Customer/Personnel Management (CPM), Finance (FIN), System (SYS), and Tenant Lease System (TLS).
+- **Framework**: Angular 18.1.0 (Standalone Pattern), TypeScript (~5.5.2), RxJS (~7.8.0)
+- **UI Toolkit**: PrimeNG 17.18.15 + PrimeFlex 3.3.1.
+  - **Global Header**: EVERY page/action component MUST include `app-menubar` (located in `src/app/shared/component/menubar/`) at the very top of the HTML, binding `[ProgNo]="ProgNo"`.
+  - **Allowed Shared Components**: Prioritize and ONLY use these 14 valid components in `src/app/shared/componentkit/`:
+    - `auto-complete`
+    - `button`
+    - `calendar`
+    - `calendar-range`
+    - `dropdown`
+    - `dropdown-range`
+    - `input-number`
+    - `input-number-range`
+    - `input-text`
+    - `input-text-range`
+    - `input-textarea`
+    - `multi-select`
+    - `table-edit`
+    - `table-report`
+  - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Never reference or mimic `src/app/pages/tls/tls13010/` (it violates architectural patterns and creates shared pollution). Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
+- **Inheritance Pattern**:
+  - Query/List pages MUST extend `BasicQueryPageComponent` (located in `src/app/shared/componentextends/basic-qpage/`).
+  - Create/Read/Update pages MUST extend `BasicCruPageComponent` (located in `src/app/shared/componentextends/basic-crupage/`).
+  - Call `this.initializePage()` in `ngOnInit`.
 
-## Development Commands
+## Critical Code Conventions (DO NOT VIOLATE)
 
-### Core Development
-- `ng serve` - Start development server at http://localhost:4200/
-- `ng build` - Build for production
-- `ng build --watch --configuration development` - Build in watch mode for development
-- `ng test` - Run unit tests with Karma
-- `ng generate component component-name` - Generate new component
+1. **Type Safety**: Never use `any`. Always use explicit TypeScript interfaces/types defined within the project. Prefer type inference only when the type is obvious.
+2. **Memory Leaks (Best Practice)**: For RxJS subscriptions, use Angular's native `takeUntilDestroyed()` operator (from `@angular/core/rxjs-interop`) instead of legacy decorators.
+3. **Dependency Injection**: Prefer the `inject()` function over constructor injection for services (e.g., `private http = inject(HttpClient);`).
+4. **Conditional Permissions**: Use `this.hasPermission()` (e.g., '20' for Create, '60' for Export) only when the specific Program (作業) requires permission control.
+5. **Context-Aware Null Safety**: ERP API data can contain nulls. Use safe navigation (`?.`) and fallback default values strategically on crucial business fields (e.g., invoices, dates) to prevent UI crashes.
 
-### Environment-Specific Builds
-- GitHub Pages: `ng build --base-href="/TSRDERP_Frontend/" --deploy-url="/TSRDERP_Frontend/"`
-- AWS Deployment: `ng build --base-href="/TSRDWEB/" --deploy-url="/TSRDWEB/"`
+## Angular 18 Best Practices (Template & Style)
 
-### Code Quality
-- ESLint configuration with Angular rules is configured in `eslint.config.js`
-- Prettier is configured for code formatting
-- TypeScript strict mode enabled
+- **Native Control Flow**: MUST use modern control flow (`@if`, `@for`, `@switch`) instead of legacy `*ngIf`, `*ngFor`, `*ngSwitch`.
+- **Forms**: Always prefer **Reactive Forms** (`FormGroup`, `FormControl`) instead of Template-driven ones.
+- **Class/Style Bindings**: Do NOT use `ngClass` or `ngStyle`. Use native `[class.name]="condition"` and `[style.property]="value"` bindings instead.
+- **Host Bindings**: Do NOT use `@HostBinding` or `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` decorator instead.
+- **Signals**: Use Angular Signals (`signal()`, `computed()`) for local component state management where appropriate. Do NOT use `mutate` on signals; use `update` or `set`.
 
-## Architecture
+## Standard Query Page HTML Pattern (Use as Layout Reference)
 
-### Module Structure
-The application follows Angular's modular architecture with feature modules:
+```html
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      (click)="onCreateData(queryForm)"
+      [disabled]="isClosed"
+    />
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      headerStyleClass="query-accordionTab"
+    >
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid"></div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report
+    dataKey="Id"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [queryFunction]="tableQueryFunction"
+    [loading]="loading"
+    (detail)="onDetailData($event)"
+  ></app-table-report>
+</div>
+```
 
-- **Layout Module** (`src/app/layout/`) - Contains main layout components (menubar, topbar, dynamic tab view)
-- **Pages Module** (`src/app/pages/`) - Feature modules organized by business domain:
-  - `ass/` - Asset management (100+ components)
-  - `base/` - Base functionality (login, dashboard, password change)
-  - `cpm/` - Customer/Personnel management 
-  - `fin/` - Finance
-  - `sys/` - System administration
-  - `tls/` - Tenant Lease System (contract management)
+## AI Response Style
 
-### Component Architecture Patterns
-
-#### Base Component Classes
-The application uses inheritance-based component architecture:
-
-- **BasicQueryPageComponent** (`src/app/shared/componentextends/basic-qpage/`) - Base class for query/list pages
-- **BasicCruPageComponent** (`src/app/shared/componentextends/basic-crupage/`) - Base class for Create/Read/Update pages
-
-These base components provide:
-- User authentication and permissions (`funInfo`)
-- Form state management
-- Navigation helpers
-- Query state persistence
-- Standard CRUD operations
-
-> **See [DEV_PATTERNS.md](./DEV_PATTERNS.md#1-base-component-classes) for complete API reference and usage examples**
-
-#### Component Kit System
-Reusable UI components in `src/app/shared/componentkit/`:
-- Form controls (input-text, dropdown, calendar, etc.)
-- Data tables with export functionality
-- File upload components
-- Multi-select and tree components
-- Advanced table components (expandable-edit-table)
-
-> **See [DEV_PATTERNS.md](./DEV_PATTERNS.md#3-component-kit) for component API and usage examples**
-
-### Service Architecture
-
-#### Service Categories
-- **API Services** (`src/app/service/api/`) - Direct API communication
-- **Basic Services** (`src/app/service/basic/`) - 100+ dropdown/lookup services for form options
-- **System Services** (`src/app/service/system/`) - Authentication, user management
-
-#### Key Services
-- **AuthService** - Handles authentication and user permissions
-- **NotificationService** - Centralized messaging and UI blocking
-- **QueryStateService** - Persists query states across navigation
-
-### Complex Workflow Implementation (TLS13010)
-
-The TLS13010 series demonstrates a sophisticated multi-step workflow pattern:
-
-#### Workflow Components
-- `tls13010/` - Query/list page
-- `tls13010-cru/` - Contract basic information (Step 1)
-- `tls13010-next1/` - Deduction settings (Step 2)  
-- `tls13010-next2/` - Commission settings (Step 3)
-- `tls13010-next3/` - Condition settings (Step 4)
-
-#### Workflow Services
-- **ContractFlowService** - Manages multi-step workflow state with sessionStorage + memory caching
-- **TLS13010Service** - API communication layer
-- **TLS13010DropdownService** - Manages dropdown options
-
-#### Data Management
-- **Workflow State Persistence** - Automatic saving to sessionStorage with memory cache
-- **Multi-step Validation** - Each step validates before proceeding
-- **Data Change Tracking** - Complex change tracking for insert/update/delete operations
-- **Unified Commission API** - Handles different commission types with data migration
-
-### State Management
-
-The application uses Angular services for state management without external libraries:
-- Session storage for workflow persistence
-- Memory caching for performance
-- Service-based state sharing between components
-
-### UI Framework
-
-Built on PrimeNG 17.18.15 with:
-- Saga Blue theme
-- PrimeFlex for layout utilities  
-- PrimeIcons for iconography
-- Custom SCSS styling
-
-### Internationalization
-
-Basic i18n support with JSON files in `src/assets/i18n/`:
-- `zh-tw.json` (Traditional Chinese)
-- `en.json` (English)
-- `ja.json` (Japanese)
-
-## Development Environment
-
-### API Configuration
-Development API endpoints configured in `src/environments/environment.ts`:
-- Default: `https://localhost:7271`
-- Multiple environment options commented for easy switching
-
-### Proxy Configuration
-`proxy.conf.json` configured for local development with CORS headers.
-
-## Code Conventions
-
-### Component Naming
-- Use kebab-case for component selectors
-- Prefix components with `app-`
-- Feature components follow pattern: `{module}{number}-{action}` (e.g., `tls13010-cru`)
-
-### File Organization
-- Each component has `.html`, `.scss`, `.ts`, and `.spec.ts` files
-- Services grouped by functionality in dedicated folders
-- Models organized by business domain in `src/app/shared/models/`
-
-### TypeScript Patterns
-- Extensive use of interfaces for type safety
-- Enum usage for constants (e.g., `WorkflowStep`)
-- Generic base classes for reusable component logic
-
-## Testing
-
-- Jasmine and Karma configured for unit testing
-- Spec files co-located with components and services
-- Testing setup includes Angular testing utilities
-
-## Security Considerations
-
-- JWT token authentication via `@auth0/angular-jwt`
-- Route guards for authentication (`auth.guard.ts`) and public access (`public.guard.ts`)
-- HTTP interceptors for auth tokens and error handling
-- Environment-specific API keys and encryption settings
-
-## Performance Considerations
-
-- Lazy loading modules by feature
-- OnPush change detection where appropriate
-- Session storage with memory caching for workflow state
-- Component reusability through base classes and component kit
-
-When working with this codebase, focus on maintaining the established patterns for component inheritance, service architecture, and the complex workflow implementations, especially in the TLS13010 contract management system which serves as the most sophisticated example of the application's capabilities.
-
----
-
-## Related Documentation
-
-| Document | Description |
-|----------|-------------|
-| [DEV_PATTERNS.md](./DEV_PATTERNS.md) | Detailed development patterns, API references, code examples |
-
-### Quick Reference (see DEV_PATTERNS.md for details)
-
-| Task | Pattern |
-|------|---------|
-| Create query page | Extend `BasicQueryPageComponent`, call `initializePage()` in `ngOnInit` |
-| Create CRU page | Extend `BasicCruPageComponent`, call `initializePage()` in `ngOnInit` |
-| Check permission | `this.hasPermission('20')` (Create) / `'30'` (Edit) / `'40'` (Delete) |
-| Navigate to CRU | `this.navigateWithState(CRUDStatus.Edit, rowdata)` |
-| Submit form | `this.handleSubmit(form, () => { /* API call */ })` |
-| Auto-unsubscribe | `pipe(untilDestroyed(this))` with `@UntilDestroy()` decorator |
+- Respond minimalistic. No long explanations or generic tutorials. Provide direct, copy-pasteable code diffs.
