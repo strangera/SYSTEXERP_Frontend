@@ -35,7 +35,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
       this._options = value;
     }
   };
-  get options(): any[] { return this._options; }
+  get options(): any[] { return this._options || []; }
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue: string | undefined = ''; // 資料的 Value
   @Input() control = new FormControl;
