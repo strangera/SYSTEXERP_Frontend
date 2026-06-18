@@ -14,7 +14,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
 import { Fin11200Service, SummaryData } from '../../../service/api/fin/fin11200.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -57,7 +57,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   });
   totalRecords = 0;
   monthOptions = monthOptions;
-  POS_NOSOptions: { value: string; label: string; }[] = [];
+  POS_NOSOptions: any = [];
   GUI_StatusOptions = getSYS1000Options('GUI_Status');
   data: Pos1018[] = [];
   summaryData: SummaryData[] = [];
@@ -86,7 +86,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
 
   constructor(
     public readonly fin11200Service: Fin11200Service,
-    private readonly eCRNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly datePipe: DatePipe
   ) {
     super(); // 呼叫父類建構子
@@ -94,7 +94,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
 
   ngOnInit(): void {
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
+    this.dropdownApiService.queryPos1002().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data?.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
     // 設定GUI_YYMM預設值
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11

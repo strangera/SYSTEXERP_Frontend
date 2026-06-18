@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -19,6 +18,7 @@ import { ButtonModule } from 'primeng/button';
 import { debounceTime, finalize, map, Observable, tap } from 'rxjs';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { TLS26050Data, TLS26050QueryRequest, TLS26050Service } from '../../../service/api/tls/tls26050.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -159,9 +159,9 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
     private sharedDropdownService: SharedDropdownService,
-    private counterNameService: CounterNameService,
     private dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService,
+    private dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -261,9 +261,9 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   // 載入下拉選項
   loadOptions() {
     // 獲取專櫃編號選項
-    this.counterNameService.getCounters().subscribe((res) => {
+    this.dropdownApiService.queryTltTalent().subscribe((res) => {
       this.counterCodeOptions = res?.map((x: any) => ({
-        label: `${x.value} - ${x.label}`,
+        label: `${x.label}`,
         value: x.value,
       })) || [];
     });

@@ -20,9 +20,9 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 interface SortMeta { field: string; order: 1 | -1 | number }
 
@@ -126,7 +126,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly fin13060Service: FIN13060Service,
-    private readonly counterNameService: CounterNameService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly fin13050Service: FIN13050Service,
     private readonly elRef: ElementRef,
@@ -188,11 +188,11 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     this.loadDropdownOptions();
 
     // 專櫃
-    this.counterNameService.getCounters().subscribe((res: any) => {
+    this.dropdownApiService.queryTltTalent().subscribe((res: any) => {
       this.CounterOptions =
         res?.map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: `${x.label}`,
           value: x.value,
         })) ?? [];
     });

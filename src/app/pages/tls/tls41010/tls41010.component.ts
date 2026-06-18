@@ -11,8 +11,6 @@ import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -113,11 +111,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   constructor(
     public tls41010Service: TLS41010Service,
-    private readonly counterNameService: CounterNameService,
     private readonly tls14030Service: Tls14030Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
-    private readonly eCRNoService: ECRNoService,
   ) {
     super();
   }
@@ -125,11 +121,11 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.counterNameService.getCounters().subscribe((res) => {
+    this.dropdownApiService.queryTltTalent().subscribe((res) => {
       this.CounterOptions = res?.map((x: any) => ({
         No: x.value,
         Name: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: x.label,
         value: x.value
       })) || [];
     });
@@ -187,10 +183,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   // 🌟【新增獨立方法】：負責向後端撈取最新的收銀機清單，更新下拉選單
   loadEcrOptions(): void {
-    this.eCRNoService.getECRNo()
+    this.dropdownApiService.queryPos1002()
       .pipe(untilDestroyed(this))
       .subscribe(data => {
-        this.dialogOptions = data;
+        this.dialogOptions = (data ?? []).map((x: any) => ({ value: x.value, label: x.label }));
       });
   }
 

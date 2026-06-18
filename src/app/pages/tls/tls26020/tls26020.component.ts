@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { FloorService } from '@service/basic/querySYS3900.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -110,7 +110,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   constructor(
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
-    private floorService: FloorService,
+    private dropdownApiService: DropdownApiService,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService,
@@ -164,7 +164,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     });
 
     // 加載樓層選項
-    this.floorService.getFloors().subscribe((data) => {
+    this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name })))).subscribe((data) => {
       this.floorOptions = data;
     });
 

@@ -30,18 +30,18 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 
 // V2 類型
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { DropdownOption, TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { LocationItem } from '../../../../core/models/contract';
 
 // 服務
-import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { BankOptionsService } from 'src/app/shared/services/dropdownservice/bank-option.service';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from 'src/app/shared/services/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownservice/vendor-category-options.service';
 
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 

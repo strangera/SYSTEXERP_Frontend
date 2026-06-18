@@ -18,15 +18,13 @@ import { PanelModule } from 'primeng/panel';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
 import { ValidationService } from '@shared/service/validation.service';
-import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -195,8 +193,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     private readonly fin13060Service: FIN13060Service,
     private readonly fin13050Service: FIN13050Service,
     private readonly validationService: ValidationService,
-    private readonly ECRNoService: ECRNoService,
-    private readonly counterNameService: CounterNameService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService
   ) {
     super();
@@ -315,10 +312,10 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       this.applyGuiTypeToPaper(this.dataForm.controls.INV_GUIType.value);
     });
 
-    this.ECRNoService.getECRNo().subscribe((res) => {
+    this.dropdownApiService.queryPos1002().subscribe((res) => {
       this.ECRNoOptions = (res ?? []).map((x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       }));
     });

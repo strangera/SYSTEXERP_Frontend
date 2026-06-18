@@ -10,8 +10,7 @@ import { catchError, finalize, map, shareReplay } from 'rxjs/operators';
 // 服務與模型
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // 修正後的共通 Table 介面與欄位格式化工具路徑
 import {
@@ -85,8 +84,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly tls23050Service: TLS23050Service,
-    private readonly floorService: FloorService,
-    private readonly ECRNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly tls11010Service: Tls11010Service,
   ) {
     super();
@@ -102,10 +100,10 @@ export class TLS23050Component extends BasicQueryPageComponent<any> implements O
    */
   private initDropdownData(): void {
     this.dropdownInit$ ??= forkJoin({
-      floors: this.floorService.getFloors().pipe(catchError(() => of([]))),
+      floors: this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), catchError(() => of([]))),
       buildings: this.tls11010Service.getBuildingOptions().pipe(catchError(() => of([]))),
-      orgs: this.tls11010Service.getOrgOptions().pipe(catchError(() => of([]))),
-      ecrs: this.ECRNoService.getECRNo().pipe(catchError(() => of([]))),
+      orgs: this.dropdownApiService.querySys3100().pipe(catchError(() => of([]))),
+      ecrs: this.dropdownApiService.queryPos1002().pipe(catchError(() => of([]))),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -114,7 +112,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> implements O
 
       const mapStandardOption = (x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       });
 

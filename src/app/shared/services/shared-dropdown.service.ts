@@ -4,13 +4,13 @@ import { catchError, map } from 'rxjs/operators';
 import { DropdownOption, Pos2013DropdownOption, SHARED_DROPDOWN_OPTIONS } from '../constants/business.constants';
 // API 服務注入
 import { HttpClient } from '@angular/common/http';
-import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
-import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
-import { LocationOptionsService } from '../../service/api/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from '../../service/api/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from '../../service/api/dropdownservice/vendor-category-options.service';
+import { BankOptionsService } from 'src/app/shared/services/dropdownservice/bank-option.service';
+import { BussclassDropdownService } from 'src/app/shared/services/dropdownservice/tltbussclass-options.service';
 import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../service/api/sys/sysb900-dropdown.service';
+import { LocationOptionsService } from './dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from './dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from './dropdownservice/vendor-category-options.service';
 @Injectable({
   providedIn: 'root'
 })

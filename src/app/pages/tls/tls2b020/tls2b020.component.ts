@@ -13,12 +13,12 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 // Service
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B020Service } from '../../../service/api/tls/tls2-b020.service';
-import { CashierService } from '../../../service/basic/queryPOS2001.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -97,9 +97,8 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls2b020Service: TLS2B020Service,
-    private cashierService: CashierService,
+    private dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
-    private floorService: FloorService,
     public override messageService: NotificationService,
   ) {
     super();
@@ -113,15 +112,17 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> implements O
       (form) => this.onSubmit(form),
     );
 
-    this.cashierService.getCashierOptions().subscribe((res) => {
+    this.dropdownApiService.queryPos2001().subscribe((res) => {
       this.cashierOptions =
-        res?.map((x: any) => ({
+        (res ?? []).map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: x.label,
           value: x.value,
-        })) || [];
+        }));
     });
-    this.floorService.getFloors().subscribe((data) => {
+    this.dropdownApiService.querySys3900().pipe(
+      map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name })))
+    ).subscribe((data) => {
       this.floorOptions = data;
     });
     this.tls11010Service.getBuildingOptions().subscribe((res) => {

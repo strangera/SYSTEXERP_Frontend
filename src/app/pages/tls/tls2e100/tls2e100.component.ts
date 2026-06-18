@@ -11,10 +11,10 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 
 @Component({
   selector: 'app-tls2e100',

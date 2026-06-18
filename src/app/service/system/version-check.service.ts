@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, isDevMode } from '@angular/core';
+import { inject, Injectable, isDevMode } from '@angular/core';
 import { interval, Observable, of, Subject } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -16,14 +16,13 @@ export interface VersionInfo {
   providedIn: 'root',
 })
 export class VersionCheckService {
-  private currentVersion: string = environment.version;
+  private readonly http = inject(HttpClient);
+  private readonly currentVersion: string = environment.version;
   private currentHash: string | null = null;
   private readonly versionUrl: string = 'version.json';
 
   // 1. 明確定義 Subject 的型別
   public versionUpdateAvailable$ = new Subject<VersionInfo>();
-
-  constructor(private readonly http: HttpClient) { }
 
   /**
    * 啟動版本檢查機制

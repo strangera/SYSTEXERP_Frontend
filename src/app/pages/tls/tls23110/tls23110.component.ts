@@ -10,8 +10,7 @@ import { catchError, finalize, map, shareReplay } from 'rxjs/operators';
 // 服務與模型
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // 修正為指定的共通 Table 欄位型態與格式化工具路徑
 import {
@@ -122,8 +121,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly tls23110Service: TLS23110Service,
-    private readonly counterNameService: CounterNameService,
-    private readonly floorService: FloorService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly tls11010Service: Tls11010Service
   ) {
     super();
@@ -178,10 +176,10 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
    */
   private initDropdownData(): void {
     this.dropdownInit$ ??= forkJoin({
-      counters: this.counterNameService.getCounters().pipe(catchError(() => of([]))),
-      floors: this.floorService.getFloors().pipe(catchError(() => of([]))),
+      counters: this.dropdownApiService.queryTltTalent().pipe(catchError(() => of([]))),
+      floors: this.dropdownApiService.querySys3900().pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), catchError(() => of([]))),
       buildings: this.tls11010Service.getBuildingOptions().pipe(catchError(() => of([]))),
-      orgs: this.tls11010Service.getOrgOptions().pipe(catchError(() => of([]))),
+      orgs: this.dropdownApiService.querySys3100().pipe(catchError(() => of([]))),
     }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -190,7 +188,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
 
       const mapStandardOption = (x: any) => ({
         label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
+        formLabel: `${x.label}`,
         value: x.value,
       });
 

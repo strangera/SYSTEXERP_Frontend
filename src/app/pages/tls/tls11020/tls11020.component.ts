@@ -23,7 +23,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 @Component({
   selector: 'app-tls11020',
@@ -150,7 +150,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls11020Service: TLS11020Service,
-    private accountingaccountService: AccountingaccountService
+    private dropdownApiService: DropdownApiService
   ) {
     super();
   }
@@ -164,8 +164,8 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
     );
 
     // 會計科目下拉（若你 table 需要 exportFormat 對照）
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountOptions = (data || []).map((x: any) => ({
+    this.dropdownApiService.queryGls1005().subscribe((data) => {
+      this.accountOptions = (data ?? []).map((x: any) => ({
         label: x.Name,
         formLabel: `${x.No} - ${x.Name}`,
         value: x.No,

@@ -11,7 +11,7 @@ import { finalize } from 'rxjs';
 import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -104,7 +104,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private ECRNoService: ECRNoService,
+    private dropdownApiService: DropdownApiService,
     public tls2a030Service: TLS2A030Service,
     private tls2c050Service: TLS2C050Service,
     private readonly datePipe: DatePipe
@@ -115,8 +115,8 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2A030', '/TLS/TLS2A030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
+    this.dropdownApiService.queryPos1002().subscribe((data) => {
+      this.ECRNoOptions = data ?? [];
     });
 
     // 取得最後關帳日期

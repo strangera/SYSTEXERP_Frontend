@@ -11,9 +11,6 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { forkJoin } from 'rxjs';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { DialogItem, TLS14020Service } from '../../../service/api/tls/tls14020.service';
@@ -28,6 +25,9 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '../../../shared/services/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '../../../shared/services/dropdownservice/vendor-category-options.service';
 
 //專櫃契約書列印
 @Component({

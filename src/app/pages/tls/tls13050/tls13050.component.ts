@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { QueryTLS13050Request, TLS13050QueryItem, Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -16,6 +15,7 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',

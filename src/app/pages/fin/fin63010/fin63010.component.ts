@@ -132,10 +132,6 @@ export class FIN63010Component extends BasicQpageComponent implements OnInit {
   usercode: any[] = [];
   ngOnInit(): void {
     this.ProgNo = '160008';
-    // Initialize dropdown options
-    // this.accountingaccountService.getOptions().subscribe((data) => {
-    //   this.accountingaccountOptions = data;
-    // });
   }
 
   onSubmit(frm: FormGroup) {

@@ -7,11 +7,9 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // options services
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
+import { map } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { RegionService } from '../../../service/basic/querySYS3A00.service';
-import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 
 // api service
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
@@ -138,7 +136,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> implements O
     { value: '999', label: '特價' },
   ];
 
-  bus_typeOptions: any[] = [];
+  bus_typeOptions: any = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
 
@@ -197,11 +195,8 @@ export class TLS13040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private TLS13040Service: TLS13040Service,
-    private RegionService: RegionService,
-    private floorService: FloorService,
-    private bigCategoryCodeService: BigCategoryCodeService,
+    private dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
-    private counterNameService: CounterNameService
   ) {
     super();
   }
@@ -213,30 +208,30 @@ export class TLS13040Component extends BasicQueryPageComponent<any> implements O
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
 
     // ▼ 選項載入
-    this.bigCategoryCodeService
-      .getSystemTypes()
+    this.dropdownApiService
+      .queryTltBusType()
       .pipe(untilDestroyed(this))
       .subscribe((data) => (this.bus_typeOptions = data));
 
-    this.counterNameService
-      .getCounters()
+    this.dropdownApiService
+      .queryTltTalent()
       .pipe(untilDestroyed(this))
       .subscribe((v) => {
         this.CounterOptions = (v || []).map((x: any) => ({
           label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
+          formLabel: `${x.label}`,
           value: x.value,
         }));
       });
 
-    this.floorService
-      .getFloors()
-      .pipe(untilDestroyed(this))
+    this.dropdownApiService
+      .querySys3900()
+      .pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), untilDestroyed(this))
       .subscribe((data) => (this.floorOptions = data));
 
-    this.RegionService
-      .getRegionOptions()
-      .pipe(untilDestroyed(this))
+    this.dropdownApiService
+      .querySys3A00()
+      .pipe(map(items => (items ?? []).map(item => ({ value: item.No, label: item.Name }))), untilDestroyed(this))
       .subscribe((data) => (this.regionOptions = data));
 
     this.tls11010Service

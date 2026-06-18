@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin11060Service } from '@service/api/fin/fin11060.service';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -96,7 +96,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { label: '否', value: 'N' },
   ];
 
-  POS_NOSOptions: { value: string; label: string; }[] = []; // 收銀機號
+  POS_NOSOptions: any = []; // 收銀機號
 
 
   data: InvoiceRecord[] = [];
@@ -163,7 +163,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   // ----------------------------------------------------------------
   constructor(
     private fin11060Service: Fin11060Service,
-    private eCRNoService: ECRNoService,
+    private readonly dropdownApiService: DropdownApiService,
     private cdr: ChangeDetectorRef
   ) {
     super();
@@ -275,6 +275,6 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   loadOptions() {
     // 查 收銀機號
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
+    this.dropdownApiService.queryPos1002().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data?.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
   }
 }
