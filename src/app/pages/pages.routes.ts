@@ -1,12 +1,13 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../core/guards/auth.guard';
+import { Sys1000Guard } from '../core/guards/sys1000.guard';
 import { PagesComponent } from './pages.component';
 
 export const pagesRoutes: Routes = [
   {
     path: '',
     component: PagesComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, Sys1000Guard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./base/dashboard.component').then(m => m.DashboardComponent) },
