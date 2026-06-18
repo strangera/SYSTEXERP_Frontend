@@ -17,7 +17,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
-import { finalize, shareReplay } from 'rxjs';
+import { finalize, forkJoin, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
@@ -163,51 +163,67 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     this.initializePage('FIN51010', this.dataForm);
     const mainId = this.rowdata?.id;
     if (!mainId) return;
-    this.formTitle = '傳票資料'
-    // 清空上一次的發票資料
+    this.formTitle = '傳票資料';
     this.invoiceData = [];
-    // 1. 主資料 (Detail)
-    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(
-      finalize(() => (this.loading = false)),
+
+    this.arLoading = true;
+    this.apLoading = true;
+
+    const detail$ = this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId });
+    const ar$ = this.tLS2C040Service.queryTLS2C040_GLS6004({ id: mainId });
+    const ap$ = this.tLS2C040Service.queryTLS2C040_GLS6005({ id: mainId });
+
+    forkJoin({ detail: detail$, ar: ar$, ap: ap$ }).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.arLoading = false;
+        this.apLoading = false;
+      }),
       untilDestroyed(this)
-    ).subscribe((res) => {
-      if (res.Data && res.Data.length > 0) {
-        const mainData = res.Data[0];
+    ).subscribe(({ detail, ar, ap }) => {
+      // 1. 主資料
+      if (detail.Data && detail.Data.length > 0) {
+        const mainData = detail.Data[0];
         this.dataForm.patchValue(mainData as any, { emitEvent: false });
         this.data = (mainData.LineList || []).map((line: any) => ({
           ...line,
           AccNo: line.AccNo?.trim(),
           ORG_ID: line.ORG_ID?.trim(),
         }));
-        this.initTable = true;
 
-        // 【核心改動】：拿到主表資料後，根據它的 SrcSheetType 決定載入哪種發票
         const sheetType = mainData.SrcSheetType?.trim();
         if (sheetType === 'PT' || sheetType === 'WT') {
           this.loadInvoiceData(sheetType, sheetType === 'PT' ? mainId : mainData.VouNo);
         }
       }
-    });
 
-    // 2. 應收帳款資料 (AR)
-    this.arLoading = true;
-    this.tLS2C040Service.queryTLS2C040_GLS6004({ id: mainId }).pipe(finalize(() => (this.arLoading = false)), untilDestroyed(this)).subscribe(res => {
-      if (res.Data) {
-        this.arData = res.Data._GLS6004List || [];
-        this.arFooterData = { ar_amt: res.Data?.Total_ar_amt };
-        this.arTotalRecords = res.TotalCount;
+      // 2. 應收帳款
+      if (ar.Data) {
+        this.arData = [...(ar.Data._GLS6004List || [])];
+        this.arFooterData = { ar_amt: ar.Data?.Total_ar_amt };
+        this.arTotalRecords = ar.TotalCount;
       }
-    });
 
-    // 3. 應付帳款資料 (AP)
-    this.apLoading = true;
-    this.tLS2C040Service.queryTLS2C040_GLS6005({ id: mainId }).pipe(finalize(() => (this.apLoading = false)), untilDestroyed(this)).subscribe(res => {
-      if (res.Data) {
-        this.apData = res.Data._GLS6005List || [];
-        this.apFooterData = { ap_amt: res.Data?.Total_AP_Amt };
-        this.apTotalRecords = res.TotalCount;
+      // 3. 應付帳款
+      if (ap.Data) {
+        this.apData = [...(ap.Data._GLS6005List || [])];
+        this.apFooterData = { ap_amt: ap.Data?.Total_AP_Amt };
+        this.apTotalRecords = ap.TotalCount;
       }
+
+      // 三支 API 都完成後才初始化 table
+      this.initTable = true;
     });
+  }
+  onTabChange(index: number) {
+    // 強制重新賦值，觸發 OnPush 變更偵測
+    if (index === 1) {
+      this.arData = [...this.arData];
+    } else if (index === 2) {
+      this.apData = [...this.apData];
+    } else if (index === 3) {
+      this.invoiceData = [...this.invoiceData];
+    }
   }
   onSubmit(frm: FormGroup) {
     const mainId = this.rowdata?.id;

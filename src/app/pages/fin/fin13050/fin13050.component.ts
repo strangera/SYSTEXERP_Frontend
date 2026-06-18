@@ -48,8 +48,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   lastQueryBody: any = null;
 
-  isRowSelectable = (row: any): boolean => !row?.Voucher_No && !!row?.CanDel;
-  editDisabled = (row: any): boolean => !!row?.Voucher_No || !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
+  editDisabled = (row: any): boolean => !row?.CanEdit;
   detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
 
   queryForm = this.formBuilder.group({
