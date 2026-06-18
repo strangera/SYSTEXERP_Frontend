@@ -46,3 +46,5 @@ src/environments/environment.ts
 
 .scannerwork/
 .env
+
+discord-agent.js
