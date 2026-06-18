@@ -8,184 +8,98 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="傳票編號"
-            controlName="TransVouNo"
-            [control]="dataForm.controls.TransVouNo"
-          ></app-input-text>
+          <app-input-text label="傳票編號" controlName="TransVouNo"
+            [control]="dataForm.controls.TransVouNo"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="傳票種類"
-            controlName="Voucher_Name"
-            [control]="dataForm.controls.Voucher_Name"
-          ></app-input-text>
+          <app-input-text label="傳票種類" controlName="Voucher_Name"
+            [control]="dataForm.controls.Voucher_Name"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="傳票型態"
-            controlName="SrcSheetType"
-            [control]="dataForm.controls.SrcSheetType"
-          ></app-input-text>
+          <app-input-text label="傳票型態" controlName="SrcSheetType"
+            [control]="dataForm.controls.SrcSheetType"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            label="傳票日期"
-            controlName="VouDate"
-            [control]="dataForm.controls.VouDate"
-          ></app-calendar>
+          <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"></app-calendar>
         </div>
         <div class="col-12 md:col-6">
-          <app-input-text
-            label="傳票摘要"
-            controlName="Remark"
-            [control]="dataForm.controls.Remark"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="結帳單號"
-            controlName="SettleNo"
-            [control]="dataForm.controls.SettleNo"
-          ></app-input-text>
+          <app-input-text label="結帳單號" controlName="SettleNo" [control]="dataForm.controls.SettleNo"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="狀態"
-            controlName="Trans_Status"
-            [options]="Trans_StatusOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Trans_Status"
-          ></app-dropdown>
+          <app-dropdown label="狀態" controlName="Trans_Status" [options]="Trans_StatusOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Trans_Status"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="建立者"
-            controlName="CRT_USR_No"
-            [control]="dataForm.controls.CRT_USR_No"
-          ></app-input-text>
+          <app-input-text label="建立者" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            calendarType="dateTimeOne"
-            label="建立日"
-            controlName="CRT_Date"
-            [control]="dataForm.controls.CRT_Date"
-          ></app-calendar>
+          <app-calendar calendarType="dateTimeOne" label="建立日" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="修改/拋轉者"
-            controlName="UPD_USR_No"
-            [control]="dataForm.controls.UPD_USR_No"
-          ></app-input-text>
+          <app-input-text label="修改/拋轉者" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            calendarType="dateTimeOne"
-            label="修改/拋轉日"
-            controlName="UPD_Date"
-            [control]="dataForm.controls.UPD_Date"
-          ></app-calendar>
+          <app-calendar calendarType="dateTimeOne" label="修改/拋轉日" controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date"></app-calendar>
         </div>
       </div>
-      <p-tabView class="mt-3 block">
+      <p-tabView class="mt-3 block" (onChange)="onTabChange($event.index)">
         <p-tabPanel header="傳票明細">
-          <app-table-edit
-            *ngIf="initTable"
-            title="傳票明細"
-            [data]="data"
-            [columns]="columns"
-            [showDelete]="false"
-            [showPaginator]="true"
-            [loading]="loading"
-            [canInsert]="false"
-            [showFooter]="true"
-            [showCheckBox]="false"
-            [disabled]="isFormReadable"
-          ></app-table-edit>
+          <app-table-edit *ngIf="initTable" title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false"
+            [showPaginator]="true" [loading]="loading" [canInsert]="false" [showFooter]="true" [showCheckBox]="false"
+            [disabled]="isFormReadable"></app-table-edit>
         </p-tabPanel>
 
         <p-tabPanel header="應收資料">
-          <div class="relative">
-            <div
-              *ngIf="arLoading"
-              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2"
-            >
+          <div class="relative" [style.display]="'block'">
+            <div *ngIf="arLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
               <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             </div>
 
-            <app-table-report
-              [data]="arData"
-              [columns]="arColumns"
-              [showManage]="false"
-              [footerData]="arFooterData"
-              [totalRecords]="arTotalRecords"
-              [showDelete]="false"
-              [showCaption]="false"
-            ></app-table-report>
+            <app-table-report [data]="arData" [columns]="arColumns" [showManage]="false" [footerData]="arFooterData"
+              [totalRecords]="arTotalRecords" [showDelete]="false" [showCaption]="false"
+              [lazy]="false"></app-table-report>
           </div>
         </p-tabPanel>
 
         <p-tabPanel header="應付資料">
-          <div class="relative">
-            <div
-              *ngIf="apLoading"
-              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2"
-            >
+          <div class="relative" [style.display]="'block'">
+            <div *ngIf="apLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
               <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             </div>
 
-            <app-table-report
-              [data]="apData"
-              [columns]="apColumns"
-              [showManage]="false"
-              [footerData]="apFooterData"
-              [totalRecords]="apTotalRecords"
-              [showDelete]="false"
-              [showCaption]="false"
-            ></app-table-report>
+            <app-table-report [data]="apData" [columns]="apColumns" [showManage]="false" [footerData]="apFooterData"
+              [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false"></app-table-report>
           </div>
         </p-tabPanel>
         <!-- 新增：進項發票 Tab 頁籤 (僅在 PT 或 WT 時顯示) -->
-        <p-tabPanel
-          header="進項發票"
-          *ngIf="
+        <p-tabPanel header="進項發票" *ngIf="
             dataForm.get('SrcSheetType')?.value === 'PT' ||
             dataForm.get('SrcSheetType')?.value === 'WT'
-          "
-        >
+          ">
           <div class="relative">
-            <div
-              *ngIf="invoiceLoading"
-              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2"
-            >
+            <div *ngIf="invoiceLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
               <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             </div>
             <!-- 使用唯讀報表組件，關閉管理欄位與刪除按鈕 -->
-            <app-table-report
-              [data]="invoiceData"
-              [columns]="invoiceColumns"
-              [showManage]="false"
-              [totalRecords]="invoiceTotalRecords"
-              [showDelete]="false"
-              [showCaption]="false"
-            ></app-table-report>
+            <app-table-report [data]="invoiceData" [columns]="invoiceColumns" [showManage]="false"
+              [totalRecords]="invoiceTotalRecords" [showDelete]="false" [showCaption]="false"></app-table-report>
           </div>
         </p-tabPanel>
       </p-tabView>
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (click)="onClear()"
-        ></app-button>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
