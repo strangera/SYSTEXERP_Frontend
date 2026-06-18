@@ -25,7 +25,7 @@ import { Button } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 import { DOC_TYPE_COLUMNS } from './tls2a040.model';
 
 export interface FileItem {

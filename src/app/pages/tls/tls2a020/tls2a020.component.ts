@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS2A020Service } from '../../../service/api/tls/tls2a020.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -15,6 +14,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 
 @Component({
   templateUrl: './tls2a020.component.html',

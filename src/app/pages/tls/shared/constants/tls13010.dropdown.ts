@@ -1,39 +1,38 @@
 // TLS13010 下拉選單選項 - 整理後版本（含洽談者）
 import { Injectable } from '@angular/core';
-import { forkJoin, Observable, map, of, tap, catchError, retry, timer } from 'rxjs';
+import { Sysb800DropdownService } from '@service/api/sys/sysb800-dropdown.service';
+import { Sysb900DropdownService } from '@service/api/sys/sysb900-dropdown.service';
+import { catchError, forkJoin, map, Observable, of, retry, tap, timer } from 'rxjs';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from 'src/app/shared/services/dropdownservice/negotiator-options.service';
+import { BussclassDropdownService } from 'src/app/shared/services/dropdownservice/tltbussclass-options.service';
+import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownservice/vendor-category-options.service';
 import {
-  DECO_TYPE_OPTIONS,
-  MONEY_TYPE_OPTIONS,
-  CHECK_TYPE_OPTIONS,
-  COMM_COMP_TYPE_OPTIONS,
-  TLT_TERM_TYPE_OPTIONS,
-  PAYTYPE_OPTIONS,
-  STORE_WAY_OPTIONS,
-  INVOICE_TYPE_OPTIONS,
-  TLT_KIND_OPTIONS,
-  TLT_OPENFLAG_OPTIONS,
-  METER_TYPE_OPTIONS,
-  OVERALL_STATUS_OPTIONS,
-  TLT_CTYPE_MTOTAL_OPTIONS,
-  TPY_TYPE_OPTIONS,
+  APPLY_STATUS_OPTIONS,
   APPROVE_STATUS_OPTIONS,
   CAG_TAXTYPE_OPTIONS,
+  CALC_TYPE_OPTIONS,
+  CAP_SALE_TYPE_OPTIONS,
+  CAP_SALE_TYPE_OPTIONS_E,
+  CHECK_TYPE_OPTIONS,
+  COMM_COMP_TYPE_OPTIONS,
+  DECO_TYPE_OPTIONS,
+  EDC_BANK_OPTIONS,
+  INSTMS_TYPE_OPTIONS,
+  INVOICE_TYPE_OPTIONS,
+  METER_TYPE_OPTIONS,
+  MONEY_TYPE_OPTIONS,
+  OVERALL_STATUS_OPTIONS,
+  PAYTYPE_OPTIONS,
+  STORE_WAY_OPTIONS,
+  TLT_CTYPE_MTOTAL_OPTIONS,
+  TLT_KIND_OPTIONS,
+  TLT_OPENFLAG_OPTIONS,
+  TLT_TERM_TYPE_OPTIONS,
   TOTAL_AMT_UNIT_OPTIONS,
   TOTAL_AMT_VENDOR_UNIT_OPTIONS,
-  APPLY_STATUS_OPTIONS,
-  CAP_SALE_TYPE_OPTIONS,
-  INSTMS_TYPE_OPTIONS,
-  EDC_BANK_OPTIONS,
-  CALC_TYPE_OPTIONS,
-  CAP_SALE_TYPE_OPTIONS_E
+  TPY_TYPE_OPTIONS
 } from './tls13010.constants';
-import { Sysb800DropdownService } from '@service/api/sys/sysb800-dropdown.service';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { Sysb900DropdownService } from '@service/api/sys/sysb900-dropdown.service';
-import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
-import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {

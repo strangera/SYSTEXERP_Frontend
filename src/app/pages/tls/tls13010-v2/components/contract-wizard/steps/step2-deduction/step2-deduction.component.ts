@@ -9,8 +9,8 @@
  * - 支援常用項目/全部項目切換
  * - 顯示專櫃契約書資訊
  */
-import { NgIf, NgFor, NgClass, DecimalPipe } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -18,25 +18,25 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
 
-import { FareItem } from '../../../../core/models/deduction';
-import { ContractInfo, LocationItem } from '../../../../core/models/contract';
 import { getContractInfoColumns } from '../../../../core/constants/commission-columns';
 import {
-  FareCapType,
   FARE_CAP_TYPE_LABELS,
   FARE_CHANGE_DETECTION_CONFIG,
+  FareCapType,
   getDeductionColumnsByType,
   setColumnsReadonly
 } from '../../../../core/constants/fare-columns.config';
-import { CrudTrackingService, ChangeDetectionConfig } from '../../../../core/services/crud-tracking.service';
+import { ContractInfo, LocationItem } from '../../../../core/models/contract';
+import { FareItem } from '../../../../core/models/deduction';
+import { ChangeDetectionConfig, CrudTrackingService } from '../../../../core/services/crud-tracking.service';
 
 @Component({
   selector: 'app-step2-deduction',

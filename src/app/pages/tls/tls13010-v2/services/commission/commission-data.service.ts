@@ -5,7 +5,7 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
 import { DropdownOption } from '../../core/models/common.interface';
 
 @Injectable({ providedIn: 'root' })

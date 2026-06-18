@@ -1,28 +1,28 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { Subscription } from 'rxjs';
 
+import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
 
-import { FareItem, FaresByType } from '../../../../core/models/deduction/fare-item.interface';
-import { LocationItem } from '../../../../core/models/contract/location-item.interface';
+import { getContractInfoColumns } from '../../../../../tls13010-v2/core/constants/commission-columns';
 import {
-  FareCapType,
   FARE_CAP_TYPE_LABELS,
   FARE_CHANGE_DETECTION_CONFIG,
+  FareCapType,
   getDeductionColumnsByType,
   setColumnsReadonly
 } from '../../../../../tls13010-v2/core/constants/fare-columns.config';
-import { CrudTrackingService, ChangeDetectionConfig, TrackableItem } from '../../../../../tls13010-v2/core/services/crud-tracking.service';
-import { getContractInfoColumns } from '../../../../../tls13010-v2/core/constants/commission-columns';
+import { ChangeDetectionConfig, CrudTrackingService, TrackableItem } from '../../../../../tls13010-v2/core/services/crud-tracking.service';
+import { LocationItem } from '../../../../core/models/contract/location-item.interface';
+import { FareItem, FaresByType } from '../../../../core/models/deduction/fare-item.interface';
 
 /** 合約資訊介面 */
 interface ContractInfo {

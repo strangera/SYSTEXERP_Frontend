@@ -12,11 +12,11 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Sys0110Service } from '@service/api/sys/sys0110.service';
 import { Tls43040Service } from '@service/api/tls/tls43040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
 
 // 只用到欄位
 interface SYS1000 {
