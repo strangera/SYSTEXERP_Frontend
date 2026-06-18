@@ -3,12 +3,15 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DetailASS13010Response, InsertASS13010Request, UpdateASS13010Request } from '@pages/ass/ass13010/ass13010.model';
+import { ASS13010Service } from '@service/api/ass/ass13010.service';
 import { Option } from '@service/utility/dropdown-api.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -16,9 +19,6 @@ import { EditorTextComponent } from '../../../shared/componentkit/editor-text/ed
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ASS13010Service } from '@service/api/ass/ass13010.service';
-import { DetailASS13010Response, InsertASS13010Request, UpdateASS13010Request } from '@pages/ass/ass13010/ass13010.model';
-import { finalize } from 'rxjs';
 
 //3.1.3.1 資產維護作業 CRU
 @UntilDestroy()

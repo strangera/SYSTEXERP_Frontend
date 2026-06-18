@@ -11,8 +11,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import {
-  formatAmount,
-  formatAmountWithDecimals,
+  formatAmount
 } from '@shared/componentkit/table-report/table-report.model';
 import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';

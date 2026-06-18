@@ -21,7 +21,6 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   ApiResponse,
   Aps1002DropdownItem,
@@ -30,12 +29,13 @@ import {
   QueryFIN64010Row,
   SortItem,
 } from '../../../service/api/fin/fin64010.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
-import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
+import { Fin26010Service } from '../../../service/api/fin/fin26010.service';
 
 @UntilDestroy()
 @Component({

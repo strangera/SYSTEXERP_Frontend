@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, distinctUntilChanged, map } from 'rxjs';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { BehaviorSubject, Observable, distinctUntilChanged, map } from 'rxjs';
 import { WorkflowStep } from '../../core/constants';
 import {
-  WorkflowStatus,
+  CommissionItem,
+  ConditionItem,
   ContractDataStructure,
   ContractInfo,
   ContractRequest,
   FareItem,
-  CommissionItem,
-  ConditionItem,
   FinalData,
-  UnifiedCommissionResponse
+  UnifiedCommissionResponse,
+  WorkflowStatus
 } from '../../core/models';
 
 /**

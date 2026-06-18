@@ -1,17 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, ColumnGroup, formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { FIN11080Data, FIN11080QueryRequest, FIN11080Service } from '@service/api/fin/fin11080.service';
-import { removeEmptyValues } from '@shared/utils/object-utils';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN11080Data, FIN11080QueryRequest, FIN11080Service } from '@service/api/fin/fin11080.service';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-fin11080',

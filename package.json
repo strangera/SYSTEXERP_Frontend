@@ -11,7 +11,8 @@
     "analyze": "source-map-explorer dist/**/*.js",
     "prebuild:version": "node pre-build.js",
     "build:tsrdweb": "npm run prebuild:version && ng build --configuration tsrdweb && node post-build.js tsrdweb /TSRDWEB/ && git checkout src/environments/*.ts",
-    "sonar": "dotenv -- npx sonar-scanner -Dsonar.token=%SONAR_TOKEN%"
+    "sonar": "dotenv -- npx sonar-scanner -Dsonar.token=%SONAR_TOKEN%",
+    "clean:imports": "npx organize-imports-cli \"src/app/pages/**/*.ts\""
   },
   "private": true,
   "dependencies": {

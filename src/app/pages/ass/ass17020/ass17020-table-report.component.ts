@@ -6,6 +6,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
@@ -14,8 +16,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
-import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
 import { ASS17020TableReportUtilityService } from './ass17020-table-report-utility.service';
 import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayload, TripleHeaderSegments } from './ass17020-table-report.model';
 

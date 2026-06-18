@@ -3,9 +3,9 @@ import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
-import { AppInitializationService } from './app.initialization.service';
 import { PRIMENG_ZH_TW } from './core/config/primeng-i18n.config';
 import { DebugSqlDisplayComponent } from './core/layout/debug-sql-display/debug-sql-display.component';
+import { AppInitializationService } from './core/services/app.initialization.service';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 
 @Component({

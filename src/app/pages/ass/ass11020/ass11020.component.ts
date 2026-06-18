@@ -10,12 +10,11 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { ASS11020Data, ASS11020QueryRequest } from './ass11020.model';
 
 // 3.1.1.2 資產列管品及耗材分類管理作業-中分類維護作業

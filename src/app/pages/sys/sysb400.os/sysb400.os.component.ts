@@ -1,15 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TreeDropdownComponent } from '../../../shared/componentkit/tree-dropdown/tree-dropdown.component';
+import { option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 
 @Component({
   selector: 'app-sysb400.os',

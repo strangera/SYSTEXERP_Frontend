@@ -2,13 +2,13 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS17090Service } from '@service/api/ass/ass17090.service';
 import {
   ASS17090QueryRequest,
   ASS17090QueryRow,
   QueryASS17090Detail,
   QueryASS17090Response,
 } from '@pages/ass/ass17090/ass17090.model';
+import { ASS17090Service } from '@service/api/ass/ass17090.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';

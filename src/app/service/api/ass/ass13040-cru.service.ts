@@ -7,7 +7,7 @@ import {
   ASS13040DetailResponseData,
 } from '@pages/ass/ass13040-cru/ass13040-cru.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({

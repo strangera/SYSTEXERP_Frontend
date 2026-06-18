@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
@@ -18,7 +18,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
-import { Fin63020Service, Fin63020DetailRow, Fin63020UpdateRequest } from '../../../service/api/fin/fin63020.service';
+import { Fin63020DetailRow, Fin63020Service, Fin63020UpdateRequest } from '../../../service/api/fin/fin63020.service';
 
 @UntilDestroy()
 @Component({

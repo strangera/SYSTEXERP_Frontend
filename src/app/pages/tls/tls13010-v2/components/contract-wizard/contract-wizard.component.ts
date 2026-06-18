@@ -30,10 +30,10 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
+import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
+import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
-import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
-import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { CommissionCrudService } from '../../services/commission/commission-crud.service';
 import { CommissionDataService } from '../../services/commission/commission-data.service';
 import { SubmitDataService } from '../../services/submit/submit-data.service';

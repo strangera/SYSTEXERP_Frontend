@@ -1,7 +1,7 @@
-import { CleanDeductions } from '../deduction';
 import { CleanCommissions } from '../commission';
 import { CleanConditions } from '../condition';
 import { CleanLocationInfo } from '../contract';
+import { CleanDeductions } from '../deduction';
 
 /**
  * 清理後的提交資料 (配合後端 CleanContractRequest)

@@ -2,25 +2,24 @@ import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import {
   QueryASS11040DataWrapper,
   QueryASS11040Request,
   QueryASS11040Response,
 } from '@pages/ass/ass11040/ass11040.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Option } from '@service/utility/dropdown-api.model';
+import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, of } from 'rxjs';
+import { finalize, Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';

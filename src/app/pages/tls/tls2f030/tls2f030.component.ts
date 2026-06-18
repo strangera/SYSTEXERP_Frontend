@@ -10,7 +10,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { QueryTLS2F030Data, QueryTLS2F030Request, Tls2f030Service } from '../../../service/api/tls/tls2f030.service';
-import { FileExportService } from '../../../shared/service/file-export.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -18,6 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmount, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { FileExportService } from '../../../shared/service/file-export.service';
 
 // 2.2.15.3 專櫃進項發票未開立查詢作業
 @Component({

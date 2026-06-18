@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { WorkflowStatus, ContractDataStructure } from '../../core/models';
+import { ContractDataStructure, WorkflowStatus } from '../../core/models';
 
 /**
  * 儲存資料介面

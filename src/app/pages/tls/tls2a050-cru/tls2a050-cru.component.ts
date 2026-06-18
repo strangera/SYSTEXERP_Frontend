@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
 import { TableModule } from 'primeng/table';
-import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
+import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls2a050-cru',

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 
 import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
+import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 import { LocationItem } from '../../core/models/contract/location-item.interface';
 import { FareItem } from '../../core/models/deduction/fare-item.interface';
-import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 
 @Injectable({
   providedIn: 'root'

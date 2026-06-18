@@ -18,8 +18,8 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { Actions } from '@shared/service/permission-guard.service';
 import { FileExportService } from '@shared/service/file-export.service';
+import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';

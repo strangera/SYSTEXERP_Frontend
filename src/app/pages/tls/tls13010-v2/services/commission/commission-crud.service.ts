@@ -4,12 +4,12 @@
  */
 import { Injectable } from '@angular/core';
 import {
-  CommissionItem,
-  DiscountSettingItem,
   AnnualPerformanceItem,
-  DiscountLevelItem
+  CommissionItem,
+  DiscountLevelItem,
+  DiscountSettingItem
 } from '../../core/models/commission';
-import { OperationResult, DropdownOption } from '../../core/models/common.interface';
+import { DropdownOption, OperationResult } from '../../core/models/common.interface';
 import { CommissionSyncService } from './commission-sync.service';
 
 export type DetailType = 'discount' | 'annual' | 'level';

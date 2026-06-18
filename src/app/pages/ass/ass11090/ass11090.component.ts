@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11090Service } from '@service/api/ass/ass11090.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,7 +18,6 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { distinctUntilChanged, finalize } from 'rxjs';
 import { ASS11090Data, ASS11090QueryRequest } from './ass11090.model';
-import { Option } from '@service/utility/dropdown-api.model';
 
 // 3.1.1.9 資材中分類會計科目維護作業
 @UntilDestroy()

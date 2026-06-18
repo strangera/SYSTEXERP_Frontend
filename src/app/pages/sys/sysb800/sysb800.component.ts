@@ -1,17 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SortMeta } from 'primeng/api';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 // 資料模型：分類項目
 interface CategoryItem {

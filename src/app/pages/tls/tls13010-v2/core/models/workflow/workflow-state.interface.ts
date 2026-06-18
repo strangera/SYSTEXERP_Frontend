@@ -1,9 +1,9 @@
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { WorkflowStep } from '../../constants';
-import { ContractInfo, ContractRequest } from '../contract';
-import { FareItem } from '../deduction';
 import { CommissionItem } from '../commission';
 import { ConditionItem } from '../condition';
+import { ContractInfo, ContractRequest } from '../contract';
+import { FareItem } from '../deduction';
 
 /**
  * 工作流程狀態

@@ -1,11 +1,11 @@
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
   ConditionItem,
   FixedRentCondition,
-  BaseRentHigherCondition,
   GeneralCommissionCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition
+  GraduatedCommissionCondition
 } from '../models/condition';
 
 /**

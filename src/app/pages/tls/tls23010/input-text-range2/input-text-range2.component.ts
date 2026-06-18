@@ -1,4 +1,4 @@
-import { NgClass, NgIf, NgStyle } from '@angular/common';
+import { NgIf, NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
