@@ -41,8 +41,8 @@ import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subh
 })
 export class FIN54020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VouDateFrom: [new Date(new Date().setHours(0, 0, 0, 0))],
-    VouDateTo: [new Date(new Date().setHours(23, 59, 59, 0))],
+    VouDateFrom: [null as Date | null],
+    VouDateTo: [null as Date | null],
     VouNoFrom: [null, [Validators.maxLength(12)]],
     VouNoTo: [null, [Validators.maxLength(12)]],
     VoucherType: [''],
@@ -114,9 +114,11 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.value;
+      const fromDate = v.VouDateFrom ? new Date(v.VouDateFrom) : null;
+      const toDate = v.VouDateTo ? new Date(v.VouDateTo) : null;
       const basePayload = {
-        VouDateFrom: v.VouDateFrom ? new Date(v.VouDateFrom.getFullYear(), v.VouDateFrom.getMonth(), v.VouDateFrom.getDate(), 0, 0, 0) : null,
-        VouDateTo: v.VouDateTo ? new Date(v.VouDateTo.getFullYear(), v.VouDateTo.getMonth(), v.VouDateTo.getDate(), 23, 59, 59) : null,
+        VouDateFrom: fromDate ? new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 0, 0, 0) : null,
+        VouDateTo: toDate ? new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate(), 23, 59, 59) : null,
         VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
         VouNoTo: (v.VouNoTo ?? '').toString().trim(),
         VoucherType: (v.VoucherType ?? '').toString().trim(),
