@@ -26,3 +26,23 @@ export function toLocalIsoString(d: Date | string | null | undefined): string | 
   if (isNaN(date.getTime())) return null;
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
 }
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * 將日期轉成 "YYYY-MM-DDTHH:mm:ss" 格式（無時區），直接用本地年月日組合，
+ * 避免 toISOString/UTC 偏移造成時間跑掉。
+ * endOfDay=true 時時間為 23:59:59，用於查詢結束日。
+ */
+export function toLocalDateTimeString(d: Date | string | null | undefined, endOfDay = false): string | null {
+  if (d === null || d === undefined || d === '') return null;
+  const date = d instanceof Date ? d : new Date(d);
+  if (isNaN(date.getTime())) return null;
+  const datePart = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return endOfDay ? `${datePart}T23:59:59` : `${datePart}T00:00:00`;
+}
+
+/** 同 toLocalDateTimeString，時間固定為 23:59:59，用於日期範圍查詢的結束日 */
+export function toLocalIsoStringEndOfDay(d: Date | string | null | undefined): string | null {
+  return toLocalDateTimeString(d, true);
+}

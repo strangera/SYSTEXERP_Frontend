@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -116,7 +118,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="是否開立業主發票"
+              label="是否分期"
               [control]="queryForm.controls.IsHaveTERM_No"
               [options]="WhetherOptions"
               optionLabel="label"
