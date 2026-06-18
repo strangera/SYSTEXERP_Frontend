@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, effect, signal } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FIN71020Service } from '@service/api/fin/fin71020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';

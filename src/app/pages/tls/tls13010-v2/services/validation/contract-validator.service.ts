@@ -5,8 +5,7 @@ import { Injectable } from '@angular/core';
 import { ContractInfo } from '../../core/models/contract';
 import {
   createEmptyResult,
-  DetailedValidationResult,
-  FieldValidationError
+  DetailedValidationResult
 } from './validation-result.interface';
 
 @Injectable({

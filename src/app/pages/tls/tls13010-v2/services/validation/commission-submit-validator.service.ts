@@ -4,8 +4,8 @@
  */
 import { Injectable, inject } from '@angular/core';
 import { CommissionItem, DiscountSettingItem } from '../../core/models/commission';
-import { CommissionDateValidatorService } from './commission-date-validator.service';
 import { CommissionSyncService } from '../commission/commission-sync.service';
+import { CommissionDateValidatorService } from './commission-date-validator.service';
 
 export interface ValidationResult {
   isValid: boolean;

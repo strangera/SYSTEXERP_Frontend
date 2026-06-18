@@ -1,8 +1,8 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
-import { Column, expandAnimation } from '../tls2b010table.model';
-import { TableModule } from 'primeng/table';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
-import { NgFor, NgIf, CommonModule } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { Column, expandAnimation } from '../tls2b010table.model';
 
 @Component({
   selector: 'app-tls2b010table-expansion',

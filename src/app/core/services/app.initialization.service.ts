@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { NavigationError, Router } from '@angular/router';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { filter } from 'rxjs';
-import { VersionCheckService } from './service/system/version-check.service';
+import { VersionCheckService } from './version-check.service';
 @Injectable({ providedIn: 'root' })
 export class AppInitializationService {
   private readonly router = inject(Router);

@@ -15,9 +15,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import {
-  formatAmount,
   formatDate,
-  ReportColumn,
+  ReportColumn
 } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -25,8 +24,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable } from 'rxjs';
 import {
   Ass16050MasterDisplayRow,
-  Ass16050MasterRow,
-  Ass16050QueryRequest,
+  Ass16050QueryRequest
 } from './ass16050.model';
 
 @UntilDestroy()

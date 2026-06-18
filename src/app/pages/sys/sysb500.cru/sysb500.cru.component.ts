@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb500m } from '../../../shared/models/sys/sysb000.model';
-import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { Sysb500m } from '../../../shared/models/sys/sysb000.model';
 
 @Component({
   selector: 'app-sysb500.cru',

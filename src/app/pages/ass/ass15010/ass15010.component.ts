@@ -3,13 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS15010Service } from '@service/api/ass/ass15010.service';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import {
   QueryASS15010ApiRequest,
   QueryASS15010Response,
 } from '@pages/ass/ass15010/ass15010.model';
+import { ASS15010Service } from '@service/api/ass/ass15010.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -22,8 +22,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { distinctUntilChanged } from 'rxjs';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 
 /** 3.1.5.1 財產標籤列印作業 */
 @UntilDestroy()

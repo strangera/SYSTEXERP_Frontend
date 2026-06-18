@@ -2,36 +2,34 @@
  * Step 3: 抽成設定主組件
  * 協調者角色：整合子組件和服務
  */
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 import { CommissionType, CommissionTypeLabels } from '../../../../core/constants';
-import { CommissionItem, DiscountSettingItem, DiscountLevelItem, AnnualPerformanceItem } from '../../../../core/models';
-import { ContractInfo } from '../../../../core/models';
-import { DropdownOption } from '../../../../core/models';
 import {
-  getContractInfoColumns,
-  getCommissionMainColumns,
-  getDiscountColumns,
   getAnnualColumns,
+  getCommissionMainColumns,
+  getContractInfoColumns,
+  getDiscountColumns,
   getLevelColumns
 } from '../../../../core/constants/commission-columns';
+import { AnnualPerformanceItem, CommissionItem, ContractInfo, DiscountLevelItem, DiscountSettingItem, DropdownOption } from '../../../../core/models';
 
 // 服務
-import { CommissionSyncService } from '../../../../services/commission/commission-sync.service';
 import { CommissionCopyService } from '../../../../services/commission/commission-copy.service';
-import { CommissionRemarkService } from '../../../../services/commission/commission-remark.service';
 import { CommissionCrudService, DetailType } from '../../../../services/commission/commission-crud.service';
+import { CommissionRemarkService } from '../../../../services/commission/commission-remark.service';
+import { CommissionSyncService } from '../../../../services/commission/commission-sync.service';
 import { CommissionDateValidatorService } from '../../../../services/validation/commission-date-validator.service';
 import { CommissionSubmitValidatorService } from '../../../../services/validation/commission-submit-validator.service';
 
 // 子組件
 import { CommissionInfoComponent } from './commission-info/commission-info.component';
-import { CommissionTableComponent, FieldChangeEvent, DetailFieldChangeEvent, TabChangeEvent, AddDetailEvent, BatchDeleteEvent, DetailBatchDeleteEvent, ButtonClickEvent } from './commission-table/commission-table.component';
+import { AddDetailEvent, BatchDeleteEvent, ButtonClickEvent, CommissionTableComponent, DetailBatchDeleteEvent, DetailFieldChangeEvent, FieldChangeEvent, TabChangeEvent } from './commission-table/commission-table.component';
 
 @Component({
   selector: 'app-step3-commission',

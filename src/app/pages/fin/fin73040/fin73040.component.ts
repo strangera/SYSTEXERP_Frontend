@@ -9,6 +9,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { SortMeta } from 'primeng/api';
 import { FIN73040Service } from '../../../service/api/fin/fin73040.service';
 import { Option } from '../../../service/utility/dropdown-api.model';
@@ -23,7 +24,6 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 import { formatAmountWithDecimals, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { FileExportService } from '../../../shared/service/file-export.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { FIN73040Data, FIN73040Option, FIN73040Query } from './fin73040.model';
 
 @Component({

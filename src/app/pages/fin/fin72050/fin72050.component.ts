@@ -4,8 +4,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72050Service } from '@service/api/fin/fin72050.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import {
   FIN72050QueryData,
   FIN72050_STATUS_OPTIONS,

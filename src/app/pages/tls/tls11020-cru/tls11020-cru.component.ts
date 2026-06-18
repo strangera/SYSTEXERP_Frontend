@@ -13,12 +13,12 @@ import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
+import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls11020-cru',

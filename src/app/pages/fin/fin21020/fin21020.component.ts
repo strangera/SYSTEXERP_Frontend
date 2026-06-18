@@ -1,9 +1,9 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -15,8 +15,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
-import { Option } from '@service/utility/dropdown-api.model';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',

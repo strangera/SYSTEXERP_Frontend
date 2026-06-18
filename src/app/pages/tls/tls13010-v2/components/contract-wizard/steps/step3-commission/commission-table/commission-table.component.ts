@@ -2,10 +2,10 @@
  * 抽成設定表格子組件
  * 處理抽成項目的表格顯示和事件轉發
  */
-import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { AccordionModule } from 'primeng/accordion';
-import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { CommissionItem } from '../../../../../core/models';
 
 // 標籤頁選項型別

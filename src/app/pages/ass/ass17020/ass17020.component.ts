@@ -2,8 +2,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS17020Service } from '@service/api/ass/ass17020.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import {
   ASS17020DataPayload,
   ASS17020DataRow,
@@ -12,17 +10,12 @@ import {
   ASS17020Summary,
   QueryASS17020Request,
 } from '@pages/ass/ass17020/ass17020.model';
+import { ASS17020Service } from '@service/api/ass/ass17020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import {
-  ColumnGroup,
-  ReportColumn,
-  formatAmount,
-  formatAmountWithDecimals,
-} from './ass17020-table-report.model';
-import { ASS17020TableReportComponent } from './ass17020-table-report.component';
 import { SortOption } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { distinctUntilChanged } from 'rxjs';
@@ -31,6 +24,13 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ASS17020TableReportComponent } from './ass17020-table-report.component';
+import {
+  ColumnGroup,
+  ReportColumn,
+  formatAmount,
+  formatAmountWithDecimals,
+} from './ass17020-table-report.model';
 
 /** 領用統計表 */
 @UntilDestroy()

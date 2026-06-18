@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { DropdownOption } from '@shared/constants/business.constants';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, shareReplay, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, shareReplay, tap } from 'rxjs/operators';
 
 
 @Injectable({

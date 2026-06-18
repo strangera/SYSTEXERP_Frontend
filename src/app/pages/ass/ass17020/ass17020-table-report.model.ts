@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
-import { SortMeta } from 'primeng/api';
 import { reportType, TableTypes } from '@shared/componentkit/table/table.model';
+import { SortMeta } from 'primeng/api';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 
-import { ContractDateRange } from '@shared/utils/contract-date-validator.util';
 import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
+import { ContractDateRange } from '@shared/utils/contract-date-validator.util';
 import { DiscountSettingItem } from '../../../tls13010-v2/core/models';
 import { AnnualPerformanceItem, CommissionItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { CommissionCrudService } from '../../../tls13010-v2/services/commission/commission-crud.service';

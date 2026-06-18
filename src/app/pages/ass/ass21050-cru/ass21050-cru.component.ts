@@ -1,21 +1,21 @@
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { ASS21050Service } from '@service/api/ass/ass21050.service';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '@shared/models/tls/tls000.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs/operators';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-ass21050-cru',

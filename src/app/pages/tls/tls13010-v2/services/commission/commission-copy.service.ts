@@ -5,8 +5,8 @@
 import { Injectable } from '@angular/core';
 import {
   CommissionItem,
-  DiscountSettingItem,
-  DiscountLevelItem
+  DiscountLevelItem,
+  DiscountSettingItem
 } from '../../core/models/commission';
 import { OperationResult } from '../../core/models/common.interface';
 import { CommissionRemarkService } from './commission-remark.service';
