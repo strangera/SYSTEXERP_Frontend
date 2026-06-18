@@ -2,6 +2,7 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -64,14 +65,16 @@ export class ASS12040CRUComponent
   public readonly applicantCodeOptions = signal<{ label: string; value: string }[]>([]);
   public readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
   public readonly paperStatusOptions = signal<{ label: string; value: string }[]>([]);
-  /** TODO: 供應商編號、品項編號、倉別下拉未實作，待 API 或規格提供後接上 */
-  public readonly supplierCodeOptions = signal<{ label: string; value: string }[]>([]);
+  /** 品項編號下拉：queryASS11040_DropDownList（GOODS_ID / 名稱） */
   public readonly itemCodeOptions = signal<{ label: string; value: string }[]>([]);
+  /** TODO: 供應商編號、倉別下拉未實作，待 API 或規格提供後接上 */
+  public readonly supplierCodeOptions = signal<{ label: string; value: string }[]>([]);
   public readonly storageOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
     private readonly ass12040Service: ASS12040Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -142,7 +145,11 @@ export class ASS12040CRUComponent
         },
       });
 
-    // TODO: 供應商編號、品項編號、倉別下拉未實作，待 API 或規格提供後接上
+    this.dropdownApiService.queryASS11040_DropDownList().subscribe(options => {
+      this.itemCodeOptions.set(options ?? []);
+    });
+
+    // TODO: 供應商編號、倉別下拉未實作，待 API 或規格提供後接上
   }
 
   override onCancel(): void {

@@ -15,7 +15,6 @@ import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
 import { ASS12020Service } from '@service/api/ass/ass12020.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -95,8 +94,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   /** 商品類型下拉選項 */
   prodTypeOptions: { value: string; label: string }[] = getSYS1000Options('PROD_TYPE');
 
-  // TODO: 未實作下拉選項
-  /** 品項編號下拉選項 */
+  /** 品項編號下拉選項：queryASS11040_DropDownList（固定資產品項主檔，與 ASS12010/ASS12020 一致） */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 供應商：queryPOS2013_DropDownList(VEN_Flag: '1') */
   supplierIdOptions: { value: string; label: string }[] = [];
@@ -204,7 +202,6 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     private readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
-    private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service,
     private readonly ass12010Service: ASS12010Service,
     private readonly ass12020Service: ASS12020Service
@@ -293,19 +290,12 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       { value: '2', label: '免稅' },
     ];
 
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-          .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
-          }));
-        this.goodsIdOptions = options;
-      },
-    });
+    this.dropdownApiService
+      .queryASS11040_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.goodsIdOptions = res ?? [];
+      });
     this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
