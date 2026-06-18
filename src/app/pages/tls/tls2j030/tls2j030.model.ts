@@ -112,6 +112,18 @@ export function validateBusTaxExmpCardRequired(value: unknown, row: Record<strin
   }
   return { isValid: true, errorMessage: [] };
 }
+
+export function validateUniformNumber(value: unknown, row: Record<string, unknown>, data?: Record<string, unknown>[], field?: string, header = '統一編號'): { isValid: boolean; errorMessage: string[] } {
+  // 允許空值（非必填）
+  if (value === null || value === undefined || String(value).trim() === '') {
+    return { isValid: true, errorMessage: [] };
+  }
+  if (!/^\d{8}$/.test(String(value))) {
+    return { isValid: false, errorMessage: [`須為8碼半形阿拉伯數字`] };
+  }
+  return { isValid: true, errorMessage: [] };
+}
+
 // ===== 來源發票欄位定義 =====
 /** 新增模式用的來源發票欄位（用於 table-edit） */
 export const COLUMNS_NATURAL_EDIT: Column[] = [
@@ -146,11 +158,11 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'TXN_SaleTax', header: '應稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '0', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_SaleNoTax', header: '免稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
-  { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
-  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
-  { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, max: 999999999999, validate: [validateMaxNumber(999999999999)] },
+  { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', disabled: (v, i, row) => String(row?.['PLU_TaxType']) !== '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', disabled: (v, i, row) => String(row?.['PLU_TaxType']) !== '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', disabled: () => true, max: 999999999999, validate: [validateMaxNumber(999999999999)] },
   { field: 'INV_CompanyName', header: '公司名稱', type: 'input', maxLength: 80, minWidth: '200px' },
-  { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8 },
+  { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8, validate: [validateUniformNumber] },
   { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', type: 'input', minWidth: '200px', disabled: (v, i, row) => row['INV_NoneTax'] !== '1', validate: [validateBusTaxExmpCardRequired] },
   { field: 'TXN_Notes', header: '備註', type: 'input', maxLength: 100, minWidth: '200px' },
