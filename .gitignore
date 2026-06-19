@@ -48,3 +48,5 @@ src/environments/environment.ts
 .env
 
 discord-agent.js
+# TypeScript Incremental compiler output
+*.tsbuildinfo
