@@ -252,4 +252,5 @@ export interface TLS2J030Source {
   TXN_TotSaleNoTax: number;
   TXN_TotTax: number;
   isClose: string; // 是否已關帳 (Y/N)
+  GUI_Message: string;
 }
