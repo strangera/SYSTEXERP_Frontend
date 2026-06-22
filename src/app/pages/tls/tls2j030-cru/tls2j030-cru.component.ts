@@ -460,10 +460,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     // 【已修正】來源發票總計只取應稅 + 免稅金額，排除 TXN_TotTax 稅額
     const sourceSum = this.data.reduce((sum, item) =>
-      sum + (Number(item.TXN_TotSaleTax) || 0) + (Number(item.TXN_TotSaleNoTax) || 0), 0);
+      sum + (Number(item.TXN_TotGUISaleTax) || 0) + (Number(item.TXN_TotGUISaleNoTax) || 0), 0);
     const changeTotalCheck = Number(changeData.TXN_SaleAmt) || 0;
     if (Math.abs(sourceSum - changeTotalCheck) > 0.01) {
-      errors.push(`來源發票銷售金額 (應稅+免稅) (${sourceSum.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
+      errors.push(`來源發票金額 (應稅+免稅) (${sourceSum.toFixed(2)}) 與換開發票金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
     }
 
     if (String(changeData.PLU_TaxType) === '1') {

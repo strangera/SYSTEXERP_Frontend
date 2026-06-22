@@ -243,16 +243,36 @@ export interface TLS2J030Data {
   isClose?: string; // 是否已關帳 (Y/N)
 }
 export interface TLS2J030Source {
-  TXN_Date: string;
-  ECR_No: string;
-  TXN_No: number | string;
+  /** 發票號碼起 */
   TXN_GUIBegNo: string;
+  /** 發票號碼迄(不用顯示，但新增要回傳) */
   TXN_GUIEndNo: string;
+  /** 交易日期 */
+  TXN_Date: string;
+  /** 發票金額 */
   TXN_TotGUI: number;
-  TXN_TaxType: string;
-  TXN_TotSaleTax: number;
-  TXN_TotSaleNoTax: number;
+  /** 收銀機號 */
+  ECR_No: string;
+  /** 交易序號 */
+  TXN_No: number;
+  /** 統一編號 */
+  TXN_Uniform: string | null;
+  /** 應稅金額 */
+  TXN_TotGUISaleTax: number;
+  /** 免稅金額 */
+  TXN_TotGUISaleNoTax: number;
+  /** 稅額 */
   TXN_TotTax: number;
-  isClose: string; // 是否已關帳 (Y/N)
-  GUI_Message: string;
+  /** 稅別 */
+  TXN_TaxType: string | null;
+  /** 稅別(名稱) */
+  TXN_TaxType_Name: string | null;
+  /** 應稅金額(不用顯示，但新增要回傳) */
+  TXN_TotSaleTax: number;
+  /** 免稅金額(不用顯示，但新增要回傳) */
+  TXN_TotSaleNoTax: number;
+  /** 發票日是否關帳 */
+  isClose: string | null;
+  /** 手開已換開訊息(給前端看的訊息) */
+  GUI_Message: string | null;
 }
