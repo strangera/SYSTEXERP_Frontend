@@ -64,7 +64,6 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         this.onInvalid(rowData);
       },
       disabled: (rowData: TLS2J030Data) => {
-        if (rowData?.TXN_GUIPaper === "E") return true;
         return !(rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y");
       }
     }
