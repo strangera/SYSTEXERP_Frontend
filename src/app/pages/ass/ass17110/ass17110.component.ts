@@ -1,19 +1,44 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS17110Service } from '@service/api/ass/ass17110.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs/operators';
+import {
+  PrintASS17110Request,
+  QueryASS17110Request,
+  QueryASS17110Response,
+} from './ass17110.model';
 
+/**
+ * ASS17110 耗材進耗存之會計科目報表
+ *
+ * 規格來源：
+ *   - 主規格書 3159「耗材進耗存之會計科目報表」
+ *   - SA 規格書 gid=1396854590 (ASS17110)
+ *
+ * 查詢條件（依規格）：
+ *   1. 統計年月 (必填，文字方塊；前端用 dateMonthOne 選擇後轉 yyyyMM)
+ *   2. 品項編號 (非必填，下拉 queryFASITEM_DropDownList MATERIAL_TYPE='3')
+ *   3. 會計科目代碼 (非必填，下拉 queryFASAccNoDropDownList → 對應 /queryGLS1005_AccNo_DropDownList)
+ *
+ * 功能：查詢 + 匯出 PDF / Excel (依現有 ASS17 系列慣例)。
+ */
+@UntilDestroy()
 @Component({
   selector: 'app-ass17110',
   templateUrl: './ass17110.component.html',
@@ -27,206 +52,168 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarComponent,
     DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
+    ButtonModule,
   ],
 })
-export class ASS17110Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
-    Kurabe: [],
+export class ASS17110Component
+  extends BasicQueryPageComponent<QueryASS17110Response>
+  implements OnInit
+{
+  readonly queryForm = this.formBuilder.group({
+    DATE_YM: [null as Date | string | null, Validators.required],
+    GOODS_ID: [null as string | null],
+    ACC_NO: [null as string | null],
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'accountingItem', header: '會計科目', visible: true },
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '品項名稱', visible: true },
-    { field: 'beginningInventoryQuantity', header: '期初庫存-數量', visible: true },
-    { field: 'beginningInventoryCost', header: '期初庫存-成本', visible: true },
-    { field: 'currentPurchaseQuantity', header: '本期進貨-數量', visible: true },
-    { field: 'currentPurchaseCost', header: '本期進貨-成本', visible: true },
-    { field: 'currentUsageQuantity', header: '本期領用-數量', visible: true },
-    { field: 'currentUsageCost', header: '本期領用-成本', visible: true },
-    { field: 'usageUnit', header: '領用單位', visible: true },
-    { field: 'usageAccountingItem', header: '領用會計科目', visible: true },
-    { field: 'currentReturnQuantity', header: '本期退料-數量', visible: true },
-    { field: 'currentReturnCost', header: '本期退料-成本', visible: true },
-    { field: 'inventoryAdjustmentQuantity', header: '盤點調整-數量', visible: true },
-    { field: 'inventoryAdjustmentCost', header: '盤點調整-成本', visible: true },
-    { field: 'currentTransferQuantity', header: '本期調撥-數量', visible: true },
-    { field: 'currentTransferCost', header: '本期調撥-成本', visible: true },
-    { field: 'currentScrapQuantity', header: '本期報廢-數量', visible: true },
-    { field: 'currentScrapCost', header: '本期報廢-成本', visible: true },
-    { field: 'endingInventoryQuantity', header: '期末庫存-數量', visible: true },
-    { field: 'endingInventoryCost', header: '期末庫存-成本', visible: true },
+
+  data: QueryASS17110Response[] = [];
+  totalRecords = 0;
+  exportPdfLoading = false;
+
+  goodsIdOptions: Option[] = [];
+  accNoOptions: Option[] = [];
+
+  /**
+   * 表格欄位 — 對齊 swagger queryASS17110 Data[]（期初/進貨/領用/退料/盤點/調撥/報廢/期末，數量＋成本成對）。
+   * 代碼與名稱拆獨立欄位（會計科目、領用單位、領用會計科目）。
+   */
+  readonly columns: ReportColumn[] = [
+    { field: 'ACC_NO', header: '會計科目代碼', visible: true },
+    { field: 'ACC_NAME', header: '會計科目名稱', visible: true },
+    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
+    { field: 'OPEN_QTY', header: '期初庫存\n數量', visible: true, align: 'right' },
+    { field: 'OPEN_COST', header: '期初庫存\n成本', visible: true, align: 'right' },
+    { field: 'IN_QTY', header: '本期進貨\n數量', visible: true, align: 'right' },
+    { field: 'IN_COST', header: '本期進貨\n成本', visible: true, align: 'right' },
+    { field: 'ISSUE_QTY', header: '本期領用\n數量', visible: true, align: 'right' },
+    { field: 'ISSUE_COST', header: '本期領用\n成本', visible: true, align: 'right' },
+    { field: 'ISSUE_ORG_ID', header: '領用單位\n代碼', visible: true },
+    { field: 'ISSUE_ORGNAME', header: '領用單位\n名稱', visible: true },
+    { field: 'ISSUE_ACC_NO', header: '領用會計科目\n代碼', visible: true },
+    { field: 'ISSUE_ACC_NAME', header: '領用會計科目\n名稱', visible: true },
+    { field: 'RETURN_QTY', header: '本期退料\n數量', visible: true, align: 'right' },
+    { field: 'RETURN_COST', header: '本期退料\n成本', visible: true, align: 'right' },
+    { field: 'ADJUST_QTY', header: '盤點調整\n數量', visible: true, align: 'right' },
+    { field: 'ADJUST_COST', header: '盤點調整\n成本', visible: true, align: 'right' },
+    { field: 'TRANSFER_QTY', header: '本期調撥\n數量', visible: true, align: 'right' },
+    { field: 'TRANSFER_COST', header: '本期調撥\n成本', visible: true, align: 'right' },
+    { field: 'DAMAGE_QTY', header: '本期報廢\n數量', visible: true, align: 'right' },
+    { field: 'DAMAGE_COST', header: '本期報廢\n成本', visible: true, align: 'right' },
+    { field: 'CLOSE_QTY', header: '期末庫存\n數量', visible: true, align: 'right' },
+    { field: 'CLOSE_COST', header: '期末庫存\n成本', visible: true, align: 'right' },
   ];
-
-
-
-
-  // Dropdown options
-  Kurabe: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-  ];
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '只顯示低於安全庫存' },
-
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-
+    private readonly service: ASS17110Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310059';
-    // Initialize dropdown options
+    this.initializePage('ASS17110', '', this.queryForm, frm => this.onSubmit(frm));
+    this.loadDropdowns();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadDropdowns(): void {
+    // 品項編號（只顯示品項編號跟名稱，MATERIAL_TYPE=3）
+    this.dropdownApi
+      .queryFasItemDropdown({ MATERIAL_TYPE: '3' })
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => (this.goodsIdOptions = opts ?? []));
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+    // 會計科目代碼（資材攤提會計科目下拉）
+    this.dropdownApi
+      .queryFasAccNoDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => (this.accNoOptions = opts ?? []));
+  }
+
+  /** 將 Date / 'yyyy/MM' / 'yyyyMM' 統一轉成 yyyyMM 字串；無效回 null。 */
+  private toYYYYMM(value: Date | string | null | undefined): string | null {
+    if (!value) return null;
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) return null;
+      const y = value.getFullYear().toString();
+      const m = (value.getMonth() + 1).toString().padStart(2, '0');
+      return `${y}${m}`;
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    const normalized = String(value).trim().replaceAll('/', '').replaceAll('-', '');
+    return /^\d{6}$/.test(normalized) ? normalized : null;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
+  private buildQueryBody(): QueryASS17110Request | null {
+    const raw = this.queryForm.getRawValue();
+    const dateYm = this.toYYYYMM(raw.DATE_YM);
+    if (!dateYm) {
+      this.messageService.warnBubble('請選擇統計年月（yyyyMM）');
+      return null;
     }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    return {
+      DATE_YM: dateYm,
+      GOODS_ID: raw.GOODS_ID?.trim() ? raw.GOODS_ID : null,
+      ACC_NO: raw.ACC_NO?.trim() ? raw.ACC_NO : null,
     };
-    this.router.navigate(['/demoCRU'], extras);
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  private buildExportBody(): PrintASS17110Request | null {
+    const body = this.buildQueryBody();
+    if (!body) return null;
+    return {
+      DATE_YM: body.DATE_YM,
+      GOODS_ID: body.GOODS_ID ?? null,
+      ACC_NO: body.ACC_NO ?? null,
+    };
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const queryBody = this.buildQueryBody();
+      if (!queryBody) {
+        this.data = [];
+        this.totalRecords = 0;
+        return;
+      }
+      const body = removeEmptyValues(queryBody) as QueryASS17110Request;
+
+      this.loading = true;
+      this.service
+        .queryASS17110(body)
+        .pipe(
+          finalize(() => (this.loading = false)),
+          untilDestroyed(this),
+        )
+        .subscribe((res: ApiResponse<QueryASS17110Response[]>) => {
+          if (res?.Status === '0000') {
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('操作失敗：' + (res?.Message ?? ''));
+          }
+        });
+    });
+  }
+
+  onExportPdf(): void {
+    const body = this.buildExportBody();
+    if (!body) return;
+    if ((this.data?.length ?? 0) === 0) {
+      this.messageService.warnBubble('目前無資料可供下載。');
+      return;
+    }
+    const export$ = this.service.exportPDFASS17110(body);
+    this.fileExportService
+      .executeFileExport(
+        export$.pipe(untilDestroyed(this)),
+        '.pdf',
+        v => (this.exportPdfLoading = v),
+      )
+      .subscribe();
   }
 }

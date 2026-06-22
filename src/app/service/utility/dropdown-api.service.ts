@@ -35,6 +35,7 @@ import {
   FaClassMItem,
   FaClassMQuery,
   FaHosItem,
+  FasAccNoDropdownItem,
   FaSitemAss1000Item,
   FasItemDropdownItem,
   FaSitemItem,
@@ -444,6 +445,34 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
+  }
+
+  /**
+   * 查詢資材攤提會計科目下拉（queryFASAccNoDropDownList / queryGLS1005_AccNo_DropDownList）
+   * — 用於 ASS15040／ASS17110 等耗材會計科目報表查詢條件
+   * 回傳 Option（value=AccNo, label='<AccNo> - <AccCName>'，與既有顯示慣例一致）
+   */
+  queryFasAccNoDropdown(keyword?: string): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<FasAccNoDropdownItem[]>>(
+        `${this.apiUrl}/queryGLS1005_AccNo_DropDownList`,
+        { Keyword: keyword ?? null },
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            ...item,
+            value: item.AccNo ?? '',
+            label: `${item.AccNo ?? ''} - ${item.AccCName ?? ''}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005_AccNo_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
 
   /** 查詢會計科目子科目設定檔(GLS1005 AccSubCode) */
