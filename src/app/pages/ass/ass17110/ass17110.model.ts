@@ -20,7 +20,9 @@ export interface QueryASS17110Request extends BaseQueryRequest {
 }
 
 /**
- * 匯出耗材進耗存之會計科目報表 (PDF / Excel) 請求
+ * 匯出耗材進耗存之會計科目報表 PDF 請求
+ * 對應 endpoint：POST /ASS0000/ASS1000/exportPDFASS17110
+ * （後端目前僅提供 PDF 匯出，無 Excel 匯出）
  */
 export interface PrintASS17110Request {
   /** 統計年月 yyyyMM (必填) */
@@ -35,9 +37,8 @@ export interface PrintASS17110Request {
  * QueryASS17110Response
  * 耗材進耗存之會計科目報表 - 明細列
  *
- * 註：SP_ASS17110Query 之回傳欄位需待後端 swagger 發佈後對齊
- * 欄位命名沿用「進耗存」報表慣例，量／成本成對；
- * 若實際欄位名稱與此不同，請更新 ass17110.component.ts columns 對應 field。
+ * 欄位對齊 swagger（POST /ASS0000/ASS1000/queryASS17110 → Data[]）。
+ * 數量為 *_QTY、成本為 *_COST，成對出現。
  */
 export interface QueryASS17110Response {
   /** 序號 */
@@ -53,37 +54,41 @@ export interface QueryASS17110Response {
   /** 期初庫存 - 數量 */
   OPEN_QTY?: number | null;
   /** 期初庫存 - 成本 */
-  OPEN_AMT?: number | null;
+  OPEN_COST?: number | null;
   /** 本期進貨 - 數量 */
   IN_QTY?: number | null;
   /** 本期進貨 - 成本 */
-  IN_AMT?: number | null;
+  IN_COST?: number | null;
   /** 本期領用 - 數量 */
   ISSUE_QTY?: number | null;
   /** 本期領用 - 成本 */
-  ISSUE_AMT?: number | null;
-  /** 領用單位 */
-  ISSUE_ORG_NAME?: string | null;
-  /** 領用會計科目 */
+  ISSUE_COST?: number | null;
+  /** 本期領用 - 領用單位代碼 */
+  ISSUE_ORG_ID?: string | null;
+  /** 本期領用 - 領用單位名稱 */
+  ISSUE_ORGNAME?: string | null;
+  /** 本期領用 - 領用會計科目代碼 */
+  ISSUE_ACC_NO?: string | null;
+  /** 本期領用 - 領用會計科目名稱 */
   ISSUE_ACC_NAME?: string | null;
   /** 本期退料 - 數量 */
   RETURN_QTY?: number | null;
   /** 本期退料 - 成本 */
-  RETURN_AMT?: number | null;
+  RETURN_COST?: number | null;
   /** 盤點調整 - 數量 */
   ADJUST_QTY?: number | null;
   /** 盤點調整 - 成本 */
-  ADJUST_AMT?: number | null;
+  ADJUST_COST?: number | null;
   /** 本期調撥 - 數量 */
   TRANSFER_QTY?: number | null;
   /** 本期調撥 - 成本 */
-  TRANSFER_AMT?: number | null;
+  TRANSFER_COST?: number | null;
   /** 本期報廢 - 數量 */
   DAMAGE_QTY?: number | null;
   /** 本期報廢 - 成本 */
-  DAMAGE_AMT?: number | null;
+  DAMAGE_COST?: number | null;
   /** 期末庫存 - 數量 */
   CLOSE_QTY?: number | null;
   /** 期末庫存 - 成本 */
-  CLOSE_AMT?: number | null;
+  CLOSE_COST?: number | null;
 }

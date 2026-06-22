@@ -82,15 +82,8 @@
             label="匯出 PDF"
             icon="pi pi-file-pdf"
             (click)="onExportPdf()"
-            [disabled]="loading || exportPdfLoading || exportExcelLoading || data.length === 0"
+            [disabled]="loading || exportPdfLoading || data.length === 0"
             [loading]="exportPdfLoading"
-          ></p-button>
-          <p-button
-            label="匯出 XLSX"
-            icon="pi pi-file-excel"
-            (click)="onExportExcel()"
-            [disabled]="loading || exportPdfLoading || exportExcelLoading || data.length === 0"
-            [loading]="exportExcelLoading"
           ></p-button>
         </div>
       </header>

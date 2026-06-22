@@ -70,14 +70,13 @@ export class ASS17110Component
   data: QueryASS17110Response[] = [];
   totalRecords = 0;
   exportPdfLoading = false;
-  exportExcelLoading = false;
 
   goodsIdOptions: Option[] = [];
   accNoOptions: Option[] = [];
 
   /**
-   * 表格欄位 — 沿用「進耗存」報表欄位群組（期初/進貨/領用/退料/盤點/調撥/報廢/期末，數量＋成本成對）。
-   * 若後端 swagger 發佈後實際欄位命名不同，請同步調整 model 與此 columns 的 field。
+   * 表格欄位 — 對齊 swagger queryASS17110 Data[]（期初/進貨/領用/退料/盤點/調撥/報廢/期末，數量＋成本成對）。
+   * 代碼與名稱拆獨立欄位（會計科目、領用單位、領用會計科目）。
    */
   readonly columns: ReportColumn[] = [
     { field: 'ACC_NO', header: '會計科目代碼', visible: true },
@@ -85,23 +84,25 @@ export class ASS17110Component
     { field: 'GOODS_ID', header: '品項編號', visible: true },
     { field: 'GOODS_NAME', header: '品項名稱', visible: true },
     { field: 'OPEN_QTY', header: '期初庫存\n數量', visible: true, align: 'right' },
-    { field: 'OPEN_AMT', header: '期初庫存\n成本', visible: true, align: 'right' },
+    { field: 'OPEN_COST', header: '期初庫存\n成本', visible: true, align: 'right' },
     { field: 'IN_QTY', header: '本期進貨\n數量', visible: true, align: 'right' },
-    { field: 'IN_AMT', header: '本期進貨\n成本', visible: true, align: 'right' },
+    { field: 'IN_COST', header: '本期進貨\n成本', visible: true, align: 'right' },
     { field: 'ISSUE_QTY', header: '本期領用\n數量', visible: true, align: 'right' },
-    { field: 'ISSUE_AMT', header: '本期領用\n成本', visible: true, align: 'right' },
-    { field: 'ISSUE_ORG_NAME', header: '領用單位', visible: true },
-    { field: 'ISSUE_ACC_NAME', header: '領用會計科目', visible: true },
+    { field: 'ISSUE_COST', header: '本期領用\n成本', visible: true, align: 'right' },
+    { field: 'ISSUE_ORG_ID', header: '領用單位\n代碼', visible: true },
+    { field: 'ISSUE_ORGNAME', header: '領用單位\n名稱', visible: true },
+    { field: 'ISSUE_ACC_NO', header: '領用會計科目\n代碼', visible: true },
+    { field: 'ISSUE_ACC_NAME', header: '領用會計科目\n名稱', visible: true },
     { field: 'RETURN_QTY', header: '本期退料\n數量', visible: true, align: 'right' },
-    { field: 'RETURN_AMT', header: '本期退料\n成本', visible: true, align: 'right' },
+    { field: 'RETURN_COST', header: '本期退料\n成本', visible: true, align: 'right' },
     { field: 'ADJUST_QTY', header: '盤點調整\n數量', visible: true, align: 'right' },
-    { field: 'ADJUST_AMT', header: '盤點調整\n成本', visible: true, align: 'right' },
+    { field: 'ADJUST_COST', header: '盤點調整\n成本', visible: true, align: 'right' },
     { field: 'TRANSFER_QTY', header: '本期調撥\n數量', visible: true, align: 'right' },
-    { field: 'TRANSFER_AMT', header: '本期調撥\n成本', visible: true, align: 'right' },
+    { field: 'TRANSFER_COST', header: '本期調撥\n成本', visible: true, align: 'right' },
     { field: 'DAMAGE_QTY', header: '本期報廢\n數量', visible: true, align: 'right' },
-    { field: 'DAMAGE_AMT', header: '本期報廢\n成本', visible: true, align: 'right' },
+    { field: 'DAMAGE_COST', header: '本期報廢\n成本', visible: true, align: 'right' },
     { field: 'CLOSE_QTY', header: '期末庫存\n數量', visible: true, align: 'right' },
-    { field: 'CLOSE_AMT', header: '期末庫存\n成本', visible: true, align: 'right' },
+    { field: 'CLOSE_COST', header: '期末庫存\n成本', visible: true, align: 'right' },
   ];
 
   constructor(
@@ -212,23 +213,6 @@ export class ASS17110Component
         export$.pipe(untilDestroyed(this)),
         '.pdf',
         v => (this.exportPdfLoading = v),
-      )
-      .subscribe();
-  }
-
-  onExportExcel(): void {
-    const body = this.buildExportBody();
-    if (!body) return;
-    if ((this.data?.length ?? 0) === 0) {
-      this.messageService.warnBubble('目前無資料可供下載。');
-      return;
-    }
-    const export$ = this.service.exportExcelASS17110(body);
-    this.fileExportService
-      .executeFileExport(
-        export$.pipe(untilDestroyed(this)),
-        '.xlsx',
-        v => (this.exportExcelLoading = v),
       )
       .subscribe();
   }

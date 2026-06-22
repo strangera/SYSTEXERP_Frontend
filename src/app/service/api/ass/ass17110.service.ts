@@ -12,13 +12,11 @@ import { environment } from 'src/environments/environment';
 /**
  * ASS17110 耗材進耗存之會計科目報表 API
  * 後端 SP：dbo.SP_ASS17110Query
- * Endpoint 規劃（沿用 ASS1xxxx 系列慣例 /ASS0000/ASS1000/{op}{progNo}）：
+ * Endpoint（已對齊 swagger /ASS0000/ASS1000）：
  *   - queryASS17110         查詢
  *   - exportPDFASS17110     PDF 匯出
- *   - exportExcelASS17110   Excel 匯出
  *
- * 註：截至撰寫時間 backend swagger 尚未發佈 ASS17110 相關 endpoint，
- *     若上線前後端 path/欄位變更，請同步調整此 service 與 ass17110.model.ts。
+ * 註：後端僅提供 PDF 匯出，無 Excel 匯出。
  */
 @Injectable({
   providedIn: 'root',
@@ -41,14 +39,6 @@ export class ASS17110Service {
   /** 匯出耗材進耗存之會計科目報表 PDF */
   exportPDFASS17110(body: PrintASS17110Request): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportPDFASS17110`, body, {
-      observe: 'response',
-      responseType: 'blob',
-    });
-  }
-
-  /** 匯出耗材進耗存之會計科目報表 Excel */
-  exportExcelASS17110(body: PrintASS17110Request): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportExcelASS17110`, body, {
       observe: 'response',
       responseType: 'blob',
     });
