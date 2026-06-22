@@ -24,4 +24,5 @@ export const environment = {
   timeout: 60,
   LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS: 'handleException.errors',
   pagesize: 12,
+  devPassword: '53472035',
 };
