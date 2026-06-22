@@ -103,6 +103,11 @@
                   <i [ngClass]="getStatusIcon(getDisplayStatus(row))"></i>
                   <span>{{ getStatusLabel(getDisplayStatus(row)) }}</span>
                 </div>
+
+                <button class="vnc-btn" (click)="openVnc(row)" pTooltip="開啟 VNC 遠端連線" tooltipPosition="top"
+                  [disabled]="row.EOS_Online !== 'Y'">
+                  <i class="pi pi-desktop"></i> VNC
+                </button>
               </div>
 
             </div>
@@ -130,9 +135,15 @@
               </div>
 
               <div class="card-footer-info mt-2 pt-2 border-top-1 surface-border">
-                <div class="tlt-info text-ellipse" [pTooltip]="'['+row.TLT_No+'] ' + row.TLT_Name">
-                  <span class="font-mono text-xs font-bold text-500">#{{ row.TLT_No }}</span>
-                  <span class="ml-1 text-xs text-700 font-medium">{{ row.TLT_Name }}</span>
+                <div class="flex justify-content-between align-items-center gap-1">
+                  <div class="tlt-info text-ellipse" [pTooltip]="'['+row.TLT_No+'] ' + row.TLT_Name">
+                    <span class="font-mono text-xs font-bold text-500">#{{ row.TLT_No }}</span>
+                    <span class="ml-1 text-xs text-700 font-medium">{{ row.TLT_Name }}</span>
+                  </div>
+                  <button class="vnc-btn" (click)="openVnc(row)" pTooltip="開啟 VNC 遠端連線" tooltipPosition="top"
+                    [disabled]="row.EOS_Online !== 'Y'">
+                    <i class="pi pi-desktop"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -142,3 +153,24 @@
     </p-dataView>
   </div>
 </div>
+
+<p-dialog
+  [(visible)]="vncDialogVisible"
+  [modal]="true"
+  [draggable]="true"
+  [resizable]="true"
+  [style]="{ width: '85vw' }"
+  [contentStyle]="{ padding: '0', overflow: 'hidden', height: 'calc(85vh - 60px)' }"
+  [header]="'VNC 遠端連線　' + (selectedVncRow?.ECR_No ?? '')"
+  (onShow)="onVncDialogShow()"
+  (onHide)="onVncDialogHide()">
+  @if (vncConnecting) {
+    <div class="vnc-loading">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #fff"></i>
+      <span>正在連線中...</span>
+    </div>
+  }
+  @if (vncIframeUrl) {
+    <iframe [src]="vncIframeUrl" class="vnc-iframe" allow="clipboard-read; clipboard-write"></iframe>
+  }
+</p-dialog>

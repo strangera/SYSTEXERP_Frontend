@@ -1,6 +1,7 @@
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule, Location } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -8,11 +9,13 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { EOSStatus, QueryTLS44010Response, TLS44010Service } from '../../../service/api/tls/tls44010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -20,7 +23,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
-// 💡 狀態映射字典配置：將 0~5 的狀態配置化管理
+// 狀態映射字典配置：將 0~5 的狀態配置化管理
 const STATUS_CONFIG: Record<EOSStatus, { class: string; icon: string; color: string; label: string }> = {
   '0': { class: 'status-chip warning', icon: 'pi pi-pause', color: '#fd7e14', label: '暫停交易' },
   '1': { class: 'status-chip logout', icon: 'pi pi-sign-out', color: '#dc3545', label: '登出' },
@@ -40,13 +43,15 @@ const STATUS_CONFIG: Record<EOSStatus, { class: string; icon: string; color: str
     TranslateModule, ButtonModule, TableModule, AccordionModule,
     CommonModule, MenubarComponent, InputTextModule, DataViewModule,
     DropdownComponent, MultiSelectComponent, TooltipModule, AsyncPipe,
-    InputTextComponent,
+    InputTextComponent, DialogModule,
   ]
 })
 export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Response> implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly dropdownApiService = inject(DropdownApiService);
   private readonly tls44010Service = inject(TLS44010Service);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly location = inject(Location);
 
   queryForm = this.fb.nonNullable.group({
     ECR_No: [null],
@@ -73,9 +78,52 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   filteredData: QueryTLS44010Response[] = [];
   layout: 'list' | 'grid' = 'grid';
 
+  vncDialogVisible = false;
+  vncConnecting = false;
+  selectedVncRow: QueryTLS44010Response | null = null;
+  vncIframeUrl: SafeResourceUrl | null = null;
+
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
     this.onSubmit(this.queryForm);
+  }
+
+  openVnc(row: QueryTLS44010Response) {
+    this.selectedVncRow = row;
+    this.vncDialogVisible = true;
+  }
+
+  async onVncDialogShow(): Promise<void> {
+    if (!this.selectedVncRow) return;
+    this.vncConnecting = true;
+    this.vncIframeUrl = null;
+
+    try {
+      const res = await firstValueFrom(this.tls44010Service.createVncSession(this.selectedVncRow.ECR_No));
+      const session = res?.Data;
+      if (!session?.SessionToken) throw new Error('取得 VNC token 失敗');
+
+      const wsBase = environment.ApiUrl
+        .replace(/^https:\/\//i, 'wss://')
+        .replace(/^http:\/\//i, 'ws://');
+
+      const wsUrl = `${wsBase}/TLS0000/TLS4000/vnc/ws?token=${session.SessionToken}`;
+      const viewerPath = this.location.prepareExternalUrl('assets/vnc-viewer.html');
+      const ecrNo   = this.selectedVncRow?.ECR_No ?? '';
+      const tltName = this.selectedVncRow?.TLT_Name ?? '';
+      const iframeUrl = `${viewerPath}?wsUrl=${encodeURIComponent(wsUrl)}&password=${encodeURIComponent(session.Password)}&ecrNo=${encodeURIComponent(ecrNo)}&tltName=${encodeURIComponent(tltName)}`;
+
+      this.vncIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(iframeUrl);
+    } catch (err) {
+      console.error('VNC 連線失敗：', err);
+    } finally {
+      this.vncConnecting = false;
+    }
+  }
+
+  onVncDialogHide() {
+    this.vncIframeUrl = null;
+    this.selectedVncRow = null;
   }
 
   /** 計算機台實際顯示狀態碼 */
@@ -86,7 +134,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
     return (row?.EOS_Status ? String(row.EOS_Status).trim() : '5') as EOSStatus;
   }
 
-  // 💡 利用 STATUS_CONFIG 物件，消滅髒亂的大範圍 switch-case
+  // 利用 STATUS_CONFIG 物件，消滅髒亂的大範圍 switch-case
   getStatusLabel(status: EOSStatus): string {
     return STATUS_CONFIG[status]?.label ?? '未知狀態';
   }
