@@ -273,6 +273,8 @@ export interface TLS2J030Source {
   TXN_TotSaleNoTax: number;
   /** 發票日是否關帳 */
   isClose: string | null;
+  /** 發票日是否鎖定 */
+  isInvoiceClose: string | null;
   /** 手開已換開訊息(給前端看的訊息) */
   GUI_Message: string | null;
 }
