@@ -6,9 +6,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { SystemDataService } from '@service/system/system-data.service';
 import { FormStatusService } from '@shared/service/form-status.service';
+import { OperationLogService } from '@shared/service/operation-log.service';
 import { PermissionGuardService } from '@shared/service/permission-guard.service';
 import { Button } from 'primeng/button';
-import { combineLatest, timer } from 'rxjs';
+import { combineLatest, timer, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 
@@ -72,6 +73,8 @@ export class ButtonComponent implements OnInit, AfterViewInit {
   private readonly currentPageService = inject(CurrentPageService);
   private readonly permissionGuard = inject(PermissionGuardService);
   private readonly formStatusService = inject(FormStatusService);
+  private readonly operationLogService = inject(OperationLogService);
+  private readonly ngUnsubscribe = new Subject<void>();
   private readonly destroyRef = inject(DestroyRef);
 
   private initialFormValue: Record<string, unknown> | null = null;
@@ -146,6 +149,7 @@ export class ButtonComponent implements OnInit, AfterViewInit {
       }
     }
     this.clickEvent.emit();
+    this.operationLogService.logButtonClick(this.label);
   }
 
   handleKeyboardClick(event: KeyboardEvent): void {
