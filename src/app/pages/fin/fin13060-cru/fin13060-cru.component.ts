@@ -72,6 +72,8 @@ interface Fin13060CruForm {
   INV_Remark: FormControl<string | null>;
   Tlt_No: FormControl<string | null>;
   Ven_No: FormControl<string | null>;
+  STO_Uniform: FormControl<string | null>;
+  TXN_Uniform: FormControl<string | null>;
 }
 
 @Component({
@@ -187,6 +189,8 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     INV_Remark: new FormControl<string | null>(null),
     Tlt_No: new FormControl<string | null>(null),
     Ven_No: new FormControl<string | null>(null),
+    STO_Uniform: new FormControl<string | null>(null),
+    TXN_Uniform: new FormControl<string | null>({ value: null, disabled: true }),
   });
 
   constructor(
@@ -214,6 +218,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           INV_YM: this.toYYYYMM(row.INV_YM),
           INV_YM_Display: this.fixInvYmForYearMonthDisplay(row.INV_YM),
           INV_DeclareYM: this.toYYYYMM(row.INV_DeclareYM),
+          TXN_Uniform: row.TXN_Uniform ?? null,
         },
         { emitEvent: false }
       );
@@ -706,9 +711,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       const obj = JSON.parse(raw);
       const mid = Number(obj?.mid ?? obj?.Mid ?? 0);
       const store = String(obj?.SYS_StoreNo ?? obj?.STR_StoreNo ?? obj?.StoreNo ?? '');
+      const stoUniform = String(obj?.STO_Uniform ?? obj?.STR_Uniform ?? '');
       this.dataForm.patchValue({
         mid: isNaN(mid) ? 0 : mid,
         SYS_StoreNo: store || null,
+        STO_Uniform: stoUniform || null,
       });
     } catch {
       // ignore
