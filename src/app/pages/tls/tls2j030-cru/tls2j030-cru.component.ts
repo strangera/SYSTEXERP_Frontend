@@ -331,9 +331,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
-    // 2. 檢查是否已關帳
-    if (source.isClose === 'Y') {
-      this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
+    // 2. 檢查是否已日關帳(拿掉，改判斷發票鎖定)
+    // if (source.isClose === 'Y') {
+    //   this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
+    //   return;
+    // }
+    // 2. 檢查發票是否鎖定
+    if (source.isInvoiceClose === 'Y') {
+      this.messageService.warnBubble(`發票日期已鎖定，不可換開發票`);
       return;
     }
 
