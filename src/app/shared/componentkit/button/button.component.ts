@@ -3,6 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { SystemDataService } from '@service/system/system-data.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { FormStatusService } from '@shared/service/form-status.service';
+import { OperationLogService } from '@shared/service/operation-log.service';
 import { PermissionGuardService } from '@shared/service/permission-guard.service';
 import { Button } from 'primeng/button';
 import { combineLatest, Subject, timer } from 'rxjs';
@@ -60,6 +61,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly currentPageService: CurrentPageService = inject(CurrentPageService);
   private readonly permissionGuard = inject(PermissionGuardService);
   private readonly formStatusService = inject(FormStatusService);
+  private readonly operationLogService = inject(OperationLogService);
   private readonly ngUnsubscribe = new Subject<void>();
   private readonly buttonConfig: Record<string, ButtonConfig> = {
     default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
@@ -143,6 +145,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     this.clickEvent.emit();
+    this.operationLogService.logButtonClick(this.label);
   }
   handleKeyboardClick(event: Event) {
     // 轉成KeyboardEvent
