@@ -80,6 +80,9 @@ export class TLS2j030Service {
   insertTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS2J030`, data);
   }
+  invalidTLS2J030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/invalidTLS2J030`, data);
+  }
   deleteTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS2J030`, data);
   }

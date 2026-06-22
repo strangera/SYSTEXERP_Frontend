@@ -217,6 +217,8 @@ export interface TLS2J030Data {
   changeEcrNo?: string; // 目前使用的換開收銀機號
   // 換開發票欄位
   TXN_Date?: string;
+  ECR_No?: string;
+  TXN_No?: number;
   TXN_GUIPaper?: string;
   TXN_GUINo?: string;
   PLU_TaxType?: string;
