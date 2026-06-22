@@ -10,7 +10,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -56,6 +56,19 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   btnLoading2 = false;
   TXN_Uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   GUI_STATS_Options = GUI_STATUS_OPTIONS;
+  addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-undo',
+      action: (rowData: TLS2J030Data) => {
+        this.onInvalid(rowData);
+      },
+      disabled: (rowData: TLS2J030Data) => {
+        if (rowData?.TXN_GUIPaper === "E") return true;
+        return !(rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y");
+      }
+    }
+  ];
   columns: ReportColumn[] = [
     { field: 'CHG_No', header: '換開編號', visible: true },
     { field: 'GUI_InputDate', header: '換開日期', visible: true, format: formatDate },
@@ -67,12 +80,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TXN_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
-    {
-      field: 'GUI_Status',
-      header: '換開狀態',
-      visible: true,
-      format: (value) => this.formatStatus(value)
-    },
+    { field: 'GUI_Status', header: '換開狀態', visible: true, format: (value) => this.formatStatus(value) },
     { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDate },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
@@ -104,6 +112,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
 
   // 控制 checkbox 是否可選：當換開狀態為 刪除=1 時不可選，不是換開機台或已關帳的資料也不可刪除
   isRowSelectable = (rowData: TLS2J030Data): boolean => {
+    if (rowData?.TXN_GUIPaper === "E") return false;
     return rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y";
   }
 
@@ -195,10 +204,6 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       selectList: deleteItems.map(item => ({
         CHG_No: item.CHG_No || '',
-        TXN_Date: item.TXN_Date ? new Date(item.TXN_Date).toISOString() : new Date().toISOString(),
-        ECR_No: item.ECR_No || '',
-        TXN_No: Number(item.TXN_No) || 0,
-        TXN_GUINo: item.TXN_GUINo || ''
       }))
     };
     this.loading = true;
@@ -218,6 +223,34 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
           this.messageService.errorBubble(`刪除失敗：${res?.Message || '系統錯誤'}`);
         }
       });
+  }
+
+  /**作廢 */
+  onInvalid(item: TLS2J030Data) {
+    this.messageService.confirm({
+      header: '確認作廢',
+      message: `確定要作廢這筆換開資料嗎？`,
+      accept: () => {
+        const payload = {
+          CHG_No: item.CHG_No || '',
+          TXN_Date: item.TXN_Date ? new Date(item.TXN_Date).toISOString() : new Date().toISOString(),
+          ECR_No: item.ECR_No || '',
+          TXN_No: Number(item.TXN_No) || 0,
+          TXN_GUINo: item.TXN_GUINo || ''
+        };
+        this.loading = true;
+        this.tls2j030Service.invalidTLS2J030(payload).pipe(untilDestroyed(this), finalize(() => { this.loading = false; }))
+          .subscribe((res) => {
+            if (res?.Status === '0000' || res?.Message === '成功') {
+              this.messageService.successBubble('作廢成功');
+              this.onSubmit(this.queryForm);
+              this.selectedItems = [];
+            } else {
+              this.messageService.errorBubble(`作廢失敗：${res?.Message || '系統錯誤'}`);
+            }
+          });
+      }
+    });
   }
 
   // 匯出 PDF
