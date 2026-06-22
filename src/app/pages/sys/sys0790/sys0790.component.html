@@ -65,7 +65,6 @@
 <div class="card">
   <app-table-report
     tableKey="SYS0790"
-    [exportContext]="{ apiUrl: 'querySYS0790' }"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords()"
@@ -73,8 +72,28 @@
     [queryFunction]="sys0790Service.querySYS0790.bind(sys0790Service)"
     [lazy]="true"
     [loading]="loading"
-    [showDelete]="false"
-    [showEdit]="false"
-    [showDetail]="false"
-  ></app-table-report>
+    [showManage]="false"
+    [showReportMode]="false"
+  >
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button
+          styleClass="p-2"
+          label="列印PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnLoading"
+          (click)="onExportPDF()"
+          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.Print)"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="匯出Excel"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          (click)="onExportExcel()"
+          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.ExportExcel)"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

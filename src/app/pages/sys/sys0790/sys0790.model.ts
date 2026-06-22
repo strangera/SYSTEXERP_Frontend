@@ -19,8 +19,8 @@ export interface QuerySYS0790Request extends BaseQueryRequest {
 
 /** SYS0790 查詢結果單筆 */
 export interface SYS0790QueryData {
-  /** SP 回傳 ROWNO */
-  RowNo?: number;
+  /** SP 回傳序號 */
+  ROWNO?: number;
   /** Log 主鍵 ID */
   ID?: number;
   /** Log 時間 */
@@ -35,8 +35,22 @@ export interface SYS0790QueryData {
   FunctionName?: string;
   /** 按鈕名稱 */
   ButtonName?: string;
-  /** 連結網址 */
+  /** 連結位置 */
   LinkUrl?: string;
+  /** 總筆數（SP 逐列回傳） */
+  TotalCount?: number;
+  /** 總頁數（SP 逐列回傳） */
+  TotalPage?: number;
+}
+
+/**
+ * SYS0790 查詢 API 原始回傳（`ApiResponse.Data` 內層）。
+ * 後端將清單包在 `QueryData`，service 會攤平成 `ApiResponse<SYS0790QueryData[]>`。
+ */
+export interface SYS0790QueryResponse {
+  QueryData: SYS0790QueryData[];
+  TotalCount?: number;
+  TotalPage?: number;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -7,7 +7,9 @@ import { SYS0790Service } from '@service/api/sys/sys0790.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -38,6 +40,7 @@ import {
     ReactiveFormsModule,
     TranslateModule,
     AccordionModule,
+    ButtonModule,
     MenubarComponent,
     ButtonComponent,
     DropdownComponent,
@@ -70,6 +73,9 @@ export class SYS0790Component
   lastQueryBody: QuerySYS0790Request | null = null;
   public readonly totalRecords = signal<number>(0);
 
+  /** 匯出（PDF / Excel）按鈕 loading */
+  btnLoading = false;
+
   columns: ReportColumn[] = [
     { field: 'LogTime', header: 'LOG時間', visible: true, format: formatDateTime, showSort: true },
     { field: 'UserNo', header: '使用者代碼', visible: true, showSort: true },
@@ -89,6 +95,7 @@ export class SYS0790Component
   constructor(
     public readonly sys0790Service: SYS0790Service,
     private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -122,6 +129,36 @@ export class SYS0790Component
     });
   }
 
+  // ── 匯出 PDF ─────────────────────────────────────────
+  onExportPDF(): void {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢再匯出。');
+      return;
+    }
+    this.fileExportService
+      .executeFileExport(
+        this.sys0790Service.exportSYS0790PDF(this.lastQueryBody).pipe(untilDestroyed(this)),
+        '.pdf',
+        (loading) => (this.btnLoading = loading),
+      )
+      .subscribe();
+  }
+
+  // ── 匯出 Excel ───────────────────────────────────────
+  onExportExcel(): void {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢再匯出。');
+      return;
+    }
+    this.fileExportService
+      .executeFileExport(
+        this.sys0790Service.exportExcelSYS0790(this.lastQueryBody).pipe(untilDestroyed(this)),
+        '.xlsx',
+        (loading) => (this.btnLoading = loading),
+      )
+      .subscribe();
+  }
+
   // ── 將 form 轉成 API request（日期轉字串） ──────────────
   private buildQueryBody(form: FormGroup): QuerySYS0790Request {
     const raw = form.getRawValue();
@@ -133,7 +170,8 @@ export class SYS0790Component
   }
 
   /**
-   * 將 Date / string / null 轉為 'YYYY-MM-DD HH:mm:ss' 字串。
+   * 將 Date / string / null 轉為 ISO 8601 'YYYY-MM-DDTHH:mm:ss' 字串。
+   * 後端為 .NET DateTime，需以 `T` 分隔（空格分隔會解析失敗）。
    * - 起：若使用者沒選時間，補 00:00:00
    * - 迄：若使用者沒選時間，補 23:59:59
    */
@@ -152,9 +190,9 @@ export class SYS0790Component
     const ss = String(d.getSeconds()).padStart(2, '0');
     // 若時間為 00:00:00 且為「迄」，自動補到當日最後一秒
     if (bound === 'end' && hh === '00' && mm === '00' && ss === '00') {
-      return `${y}-${m}-${day} 23:59:59`;
+      return `${y}-${m}-${day}T23:59:59`;
     }
-    return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+    return `${y}-${m}-${day}T${hh}:${mm}:${ss}`;
   }
 
   // ── 載入下拉選單 ─────────────────────────────────────
