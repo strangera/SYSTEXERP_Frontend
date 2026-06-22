@@ -115,7 +115,8 @@
         </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center">
+          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center"
+          [style]="{'width': col.width, 'min-width': col.minWidth, 'max-width': col.maxWidth}">
           {{ col.header }}
           <span *ngIf="validationService.isRequired(col)" class="text-red-500">
             *

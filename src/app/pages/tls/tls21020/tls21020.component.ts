@@ -1,5 +1,5 @@
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21020Service } from '@service/api/tls/tls21020.service';
@@ -13,7 +13,7 @@ import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.m
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { concatMap, finalize, Observable } from 'rxjs';
+import { concatMap, filter, finalize, Observable, switchMap, tap } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -32,68 +32,56 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
+  public readonly service = inject(TLS21020Service);
+  private readonly logger = inject(NGXLogger);
+  private readonly destroyRef = inject(DestroyRef);
+
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
     ...createPaginationConfig([{ field: 'AccDC', order: 0 }, { field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
-  private readonly entryTypeSignal = toSignal(this.qf().ENTRY_TYPE.valueChanges);
+
   public readonly tableData = signal<TLS21020Data[]>([]);
   public readonly totalRecords = signal<number>(0);
-  public readonly tableLoading = signal<boolean>(!1);
+  public readonly tableLoading = signal<boolean>(false);
   public readonly selectedItems = signal<TLS21020Data[]>([]);
-  public readonly entryTypeEffect = effect(() => {
-    const ENTRY_TYPE = this.entryTypeSignal();
-    if (!ENTRY_TYPE) return (this.tableData.set([]), this.totalRecords.set(0));
-    // 日後可客製化欄位顯示
-    switch (ENTRY_TYPE) {
-      case EntryType['SD銷售日傳票']:
-        this.columnsKeys.set({
-          AccDC: !0,
-          ItemDesc: !0,
-          AccNo: !0,
-          Org_ID: !0,
-          AccNotes: !0,
-          ObjectNo: !0,
-          RelatedPartyAccNo: !0,
-          VEN_No: !0,
-          PAY_days: !0,
-        });
-        break;
-      case EntryType['WD自營日結傳票']:
-        this.columnsKeys.set({
-          AccDC: !0,
-          ItemDesc: !0,
-          AccNo: !0,
-          Org_ID: !0,
-          AccNotes: !0,
-        });
-        break;
-      default:
-        this.columnsKeys.set({
-          AccDC: !0,
-          ItemDesc: !0,
-          AccNo: !0,
-          Org_ID: !0,
-          AccNotes: !0,
-          ObjectNo: !0,
-          RelatedPartyAccNo: !0,
-        });
-        break;
-    }
-    this.tableLoading.set(!0);
-    this.queryTLS21020().pipe(
-      finalize(() => this.tableLoading.set(!1)),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.tableData.set(res.Data || []);
-        this.totalRecords.set(res.TotalCount || 0);
-      },
-    });
-  }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
+
+  // 以下三組宣告需在 allColumns 之前，確保 plain property 初始化順序正確
+  private readonly fail = (msg: string) => ({ isValid: false, errorMessage: msg });
+  private readonly warn = (msg: string) => ({ isValid: true, errorMessage: msg });
+  private readonly isEmpty = (v: unknown) => !v?.toString().trim();
+
+  private readonly validatorField: [keyof TLS21020Data, string, boolean][] = [
+    ['AccNo', '會計科目', true],
+    ['Org_ID', '組織代碼', true],
+    ['AccNotes', '傳票備註', false],
+    ['RelatedPartyAccNo', '區分關係人會科', false],
+    ['PAY_days', '付款天數', false],
+    ['PAY_No', '付款別編號', false],
+  ];
+
+  /** 欄位級別驗證 */
+  private readonly validator = (value: unknown, rowData: TLS21020Data, _data: TLS21020Data[], field: keyof TLS21020Data) => {
+    const { Voucher_Type } = rowData;
+    if (Voucher_Type === '4') {
+      if (field === 'VEN_No' && this.isEmpty(value)) {
+        return { isValid: false, errorMessage: ['應收廠商必須填寫'] };
+      }
+      if (field === 'PAY_days') {
+        if (this.validateValue(value)) return { isValid: false, errorMessage: ['付款天數必須為大於等於0的整數'] };
+        if (this.isEmpty(value)) return { isValid: true, errorMessage: ['付款天數建議填寫'] };
+      }
+    }
+    for (const [key, label, isRequired] of this.validatorField) {
+      if (field !== key) continue;
+      if (isRequired && this.isEmpty(value)) return { isValid: false, errorMessage: [`${label}為必填欄位`] };
+      if (!isRequired && this.isEmpty(value)) return { isValid: true, errorMessage: [`${label}建議填寫`] };
+    }
+    return { isValid: true, errorMessage: [''] };
+  };
 
   /**
    * 欄位顯示設定
@@ -101,142 +89,129 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
    * - boolean 值 true 代表預設 type, false 則變成純文字顯示
    */
   private readonly columnsKeys = signal<Partial<Record<keyof TLS21020Data, boolean>>>({
-    AccDC: !0,
-    ItemDesc: !0,
-    AccNo: !0,
-    // ABAT_YN: !1, 照要求隱藏
-    Org_ID: !0,
-    AccNotes: !0,
-    // PAY_No: !1,
+    AccDC: true,
+    ItemDesc: true,
+    AccNo: true,
+    // ABAT_YN: false, 照要求隱藏
+    Org_ID: true,
+    AccNotes: true,
+    // PAY_No: false,
   });
-  private readonly allColumns = computed((): EditColumn[] => {
-    return [
-      {
-        field: 'AccDC',
-        header: '借/貸',
-        format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
+
+  // allColumns 沒有呼叫任何 signal（選項以 Signal reference 傳入），computed 追蹤不到依賴，
+  // 等同 plain property 但多一層包裹；改為 readonly 後每次存取不再重新建立陣列。
+  private readonly allColumns: EditColumn[] = [
+    {
+      field: 'AccDC',
+      header: '借/貸',
+      format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
+    },
+    { field: 'ItemDesc', header: '項目名稱' },
+    {
+      field: 'AccNo',
+      header: '會計科目',
+      type: 'dropdown',
+      options: this.service.GLS1005Options,
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [this.validator],
+      showClear: false,
+      calculate: (_d: TLS21020Data, v: string) => {
+        const glsData = this.service.GLS1005Map().get(v);
+        const ABAT_YN = glsData?.['ABAT_YN'] || 'N';
+        const Voucher_Type = glsData?.['Voucher_Type'];
+        const updates: Partial<TLS21020Data> & { Voucher_Type?: string } = { ABAT_YN, Voucher_Type };
+        if (Voucher_Type !== '4') {
+          updates.VEN_No = void 0;
+          updates.PAY_days = void 0;
+        }
+        return updates as Partial<TLS21020Data>;
       },
-      { field: 'ItemDesc', header: '項目名稱' },
-      {
-        field: 'AccNo',
-        header: '會計科目',
-        type: 'dropdown',
-        options: this.service.GLS1005Options,
-        optionLabel: 'label',
-        optionValue: 'value',
-        validate: [this.validator.bind(this)],
-        showClear: !1,
-        calculate: (_d: TLS21020Data, v: string) => {
-          const glsData = this.service.GLS1005Map().get(v);
-          const ABAT_YN = glsData?.['ABAT_YN'] || 'N';
-          const Voucher_Type = glsData?.['Voucher_Type'];
-          const updates: Partial<TLS21020Data> & { Voucher_Type?: string } = { ABAT_YN, Voucher_Type };
-          // 不是應收帳款 ('4') 時，清空廠商與付款天數
-          if (Voucher_Type !== '4') {
-            updates.VEN_No = void 0;
-            updates.PAY_days = void 0;
-          }
-          return updates as Partial<TLS21020Data>;
-        },
-      },
-      {
-        field: 'ABAT_YN',
-        header: '立沖科目',
-        format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
-      },
-      {
-        field: 'Org_ID',
-        header: '組織代碼',
-        type: 'dropdown',
-        options: this.service.SYS3100Options,
-        optionLabel: 'label',
-        optionValue: 'value',
-        validate: [this.validator.bind(this)],
-        format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
-        showClear: !1,
-      },
-      {
-        field: 'AccNotes',
-        header: '傳票備註',
-        type: 'input',
-        validate: [this.validator.bind(this)],
-        width: '100%', /** @describe 先100 太寬再改 */
-      },
-      {
-        field: 'ObjectNo',
-        header: '是否依合約拆立組織',
-        type: 'dropdown',
-        format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
-        options: this.service.getYNOptions,
-        optionLabel: 'label',
-        optionValue: 'value',
-        width: '4rem',
-        showClear: !1,
-      },
-      {
-        field: 'RelatedPartyAccNo',
-        header: '區分關係人會科',
-        groupField: 'RelatedPartyAcc',
-        type: 'dropdown',
-        options: this.service.GLS1005Options,
-        optionLabel: 'label',
-        optionValue: 'value',
-        validate: [this.validator.bind(this)],
-        format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
-      },
-      {
-        field: 'VEN_No',
-        header: '應收廠商',
-        groupField: 'Vendor',
-        type: 'dropdown',
-        options: this.service.POS2013Options,
-        optionValue: 'value',
-        templateLabel: 'label',
-        validate: [this.validator.bind(this)],
-        disabled: (v, i, r) => (r as any).Voucher_Type !== '4',
-      },
-      {
-        field: 'PAY_days',
-        header: '付款天數',
-        type: 'inputNumber',
-        validate: [this.validator.bind(this)],
-        disabled: (v, i, r) => (r as any).Voucher_Type !== '4',
-        width: '4rem',
-      },
-      {
-        field: 'PAY_No',
-        header: '付款別編號',
-        type: 'input',
-        validate: [this.validator.bind(this)],
-      },
-    ];
-  });
+      width: '250px',
+    },
+    {
+      field: 'ABAT_YN',
+      header: '立沖科目',
+      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
+    },
+    {
+      field: 'Org_ID',
+      header: '組織代碼',
+      type: 'dropdown',
+      options: this.service.SYS3100Options,
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [this.validator],
+      format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
+      showClear: false,
+      width: '200px',
+    },
+    {
+      field: 'AccNotes',
+      header: '傳票備註',
+      type: 'input',
+      validate: [this.validator],
+      width: '300px',
+    },
+    {
+      field: 'ObjectNo',
+      header: '是否依合約拆立組織',
+      type: 'dropdown',
+      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
+      options: this.service.getYNOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      width: '30px',
+      showClear: false,
+    },
+    {
+      field: 'RelatedPartyAccNo',
+      header: '區分關係人會科',
+      groupField: 'RelatedPartyAcc',
+      type: 'dropdown',
+      options: this.service.GLS1005Options,
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [this.validator],
+      format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
+    },
+    {
+      field: 'VEN_No',
+      header: '應收廠商',
+      groupField: 'Vendor',
+      type: 'dropdown',
+      options: this.service.POS2013Options,
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [this.validator],
+      disabled: (_v, _i, r) => (r as TLS21020Data).Voucher_Type !== '4',
+    },
+    {
+      field: 'PAY_days',
+      header: '付款天數',
+      type: 'inputNumber',
+      validate: [this.validator],
+      disabled: (_v, _i, r) => (r as TLS21020Data).Voucher_Type !== '4',
+      width: '1rem',
+    },
+    {
+      field: 'PAY_No',
+      header: '付款別編號',
+      type: 'input',
+      validate: [this.validator],
+    },
+  ];
 
   /** 根據 columnsKeys 動態產生最終欄位 */
   public readonly columns = computed((): EditColumn[] => {
     const keys = this.columnsKeys();
-    const all = this.allColumns();
-    this.logger.debug(`columns:`, [keys, all]);
-    return all
+    return this.allColumns
       .filter(col => col.field in keys)
       .map(col => {
         const shouldKeepType = keys[col.field as keyof TLS21020Data];
-        if (!shouldKeepType) { const { ...rest } = col; return { ...rest, type: void 0 }; }
-        return col;
+        return shouldKeepType ? col : { ...col, type: void 0 };
       });
   });
-
-  private readonly fail = (msg: string) => ({ isValid: !1, errorMessage: msg });
-  private readonly warn = (msg: string) => ({ isValid: !0, errorMessage: msg });
-  private readonly isEmpty = (v: unknown) => !v?.toString().trim();
-  private readonly validatorField: [keyof TLS21020Data, string, boolean][] = [
-    ['AccNo', '會計科目', !0],
-    ['Org_ID', '組織代碼', !0],
-    ['AccNotes', '傳票備註', !1],
-    ['RelatedPartyAccNo', '區分關係人會科', !1],
-    ['PAY_days', '付款天數', !1],
-    ['PAY_No', '付款別編號', !1],
-  ];
 
   public readonly defaultInsertData: Partial<TLS21020Data> = {
     AccDC: 'D',
@@ -244,24 +219,55 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ObjectNo: 'N',
   };
 
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
-  }, { allowSignalWrites: true });
-
-  constructor(
-    public readonly service: TLS21020Service,
-    private readonly logger: NGXLogger,
-  ) {
-    super();
-  }
-
   public ngOnInit(): void {
     this.initializePage('TLS21020', void 0, this.queryForm, this.onSubmit.bind(this));
-
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
     this.service.getEntryTypes();
+
+    // switchMap 確保切換傳票種類時取消前一個進行中的請求，避免舊請求覆蓋新結果
+    this.qf().ENTRY_TYPE.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      tap(type => {
+        if (!type) {
+          this.tableData.set([]);
+          this.totalRecords.set(0);
+        } else {
+          this.updateColumnsKeys(type);
+        }
+      }),
+      filter((type): type is EntryType => !!type),
+      switchMap(() => {
+        this.loading = true;
+        this.tableLoading.set(true);
+        return this.queryTLS21020().pipe(
+          finalize(() => {
+            this.loading = false;
+            this.tableLoading.set(false);
+          }),
+        );
+      }),
+    ).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
+      },
+    });
+  }
+
+  private updateColumnsKeys(type: EntryType): void {
+    switch (type) {
+      case EntryType['SD銷售日傳票']:
+        this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true, ObjectNo: true, RelatedPartyAccNo: true, VEN_No: true, PAY_days: true });
+        break;
+      case EntryType['WD自營日結傳票']:
+        this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true });
+        break;
+      default:
+        this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true, ObjectNo: true, RelatedPartyAccNo: true });
+    }
   }
 
   public onSubmit(): void {
@@ -270,8 +276,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       for (const item of data) {
         const { isValid, errorMessage } = this.validateRow(item);
         if (isValid) continue;
-
-        this.loading = !1;
+        this.loading = false;
         this.messageService.errorBubble(errorMessage);
         return;
       }
@@ -281,11 +286,15 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         ObjectNo: item.ObjectNo === 'Y' ? 'Y' : 'N',
       }));
 
-      this.tableLoading.set(!0);
-      this.logger.debug(`submit:`, [this.queryForm.getRawValue(), this.tableData(), payload]);
+      this.loading = true;
+      this.tableLoading.set(true);
+      this.logger.debug('submit:', [this.queryForm.getRawValue(), this.tableData(), payload]);
       this.service.updateTLS21020(payload).pipe(
         concatMap(() => this.queryTLS21020()),
-        finalize(() => this.tableLoading.set(!1)),
+        finalize(() => {
+          this.loading = false;
+          this.tableLoading.set(false);
+        }),
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
@@ -300,62 +309,29 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public queryTLS21020(): Observable<BaseQueryResponse<TLS21020Data>> {
     const payload = { ...this.queryForm.getRawValue(), pageSize: 1e5 } as TLS21020Query;
     this.queryStateService.setQueryState(this.ProgNo, payload);
-    this.logger.debug(`queryTLS21020:`, [payload]);
+    this.logger.debug('queryTLS21020:', [payload]);
     return this.service.queryTLS21020(payload);
   }
 
-  /** 錯誤檢查 */
-  public validateRow = (rowData: TLS21020Data): { isValid: boolean, errorMessage: string; } => {
-    // 重複性檢查
-    const { ABAT_YN, VEN_No, PAY_days } = rowData;
-    const Voucher_Type = (rowData as any).Voucher_Type;
+  public validateRow = (rowData: TLS21020Data): { isValid: boolean; errorMessage: string } => {
+    const { VEN_No, PAY_days, Voucher_Type } = rowData;
 
-    // 應收帳款檢查
     if (Voucher_Type === '4') {
       if (this.isEmpty(VEN_No)) return this.fail('應收廠商必須填寫');
       if (this.validateValue(PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
       if (this.isEmpty(PAY_days)) return this.warn('付款天數建議填寫');
     }
 
-    // 欄位級別驗證
     const col = this.columns().some(col => this.validatorField.some(([key]) => col.field === key));
     if (col) for (const [key, label, isRequired] of this.validatorField) {
       const value = rowData[key];
-      // 必填檢查
       if (isRequired && this.isEmpty(value)) return this.fail(`${label}為必填欄位`);
-      // 選填檢查
       if (!isRequired && this.isEmpty(value)) return this.warn(`${label}建議填寫`);
     }
 
     return this.warn('');
   };
 
-  /** 欄位級別驗證 */
-  private readonly validator = (value: unknown, rowData: TLS21020Data, data: TLS21020Data[], field: keyof TLS21020Data) => {
-    const Voucher_Type = (rowData as any).Voucher_Type;
-
-    // 針對應收帳款的即時驗證
-    if (Voucher_Type === '4') {
-      if (field === 'VEN_No' && this.isEmpty(value)) {
-        return { isValid: !1, errorMessage: ['應收廠商必須填寫'] };
-      }
-      if (field === 'PAY_days') {
-        if (this.validateValue(value)) return { isValid: !1, errorMessage: ['付款天數必須為大於等於0的整數'] };
-        if (this.isEmpty(value)) return { isValid: !0, errorMessage: ['付款天數建議填寫'] };
-      }
-    }
-    for (const [key, label, isRequired] of this.validatorField) {
-      // 跳過非該欄位
-      if (field !== key) continue;
-      // 必填檢查
-      if (isRequired && this.isEmpty(value)) return { isValid: !1, errorMessage: [`${label}為必填欄位`] };
-      // 選填檢查
-      if (!isRequired && this.isEmpty(value)) return { isValid: !0, errorMessage: [`${label}建議填寫`] };
-    }
-    return { isValid: !0, errorMessage: [''] };
-  };
-
-  /** 檢查型別 */
   private validateValue<T>(value: T): boolean {
     if (typeof value === 'string') return !value.trim();
     if (typeof value === 'number') return !Number.isInteger(value) || value < 0;
