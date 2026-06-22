@@ -34,7 +34,12 @@
               "src/favicon.ico",
               "src/assets",
               "src/serve.json",
-              "src/web.config.template"
+              "src/web.config.template",
+              {
+                "glob": "**/*",
+                "input": "node_modules/@novnc/novnc",
+                "output": "assets/novnc"
+              }
             ],
             "styles": [
               "node_modules/primeng/resources/primeng.min.css",
@@ -81,7 +86,12 @@
                 "src/web.config",
                 "src/favicon.ico",
                 "src/assets",
-                "src/serve.json"
+                "src/serve.json",
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@novnc/novnc",
+                  "output": "assets/novnc"
+                }
               ]
             },
             "tsrdweb": {
@@ -98,7 +108,12 @@
                 "src/favicon.ico",
                 "src/assets",
                 "src/serve.json",
-                "src/web.config.template"
+                "src/web.config.template",
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@novnc/novnc",
+                  "output": "assets/novnc"
+                }
               ]
             },
             "development": {
