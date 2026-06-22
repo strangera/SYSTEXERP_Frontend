@@ -96,6 +96,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'TXN_Date', header: '交易日期', format: formatDate },
         { field: 'ECR_No', header: '收銀機號' },
         { field: 'TXN_No', header: '交易序號' },
+        { field: 'TXN_Item', header: '項次' },
         { field: 'LOGO_No', header: '品牌代碼' },
         { field: 'LOGO_CH_NAME', header: '品牌名稱' },
         { field: 'GUINO', header: '發票號碼' },

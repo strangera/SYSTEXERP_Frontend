@@ -36,6 +36,7 @@ export interface DetailData {
   LOGO_No: string,
   LOGO_CH_NAME: string,
   GUINO: string,
+  TXN_Item: number,
   PLU_MagNo: string,
   PLU_No: string,
   PLU_Name: string,
