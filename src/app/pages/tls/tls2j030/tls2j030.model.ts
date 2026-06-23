@@ -162,7 +162,7 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
   { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', disabled: (v, i, row) => String(row?.['PLU_TaxType']) !== '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', disabled: () => true, max: 999999999999, validate: [validateMaxNumber(999999999999)] },
   { field: 'INV_CompanyName', header: '公司名稱', type: 'input', maxLength: 80, minWidth: '200px' },
-  { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8, validate: [validateUniformNumber] },
+  { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8 },
   { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', type: 'input', minWidth: '200px', disabled: (v, i, row) => row['INV_NoneTax'] !== '1', validate: [validateBusTaxExmpCardRequired] },
   { field: 'TXN_Notes', header: '備註', type: 'input', maxLength: 100, minWidth: '200px' },
