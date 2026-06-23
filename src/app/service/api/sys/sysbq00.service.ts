@@ -16,7 +16,10 @@ export interface QuerySysbq00Request {
 
 export interface Sysbq00Data {
     id: number;
+    sys_type: string | null;
+    sys_type_name: string | null;
     data_type: string;
+    data_type_name: string | null;
     line1: string;
     line2: string;
     line3: string;

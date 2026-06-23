@@ -71,18 +71,21 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   });
 
   readonly columns = [
+    { field: 'sys_type', header: '系統別', visible: true },
+    { field: 'sys_type_name', header: '系統別名稱', visible: true },
     { field: 'data_type', header: '作業代碼', visible: true },
+    { field: 'data_type_name', header: '作業名稱', visible: true },
     { field: 'line1', header: '簽核欄名稱1', visible: true },
     { field: 'line2', header: '簽核欄名稱2', visible: true },
     { field: 'line3', header: '簽核欄名稱3', visible: true },
     { field: 'line4', header: '簽核欄名稱4', visible: true },
     { field: 'line5', header: '簽核欄名稱5', visible: true },
-    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDateTime },
-    { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
-    { field: 'UPD_Date', header: '變更時間', visible: true, format: formatDateTime },
-    { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
-    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: true },
+    { field: 'CRT_Date', header: '建立時間', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更時間', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
 
   ngOnInit(): void {
