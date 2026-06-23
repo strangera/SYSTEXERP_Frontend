@@ -37,7 +37,10 @@ export type EOSStatus = '0' | '1' | '2' | '3' | '4' | '5';
 
 export interface VncSessionResponse {
   SessionToken: string;
-  Password: string;
+}
+
+export interface VncVerifyPasswordRequest {
+  EncryptedPassword: string;
 }
 
 @Injectable({
@@ -54,5 +57,12 @@ export class TLS44010Service {
 
   createVncSession(ecrNo: string): Observable<ApiResponse<VncSessionResponse>> {
     return this.http.post<ApiResponse<VncSessionResponse>>(`${this.apiUrl}/vnc/token`, { ECR_No: ecrNo });
+  }
+
+  verifyVncPassword(encryptedPassword: string): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(
+      `${this.apiUrl}/vnc/verify-password`,
+      { EncryptedPassword: encryptedPassword }
+    );
   }
 }

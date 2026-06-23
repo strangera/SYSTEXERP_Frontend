@@ -151,98 +151,43 @@
     .ov-sub   { font-size: 12.5px; color: var(--text-muted); text-align: center; max-width: 300px; line-height: 1.6; }
     .ov-sub.err { color: rgba(248,81,73,.85); }
 
-    /* ── PASSWORD MODAL ── */
-    .pw-backdrop {
+    /* ── CONTROL REQUEST OVERLAY ── */
+    .ctrl-req-overlay {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,.6);
+      background: rgba(0,0,0,.55);
       backdrop-filter: blur(4px);
       z-index: 50;
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
       transition: opacity .2s ease;
     }
-    .pw-backdrop.open { opacity: 1; pointer-events: all; }
+    .ctrl-req-overlay.open { opacity: 1; pointer-events: all; }
 
-    .pw-card {
+    .ctrl-req-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px;
-      width: 340px;
+      padding: 28px 32px;
+      width: 300px;
       max-width: calc(100vw - 32px);
       box-shadow: 0 20px 60px rgba(0,0,0,.6);
-      transform: scale(.95) translateY(8px);
-      transition: transform .2s ease;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      text-align: center;
     }
-    .pw-backdrop.open .pw-card { transform: scale(1) translateY(0); }
-
-    .pw-head {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-    }
-    .pw-head-icon {
-      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    .ctrl-req-icon {
+      width: 44px; height: 44px; border-radius: 12px;
       background: linear-gradient(145deg, #d29922, #a07010);
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
-    .pw-head-text { min-width: 0; }
-    .pw-title { font-size: 14px; font-weight: 700; color: var(--text); }
-    .pw-desc  { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
-
-    .pw-input-wrap { position: relative; margin-bottom: 8px; }
-    .pw-input {
-      width: 100%; height: 38px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 6px; padding: 0 38px 0 12px;
-      color: var(--text); font-size: 13px; font-family: inherit;
-      outline: none; transition: border-color .15s;
+    .ctrl-req-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .ctrl-req-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .ctrl-req-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid rgba(88,166,255,.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
     }
-    .pw-input:focus { border-color: var(--accent); }
-    .pw-input.shake { animation: shake .35s ease; }
-    @keyframes shake {
-      0%,100%{transform:translateX(0)}
-      20%{transform:translateX(-6px)}
-      40%{transform:translateX(6px)}
-      60%{transform:translateX(-4px)}
-      80%{transform:translateX(4px)}
-    }
-
-    .pw-toggle {
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      color: var(--text-muted); padding: 2px;
-    }
-    .pw-toggle:hover { color: var(--text); }
-
-    .pw-err {
-      font-size: 11.5px; color: var(--danger);
-      min-height: 18px; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 4px;
-      opacity: 0; transition: opacity .2s;
-    }
-    .pw-err.show { opacity: 1; }
-
-    .pw-footer { display: flex; gap: 8px; justify-content: flex-end; }
-
-    .pw-btn {
-      height: 34px; border-radius: 6px; border: 1px solid var(--border);
-      cursor: pointer; font-size: 12.5px; font-family: inherit;
-      padding: 0 16px; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 5px;
-      transition: all .15s;
-    }
-    .pw-btn.cancel {
-      background: transparent; color: var(--text-muted);
-    }
-    .pw-btn.cancel:hover { background: rgba(255,255,255,.06); color: var(--text); }
-
-    .pw-btn.confirm {
-      background: linear-gradient(135deg, #d29922, #a07010);
-      color: #fff; border-color: transparent;
-      box-shadow: 0 2px 8px rgba(210,153,34,.3);
-    }
-    .pw-btn.confirm:hover { filter: brightness(1.1); }
-    .pw-btn.confirm:active { transform: scale(.97); }
 
     /* ── STATUS BAR ── */
     .sbar {
@@ -360,53 +305,22 @@
     <div class="sbar-item" id="sb-res">解析度：—</div>
   </div>
 
-  <!-- ── Password Modal ── -->
-  <div class="pw-backdrop" id="pwBackdrop">
-    <div class="pw-card">
-      <div class="pw-head">
-        <div class="pw-head-icon">🔐</div>
-        <div class="pw-head-text">
-          <div class="pw-title">接管遠端控制</div>
-          <div class="pw-desc">輸入 VNC 密碼以啟用鍵盤及滑鼠操控</div>
-        </div>
-      </div>
-
-      <div class="pw-input-wrap">
-        <input class="pw-input" type="password" id="pwInput"
-               placeholder="請輸入 VNC 密碼" autocomplete="off"
-               spellcheck="false">
-        <button class="pw-toggle" id="pwToggle" tabindex="-1" type="button">
-          <svg id="pwEyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-      </div>
-      <div class="pw-err" id="pwErr">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        密碼錯誤，請重試
-      </div>
-      <div class="pw-footer">
-        <button class="pw-btn cancel" id="pwCancel">取消</button>
-        <button class="pw-btn confirm" id="pwConfirm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
-            <path d="M9 11l3 3 4-4"/>
-          </svg>
-          確認接管
-        </button>
-      </div>
+  <!-- ── Control Request Overlay（等待 Angular 父視窗完成密碼驗證）── -->
+  <div class="ctrl-req-overlay" id="ctrlReqOverlay">
+    <div class="ctrl-req-card">
+      <div class="ctrl-req-icon">🔐</div>
+      <div class="ctrl-req-title">請求接管控制</div>
+      <div class="ctrl-req-desc">請在主視窗輸入 VNC 密碼以啟用鍵盤及滑鼠操控</div>
+      <div class="ctrl-req-spinner"></div>
     </div>
   </div>
 
   <script type="module">
     import RFB from './novnc/core/rfb.js';
 
-    // ── Params ──
+    // ── Params ──（不再接收密碼；後端代理已完成 RFB 認證）
     const p       = new URLSearchParams(location.search);
     const wsUrl   = p.get('wsUrl');
-    const pass    = p.get('password') || '';
     const ecrNo   = p.get('ecrNo') || '';
     const tltName = p.get('tltName') || '';
 
@@ -441,6 +355,10 @@
     // ── Mode state ──
     let isControlMode = false;
     let rfb = null;
+    let controlRequestPending = false;
+    let controlRequestTimeout = null;
+
+    const ctrlReqOverlay = document.getElementById('ctrlReqOverlay');
 
     const iconViewOnly = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
     const iconControl  = `<path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>`;
@@ -497,12 +415,12 @@
       overlay.classList.remove('hidden');
     }
 
-    // ── Init RFB ──
+    // ── Init RFB（後端代理已完成 RFB 認證，前端不需要密碼）──
     if (!wsUrl) {
       setDisconnected(false, '缺少 wsUrl 連線參數');
     } else {
       try {
-        rfb = new RFB(screenEl, wsUrl, { credentials: { password: pass } });
+        rfb = new RFB(screenEl, wsUrl, {});
         rfb.scaleViewport = true;
         rfb.resizeSession = false;
         rfb.viewOnly      = true; // start view-only
@@ -526,64 +444,37 @@
       if (isControlMode) {
         applyViewOnly();
       } else {
-        openPwModal();
+        requestControl();
       }
     });
 
-    // ── Password Modal ──
-    const pwBackdrop = document.getElementById('pwBackdrop');
-    const pwInput    = document.getElementById('pwInput');
-    const pwErr      = document.getElementById('pwErr');
-    const pwToggle   = document.getElementById('pwToggle');
-    const eyeOpen    = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
-    const eyeClosed  = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
-
-    function openPwModal() {
-      pwInput.value = '';
-      pwErr.classList.remove('show');
-      pwInput.type = 'password';
-      document.getElementById('pwEyeIcon').innerHTML = eyeOpen;
-      pwBackdrop.classList.add('open');
-      setTimeout(() => pwInput.focus(), 150);
+    // ── 請求接管：通知父視窗（Angular）進行密碼驗證 ──
+    function requestControl() {
+      if (controlRequestPending) return;
+      controlRequestPending = true;
+      ctrlReqOverlay.classList.add('open');
+      window.parent.postMessage({ type: 'REQUEST_CONTROL' }, '*');
+      // 30 秒逾時保護
+      controlRequestTimeout = setTimeout(() => {
+        cancelControlRequest();
+      }, 30000);
     }
 
-    function closePwModal() {
-      pwBackdrop.classList.remove('open');
-      pwInput.value = '';
+    function cancelControlRequest() {
+      controlRequestPending = false;
+      clearTimeout(controlRequestTimeout);
+      ctrlReqOverlay.classList.remove('open');
     }
 
-    function confirmPassword() {
-      const entered = pwInput.value;
-      if (entered === pass) {
-        closePwModal();
+    // ── 接收父視窗（Angular）回傳的驗證結果 ──
+    window.addEventListener('message', (event) => {
+      const type = event.data?.type;
+      if (type === 'CONTROL_GRANTED') {
+        cancelControlRequest();
         applyControl();
-      } else {
-        pwErr.classList.add('show');
-        pwInput.classList.add('shake');
-        pwInput.value = '';
-        pwInput.focus();
-        setTimeout(() => pwInput.classList.remove('shake'), 400);
+      } else if (type === 'CONTROL_DENIED') {
+        cancelControlRequest();
       }
-    }
-
-    document.getElementById('pwConfirm').addEventListener('click', confirmPassword);
-    document.getElementById('pwCancel').addEventListener('click', closePwModal);
-
-    pwInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') confirmPassword();
-      if (e.key === 'Escape') closePwModal();
-      if (pwErr.classList.contains('show')) pwErr.classList.remove('show');
-    });
-
-    pwBackdrop.addEventListener('click', (e) => {
-      if (e.target === pwBackdrop) closePwModal();
-    });
-
-    // Password show/hide toggle
-    pwToggle.addEventListener('click', () => {
-      const isHidden = pwInput.type === 'password';
-      pwInput.type = isHidden ? 'text' : 'password';
-      document.getElementById('pwEyeIcon').innerHTML = isHidden ? eyeClosed : eyeOpen;
     });
 
     // ── Fullscreen ──
