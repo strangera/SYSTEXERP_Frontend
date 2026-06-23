@@ -80,7 +80,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TXN_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GUI_Status', header: '換開狀態', visible: true, format: (value) => this.formatStatus(value) },
-    { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDate },
+    { field: 'GUI_CancelDate', header: '作廢日期', visible: true, format: formatDate },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
