@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { PrimeNGConfig } from 'primeng/api';
@@ -32,6 +32,7 @@ const NON_BUSINESS_CLICK_EXCLUDE_SELECTOR = [
     <app-debug-sql-display></app-debug-sql-display>`,
   standalone: true,
   imports: [RouterOutlet, NotificationMessageComponent, ConfirmDialogModule, DebugSqlDisplayComponent],
+  host: { '(document:click)': 'onDocumentClick($event)' },
 })
 export class AppComponent implements OnInit {
   private readonly primengConfig = inject(PrimeNGConfig);
@@ -50,7 +51,6 @@ export class AppComponent implements OnInit {
     this.primengConfig.setTranslation(PRIMENG_ZH_TW);
   }
 
-  @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
     if (!target) return;
@@ -60,6 +60,7 @@ export class AppComponent implements OnInit {
 
     if (el.closest('app-button')) return;
     if (el.closest(NON_BUSINESS_CLICK_EXCLUDE_SELECTOR)) return;
+    if (el.closest('[data-no-log]')) return;
 
     const progNo = this.currentPageService.getCurrentProgNo();
     if (!progNo) return;
