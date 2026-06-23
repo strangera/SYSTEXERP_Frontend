@@ -16,6 +16,17 @@ const DEBUG_ID_HEADER = 'X-Debug-Id';
 const BASE_URL_TO_REMOVE = environment.BaseUrl;
 const DEBUG_API_PATH = '/BasicEIP_Core/DiagnosticsModule/Debug/';
 
+// 符合此清單的 API 路徑不會觸發 SQL log 抓取
+const EXCLUDED_URL_PATTERNS: string[] = [
+  DEBUG_API_PATH, // 避免 debug API 自身遞迴觸發
+  '/BasicEIP_Core/Auth/',
+  '/insertSYS0790'
+];
+
+function isExcludedFromDebug(apiUrl: string): boolean {
+  return EXCLUDED_URL_PATTERNS.some(pattern => apiUrl.includes(pattern));
+}
+
 /**
  * 偵錯標頭功能型攔截器 (更新為使用 Debug ID 呼叫新 API)
  */
@@ -48,7 +59,7 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
         const headers = event.headers;
         const debugId = headers.get(DEBUG_ID_HEADER);
 
-        if (debugId) {
+        if (debugId && !isExcludedFromDebug(apiUrl)) {
           // 計算體感總時 (此時主請求已回來)
           const totalTime = Date.now() - startTime;
           // 傳入 totalTime 給 fetchDebugData
@@ -64,7 +75,6 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
 
 /**
  * 處理 Debug API 請求的獨立函數 (不變)
- * ... (保持不變)
  */
 function fetchDebugData(
   debugId: string,
