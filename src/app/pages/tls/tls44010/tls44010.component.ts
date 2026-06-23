@@ -157,7 +157,6 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   private connectEosStatusHub(): void {
     this.eosHubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.ApiUrl}/hubs/eos-status`, {
-        transport: signalR.HttpTransportType.WebSockets,
         accessTokenFactory: () => this.authService.currentUserValue?.AccessToken ?? ''
       })
       .withAutomaticReconnect()
