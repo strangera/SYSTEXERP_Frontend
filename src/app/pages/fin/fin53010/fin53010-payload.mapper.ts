@@ -103,6 +103,7 @@ function mapStepApToInsert(
     ACP_Amt: row.acp_amt,
     VEN_PayType: row.ven_pay_type,
     VEN_BNK_No: row.ven_bnk_no,
+    VEN_BNK_BranchNo: row.ven_bnk_branch_no,
     VEN_BankAccountNo: bank.VEN_BankAccountNo,
     VEN_AccountName: bank.VEN_AccountName,
     ACP_ExpectPayDate: toYmd(row.acp_expect_pay_date ?? undefined, deps.datePipe),

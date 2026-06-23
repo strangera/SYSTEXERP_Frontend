@@ -720,8 +720,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly stepPurchaseColumns: EditColumn[] = [
     { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 21 && +o.value <= 25), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
-    { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validateBankRequired.bind(this)] },
-    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validatePurchaseTrackNo.bind(this)] },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validatePurchaseInvoiceNo.bind(this)] },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateBankRequired.bind(this)] },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, validate: [this.validateBankRequired.bind(this), this.validateUniformNumber.bind(this)] },
@@ -732,7 +732,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, textAlign: 'left' },
-    { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
+    { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left', validate: [this.validatePurchaseSourceDocNo.bind(this)] },
     { field: 'comb', header: '彙加註記', type: 'input', textAlign: 'left' },
     { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt], textAlign: 'right' },
   ];
@@ -760,6 +760,33 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (value === '' || value === null || value === undefined) {
       return { isValid: false, errorMessage: [`${header}不可為空`] };
     }
+    return { isValid: true, errorMessage: [] };
+  }
+
+  private validatePurchaseTrackNo(value: unknown, rowData: unknown): { isValid: boolean; errorMessage: string[] } {
+    const vt = String((rowData as Record<string, unknown>)['voucher_type'] ?? '').trim();
+    if (vt !== '21') return { isValid: true, errorMessage: [] };
+    if (!String(value ?? '').trim()) return { isValid: false, errorMessage: ['字軌不可為空'] };
+    return { isValid: true, errorMessage: [] };
+  }
+
+  private validatePurchaseInvoiceNo(value: unknown, rowData: unknown): { isValid: boolean; errorMessage: string[] } {
+    const vt = String((rowData as Record<string, unknown>)['voucher_type'] ?? '').trim();
+    const v = String(value ?? '').trim();
+    if (vt === '21' && !v) return { isValid: false, errorMessage: ['發票號碼不可為空'] };
+    if (vt === '25') {
+      const trackNo = String((rowData as Record<string, unknown>)['track_no'] ?? '').trim();
+      if (trackNo && !v) return { isValid: false, errorMessage: ['輸入字軌時，發票號碼不可為空'] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
+  private validatePurchaseSourceDocNo(value: unknown, rowData: unknown): { isValid: boolean; errorMessage: string[] } {
+    const vt = String((rowData as Record<string, unknown>)['voucher_type'] ?? '').trim();
+    if (vt !== '25') return { isValid: true, errorMessage: [] };
+    const v = String(value ?? '').trim();
+    const invoiceNo = String((rowData as Record<string, unknown>)['invoice_no'] ?? '').trim();
+    if (!v && !invoiceNo) return { isValid: false, errorMessage: ['格式25：請輸入發票號碼或憑證單號'] };
     return { isValid: true, errorMessage: [] };
   }
 
@@ -1089,6 +1116,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       acp_amt: amt || undefined,
       acp_date: vouDate,
       ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+      ven_bnk_branch_no: venOpt?.['VEN_BNK_BranchNo'] != null ? String(venOpt['VEN_BNK_BranchNo']) : undefined,
       ven_bank_account: this.formatVenBankAccount(venOpt),
       ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? 'Y',
       ven_check_title: venCheckTitle,
@@ -1558,15 +1586,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
    * 1. 當會計科目為 '123208' 時，組織代號必須為特定的幾個值
    */
   public readonly validateRow = (rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string; } => {
-    const accNo = String(rowData.AccNo ?? '').trim();
-    const orgId = String(rowData.ORG_ID ?? '').trim();
+    void rowData;
+    // const accNo = String(rowData.AccNo ?? '').trim();
+    // const orgId = String(rowData.ORG_ID ?? '').trim();
 
-    if (accNo === '123208') {
-      const allowedOrgIds = ['107400', '107500', '100200', '100210', '100300', '100310', '106000'];
-      if (!allowedOrgIds.includes(orgId)) {
-        return { isValid: false, errorMessage: '組織代號有誤。只可以輸入以下組織代號: 107400, 107500, 100200, 100210, 100300, 100310, 106000' };
-      }
-    }
+    // if (accNo === '123208') {
+    //   const allowedOrgIds = ['107400', '107500', '100200', '100210', '100300', '100310', '106000'];
+    //   if (!allowedOrgIds.includes(orgId)) {
+    //     return { isValid: false, errorMessage: '組織代號有誤。只可以輸入以下組織代號: 107400, 107500, 100200, 100210, 100300, 100310, 106000' };
+    //   }
+    // }
 
     return { isValid: true, errorMessage: '' };
   };
@@ -1848,7 +1877,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (f === 'vendor_tax_id') {
       const uniform = String(row.vendor_tax_id ?? '').trim();
       const venNo = uniform ? this.service.vendorUniformToVenNoMap().get(uniform) : undefined;
-      event.rowData.ven_no = venNo;
+      event.rowData.ven_no = venNo ?? '0';
       return;
     }
 
@@ -1874,6 +1903,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         event.rowData.deduction_code = (taxType === '2' || taxType === '3') ? '3' : '1';
       }
       return;
+    }
+
+    // 格式非 21 且憑證單號未填 → 自動帶入傳票編號（新增模式 VouNo 為「自動給號」時略過）
+    if (f === 'voucher_type') {
+      const vt = String(event.value ?? '').trim();
+      if (vt !== '21') {
+        const sourceDocNo = String(row.source_doc_no ?? '').trim();
+        const vouNo = this.dataForm.getRawValue().VouNo?.trim() ?? '';
+        if (!sourceDocNo && vouNo && vouNo !== '自動給號') {
+          event.rowData.source_doc_no = vouNo;
+        }
+      }
     }
 
     // voucher_type 或 invoice_no 變更時重新計算彙加註記
@@ -1977,11 +2018,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
 
       // 如果會計科目是進項稅額，且組織是部門，則自動改為共同
-      if (rowData.AccNo?.startsWith('1232')
-        && this.service.orgMap().get(rowData.ORG_ID || '')?.label?.endsWith('部')) {
-        rowData.AccNo = '123208';
-        rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
-      }
+      // if (rowData.AccNo?.startsWith('1232')
+      //   && this.service.orgMap().get(rowData.ORG_ID || '')?.label?.endsWith('部')) {
+      //   rowData.AccNo = '123208';
+      //   rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
+      // }
     }
   }
 
