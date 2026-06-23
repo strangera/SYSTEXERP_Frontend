@@ -12,46 +12,28 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
+      headerStyleClass="query-accordionTab"
     >
       <form [formGroup]="queryForm" id="queryForm">
-        <!-- 請依據所要申請的系統權限，選擇主系統項目。 -->
-        <div
-          class="mb-3 p-3 surface-100 border-round flex align-items-center gap-2"
-        >
+        <div class="mb-3 p-3 surface-100 border-round flex align-items-center gap-2">
           <i class="pi pi-info-circle text-blue-500"></i>
-          <span class="text-700 font-medium">
-            請依據所要申請的系統權限，選擇主系統項目。
-          </span>
+          <span class="text-700 font-medium">請依據所要申請的系統權限，選擇主系統項目。</span>
         </div>
         <div class="grid p-fluid">
-          <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者編號/名稱" controlName="user_No"
-            [control]="queryForm.controls.user_No" [submitted]="submitted" [options]="userNoOptions | async"
-            optionLabel="label" optionValue="value"></app-dropdown> -->
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="主系統項目代號/名稱"
             controlName="prog_no"
             [control]="queryForm.controls.prog_no"
             [options]="subModuleNoOptions | async"
-            optionLabel="Name"
+            optionLabel="label"
+            optionValue="value"
+            [editable]="false"
             [submitted]="submitted"
             [group]="true"
           ></app-dropdown>
         </div>
-        <!-- <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
-        </div> -->
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <app-table-report [apiUrl]="queryForm.value.authType === 'User' ? 'querySYS0780AllUsers' : 'querySYS0780UserRoles'"
-    tableKey="sys0780" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
-    [showDetail]="false" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryForm.value.authType === 'User' ? sys0780Service.queryAllUsers.bind(sys0780Service) : sys0780Service.queryUserRoles.bind(sys0780Service)">
-  </app-table-report>
-</div> -->
