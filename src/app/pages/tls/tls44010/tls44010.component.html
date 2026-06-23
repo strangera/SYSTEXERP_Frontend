@@ -64,7 +64,28 @@
                   }}</b></span>
             </div>
           </div>
-          <p-dataViewLayoutOptions></p-dataViewLayoutOptions>
+          <div class="flex align-items-center gap-3">
+            <div class="eos-hub-info">
+              <div class="flex align-items-center gap-1">
+                <span class="eos-hub-dot"
+                      [class.connected]="eosHubStatus === 'connected'"
+                      [class.reconnecting]="eosHubStatus === 'reconnecting'"
+                      [class.disconnected]="eosHubStatus === 'disconnected'"></span>
+                <span class="eos-hub-label"
+                      [class.text-green-600]="eosHubStatus === 'connected'"
+                      [class.text-yellow-600]="eosHubStatus === 'reconnecting'"
+                      [class.text-red-500]="eosHubStatus === 'disconnected'">
+                  @if (eosHubStatus === 'connected') { 即時監控中 }
+                  @else if (eosHubStatus === 'reconnecting') { 重新連線中... }
+                  @else { 連線中斷，數據可能不準確 }
+                </span>
+              </div>
+              @if (eosLastUpdated) {
+                <div class="eos-last-updated">上次更新：{{ eosLastUpdated | date:'HH:mm:ss' }}</div>
+              }
+            </div>
+            <p-dataViewLayoutOptions></p-dataViewLayoutOptions>
+          </div>
         </div>
       </ng-template>
 

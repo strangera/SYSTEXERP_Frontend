@@ -427,6 +427,56 @@
 }
 
 /* ==========================================================================
+   EOS SignalR 即時監控狀態指示器
+   ========================================================================== */
+.eos-hub-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.eos-hub-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+
+  &.connected {
+    background-color: #22c55e;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-color: #22c55e;
+      animation: pulse 2s infinite ease-in-out;
+    }
+  }
+
+  &.reconnecting {
+    background-color: #f59e0b;
+  }
+
+  &.disconnected {
+    background-color: #ef4444;
+  }
+}
+
+.eos-hub-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.eos-last-updated {
+  font-size: 10px;
+  color: #adb5bd;
+}
+
+/* ==========================================================================
    VNC 功能樣式
    ========================================================================== */
 .vnc-btn {

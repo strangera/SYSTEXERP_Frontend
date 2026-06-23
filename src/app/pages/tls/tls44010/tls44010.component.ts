@@ -98,6 +98,9 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   vncControlPassword = '';
   vncControlLoading = false;
 
+  eosHubStatus: 'connected' | 'reconnecting' | 'disconnected' = 'disconnected';
+  eosLastUpdated: Date | null = null;
+
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
     this.onSubmit(this.queryForm);
@@ -161,6 +164,8 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
       .build();
 
     this.eosHubConnection.on('StatusChanged', (changes: { ECR_No: string; Online: string }[]) => {
+      console.log('[SignalR] StatusChanged:', changes);
+      this.eosLastUpdated = new Date();
       let dirty = false;
       for (const change of changes) {
         const item = this.data.find(d => d.ECR_No === change.ECR_No);
@@ -172,7 +177,14 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
       if (dirty) this.filterDataByTab();
     });
 
-    this.eosHubConnection.start().catch(err => console.error('EOS SignalR 連線失敗:', err));
+    this.eosHubConnection.onreconnecting(() => { this.eosHubStatus = 'reconnecting'; });
+    this.eosHubConnection.onreconnected(() => { this.eosHubStatus = 'connected'; });
+    this.eosHubConnection.onclose(() => { this.eosHubStatus = 'disconnected'; });
+
+    this.eosHubConnection.start()
+      .then(() => { this.eosHubStatus = 'connected'; })
+      .catch(err => console.error('EOS SignalR 連線失敗:', err));
+
     this.destroyRef.onDestroy(() => this.eosHubConnection?.stop());
   }
 
