@@ -333,7 +333,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     this.queryLoading = true;
     this.tls2j030Service.queryTLS2J030TXN_GUI({ TXN_GUIBegNo: txnGuiBegNo }).pipe(finalize(() => this.queryLoading = false)).subscribe({
       next: res => this.handleQuerySourceInvoiceSuccess(res?.Data || []),
-      error: () => this.messageService.errorBubble('查詢失敗')
     });
   }
 
@@ -347,11 +346,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const source = list[0];
     const sourceDate = source.TXN_Date;
     const today = new Date().toISOString();
-
-    if (source.GUI_Message !== '') {
-      this.messageService.warnBubble(`${source.GUI_Message}`);
-      return;
-    }
 
     // 1. 判斷是否為當期發票
     if (this.formatDateToYYYYMM(sourceDate) !== this.formatDateToYYYYMM(today)) {
