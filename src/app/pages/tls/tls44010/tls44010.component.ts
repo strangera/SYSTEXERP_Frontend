@@ -1,5 +1,6 @@
 import { AsyncPipe, CommonModule, Location } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,17 +12,21 @@ import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize, firstValueFrom } from 'rxjs';
+import * as signalR from '@microsoft/signalr';
+import { filter, finalize, firstValueFrom, fromEvent } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { EOSStatus, QueryTLS44010Response, TLS44010Service } from '../../../service/api/tls/tls44010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { EncryptionService } from '../../../shared/service/encryption.service';
 
 // 狀態映射字典配置：將 0~5 的狀態配置化管理
 const STATUS_CONFIG: Record<EOSStatus, { class: string; icon: string; color: string; label: string }> = {
@@ -43,7 +48,7 @@ const STATUS_CONFIG: Record<EOSStatus, { class: string; icon: string; color: str
     TranslateModule, ButtonModule, TableModule, AccordionModule,
     CommonModule, MenubarComponent, InputTextModule, DataViewModule,
     DropdownComponent, MultiSelectComponent, TooltipModule, AsyncPipe,
-    InputTextComponent, DialogModule,
+    InputTextComponent, DialogModule, PasswordModule,
   ]
 })
 export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Response> implements OnInit {
@@ -52,6 +57,12 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   private readonly tls44010Service = inject(TLS44010Service);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly location = inject(Location);
+  private readonly encryptionService = inject(EncryptionService);
+  private readonly notemessage = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
+  private eosHubConnection?: signalR.HubConnection;
+
+  @ViewChild('vncIframe') private vncIframeRef?: ElementRef<HTMLIFrameElement>;
 
   queryForm = this.fb.nonNullable.group({
     ECR_No: [null],
@@ -83,9 +94,22 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   selectedVncRow: QueryTLS44010Response | null = null;
   vncIframeUrl: SafeResourceUrl | null = null;
 
+  vncControlDialogVisible = false;
+  vncControlPassword = '';
+  vncControlLoading = false;
+
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
     this.onSubmit(this.queryForm);
+
+    fromEvent<MessageEvent>(window, 'message')
+      .pipe(
+        filter(e => e.data?.type === 'REQUEST_CONTROL'),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => this.onVncControlRequest());
+
+    this.connectEosStatusHub();
   }
 
   openVnc(row: QueryTLS44010Response) {
@@ -109,9 +133,10 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
 
       const wsUrl = `${wsBase}/TLS0000/TLS4000/vnc/ws?token=${session.SessionToken}`;
       const viewerPath = this.location.prepareExternalUrl('assets/vnc-viewer.html');
-      const ecrNo   = this.selectedVncRow?.ECR_No ?? '';
+      const ecrNo = this.selectedVncRow?.ECR_No ?? '';
       const tltName = this.selectedVncRow?.TLT_Name ?? '';
-      const iframeUrl = `${viewerPath}?wsUrl=${encodeURIComponent(wsUrl)}&password=${encodeURIComponent(session.Password)}&ecrNo=${encodeURIComponent(ecrNo)}&tltName=${encodeURIComponent(tltName)}`;
+      // 不傳密碼，後端代理在 RFB 握手時已完成認證
+      const iframeUrl = `${viewerPath}?wsUrl=${encodeURIComponent(wsUrl)}&ecrNo=${encodeURIComponent(ecrNo)}&tltName=${encodeURIComponent(tltName)}`;
 
       this.vncIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(iframeUrl);
     } catch (err) {
@@ -124,6 +149,64 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   onVncDialogHide() {
     this.vncIframeUrl = null;
     this.selectedVncRow = null;
+  }
+
+  private connectEosStatusHub(): void {
+    this.eosHubConnection = new signalR.HubConnectionBuilder()
+      .withUrl(`${environment.ApiUrl}/hubs/eos-status`, {
+        transport: signalR.HttpTransportType.WebSockets,
+        accessTokenFactory: () => this.authService.currentUserValue?.AccessToken ?? ''
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    this.eosHubConnection.on('StatusChanged', (changes: { ECR_No: string; Online: string }[]) => {
+      let dirty = false;
+      for (const change of changes) {
+        const item = this.data.find(d => d.ECR_No === change.ECR_No);
+        if (item) {
+          item.EOS_Online = change.Online;
+          dirty = true;
+        }
+      }
+      if (dirty) this.filterDataByTab();
+    });
+
+    this.eosHubConnection.start().catch(err => console.error('EOS SignalR 連線失敗:', err));
+    this.destroyRef.onDestroy(() => this.eosHubConnection?.stop());
+  }
+
+  onVncControlRequest(): void {
+    this.vncControlPassword = '';
+    this.vncControlDialogVisible = true;
+  }
+
+  onVncControlCancel(): void {
+    this.vncControlDialogVisible = false;
+    this.vncControlPassword = '';
+    this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, '*');
+  }
+
+  onVncControlConfirm(): void {
+    if (!this.vncControlPassword) return;
+    this.vncControlLoading = true;
+
+    const userNo = this.authService.currentUserValue?.user_No ?? '';
+    const encrypted = this.encryptionService.getPassword(userNo, this.vncControlPassword);
+
+    this.tls44010Service.verifyVncPassword(encrypted)
+      .pipe(finalize(() => { this.vncControlLoading = false; }))
+      .subscribe({
+        next: () => {
+          this.vncControlDialogVisible = false;
+          this.vncControlPassword = '';
+          this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, '*');
+        },
+        error: () => {
+          this.notemessage.errorBubble('VNC 密碼錯誤，請重試');
+          this.vncControlPassword = '';
+        }
+      });
   }
 
   /** 計算機台實際顯示狀態碼 */
