@@ -171,6 +171,31 @@
     </div>
   }
   @if (vncIframeUrl) {
-    <iframe [src]="vncIframeUrl" class="vnc-iframe" allow="clipboard-read; clipboard-write"></iframe>
+    <iframe #vncIframe [src]="vncIframeUrl" class="vnc-iframe" allow="clipboard-read; clipboard-write"></iframe>
   }
+</p-dialog>
+
+<p-dialog
+  [(visible)]="vncControlDialogVisible"
+  [modal]="true"
+  header="接管遠端控制"
+  [style]="{ width: '360px' }"
+  [closable]="!vncControlLoading"
+  (onHide)="onVncControlCancel()">
+  <div class="flex flex-column gap-3 p-2">
+    <div class="text-sm text-600">輸入 VNC 密碼以啟用鍵盤及滑鼠操控</div>
+    <p-password
+      [(ngModel)]="vncControlPassword"
+      placeholder="請輸入 VNC 密碼"
+      [feedback]="false"
+      [toggleMask]="true"
+      inputStyleClass="w-full"
+      styleClass="w-full"
+      (keydown.enter)="onVncControlConfirm()">
+    </p-password>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="取消" [text]="true" [disabled]="vncControlLoading" (click)="onVncControlCancel()"></p-button>
+    <p-button label="確認接管" [loading]="vncControlLoading" (click)="onVncControlConfirm()"></p-button>
+  </ng-template>
 </p-dialog>
