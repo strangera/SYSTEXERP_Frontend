@@ -16,11 +16,24 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <app-input-text
+          <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="資料型態"
-            controlName="data_type"
-            [control]="queryForm.controls.data_type"
+            label="系統別"
+            controlName="sys_type"
+            [options]="sysTypeOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.sys_type"
+            [submitted]="submitted"
+          />
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="作業代碼"
+            controlName="act_code"
+            [options]="actCodeOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.act_code"
             [submitted]="submitted"
           />
           <app-input-text
@@ -44,18 +57,18 @@
 <div class="card">
   <app-table-report
     [exportContext]="{ apiUrl: 'querySYSBQ00' }"
-    dataKey="data_type"
-    [data]="data"
+    dataKey="id"
+    [data]="data()"
     [columns]="columns"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [showCheckBox]="true"
     (delete)="onDelete($event)"
-    [totalRecords]="totalRecords"
-    [queryFunction]="sysbq00Service.querySYSBQ00.bind(sysbq00Service)"
-    [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords()"
+    [queryFunction]="tableQueryFunction"
+    [lastQueryBody]="lastQueryBody()"
     [loading]="loading"
-    (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows"
+    (selectionChange)="selectedRows.set($event)"
+    [selectedItems]="selectedRows()"
   ></app-table-report>
 </div>
