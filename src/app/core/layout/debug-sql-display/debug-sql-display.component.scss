@@ -1,12 +1,10 @@
 ::ng-deep {
-  /* --- 樣式鎖 1: 按鈕面板區 --- */
+  /* --- 浮動按鈕區 --- */
   .tls-sql-debug-panel {
     .position-relative {
       position: relative !important;
       display: inline-block !important;
     }
-
-    /* 只影響除錯按鈕上的 Badge */
     .p-badge {
       position: absolute !important;
       top: 0 !important;
@@ -18,51 +16,158 @@
     }
   }
 
-  /* --- 樣式鎖 2: 彈窗主體區 (透過 styleClass 綁定) --- */
-  .tls-sql-debug-overlay {
-    background: #1e1e1e !important;
-    border: 1px solid #444 !important;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
-
-    .p-overlaypanel-content {
-      padding: 0 !important;
+  /* --- Dialog 主體深色主題 --- */
+  .tls-sql-debug-dialog {
+    &.p-dialog {
       background: #1e1e1e !important;
+      border: 1px solid #444 !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7) !important;
     }
 
-    /* 彈窗關閉按鈕 */
-    .p-overlaypanel-close {
-      background: #333 !important;
-      color: #999 !important;
+    .p-dialog-header {
+      background: #252526 !important;
+      border-bottom: 1px solid #333 !important;
+      padding: 0.6rem 1rem !important;
+      color: #ccc !important;
+    }
+
+    .p-dialog-header-icon {
+      color: #888 !important;
       &:hover {
-        background: #444 !important;
+        background: #3e3e42 !important;
         color: #fff !important;
       }
     }
 
-    /* 內部的標題欄 */
-    .debug-header {
-      background: #252526 !important;
-      padding: 1rem !important;
-      border-bottom: 1px solid #333 !important;
+    .p-dialog-content {
+      background: #1e1e1e !important;
+      padding: 0 !important;
     }
 
-    /* 深色表格自訂 */
-    .debug-table {
-      .p-datatable-tbody > tr {
+    /* Header 右側的計數 badge */
+    .count-badge {
+      background: #3e3e42 !important;
+      color: #818cf8 !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      padding: 2px 8px !important;
+      border-radius: 10px !important;
+      border: 1px solid #555 !important;
+    }
+
+    /* --- 搜尋過濾列 (sticky 固定在頂部) --- */
+    .filter-bar {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 10 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 7px 12px !important;
+      background: #252526 !important;
+      border-bottom: 1px solid #2a2a2a !important;
+
+      .filter-icon {
+        color: #555 !important;
+        font-size: 12px !important;
+      }
+
+      .filter-input {
+        flex: 1 !important;
         background: #1e1e1e !important;
-        border-bottom: 1px solid #333 !important;
-        transition: background 0.2s;
-        &:hover {
-          background: #252526 !important;
+        border: 1px solid #3e3e42 !important;
+        color: #ccc !important;
+        padding: 5px 10px !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        font-family: "Fira Code", "Consolas", monospace !important;
+        outline: none !important;
+        transition: border-color 0.15s !important;
+
+        &:focus {
+          border-color: #6366f1 !important;
         }
-        td {
-          padding: 1.25rem 1rem !important;
-          border: none !important;
+
+        &::placeholder {
+          color: #555 !important;
+        }
+      }
+
+      .ctrl-btn {
+        background: transparent !important;
+        border: 1px solid #3e3e42 !important;
+        color: #666 !important;
+        padding: 4px 10px !important;
+        border-radius: 4px !important;
+        font-size: 11px !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+        transition: all 0.15s !important;
+
+        &:hover {
+          background: #3e3e42 !important;
+          color: #ccc !important;
+          border-color: #555 !important;
         }
       }
     }
 
-    /* API 標籤與 Endpoint 字體 */
+    /* --- Table 樣式 --- */
+    .debug-table {
+      .p-datatable-wrapper {
+        background: #1e1e1e !important;
+      }
+
+      .p-datatable-tbody {
+        > tr {
+          background: #1e1e1e !important;
+
+          /* 摘要行（可點擊折疊） */
+          &.summary-row {
+            cursor: pointer !important;
+            border-bottom: 1px solid #2a2a2a !important;
+            transition: background 0.12s !important;
+
+            &:hover {
+              background: #252526 !important;
+            }
+
+            td {
+              padding: 8px 12px !important;
+              border: none !important;
+            }
+          }
+
+          /* 展開後的詳細內容行 */
+          &.detail-row {
+            background: #1a1a1a !important;
+            border-bottom: 1px solid #333 !important;
+
+            td {
+              padding: 4px 12px 12px 36px !important;
+              border: none !important;
+            }
+          }
+        }
+      }
+    }
+
+    /* --- 摘要行內的元素 --- */
+    .toggle-icon {
+      color: #555 !important;
+      font-size: 11px !important;
+      width: 14px !important;
+      flex-shrink: 0 !important;
+      transition: color 0.12s !important;
+    }
+
+    .summary-row:hover .toggle-icon {
+      color: #818cf8 !important;
+    }
+
     .api-tag {
       background: #3e3e42 !important;
       color: #00bcd4 !important;
@@ -71,18 +176,41 @@
       padding: 2px 6px !important;
       border-radius: 4px !important;
       border: 1px solid #555 !important;
+      flex-shrink: 0 !important;
     }
 
     .endpoint-code {
       color: #fbbf24 !important;
-      background: rgba(251, 191, 36, 0.1) !important;
+      background: rgba(251, 191, 36, 0.08) !important;
       font-size: 12px !important;
       padding: 2px 8px !important;
       border-radius: 4px !important;
       font-family: "Fira Code", "Consolas", monospace !important;
+      flex-shrink: 0 !important;
+      max-width: 35% !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
     }
 
-    /* --- SQL 語法塊與「物理點選感」互動 --- */
+    .sql-preview {
+      color: #555 !important;
+      font-size: 11px !important;
+      font-family: "Fira Code", "Consolas", monospace !important;
+      flex: 1 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    .timestamp-tag {
+      color: #3e3e42 !important;
+      font-size: 11px !important;
+      font-family: "Fira Code", "Consolas", monospace !important;
+      flex-shrink: 0 !important;
+    }
+
+    /* --- SQL 語法塊 --- */
     .sql-code-wrapper {
       background-color: #0d0d0d !important;
       border: 1px solid #333 !important;
@@ -96,46 +224,27 @@
 
       &:hover {
         background-color: #161616 !important;
-        transform: translateY(-2px) !important; // 浮起
+        transform: translateY(-2px) !important;
         border-color: #6366f1 !important;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
-        .copy-hint {
-          color: #818cf8 !important;
-        }
-        .pi-copy {
-          color: #fff !important;
-          transform: scale(1.15);
-        }
+        .copy-hint { color: #818cf8 !important; }
+        .pi-copy { color: #fff !important; transform: scale(1.15); }
       }
 
-      /* 重點：按下時的物理觸感 (下陷 + 縮小) */
       &:active {
         transform: translateY(1px) scale(0.96) !important;
         background-color: #000 !important;
-        box-shadow: inset 0 4px 15px rgba(0, 0, 0, 1) !important; // 深層內陰影
+        box-shadow: inset 0 4px 15px rgba(0, 0, 0, 1) !important;
         border-color: #4f46e5 !important;
       }
 
       .sql-header {
         margin-bottom: 10px !important;
-        .sql-title {
-          color: #6366f1 !important;
-          font-size: 10px !important;
-          font-weight: bold !important;
-          opacity: 0.8;
-        }
-        .copy-hint {
-          color: #555 !important;
-          font-size: 9px !important;
-          font-weight: bold !important;
-        }
-        .pi-copy {
-          color: #444 !important;
-          transition: 0.2s !important;
-        }
+        .sql-title { color: #6366f1 !important; font-size: 10px !important; font-weight: bold !important; opacity: 0.8; }
+        .copy-hint { color: #555 !important; font-size: 9px !important; font-weight: bold !important; }
+        .pi-copy { color: #444 !important; transition: 0.2s !important; }
       }
 
-      /* SQL 語法高亮配色與 Tab 縮排 */
       .sql-content {
         margin: 0 !important;
         color: #d4d4d4 !important;
@@ -146,34 +255,19 @@
         white-space: pre-wrap !important;
         word-break: break-all !important;
 
-        /* 使用嵌套確保正確染色 */
         span {
-          &.sql-keyword {
-            color: #569cd6 !important;
-            font-weight: bold !important;
-          }
-          &.sql-func {
-            color: #dcdcaa !important;
-          }
-          &.sql-string {
-            color: #ce9178 !important;
-          }
-          &.sql-num {
-            color: #b5cea8 !important;
-          }
-          &.sql-var {
-            color: #9cdcfe !important;
-          }
-          &.sql-op {
-            color: #888888 !important;
-          } // 符號給深灰色，看起來比較高級
-          &.sql-comment {
-            color: #6a9955 !important;
-            font-style: italic !important;
-          }
+          &.sql-keyword { color: #569cd6 !important; font-weight: bold !important; }
+          &.sql-func { color: #dcdcaa !important; }
+          &.sql-string { color: #ce9178 !important; }
+          &.sql-num { color: #b5cea8 !important; }
+          &.sql-var { color: #9cdcfe !important; }
+          &.sql-op { color: #888888 !important; }
+          &.sql-comment { color: #6a9955 !important; font-style: italic !important; }
         }
       }
     }
+
+    /* --- 效能儀表板 --- */
     .perf-dashboard {
       background: rgba(0, 0, 0, 0.2) !important;
       padding: 6px 10px !important;
@@ -190,61 +284,33 @@
         font-size: 11px !important;
         border: 1px solid transparent !important;
 
-        .label {
-          opacity: 0.8;
-          color: #aaa;
-        }
+        .label { opacity: 0.8; color: #aaa; }
+        .val { font-weight: 700 !important; }
 
-        .val {
-          font-weight: 700 !important;
-        }
-
-        /* 針對不同指標賦予精緻的極客配色 */
         &.total {
-          background: rgba(139, 92, 246, 0.1) !important; // 紫色
+          background: rgba(139, 92, 246, 0.1) !important;
           border-color: rgba(139, 92, 246, 0.2) !important;
-          .val {
-            color: #a78bfa !important;
-          }
+          .val { color: #a78bfa !important; }
         }
-
-        &.backend {
-          background: rgba(59, 130, 246, 0.1) !important; // 藍色
-          border-color: rgba(59, 130, 246, 0.2) !important;
-          .val {
-            color: #60a5fa !important;
-          }
-        }
-
         &.database {
-          background: rgba(16, 185, 129, 0.1) !important; // 綠色
+          background: rgba(16, 185, 129, 0.1) !important;
           border-color: rgba(16, 185, 129, 0.2) !important;
-          .val {
-            color: #34d399 !important;
-          }
+          .val { color: #34d399 !important; }
         }
-
         &.network {
-          background: rgba(245, 158, 11, 0.1) !important; // 橘黃色
+          background: rgba(245, 158, 11, 0.1) !important;
           border-color: rgba(245, 158, 11, 0.2) !important;
-          .val {
-            color: #fbbf24 !important;
-          }
+          .val { color: #fbbf24 !important; }
         }
-
         &.before-db {
-          background-color: #e0f2fe;
-          color: #0369a1; // 藍色：代表前置邏輯處理
-          .label {
-            color: #000;
-          }
+          background: rgba(14, 165, 233, 0.1) !important;
+          border-color: rgba(14, 165, 233, 0.2) !important;
+          .val { color: #38bdf8 !important; }
         }
         &.after-db {
-          background-color: #f3e8ff;
-          color: #6b21a8; // 紫色：代表後置序列化與轉型
-          .label {
-            color: #000;
-          }
+          background: rgba(167, 139, 250, 0.1) !important;
+          border-color: rgba(167, 139, 250, 0.2) !important;
+          .val { color: #c4b5fd !important; }
         }
       }
     }

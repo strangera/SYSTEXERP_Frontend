@@ -1,86 +1,140 @@
-<div class="fixed bottom-0 right-0 z-5 p-3 tls-sql-debug-panel" *ngIf="isDebugEnabled()">
-  <div class="position-relative">
-    <p-button (onClick)="onToggle($event, op)" icon="pi pi-database"
-      styleClass="p-button-rounded p-button-lg p-button-help p-shadow-4">
-    </p-button>
-    <p-badge [value]="sqlCount()" severity="danger" [hidden]="sqlCount() === 0"></p-badge>
+@if (isDebugEnabled()) {
+  <div class="fixed bottom-0 right-0 z-5 p-3 tls-sql-debug-panel">
+    <div class="position-relative">
+      <p-button (onClick)="dialogVisible.set(true)" icon="pi pi-database"
+        styleClass="p-button-rounded p-button-lg p-button-help p-shadow-4">
+      </p-button>
+      <p-badge [value]="sqlCount()" severity="danger" [hidden]="sqlCount() === 0"></p-badge>
+    </div>
   </div>
 
-  <p-overlayPanel #op [style]="{ width: '75vw', maxWidth: '1200px' }" [showCloseIcon]="true"
-    styleClass="tls-sql-debug-overlay">
-    <ng-template pTemplate="content">
-      <div class="debug-header flex align-items-center justify-content-between mb-2" data-no-log>
-        <h4 class="m-0 flex align-items-center" style="color: #818cf8;">
-          <i class="pi pi-bolt mr-2 text-xl"></i>
-          <span>SQL & Performance Monitor ({{ sqlCount() }})</span>
-        </h4>
+  <p-dialog
+    [visible]="dialogVisible()"
+    (visibleChange)="dialogVisible.set($event)"
+    [modal]="false"
+    [resizable]="true"
+    [draggable]="true"
+    [maximizable]="true"
+    [closable]="true"
+    styleClass="tls-sql-debug-dialog"
+    [style]="{ width: '80vw', height: '80vh' }"
+    [contentStyle]="{ padding: '0', 'overflow-y': 'auto' }"
+    data-no-log>
+
+    <ng-template pTemplate="header">
+      <div class="debug-dialog-header flex align-items-center justify-content-between w-full" data-no-log>
+        <span class="flex align-items-center gap-2" style="color: #818cf8;">
+          <i class="pi pi-bolt text-xl"></i>
+          <span class="font-bold">SQL & Performance Monitor</span>
+          <span class="count-badge">{{ filteredCount() }} / {{ sqlCount() }}</span>
+        </span>
         <p-button icon="pi pi-trash" label="Clear Logs" (onClick)="onClearHistory()"
           styleClass="p-button-danger p-button-text p-button-sm" [disabled]="sqlCount() === 0">
         </p-button>
       </div>
+    </ng-template>
 
-      <p-table [value]="tableData()" [scrollable]="true" scrollHeight="450px" styleClass="p-datatable-sm debug-table"
-        responsiveLayout="scroll">
-        <ng-template pTemplate="body" let-sqlDetail let-i="rowIndex">
-          <tr class="debug-row">
+    <div class="debug-dialog-body">
+      <div class="filter-bar" data-no-log>
+        <i class="pi pi-search filter-icon"></i>
+        <input
+          class="filter-input"
+          type="text"
+          placeholder="Filter by endpoint or SQL content..."
+          [value]="filterText()"
+          (input)="filterText.set($any($event.target).value)"
+        />
+        <button class="ctrl-btn" (click)="expandAll()">
+          <i class="pi pi-plus-circle"></i> Expand All
+        </button>
+        <button class="ctrl-btn" (click)="collapseAll()">
+          <i class="pi pi-minus-circle"></i> Collapse All
+        </button>
+      </div>
+
+      <p-table
+        [value]="filteredData()"
+        styleClass="p-datatable-sm debug-table">
+
+        <ng-template pTemplate="body" let-row>
+          <tr class="summary-row" (click)="toggleRow(row.id)">
             <td>
-              <div class="flex flex-column gap-2 py-2">
-                <div class="flex align-items-center justify-content-between">
-                  <div class="flex align-items-center gap-2">
-                    <span class="api-tag">ENDPOINT</span>
-                    <code class="endpoint-code">{{ sqlDetail.apiUrl }}</code>
-                  </div>
-                  <span class="text-xs font-mono text-500">{{ sqlDetail.timestamp }}</span>
-                </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi toggle-icon"
+                  [class.pi-chevron-right]="!isExpanded(row.id)"
+                  [class.pi-chevron-down]="isExpanded(row.id)"></i>
+                <span class="api-tag">SQL</span>
+                <code class="endpoint-code">{{ row.apiUrl }}</code>
+                <span class="sql-preview">{{ row.sqlPreview }}</span>
+                <span class="timestamp-tag">{{ row.timestamp }}</span>
+              </div>
+            </td>
+          </tr>
 
-                <div class="perf-dashboard flex flex-wrap gap-2 my-1"
-                  *ngIf="sqlDetail.isFirstOfApi && sqlDetail.metrics">
-                  <div class="perf-chip total">
-                    <span class="label">⏱️ 體感總時</span>
-                    <span class="val">{{ sqlDetail.metrics.totalTime }} ms</span>
-                  </div>
+          @if (isExpanded(row.id)) {
+            <tr class="detail-row">
+              <td>
+                <div class="flex flex-column gap-2 py-1">
 
-                  <div class="perf-chip before-db">
-                    <span class="label">🖥️ DB 前運算</span>
-                    <span class="val">{{ sqlDetail.metrics.beforeDbTime }} ms</span>
-                  </div>
-
-                  <div class="perf-chip database">
-                    <span class="label">💾 DB 執行</span>
-                    <span class="val">{{ sqlDetail.metrics.dbTime }} ms</span>
-                  </div>
-
-                  <div class="perf-chip after-db">
-                    <span class="label">💻 DB 後處理</span>
-                    <span class="val">{{ sqlDetail.metrics.afterDbTime }} ms</span>
-                  </div>
-
-                  <div class="perf-chip network">
-                    <span class="label">🌐 網路與損耗</span>
-                    <span class="val">{{ sqlDetail.metrics.networkTime }} ms</span>
-                  </div>
-                </div>
-
-                <div class="sql-code-wrapper" (click)="copySql(sqlDetail.sql)">
-                  <div class="sql-header flex justify-content-between">
-                    <span class="sql-title">Structured Query Language / Debug Log</span>
-                    <div class="flex align-items-center gap-2" *ngIf="!sqlDetail.sql.startsWith('--')">
-                      <span class="copy-hint">CLICK TO COPY</span>
-                      <i class="pi pi-copy"></i>
+                  @if (row.isFirstOfApi && row.metrics) {
+                    <div class="perf-dashboard flex flex-wrap gap-2">
+                      <div class="perf-chip total">
+                        <span class="label">⏱️ 體感總時</span>
+                        <span class="val">{{ row.metrics.totalTime }} ms</span>
+                      </div>
+                      <div class="perf-chip before-db">
+                        <span class="label">🖥️ DB 前運算</span>
+                        <span class="val">{{ row.metrics.beforeDbTime }} ms</span>
+                      </div>
+                      <div class="perf-chip database">
+                        <span class="label">💾 DB 執行</span>
+                        <span class="val">{{ row.metrics.dbTime }} ms</span>
+                      </div>
+                      <div class="perf-chip after-db">
+                        <span class="label">💻 DB 後處理</span>
+                        <span class="val">{{ row.metrics.afterDbTime }} ms</span>
+                      </div>
+                      <div class="perf-chip network">
+                        <span class="label">🌐 網路與損耗</span>
+                        <span class="val">{{ row.metrics.networkTime }} ms</span>
+                      </div>
                     </div>
+                  }
+
+                  <div class="sql-code-wrapper" (click)="$event.stopPropagation(); copySql(row.sql)">
+                    <div class="sql-header flex justify-content-between">
+                      <span class="sql-title">Structured Query Language / Debug Log</span>
+                      @if (!row.sql.startsWith('--')) {
+                        <div class="flex align-items-center gap-2">
+                          <span class="copy-hint">CLICK TO COPY</span>
+                          <i class="pi pi-copy"></i>
+                        </div>
+                      }
+                    </div>
+                    <pre class="sql-content" [innerHTML]="row.displaySql"></pre>
                   </div>
-                  <pre class="sql-content" [innerHTML]="sqlDetail.displaySql"></pre>
+
                 </div>
+              </td>
+            </tr>
+          }
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td>
+              <div class="p-5 text-center text-500">
+                <i class="pi pi-inbox block mb-2 text-2xl"></i>
+                @if (filterText()) {
+                  No results matching "{{ filterText() }}"
+                } @else {
+                  目前沒有累積的記錄
+                }
               </div>
             </td>
           </tr>
         </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <div class="p-5 text-center text-500">
-            <i class="pi pi-inbox block mb-2 text-2xl"></i> 目前沒有累積的 記錄
-          </div>
-        </ng-template>
       </p-table>
-    </ng-template>
-  </p-overlayPanel>
-</div>
+    </div>
+  </p-dialog>
+}
