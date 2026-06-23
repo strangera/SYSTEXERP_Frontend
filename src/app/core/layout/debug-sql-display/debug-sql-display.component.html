@@ -9,7 +9,7 @@
   <p-overlayPanel #op [style]="{ width: '75vw', maxWidth: '1200px' }" [showCloseIcon]="true"
     styleClass="tls-sql-debug-overlay">
     <ng-template pTemplate="content">
-      <div class="debug-header flex align-items-center justify-content-between mb-2">
+      <div class="debug-header flex align-items-center justify-content-between mb-2" data-no-log>
         <h4 class="m-0 flex align-items-center" style="color: #818cf8;">
           <i class="pi pi-bolt mr-2 text-xl"></i>
           <span>SQL & Performance Monitor ({{ sqlCount() }})</span>
