@@ -193,14 +193,14 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'bus_type_name', header: '大分類名稱', type: 'dropdown', validate: [validateRequired] },
   { field: 'INV_ItemName', header: '項目名稱', type: 'dropdown', validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
-  { field: 'INV_SaleAmt', header: '發票金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [
   { field: 'TXN_Item', header: '項次' },
   { field: 'INV_ItemName', header: '項目名稱' },
   { field: 'INV_Qty', header: '銷售數量' },
-  { field: 'TXN_SaleAmt', header: '銷售發票金額', format: formatAmount },
+  { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
 ];
 
 // ===== 介面定義 =====
@@ -275,6 +275,4 @@ export interface TLS2J030Source {
   isClose: string | null;
   /** 發票日是否鎖定 */
   isInvoiceClose: string | null;
-  /** 手開已換開訊息(給前端看的訊息) */
-  GUI_Message: string | null;
 }
