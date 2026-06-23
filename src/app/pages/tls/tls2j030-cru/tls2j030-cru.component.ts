@@ -14,6 +14,7 @@ import { DividerModule } from "primeng/divider";
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs'; // 引入 of
+import { ValidationService } from 'src/app/shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import {
@@ -83,8 +84,26 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   constructor(
     public readonly tls2j030Service: TLS2j030Service,
     private dropDownListService: DropDownListService,
+    private validationService: ValidationService,
   ) {
     super();
+  }
+  private validateUniformNumber(
+    value: any,
+    rowData: unknown,
+    data: unknown[],
+    field: string,
+    header: string
+  ): { isValid: boolean; errorMessage: string[] } {
+    void rowData; void data; void field; void header;
+    if (value === '' || value === null || value === undefined) {
+      return { isValid: true, errorMessage: [] };
+    }
+    const error = this.validationService.companyIdValidator({ value: String(value) });
+    if (error) {
+      return { isValid: false, errorMessage: ['統一編號格式錯誤'] };
+    }
+    return { isValid: true, errorMessage: [] };
   }
   private updateColumnsChange(): void {
     // 基礎欄位
@@ -116,9 +135,18 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     if (showGuiNo) {
       baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, minWidth: '120px', validate: [validateRequired], });
     }
-
+    // 組合剩餘欄位，並動態注入 TXN_Uniform(統編)的驗證
+    const changeEditColumns = COLUMNS_CHANGE_EDIT.map(col => {
+      if (col.field === 'TXN_Uniform') {
+        return {
+          ...col,
+          validate: [this.validateUniformNumber.bind(this)]
+        };
+      }
+      return col;
+    });
     // 加入剩餘欄位
-    baseColumns = [...baseColumns, ...COLUMNS_CHANGE_EDIT]
+    baseColumns = [...baseColumns, ...changeEditColumns]
 
     this.columnschange = baseColumns;
   }
