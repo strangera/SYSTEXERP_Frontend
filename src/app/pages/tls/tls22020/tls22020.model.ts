@@ -1,4 +1,4 @@
-import { Column, ColumnGroup, formatAmount } from "@shared/componentkit/table/table.model";
+import { ReportColumn, ColumnGroup, formatAmount } from "@shared/componentkit/table-report/table-report.model";
 export interface TLS22020Data {
   ECR_No: string;
   tlt_no: string;
@@ -53,28 +53,28 @@ export const creditCardGroup: ColumnGroup[] = payNoDataList.map(item => ({
 }));
 
 //固定前置欄位
-const baseColumns: Column[] = [
+const baseColumns: ReportColumn[] = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'tlt_no' },
   { header: '專櫃名稱', field: 'tlt_name' }
 ];
 
 // 每個付款別的「三個子欄位」
-const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
-  { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, style: 'text-right' },
-  { header: 'Z帳', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, style: 'text-right' },
-  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, style: 'text-right' },
+const paymentColumns: ReportColumn[] = payNoDataList.flatMap((item) => [
+  { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, align: 'right' },
+  { header: 'Z帳', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, align: 'right' },
+  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, align: 'right' },
 ]);
 
 // 固定欄位
-const tailColumns: Column[] = [
-  { header: '明細總金額', field: 'Total_Txn_PayAmt', isTotal: true, format: formatAmount, style: 'text-right' },
-  { header: '帳單總金額', field: 'Total_SLE_PayAmt', isTotal: true, format: formatAmount, style: 'text-right' },
-  { header: '總差額', field: 'Total_Diff_PayAmt', isTotal: true, format: formatAmount, style: 'text-right' },
+const tailColumns: ReportColumn[] = [
+  { header: '明細總金額', field: 'Total_Txn_PayAmt', isTotal: true, format: formatAmount, align: 'right' },
+  { header: '帳單總金額', field: 'Total_SLE_PayAmt', isTotal: true, format: formatAmount, align: 'right' },
+  { header: '總差額', field: 'Total_Diff_PayAmt', isTotal: true, format: formatAmount, align: 'right' },
 
 ];
 
-export const creditCardColumns: Column[] = [
+export const creditCardColumns: ReportColumn[] = [
   ...baseColumns,
   ...paymentColumns,
   ...tailColumns
