@@ -42,6 +42,16 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="銷售人統一編號" [control]="dataForm.controls.STO_Uniform"
+            [submitted]="submitted" [readonly]="true"></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="買受人統一編號" [control]="dataForm.controls.TXN_Uniform"
+            [submitted]="submitted"></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="格式代號" controlName="INV_GUIType" [options]="INV_GUITypeOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.INV_GUIType" [submitted]="submitted"></app-dropdown>
         </div>

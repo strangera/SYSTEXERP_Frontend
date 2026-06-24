@@ -160,6 +160,7 @@ export class TableReportComponent implements OnChanges {
   @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
   private isNextPagePreloaded = false;
+  private columnWidthsReady = false;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
 
@@ -206,12 +207,17 @@ export class TableReportComponent implements OnChanges {
       this.subtotalService.clearGroupTotals();
       this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
       this.isNextPagePreloaded = false;
+      // 全新查詢（前一次資料為空）才重新啟用欄寬計算；load-more 追加不重算
+      if (!changes['data'].previousValue?.length) {
+        this.columnWidthsReady = false;
+      }
     }
 
-    if (this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
+    if (!this.columnWidthsReady && this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
       this.columns = this.widthService.calculateAndFixColumnWidths(
         this.columns, this.data, this.totalRecords, this.showReorder
       );
+      this.columnWidthsReady = true;
     }
 
     // 封裝後的 PrimeNG 視圖狀態與虛擬滾動分配邏輯
@@ -387,7 +393,8 @@ export class TableReportComponent implements OnChanges {
     this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
     this.cdr.detectChanges();
     setTimeout(() => {
-      if (this.dt) this.dt.restoreState();
+      if (!this.dt) return;
+      this.dt.restoreState();
       this.cdr.detectChanges();
     }, 0);
   }
@@ -406,7 +413,6 @@ export class TableReportComponent implements OnChanges {
       this.selectedItems = [...this.selectedItems];
       this.cdr.detectChanges();
     }
-    this.cdr.markForCheck();
   }
 
   trackByFn(index: number, item: any) {

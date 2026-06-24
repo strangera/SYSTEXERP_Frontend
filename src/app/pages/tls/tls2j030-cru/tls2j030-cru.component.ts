@@ -14,6 +14,7 @@ import { DividerModule } from "primeng/divider";
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs'; // 引入 of
+import { ValidationService } from 'src/app/shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import {
@@ -83,8 +84,26 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   constructor(
     public readonly tls2j030Service: TLS2j030Service,
     private dropDownListService: DropDownListService,
+    private validationService: ValidationService,
   ) {
     super();
+  }
+  private validateUniformNumber(
+    value: any,
+    rowData: unknown,
+    data: unknown[],
+    field: string,
+    header: string
+  ): { isValid: boolean; errorMessage: string[] } {
+    void rowData; void data; void field; void header;
+    if (value === '' || value === null || value === undefined) {
+      return { isValid: true, errorMessage: [] };
+    }
+    const error = this.validationService.companyIdValidator({ value: String(value) });
+    if (error) {
+      return { isValid: false, errorMessage: ['統一編號格式錯誤'] };
+    }
+    return { isValid: true, errorMessage: [] };
   }
   private updateColumnsChange(): void {
     // 基礎欄位
@@ -116,9 +135,18 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     if (showGuiNo) {
       baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, minWidth: '120px', validate: [validateRequired], });
     }
-
+    // 組合剩餘欄位，並動態注入 TXN_Uniform(統編)的驗證
+    const changeEditColumns = COLUMNS_CHANGE_EDIT.map(col => {
+      if (col.field === 'TXN_Uniform') {
+        return {
+          ...col,
+          validate: [this.validateUniformNumber.bind(this)]
+        };
+      }
+      return col;
+    });
     // 加入剩餘欄位
-    baseColumns = [...baseColumns, ...COLUMNS_CHANGE_EDIT]
+    baseColumns = [...baseColumns, ...changeEditColumns]
 
     this.columnschange = baseColumns;
   }
@@ -305,7 +333,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     this.queryLoading = true;
     this.tls2j030Service.queryTLS2J030TXN_GUI({ TXN_GUIBegNo: txnGuiBegNo }).pipe(finalize(() => this.queryLoading = false)).subscribe({
       next: res => this.handleQuerySourceInvoiceSuccess(res?.Data || []),
-      error: () => this.messageService.errorBubble('查詢失敗')
     });
   }
 
@@ -320,33 +347,24 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const sourceDate = source.TXN_Date;
     const today = new Date().toISOString();
 
-    if (source.GUI_Message !== '') {
-      this.messageService.warnBubble(`${source.GUI_Message}`);
-      return;
-    }
-
     // 1. 判斷是否為當期發票
     if (this.formatDateToYYYYMM(sourceDate) !== this.formatDateToYYYYMM(today)) {
       this.messageService.warnBubble(`來源發票非當期發票，無法新增`);
       return;
     }
 
-    // 2. 檢查是否已關帳
-    if (source.isClose === 'Y') {
-      this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
+    // 2. 檢查是否已日關帳(拿掉，改判斷發票鎖定)
+    // if (source.isClose === 'Y') {
+    //   this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
+    //   return;
+    // }
+    // 2. 檢查發票是否鎖定
+    if (source.isInvoiceClose === 'Y') {
+      this.messageService.warnBubble(`發票日期已鎖定，不可換開發票`);
       return;
     }
 
-    // 3. 檢查交易日期是否與第一筆一致
-    if (this.data.length > 0) {
-      const firstDate = this.data[0].TXN_Date;
-      if (this.formatDateToYYYYMM(source.TXN_Date) !== this.formatDateToYYYYMM(firstDate)) {
-        this.messageService.warnBubble('來源發票交易日期須與第一筆一致，無法新增');
-        return;
-      }
-    }
-
-    // 4. 檢查是否已存在
+    // 3. 檢查是否已存在
     const formatted = this.formatTxnNoInSingleData(source);
 
     if (this.data.some(d => d.TXN_GUIBegNo === formatted.TXN_GUIBegNo && d.TXN_No === formatted.TXN_No)) {
@@ -355,20 +373,20 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
-    // 5. 加入來源發票
+    // 4. 加入來源發票
     this.data = [...this.data, formatted];
     this.sourceInvoiceData = formatted;
     this.messageService.successBubble('查詢並加入來源發票成功');
 
-    // 6. 初始化編輯資料 (如果尚未初始化)
+    // 5. 初始化編輯資料 (如果尚未初始化)
     if (!this.changeEditData || this.changeEditData.length === 0) {
       this.initializeEditData();
     }
 
-    // 7. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
+    // 6. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
     this.syncSourceSumToChangeInvoice();
 
-    // 8. 清空輸入欄位
+    // 7. 清空輸入欄位
     this.dataForm.get('TXN_GUIBegNo')?.setValue('');
     this.txnNotesChange(); // 同步更新換開發票的備註欄位
   }

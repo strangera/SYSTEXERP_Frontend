@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POS 遠端控制</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --border:      #30363d;
+      --accent:      #58a6ff;
+      --success:     #3fb950;
+      --danger:      #f85149;
+      --warning:     #d29922;
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --text-subtle: #484f58;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      height: 46px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+
+    .brand-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(145deg, #1d6ed8, #0a4fa8);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,.5);
+    }
+
+    .brand-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+    .brand-label { font-size: 10px; color: var(--text-muted); font-weight: 500; letter-spacing: .05em; text-transform: uppercase; }
+    .brand-id {
+      font-size: 13px; font-weight: 700;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .brand-id .ecr { color: var(--accent); }
+    .brand-id .sep { color: var(--text-subtle); margin: 0 5px; }
+    .brand-id .tlt { color: var(--text-muted); font-weight: 500; font-family: inherit; font-size: 12px; }
+
+    .spacer { flex: 1; }
+
+    /* Connection badge */
+    .conn-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px 3px 8px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 600;
+      border: 1px solid transparent; white-space: nowrap;
+      transition: all .35s ease;
+    }
+    .conn-badge.connecting { background: rgba(88,166,255,.1);  color: var(--accent);  border-color: rgba(88,166,255,.25); }
+    .conn-badge.connected  { background: rgba(63,185,80,.1);   color: var(--success); border-color: rgba(63,185,80,.25); }
+    .conn-badge.error      { background: rgba(248,81,73,.1);   color: var(--danger);  border-color: rgba(248,81,73,.25); }
+    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .conn-dot.pulse { animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* Mode badge (view-only / control) */
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px 3px 8px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 600;
+      border: 1px solid transparent; cursor: pointer;
+      white-space: nowrap; transition: all .25s ease;
+    }
+    .mode-badge.viewonly {
+      background: rgba(210,153,34,.08); color: var(--warning);
+      border-color: rgba(210,153,34,.25);
+    }
+    .mode-badge.viewonly:hover { background: rgba(210,153,34,.18); border-color: rgba(210,153,34,.5); }
+    .mode-badge.control {
+      background: rgba(63,185,80,.1); color: var(--success);
+      border-color: rgba(63,185,80,.3);
+    }
+    .mode-badge.control:hover { background: rgba(248,81,73,.1); color: var(--danger); border-color: rgba(248,81,73,.3); }
+
+    /* Divider */
+    .vdiv { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+
+    /* Toolbar buttons */
+    .tbtn {
+      height: 30px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 5px; padding: 0 9px; font-size: 12px; font-family: inherit;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .tbtn:hover:not(:disabled) { background: rgba(88,166,255,.1); color: var(--accent); border-color: rgba(88,166,255,.35); }
+    .tbtn:active:not(:disabled) { transform: scale(.95); }
+    .tbtn:disabled { opacity: .28; cursor: default; }
+    .tbtn.icon-only { width: 30px; padding: 0; }
+    .tbtn.danger:hover:not(:disabled) { background: rgba(248,81,73,.1); color: var(--danger); border-color: rgba(248,81,73,.35); }
+
+    /* ── SCREEN ── */
+    #vnc-wrap { flex: 1; position: relative; background: #000; overflow: hidden; }
+    #screen   { width: 100%; height: 100%; }
+
+    /* View-only cursor block */
+    #screen.viewonly { cursor: not-allowed !important; }
+    #screen.viewonly canvas { pointer-events: none; cursor: not-allowed !important; }
+
+    /* ── OVERLAY (connecting / error) ── */
+    .overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      background: rgba(13,17,23,.88);
+      backdrop-filter: blur(8px);
+      z-index: 20; transition: opacity .4s ease;
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+    .ring {
+      width: 52px; height: 52px;
+      border: 3px solid rgba(88,166,255,.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ov-icon  { font-size: 44px; line-height: 1; display: none; }
+    .ov-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .ov-sub   { font-size: 12.5px; color: var(--text-muted); text-align: center; max-width: 300px; line-height: 1.6; }
+    .ov-sub.err { color: rgba(248,81,73,.85); }
+
+    /* ── CONTROL REQUEST OVERLAY ── */
+    .ctrl-req-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .ctrl-req-overlay.open { opacity: 1; pointer-events: all; }
+
+    .ctrl-req-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      width: 300px;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      text-align: center;
+    }
+    .ctrl-req-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(145deg, #d29922, #a07010);
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .ctrl-req-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .ctrl-req-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .ctrl-req-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid rgba(88,166,255,.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    /* ── STATUS BAR ── */
+    .sbar {
+      height: 22px; background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 12px; gap: 14px;
+      font-size: 10.5px; color: var(--text-subtle);
+      flex-shrink: 0;
+    }
+    .sbar-item { display: flex; align-items: center; gap: 4px; }
+    .sbar-spacer { flex: 1; }
+    .kbd {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 3px; padding: 0 3px;
+      font-size: 9.5px; font-family: monospace; color: var(--text-muted);
+    }
+    #sb-mode { font-weight: 600; }
+    #sb-mode.viewonly { color: var(--warning); }
+    #sb-mode.control  { color: var(--success); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="brand">
+      <div class="brand-icon">🖥</div>
+      <div class="brand-text">
+        <div class="brand-label">POS 遠端控制</div>
+        <div class="brand-id">
+          <span class="ecr" id="lb-ecr">—</span>
+          <span class="sep" id="lb-sep" style="display:none">·</span>
+          <span class="tlt" id="lb-tlt"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Connection status -->
+    <div class="conn-badge connecting" id="connBadge">
+      <div class="conn-dot pulse" id="connDot"></div>
+      <span id="connText">連線中…</span>
+    </div>
+
+    <div class="vdiv"></div>
+
+    <!-- Mode toggle -->
+    <div class="mode-badge viewonly" id="modeBadge" title="點擊輸入密碼以接管控制">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="modeIcon">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span id="modeText">僅限觀看</span>
+    </div>
+
+    <div class="vdiv"></div>
+
+    <!-- Ctrl+Alt+Del -->
+    <button class="tbtn" id="btnCad" disabled title="傳送 Ctrl+Alt+Del 至遠端機台">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <path d="M8 10v0M12 10v0M8 14h4"/>
+      </svg>
+      Ctrl+Alt+Del
+    </button>
+
+    <!-- Fullscreen -->
+    <button class="tbtn icon-only" id="btnFs" title="全螢幕">
+      <svg id="fsIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/>
+      </svg>
+    </button>
+
+    <div class="vdiv"></div>
+
+    <!-- Disconnect -->
+    <button class="tbtn icon-only danger" id="btnDisc" title="中斷連線">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── VNC Wrap ── -->
+  <div id="vnc-wrap">
+    <div id="screen" class="viewonly"></div>
+    <div class="overlay" id="overlay">
+      <div class="ring" id="ovRing"></div>
+      <div class="ov-icon" id="ovIcon"></div>
+      <div class="ov-title" id="ovTitle">正在建立連線</div>
+      <div class="ov-sub"  id="ovSub">連接至 POS 機台中，請稍候…</div>
+    </div>
+  </div>
+
+  <!-- ── Status bar ── -->
+  <div class="sbar">
+    <div class="sbar-item">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+      </svg>
+      <span id="sb-ecr">—</span>
+    </div>
+    <div class="sbar-item">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      </svg>
+      <span id="sb-tlt">—</span>
+    </div>
+    <div class="sbar-spacer"></div>
+    <div class="sbar-item"><span class="kbd">F8</span> 選單</div>
+    <div class="sbar-item">
+      <span id="sb-mode" class="viewonly">👁 僅限觀看</span>
+    </div>
+    <div class="sbar-item" id="sb-res">解析度：—</div>
+  </div>
+
+  <!-- ── Control Request Overlay（等待 Angular 父視窗完成密碼驗證）── -->
+  <div class="ctrl-req-overlay" id="ctrlReqOverlay">
+    <div class="ctrl-req-card">
+      <div class="ctrl-req-icon">🔐</div>
+      <div class="ctrl-req-title">請求接管控制</div>
+      <div class="ctrl-req-desc">請在主視窗輸入 VNC 密碼以啟用鍵盤及滑鼠操控</div>
+      <div class="ctrl-req-spinner"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import RFB from './novnc/core/rfb.js';
+
+    // ── Params ──（不再接收密碼；後端代理已完成 RFB 認證）
+    const p       = new URLSearchParams(location.search);
+    const wsUrl   = p.get('wsUrl');
+    const ecrNo   = p.get('ecrNo') || '';
+    const tltName = p.get('tltName') || '';
+
+    // Labels
+    if (ecrNo) {
+      document.getElementById('lb-ecr').textContent = ecrNo;
+      document.getElementById('sb-ecr').textContent = ecrNo;
+    }
+    if (tltName) {
+      document.getElementById('lb-tlt').textContent = tltName;
+      document.getElementById('lb-sep').style.display = '';
+      document.getElementById('sb-tlt').textContent = tltName;
+    }
+
+    // ── UI refs ──
+    const overlay  = document.getElementById('overlay');
+    const ovRing   = document.getElementById('ovRing');
+    const ovIcon   = document.getElementById('ovIcon');
+    const ovTitle  = document.getElementById('ovTitle');
+    const ovSub    = document.getElementById('ovSub');
+    const badge    = document.getElementById('connBadge');
+    const dot      = document.getElementById('connDot');
+    const connTxt  = document.getElementById('connText');
+    const btnCad   = document.getElementById('btnCad');
+    const sbRes    = document.getElementById('sb-res');
+    const modeBadge = document.getElementById('modeBadge');
+    const modeIcon  = document.getElementById('modeIcon');
+    const modeText  = document.getElementById('modeText');
+    const sbMode    = document.getElementById('sb-mode');
+    const screenEl  = document.getElementById('screen');
+
+    // ── Mode state ──
+    let isControlMode = false;
+    let rfb = null;
+    let controlRequestPending = false;
+    let controlRequestTimeout = null;
+
+    const ctrlReqOverlay = document.getElementById('ctrlReqOverlay');
+
+    const iconViewOnly = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    const iconControl  = `<path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>`;
+
+    function applyViewOnly() {
+      isControlMode = false;
+      if (rfb) rfb.viewOnly = true;
+      screenEl.classList.add('viewonly');
+      modeBadge.className = 'mode-badge viewonly';
+      modeBadge.title = '點擊輸入密碼以接管控制';
+      modeIcon.innerHTML = iconViewOnly;
+      modeText.textContent = '僅限觀看';
+      sbMode.className = 'viewonly';
+      sbMode.textContent = '👁 僅限觀看';
+      btnCad.disabled = true;
+    }
+
+    function applyControl() {
+      isControlMode = true;
+      if (rfb) rfb.viewOnly = false;
+      screenEl.classList.remove('viewonly');
+      modeBadge.className = 'mode-badge control';
+      modeBadge.title = '目前可操控 POS — 點擊釋放控制';
+      modeIcon.innerHTML = iconControl;
+      modeText.textContent = '控制中';
+      sbMode.className = 'control';
+      sbMode.textContent = '🎮 控制中';
+      btnCad.disabled = false;
+    }
+
+    // ── Connection state ──
+    function setConnected() {
+      badge.className = 'conn-badge connected';
+      dot.className   = 'conn-dot';
+      connTxt.textContent = '已連線';
+      overlay.classList.add('hidden');
+      const canvas = document.querySelector('#screen canvas');
+      if (canvas) sbRes.textContent = `解析度：${canvas.width} × ${canvas.height}`;
+    }
+
+    function setDisconnected(clean, reason) {
+      badge.className = 'conn-badge error';
+      dot.className   = 'conn-dot';
+      connTxt.textContent = clean ? '已中斷' : '連線異常';
+      applyViewOnly();
+      ovRing.style.display = 'none';
+      ovIcon.style.display = 'block';
+      ovIcon.textContent   = clean ? '🔌' : '⚠️';
+      ovTitle.textContent  = clean ? '連線已關閉' : '連線中斷';
+      ovSub.textContent    = reason || (clean
+        ? '與 POS 機台的連線已正常關閉'
+        : '連線發生錯誤，請重新開啟遠端控制');
+      ovSub.className = clean ? 'ov-sub' : 'ov-sub err';
+      overlay.classList.remove('hidden');
+    }
+
+    // ── Init RFB（後端代理已完成 RFB 認證，前端不需要密碼）──
+    if (!wsUrl) {
+      setDisconnected(false, '缺少 wsUrl 連線參數');
+    } else {
+      try {
+        rfb = new RFB(screenEl, wsUrl, {});
+        rfb.scaleViewport = true;
+        rfb.resizeSession = false;
+        rfb.viewOnly      = true; // start view-only
+
+        rfb.addEventListener('connect',    ()  => setConnected());
+        rfb.addEventListener('disconnect', (e) => setDisconnected(!!e.detail?.clean, e.detail?.reason || ''));
+        rfb.addEventListener('desktopname',(e) => {
+          if (e.detail?.name) ovSub.textContent = `正在連接至 ${e.detail.name}…`;
+        });
+
+        btnCad.addEventListener('click', () => rfb?.sendCtrlAltDel());
+        document.getElementById('btnDisc').addEventListener('click', () => rfb?.disconnect());
+      } catch (err) {
+        setDisconnected(false, '初始化失敗：' + err.message);
+      }
+    }
+
+    // ── Mode badge click ──
+    modeBadge.addEventListener('click', () => {
+      if (!rfb) return;
+      if (isControlMode) {
+        applyViewOnly();
+      } else {
+        requestControl();
+      }
+    });
+
+    // ── 請求接管：通知父視窗（Angular）進行密碼驗證 ──
+    function requestControl() {
+      if (controlRequestPending) return;
+      controlRequestPending = true;
+      ctrlReqOverlay.classList.add('open');
+      window.parent.postMessage({ type: 'REQUEST_CONTROL' }, '*');
+      // 30 秒逾時保護
+      controlRequestTimeout = setTimeout(() => {
+        cancelControlRequest();
+      }, 30000);
+    }
+
+    function cancelControlRequest() {
+      controlRequestPending = false;
+      clearTimeout(controlRequestTimeout);
+      ctrlReqOverlay.classList.remove('open');
+    }
+
+    // ── 接收父視窗（Angular）回傳的驗證結果 ──
+    window.addEventListener('message', (event) => {
+      const type = event.data?.type;
+      if (type === 'CONTROL_GRANTED') {
+        cancelControlRequest();
+        applyControl();
+      } else if (type === 'CONTROL_DENIED') {
+        cancelControlRequest();
+      }
+    });
+
+    // ── Fullscreen ──
+    const btnFs = document.getElementById('btnFs');
+    const fsExpand = `<path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/>`;
+    const fsShrink = `<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>`;
+
+    btnFs.addEventListener('click', async () => {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        await document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      const isFs = !!document.fullscreenElement;
+      btnFs.title = isFs ? '離開全螢幕' : '全螢幕';
+      document.getElementById('fsIcon').innerHTML = isFs ? fsShrink : fsExpand;
+    });
+  </script>
+</body>
+</html>

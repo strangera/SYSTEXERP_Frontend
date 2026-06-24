@@ -103,6 +103,7 @@ function mapStepApToInsert(
     ACP_Amt: row.acp_amt,
     VEN_PayType: row.ven_pay_type,
     VEN_BNK_No: row.ven_bnk_no,
+    VEN_BNK_BranchNo: row.ven_bnk_branch_no,
     VEN_BankAccountNo: bank.VEN_BankAccountNo,
     VEN_AccountName: bank.VEN_AccountName,
     ACP_ExpectPayDate: toYmd(row.acp_expect_pay_date ?? undefined, deps.datePipe),
@@ -152,10 +153,11 @@ function mapStepPurchaseToInsert2002(
 ): InsertAPS2002DataBody {
   const prefix = String(row.track_no ?? '').trim();
   const no = String(row.invoice_no ?? '').trim();
-  const purGuino = prefix && no ? `${prefix}${no}` : undefined;
+  // 某些發票格式發票號碼可不填；未填時送空字串給後端
+  const purGuino = no ? `${prefix}${no}` : '';
   const ven = deps.getVendorOption(row.ven_no);
   const voucherType = String(row.voucher_type ?? '').trim();
-  const invoiceNoStr = String(row.invoice_no ?? '').trim();
+  const invoiceNoStr = no;
   const isSummaryInvoice = (voucherType === '22' || voucherType === '25')
     && (invoiceNoStr === '' || invoiceNoStr === '0000000000');
   const purComb = isSummaryInvoice ? 'A' : undefined;

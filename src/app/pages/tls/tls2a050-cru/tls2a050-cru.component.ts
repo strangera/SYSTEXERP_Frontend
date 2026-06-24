@@ -1,116 +1,79 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
-import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
+import { finalize } from 'rxjs';
+import { QueryTLS22050Response, Tls22050Service } from 'src/app/service/api/tls/tls22050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+
+interface ParentQueryRow {
+  TXN_Date: string | null;
+}
+
+interface DetailRow {
+  PAY_Name: string;
+  ECR_No: string | null;
+  TXN_No: number | null;
+  BOOK_PayAmt: number;
+  ACT_PayAmt: number;
+  OVER_PayAmt: number;
+  isTotal: boolean;
+  rowspan: number;
+}
 
 @Component({
   selector: 'app-tls2a050-cru',
   templateUrl: './tls2a050-cru.component.html',
-  styleUrls: ['./tls2a050-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
     ButtonComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
     TranslateModule,
-    ButtonModule,
     TableModule,
-    CommonModule,
-    TagModule
+    DecimalPipe,
   ],
 })
-export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  dataForm = this.formBuilder.nonNullable.group({
-    TXN_Date: [null],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-    // pageSize: [5000]
-  });
+export class TLS2A050CRUComponent extends BasicCruPageComponent<ParentQueryRow> implements OnInit {
+  private readonly tls22050Service = inject(Tls22050Service);
+  private readonly destroyRef = inject(DestroyRef);
 
-  data: any[] = [];
-  totalRecords = 0;
-  selectedItems: any[] = [];
-
-  detailData: any[] = []; // 明細
-  totals: any[] = [];     // 各付款別小計
-
-  columns: Column[] = [
-    { field: 'PAY_Name', header: '付款別', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    {
-      field: 'BOOK_PayAmt',
-      header: '系統金額',
-      visible: true,
-      format: formatAmount,
-    },
-    {
-      field: 'ACT_PayAmt',
-      header: '實收金額',
-      visible: true,
-      format: formatAmount,
-    },
-    {
-      field: 'OVER_PayAmt',
-      header: '帳差',
-      visible: true,
-      format: formatAmount,
-    },
-  ];
-
-  constructor(
-    private tls2A050Service: Tls2A050Service
-  ) {
-    super();
-  }
+  txnDate: string | null = null;
+  detailData: DetailRow[] = [];
 
   ngOnInit(): void {
-    this.initializePage('TLS2A050', this.dataForm);
-    this.onSubmit(this.dataForm);
+    this.initializePage('TLS2A050');
+    const date = this.rowdata?.TXN_Date ?? null;
+    if (!date) {
+      this.messageService.errorBubble('缺少查詢日期');
+      return;
+    }
+    this.txnDate = date;
+    this.fetchDetails(date);
   }
-  onSubmit(frm: FormGroup) {
-    const raw = frm.value;
-    this.tls2A050Service.queryTLS22050(raw).subscribe({
+
+  private fetchDetails(txnDate: string): void {
+    // Backend SQL uses Convert(varchar,date,120) = @TXN_Date → yyyy-MM-dd format
+    const dateParam = txnDate.replace(/\//g, '-');
+    this.loading = true;
+    this.tls22050Service.queryTLS22050({
+      TXN_Date: dateParam,
+      pageIndex: 1,
+      pageSize: 99999,
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
+    .subscribe({
       next: (res) => {
         if (res.Status === '0000' || res.Status === 0) {
-          if (!res.Data || res.Data.length === 0) {
-            alert('查無資料');
+          const queryData = res.Data ?? [];
+          if (queryData.length === 0) {
+            this.messageService.errorBubble('查無資料');
             this.detailData = [];
             return;
           }
-          this.detailData = [];
-          (res.Data || []).forEach((group: any) => {
-            const list = group._DetailList && group._DetailList.length > 0
-              ? group._DetailList
-              : [{ ECR_No: null, TXN_No: null, BOOK_PayAmt: 0, ACT_PayAmt: 0, OVER_PayAmt: 0 }];
-            // 加入明細列
-            list.forEach((d: any) => {
-              this.detailData.push({
-                ...d,
-                PAY_Name: group.PAY_Name,
-                isTotal: false
-              });
-            });
-            this.detailData.push({
-              PAY_Name: group.PAY_Name,  // 保持分組歸屬
-              isTotal: true,
-              BOOK_PayAmt: group.BOOK_PayCnt_Sum ?? 0,
-              ACT_PayAmt: group.ACT_PayAmt_Sum ?? 0,
-              OVER_PayAmt: group.OVER_PayAmt_Sum ?? 0
-            });
-          });
-          console.log('展平後 detailData:', this.detailData);
+          this.detailData = this.flattenRows(queryData);
         } else {
           this.messageService.errorBubble(`查詢失敗: ${res.Message}`);
         }
@@ -118,4 +81,33 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
+  private flattenRows(queryData: QueryTLS22050Response[]): DetailRow[] {
+    const rows: DetailRow[] = [];
+    for (const payGroup of queryData) {
+      const details = payGroup._DetailList ?? [];
+      details.forEach((detail, index) => {
+        rows.push({
+          PAY_Name: payGroup.PAY_Name,
+          ECR_No: detail.ECR_No,
+          TXN_No: detail.TXN_No,
+          BOOK_PayAmt: detail.BOOK_PayAmt,
+          ACT_PayAmt: detail.ACT_PayAmt,
+          OVER_PayAmt: detail.OVER_PayAmt,
+          isTotal: false,
+          rowspan: index === 0 ? details.length : 0,
+        });
+      });
+      rows.push({
+        PAY_Name: payGroup.PAY_Name,
+        ECR_No: null,
+        TXN_No: null,
+        BOOK_PayAmt: payGroup.BOOK_PayCnt_Sum,
+        ACT_PayAmt: payGroup.ACT_PayAmt_Sum,
+        OVER_PayAmt: payGroup.OVER_PayAmt_Sum,
+        isTotal: true,
+        rowspan: 0,
+      });
+    }
+    return rows;
+  }
 }

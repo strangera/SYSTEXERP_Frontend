@@ -35,6 +35,14 @@ export interface QueryTLS44010Response {
 // 狀態對應型別 (0: 暫停交易, 1: 登出, 2: 完成清帳, 3: 交易中, 4: 完成交班, 5: 關機)
 export type EOSStatus = '0' | '1' | '2' | '3' | '4' | '5';
 
+export interface VncSessionResponse {
+  SessionToken: string;
+}
+
+export interface VncVerifyPasswordRequest {
+  EncryptedPassword: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -45,5 +53,16 @@ export class TLS44010Service {
 
   queryTLS44010(data: Partial<QueryTLS44010Request>): Observable<ApiResponse<QueryTLS44010Response[]>> {
     return this.http.post<ApiResponse<QueryTLS44010Response[]>>(`${this.apiUrl}/queryTLS44010`, data);
+  }
+
+  createVncSession(ecrNo: string): Observable<ApiResponse<VncSessionResponse>> {
+    return this.http.post<ApiResponse<VncSessionResponse>>(`${this.apiUrl}/vnc/token`, { ECR_No: ecrNo });
+  }
+
+  verifyVncPassword(encryptedPassword: string): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(
+      `${this.apiUrl}/vnc/verify-password`,
+      { EncryptedPassword: encryptedPassword }
+    );
   }
 }

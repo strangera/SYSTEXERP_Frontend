@@ -1,42 +1,39 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BadgeModule } from 'primeng/badge';
 import { ButtonModule } from 'primeng/button';
-import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { ApiMetrics, DebugToggleService } from '../../services/debug-toggle.service';
+
 interface FlatSqlDetail {
+  id: string;
   apiUrl: string;
   sql: string;
   displaySql: string;
+  sqlPreview: string;
   timestamp: string;
-  isFirstOfApi: boolean;  // 用於控制元件上效能儀表板的顯示
-  metrics?: ApiMetrics;   // 效能指標數據
+  isFirstOfApi: boolean;
+  metrics?: ApiMetrics;
 }
 
 /** SQL 語法高亮工具 - 強化版 */
 const highlightSql = (sql: string): string => {
   if (!sql) return '';
 
-  // 1. 先處理基礎 HTML 轉義，避免 SQL 裡的 < > 影響渲染
   let result = sql
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // 2. 定義匹配規則
   const strings = /('[^']*')/g;
   const keywords = /\b(SELECT|FROM|WHERE|AND|OR|ORDER BY|GROUP BY|INSERT|UPDATE|SET|DELETE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AS|WITH\(NOLOCK\)|UNION|ALL|TOP|DISTINCT|IN|BETWEEN|IS|NOT|NULL|OVER|PARTITION BY|HAVING|EXISTS|CASE|WHEN|THEN|ELSE|END|INTO|VALUES|ANY|OFFSET|FETCH|NEXT|ROWS|ONLY)\b/gi;
   const functions = /\b(SUM|COUNT|MAX|MIN|AVG|CONVERT|ISNULL|COALESCE|CAST|GETDATE|DATEFROMPARTS|EOMONTH|LEFT|RIGHT|TRIM|REPLICATE|ABS|CEILING|FLOOR|ROUND|GETUTCDATE|DATEADD|DATEDIFF|DATENAME|DATEPART|ROW_NUMBER|RANK|DENSE_RANK)\b/gi;
   const variables = /(@\w+)/g;
   const numbers = /\b(\d+)\b/g;
-  // 修正：Operators 不要動到 <span> 的關鍵字，我們改用簡單的顏色區分
   const operators = /([\+\-\*\/\=\!\<\>\,.;()])/g;
 
-  // 3. 執行取代 (順序很重要)
-  // 先把符號包起來，但後續的 replace 會把標籤內的內容再包一層，這沒關係
   result = result.replace(operators, '<span class="sql-op">$1</span>');
   result = result.replace(strings, '<span class="sql-string">$1</span>');
   result = result.replace(keywords, '<span class="sql-keyword">$1</span>');
@@ -50,19 +47,21 @@ const highlightSql = (sql: string): string => {
 @Component({
   selector: 'app-debug-sql-display',
   standalone: true,
-  imports: [CommonModule, ButtonModule, BadgeModule, OverlayPanelModule, TableModule, ScrollPanelModule],
+  imports: [CommonModule, ButtonModule, BadgeModule, DialogModule, TableModule],
   templateUrl: './debug-sql-display.component.html',
   styleUrl: './debug-sql-display.component.scss'
 })
 export class DebugSqlDisplayComponent {
   private readonly debugService = inject(DebugToggleService);
-  private messageService = inject(NotificationService);
+  private readonly messageService = inject(NotificationService);
 
   public allApiHistory = this.debugService.allSqlHistory;
   public isDebugEnabled = this.debugService.isDebugEnabled;
+  public dialogVisible = signal(false);
+  public filterText = signal('');
+  private expandedKeys = signal(new Set<string>());
 
   public tableData = computed<FlatSqlDetail[]>(() => {
-    // 為了讓最新呼叫的 API 排在最上面，我們先將歷史陣列反轉
     const history = [...this.allApiHistory()].reverse();
     const flatData: FlatSqlDetail[] = [];
 
@@ -84,32 +83,59 @@ export class DebugSqlDisplayComponent {
           .join('\n')
           .trim();
 
-        const displaySql = highlightSql(cleanedSql);
+        const sqlPreview = cleanedSql.split('\n').find(l => l.trim())?.trim().slice(0, 120) ?? '';
 
         flatData.push({
+          id: `${entry.apiUrl}__${timestamp}__${flatData.length}`,
           apiUrl: entry.apiUrl,
           sql: sqlItem.sql,
-          displaySql: displaySql,
-          timestamp: timestamp,
+          displaySql: highlightSql(cleanedSql),
+          sqlPreview,
+          timestamp,
           isFirstOfApi: index === 0,
           metrics: entry.metrics
         });
       });
     });
 
-    // 注意：因為上面已經事先對 API entry 做了反轉(確保最新的 API 在前)，
-    // 這裡我們直接回傳 flatData，不用在最後再 reverse()，否則 index 旗標與顯示順序會錯亂。
     return flatData;
   });
 
-  public sqlCount = computed(() => this.tableData().length);
+  public filteredData = computed<FlatSqlDetail[]>(() => {
+    const filter = this.filterText().toLowerCase().trim();
+    if (!filter) return this.tableData();
+    return this.tableData().filter(row =>
+      row.apiUrl.toLowerCase().includes(filter) ||
+      row.sql.toLowerCase().includes(filter)
+    );
+  });
 
-  onToggle(event: Event, op: any): void {
-    op.toggle(event);
+  public sqlCount = computed(() => this.tableData().length);
+  public filteredCount = computed(() => this.filteredData().length);
+
+  toggleRow(id: string): void {
+    this.expandedKeys.update(set => {
+      const next = new Set(set);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  isExpanded(id: string): boolean {
+    return this.expandedKeys().has(id);
+  }
+
+  expandAll(): void {
+    this.expandedKeys.set(new Set(this.filteredData().map(r => r.id)));
+  }
+
+  collapseAll(): void {
+    this.expandedKeys.set(new Set());
   }
 
   onClearHistory(): void {
     this.debugService.clearHistory();
+    this.expandedKeys.set(new Set());
   }
 
   copySql(sql: string): void {
