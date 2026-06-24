@@ -51,6 +51,14 @@ export interface Sysbq00DropDownItem {
     child_sort: number | null;
 }
 
+export interface SignatureConfig {
+    line1: string | null;
+    line2: string | null;
+    line3: string | null;
+    line4: string | null;
+    line5: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Sysbq00Service {
     private readonly http = inject(HttpClient);
@@ -74,5 +82,9 @@ export class Sysbq00Service {
 
     getSYSBQ00DropDown(): Observable<ApiResponse<Sysbq00DropDownItem[]>> {
         return this.http.post<ApiResponse<Sysbq00DropDownItem[]>>(`${this.apiUrl}/getSYSBQ00DropDown`, {});
+    }
+
+    getSignatureConfig(dataType: string): Observable<ApiResponse<SignatureConfig | null>> {
+        return this.http.post<ApiResponse<SignatureConfig | null>>(`${this.apiUrl}/getSignatureConfig`, { data_type: dataType });
     }
 }

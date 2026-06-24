@@ -97,3 +97,26 @@
 ## AI Response Style
 
 - Respond minimalistic. No long explanations or generic tutorials. Provide direct, copy-pasteable code diffs.
+
+---
+
+## 報表簽核欄位 (POS1032) — 共通 snippet
+
+**說明**: 在報表特定位置顯示簽核欄 (總經理/部主管/單位主管/組長/填寫人 等)，資料來自 POS1032，由 `app-report-signature` 元件統一呈現。
+**元件位置**: `src/app/shared/biz-components/report-signature/report-signature.component.ts`
+**API**: `Sysbq00Service.getSignatureConfig(dataType)` → `POST /SYS0000/BAS1000/getSignatureConfig`
+
+### 使用方式（在任意頁面 HTML 加入）
+```typescript
+// .component.ts — imports 陣列加入
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
+
+imports: [..., ReportSignatureComponent]
+```
+
+```html
+<!-- .component.html — 放在要顯示簽核欄的位置，dataType 填入作業代碼 -->
+<app-report-signature dataType="FIN15010" />
+```
+
+元件會自動呼叫 API 取資料，將 line1~line5 橫排顯示，空值的欄自動略去。
