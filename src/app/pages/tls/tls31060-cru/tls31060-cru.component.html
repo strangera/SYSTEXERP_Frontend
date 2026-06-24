@@ -1,23 +1,25 @@
-<div class="card">
-  <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
-  </div>
-</div>
-<div class="card">
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="rowData?.org_name ?? ''"
+  [modal]="true"
+  [maximizable]="true"
+  [style]="{ width: '95vw' }"
+  [contentStyle]="{ overflow: 'auto', padding: '0' }"
+>
   <app-table-report
-    tableKey="tls31060"
+    tableKey="tls31060-detail"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
     [columnGroup]="columnGroup"
     [totalRecords]="totalRecords"
     [showDelete]="false"
+    [showEdit]="false"
     [showManage]="false"
-    [queryFunction]="tls31060Service.queryTLS31060Detail.bind(tls31060Service)"
     [loading]="loading"
     [footerData]="footershowTotal"
-    [footerPercentData]="footershowPercent"
+    [queryFunction]="detailQueryFn"
   >
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
@@ -28,7 +30,6 @@
           icon="pi pi-file"
           (click)="onReport(false)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
@@ -37,9 +38,8 @@
           icon="pi pi-file"
           (click)="onReport(true)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
         ></p-button>
       </div>
     </header>
   </app-table-report>
-</div>
+</p-dialog>
