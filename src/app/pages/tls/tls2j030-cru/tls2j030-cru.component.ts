@@ -359,10 +359,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     //   return;
     // }
     // 2. 檢查發票是否鎖定
-    if (source.isInvoiceClose === 'Y') {
-      this.messageService.warnBubble(`發票日期已鎖定，不可換開發票`);
-      return;
-    }
+    // if (source.isInvoiceClose === 'Y') {
+    //   this.messageService.warnBubble(`發票日期已鎖定，不可換開發票`);
+    //   return;
+    // }
 
     // 3. 檢查是否已存在
     const formatted = this.formatTxnNoInSingleData(source);
