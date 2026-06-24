@@ -298,8 +298,15 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe({
         next: (res: any) => {
           if (res.Status === '0000' || res.Status === '0001') {
-            this.messageService.successBubble(res.Message || '儲存成功');
-            this.onCancel();
+            const voucherNo = res.Data?.VouNo ?? res.Message ?? '';
+            this.messageService.confirm({
+              header: '新增成功',
+              message: `傳票號碼：${voucherNo}`,
+              icon: 'pi pi-check-circle',
+              acceptLabel: '確定',
+              showRejectButton: false,
+              accept: () => this.onCancel(),
+            });
           } else {
             this.messageService.errorBubble(res.Message || '儲存失敗');
           }
