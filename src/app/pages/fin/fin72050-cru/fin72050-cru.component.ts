@@ -19,7 +19,7 @@ import {
 } from '@shared/models/fin/fin72050.model';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
-import { finalize } from 'rxjs';
+import { EMPTY, finalize, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -246,20 +246,17 @@ export class FIN72050CRUComponent
 
     this.createLoading = true;
     this.fin72050Service.getPCCNoFIN72050(getNoReq)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (noRes) => {
+      .pipe(
+        switchMap((noRes) => {
           if (noRes.Status !== '0000') {
-            this.createLoading = false;
             this.messageService.errorBubble(noRes.Message || '取號失敗');
-            return;
+            return EMPTY;
           }
           const noData = noRes.Data;
           const pccNo = noData.PCC_SerialNo;
           if (!pccNo) {
-            this.createLoading = false;
             this.messageService.errorBubble('取號失敗：未取得盤點單號');
-            return;
+            return EMPTY;
           }
 
           this.dataForm.patchValue({
@@ -295,18 +292,19 @@ export class FIN72050CRUComponent
             PCC_ActAmt_2000: 0,
           };
 
-          this.fin72050Service.insertFIN72050(insertReq)
-            .pipe(untilDestroyed(this), finalize(() => (this.createLoading = false)))
-            .subscribe({
-              next: (insRes) => {
-                if (insRes.Status !== '0000') {
-                  this.messageService.errorBubble(insRes.Message || '建立失敗');
-                  return;
-                }
-                this.messageService.successBubble('建立成功');
-                this.onCancel();
-              },
-            });
+          return this.fin72050Service.insertFIN72050(insertReq);
+        }),
+        untilDestroyed(this),
+        finalize(() => (this.createLoading = false)),
+      )
+      .subscribe({
+        next: (insRes) => {
+          if (insRes.Status !== '0000') {
+            this.messageService.errorBubble(insRes.Message || '建立失敗');
+            return;
+          }
+          this.messageService.successBubble('建立成功');
+          this.onCancel();
         },
       });
   }
