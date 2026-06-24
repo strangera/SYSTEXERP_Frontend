@@ -152,7 +152,9 @@ export class ASS12050MasterComponent implements OnInit {
 
   /** 返回查詢頁 */
   onBack(): void {
-    this.router.navigate(['account/ass/ass12050']);
+    this.router.navigate(['account/ass/ass12050'], {
+      state: { fromRoute: this.router.url },
+    });
   }
 
   /** 明細列點編輯：進入 ass12050cru 編輯明細 */
