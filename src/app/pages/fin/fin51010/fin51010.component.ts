@@ -129,6 +129,25 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   /** 執行拋轉作業 */
   onTransfer() {
     if (this.selectedItems.length === 0) return;
+
+    // 前端先攔截借貸不平衡的傳票，不進入確認流程
+    const imbalanced = this.selectedItems.filter(item => item.Debit_Amt !== item.Credit_Amt);
+    if (imbalanced.length > 0) {
+      const details = imbalanced.map(item =>
+        `${formatDate(item.VouDate)}／${item.SrcSheetType}／${item.Remark}`
+      ).join('<br>');
+      setTimeout(() => {
+        this.messageService.confirm({
+          header: '借貸不平衡，無法拋轉',
+          message: `下列 ${imbalanced.length} 筆傳票借貸不平衡，請修正後再拋轉：<br><br>${details}`,
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: '確定',
+          showRejectButton: false
+        });
+      }, 0);
+      return;
+    }
+
     this.messageService.confirm({
       header: '拋轉確認',
       message: '是否拋轉所選項目?',

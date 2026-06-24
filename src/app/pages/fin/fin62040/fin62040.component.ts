@@ -1,327 +1,77 @@
-
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN62040Data, FIN62040Service, QueryFIN62040Request } from '@service/api/fin/fin62040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+
 @Component({
   selector: 'app-fin62040',
   templateUrl: './fin62040.component.html',
-  styleUrl: './fin62040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableReportComponent,
+    TranslateModule,
+    CalendarComponent
+  ]
 })
-export class FIN62040Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN62040Component extends BasicQueryPageComponent<FIN62040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    startserialticket: [],
-    endserialticket: [],
-    Subpoenatype: [],
-    SSubpoenadate: [],
-    ESubpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    builder: [],
-    Residualvalueyears: [],
-    Depreciation: [],
-    accountsummary: [],
-    Subpoenatype2: [],
-    Postingmethod: [],
-    year: [],
-    buildnumber: [],
-    confirmationnumber: [],
-    postingnumber: [],
-    yearmm: [],
-    Sbuilddate: [],
-    Ebuilddate: [],
-    printtype: [],
-    department: [],
-    activity: [],
-    vander: [],
-    Accountcode: [],
-    code: [],
-    Subpoenacode: [],
-    whether: [],
-    ifOptions: [],
-    summary: [],
-    reportingmethod: [],
-    Printingmethod: [],
-    Printingcolumn: [],
-    display: [],
-    Approvalcolumn: [],
-    category: [],
-    CSdate: [],
-    Companybankcode: [],
-    status: [],
-    Salespersoncode: [],
-    Employeenumber: [],
-    Employeename: [],
-    Organizationcode: [],
-    dialnumber: [],
-    ScreationDate: [],
-    EcreationDate: [],
-    Stransferdate: [],
-    Etransferdate: [],
-    TCBAC: [],
-    TOCBAC: [],
-    SsearchDate: [],
-    EsearchDate: [],
+    StartDate: [null, Validators.required],
+    EndDate: [null, Validators.required],
+    pageSize: [30],
+    pageIndex: [1],
   });
 
-  // Dropdown options
-  TCBACOptions: any[] = [
-  ];
-  TOCBACOptions: any[] = [
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '停用' },
-    { value: 2, label: '手開' },
-    { value: 3, label: '電腦' },
+  data: FIN62040Data[] = [];
+  selectedItems: FIN62040Data[] = [];
+  lastQueryBody: QueryFIN62040Request | null = null;
+  totalRecords = 0;
+
+  columns: Column[] = [
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目代稱' },
+    { field: 'BNK_AccNo', header: '帳號' },
+    { field: 'BNK_NAME', header: '銀行名稱' },
+    { field: 'BNK_AccName', header: '戶名' },
+    { field: 'BegAmt', header: '前期結餘', format: formatAmount },
+    { field: 'DebitAmt', header: '本期借方金額', format: formatAmount },
+    { field: 'CreditAmt', header: '本期貸方金額', format: formatAmount },
+    { field: 'EndAmt', header: '結餘', format: formatAmount }
   ];
 
-  bankOptions: any[] = [
-    { value: 110301, label: '銀行存款-兆豐銀行(活)' },
-    { value: 110302, label: '銀行存款-台新銀行(活)' },
-    { value: 110303, label: '銀行存款-中國信託(活)' },
-    { value: 110304, label: '銀行存款-玉山銀行(活)' },
-    { value: 110306, label: '銀行存款-玉山銀行(支)' },
-    { value: 110307, label: '銀行存款-新竹銀行(活-EC)' },
-    { value: 110308, label: '銀行存款-台灣銀行(活)' },
-    { value: 110397, label: '銀行存款-定存-合庫' },
-    { value: 110398, label: '銀行存款-定存-玉山' },
-    { value: 110399, label: '銀行存款-定存-兆豐' },
-  ];
-  printtype: any[] = [
-    { value: 1, label: 'A4(直印)' },
-    { value: 2, label: 'A4(橫印)' },
-    { value: 3, label: '一般' },
-  ];
-  category
-    : any[] = [
-      { value: 1, label: '統制' },
-      { value: 2, label: '明細' },
-      { value: 3, label: '彙總' },
-
-    ];
-  Subpoenatype2: any[] = [
-    { value: 1, label: '贊助金傳票' },
-    { value: 2, label: '電匯EDI傳票' },
-    { value: 3, label: '年結傳票' },
-    { value: 4, label: '銀行資金調撥傳票' },
-    { value: 5, label: '零用金拋轉傳票' },
-    { value: 6, label: '票據兌現傳票' },
-    { value: 7, label: '支票沖轉傳票' },
-    { value: 8, label: '退票沖轉票據傳票' },
-    { value: 9, label: '開票傳票' },
-    { value: 10, label: '撤票沖轉票據傳票' },
-  ];
-
-  Reportingmethod: any[] = [
-    { value: 1, label: '交易記錄之會計科目' },
-    { value: 2, label: '含無交易記錄之會計科目' },
-  ];
-  Printingmethod
-    : any[] = [
-      { value: 1, label: '分開列印' },
-      { value: 2, label: '合併列印' },
-    ];
-  Postingmethod: any[] = [
-    { value: 1, label: '依明細勾選' },
-    { value: 2, label: '依過帳年月' },
-  ];
-  Printingcolumn
-    : any[] = [
-      { value: 1, label: '狀態' },
-      { value: 2, label: '活動' },
-      { value: 2, label: '立沖代號' },
-    ];
-  activity: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '會員紅利活動' },
-  ];
-  departmentOptions: any[] = [];
-
-  ifOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  detail: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-  Subpoenaformatl: any[] = [
-    { value: 1, label: '無特定' },
-    { value: 2, label: '應付票據' },
-    { value: 3, label: '應收票據' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1101, label: '現金收入傳票' },
-    { value: 110101, label: '現金支出傳票' },
-    { value: 110102, label: '轉帳傳票' },
-  ];
-  borrowloanOptions: any[] = [
-    { value: 1, label: '借' },
-    { value: 2, label: '貸' },
-  ];
-
-  accountingaccountOptions: any[] = [
-
-  ];
-
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' },
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' },
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  Subpoenastatus: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' },
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' },
-  ];
-  Accountcode
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '負債' },
-      { value: 3, label: '股東權益' },
-      { value: 4, label: '營業收入' },
-    ];
-  display
-    : any[] = [
-      { value: 1, label: '顯示' },
-      { value: 2, label: '不顯示' },
-
-    ]
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'accountCode', header: '科目代號', visible: true },
-    { field: 'item', header: '目', visible: true },
-    { field: 'accountName', header: '科目名稱', visible: true },
-    { field: 'bankName', header: '銀行名稱', visible: true },
-    { field: 'accountHolder', header: '戶名', visible: true },
-    { field: 'previousBalance', header: '前期結餘', visible: true },
-    { field: 'debitAmountCurrent', header: '本期借方金額', visible: true },
-    { field: 'creditAmountCurrent', header: '本期貸方金額', visible: true },
-    { field: 'balance', header: '結餘', visible: true }
-  ];
-
-
-
-  // TypeScript Options
-  AccountcodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-
+    public readonly fin62040Service: FIN62040Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  usercode: any[] = [];
   ngOnInit(): void {
-    this.ProgNo = '160006';
-    // Initialize dropdown options
-
+    this.initializePage('FIN62040', '', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      this.fin62040Service.queryFIN62040(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.lastQueryBody = form.getRawValue();
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
   }
 }

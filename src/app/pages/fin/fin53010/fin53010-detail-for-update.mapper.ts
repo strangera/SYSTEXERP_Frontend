@@ -136,7 +136,9 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
 
 export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseInvoiceRow {
   const id = row.id;
-  const guino = String(row.PUR_GUINo ?? '').trim();
+  const guinoRaw = String(row.PUR_GUINo ?? '').trim();
+  // '0000000000' 代表發票號碼未填，回填空白
+  const guino = /^0+$/.test(guinoRaw) ? '' : guinoRaw;
   let trackNo = '';
   let invoiceNo = guino;
   if (guino.length >= 10) {

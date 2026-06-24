@@ -912,6 +912,7 @@ export interface FIN53010StepAP {
   acp_expect_pay_date?: Date | null;
   acp_date?: Date | null;
   ven_bnk_no?: string;
+  ven_bnk_branch_no?: string;
   ven_bank_account?: string;
   ven_ctrlyn?: string;
   ven_check_title?: string;
