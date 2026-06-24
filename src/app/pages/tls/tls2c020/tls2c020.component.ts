@@ -152,7 +152,7 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.ECR_NoOptions = res.Data.map((item: any) => ({
-          label: item.Name,
+          label: `${item.No} - ${item.Name}`,
           value: item.No
         }));
         this.cd.detectChanges();

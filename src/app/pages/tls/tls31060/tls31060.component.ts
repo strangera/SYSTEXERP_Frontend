@@ -28,7 +28,7 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
-import { Tls31060CRUComponent } from '../tls31060-cru/tls31060-cru.component';
+import { Tls31060CRUComponent } from './tls31060-cru/tls31060-cru.component';
 
 @Component({
   selector: 'app-tls31060',

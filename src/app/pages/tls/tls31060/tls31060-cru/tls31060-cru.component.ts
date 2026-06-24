@@ -7,8 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31060-cru',
@@ -110,6 +110,7 @@ export class Tls31060CRUComponent implements OnChanges {
       org_id: this.rowData!.org_id,
       TaxType: q.TaxType,
       IsRece_Yn: q.IsRece_Yn,
+      pageSize: 100,
     };
   }
 
