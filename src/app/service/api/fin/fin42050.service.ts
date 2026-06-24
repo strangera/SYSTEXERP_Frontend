@@ -20,7 +20,7 @@ export interface FIN42050Data {
 
 @Injectable({ providedIn: 'root' })
 export class FIN42050Service {
-    apiUrl: string = environment.ApiUrl + '/Controllers/FIN40000';
+    apiUrl: string = environment.ApiUrl + '/FIN0000/FIN4000';
 
     constructor(private http: HttpClient) { }
 

@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,13 +10,15 @@ import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin42050',
@@ -32,7 +34,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     DropdownComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     CommonModule,
     CalendarComponent,
@@ -49,6 +51,9 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
     Org_ID: [null],                                // 部門（可空）
     ReportType: [1, [Validators.required]],        // 類別：1=統制, 2=明細
     AmtUnit: [1, [Validators.required]],           // 單位金額表示：1=元, 2=千, 3=萬
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: '', order: 1 }]), // 分頁和排序參數
   });
 
   OrgId_Options: option[] = [];
@@ -63,19 +68,19 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
   ];
 
   data: FIN42050Data[] = [];
-  columns = [
-    { field: 'AccountCode', header: '科目代號', visible: true },
-    { field: 'AccountName', header: '科目名稱', visible: true },
-    { field: 'ActualAmount', header: '實際金額', visible: true },
-    { field: 'ActualRatio', header: '實際佔比(%)', visible: true },
-    { field: 'Budget1Amount', header: '版本1金額', visible: true },
-    { field: 'Budget1Ratio', header: '版本1佔比(%)', visible: true },
-    { field: 'Budget2Amount', header: '版本2金額', visible: true },
-    { field: 'Budget2Ratio', header: '版本2佔比(%)', visible: true },
-    { field: 'BudgetVersionDiff', header: '版本差異值', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'AccountCode', header: '科目代號', visible: true, align: 'left' },
+    { field: 'AccountName', header: '科目名稱', visible: true, align: 'left' },
+    { field: 'ActualAmount', header: '實際金額', visible: true, align: 'right', format: formatAmount },
+    { field: 'ActualRatio', header: '實際佔比(%)', visible: true, align: 'right', format: (value) => formatPercentage(value, 2) },
+    { field: 'Budget1Amount', header: '版本1金額', visible: true, align: 'right', format: formatAmount },
+    { field: 'Budget1Ratio', header: '版本1佔比(%)', visible: true, align: 'right', format: (value) => formatPercentage(value, 2) },
+    { field: 'Budget2Amount', header: '版本2金額', visible: true, align: 'right', format: formatAmount },
+    { field: 'Budget2Ratio', header: '版本2佔比(%)', visible: true, align: 'right', format: (value) => formatPercentage(value, 2) },
+    { field: 'BudgetVersionDiff', header: '版本差異值', visible: true, align: 'right', format: formatAmount },
   ];
 
-  totalRecords = 0;
+  readonly totalRecords = signal<number>(0);
   lastQueryBody = null;
   btnPDFLoading = false;
   btnExcelLoading = false;
@@ -100,7 +105,14 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
       BudgetYM1: raw.BudgetYM1 ? formatDate(raw.BudgetYM1, 'yyyyMM', 'en-US') : null,
       BudgetYM2: raw.BudgetYM2 ? formatDate(raw.BudgetYM2, 'yyyyMM', 'en-US') : null,
       Org_Name: this.OrgId_Options.find(o => o.value === raw.Org_ID)?.label ?? null,
+      PageSize: raw.PageSize ?? 30,
+      PageIndex: raw.PageIndex ?? 1,
+      OrderBy: raw.OrderBy,
+      Offset: raw.Offset,
+      SortBy: raw.SortBy,
     };
+
+    console.log('payload:', payload);
 
     this.handleSubmit(frm, () => {
       this.fin42050Service.queryFIN42050(payload)
@@ -108,10 +120,11 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
         .subscribe(response => {
           if (response.Status === '0000') {
             this.data = response.Data ?? [];
-            this.totalRecords = response.TotalCount;
+            this.totalRecords.set(response.TotalCount);
             this.lastQueryBody = payload;
           } else {
             this.messageService.errorBubble(response.Message);
+            this.totalRecords.set(response.TotalCount);
           }
         });
     });
