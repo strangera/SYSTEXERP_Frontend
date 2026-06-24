@@ -30,6 +30,7 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   });
   selectedItems: any[] = [];
   totalRecords = 0;
+  private isAutoRestore = false;
   // dialog for selecting RCV_No
   rcvDialogVisible = false;
   dialogQueryForm = this.formBuilder.nonNullable.group({
@@ -62,8 +63,9 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
+    const prevRoute = this.router.lastSuccessfulNavigation?.extras.state?.['fromRoute'] ?? '';
+    this.isAutoRestore = prevRoute.toLowerCase().includes('fin33010cru');
     this.initializePage('FIN33010', '/FIN/FIN33010CRU', this.queryForm, (frm) => this.onSubmit(frm));
-
   }
 
   openRcvDialog(): void {
@@ -125,6 +127,8 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup): void {
+    const skipNavigate = this.isAutoRestore;
+    this.isAutoRestore = false;
     this.handleSubmit(frm, () => {
       const v = frm.getRawValue();
       const payload = {
@@ -173,7 +177,7 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
               header,
             };
 
-            // 直接進入 CRU 顯示欄位與明細表
+            if (skipNavigate) { return; }
             this.onDetail(header, queryConditions);
           } else {
             this.messageService?.errorBubble?.(res.Message || '查詢失敗');
