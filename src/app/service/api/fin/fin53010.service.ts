@@ -234,6 +234,15 @@ export class FIN53010Service {
       );
   }
 
+  public checkRepYYYYMMAudited(repYYYYMM: string): Observable<boolean> {
+    return this.http
+      .post<ApiResponse<boolean>>(`${apiUrl}/checkRepYYYYMMAudited`, { RepYYYYMM: repYYYYMM })
+      .pipe(
+        map(res => res?.Data ?? false),
+        catchError(() => of(false)),
+      );
+  }
+
   public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
     this.calculatedPayDateLoading.set(true);
     return this.http.post<GetCalculatedPayDateResult>(`${apiUrl}/getCalculatedPayDate`, payload).pipe(

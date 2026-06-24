@@ -115,6 +115,8 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
   }
   const idRaw = row.ID;
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
+  const invoiceType = String(row.InvoiceType ?? '').trim();
+  const isAllowance = invoiceType === '33' || invoiceType === '34';
   return {
     ...(id !== undefined ? { id } : {}),
     _invoiceValidated: true,
@@ -131,6 +133,7 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
     source_doc_no: row.Source_Doc_No ?? undefined,
     summary_count: undefined,
     asset_flag: row.AssetType ?? undefined,
+    ...(isAllowance ? { credit_type: row.Credit_Type ?? undefined } : {}),
   };
 }
 
@@ -148,6 +151,8 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     trackNo = guino.slice(0, 2);
     invoiceNo = guino.slice(2);
   }
+  const voucherType = String(row.PUR_VoucherType ?? '').trim();
+  const isAllowance = voucherType === '23' || voucherType === '24';
   return {
     ...(typeof id === 'number' && !Number.isNaN(id) ? { id } : {}),
     voucher_type: row.PUR_VoucherType ?? undefined,
@@ -167,6 +172,7 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     source_doc_no: row.Source_Doc_No ?? undefined,
     comb: row.PUR_Comb ?? undefined,
     total_count: row.PUR_Comb_Cnt ?? undefined,
+    ...(isAllowance ? { credit_type: row.Credit_Type ?? undefined } : {}),
   };
 }
 
@@ -188,7 +194,9 @@ export interface Fin53010ForUpdateStepMapped {
   stepAPRows: FIN53010StepAP[];
   stepARRows: FIN53010StepAR[];
   stepSalesRows: FIN53010StepSalesInvoiceRow[];
+  stepSalesAllowanceRows: FIN53010StepSalesInvoiceRow[];
   stepPurchaseRows: FIN53010StepPurchaseInvoiceRow[];
+  stepPurchaseAllowanceRows: FIN53010StepPurchaseInvoiceRow[];
   stepBankRows: FIN53010StepBankDeposit[];
 }
 
@@ -196,6 +204,8 @@ const arr = <T,>(a: T[] | null | undefined): T[] => (Array.isArray(a) ? a : []);
 
 /**
  * 將 queryFIN53010DetailData_ByVouNo_forupdate 的 Data 填入多步驟列。
+ * APS2002 格式 21/22/25 → stepPurchaseRows；23/24 → stepPurchaseAllowanceRows。
+ * APS4023 格式 31/32/35 → stepSalesRows；33/34 → stepSalesAllowanceRows。
  */
 export function mapFin53010ForUpdateResponseToStepRows(
   data: QueryFIN53010DetailDataByVouNoForUpdateResponse | null | undefined,
@@ -205,19 +215,43 @@ export function mapFin53010ForUpdateResponseToStepRows(
       stepAPRows: [],
       stepARRows: [],
       stepSalesRows: [],
+      stepSalesAllowanceRows: [],
       stepPurchaseRows: [],
+      stepPurchaseAllowanceRows: [],
       stepBankRows: [],
     };
   }
+
+  const allPurchase = arr(data._APS2002s).map(mapAps2002RowToStepPurchase);
+  const normalPurchase = allPurchase.filter(r => {
+    const t = String(r.voucher_type ?? '').trim();
+    return t !== '23' && t !== '24';
+  });
+  const allowancePurchase = allPurchase.filter(r => {
+    const t = String(r.voucher_type ?? '').trim();
+    return t === '23' || t === '24';
+  });
+
+  const allSalesFromApi = arr(data._APS4023s).map(mapAps4023RowToStepSales);
+  const normalSales = allSalesFromApi.filter(r => {
+    const t = String(r.invoice_type ?? '').trim();
+    return t !== '33' && t !== '34';
+  });
+  const allowanceSales = allSalesFromApi.filter(r => {
+    const t = String(r.invoice_type ?? '').trim();
+    return t === '33' || t === '34';
+  });
 
   return {
     stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepSalesRows: [
-      ...arr(data._APS4023s).map(mapAps4023RowToStepSales),
+      ...normalSales,
       ...arr(data._POS4023s).map(mapPos4023RowToStepSales),
     ].map((r, i) => ({ ...r, SerNo: i + 1 })),
-    stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepSalesAllowanceRows: allowanceSales.map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepPurchaseRows: normalPurchase.map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepPurchaseAllowanceRows: allowancePurchase.map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank).map((r, i) => ({ ...r, SerNo: i + 1 })),
   };
 }

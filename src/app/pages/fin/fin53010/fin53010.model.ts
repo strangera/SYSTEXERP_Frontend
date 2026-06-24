@@ -172,6 +172,9 @@ export interface InsertAPS2002DataBody {
   PUR_Type?: string | null;
   PUR_Comb_Cnt?: number | null;
   PUR_Comb?: string | null;
+  Source_Doc_No?: string | null;
+  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 23/24 時帶入，後端待確認） */
+  Credit_Type?: string | null;
 }
 
 /** Swagger insertARS3001Data */
@@ -202,6 +205,8 @@ export interface InsertAPS4023DataBody {
   PUR_Tax?: number | null;
   Source_Doc_No?: string | null;
   AssetType?: string | null;
+  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 33/34 時帶入，後端待確認） */
+  Credit_Type?: string | null;
 }
 
 /** Swagger insertAPS4002Data */
@@ -958,6 +963,10 @@ export interface FIN53010StepSalesInvoiceRow {
   isPOS4023?: boolean;
   /** 已通過 APS2001/POS1017 配號驗證，submit 時必須為 true */
   _invoiceValidated?: boolean;
+  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 33/34 時帶入） */
+  credit_type?: string;
+  /** 折讓用：退出/折讓日期（格式 33/34；invoice_date 仍為原發票日期） */
+  credit_date?: Date | null;
 }
 
 /** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */
@@ -986,6 +995,10 @@ export interface FIN53010StepPurchaseInvoiceRow {
   /** 彙加註記（自動計算：格式22/25且發票號空白或0000000000時為'A'） */
   comb?: string;
   total_count?: number;
+  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 23/24 時帶入） */
+  credit_type?: string;
+  /** 折讓用：退出/折讓日期（格式 23/24；invoice_date 仍為原發票日期） */
+  credit_date?: Date | null;
 }
 
 /** FIN53010 新增多步驟：銀行存款（Voucher_Type=7） */

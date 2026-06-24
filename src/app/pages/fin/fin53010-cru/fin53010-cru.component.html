@@ -193,6 +193,54 @@
 </div>
 }
 
+@if ((isFormCreateable || isFormEditable) && currentStep() === 8) {
+<div class="card">
+  <p-panel header="進項折讓發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false"
+      [disabled]="isFormReadable || isPostedEdit" [data]="stepPurchaseAllowanceRows()"
+      [columns]="stepPurchaseAllowanceColumns" [tableKey]="'FIN53010_step_purchase_allowance'"
+      [defaultInsertData]="{ voucher_type: '23', tax_type: '1' }"
+      (dataChange)="onStepPurchaseAllowanceDataChange($event)"
+      (fieldChange)="onStepPurchaseAllowanceFieldChange($event)"
+      [footerData]="stepPurchaseAllowanceFooter()"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
+}
+
+@if ((isFormCreateable || isFormEditable) && currentStep() === 9) {
+<div class="card">
+  <p-panel header="銷項折讓發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false"
+      [disabled]="isFormReadable || isPostedEdit" [data]="stepSalesAllowanceRows()"
+      [columns]="stepSalesAllowanceColumns" [tableKey]="'FIN53010_step_sales_allowance'"
+      [defaultInsertData]="{ invoice_type: '33', tax_type: '1' }"
+      (dataChange)="onStepSalesAllowanceDataChange($event)"
+      (fieldChange)="onStepSalesAllowanceFieldChange($event)"
+      [footerData]="stepSalesAllowanceFooter()"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
+}
+
 @if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
 <div class="card">
   <p-panel header="銀行存款" class="line-height-3 m-0">
@@ -429,3 +477,5 @@
       (selectionChange)="selectedDetail.set($event)"></app-table>
   </div>
 </app-dialog>
+
+<p-confirmDialog />

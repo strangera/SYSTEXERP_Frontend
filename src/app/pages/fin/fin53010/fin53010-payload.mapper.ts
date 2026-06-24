@@ -129,6 +129,8 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
 
 function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow, deps: Fin53010PayloadDepsWithVou): InsertAPS4023DataBody {
   const id = row.id;
+  const invoiceType = String(row.invoice_type ?? '').trim();
+  const isAllowance = invoiceType === '33' || invoiceType === '34';
   return {
     ID: typeof id === 'number' && !Number.isNaN(id) ? id : 0,
     InvoiceType: row.invoice_type ?? null,
@@ -143,6 +145,7 @@ function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow, deps: Fin530
     PUR_Tax: row.tax_amount ?? null,
     Source_Doc_No: row.source_doc_no ?? null,
     AssetType: row.asset_flag ?? null,
+    Credit_Type: isAllowance ? (row.credit_type ?? null) : undefined,
   };
 }
 
@@ -162,6 +165,7 @@ function mapStepPurchaseToInsert2002(
     && (invoiceNoStr === '' || invoiceNoStr === '0000000000');
   const purComb = isSummaryInvoice ? 'A' : undefined;
   const purVenUniform = row.vendor_tax_id ? String(row.vendor_tax_id).slice(0, 8) : undefined;
+  const isAllowance = voucherType === '23' || voucherType === '24';
   return {
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
@@ -182,6 +186,8 @@ function mapStepPurchaseToInsert2002(
     PUR_Type: row.category_type,
     PUR_Comb_Cnt: row.total_count,
     PUR_Comb: purComb,
+    Source_Doc_No: row.source_doc_no ?? null,
+    Credit_Type: isAllowance ? (row.credit_type ?? null) : undefined,
   };
 }
 
@@ -204,8 +210,22 @@ function buildInsertNext(
   stepSales: FIN53010StepSalesInvoiceRow[],
   stepPurchase: FIN53010StepPurchaseInvoiceRow[],
   stepBank: FIN53010StepBankDeposit[],
+  stepPurchaseAllowance: FIN53010StepPurchaseInvoiceRow[],
+  stepSalesAllowance: FIN53010StepSalesInvoiceRow[],
   deps: Fin53010PayloadDepsWithVou,
 ): InsertFIN53010DetailDataNextBody {
+  const normalSalesRows = activeSteps.includes(6) && stepSales.length
+    ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToInsert4023(r, deps))
+    : [];
+  const allowanceSalesRows = activeSteps.includes(9) && stepSalesAllowance.length
+    ? stepSalesAllowance.map(r => mapStepSalesToInsert4023(r, deps))
+    : [];
+  const normalPurchaseRows = activeSteps.includes(5) && stepPurchase.length
+    ? stepPurchase.map((r, i) => mapStepPurchaseToInsert2002(r, i, deps))
+    : [];
+  const allowancePurchaseRows = activeSteps.includes(8) && stepPurchaseAllowance.length
+    ? stepPurchaseAllowance.map((r, i) => mapStepPurchaseToInsert2002(r, normalPurchaseRows.length + i, deps))
+    : [];
   return {
     insertAPS3001Datas:
       activeSteps.includes(3) && stepAP.length
@@ -215,14 +235,8 @@ function buildInsertNext(
       activeSteps.includes(4) && stepAR.length
         ? stepAR.map(r => mapStepArToInsert(r, deps))
         : [],
-    insertAPS4023Datas:
-      activeSteps.includes(6) && stepSales.length
-        ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToInsert4023(r, deps))
-        : [],
-    insertAPS2002Datas:
-      activeSteps.includes(5) && stepPurchase.length
-        ? stepPurchase.map((r, i) => mapStepPurchaseToInsert2002(r, i, deps))
-        : [],
+    insertAPS4023Datas: [...normalSalesRows, ...allowanceSalesRows],
+    insertAPS2002Datas: [...normalPurchaseRows, ...allowancePurchaseRows],
     insertAPS4002Datas:
       activeSteps.includes(7) && stepBank.length
         ? stepBank.map(r => mapStepBankToInsert4002(r, deps))
@@ -270,6 +284,8 @@ export function buildInsertFin53010Request(params: {
   stepSalesRows: FIN53010StepSalesInvoiceRow[];
   stepPurchaseRows: FIN53010StepPurchaseInvoiceRow[];
   stepBankRows: FIN53010StepBankDeposit[];
+  stepPurchaseAllowanceRows: FIN53010StepPurchaseInvoiceRow[];
+  stepSalesAllowanceRows: FIN53010StepSalesInvoiceRow[];
   deps: Fin53010PayloadMapperDeps;
 }): InsertFIN53010Request {
   const { form, voucherTypePadded, tableData, activeVoucherSteps, deps } = params;
@@ -284,6 +300,8 @@ export function buildInsertFin53010Request(params: {
     params.stepSalesRows,
     params.stepPurchaseRows,
     params.stepBankRows,
+    params.stepPurchaseAllowanceRows,
+    params.stepSalesAllowanceRows,
     mergedDeps,
   );
   const req: InsertFIN53010Request = {
@@ -332,6 +350,8 @@ function buildUpdateNext(
   stepSales: FIN53010StepSalesInvoiceRow[],
   stepPurchase: FIN53010StepPurchaseInvoiceRow[],
   stepBank: FIN53010StepBankDeposit[],
+  stepPurchaseAllowance: FIN53010StepPurchaseInvoiceRow[],
+  stepSalesAllowance: FIN53010StepSalesInvoiceRow[],
   deps: Fin53010PayloadDepsWithVou,
 ): UpdateFIN53010DetailDataNextBody | null {
   /** 後端契約：updateAPS3001Datas／updateARS3001Datas 為陣列；無 id 或省略 id 視為子檔新增（依 API 實作為準）。 */
@@ -342,11 +362,25 @@ function buildUpdateNext(
   if (activeSteps.includes(4) && stepAR.length) {
     next.updateARS3001Datas = stepAR.map(r => mapStepArToUpdate(r, deps, r.id));
   }
-  if (activeSteps.includes(6) && stepSales.length) {
-    next.updateAPS4023Datas = stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToUpdate4023(r, deps));
+  const normalSalesRows = activeSteps.includes(6)
+    ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToUpdate4023(r, deps))
+    : [];
+  const allowanceSalesRows = activeSteps.includes(9)
+    ? stepSalesAllowance.map(r => mapStepSalesToUpdate4023(r, deps))
+    : [];
+  const mergedSales = [...normalSalesRows, ...allowanceSalesRows];
+  if (mergedSales.length) {
+    next.updateAPS4023Datas = mergedSales;
   }
-  if (activeSteps.includes(5) && stepPurchase.length) {
-    next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));
+  const normalPurchaseRows = activeSteps.includes(5)
+    ? stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id))
+    : [];
+  const allowancePurchaseRows = activeSteps.includes(8)
+    ? stepPurchaseAllowance.map((r, i) => mapStepPurchaseToUpdate2002(r, normalPurchaseRows.length + i, deps, r.id))
+    : [];
+  const mergedPurchase = [...normalPurchaseRows, ...allowancePurchaseRows];
+  if (mergedPurchase.length) {
+    next.updateAPS2002Datas = mergedPurchase;
   }
   if (activeSteps.includes(7) && stepBank.length) {
     next.updateAPS4002Datas = stepBank.map(r => mapStepBankToUpdate4002(r, deps, r.id));
@@ -405,6 +439,8 @@ export function buildUpdateFin53010Request(params: {
   stepSalesRows: FIN53010StepSalesInvoiceRow[];
   stepPurchaseRows: FIN53010StepPurchaseInvoiceRow[];
   stepBankRows: FIN53010StepBankDeposit[];
+  stepPurchaseAllowanceRows: FIN53010StepPurchaseInvoiceRow[];
+  stepSalesAllowanceRows: FIN53010StepSalesInvoiceRow[];
   masterId: number;
   deps: Fin53010PayloadMapperDeps;
 }): UpdateFIN53010Request {
@@ -420,6 +456,8 @@ export function buildUpdateFin53010Request(params: {
     params.stepSalesRows,
     params.stepPurchaseRows,
     params.stepBankRows,
+    params.stepPurchaseAllowanceRows,
+    params.stepSalesAllowanceRows,
     mergedDeps,
   );
   return {
