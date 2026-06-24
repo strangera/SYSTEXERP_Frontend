@@ -232,23 +232,35 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             ? Math.round(this.originalRemainingAmt - currentTotal) : this.originalRemainingAmt;
 
           this.dataForm.patchValue({
-            Inv_Date: (detail as any).PUR_GUIDate ?? null,
-            Inv_Net: (detail as any).PUR_Net,
-            Inv_Tax: (detail as any).PUR_Tax,
-            PUR_VoucherType: this.normalizeVoucherType((detail as any).PUR_VoucherType) || '',
-            PUR_TaxType: (detail as any).PUR_TaxType,
-            Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt ?? null,
-            Total_Amt: remaining,
-          }, { emitEvent: false });
+  Inv_Date: (detail as any).PUR_GUIDate ?? null,
+  Inv_Net: (detail as any).PUR_Net,
+  Inv_Tax: (detail as any).PUR_Tax,
+  PUR_VoucherType: this.normalizeVoucherType((detail as any).PUR_VoucherType) || '',
+  PUR_TaxType: (detail as any).PUR_TaxType,
+  Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt ?? null,
+  Total_Amt: remaining,
+
+  // 查完發票後帶入
+  Source_Doc_No: (detail as any).Source_Doc_No ?? '',
+  Voucher_No: (detail as any).Voucher_No ?? '',
+}, { emitEvent: false });
 
           this.updateCreditTypeByAmount(currentTotal);
         } else {
           this.originalRemainingAmt = null;
           this.dataForm.patchValue({
-            Inv_Date: null, Inv_Net: null, Inv_Tax: null,
-            PUR_VoucherType: '', PUR_TaxType: '',
-            PUR_Amt: null, Total_hitory_PUR_Amt: null, Total_Amt: null, Credit_Type: '',
-          }, { emitEvent: false });
+  Inv_Date: null,
+  Inv_Net: null,
+  Inv_Tax: null,
+  PUR_VoucherType: '',
+  PUR_TaxType: '',
+  PUR_Amt: null,
+  Total_hitory_PUR_Amt: null,
+  Total_Amt: null,
+  Credit_Type: '',
+  Source_Doc_No: '',
+  Voucher_No: '',
+}, { emitEvent: false });
         }
 
         this.refreshAmountValidFlag();
