@@ -36,7 +36,7 @@ export interface TLS31060DetailRequest {
   bus_type: string[]
   bus_class: string[][]
   bus_sclass: string[][]
-  tlt_kind: string
+  tlt_kind: string[]
   tlt_term_type: string[]
   org_id: string; // 單組織
   TaxType: string
@@ -105,6 +105,20 @@ export interface TLS31060DetailResponse {
   TotalData: TLS31020Total;
 }
 
+export interface TLS31060QueryResult {
+  Data: TLS31060Item[];
+  TotalCount: number;
+  Message: string;
+  TotalData: TLS31020Total;
+}
+
+export interface TLS31060DetailQueryResult {
+  Data: TLS31060DetailItem[];
+  TotalCount: number;
+  Message: string;
+  TotalData: TLS31020Total;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -114,30 +128,26 @@ export class Tls31060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢各組織之營業報表
-  queryTLS31060(body: TLS31060Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS31060`, body).pipe(
-      map(res => {
-        return {
-          Data: res.Data?.Data,
-          TotalCount: res.TotalCount,
-          Message: res.Message,
-          TotalData: res.Data?.TotalData
-        };
-      })
+  queryTLS31060(body: TLS31060Request): Observable<TLS31060QueryResult> {
+    return this.http.post<ApiResponse<TLS31060Response>>(`${this.apiUrl}/queryTLS31060`, body).pipe(
+      map(res => ({
+        Data: res.Data?.Data ?? [],
+        TotalCount: res.TotalCount,
+        Message: res.Message,
+        TotalData: res.Data?.TotalData
+      } as TLS31060QueryResult))
     );
   }
 
   // 查詢單組織展開之營業報表
-  queryTLS31060Detail(body: TLS31060DetailRequest): Observable<any> {
+  queryTLS31060Detail(body: TLS31060DetailRequest): Observable<TLS31060DetailQueryResult> {
     return this.http.post<ApiResponse<TLS31060DetailResponse>>(`${this.apiUrl}/queryTLS31060Detail`, body).pipe(
-      map(res => {
-        return {
-          Data: res.Data?.QueryData, //這邊要注意
-          TotalCount: res.TotalCount,
-          Message: res.Message,
-          TotalData: res.Data?.TotalData,
-        };
-      })
+      map(res => ({
+        Data: res.Data?.QueryData ?? [],
+        TotalCount: res.TotalCount,
+        Message: res.Message,
+        TotalData: res.Data?.TotalData,
+      } as TLS31060DetailQueryResult))
     );
   }
 

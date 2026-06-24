@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
-import { TLS31060Item, TLS31060PrintRequest, TLS31060Request, TLS31060Response, Tls31060Service } from '@service/api/tls/tls31060.service';
+import { TLS31060Item, TLS31060PrintRequest, TLS31060QueryResult, TLS31060Request, Tls31060Service } from '@service/api/tls/tls31060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -28,6 +28,7 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { Tls31060CRUComponent } from '../tls31060-cru/tls31060-cru.component';
 
 @Component({
   selector: 'app-tls31060',
@@ -53,10 +54,11 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls31060CRUComponent,
   ]
 })
 
-export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response> implements OnInit {
+export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
@@ -138,10 +140,13 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
 
   totalRecords = 0;
   data: TLS31060Item[] = [];
-  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
-  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
-  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
-  historyRequestBody: TLS31060Request | null = null; //歷史查詢條件
+  footerTotal: TLS31020Total | null = null;
+  footershowTotal: footerShowTotal | null = null;
+  footershowPercent: footerShowTotal | null = null;
+  historyRequestBody: TLS31060Request | null = null;
+
+  dialogVisible = false;
+  selectedRow: TLS31060Item | null = null;
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
@@ -218,7 +223,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS31060', 'TLS/TLS31060cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS31060', '', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
@@ -377,12 +382,12 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
       } as TLS31060Request;
 
       console.log('送出query請求', formValue);
-      this.tls31060Service.queryTLS31060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls31060Service.queryTLS31060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe((res: TLS31060QueryResult) => {
 
-        this.data = res.Data ?? [];               // 查詢資料
-        this.footerTotal = res.TotalData ?? null;;    // 總計資料
+        this.data = res.Data ?? [];
+        this.footerTotal = res.TotalData ?? null;
 
-        this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
+        this.footershowTotal = this.footerTotal ? {
           budget: this.footerTotal.TotalBudget,
           AVN_TotSaleAmt: this.footerTotal.TotalSales,
           TxnCount: this.footerTotal.TotalTxnCount,
@@ -609,9 +614,9 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     this.syncDateToQueryForm();
   }
 
-  onDetail1(event: any) {
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+  onDetail1(event: TLS31060Item) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   setColumns() {

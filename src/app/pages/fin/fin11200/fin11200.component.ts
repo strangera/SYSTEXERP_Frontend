@@ -53,7 +53,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     GUI_StatusList: [null], // 發票狀態
     pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]],
+    SortBy: [[{ field: 'GUI_YYMM', order: 1 }, { field: 'ECR_No', order: 1 }, { field: 'SER_NOS', order: 1 }]],
   });
   totalRecords = 0;
   monthOptions = monthOptions;

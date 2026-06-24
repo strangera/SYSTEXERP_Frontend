@@ -5,9 +5,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -38,8 +37,7 @@ yesterday.setDate(yesterday.getDate() - 1);
     DropdownRangeComponent,
     CommonModule,
     ButtonModule,
-    CustomFooterTableComponent
-
+    TableReportComponent,
   ],
 })
 
@@ -53,24 +51,16 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     rece_yn: [null],
     TXN_DateStart: [null as Date | null],
     TXN_DateEnd: [null as Date | null],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-    pageSize: [30],
   });
   statusOptions = [
     { label: '是', value: 'Y' },
     { label: '否', value: 'N' }
   ];
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   // 表格資料
   data: TLS22020Data[] = [];
   ECRNoOptions: IDropdownItem[] = [];
-  columns: Column[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-
-  ];
   footerData: any[] = [];
+  lastQueryBody: any = null;
   private skipAutoQueryOnce = false;
   exportExcelLoading = false;
   // 下拉選單選項
@@ -91,7 +81,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   }
   ngOnInit(): void {
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
-    this.queryForm.patchValue({ pageSize: 30 });
     this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
       this.ECRNoOptions = (data.Data || []).map((x: any) => ({ No: x.No, Name: `${x.No}-${x.Name}` }));
     });
@@ -111,6 +100,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
       this.data = savedData.Data.QueryData;
       this.totalRecords = savedData.TotalCount ?? this.data.length;
+      this.lastQueryBody = this.queryStateService.getQueryStateValue(this.ProgNo) ?? {};
 
       // footerData 總計
       this.footerData = [{ group_name: '總計', ...savedData.Data.SumData }];
@@ -147,6 +137,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
           this.data = flatData;
           this.totalRecords = res.TotalCount ?? flatData.length;
+          this.lastQueryBody = form.value;
 
           // footerData 總計
           this.footerData = [{ group_name: '總計', ...res.Data?.SumData }];
@@ -180,7 +171,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
         TXN_DateEnd: raw.TXN_DateEnd
           ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
           : null,
-        pageSize: this.totalRecords
       },
     }
 
