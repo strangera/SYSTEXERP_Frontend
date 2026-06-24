@@ -59,7 +59,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   addButton: AddButton[] = [
     {
       label: '作廢',
-      icon: 'pi pi-times text-red-500',
+      icon: 'pi pi-times-circle text-red-500',
       action: (rowData: TLS2J030Data) => {
         this.onInvalid(rowData);
       },
