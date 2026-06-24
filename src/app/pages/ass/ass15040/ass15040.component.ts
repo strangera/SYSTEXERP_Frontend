@@ -3,8 +3,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15040Service } from '@service/api/ass/ass15040.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { map, Observable, of } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -47,6 +49,7 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
 
   data: QueryASS15040Response[] = [];
   totalRecords = 0;
+  lastQueryBody?: QueryASS15040Request;
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
   exportExcelLoading = false;
@@ -105,6 +108,7 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
           this.tableLoading.set(false);
           return;
         }
+        this.lastQueryBody = payload;
         this.ass15040Service.queryASS15040(payload).pipe(untilDestroyed(this)).subscribe({
           next: res => {
             if (res?.Status !== '0000') {
@@ -142,6 +146,41 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
   onSubmitQuery(frm: FormGroup): void {
     this.onSubmit(frm);
   }
+
+  /**
+   * 表格分頁/排序回呼。table-report 於 onSort 時會把 SortBy（multiSortMeta）
+   * 併入 body 呼叫此函式，後端排序後回傳。service 為巢狀結構，此處展平成 ApiResponse<T[]>。
+   */
+  public queryFunction = (
+    body: QueryASS15040Request,
+  ): Observable<ApiResponse<QueryASS15040Response[]>> => {
+    const base = this.lastQueryBody ?? this.buildQueryRequest();
+    if (!base) {
+      return of({
+        Status: '0000',
+        Data: [],
+        Error: null,
+        Meta: { Timestamp: '', RequestId: '' },
+        Message: '',
+        TotalCount: 0,
+        TotalPage: 0,
+      } as ApiResponse<QueryASS15040Response[]>);
+    }
+    const payload: QueryASS15040Request = {
+      ...base,
+      PageIndex: body?.PageIndex ?? base.PageIndex ?? 1,
+      PageSize: body?.PageSize ?? base.PageSize ?? 9999,
+      SortBy: body?.SortBy ?? base.SortBy,
+    };
+    return this.ass15040Service.queryASS15040(payload).pipe(
+      untilDestroyed(this),
+      map(res => ({
+        ...res,
+        Data: res.Data?.QueryData ?? [],
+        TotalCount: res.Data?.TotalCount ?? res.TotalCount ?? 0,
+      }) as ApiResponse<QueryASS15040Response[]>),
+    );
+  };
 
   override onCreate(): void {
     if (this.hasPermission(this.Actions.Create)) {

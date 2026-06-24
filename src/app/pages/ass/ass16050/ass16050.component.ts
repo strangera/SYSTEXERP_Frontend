@@ -55,7 +55,7 @@ export class ASS16050Component
   queryForm = this.formBuilder.group({
     MTAPPLY_ID: [null as string | null, [Validators.maxLength(15)]],
     EMP_ID: [null as string | null],
-    FASITEM_ID: [null as string | null],
+    FASITEM_ID: [null as number | null],
     APPLY_DATE_S: [null as Date | null],
     APPLY_DATE_E: [null as Date | null],
     APRV_DATE_S: [null as Date | null],
@@ -135,7 +135,7 @@ export class ASS16050Component
       });
 
     this.dropdownApiService
-      .queryFasItemDropDownList()
+      .queryFasItemAss1000Dropdown()
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.fasItemOptions = opts ?? [];
@@ -228,8 +228,8 @@ export class ASS16050Component
     const payload: Ass16050QueryRequest = {
       MTAPPLY_ID: v.MTAPPLY_ID || undefined,
       EMP_ID: v.EMP_ID || undefined,
-      // FASITEM_ID 後端定義為 int64，下拉 value 為 GOODS_ID（string），此處轉成 number
-      FASITEM_ID: v.FASITEM_ID ? Number(v.FASITEM_ID) || undefined : undefined,
+      // FASITEM_ID 後端定義為 int64，下拉 value 即為 ID（int64）
+      FASITEM_ID: v.FASITEM_ID ?? undefined,
       APPLY_DATE_S: toDateStr(v.APPLY_DATE_S),
       APPLY_DATE_E: toDateStr(v.APPLY_DATE_E),
       APRV_DATE_S: toDateStr(v.APRV_DATE_S),
