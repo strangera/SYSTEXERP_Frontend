@@ -71,7 +71,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   });
 
   readonly columns = [
-    { field: 'sys_type', header: '系統別', visible: true },
+    { field: 'sys_type', header: '系統別', visible: true, width: '70px' },
     { field: 'sys_type_name', header: '系統別名稱', visible: true },
     { field: 'data_type', header: '作業代碼', visible: true },
     { field: 'data_type_name', header: '作業名稱', visible: true },

@@ -341,6 +341,9 @@
           styleClass="p-button-text p-button-sm ml-2" pTooltip="滾動到頂部" />
       </div>
     </div>
+    @if (currentProgNo() && showReportMode && data.length){
+    <app-report-signature [dataType]="currentProgNo()!" />
+    }
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr *ngIf="hasSearched">

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -12,7 +13,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize, Observable } from 'rxjs';
+import { finalize, map, Observable } from 'rxjs';
+import { ReportSignatureComponent } from '../../biz-components/report-signature/report-signature.component';
 import { ExportContext } from '../../exports/report-export.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { TableReportCaptionComponent } from './components/table-report-caption/table-report-caption.component';
@@ -31,7 +33,7 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
   selector: 'app-table-report',
   host: { 'table-report-id': '複製時請自行取唯一名' },
   standalone: true,
-  imports: [TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
+  imports: [ReportSignatureComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,7 +43,7 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
     TableReportDragDropService,
     TableReportSubtotalService,
     TableReportPermissionService,
-    TableReportDataFlowService
+    TableReportDataFlowService,
   ]
 })
 export class TableReportComponent implements OnChanges {
@@ -55,7 +57,6 @@ export class TableReportComponent implements OnChanges {
   public readonly permissionService = inject(TableReportPermissionService);
   public readonly dataFlowService = inject(TableReportDataFlowService);
   public readonly sanitizer = inject(DomSanitizer);
-
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly queryState = inject(QueryStateService);
@@ -76,7 +77,23 @@ export class TableReportComponent implements OnChanges {
   @Input() dataKey: string | undefined;
   selectedColumns: ReportColumn[] = [];
 
-  @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
+  public readonly currentProgNo = toSignal(
+    this.route.data.pipe(map(d => (d['progNo'] as string) ?? null)),
+    { initialValue: (this.route.snapshot.data['progNo'] as string) ?? null }
+  );
+
+  private readonly _tableKeyFromRoute = toSignal(
+    this.route.url.pipe(map(urlSegments => urlSegments.at(-1)?.path ?? '')),
+    { initialValue: this.route.snapshot.url.at(-1)!.path }
+  );
+
+  private _explicitTableKey?: string;
+  @Input() set tableKey(val: string) {
+    this._explicitTableKey = val;
+  }
+  get tableKey(): string {
+    return this._explicitTableKey ?? this._tableKeyFromRoute() ?? '';
+  }
   @Input() loading = false;
   public _loading = false;
   @Input() showReorder = true;
