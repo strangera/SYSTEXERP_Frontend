@@ -7,7 +7,7 @@ import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { DividerModule } from "primeng/divider";
@@ -73,6 +73,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   isViewMode = false;
   queryLoading = false;
+  invoiceLockDate = '';
 
   @ViewChild('changeEdit') tableChangeEdit!: TableEditComponent;
   @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;
@@ -88,6 +89,24 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   ) {
     super();
   }
+  private validateInvoiceDateAfterLockDate(
+    value: unknown,
+    rowData: Record<string, unknown>,
+    data: unknown[],
+    field: string,
+    header: string
+  ): { isValid: boolean; errorMessage: string[] } {
+    void rowData; void data; void field; void header;
+    if (!this.invoiceLockDate || value == null) return { isValid: true, errorMessage: [] };
+    const dateVal = new Date(value as string | number | Date);
+    const lockDateVal = new Date(this.invoiceLockDate);
+    if (isNaN(dateVal.getTime()) || isNaN(lockDateVal.getTime())) return { isValid: true, errorMessage: [] };
+    if (dateVal <= lockDateVal) {
+      return { isValid: false, errorMessage: [`發票日期需大於發票鎖定日(${this.invoiceLockDate})`] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
   private validateUniformNumber(
     value: any,
     rowData: unknown,
@@ -109,7 +128,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 基礎欄位
     let baseColumns: EditColumn[] = [
       {
-        field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px',
+        field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired, this.validateInvoiceDateAfterLockDate.bind(this)], width: '150px',
         disabled: (v: any, i?: number, row?: any) => String(row?.['TXN_GUIPaper']) === 'E'
       },
       {
@@ -126,6 +145,17 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
             this.changeEditData = [...this.changeEditData];
           }
           this.updateColumnsChange();
+          if (rowData) {
+            const result = this.validateInvoiceDateAfterLockDate(rowData.TXN_Date, rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
+            if (!rowData._validationErrors) rowData._validationErrors = {};
+            if (!result.isValid) {
+              rowData._validationErrors['TXN_Date'] = result.errorMessage[0];
+              this.messageService.warnBubble(result.errorMessage[0]);
+            } else {
+              delete rowData._validationErrors['TXN_Date'];
+            }
+            this.changeEditData = [...this.changeEditData];
+          }
         },
       },
     ];
@@ -163,6 +193,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       // 新增
       this.changeEcrNo = this.rowdata?.changeEcrNo || ''; // 目前收銀機號(一進查詢頁面取得)
       this.isViewMode = false;
+      this.tls2j030Service.queryTLS2J030InvoiceLockDate().subscribe({
+        next: (res: any) => { this.invoiceLockDate = res?.Data.cls_date ?? ''; }
+      });
       // 使用 setTimeout 確保 EditTable 相關物件已渲染
       setTimeout(() => this.initializeEditData());
     }
@@ -302,6 +335,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 檢查邏輯（若有，但不影響功能）已簡化移除，因為主要驗證在 onSubmit
   }
 
+  onChangeFieldChange(event: FieldChangeEvent): void {
+    if (event.field !== 'TXN_Date') return;
+    const result = this.validateInvoiceDateAfterLockDate(event.value, event.rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
+    if (!result.isValid) {
+      this.messageService.warnBubble(result.errorMessage[0]);
+    }
+  }
+
   onDetailEditDataChange(data: any[]) {
     this.detailEditData = data;
 
@@ -353,18 +394,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
-    // 2. 檢查是否已日關帳(拿掉，改判斷發票鎖定)
-    // if (source.isClose === 'Y') {
-    //   this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
-    //   return;
-    // }
-    // 2. 檢查發票是否鎖定
-    if (source.isInvoiceClose === 'Y') {
-      this.messageService.warnBubble(`發票日期已鎖定，不可換開發票`);
-      return;
-    }
-
-    // 3. 檢查是否已存在
+    // 2. 檢查是否已存在
     const formatted = this.formatTxnNoInSingleData(source);
 
     if (this.data.some(d => d.TXN_GUIBegNo === formatted.TXN_GUIBegNo && d.TXN_No === formatted.TXN_No)) {
@@ -373,20 +403,20 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
-    // 4. 加入來源發票
+    // 3. 加入來源發票
     this.data = [...this.data, formatted];
     this.sourceInvoiceData = formatted;
     this.messageService.successBubble('查詢並加入來源發票成功');
 
-    // 5. 初始化編輯資料 (如果尚未初始化)
+    // 4. 初始化編輯資料 (如果尚未初始化)
     if (!this.changeEditData || this.changeEditData.length === 0) {
       this.initializeEditData();
     }
 
-    // 6. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
+    // 5. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
     this.syncSourceSumToChangeInvoice();
 
-    // 7. 清空輸入欄位
+    // 6. 清空輸入欄位
     this.dataForm.get('TXN_GUIBegNo')?.setValue('');
     this.txnNotesChange(); // 同步更新換開發票的備註欄位
   }
