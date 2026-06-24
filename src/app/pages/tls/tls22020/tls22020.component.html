@@ -42,20 +42,9 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      tableKey="TLS22020"
-      [lastQueryBody]="lastQueryBody"
-      [data]="data"
-      [columns]="selectedColumns"
-      [columnGroup]="columnGroup"
-      [totalRecords]="totalRecords"
-      [loading]="loading"
-      [footerData]="footerData"
-      [showManage]="false"
-      [showExcel]="true"
-      [showExcelImport]="false"
-      [exportExcelLoading]="exportExcelLoading"
-      (exportExcel)="exportReport()"
-    ></app-table-report>
+    <app-table-report tableKey="TLS22020" [lastQueryBody]="lastQueryBody" [data]="data" [columns]="selectedColumns"
+      [columnGroup]="columnGroup" [totalRecords]="totalRecords" [loading]="loading" [footerData]="footerData"
+      [showManage]="false" [showExcel]="true" [showExcelImport]="false" [exportExcelLoading]="exportExcelLoading"
+      (exportExcel)="exportReport()" [lazy]="false"></app-table-report>
   </div>
 </div>
