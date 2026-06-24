@@ -131,20 +131,17 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-table-report
       tableKey="FIN42050"
       [data]="data"
       [columns]="columns"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90]"
+      [totalRecords]="totalRecords()"
       [showDelete]="false"
       [showManage]="false"
       [showCheckBox]="false"
       [showSort]="false"
       [showReportMode]="false"
       dataKey="SortNo"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="loading"
     >
@@ -164,10 +161,12 @@
             [loading]="btnExcelLoading"
             icon="pi pi-file-excel"
             (click)="exportExcel()"
-            [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"
+            [disabled]="
+              data.length === 0 || !hasPermission(Actions.ExportExcel)
+            "
           ></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table-report>
   </div>
 </div>
