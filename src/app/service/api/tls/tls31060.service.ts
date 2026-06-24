@@ -40,7 +40,8 @@ export interface TLS31060DetailRequest {
   tlt_term_type: string[]
   org_id: string; // 單組織
   TaxType: string
-  IsRece_Yn: string
+  IsRece_Yn: string;
+  pageSize?: number;
 }
 
 export interface TLS31060PrintDetailRequest extends TLS31060DetailRequest {
