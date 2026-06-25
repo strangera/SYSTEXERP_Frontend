@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -35,6 +35,8 @@ export class FIN53010Service {
   public readonly detailByVouNoForUpdateLoading = signal<boolean>(!1);
   /** 依發票號碼查 APS4023（queryAPS4023DetatilData_ByInvoiceNumber） */
   public readonly aps4023ByInvoiceLoading = signal<boolean>(!1);
+  /** 依發票號碼查 APS2002 原始進項發票（queryAPS2002DetailData_ByInvoiceNo） */
+  public readonly aps2002ByInvoiceLoading = signal<boolean>(!1);
   /** 依廠商與立帳日期查預計付款日（getCalculatedPayDate） */
   public readonly calculatedPayDateLoading = signal<boolean>(!1);
 
@@ -219,6 +221,83 @@ export class FIN53010Service {
     });
   }
 
+  private aps2002ByInvoiceRequestCount = 0;
+
+  /** 依發票號碼查詢 APS2002 原始進項發票（格式 21/22/25），供進項折讓 blur 帶入 */
+  public queryAps2002DetailDataByInvoiceNo(
+    body: QueryAps2002DetailDataByInvoiceNoRequest
+  ): Observable<ApiResponse<Aps2002DetailDataByInvoiceNoData | null>> {
+    return defer(() => {
+      this.aps2002ByInvoiceRequestCount++;
+      this.aps2002ByInvoiceLoading.set(true);
+      return this.http
+        .post<ApiResponse<Aps2002DetailDataByInvoiceNoData | null>>(
+          `${apiUrl}/queryAPS2002DetailData_ByInvoiceNo`,
+          body
+        )
+        .pipe(
+          take(1),
+          tap(res => this.logger.debug('queryAPS2002DetailData_ByInvoiceNo:', [res])),
+          finalize(() => {
+            this.aps2002ByInvoiceRequestCount = Math.max(0, this.aps2002ByInvoiceRequestCount - 1);
+            this.aps2002ByInvoiceLoading.set(this.aps2002ByInvoiceRequestCount > 0);
+          }),
+          catchError(err => {
+            this.logger.error('API queryAPS2002DetailData_ByInvoiceNo 失敗:', err);
+            const body = err?.error as ApiResponse<unknown> | undefined;
+            const msg = body?.Message
+              ?? (typeof err?.message === 'string' ? err.message : '')
+              ?? '查詢失敗';
+            return of({
+              Status: '9999',
+              Data: null,
+              Message: msg,
+              Error: body?.Error ?? null,
+              Meta: { Timestamp: '', RequestId: '' },
+              TotalCount: 0,
+              TotalPage: 0,
+            } as ApiResponse<Aps2002DetailDataByInvoiceNoData | null>);
+          }),
+        );
+    });
+  }
+
+  /** 查詢可折讓原始進項發票清單（格式 21/22/25），支援分頁 */
+  public queryAps2002OriginalInvoicesForAllowance(
+    body: QueryAps2002OriginalInvoicesForAllowanceRequest
+  ): Observable<ApiResponse<Aps2002DetailDataByInvoiceNoData[]>> {
+    return this.http
+      .post<ApiResponse<Aps2002DetailDataByInvoiceNoData[]>>(
+        `${apiUrl}/queryAPS2002OriginalInvoices_ForAllowance`,
+        body
+      )
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API queryAPS2002OriginalInvoices_ForAllowance 失敗:', err);
+          return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Aps2002DetailDataByInvoiceNoData[]>);
+        }),
+      );
+  }
+
+  /** 查詢可折讓原始銷項發票清單（格式 31/32/35），支援分頁 */
+  public queryAps4023OriginalInvoicesForAllowance(
+    body: QueryAps4023OriginalInvoicesForAllowanceRequest
+  ): Observable<ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>> {
+    return this.http
+      .post<ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>>(
+        `${apiUrl}/queryAPS4023OriginalInvoices_ForAllowance`,
+        body
+      )
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API queryAPS4023OriginalInvoices_ForAllowance 失敗:', err);
+          return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>);
+        }),
+      );
+  }
+
   /** 驗證銷項發票號碼是否在配號範圍內（31/32→APS2001，35→POS1017） */
   public validateSalesInvoice(
     body: { InvoiceType: string; InvoicePrefix: string; InvoiceNo: string }
@@ -231,6 +310,15 @@ export class FIN53010Service {
           this.logger.error('API validateSalesInvoice 失敗:', err);
           return of({ Status: '9999', Data: false, Message: '驗證失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<boolean>);
         }),
+      );
+  }
+
+  public checkRepYYYYMMAudited(repYYYYMM: string): Observable<boolean> {
+    return this.http
+      .post<ApiResponse<boolean>>(`${apiUrl}/checkRepYYYYMMAudited`, { RepYYYYMM: repYYYYMM })
+      .pipe(
+        map(res => res?.Data ?? false),
+        catchError(() => of(false)),
       );
   }
 
