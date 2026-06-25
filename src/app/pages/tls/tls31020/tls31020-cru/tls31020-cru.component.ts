@@ -122,6 +122,7 @@ export class Tls31020CruComponent implements OnChanges {
       org_id: q.org_id ?? [],
       TaxType: q.TaxType,
       IsRece_Yn: q.IsRece_Yn,
+      pageSize: 100,
     };
   }
 
