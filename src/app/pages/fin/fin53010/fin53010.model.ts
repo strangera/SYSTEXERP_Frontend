@@ -205,7 +205,7 @@ export interface InsertAPS4023DataBody {
   PUR_Tax?: number | null;
   Source_Doc_No?: string | null;
   AssetType?: string | null;
-  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 33/34 時帶入，後端待確認） */
+  /** 折讓用：區別 'R'=退出 'C'=折讓（格式 33/34） */
   Credit_Type?: string | null;
 }
 
@@ -462,6 +462,43 @@ export interface QueryAps4023DetailDataByInvoiceNumberRequest {
   InvoiceNumber?: string | null;
 }
 
+/** queryAPS2002DetailData_ByInvoiceNo Request */
+export interface QueryAps2002DetailDataByInvoiceNoRequest {
+  InvoiceNo?: string | null;
+}
+
+/** queryAPS2002DetailData_ByInvoiceNo Response Data（進項折讓原始發票查詢） */
+export interface Aps2002DetailDataByInvoiceNoData {
+  PUR_GUINo?: string | null;
+  /** 原格式（21/22/25），前端轉換為 23/24 後寫入 voucher_type */
+  PUR_VoucherType?: string | null;
+  /** 原發票日期 */
+  PUR_GUIDate?: string | null;
+  /** 原發票總金額 */
+  PUR_Amt?: number | null;
+  /** 銷受人統一編號 */
+  PUR_VenUniform?: string | null;
+  PUR_TaxType?: string | null;
+  PUR_Net?: number | null;
+  PUR_Tax?: number | null;
+  /** 已退回/折讓金額（後端加總已有 23/24 records） */
+  AlreadyAllowanceAmt?: number | null;
+}
+
+/** queryAPS2002OriginalInvoices_ForAllowance Request */
+export interface QueryAps2002OriginalInvoicesForAllowanceRequest {
+  InvoiceNo?: string | null;
+  PageSize?: number | null;
+  PageIndex?: number | null;
+}
+
+/** queryAPS4023OriginalInvoices_ForAllowance Request */
+export interface QueryAps4023OriginalInvoicesForAllowanceRequest {
+  InvoiceNumber?: string | null;
+  PageSize?: number | null;
+  PageIndex?: number | null;
+}
+
 /** getCalculatedPayDate Request */
 export interface GetCalculatedPayDateRequest {
   VenNo?: string | null;
@@ -515,6 +552,8 @@ export interface Aps4023DetailDataByInvoiceNumberData {
   SAL_Type?: string | null;
   AssetType?: string | null;
   TXN_GUIRemark?: string | null;
+  /** 已退回/折讓金額（後端加總已有 33/34 records） */
+  AlreadyAllowanceAmt?: number | null;
 }
 export interface QueryFIN53010DetailDataByVouNoRequest {
   VouNo?: string | null;
@@ -610,6 +649,8 @@ export interface APS2002 {
   SYS_ORIGIN?: string | null;
   PUR_Comb_Cnt?: number | null;
   PUR_Comb?: string | null;
+  /** 原發票日期（後端 self-join：23/24 折讓列由 b.PUR_GUIDate 帶入，21/22/25 正常列為 null） */
+  Orig_InvoiceDate?: string | null;
 }
 
 export interface ARS3001 {
@@ -688,6 +729,8 @@ export interface APS4023 {
   SAL_Type?: string | null;
   AssetType?: string | null;
   TXN_GUIRemark?: string | null;
+  /** 原發票日期（後端 self-join：33/34 折讓列由 b.InvoiceDate 帶入，31/32/35 正常列為 null） */
+  Orig_InvoiceDate?: string | null;
 }
 
 export interface APS4002 {

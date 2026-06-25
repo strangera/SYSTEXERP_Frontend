@@ -122,8 +122,16 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
     _invoiceValidated: true,
     invoice_type: row.InvoiceType ?? undefined,
     invoice_prefix: prefix || undefined,
-    invoice_no: inv8.length === 8 ? inv8 : invNum,
-    invoice_date: parseYmdToDate(row.InvoiceDate ?? undefined),
+    // allowance (33/34): store full 10-char number in invoice_no for display; mapper splits it back for API
+    invoice_no: isAllowance ? invNum : (inv8.length === 8 ? inv8 : invNum),
+    // 33/34：InvoiceDate = 退出/折讓日期(credit_date)；Orig_InvoiceDate（後端 self-join）= 原發票日期
+    ...(isAllowance
+      ? {
+          credit_date: parseYmdToDate(row.InvoiceDate ?? undefined),
+          ...(row.Orig_InvoiceDate != null ? { invoice_date: parseYmdToDate(row.Orig_InvoiceDate) } : {}),
+        }
+      : { invoice_date: parseYmdToDate(row.InvoiceDate ?? undefined) }
+    ),
     declare_ym: parseYyyyMmToMonthDate(row.INV_DeclareYM ?? undefined),
     buyer_uniform: row.Buyer_Uniform ?? undefined,
     total_amount: row.PUR_Amt ?? undefined,
@@ -156,9 +164,17 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
   return {
     ...(typeof id === 'number' && !Number.isNaN(id) ? { id } : {}),
     voucher_type: row.PUR_VoucherType ?? undefined,
-    track_no: trackNo || undefined,
-    invoice_no: invoiceNo || undefined,
-    invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
+    track_no: isAllowance ? undefined : (trackNo || undefined),
+    // 23/24 折讓：完整 10 碼存入 invoice_no（同銷項 33/34 做法），payload mapper 直接用整串
+    invoice_no: isAllowance ? (guino || undefined) : (invoiceNo || undefined),
+    // 23/24 的 PUR_GUIDate = 退出折讓日期（credit_date）；Orig_InvoiceDate（後端 self-join）= 原發票日期
+    ...(isAllowance
+      ? {
+          credit_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
+          ...(row.Orig_InvoiceDate != null ? { invoice_date: parseYmdToDate(row.Orig_InvoiceDate) } : {}),
+        }
+      : { invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined) }
+    ),
     declare_ym: parseYyyyMmToMonthDate(row.PUR_RepYYYYMM ?? undefined),
     vendor_tax_id: row.PUR_VenUniform ?? undefined,
     ven_no: row.PUR_VenNo ?? undefined,

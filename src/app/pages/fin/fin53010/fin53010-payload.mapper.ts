@@ -131,12 +131,19 @@ function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow, deps: Fin530
   const id = row.id;
   const invoiceType = String(row.invoice_type ?? '').trim();
   const isAllowance = invoiceType === '33' || invoiceType === '34';
+  // allowance rows store full 10-char number in invoice_no; split for API
+  const invNoFull = String(row.invoice_no ?? '').trim();
+  const invPrefix = row.invoice_prefix ?? (invNoFull.length === 10 ? invNoFull.slice(0, 2) : null);
+  const invNo = invNoFull.length === 10 ? invNoFull.slice(2) : (invNoFull || null);
   return {
     ID: typeof id === 'number' && !Number.isNaN(id) ? id : 0,
     InvoiceType: row.invoice_type ?? null,
-    InvoicePrefix: row.invoice_prefix ?? null,
-    InvoiceNo: row.invoice_no ?? null,
-    InvoiceDate: toYmd(row.invoice_date ?? undefined, deps.datePipe) ?? null,
+    InvoicePrefix: invPrefix,
+    InvoiceNo: invNo,
+    // 33/34：InvoiceDate = 退出/折讓日期；31/32：InvoiceDate = 原發票日期
+    InvoiceDate: isAllowance
+      ? (toYmd(row.credit_date ?? undefined, deps.datePipe) ?? null)
+      : (toYmd(row.invoice_date ?? undefined, deps.datePipe) ?? null),
     INV_DeclareYM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe) ?? null,
     Buyer_Uniform: row.buyer_uniform ?? null,
     PUR_Amt: row.total_amount ?? null,
@@ -170,7 +177,9 @@ function mapStepPurchaseToInsert2002(
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
     ACP_Type: '7',
-    PUR_GUIDate: toYmd(row.invoice_date ?? undefined, deps.datePipe),
+    PUR_GUIDate: isAllowance
+      ? toYmd(row.credit_date ?? undefined, deps.datePipe)  // 23/24：credit_date = 退出/折讓日期
+      : toYmd(row.invoice_date ?? undefined, deps.datePipe),
     PUR_VenNo: row.ven_no,
     PUR_VenName: vendorDisplayName(ven),
     PUR_VenUniform: purVenUniform,
