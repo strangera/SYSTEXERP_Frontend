@@ -19,6 +19,8 @@ export interface UserOption {
   ID: string; // ID
   User_No: string; // 使用者代號
   User_Name: string; // 使用者名稱
+  Org_Id: string | null; // 組織代碼
+  Org_Name: string | null; // 組織名稱
   Match: boolean; // 是否配對 (指示此使用者是否已與此角色匹配)
 }
 
@@ -69,18 +71,21 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
   filterDialogForm = this.formBuilder.nonNullable.group({
     User_No: [''], // 篩選使用者編號
     User_Name: [''], // 篩選使用者名稱
+    Org_Id: [''], // 篩選組織代碼
   });
 
   // 主表格的欄位定義
   assignedUsersColumns: Column[] = [
     { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
+    { field: 'Org_Name', header: '組織名稱', visible: true },
   ];
 
   // 彈跳視窗表格的欄位定義
   availableUsersColumns: Column[] = [
     { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
+    { field: 'Org_Name', header: '組織名稱', visible: true },
   ];
 
   constructor(private sys0230Service: Sys0230Service) {
@@ -196,7 +201,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
    * 這個方法現在會從 `allUsersFromServer` 中過濾，並排除任何已經在 `assignedUsers` 中的項目。
    */
   filterAvailableUsers(): void {
-    const { User_No, User_Name } = this.filterDialogForm.value;
+    const { User_No, User_Name, Org_Id } = this.filterDialogForm.value;
 
     // 從所有使用者列表開始篩選
     let filteredData = [...this.allUsersFromServer];
@@ -208,6 +213,10 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
     // 應用使用者名稱篩選
     if (User_Name) {
       filteredData = filteredData.filter((user) => user.User_Name.includes(User_Name));
+    }
+    // 應用組織代碼篩選
+    if (Org_Id) {
+      filteredData = filteredData.filter((user) => user.Org_Id?.includes(Org_Id));
     }
 
     // 最後，確保篩選後的列表只包含那些目前尚未被指派的使用者
