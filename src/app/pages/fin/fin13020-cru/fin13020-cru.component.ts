@@ -189,7 +189,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('Total_Amt')?.disable();
     this.dataForm.get('Credit_Type')?.disable();
     this.dataForm.get('PUR_VoucherType')?.disable();
-    this.dataForm.get('Voucher_No')?.disable();
+    // this.dataForm.get('Voucher_No')?.disable();
 
     if (this.crudstatus === CRUDStatus.Create) {
       const today = new Date();
@@ -554,7 +554,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('Total_Amt')?.disable();
     this.dataForm.get('Credit_Type')?.disable();
     this.dataForm.get('PUR_VoucherType')?.disable();
-    this.dataForm.get('Voucher_No')?.disable();
+    // this.dataForm.get('Voucher_No')?.disable();
   }
 
   private updateAmountFieldsByDetailRows(): void {
