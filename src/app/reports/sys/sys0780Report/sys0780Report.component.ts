@@ -5,8 +5,8 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PrivilegeOutput, Sys0780Service } from '@service/api/sys/sys0780.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -19,7 +19,7 @@ import { ChipModule } from 'primeng/chip';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PanelModule } from 'primeng/panel';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
-import { finalize } from 'rxjs';
+import { ReportSignatureComponent } from 'src/app/shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-sys0780-report',
@@ -29,7 +29,7 @@ import { finalize } from 'rxjs';
   imports: [
     TranslateModule, DropdownComponent, CalendarComponent, MultiSelectComponent,
     ReactiveFormsModule, FormsModule, AsyncPipe, ChipModule, PanelModule,
-    TriStateCheckboxModule, CheckboxModule, ButtonModule, InputTextareaModule
+    TriStateCheckboxModule, CheckboxModule, ButtonModule, InputTextareaModule, ReportSignatureComponent
   ],
   providers: [DatePipe]
 })

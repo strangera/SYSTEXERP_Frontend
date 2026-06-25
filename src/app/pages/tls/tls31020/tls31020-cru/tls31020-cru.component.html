@@ -1,25 +1,24 @@
-<div class="card">
-  <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
-  </div>
-</div>
-<div class="card">
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="rowData?.floor_desc ?? ''"
+  [modal]="true"
+  [maximizable]="true"
+  [style]="{ width: '95vw' }"
+  [contentStyle]="{ overflow: 'auto', padding: '0' }">
   <app-table-report
-    tableKey="tls31020"
+    tableKey="tls31020-detail"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
     [columnGroup]="columnGroup"
     [totalRecords]="totalRecords"
     [showDelete]="false"
+    [showEdit]="false"
     [showManage]="false"
-    [queryFunction]="tls31020Service.queryTLS31020Detail.bind(tls31020Service)"
     [loading]="loading"
     [footerData]="footershowTotal"
-    [footerPercentData]="footershowPercent"
-    [exportContext]="{ apiUrl: 'queryTLS31020Detail' }"
-  >
+    [queryFunction]="detailQueryFn">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button
@@ -28,19 +27,17 @@
           [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(false)"
-          [disabled]="data.length === 0"
-          [loading]="btnPDFLoading"
-        ></p-button>
+          [disabled]="data.length === 0">
+        </p-button>
         <p-button
           styleClass="p-2"
           label="單樓層之營業報表.XLSX"
           [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(true)"
-          [disabled]="data.length === 0"
-          [loading]="btnExcelLoading"
-        ></p-button>
+          [disabled]="data.length === 0">
+        </p-button>
       </div>
     </header>
   </app-table-report>
-</div>
+</p-dialog>

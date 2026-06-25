@@ -59,12 +59,14 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   addButton: AddButton[] = [
     {
       label: '作廢',
-      icon: 'pi pi-undo',
+      icon: 'pi pi-times-circle text-red-500',
       action: (rowData: TLS2J030Data) => {
         this.onInvalid(rowData);
       },
+      // 1.換開機台才能執行作廢，2.換開狀態為正常且發票日未鎖定才能作廢
       disabled: (rowData: TLS2J030Data) => {
-        return !(rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y");
+        if (this.isNotECR) return true;
+        return rowData?.isInvoiceClose === "Y" || rowData?.GUI_Status === "1";
       }
     }
   ];
@@ -109,10 +111,11 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 控制 checkbox 是否可選：當換開狀態為 刪除=1 時不可選，不是換開機台或已關帳的資料也不可刪除
+  // 控制 checkbox 是否可選：1.換開機台才能執行刪除，2.電子發票不可刪，3.換開狀態為正常且發票日未鎖定才能刪除
   isRowSelectable = (rowData: TLS2J030Data): boolean => {
+    if (this.isNotECR) return false;
     if (rowData?.TXN_GUIPaper === "E") return false;
-    return rowData?.GUI_Status !== "1" && !this.isNotECR && rowData?.isClose !== "Y";
+    return rowData?.GUI_Status !== "1" && rowData?.isInvoiceClose !== "Y";
   }
 
   ngOnInit(): void {

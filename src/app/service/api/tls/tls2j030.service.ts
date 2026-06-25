@@ -86,6 +86,9 @@ export class TLS2j030Service {
   deleteTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS2J030`, data);
   }
+  queryTLS2J030InvoiceLockDate(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030InvoiceLockDate`, {});
+  }
   exportTLS2J030PDF(data: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS2J030PDF`, data, { responseType: 'blob' });
   }

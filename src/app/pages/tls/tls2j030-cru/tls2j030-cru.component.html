@@ -41,7 +41,8 @@
         </p-divider>
         <app-table-edit #changeEdit tableKey="ChangeEdit" class="col-12" [data]="changeEditData"
           [columns]="columnschange" dataStatusField="status" [tableRequired]="true" [showDelete]="false"
-          [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false" [showCheckBox]="false">
+          [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false" [showCheckBox]="false"
+          (fieldChange)="onChangeFieldChange($event)">
         </app-table-edit>
         <p-divider align="left" type="solid" styleClass="pb-2 mb-0">
           <span class="text-center text-xl font-bold text-primary">
