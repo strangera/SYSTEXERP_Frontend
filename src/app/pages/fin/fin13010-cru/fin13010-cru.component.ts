@@ -322,7 +322,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     this.dataForm.get('Total_Amt')?.disable();
     this.dataForm.get('Credit_Type')?.disable();
     this.dataForm.get('PUR_VoucherType')?.disable();
-    this.dataForm.get('Voucher_No')?.disable();
+    // this.dataForm.get('Voucher_No')?.disable();
   }
 
   /* ==================== 金額互算 ==================== */
