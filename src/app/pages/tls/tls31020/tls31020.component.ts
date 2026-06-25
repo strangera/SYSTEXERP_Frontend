@@ -27,6 +27,7 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Tls31020CruComponent } from './tls31020-cru/tls31020-cru.component';
 
 @Component({
   selector: 'app-tls31020',
@@ -52,6 +53,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls31020CruComponent,
   ]
 })
 
@@ -139,6 +141,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
+
+  dialogVisible = false;
+  selectedRow: TLS31020Item | null = null;
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
@@ -330,7 +335,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS31020', 'TLS/TLS31020cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS31020', '', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
@@ -753,9 +758,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   }
 
 
-  onDetail1(event: any) {
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+  onDetail1(event: TLS31020Item) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   setColumns() {
