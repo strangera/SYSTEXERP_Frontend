@@ -132,6 +132,8 @@ export class TableReportComponent implements OnChanges {
   @Output() delete = new EventEmitter<any>();
   @Input() showDelete = true;
   @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;
+  @Input() showInsert = false;
+  @Output() insert = new EventEmitter<void>();
   @Input() showExcel = false;
   @Input() showExcelExport = true;
   @Input() showExcelImport = true;
@@ -240,21 +242,15 @@ export class TableReportComponent implements OnChanges {
     // 封裝後的 PrimeNG 視圖狀態與虛擬滾動分配邏輯
     if (this.data && this.data.length !== 0) {
       if (this.dt) {
-        this.dt.virtualScroll = false;
+        this.dt.virtualScroll = this.lazy && this.data.length >= 30;
         setTimeout(() => this.syncTableSortMeta());
       }
+
+      this.virtualData = this.data;
       this.cdr.detectChanges();
 
-      this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
-
-      if (this.data.length < 30) {
-        this.virtualData = this.data;
-        this.dt.virtualScroll = false;
-      } else {
-        this.dt.virtualScroll = true;
-        this.virtualData = Array.from({ length: this.data.length });
-        this.cdr.detectChanges();
-        this.virtualData = this.data;
+      if (this.dt) {
+        this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
       }
     }
   }
@@ -403,7 +399,7 @@ export class TableReportComponent implements OnChanges {
   }
 
   customSort(event: TableQueryPayload) {
-    if (!event.multiSortMeta) return;
+    if (!event.multiSortMeta || this.isSyncingSort) return;
     this.data = this.dataFlowService.executeClientSort(event, this.data);
     if (this.selectedItems && this.selectedItems.length > 0) this.selectedItems = [...this.selectedItems];
     this.subtotalService.clearGroupTotals();
@@ -411,8 +407,11 @@ export class TableReportComponent implements OnChanges {
     this.cdr.detectChanges();
     setTimeout(() => {
       if (!this.dt) return;
+      this.isSyncingSort = true;
+      this.virtualData = [...this.data];
       this.dt.restoreState();
       this.cdr.detectChanges();
+      this.isSyncingSort = false;
     }, 0);
   }
 

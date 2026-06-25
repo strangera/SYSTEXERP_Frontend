@@ -17,7 +17,7 @@
     <app-table-report-caption [data]="data" [footerData]="footerData" [columns]="columns"
       (columnsEvent)="columns = $event" [dataKey]="dataKey" [selectedColumns]="selectedColumns"
       (selectedColumnsEvent)="selectedColumns = $event" [selectedItems]="selectedItems" [tableKey]="tableKey"
-      [showCaption]="showCaption" [showFilter]="showFilter" [showReportMode]="showReportMode" [showDelete]="showDelete"
+      [showCaption]="showCaption" [showFilter]="showFilter" [showReportMode]="showReportMode" [showDelete]="showDelete" [showInsert]="showInsert" (insert)="insert.emit()"
       [showExcel]="showExcel" [expansionColumns]="expansionColumns" [expandedRows]="expandedRows"
       [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
       [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"

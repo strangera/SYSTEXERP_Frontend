@@ -1,7 +1,7 @@
 <p-dialog [(visible)]="visible" position="center" [focusOnShow]="false"
   [style]="{ width: width, height: height, maxWidth: maxWidth, minHeight: minHeight }" [header]="header" [modal]="true"
   [styleClass]="styleClass + ' p-fluid'" (visibleChange)="visibleChange.emit($event)" [maximizable]="true"
-  appendTo="body" [closable]="!loading">
+  appendTo="body" [closable]="!loading" (onShow)="show.emit()">
   <ng-template pTemplate="content">
     <ng-content></ng-content>
   </ng-template>
