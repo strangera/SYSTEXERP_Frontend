@@ -65,8 +65,8 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'MIN_TXN_No', header: '後台交易起號', format: v => v.toString().padStart(6, '0') }, // 不足六位數的交易號前面補零
     { field: 'MAX_TXN_No', header: '後台交易迄號', format: v => v.toString().padStart(6, '0') },
-    { field: 'SLE_TxnBegNo', header: '前台清機起號' },
-    { field: 'SLE_TxnEndNo', header: '前台清機迄號' },
+    { field: 'SLE_TxnBegNo', header: '前台清機起號', format: v => v.toString().padStart(6, '0') },
+    { field: 'SLE_TxnEndNo', header: '前台清機迄號', format: v => v.toString().padStart(6, '0') },
     { field: 'SLE_GUIBegNo', header: '發票起始(起)' },
     { field: 'SLE_GUIEndNo', header: '發票結束(迄)' },
     {
