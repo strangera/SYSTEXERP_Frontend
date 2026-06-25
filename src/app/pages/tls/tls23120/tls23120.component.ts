@@ -379,7 +379,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
       }))
     };
     const firstDate = this.selectedItems[0]?.sad_date ? String(this.selectedItems[0].sad_date).replace(/-/g, '') : '';
-    const customFileName = `專櫃日對帳單${firstDate}.zip`;
+    const customFileName = `專櫃日對帳單${firstDate}.pdf`;
 
     this.loading = true;
     this.btnLoading = true;
@@ -391,10 +391,10 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
       )
       .subscribe({
         next: (response) => {
-          const blob = new Blob([response.body || response], { type: 'application/zip' });
+          const blob = new Blob([response.body || response], { type: 'application/pdf' });
           saveAs(blob, customFileName);
         },
-        error: (err) => { console.error('ZIP 匯出失敗:', err); }
+        error: (err) => { console.error('PDF 匯出失敗:', err); }
       });
   }
 

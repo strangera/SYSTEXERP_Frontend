@@ -4,174 +4,92 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="銷售日期"
-              [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar label="銷售日期" [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              class="col-12"
-              label="顯示大分類"
-              groupname="show_bus_type"
-              [control]="queryForm.controls.ShowBusType"
-              [options]="WhetherOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton class="col-12" label="顯示大分類" groupname="show_bus_type"
+              [control]="queryForm.controls.ShowBusType" [options]="WhetherOptions"
+              [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4"></div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex align-items-center gap-2 mb-2">
-              <p-radioButton
-                name="filterMode"
-                formControlName="filterMode"
-                value="counter"
-                inputId="fm-counter"
-              ></p-radioButton>
-              <label
-                for="fm-counter"
-                class="font-medium text-sm cursor-pointer"
-              >
+              <p-radioButton name="filterMode" formControlName="filterMode" value="counter"
+                inputId="fm-counter"></p-radioButton>
+              <label for="fm-counter" class="font-medium text-sm cursor-pointer">
                 使用「專櫃編號」條件
               </label>
             </div>
-            <ng-container
-              *ngIf="queryForm.get('filterMode')?.value === 'counter'"
-            >
-              <app-dropdown
-                label="專櫃編號"
-                [options]="CounterOptions"
-                optionLabel="formLabel"
-                optionValue="value"
-                [control]="queryForm.controls.TLT_No"
-                [submitted]="submitted"
-              ></app-dropdown>
+            <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
+              <app-dropdown label="專櫃編號" [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+                [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
             </ng-container>
           </div>
 
           <div class="col-12">
             <div class="flex align-items-center gap-2 mb-2">
-              <p-radioButton
-                name="filterMode"
-                formControlName="filterMode"
-                value="location"
-                inputId="fm-location"
-              ></p-radioButton>
-              <label
-                for="fm-location"
-                class="font-medium text-sm cursor-pointer"
-              >
+              <p-radioButton name="filterMode" formControlName="filterMode" value="location"
+                inputId="fm-location"></p-radioButton>
+              <label for="fm-location" class="font-medium text-sm cursor-pointer">
                 使用「館別／區域／樓層」條件
               </label>
             </div>
           </div>
 
-          <ng-container
-            *ngIf="queryForm.get('filterMode')?.value === 'location'"
-          >
+          <ng-container *ngIf="queryForm.get('filterMode')?.value === 'location'">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
-                label="館別"
-                [control]="queryForm.controls.tlt_building"
-                [options]="BUILDING_NO_Options"
-                optionLabel="label"
-                optionValue="value"
-                [submitted]="submitted"
-              ></app-multi-select>
+              <app-multi-select label="館別" [control]="queryForm.controls.tlt_building" [options]="BUILDING_NO_Options"
+                optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
-                label="區域"
-                [control]="queryForm.controls.area_no"
-                [options]="regionOptions"
-                optionLabel="label"
-                optionValue="value"
-                [submitted]="submitted"
-              ></app-multi-select>
+              <app-multi-select label="區域" [control]="queryForm.controls.area_no" [options]="regionOptions"
+                optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
-                label="樓層"
-                [control]="queryForm.controls.tlt_floor"
-                [options]="floorOptions"
-                optionLabel="label"
-                optionValue="value"
-                [submitted]="submitted"
-              ></app-multi-select>
+              <app-multi-select label="樓層" [control]="queryForm.controls.tlt_floor" [options]="floorOptions"
+                optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
             </div>
           </ng-container>
 
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex align-items-center gap-2 mb-2">
-              <p-radioButton
-                name="filterMode"
-                formControlName="filterMode"
-                value="busType"
-                inputId="fm-bus"
-              ></p-radioButton>
+              <p-radioButton name="filterMode" formControlName="filterMode" value="busType"
+                inputId="fm-bus"></p-radioButton>
               <label for="fm-bus" class="font-medium text-sm cursor-pointer">
                 使用「大分類」條件
               </label>
             </div>
-            <ng-container
-              *ngIf="queryForm.get('filterMode')?.value === 'busType'"
-            >
-              <app-multi-select
-                label="大分類"
-                [control]="queryForm.controls.bus_type"
-                [options]="bus_typeOptions"
-                optionLabel="label"
-                optionValue="value"
-                [submitted]="submitted"
-              ></app-multi-select>
+            <ng-container *ngIf="queryForm.get('filterMode')?.value === 'busType'">
+              <app-multi-select label="大分類" [control]="queryForm.controls.bus_type" [options]="bus_typeOptions"
+                optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
             </ng-container>
           </div>
           <div class="col-12 md:col-6 lg:col-8"></div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex align-items-center gap-2 mb-2">
-              <p-radioButton
-                name="filterMode"
-                formControlName="filterMode"
-                value="org"
-                inputId="fm-org"
-              ></p-radioButton>
+              <p-radioButton name="filterMode" formControlName="filterMode" value="org"
+                inputId="fm-org"></p-radioButton>
               <label for="fm-org" class="font-medium text-sm cursor-pointer">
                 使用「組織代碼／名稱」條件
               </label>
             </div>
             <ng-container *ngIf="queryForm.get('filterMode')?.value === 'org'">
-              <app-multi-select
-                label="組織代碼/名稱"
-                [control]="queryForm.controls.org_id"
-                [options]="OrganizationCodeOptions"
-                optionLabel="formLabel"
-                optionValue="value"
-                [submitted]="submitted"
-              ></app-multi-select>
+              <app-multi-select label="組織代碼/名稱" [control]="queryForm.controls.org_id"
+                [options]="OrganizationCodeOptions" optionLabel="formLabel" optionValue="value"
+                [submitted]="submitted"></app-multi-select>
             </ng-container>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -181,95 +99,47 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    tableKey="tls23120"
-    dataKey="talent_id"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="true"
-    [loading]="loading"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showReportMode]="false"
-    [showEdit]="false"
-    [showDelete]="false"
-    [totalRecords]="totalRecords"
-    [lastQueryBody]="historyRequestBody"
-    (detail)="onQueryAndOpen($event)"
-    [queryFunction]="tls23120Service.queryTLS23120.bind(tls23120Service)"
-  >
+  <app-table-report tableKey="tls23120" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="true"
+    [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [showReportMode]="false" [showEdit]="false" [showDelete]="false" [totalRecords]="totalRecords"
+    [lastQueryBody]="historyRequestBody" (detail)="onQueryAndOpen($event)"
+    [queryFunction]="tls23120Service.queryTLS23120.bind(tls23120Service)">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
-          <p-button
-            styleClass="p-2"
-            label="專櫃日對帳單.zip"
-            [rounded]="true"
-            icon="pi pi-file"
-            (click)="exportZip()"
+          <p-button styleClass="p-2" label="專櫃日對帳單PDF" [rounded]="true" icon="pi pi-file" (click)="exportZip()"
             [disabled]="
               data.length === 0 ||
               selectedItems.length === 0 ||
               !hasPermission(Actions.ExportZip)
-            "
-            [loading]="btnLoading"
-          ></p-button>
+            " [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
-          <p-button
-            styleClass="p-2"
-            label="網路對帳"
-            [rounded]="true"
-            icon="pi pi-file"
-            (click)="netReport()"
-            [disabled]="
+          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()" [disabled]="
               data.length === 0 ||
               selectedItems.length === 0 ||
               !hasPermission(Actions.OnlineCheck)
-            "
-            [loading]="btnLoading"
-          ></p-button>
-          <p-button
-            styleClass="p-2"
-            label="AUTOMAIL"
-            [rounded]="true"
-            icon="pi pi-file"
-            (click)="dialogVisible = true"
+            " [loading]="btnLoading"></p-button>
+          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="dialogVisible = true"
             [disabled]="
               data.length === 0 ||
               selectedItems.length === 0 ||
               !hasPermission(Actions.AUTOMAIL)
-            "
-            [loading]="btnLoading"
-          ></p-button>
+            " [loading]="btnLoading"></p-button>
         </div>
       </div>
     </header>
   </app-table-report>
 </div>
 
-<app-dialog
-  [visible]="dialogVisible"
-  header="AutoMail"
-  [showFooter]="false"
-  (visibleChange)="dialogVisible = $event"
-  width="400px"
->
+<app-dialog [visible]="dialogVisible" header="AutoMail" [showFooter]="false" (visibleChange)="dialogVisible = $event"
+  width="400px">
   <form [formGroup]="dialogForm" (ngSubmit)="autoMail(dialogForm)">
     <div class="grid p-fluid">
-      <app-dropdown
-        class="col-12"
-        label="寄件者"
-        [control]="dialogForm.controls.SMTP_No"
-        [options]="SMTP_NoOptions | async"
-        optionLabel="Name"
-        optionValue="No"
-        [submitted]="submitted"
-      />
+      <app-dropdown class="col-12" label="寄件者" [control]="dialogForm.controls.SMTP_No"
+        [options]="SMTP_NoOptions | async" optionLabel="Name" optionValue="No" [submitted]="submitted" />
     </div>
-    <div
-      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-    >
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
       <app-button btnType="submit" [loading]="dialogLoading"></app-button>
     </div>
   </form>
