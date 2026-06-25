@@ -26,6 +26,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
+import { Tls32040CRUComponent } from './tls32040-cru/tls32040-cru.component';
 
 const today = new Date();
 const yesterday = new Date(today);
@@ -54,6 +55,7 @@ const yesterday = new Date(today);
     ButtonModule,
     ChartModule,
     CheckboxModule,
+    Tls32040CRUComponent,
   ]
 })
 
@@ -170,6 +172,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   chartData: any = []; // 圖檔資料
   chart_options: any = []; // 圖檔欄位
   historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
+  dialogVisible = false;
+  selectedRow: TLS32040Response | null = null;
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
@@ -973,12 +977,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   //能否顯示明細的row控制項
 
-  onDetail1(event: any) {
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
-      this.onDetail(event, queryConditions);
-    else
+  onDetail1(event: TLS32040Response) {
+    if (event.RowType === 'TEAM' && this.historyRequestBody) {
+      this.selectedRow = event;
+      this.dialogVisible = true;
+    } else {
       this.messageService.infoBubble('非合計欄位才可查看明細');
+    }
   }
 
   // 算比較表單的週數
