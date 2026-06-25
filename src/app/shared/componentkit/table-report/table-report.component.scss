@@ -1,3 +1,13 @@
+// PrimeNG 17 hardcode [autoSize]="true" [inline]="true" 給 Scroller，
+// 且當 scrollHeight≠'flex' 時 _scrollHeight=undefined，導致 calculateAutoSize()
+// 在 render row 數改變時清掉 style.height，測出 spacer 高度 → 爆版。
+// CSS !important 蓋掉 JS inline style（spec: author !important > inline without !important），
+// 讓 offsetHeight 量測值永遠是 700px，calculateAutoSize 的回寫就穩定收斂。
+:host.fixed-height ::ng-deep .p-scroller {
+  height: 700px !important;
+  max-height: 700px !important;
+}
+
 :host ::ng-deep {
   // ==========================================
   // 1. 自訂表格滾動條 (Scrollbar)

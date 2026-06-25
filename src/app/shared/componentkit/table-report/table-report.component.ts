@@ -31,7 +31,7 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
 @UntilDestroy()
 @Component({
   selector: 'app-table-report',
-  host: { 'table-report-id': '複製時請自行取唯一名' },
+  host: { 'table-report-id': '複製時請自行取唯一名', '[class.fixed-height]': '!autoHeight' },
   standalone: true,
   imports: [ReportSignatureComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
   templateUrl: './table-report.component.html',
@@ -311,14 +311,13 @@ export class TableReportComponent implements OnChanges {
       .pipe(untilDestroyed(this), finalize(() => (this._loading = false)))
       .subscribe(res => {
         if (res?.Data && res.Data.length > 0) {
-          this.virtualData = Array.from({ length: this.data.length + res.Data.length });
-          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-          this.cdr.detectChanges();
           this.data = [...this.data, ...res.Data];
-          this.syncTableSortMeta();
-          this.dataChange.emit(this.data);
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
+          this.syncTableSortMeta();
+          this.dataChange.emit(this.data);
+          this.cdr.detectChanges();
         }
         this.isNextPagePreloaded = false;
       });
