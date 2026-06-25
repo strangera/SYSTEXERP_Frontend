@@ -90,16 +90,16 @@
               ]" [submitted]="submitted"></app-radiobutton>
           </div>
           <!-- 金額區間 -->
-<div class="col-12 md:col-6 lg:col-4">
-  <app-input-text-range
-    label="金額區間"
-    controlNameStart="AmtFrom"
-    controlNameEnd="AmtTo"
-    [startControl]="queryForm.controls.AmtFrom"
-    [endControl]="queryForm.controls.AmtTo"
-    [submitted]="submitted">
-  </app-input-text-range>
-</div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range
+              label="金額"
+              controlNameStart="AmtFrom"
+              controlNameEnd="AmtTo"
+              [startControl]="queryForm.controls.AmtFrom"
+              [endControl]="queryForm.controls.AmtTo"
+              [submitted]="submitted">
+            </app-input-text-range>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
