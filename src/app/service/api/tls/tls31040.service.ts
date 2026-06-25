@@ -33,7 +33,7 @@ export interface TLS31040DetailRequest {
   tlt_building: string[]
   tlt_floor: string[]
   area_no: string[]
-  bus_type: string // 這裡只有一個大分類
+  bus_type: string[] // 這裡只有一個大分類
   bus_class: string[][]
   bus_sclass: string[][]
   tlt_kind: string
@@ -41,6 +41,7 @@ export interface TLS31040DetailRequest {
   org_id: string[]
   TaxType: string
   IsRece_Yn: string
+  pageSize?: number
 }
 
 export interface TLS31040PrintDetailRequest extends TLS31040DetailRequest {
@@ -50,7 +51,7 @@ export interface TLS31040PrintDetailRequest extends TLS31040DetailRequest {
 
 export interface TLS31040Item {
   tlt_kind: string;
-  tlt_kind_name: string;
+  tlt_kindName: string;
 
   budget: number;
   AVN_TotSaleAmt: number;

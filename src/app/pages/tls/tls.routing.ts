@@ -302,12 +302,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls31020', loadComponent: () => import('./tls31020/tls31020.component').then(m => m.TLS31020Component), data: { progNo: 'TLS31020' } },
   // 各大分類之營業報表
   { path: 'tls31030', loadComponent: () => import('./tls31030/tls31030.component').then(m => m.TLS31030Component), data: { progNo: 'TLS31030' } },
-  // 各大分類之營業報表 CRU
-  { path: 'tls31030cru', loadComponent: () => import('./tls31030-cru/tls31030-cru.component').then(m => m.Tls31030CruComponent), data: { progNo: 'Tls31030' } },
   // 各櫃別之營業報表
   { path: 'tls31040', loadComponent: () => import('./tls31040/tls31040.component').then(m => m.TLS31040Component), data: { progNo: 'TLS31040' } },
-  // 各櫃別之營業報表 CRU
-  { path: 'tls31040cru', loadComponent: () => import('./tls31040-cru/tls31040-cru.component').then(m => m.Tls31040CRUComponent), data: { progNo: 'Tls31040' } },
   // 各抽成別之營業報表
   { path: 'tls31050', loadComponent: () => import('./tls31050/tls31050.component').then(m => m.TLS31050Component), data: { progNo: 'TLS31050' } },
   // 各抽成別之營業報表 CRU
