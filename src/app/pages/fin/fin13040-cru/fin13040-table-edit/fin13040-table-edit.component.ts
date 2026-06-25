@@ -123,6 +123,20 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     private readonly messageService: NotificationService,
     private cdRef: ChangeDetectorRef,
   ) { }
+  /** 追蹤每個欄位取得焦點時的值，用於判斷 blur 時是否真的有變更 */
+  private fieldValuesAtFocus = new Map<string, any>();
+
+  captureValueAtFocus(rowData: any, col: EditColumn): void {
+    const key = `${rowData[this.dataKey]}_${col.field}`;
+    this.fieldValuesAtFocus.set(key, rowData[col.field]);
+  }
+
+  private hasValueChangedSinceFocus(rowData: any, col: EditColumn, currentValue: any): boolean {
+    const key = `${rowData[this.dataKey]}_${col.field}`;
+    if (!this.fieldValuesAtFocus.has(key)) return true;
+    return this.fieldValuesAtFocus.get(key) !== currentValue;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       if (this.data.length > 0) {
@@ -132,9 +146,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
             item[this.dataStatusField] = this.dataStatusValue.Original;
             item[this.dataKey] = `temp-${uuidv4()}`;
           }
-          // 載入資料時，確保所有計算欄位都是最新的
-          // 新增的邏輯：呼叫計算方法
-          this.calculateRow(item);
           // 載入資料時也執行整行驗證
           if (this.rowValidate) {
             item._rowValidationError = this.rowValidate(item, index);
@@ -235,7 +246,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     }
   }
   // 處理 ngModelChange 事件，並發送給父元件
-  onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
+  // isFromBlur=true 時，若值未變更則略過 calculate（避免非使用者輸入的 blur 觸發反向計算導致進位差）
+  onValueChange(rowData: any, value: any, col: EditColumn, index: number, isFromBlur = false) {
     if (this.disabled) {
       return;
     }
@@ -272,15 +284,12 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 不論是不是新增列，都執行單一欄位的驗證
     this.validateField(rowData, col, value);
-    // --- 新增的自動計算邏輯 ---
-    if (col.calculate) {
-      // 呼叫 calculate 方法，取得要更新的欄位值
+    // --- 自動計算邏輯 ---
+    // blur 觸發且值未變更時略過，防止「A欄改→B欄被設→B blur→B反算A」的進位差問題
+    if (col.calculate && (!isFromBlur || this.hasValueChangedSinceFocus(rowData, col, value))) {
       const updates = col.calculate(rowData, value);
-      // 遍歷回傳的物件，更新 rowData 的值
       for (const field in updates) {
         if (Object.prototype.hasOwnProperty.call(updates, field)) {
-          // 使用 patchValue 方法更新欄位值，這樣可以觸發相關的變更偵測
-          // 但這裡我們直接更新 rowData，因為 ngModelChange 事件已經在處理中
           rowData[field] = updates[field];
         }
       }
