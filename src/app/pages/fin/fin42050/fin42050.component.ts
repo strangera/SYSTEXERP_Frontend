@@ -120,6 +120,8 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
         .subscribe(response => {
           if (response.Status === '0000') {
             this.data = response.Data ?? [];
+            // this.data = this.removeHeaderRows(response.Data ?? []);
+            this.isEmptyRow(this.data);
             this.totalRecords.set(response.TotalCount);
             this.lastQueryBody = payload;
           } else {
@@ -166,4 +168,23 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
     link.click();
     URL.revokeObjectURL(url);
   }
+
+  private removeHeaderRows(data: FIN42050Data[]): FIN42050Data[] {
+    return data.filter(row => row.RowType !== 'HEADER');
+  }
+
+  private isEmptyRow(data: FIN42050Data[]) {
+    for (const row of data) {
+      if (row.RowType === 'HEADER') {
+        row.ActualAmount = undefined;
+        row.ActualRatio = undefined;
+        row.Budget1Amount = undefined;
+        row.Budget1Ratio = undefined;
+        row.Budget2Amount = undefined;
+        row.Budget2Ratio = undefined;
+        row.BudgetVersionDiff = undefined;
+      }
+    }
+  }
+
 }
