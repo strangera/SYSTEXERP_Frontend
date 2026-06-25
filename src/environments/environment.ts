@@ -3,10 +3,10 @@ export const environment = {
   production: false,
   version: '2025/01/15_V1 09:30', // 手動設定的預設值
   showDebugToggleInMenu: true,
-  // BaseUrl: 'https://localhost:7271',
-  // ApiUrl: 'https://localhost:7271',
-  BaseUrl: 'http://localhost:5142',
-  ApiUrl: 'http://localhost:5142',
+  BaseUrl: 'https://localhost:7271',
+  ApiUrl: 'https://localhost:7271',
+  // BaseUrl: 'http://localhost:5142',
+  // ApiUrl: 'http://localhost:5142',
 
   // BaseUrl: 'https://10.3.11.8/TSRD_WEBAPI',
   // ApiUrl: 'https://10.3.11.8/TSRD_WEBAPI',
