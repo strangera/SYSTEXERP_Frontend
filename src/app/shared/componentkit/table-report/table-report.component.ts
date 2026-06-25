@@ -13,7 +13,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize, map, Observable } from 'rxjs';
+import { finalize, map, Observable, Subscription } from 'rxjs';
 import { ReportSignatureComponent } from '../../biz-components/report-signature/report-signature.component';
 import { ExportContext } from '../../exports/report-export.service';
 import { QueryStateService } from '../../service/query-state.service';
@@ -180,6 +180,7 @@ export class TableReportComponent implements OnChanges {
   expandedRows: Record<string, boolean> = {};
   private isNextPagePreloaded = false;
   private columnWidthsReady = false;
+  private loadMoreSub?: Subscription;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
 
@@ -307,19 +308,23 @@ export class TableReportComponent implements OnChanges {
       SortBy: currentSort && currentSort.length > 0 ? currentSort : (this.lastQueryBody.SortBy || undefined)
     };
     this._loading = true;
-    this.queryFunction(body)
-      .pipe(untilDestroyed(this), finalize(() => (this._loading = false)))
+    this.loadMoreSub = this.queryFunction(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this._loading = false;
+          this.isNextPagePreloaded = false;
+          this.cdr.detectChanges(); // 消除 skeleton、清除 loading 狀態（取消時也會觸發）
+        })
+      )
       .subscribe(res => {
         if (res?.Data && res.Data.length > 0) {
           this.data = [...this.data, ...res.Data];
           this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
-          this.syncTableSortMeta();
           this.dataChange.emit(this.data);
-          this.cdr.detectChanges();
         }
-        this.isNextPagePreloaded = false;
       });
   }
 
@@ -330,7 +335,11 @@ export class TableReportComponent implements OnChanges {
       this.cdr.detectChanges();
       return;
     }
-    if (this.isSyncingSort || this._loading) return;
+    // 排序優先：若 loadMore 正在進行，立即取消（finalize 會自動 reset _loading / isNextPagePreloaded）
+    if (this._loading) {
+      this.loadMoreSub?.unsubscribe();
+    }
+    if (this.isSyncingSort) return;
 
     // 精準對接 PrimeNG 的全小寫大坑
     const incomingSorts: any[] = event.multisortmeta || [];
@@ -368,33 +377,33 @@ export class TableReportComponent implements OnChanges {
     this.lastQueryBody = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta };
     const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
+    this.isNextPagePreloaded = true; // 排序期間防止 scroll 觸發 loadMore
+    this.cdr.detectChanges(); // 立即顯示 loading overlay
 
-    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
-      this.hasSearched = true;
-      if (res?.Data && res.Data.length > 0) {
-        this.virtualData = [];
-        this.dt.virtualScroll = false;
-        this.subtotalService.clearGroupTotals();
-        this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-        this.data = res.Data;
-        this.isNextPagePreloaded = false;
-
-        this.syncTableSortMeta();
-        this.cdr.detectChanges();
-
-        if (res.Data.length < pageSize) {
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-        } else {
-          this.dt.virtualScroll = true;
-          this.virtualData = Array.from({ length: res.Data.length });
+    this.queryFunction(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.isNextPagePreloaded = false;
           this.cdr.detectChanges();
+        })
+      )
+      .subscribe(res => {
+        this.hasSearched = true;
+        if (res?.Data && res.Data.length > 0) {
+          this.subtotalService.clearGroupTotals();
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount || this.data.length;
+          this.dt.virtualScroll = this.lazy && this.data.length >= 30;
           this.virtualData = this.data;
+          this.selectedItems = [];
+          this.dataChange.emit(this.data);
+          this.syncTableSortMeta();
+          this.cdr.detectChanges();
         }
-        this.selectedItems = [];
-        this.dataChange.emit(this.data);
-      }
-    });
+      });
   }
 
   customSort(event: TableQueryPayload) {
