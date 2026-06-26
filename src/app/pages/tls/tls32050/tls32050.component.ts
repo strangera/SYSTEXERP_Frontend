@@ -24,6 +24,7 @@ import { yesterday } from 'src/app/shared/models/system/query-form.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
@@ -49,6 +50,7 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls32050CRUComponent,
   ]
 })
 export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response> implements OnInit {
@@ -148,6 +150,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   totalRecords = 0;
   data: TLS32050Response[] = [];
   historyRequestBody: TLS32050Request | null = null; //歷史查詢條件
+  dialogVisible = false;
+  selectedRow: TLS32050Response | null = null;
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
@@ -837,12 +841,12 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   }
 
   onDetail1(event: TLS32050Response) {
-    // console.log('事件', event)
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
-      this.onDetail(event, queryConditions);
-    else
+    if (event.RowType === 'TEAM' && this.historyRequestBody) {
+      this.selectedRow = event;
+      this.dialogVisible = true;
+    } else {
       this.messageService.infoBubble('非合計欄位才可查看明細');
+    }
   }
 
   // 算比較表單的週數

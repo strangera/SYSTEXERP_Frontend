@@ -75,7 +75,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     ConsumerNum: [false],
     pageSize: [1000],
     pageIndex: [1],
-    SortBy: [[{ field: 'tlt_building', order: 1 }]],
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
 
   totalRecords = 0;
