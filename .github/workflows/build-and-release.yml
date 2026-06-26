@@ -6,64 +6,125 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        clean: true
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
 
     - name: Install dependencies
       run: npm install --legacy-peer-deps
 
     # 只 build production
     - name: Build (Production)
+      shell: pwsh
       run: npm run build:tsrdweb
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
 
     - name: Prepare files
+      shell: pwsh
       run: |
-        if [ -d "dist/tsrderp-frontend" ]; then
-          mv dist/tsrderp-frontend dist-out
-        elif [ -d "dist" ]; then
-          mv dist dist-out
-        fi
-        find dist-out -name "*.map" -delete 2>/dev/null || true
-        echo "Total files: $(find dist-out -type f | wc -l)"
+        if (Test-Path "dist\tsrderp-frontend") {
+          Move-Item "dist\tsrderp-frontend" "dist-out"
+        } elseif (Test-Path "dist") {
+          Move-Item "dist" "dist-out"
+        } else {
+          Write-Error "找不到 dist 資料夾"
+          exit 1
+        }
+        Get-ChildItem -Path "dist-out" -Recurse -Filter "*.map" | Remove-Item -Force
+        $count = (Get-ChildItem -Path "dist-out" -Recurse -File).Count
+        Write-Host "Total files: $count"
 
     - name: Resolve version
       id: ver
-      run: echo "ver=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+      shell: pwsh
+      run: |
+        $ver = "${{ github.ref_name }}" -replace '^v', ''
+        echo "ver=$ver" >> $env:GITHUB_OUTPUT
+        Write-Host "Version: $ver"
 
     - name: Add build-info.json
+      shell: pwsh
       run: |
-        printf '{"version":"%s","tag":"%s","buildTime":"%s","commit":"%s"}\n' \
-          "${{ steps.ver.outputs.ver }}" \
-          "${{ github.ref_name }}" \
-          "$(TZ=Asia/Taipei date +'%Y-%m-%d %H:%M:%S')" \
-          "${{ github.sha }}" > dist-out/build-info.json
+        $buildTime = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date), 'Taipei Standard Time').ToString('yyyy-MM-dd HH:mm:ss')
+        $buildInfo = @{
+          version   = "${{ steps.ver.outputs.ver }}"
+          tag       = "${{ github.ref_name }}"
+          buildTime = $buildTime
+          commit    = "${{ github.sha }}"
+        }
+        $buildInfo | ConvertTo-Json -Compress | Out-File -FilePath "dist-out\build-info.json" -Encoding UTF8
+        Write-Host "✅ build-info.json created"
 
-    # 丟進 releases/production，並順手打 rel-fe-<版本> tag（部署端靠這個抓版本）
+    # 推送到 releases/production 並打 rel-fe-<版本> tag
     - name: Deploy to releases/production (+ tag)
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: releases/production
-        folder: dist-out
-        single-commit: true
-        commit-message: "build: ${{ github.ref_name }}"
-        tag: rel-fe-${{ steps.ver.outputs.ver }}
+      shell: pwsh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GIT_AUTHOR_NAME: github-actions[bot]
+        GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+        GIT_COMMITTER_NAME: github-actions[bot]
+        GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+      run: |
+        $remote = "https://x-access-token:$env:GITHUB_TOKEN@github.com/${{ github.repository }}.git"
+        $tempDir = "$env:RUNNER_TEMP\branch-release-fe"
+        $distPath = (Resolve-Path "dist-out").Path
+
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+
+        git clone --branch releases/production --depth 1 $remote $tempDir
+        if ($LASTEXITCODE -eq 0) {
+          Set-Location $tempDir
+          git rm -rf . --quiet
+        } else {
+          New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+          Set-Location $tempDir
+          git init
+          git remote add origin $remote
+          git checkout --orphan releases/production
+        }
+
+        Copy-Item "$distPath\*" "." -Recurse -Force
+
+        git add -A
+        if (git status --porcelain) {
+          git commit -m "build: ${{ github.ref_name }}"
+          if ($LASTEXITCODE -ne 0) { Write-Error "git commit failed"; exit 1 }
+          git push origin releases/production --force
+          if ($LASTEXITCODE -ne 0) { Write-Error "git push failed"; exit 1 }
+          Write-Host "✅ Deployed to releases/production"
+
+          $relTag = "rel-fe-${{ steps.ver.outputs.ver }}"
+          git tag -f $relTag
+          git push origin "refs/tags/$relTag" --force
+          Write-Host "🏷️ Artifact tag: $relTag"
+        } else {
+          Write-Host "No changes to deploy"
+        }
 
     - name: Build Summary
+      shell: pwsh
       run: |
-        echo "✅ 建置完成！"
-        echo "🏷️  版本: ${{ github.ref_name }}"
-        echo "📦 Production → releases/production  (tag rel-fe-${{ steps.ver.outputs.ver }})"
+        Write-Host "✅ 建置完成！"
+        Write-Host "🏷️  版本: ${{ github.ref_name }}"
+        Write-Host "📦 Production → releases/production  (tag rel-fe-${{ steps.ver.outputs.ver }})"
+
+    - name: Cleanup workspace
+      shell: pwsh
+      if: always()
+      run: |
+        Remove-Item -Path "$env:GITHUB_WORKSPACE\dist-out" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:GITHUB_WORKSPACE\dist" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "✅ Workspace cleaned"
