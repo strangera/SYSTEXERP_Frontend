@@ -41,6 +41,8 @@ export interface TLS31050DetailRequest {
   org_id: string[]
   TaxType: string
   IsRece_Yn: string
+  pageIndex: number
+  pageSize: number
 }
 
 export interface TLS31050PrintDetailRequest extends TLS31050DetailRequest {

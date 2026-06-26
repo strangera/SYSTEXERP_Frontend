@@ -20,6 +20,8 @@ export interface TLS31080Request {
   Buildings: string;
   IncludeTax: boolean;
   BizInvFlag: string;
+  pageIndex?: number;
+  pageSize?: number;
 }
 
 export interface TLS31080Response {

@@ -28,6 +28,7 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { Tls31070CRUComponent } from './tls31070-cru/tls31070-cru.component';
 
 @Component({
   selector: 'app-tls31070',
@@ -53,6 +54,7 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls31070CRUComponent,
   ]
 })
 
@@ -142,6 +144,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31070Request | null = null; //歷史查詢條件
+  dialogVisible = false;
+  selectedRow: TLS31070Item | null = null;
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
@@ -218,7 +222,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS31070', 'TLS/TLS31070cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS31070', '', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
@@ -601,9 +605,9 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     this.syncDateToQueryForm();
   }
 
-  onDetail1(event: any) {
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+  onDetail1(event: TLS31070Item) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   setColumns() {
