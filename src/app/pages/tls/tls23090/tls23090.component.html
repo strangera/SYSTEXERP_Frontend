@@ -221,6 +221,26 @@
       </div>
     </header>
   </app-table-report>
+  @if (installmentSummary.length > 0) {
+    <div class="mt-3" style="width: fit-content;">
+      <table style="border-collapse: collapse; font-size: 0.875rem;">
+        <thead>
+          <tr>
+            <th class="p-2 border-1 surface-border text-center font-bold surface-ground" style="min-width: 80px;">期數</th>
+            <th class="p-2 border-1 surface-border text-center font-bold surface-ground" style="min-width: 140px;">合計金額</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of installmentSummary; track item.termNo) {
+            <tr>
+              <td class="p-2 border-1 surface-border text-center">{{ item.termNo }}</td>
+              <td class="p-2 border-1 surface-border text-right">{{ item.total | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>
 
 <div class="card" *ngIf="viewMode === 'counter'">

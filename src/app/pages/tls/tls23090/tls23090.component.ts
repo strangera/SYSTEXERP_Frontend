@@ -272,12 +272,18 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
             this.data = rows;
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
             this.grandTotal = this.computeCreditGrandTotal(wrappers);
+            this.installmentSummary = (wrappers[0]?.InstallmentSummary ?? []).map((s: any) => ({
+              termNo: Number(s.TERM_No),
+              termName: s.TERM_Name ?? String(s.TERM_No),
+              total: Number(s.TotalAmt ?? 0),
+            }));
           }
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
           this.grandTotal = {};
+          this.installmentSummary = [];
         },
       });
     });
@@ -312,8 +318,14 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
           grand[field] = wrappers.reduce((acc: number, w: any) => acc + Number(w?.[apiKey] ?? 0), 0);
         });
 
+        const instSummary = (wrappers[0]?.InstallmentSummary ?? []).map((s: any) => ({
+          termNo: Number(s.TERM_No),
+          termName: s.TERM_Name ?? String(s.TERM_No),
+          total: Number(s.TotalAmt ?? 0),
+        }));
         if (!body?.pageIndex || Number(body?.pageIndex) === 1) {
           this.grandTotal = { ...grand };
+          this.installmentSummary = instSummary;
         }
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
       })
@@ -379,6 +391,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
     this.columns = this.viewMode === 'credit' ? this.columnsCredit : this.columnsCounter;
     this.sortMeta = nextDefault.map(x => ({ ...x }));
     this.grandTotal = {};
+    this.installmentSummary = [];
 
     this.queryForm.patchValue({ pageIndex: 1, SortBy: this.sortMeta }, { emitEvent: false });
     this.onSubmit(this.queryForm);
@@ -471,6 +484,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
   }
 
   // ========= 輔助整理工廠群與計算清洗機制 =========
+  installmentSummary: { termNo: number; termName: string; total: number }[] = [];
+
   buildFooterFromGrandTotal(): Record<string, any> | undefined {
     if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
     const footer: Record<string, any> = {};
@@ -555,6 +570,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
     { field: 'CRD_No', header: '信用卡卡號', visible: true },
     { field: 'TXN_PayAmt', header: '金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'TXN_Point', header: '紅利', align: 'right', format: formatAmount, isTotal: true, visible: true },
+    { field: 'PAY_Name', header: '分期', visible: true },
+    { field: 'TERM_No', header: '分期期別', visible: true, format: (v: any) => (v == null || Number(v) === 0) ? '' : String(Number(v)) },
     { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'EDC_InstEachAmt', header: '每期分期金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
