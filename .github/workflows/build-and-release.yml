@@ -26,14 +26,14 @@ jobs:
 
     # 只 build production
     - name: Build (Production)
-      shell: pwsh
+      shell: powershell
       run: npm run build:tsrdweb
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
 
     - name: Prepare files
-      shell: pwsh
+      shell: powershell
       run: |
         if (Test-Path "dist\tsrderp-frontend") {
           Move-Item "dist\tsrderp-frontend" "dist-out"
@@ -49,14 +49,14 @@ jobs:
 
     - name: Resolve version
       id: ver
-      shell: pwsh
+      shell: powershell
       run: |
         $ver = "${{ github.ref_name }}" -replace '^v', ''
         echo "ver=$ver" >> $env:GITHUB_OUTPUT
         Write-Host "Version: $ver"
 
     - name: Add build-info.json
-      shell: pwsh
+      shell: powershell
       run: |
         $buildTime = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date), 'Taipei Standard Time').ToString('yyyy-MM-dd HH:mm:ss')
         $buildInfo = @{
@@ -70,7 +70,7 @@ jobs:
 
     # 推送到 releases/production 並打 rel-fe-<版本> tag
     - name: Deploy to releases/production (+ tag)
-      shell: pwsh
+      shell: powershell
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GIT_AUTHOR_NAME: github-actions[bot]
@@ -115,14 +115,14 @@ jobs:
         }
 
     - name: Build Summary
-      shell: pwsh
+      shell: powershell
       run: |
         Write-Host "✅ 建置完成！"
         Write-Host "🏷️  版本: ${{ github.ref_name }}"
         Write-Host "📦 Production → releases/production  (tag rel-fe-${{ steps.ver.outputs.ver }})"
 
     - name: Cleanup workspace
-      shell: pwsh
+      shell: powershell
       if: always()
       run: |
         Remove-Item -Path "$env:GITHUB_WORKSPACE\dist-out" -Recurse -Force -ErrorAction SilentlyContinue
