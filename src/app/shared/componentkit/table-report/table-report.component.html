@@ -5,7 +5,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollDelay]="0" [virtualScrollOptions]="{
+  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScroll]="data.length >= 30" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
     onScroll: onScroll,
@@ -117,7 +117,8 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pSelectableRowDisabled]="!isRowSelectable(rowData)"
+      [ngClass]="{ 'p-disabled-row': nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData) }"
+      [pSelectableRowDisabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)"
       [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <td *ngIf="showReorder" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
         [style.width]="serialColumnWidth">
@@ -125,7 +126,7 @@
       </td>
       <td *ngIf="showCheckBox">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-          [disabled]="!isRowSelectable(rowData)" />
+          [disabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)" />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
@@ -253,7 +254,7 @@
       </td>
     </tr>
     <tr *ngIf="
-        rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()
+        rowData && isGroupLastRow(rowData, rowIndex) && _hasSubtotalColumns
       " class="font-bold text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="
           (showReorder ? 1 : 0) +

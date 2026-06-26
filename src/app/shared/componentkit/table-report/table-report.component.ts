@@ -112,7 +112,8 @@ export class TableReportComponent implements OnChanges {
   @Output() itemClick = new EventEmitter<any>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
 
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => this.isRowSelectable(data);
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean =>
+    !this.nonSelectableKeys.has(this.dataKey ? data[this.dataKey] : data);
 
   @Input() set isAllSelected(val: boolean) { this.selectionService.isAllSelected = val; }
   get isAllSelected(): boolean { return this.selectionService.isAllSelected; }
@@ -186,6 +187,21 @@ export class TableReportComponent implements OnChanges {
 
   public hasSearched = false;
 
+  // 資料載入後預算，rowSelectableWrapper / template 查詢全部 O(1)
+  readonly nonSelectableKeys = new Set<any>();
+  _hasSubtotalColumns = false;
+
+  private _buildSelectableCache(): void {
+    this.nonSelectableKeys.clear();
+    this.data.forEach(row => {
+      if (!(this.isRowSelectable(row) ?? true)) {
+        this.nonSelectableKeys.add(this.dataKey ? row[this.dataKey] : row);
+      }
+    });
+    this.selectionService.cacheSelectableCount(this.data, this.isRowSelectable);
+    this._hasSubtotalColumns = this.columns.some(col => col.isSubTotal && !!this.groupRowsBy);
+  }
+
   constructor() {
     this.permissionService.initPermission(this.tableKey, (newKey) => {
       this.tableKey = newKey;
@@ -225,7 +241,12 @@ export class TableReportComponent implements OnChanges {
       this.selectionService.reset();
       this.virtualData = [];
       this.subtotalService.clearGroupTotals();
-      this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
+      this._buildSelectableCache();
+      // defer O(n×m) subtotal calc — runs after first paint
+      setTimeout(() => {
+        this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
+        this.cdr.detectChanges();
+      }, 0);
       this.isNextPagePreloaded = false;
       // 全新查詢（前一次資料為空）才重新啟用欄寬計算；load-more 追加不重算
       if (!changes['data'].previousValue?.length) {
@@ -234,25 +255,24 @@ export class TableReportComponent implements OnChanges {
     }
 
     if (!this.columnWidthsReady && this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
-      this.columns = this.widthService.calculateAndFixColumnWidths(
-        this.columns, this.data, this.totalRecords, this.showReorder
-      );
       this.columnWidthsReady = true;
+      // defer off the critical render path — avoids blocking first paint
+      setTimeout(() => {
+        this.columns = this.widthService.calculateAndFixColumnWidths(
+          this.columns, this.data, this.totalRecords, this.showReorder
+        );
+        this.cdr.detectChanges();
+      }, 0);
     }
 
-    // 封裝後的 PrimeNG 視圖狀態與虛擬滾動分配邏輯
     if (this.data && this.data.length !== 0) {
       if (this.dt) {
-        this.dt.virtualScroll = this.lazy && this.data.length >= 30;
         setTimeout(() => this.syncTableSortMeta());
+        this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
       }
 
       this.virtualData = this.data;
       this.cdr.detectChanges();
-
-      if (this.dt) {
-        this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
-      }
     }
   }
   // --- 轉發各分類服務事件門 ---
@@ -450,10 +470,6 @@ export class TableReportComponent implements OnChanges {
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
-
-  hasSubtotalColumns(): boolean {
-    return this.columns.some(col => col.isSubTotal && this.groupRowsBy);
   }
 
   isGroupLastRow(rowData: any, rowIndex: number): boolean {
