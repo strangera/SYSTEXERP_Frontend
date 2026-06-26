@@ -25,6 +25,7 @@ export class DialogComponent {
   @Input() loading = false; // 是否顯示載入中
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter();
+  @Output() show = new EventEmitter<void>();
 
   saveDialog() {
     if (this.disable) {

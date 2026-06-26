@@ -21,6 +21,7 @@ import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from '
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
 @Component({
   selector: 'app-tls31080',
   templateUrl: './tls31080.component.html',
@@ -41,6 +42,7 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls31080CRUComponent,
   ]
 })
 
@@ -81,6 +83,8 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   data: TLS31080Response[] = [];
   footerData: TLS31080Response | null = null;
   historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
+  dialogVisible = false;
+  selectedRow: TLS31080Response | null = null;
 
   btnPDFLoading = false;
   btnExcelLoading = false;
@@ -192,7 +196,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS31080', 'TLS/TLS31080cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS31080', '', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 日期表單控制
     this.onTimeModeChange('A');
@@ -399,6 +403,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           H22: res.Data.TotalData.TotalH22 ?? 0,
           H23: res.Data.TotalData.TotalH23 ?? 0,
         }
+        this.historyRequestBody = formValue;
         this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -474,33 +479,9 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     }
   }
 
-  onDetail1(event: any) {
-    // 直接從查詢頁 state 拿已格式化好的 request
-    const rawQuery = this.queryStateService.getQueryStateValue(this.ProgNo);
-
-    if (!rawQuery) {
-      this.messageService.errorBubble('請返回查詢頁重新操作');
-      return;
-    }
-
-    // 將日期轉 string、分類轉編號、多選陣列轉逗號字串
-    const formValue: TLS31080Request = {
-      ...rawQuery,
-      TxnDate: formatDate(rawQuery.TxnDate, 'yyyy-MM-dd', 'en-US'),
-      CatLNos: (rawQuery.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-      CatMNos: (rawQuery.CatMNos || []).map((x: any) => x.No ?? x).join(','),
-      CatSNos: (rawQuery.CatSNos || []).map((x: any) => x.No ?? x).join(','),
-      Floors: (rawQuery.Floors || []).join(','),
-      Areas: (rawQuery.Areas || []).join(','),
-      CabinetKinds: (rawQuery.CabinetKinds || []).join(','),
-      OrgIds: (rawQuery.OrgIds || []).join(','),
-      CounterNos: (rawQuery.CounterNos || []).join(','),
-      ChargeTypes: (rawQuery.ChargeTypes || []).join(','),
-      Buildings: (rawQuery.Buildings || []).join(','),
-    };
-
-    // 再傳給明細方法
-    this.onDetail(event, formValue);
+  onDetail1(event: TLS31080Response) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   setColumns() {

@@ -5,7 +5,8 @@
   [modal]="true"
   [maximizable]="true"
   [style]="{ width: '95vw' }"
-  [contentStyle]="{ overflow: 'auto', padding: '0' }">
+  [contentStyle]="{ overflow: 'auto', padding: '0' }"
+>
   <app-table-report
     tableKey="tls31020-detail"
     [lastQueryBody]="historyRequestBody"
@@ -18,7 +19,9 @@
     [showManage]="false"
     [loading]="loading"
     [footerData]="footershowTotal"
-    [queryFunction]="detailQueryFn">
+    [queryFunction]="detailQueryFn"
+    [exportContext]="{ apiUrl: 'queryTLS31020Detail' }"
+  >
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button
@@ -27,16 +30,16 @@
           [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(false)"
-          [disabled]="data.length === 0">
-        </p-button>
+          [disabled]="data.length === 0"
+        ></p-button>
         <p-button
           styleClass="p-2"
           label="單樓層之營業報表.XLSX"
           [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(true)"
-          [disabled]="data.length === 0">
-        </p-button>
+          [disabled]="data.length === 0"
+        ></p-button>
       </div>
     </header>
   </app-table-report>

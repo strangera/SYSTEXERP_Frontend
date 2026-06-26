@@ -21,6 +21,8 @@ export interface TLS31090Request {
   Buildings: string;
   IncludeTax: boolean;
   BizInvFlag: string;
+  pageIndex?: number;
+  pageSize?: number;
 }
 
 export interface TLS31090Response {
@@ -65,6 +67,14 @@ export interface TLS31090DetailResponse {
   tlt_name: string,
   floor_desc: string;
   TimeType: string;
+  H00: number;
+  H01: number;
+  H02: number;
+  H03: number;
+  H04: number;
+  H05: number;
+  H06: number;
+  H07: number;
   H08: number;
   H09: number;
   H10: number;
@@ -83,6 +93,7 @@ export interface TLS31090DetailResponse {
   H23: number;
   ReentryAmt: number;
   PresaleCheckoutAmt: number; // 預售結帳
+  AVN_PreOrderAmt: number; // 預售業績
   SubTotal: number;
 }
 

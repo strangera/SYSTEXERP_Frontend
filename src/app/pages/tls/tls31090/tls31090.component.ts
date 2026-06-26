@@ -21,6 +21,7 @@ import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from '
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
 
 @UntilDestroy()
 @Component({
@@ -43,6 +44,7 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    Tls31090CRUComponent,
   ]
 })
 
@@ -82,6 +84,8 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   data: TLS31090Response[] = [];
   footerData: TLS31090Response | null = null;
   historyRequestBody: TLS31090Request | null = null; //歷史查詢條件
+  dialogVisible = false;
+  selectedRow: TLS31090Response | null = null;
 
   btnPDFLoading = false;
   btnExcelLoading = false;
@@ -195,7 +199,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS31090', 'TLS/TLS31090cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS31090', '', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 日期表單控制
     this.onTimeModeChange('A');
@@ -400,6 +404,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
           ConsumerNum: res.Data.TotalData.TotalConsumerNum, // 消費人數總計
           ConsumerOrder: res.Data.TotalData.TotalConsumerOrder, // 消費客單總計
         };
+        this.historyRequestBody = formValue;
         this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -474,33 +479,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     }
   }
 
-  onDetail1(event: any) {
-    // 直接從查詢頁 state 拿已格式化好的 request
-    const rawQuery = this.queryStateService.getQueryStateValue(this.ProgNo);
-
-    if (!rawQuery) {
-      this.messageService.errorBubble('請返回查詢頁重新操作');
-      return;
-    }
-
-    // 將日期轉 string、分類轉編號、多選陣列轉逗號字串
-    const formValue: TLS31090Request = {
-      ...rawQuery,
-      TxnDate: formatDate(rawQuery.TxnDate, 'yyyy-MM-dd', 'en-US'),
-      CatMNos: (rawQuery.CatMNos || []).map((x: any) => [x.bus_type, x.No]),
-      CatSNos: (rawQuery.CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
-
-      Floors: (rawQuery.Floors || []).join(','),
-      Areas: (rawQuery.Areas || []).join(','),
-      CabinetKinds: (rawQuery.CabinetKinds || []).join(','),
-      OrgIds: (rawQuery.OrgIds || []).join(','),
-      CounterNos: (rawQuery.CounterNos || []).join(','),
-      ChargeTypes: (rawQuery.ChargeTypes || []).join(','),
-      Buildings: (rawQuery.Buildings || []).join(','),
-    };
-
-    // 再傳給明細方法
-    this.onDetail(event, formValue);
+  onDetail1(event: TLS31090Response) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   setColumns() {

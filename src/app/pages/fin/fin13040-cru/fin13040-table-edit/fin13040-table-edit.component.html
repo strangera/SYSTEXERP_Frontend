@@ -126,7 +126,8 @@
               (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="col.maxLength"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+              (focus)="captureValueAtFocus(rowData, col)"
+              (blur)="onValueChange(rowData,rowData[col.field], col, index, true)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
             <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
@@ -135,8 +136,8 @@
               (onInput)="onValueChange(rowData,$event.value, col, index)" [minlength]="col.minLength"
               [maxlength]="col.maxLength" [minFractionDigits]="col.minFractionDigits"
               [maxFractionDigits]="col.maxFractionDigits"
-              (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index)"
-              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index)"
+              (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index); captureValueAtFocus(rowData, col)"
+              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index, true)"
               [style]="{'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [inputStyle]="{'width': col.width}" [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />

@@ -10,20 +10,28 @@ export class TableReportSelectionService {
   public selectionChange = new EventEmitter<any[]>();
   public selectAllChange = new EventEmitter<boolean>();
 
+  // 資料載入時預先快取，避免每次勾選都重算
+  private _selectableCount = 0;
+
+  /** 資料變更時呼叫一次，預算可選總數 */
+  public cacheSelectableCount(data: any[], isRowSelectable: (rowData: any) => boolean | undefined): void {
+    this._selectableCount = data.filter(r => isRowSelectable(r) ?? true).length;
+  }
+
   /**
    * 初始化或從外部同步已選取項目
    */
-  public syncSelectedItems(items: any[], data: any[], isRowSelectable: (rowData: any) => boolean | undefined) {
+  public syncSelectedItems(items: any[], _data: any[], _isRowSelectable: (rowData: any) => boolean | undefined) {
     this.selectedItems = [...items];
-    this.checkIfAllSelected(data, isRowSelectable);
+    this._checkIfAllSelected();
   }
 
   /**
    * 處理單一勾選變更
    */
-  public handleSelectionChange(event: any[], data: any[], isRowSelectable: (rowData: any) => boolean | undefined) {
+  public handleSelectionChange(event: any[], _data: any[], _isRowSelectable: (rowData: any) => boolean | undefined) {
     this.selectedItems = [...event];
-    this.checkIfAllSelected(data, isRowSelectable);
+    this._checkIfAllSelected();
 
     this.selectionChange.emit(this.selectedItems);
     this.selectAllChange.emit(this.isAllSelected);
@@ -68,13 +76,11 @@ export class TableReportSelectionService {
   public reset() {
     this.selectedItems = [];
     this.isAllSelected = false;
+    this._selectableCount = 0;
   }
 
-  /**
-   * 檢查當前選取的筆數是否等於全部可選取的筆數
-   */
-  private checkIfAllSelected(data: any[], isRowSelectable: (rowData: any) => boolean | undefined) {
-    const selectableRows = data.filter(rowData => isRowSelectable(rowData) ?? true);
-    this.isAllSelected = selectableRows.length > 0 && this.selectedItems.length === selectableRows.length;
+  /** O(1)：比筆數，不再重掃資料 */
+  private _checkIfAllSelected(): void {
+    this.isAllSelected = this._selectableCount > 0 && this.selectedItems.length === this._selectableCount;
   }
 }

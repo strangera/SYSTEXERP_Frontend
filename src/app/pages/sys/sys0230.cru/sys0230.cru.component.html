@@ -1,132 +1,60 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <!-- 選單列組件，顯示程式編號 -->
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- 返回按鈕，點擊時觸發 onCancel 方法 -->
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <!-- 主要面板，顯示表單標題 -->
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <!-- 表單區塊，綁定 dataForm，提交時觸發 onSubmit 方法 -->
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 角色代號輸入框 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色代號"
-            controlName="Role_No"
-            [control]="dataForm.controls.Role_No"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text>
+          <app-input-text label="角色代號" controlName="Role_No" [control]="dataForm.controls.Role_No"
+            [submitted]="submitted" [disabled]="true"></app-input-text>
         </div>
-        <!-- 角色名稱輸入框 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色名稱"
-            controlName="Role_Name"
-            [control]="dataForm.controls.Role_Name"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text>
+          <app-input-text label="角色名稱" controlName="Role_Name" [control]="dataForm.controls.Role_Name"
+            [submitted]="submitted" [disabled]="true"></app-input-text>
         </div>
-        <!-- 角色註記輸入框 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色註記"
-            controlName="Description"
-            [control]="dataForm.controls.Description"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text>
+          <app-input-text label="角色註記" controlName="Description" [control]="dataForm.controls.Description"
+            [submitted]="submitted" [disabled]="true"></app-input-text>
         </div>
       </div>
 
       <div class="card">
         <div class="col-12">
-          <!-- 已指派使用者列表 (主表格) -->
-          <app-table
-            title="已分配使用者"
-            tableKey="SYS0230CRU"
-            [data]="assignedUsers"
-            [columns]="assignedUsersColumns"
-            [showManage]="false"
-            dataKey="ID"
-            [multiSortMeta]="[{ field: 'ID', order: 1 }]"
-            [selectedItems]="selectedAssignedUsers"
-            (selectionChange)="selectedAssignedUsers = $event"
-            [showReportMode]="false"
-            [deleteData]="true"
-            [showInsert]="true"
-            (insert)="dialogVisible = true"
-            (delete)="onDelete($event)"
-            [disabled]="isFormReadable"
-            [showCaption]="!isFormReadable"
-            [showCheckBox]="!isFormReadable"
-          ></app-table>
+          <app-table-report tableKey="SYS0230CRU" [data]="assignedUsers" [columns]="assignedUsersColumns"
+            [showManage]="false" dataKey="ID" [totalRecords]="assignedUsers.length" [lazy]="false"
+            [selectedItems]="selectedAssignedUsers" (selectionChange)="selectedAssignedUsers = $event"
+            [showReportMode]="false" [showDelete]="!isFormReadable" [showInsert]="!isFormReadable" (insert)="onInsert()"
+            (delete)="onDelete($event)" [showCaption]="!isFormReadable" [showCheckBox]="!isFormReadable"
+            [showDetail]="false" [showEdit]="false"></app-table-report>
         </div>
       </div>
 
-      <!-- 操作按鈕區塊，僅在表單可編輯時顯示 -->
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
+      }
     </form>
   </p-panel>
 </div>
 
-<!-- 選擇使用者彈跳視窗 -->
-<app-dialog
-  [visible]="dialogVisible"
-  header="選擇使用者"
-  (visibleChange)="dialogVisible = $event"
-  (save)="saveDialog()"
-  [disable]="selectedAvailableUsers.length === 0"
->
-  <!-- 彈跳視窗內的篩選表單 -->
-  <form
-    [formGroup]="filterDialogForm"
-    id="filterDialogForm"
-    (ngSubmit)="filterAvailableUsers()"
-  >
+<app-dialog [visible]="dialogVisible" header="選擇使用者" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedAvailableUsers.length === 0" (show)="onDialogShow()">
+  <form [formGroup]="filterDialogForm" id="filterDialogForm" (ngSubmit)="filterAvailableUsers()">
     <div class="grid p-fluid">
-      <!-- 篩選：使用者編號 -->
-      <app-input-text
-        class="col-12 md:col-6 lg:col-4"
-        label="使用者編號"
-        controlName="User_No"
-        [control]="filterDialogForm.controls.User_No"
-        [submitted]="submitted"
-        [disabled]="false"
-      ></app-input-text>
-      <!-- 篩選：使用者名稱 -->
-      <app-input-text
-        class="col-12 md:col-6 lg:col-4"
-        label="使用者名稱"
-        controlName="User_Name"
-        [control]="filterDialogForm.controls.User_Name"
-        [submitted]="submitted"
-        [disabled]="false"
-      ></app-input-text>
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者編號" controlName="User_No"
+        [control]="filterDialogForm.controls.User_No" [submitted]="submitted" [disabled]="false"></app-input-text>
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者名稱" controlName="User_Name"
+        [control]="filterDialogForm.controls.User_Name" [submitted]="submitted" [disabled]="false"></app-input-text>
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="Org_Id"
+        [control]="filterDialogForm.controls.Org_Id" [submitted]="submitted" [disabled]="false"></app-input-text>
     </div>
   </form>
-  <!-- 彈跳視窗內的可選取使用者列表 -->
-  <app-table
-    tableKey="SYS0230DialogTable"
-    dataKey="ID"
-    [showReportMode]="false"
-    [data]="availableUsers"
-    [columns]="availableUsersColumns"
-    [showDelete]="false"
-    [selectedItems]="selectedAvailableUsers"
-    [showCaption]="false"
-    (selectionChange)="selectedAvailableUsers = $event"
-    [showHeader]="false"
-    [showManage]="false"
-    [showCheckBox]="true"
-  ></app-table>
+  <app-table-report tableKey="SYS0230DialogTable" dataKey="ID" [showReportMode]="false" [data]="availableUsers"
+    [columns]="availableUsersColumns" [showDelete]="false" [selectedItems]="selectedAvailableUsers"
+    [showCaption]="false" (selectionChange)="selectedAvailableUsers = $event" [showManage]="false" [showCheckBox]="true"
+    [totalRecords]="availableUsers.length" [lazy]="false" [showDetail]="false" [showEdit]="false"></app-table-report>
 </app-dialog>

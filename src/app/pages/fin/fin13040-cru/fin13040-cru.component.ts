@@ -314,7 +314,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       const qty = Number(d.TXN_Qty ?? 0);
       // 重算未稅單價，確保顯示一致
       const unitPrice = qty > 0
-        ? Math.round(((saleAmt / qty) - (saleAmt / qty) / 21) * 100) / 100
+        ? Math.round((saleAmt / qty) - (saleAmt / qty) / 21)
         : Number(d.PLU_SalePrc ?? 0);
       return {
         PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
@@ -637,8 +637,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       : 0;
     // 未稅單價
     const unitPrice = isNoTax
-      ? taxIncludedUnitPrice
-      : Math.round((taxIncludedUnitPrice - taxIncludedUnitPrice / 21) * 100) / 100;
+      ? Math.round(taxIncludedUnitPrice)
+      : Math.round(taxIncludedUnitPrice - taxIncludedUnitPrice / 21);
 
     return {
       ...row,

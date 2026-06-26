@@ -62,6 +62,8 @@ export interface TLS21020UpdateQuery extends BaseQueryRequest {
   RelatedPartyAccNo: string;
   VEN_No: string;
   id: number;
+  Voucher_Type: string;
+  ENTRY_TYPE: string;
 }
 
 export interface POS2013 extends Option {

@@ -13,7 +13,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize, map, Observable } from 'rxjs';
+import { finalize, map, Observable, Subscription } from 'rxjs';
 import { ReportSignatureComponent } from '../../biz-components/report-signature/report-signature.component';
 import { ExportContext } from '../../exports/report-export.service';
 import { QueryStateService } from '../../service/query-state.service';
@@ -31,7 +31,7 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
 @UntilDestroy()
 @Component({
   selector: 'app-table-report',
-  host: { 'table-report-id': '複製時請自行取唯一名' },
+  host: { 'table-report-id': '複製時請自行取唯一名', '[class.fixed-height]': '!autoHeight' },
   standalone: true,
   imports: [ReportSignatureComponent, TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableReportCaptionComponent],
   templateUrl: './table-report.component.html',
@@ -112,7 +112,8 @@ export class TableReportComponent implements OnChanges {
   @Output() itemClick = new EventEmitter<any>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
 
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => this.isRowSelectable(data);
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean =>
+    !this.nonSelectableKeys.has(this.dataKey ? data[this.dataKey] : data);
 
   @Input() set isAllSelected(val: boolean) { this.selectionService.isAllSelected = val; }
   get isAllSelected(): boolean { return this.selectionService.isAllSelected; }
@@ -132,6 +133,8 @@ export class TableReportComponent implements OnChanges {
   @Output() delete = new EventEmitter<any>();
   @Input() showDelete = true;
   @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;
+  @Input() showInsert = false;
+  @Output() insert = new EventEmitter<void>();
   @Input() showExcel = false;
   @Input() showExcelExport = true;
   @Input() showExcelImport = true;
@@ -178,10 +181,26 @@ export class TableReportComponent implements OnChanges {
   expandedRows: Record<string, boolean> = {};
   private isNextPagePreloaded = false;
   private columnWidthsReady = false;
+  private loadMoreSub?: Subscription;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
 
   public hasSearched = false;
+
+  // 資料載入後預算，rowSelectableWrapper / template 查詢全部 O(1)
+  readonly nonSelectableKeys = new Set<any>();
+  _hasSubtotalColumns = false;
+
+  private _buildSelectableCache(): void {
+    this.nonSelectableKeys.clear();
+    this.data.forEach(row => {
+      if (!(this.isRowSelectable(row) ?? true)) {
+        this.nonSelectableKeys.add(this.dataKey ? row[this.dataKey] : row);
+      }
+    });
+    this.selectionService.cacheSelectableCount(this.data, this.isRowSelectable);
+    this._hasSubtotalColumns = this.columns.some(col => col.isSubTotal && !!this.groupRowsBy);
+  }
 
   constructor() {
     this.permissionService.initPermission(this.tableKey, (newKey) => {
@@ -222,7 +241,12 @@ export class TableReportComponent implements OnChanges {
       this.selectionService.reset();
       this.virtualData = [];
       this.subtotalService.clearGroupTotals();
-      this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
+      this._buildSelectableCache();
+      // defer O(n×m) subtotal calc — runs after first paint
+      setTimeout(() => {
+        this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
+        this.cdr.detectChanges();
+      }, 0);
       this.isNextPagePreloaded = false;
       // 全新查詢（前一次資料為空）才重新啟用欄寬計算；load-more 追加不重算
       if (!changes['data'].previousValue?.length) {
@@ -231,31 +255,24 @@ export class TableReportComponent implements OnChanges {
     }
 
     if (!this.columnWidthsReady && this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
-      this.columns = this.widthService.calculateAndFixColumnWidths(
-        this.columns, this.data, this.totalRecords, this.showReorder
-      );
       this.columnWidthsReady = true;
+      // defer off the critical render path — avoids blocking first paint
+      setTimeout(() => {
+        this.columns = this.widthService.calculateAndFixColumnWidths(
+          this.columns, this.data, this.totalRecords, this.showReorder
+        );
+        this.cdr.detectChanges();
+      }, 0);
     }
 
-    // 封裝後的 PrimeNG 視圖狀態與虛擬滾動分配邏輯
     if (this.data && this.data.length !== 0) {
       if (this.dt) {
-        this.dt.virtualScroll = false;
         setTimeout(() => this.syncTableSortMeta());
+        this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
       }
+
+      this.virtualData = this.data;
       this.cdr.detectChanges();
-
-      this.dt.scrollHeight = this.autoHeight ? (undefined as any) : '700px';
-
-      if (this.data.length < 30) {
-        this.virtualData = this.data;
-        this.dt.virtualScroll = false;
-      } else {
-        this.dt.virtualScroll = true;
-        this.virtualData = Array.from({ length: this.data.length });
-        this.cdr.detectChanges();
-        this.virtualData = this.data;
-      }
     }
   }
   // --- 轉發各分類服務事件門 ---
@@ -311,20 +328,23 @@ export class TableReportComponent implements OnChanges {
       SortBy: currentSort && currentSort.length > 0 ? currentSort : (this.lastQueryBody.SortBy || undefined)
     };
     this._loading = true;
-    this.queryFunction(body)
-      .pipe(untilDestroyed(this), finalize(() => (this._loading = false)))
+    this.loadMoreSub = this.queryFunction(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this._loading = false;
+          this.isNextPagePreloaded = false;
+          this.cdr.detectChanges(); // 消除 skeleton、清除 loading 狀態（取消時也會觸發）
+        })
+      )
       .subscribe(res => {
         if (res?.Data && res.Data.length > 0) {
-          this.virtualData = Array.from({ length: this.data.length + res.Data.length });
-          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-          this.cdr.detectChanges();
           this.data = [...this.data, ...res.Data];
-          this.syncTableSortMeta();
-          this.dataChange.emit(this.data);
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
+          this.dataChange.emit(this.data);
         }
-        this.isNextPagePreloaded = false;
       });
   }
 
@@ -335,7 +355,11 @@ export class TableReportComponent implements OnChanges {
       this.cdr.detectChanges();
       return;
     }
-    if (this.isSyncingSort || this._loading) return;
+    // 排序優先：若 loadMore 正在進行，立即取消（finalize 會自動 reset _loading / isNextPagePreloaded）
+    if (this._loading) {
+      this.loadMoreSub?.unsubscribe();
+    }
+    if (this.isSyncingSort) return;
 
     // 精準對接 PrimeNG 的全小寫大坑
     const incomingSorts: any[] = event.multisortmeta || [];
@@ -373,37 +397,37 @@ export class TableReportComponent implements OnChanges {
     this.lastQueryBody = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta };
     const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
+    this.isNextPagePreloaded = true; // 排序期間防止 scroll 觸發 loadMore
+    this.cdr.detectChanges(); // 立即顯示 loading overlay
 
-    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
-      this.hasSearched = true;
-      if (res?.Data && res.Data.length > 0) {
-        this.virtualData = [];
-        this.dt.virtualScroll = false;
-        this.subtotalService.clearGroupTotals();
-        this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
-        this.data = res.Data;
-        this.isNextPagePreloaded = false;
-
-        this.syncTableSortMeta();
-        this.cdr.detectChanges();
-
-        if (res.Data.length < pageSize) {
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-        } else {
-          this.dt.virtualScroll = true;
-          this.virtualData = Array.from({ length: res.Data.length });
+    this.queryFunction(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.isNextPagePreloaded = false;
           this.cdr.detectChanges();
+        })
+      )
+      .subscribe(res => {
+        this.hasSearched = true;
+        if (res?.Data && res.Data.length > 0) {
+          this.subtotalService.clearGroupTotals();
+          this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount || this.data.length;
+          this.dt.virtualScroll = this.lazy && this.data.length >= 30;
           this.virtualData = this.data;
+          this.selectedItems = [];
+          this.dataChange.emit(this.data);
+          this.syncTableSortMeta();
+          this.cdr.detectChanges();
         }
-        this.selectedItems = [];
-        this.dataChange.emit(this.data);
-      }
-    });
+      });
   }
 
   customSort(event: TableQueryPayload) {
-    if (!event.multiSortMeta) return;
+    if (!event.multiSortMeta || this.isSyncingSort) return;
     this.data = this.dataFlowService.executeClientSort(event, this.data);
     if (this.selectedItems && this.selectedItems.length > 0) this.selectedItems = [...this.selectedItems];
     this.subtotalService.clearGroupTotals();
@@ -411,8 +435,11 @@ export class TableReportComponent implements OnChanges {
     this.cdr.detectChanges();
     setTimeout(() => {
       if (!this.dt) return;
+      this.isSyncingSort = true;
+      this.virtualData = [...this.data];
       this.dt.restoreState();
       this.cdr.detectChanges();
+      this.isSyncingSort = false;
     }, 0);
   }
 
@@ -443,10 +470,6 @@ export class TableReportComponent implements OnChanges {
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as ReportColumn[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
-
-  hasSubtotalColumns(): boolean {
-    return this.columns.some(col => col.isSubTotal && this.groupRowsBy);
   }
 
   isGroupLastRow(rowData: any, rowIndex: number): boolean {

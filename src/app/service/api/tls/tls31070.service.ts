@@ -41,7 +41,9 @@ export interface TLS31070DetailRequest {
   org_id: string[]
   paper_type: string
   TaxType: string
-  IsRece_Yn: string
+  IsRece_Yn: string;
+  pageIndex: number
+  pageSize: number
 }
 
 export interface TLS31070PrintDetailRequest extends TLS31070DetailRequest {
