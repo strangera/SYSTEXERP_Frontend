@@ -163,6 +163,25 @@ export class TableReportUtilityService {
     return index === -1 ? 0 : index;
   }
 
+  // 取得欄位在 footerSpanConfig 中的 colspan 數（沒設定時回傳 1）
+  getColSpanForField(config: { field: string; colSpan: number }[] | undefined, field: string): number {
+    if (!config) return 1;
+    const found = config.find(c => c.field === field);
+    return found ? found.colSpan : 1;
+  }
+
+  // 判斷欄位是否被前一個 span 欄位覆蓋（應跳過不渲染）
+  isSpannedByPrevious(config: { field: string; colSpan: number }[] | undefined, columns: ReportColumn[], field: string): boolean {
+    if (!config) return false;
+    for (const c of config) {
+      const startIdx = columns.findIndex(col => col.field === c.field);
+      if (startIdx === -1) continue;
+      const currentIdx = columns.findIndex(col => col.field === field);
+      if (currentIdx > startIdx && currentIdx < startIdx + c.colSpan) return true;
+    }
+    return false;
+  }
+
   /**
  * 取得當前行的分組顯示名稱
  */

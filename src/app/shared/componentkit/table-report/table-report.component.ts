@@ -156,6 +156,7 @@ export class TableReportComponent implements OnChanges {
   @Input() footerData: any;
   @Input() footerPercentData: any;
   @Input() extraFooterData: any;
+  @Input() footerSpanConfig?: { field: string; colSpan: number }[];
   @Input() groupRowsBy?: string;
   @Input() subTotalLabel = '小計';
   @Input() showSubTotalGroupValue = true;

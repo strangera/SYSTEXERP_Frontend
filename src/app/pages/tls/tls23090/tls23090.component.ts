@@ -15,7 +15,6 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 
 // 修正為指定的共通 Table 欄位型態與格式化工具路徑
 import {
-  formatAmount,
   formatDate,
   ReportColumn
 } from '../../../shared/componentkit/table-report/table-report.model';
@@ -58,6 +57,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
   sortMeta: any[] = [];
 
   private grandTotal: Record<string, number> = {};
+  private creditGrandTotalStr = '';
+  readonly creditFooterSpanConfig = [{ field: 'PAY_Name', colSpan: 4 }];
   private _viewMode: 'credit' | 'counter' = 'credit';
 
   get viewMode(): 'credit' | 'counter' { return this._viewMode; }
@@ -129,7 +130,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
 
   // ===== 總計對應欄位對照 =====
   private readonly creditTotalFieldMap: Record<string, string> = {
-    TXN_PayAmt: 'TotalPayAmt', TXN_Point: 'TotalPoint', EDC_InstHeadAmt: 'TotalInstHeadAmt', EDC_InstEachAmt: 'TotalInstEachAmt',
+    TXN_PayAmt: 'TotalPayAmt', TXN_Point: 'TotalPoint', INST_Amt: 'TotalInstAmt',
   };
   private readonly counterTotalFieldMap: Record<string, string> = {
     AE_Count: 'TOTAL_AE_Count', AE_Amount: 'TOTAL_AE_Amount', DA_Count: 'TOTAL_DA_Count', DA_Amount: 'TOTAL_DA_Amount',
@@ -272,6 +273,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
             this.data = rows;
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
             this.grandTotal = this.computeCreditGrandTotal(wrappers);
+            this.creditGrandTotalStr = wrappers[0]?.GrandTotalStr ?? '';
             this.installmentSummary = (wrappers[0]?.InstallmentSummary ?? []).map((s: any) => ({
               termNo: Number(s.TERM_No),
               termName: s.TERM_Name ?? String(s.TERM_No),
@@ -325,6 +327,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
         }));
         if (!body?.pageIndex || Number(body?.pageIndex) === 1) {
           this.grandTotal = { ...grand };
+          this.creditGrandTotalStr = wrappers[0]?.GrandTotalStr ?? '';
           this.installmentSummary = instSummary;
         }
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
@@ -490,7 +493,13 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
     if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
     const footer: Record<string, any> = {};
     for (const col of this.columns) {
-      if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
+      if (col?.isTotal) {
+        const raw = this.grandTotal[col.field] ?? 0;
+        footer[col.field] = (raw as number).toLocaleString();
+      }
+    }
+    if (this.viewMode === 'credit' && this.creditGrandTotalStr) {
+      footer['PAY_Name'] = this.creditGrandTotalStr;
     }
     return footer;
   }
@@ -567,14 +576,14 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
     { field: 'CRD_Name', header: '信用卡卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號', visible: true },
+    { field: 'CRD_No', header: '信用卡卡號', visible: true, width: '120px' },
     { field: 'TXN_PayAmt', header: '金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'TXN_Point', header: '紅利', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'PAY_Name', header: '分期', visible: true },
-    { field: 'TERM_No', header: '分期期別', visible: true, format: (v: any) => (v == null || Number(v) === 0) ? '' : String(Number(v)) },
-    { field: 'TERM_Name', header: '分期期數', visible: true },
-    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'EDC_InstEachAmt', header: '每期分期金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
+    { field: 'INST_Amt', header: '分期', align: 'right', format: formatAmount, isTotal: true, visible: true },
+    { field: 'PAY_Name', header: '分期期別', visible: true, format: v => v ? v : '--', width: '100px' },
+    { field: 'TERM_Name', header: '分期期數', visible: true, format: v => v ? v : '--' },
+    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', align: 'right', format: formatAmount, visible: true },
+    { field: 'EDC_InstEachAmt', header: '每期分期金額', align: 'right', format: formatAmount, visible: true },
   ];
 
   private readonly columnsCounter: ReportColumn[] = [
@@ -582,21 +591,29 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃編號/名稱', visible: true, align: 'left' },
-    { field: 'AE_Count', header: 'AE 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'AE_Count', header: 'AE 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'AE_Amount', header: 'AE 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'DA_Count', header: 'DA 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'DA_Count', header: 'DA 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'DA_Amount', header: 'DA 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'MASTER_Count', header: 'MASTER 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'MASTER_Count', header: 'MASTER 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'MASTER_Amount', header: 'MASTER 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'VISA_Count', header: 'VISA 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'VISA_Count', header: 'VISA 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'VISA_Amount', header: 'VISA 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'JCB_Count', header: 'JCB 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'JCB_Count', header: 'JCB 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'JCB_Amount', header: 'JCB 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'UnionPay_Count', header: 'UnionPay 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'UnionPay_Count', header: 'UnionPay 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'UnionPay_Amount', header: 'UnionPay 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'Others_Count', header: '其他 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'Others_Count', header: '其他 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'Others_Amount', header: '其他 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'Total_Count', header: '合計 筆數', align: 'right', isTotal: true, visible: true },
+    { field: 'Total_Count', header: '合計 筆數', align: 'right', format: formatAmount, isTotal: true, visible: true },
     { field: 'Total_Amount', header: '合計 金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
   ];
 }
+export const formatAmount = (val: number | string | null | undefined): string => {
+  // 預先格式化的字串（來自合計列）直接 pass-through
+  if (typeof val === 'string') return val !== '' ? val : '--';
+  if (val === null || val === undefined || Number(val) === 0) return '--';
+  const num = Number(val);
+  if (isNaN(num)) return '--';
+  return num.toLocaleString(); // eg. 1,000,000
+};
