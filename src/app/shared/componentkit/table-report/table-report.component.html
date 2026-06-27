@@ -9,8 +9,8 @@
     inline: true,
     trackBy: trackByFn,
     onScroll: onScroll,
-    itemSize: 41.84,
-    numToleratedItems: 25
+    itemSize: ItemSize,
+    numToleratedItems: computedNumToleratedItems
   }" [expandedRowKeys]="expandedRows" [loading]="loading">
   <ng-template pTemplate="caption">
     <app-table-report-caption [data]="data" [footerData]="footerData" [columns]="columns"

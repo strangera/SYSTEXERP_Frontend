@@ -188,6 +188,7 @@
 <div class="card" *ngIf="viewMode === 'credit'">
   <app-table-report
     tableKey="TLS23090_credit"
+    [ItemSize]="22.4"
     [columns]="columns"
     [data]="data"
     [totalRecords]="totalRecords"
@@ -247,6 +248,7 @@
 <div class="card" *ngIf="viewMode === 'counter'">
   <app-table-report
     tableKey="TLS23090_counter"
+    [ItemSize]="22.4"
     [columns]="columns"
     [data]="data"
     [totalRecords]="totalRecords"

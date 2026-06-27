@@ -570,20 +570,20 @@ export class TLS23090Component extends BasicQueryPageComponent<any> implements O
 
   // ===== 報表欄位結構定義 (採用共通 ReportColumn 規範且校正對齊) =====
   private readonly columnsCredit: ReportColumn[] = [
-    { field: 'TXN_Date', header: '銷售日期', format: formatDate, visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v) },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'TXN_Date', header: '銷售日期', format: formatDate, visible: true, width: '80px' },
+    { field: 'ECR_No', header: '收銀機號', visible: true, width: '70px' },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: (v: any) => this.padTxnNo(v), width: '70px' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, width: '70px' },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
-    { field: 'CRD_Name', header: '信用卡卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號', visible: true, width: '120px' },
-    { field: 'TXN_PayAmt', header: '金額', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'TXN_Point', header: '紅利', align: 'right', format: formatAmount, isTotal: true, visible: true },
-    { field: 'INST_Amt', header: '分期', align: 'right', format: formatAmount, isTotal: true, visible: true },
+    { field: 'CRD_Name', header: '信用卡卡別', visible: true, width: '70px' },
+    { field: 'CRD_No', header: '信用卡卡號', visible: true, width: '130px' },
+    { field: 'TXN_PayAmt', header: '金額', align: 'right', format: formatAmount, isTotal: true, visible: true, width: '70px' },
+    { field: 'TXN_Point', header: '紅利', align: 'right', format: formatAmount, isTotal: true, visible: true, width: '70px' },
+    { field: 'INST_Amt', header: '分期', align: 'right', format: formatAmount, isTotal: true, visible: true, width: '70px' },
     { field: 'PAY_Name', header: '分期期別', visible: true, format: v => v ? v : '--', width: '100px' },
-    { field: 'TERM_Name', header: '分期期數', visible: true, format: v => v ? v : '--' },
-    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', align: 'right', format: formatAmount, visible: true },
-    { field: 'EDC_InstEachAmt', header: '每期分期金額', align: 'right', format: formatAmount, visible: true },
+    { field: 'TERM_Name', header: '分期期數', visible: true, format: v => v ? v : '--', width: '50px' },
+    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', align: 'right', format: formatAmount, visible: true, width: '70px' },
+    { field: 'EDC_InstEachAmt', header: '每期分期金額', align: 'right', format: formatAmount, visible: true, width: '70px' },
   ];
 
   private readonly columnsCounter: ReportColumn[] = [
