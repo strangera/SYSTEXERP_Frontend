@@ -73,6 +73,10 @@ export class TableReportComponent implements OnChanges {
 
   virtualData: any = [];
   @Input() ItemSize = 46;
+  @Input() numToleratedItems?: number;
+  get computedNumToleratedItems(): number {
+    return this.numToleratedItems ?? Math.ceil(700 / this.ItemSize) * 2;
+  }
   @Input() lazy = true;
   @Input() dataKey: string | undefined;
   selectedColumns: ReportColumn[] = [];
@@ -156,6 +160,7 @@ export class TableReportComponent implements OnChanges {
   @Input() footerData: any;
   @Input() footerPercentData: any;
   @Input() extraFooterData: any;
+  @Input() footerSpanConfig?: { field: string; colSpan: number }[];
   @Input() groupRowsBy?: string;
   @Input() subTotalLabel = '小計';
   @Input() showSubTotalGroupValue = true;

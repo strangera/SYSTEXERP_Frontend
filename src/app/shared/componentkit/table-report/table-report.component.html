@@ -9,8 +9,8 @@
     inline: true,
     trackBy: trackByFn,
     onScroll: onScroll,
-    itemSize: 41.84,
-    numToleratedItems: 25
+    itemSize: ItemSize,
+    numToleratedItems: computedNumToleratedItems
   }" [expandedRowKeys]="expandedRows" [loading]="loading">
   <ng-template pTemplate="caption">
     <app-table-report-caption [data]="data" [footerData]="footerData" [columns]="columns"
@@ -319,7 +319,8 @@
         </span>
       </td>
       <ng-container *ngFor="let col of selectedColumns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstFooterIndex(selectedColumns, row)"
+        <td *ngIf="i >= tableUtility.getFirstFooterIndex(selectedColumns, row) && !tableUtility.isSpannedByPrevious(footerSpanConfig, selectedColumns, col.field)"
+          [colSpan]="tableUtility.getColSpanForField(footerSpanConfig, col.field)"
           [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }" [ngClass]="[
             col.cellClass ? col.cellClass(rowData, 'footer') || '' : '',
           ]">
