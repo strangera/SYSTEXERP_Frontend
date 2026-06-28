@@ -4,156 +4,75 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="銷售日期"
-            [startControl]="queryForm.controls.TXN_DateStart"
-            [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"></app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              [control]="queryForm.controls.ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀機號" [control]="queryForm.controls.ECR_No" [options]="ECRNoOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              [control]="queryForm.controls.tlt_no"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="專櫃編號" [control]="queryForm.controls.tlt_no" [options]="CounterOptions"
+              optionLabel="formLabel" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="信用卡別"
-              [control]="queryForm.controls.CRD_Type"
-              [options]="cardTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="信用卡別" [control]="queryForm.controls.CRD_Type" [options]="cardTypeOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="信用卡號"
-              [control]="queryForm.controls.CRD_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="信用卡號" [control]="queryForm.controls.CRD_No" [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="金額"
-              [control]="queryForm.controls.TXN_PayAmt"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="金額" [control]="queryForm.controls.TXN_PayAmt"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否分期"
-              [control]="queryForm.controls.IsHaveTERM_No"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="是否分期" [control]="queryForm.controls.IsHaveTERM_No" [options]="WhetherOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="期別"
-              [control]="queryForm.controls.TERM_No"
-              [options]="installmentPeriodOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="期別" [control]="queryForm.controls.TERM_No" [options]="installmentPeriodOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收單行"
-              [control]="queryForm.controls.Acquirer"
-              [options]="acquiringBankOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收單行" [control]="queryForm.controls.Acquirer" [options]="acquiringBankOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="連線狀態"
-              [control]="queryForm.controls.ConnStatus"
-              [options]="connectionStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="連線狀態" [control]="queryForm.controls.ConnStatus" [options]="connectionStatusOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="館別"
-              [control]="queryForm.controls.tlt_building"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="館別" [control]="queryForm.controls.tlt_building" [options]="BUILDING_NO_Options"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [control]="queryForm.controls.tlt_floor"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" [control]="queryForm.controls.tlt_floor" [options]="floorOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [control]="queryForm.controls.org_id"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [control]="queryForm.controls.org_id" [options]="OrganizationCodeOptions"
+              optionLabel="formLabel" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -164,122 +83,69 @@
 
 <div class="col-12 md:col-6 lg:col-4 mt-2">
   <div class="flex align-items-center gap-3">
-    <p-radioButton
-      name="viewMode"
-      inputId="vmCredit"
-      value="credit"
-      [(ngModel)]="viewMode"
-      [ngModelOptions]="{ standalone: true }"
-      (onChange)="onModeChange()"
-    ></p-radioButton>
+    <p-radioButton name="viewMode" inputId="vmCredit" value="credit" [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"></p-radioButton>
     <label for="vmCredit" class="cursor-pointer text-sm">信用卡明細</label>
-    <p-radioButton
-      name="viewMode"
-      inputId="vmCounter"
-      value="counter"
-      [(ngModel)]="viewMode"
-      [ngModelOptions]="{ standalone: true }"
-      (onChange)="onModeChange()"
-    ></p-radioButton>
+    <p-radioButton name="viewMode" inputId="vmCounter" value="counter" [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"></p-radioButton>
     <label for="vmCounter" class="cursor-pointer text-sm">專櫃卡別分析</label>
   </div>
 </div>
 
-<div class="card" *ngIf="viewMode === 'credit'">
-  <app-table-report
-    tableKey="TLS23090_credit"
-    [ItemSize]="22.4"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    dataKey="_rowKey"
-    [showManage]="false"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [lastQueryBody]="historyRequestBody"
-    [queryFunction]="queryTLS23090CreditForReport"
-    [footerData]="buildFooterFromGrandTotal()"
-    [footerSpanConfig]="creditFooterSpanConfig"
-  >
+@if (viewMode === 'credit') {
+<div class="card">
+  <app-table-report tableKey="TLS23090_credit" [ItemSize]="22.4" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" dataKey="_rowKey" [showManage]="false" [showDelete]="false"
+    [showReportMode]="false" [lastQueryBody]="historyRequestBody" [queryFunction]="queryTLS23090CreditForReport"
+    [footerData]="buildFooterFromGrandTotal()" [footerSpanConfig]="creditFooterSpanConfig">
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="信用卡明細表.PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportCreditPDF()"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="信用卡明細表.XLSX"
-          icon="pi pi-file-excel"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportCreditExcel()"
-        ></p-button>
+        <p-button styleClass="p-2" label="信用卡明細表.PDF" icon="pi pi-file-pdf" [loading]="btnLoading"
+          [disabled]="data.length === 0" (click)="onExportCreditPDF()"></p-button>
+        <p-button styleClass="p-2" label="信用卡明細表.XLSX" icon="pi pi-file-excel" [loading]="btnLoading"
+          [disabled]="data.length === 0" (click)="onExportCreditExcel()"></p-button>
       </div>
     </header>
   </app-table-report>
   @if (installmentSummary.length > 0) {
-    <div class="mt-3" style="width: fit-content;">
-      <table style="border-collapse: collapse; font-size: 0.875rem;">
-        <thead>
-          <tr>
-            <th class="p-2 border-1 surface-border text-center font-bold surface-ground" style="min-width: 80px;">期數</th>
-            <th class="p-2 border-1 surface-border text-center font-bold surface-ground" style="min-width: 140px;">合計金額</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of installmentSummary; track item.termNo) {
-            <tr>
-              <td class="p-2 border-1 surface-border text-center">{{ item.termNo }}</td>
-              <td class="p-2 border-1 surface-border text-right">{{ item.total | number }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+  <div class="mt-3" style="width: fit-content;">
+    <table style="border-collapse: collapse; font-size: 0.875rem;">
+      <thead>
+        <tr>
+          <th class="p-2 border-1 surface-border text-center font-bold"
+            style="min-width: 80px;background: var(--table-header-bg)">期數</th>
+          <th class="p-2 border-1 surface-border text-center font-bold"
+            style="min-width: 140px;background: var(--table-header-bg)">合計金額</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of installmentSummary; track item.termNo) {
+        <tr>
+          <td class="p-2 border-1 surface-border text-center">{{ item.termNo }}</td>
+          <td class="p-2 border-1 surface-border text-right">{{ item.total | number }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
   }
 </div>
+}
 
-<div class="card" *ngIf="viewMode === 'counter'">
-  <app-table-report
-    tableKey="TLS23090_counter"
-    [ItemSize]="22.4"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    dataKey="_rowKey"
-    [showManage]="false"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [lastQueryBody]="historyRequestBody"
-    [queryFunction]="queryTLS23090CounterForReport"
-    [footerData]="buildFooterFromGrandTotal()"
-  >
+@if (viewMode === 'counter') {
+<div class="card">
+  <app-table-report tableKey="TLS23090_counter" [ItemSize]="22.4" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" dataKey="_rowKey" [showManage]="false" [showDelete]="false"
+    [showReportMode]="false" [lastQueryBody]="historyRequestBody" [queryFunction]="queryTLS23090CounterForReport"
+    [footerData]="buildFooterFromGrandTotal()">
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="專櫃卡別分析.PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportCounterPDF()"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="專櫃卡別分析.XLSX"
-          icon="pi pi-file-excel"
-          [loading]="btnLoading"
-          [disabled]="data.length === 0"
-          (click)="onExportCounterExcel()"
-        ></p-button>
+        <p-button styleClass="p-2" label="專櫃卡別分析.PDF" icon="pi pi-file-pdf" [loading]="btnLoading"
+          [disabled]="data.length === 0" (click)="onExportCounterPDF()"></p-button>
+        <p-button styleClass="p-2" label="專櫃卡別分析.XLSX" icon="pi pi-file-excel" [loading]="btnLoading"
+          [disabled]="data.length === 0" (click)="onExportCounterExcel()"></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
+}
