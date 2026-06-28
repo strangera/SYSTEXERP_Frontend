@@ -211,10 +211,23 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     const vns = this.qf().VouNoStart.value;
     const vne = this.qf().VouNoEnd.value;
 
-    const formatDate = (v: Date | string | null | undefined | void): string | undefined => {
+    /** 將 Date 或手 key 字串(yyyy/MM/dd、yyyy-MM-dd)正規化為 Date；無法解析回傳 undefined。 */
+    const toDate = (v: Date | string | null | undefined | void): Date | undefined => {
       if (!v) return undefined;
-      if (v instanceof Date) return this.date.transform(v, 'yyyy-MM-dd') ?? undefined;
-      return String(v);
+      if (v instanceof Date) return isNaN(v.getTime()) ? undefined : v;
+      const m = String(v).match(/^\s*(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      const d = new Date(String(v));
+      return isNaN(d.getTime()) ? undefined : d;
+    };
+
+    /** 起日補 00:00:00、迄日補 23:59:59，輸出後端可解析的 ISO 字串 (yyyy-MM-ddTHH:mm:ss)。 */
+    const formatDate = (v: Date | string | null | undefined | void, edge: 'start' | 'end'): string | undefined => {
+      const d = toDate(v);
+      if (!d) return undefined;
+      if (edge === 'start') d.setHours(0, 0, 0, 0);
+      else d.setHours(23, 59, 59, 999);
+      return this.date.transform(d, "yyyy-MM-dd'T'HH:mm:ss") ?? undefined;
     };
 
     const raw = {
@@ -222,12 +235,12 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       VouNoStart: String(vns ?? ''),
       VouNoEnd: String(vne ?? ''),
       VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
-      VouDateStart: formatDate(this.qf().VouDateStart.value),
-      VouDateEnd: formatDate(this.qf().VouDateEnd.value),
-      CrtDateStart: formatDate(this.qf().CrtDateStart.value),
-      CrtDateEnd: formatDate(this.qf().CrtDateEnd.value),
-      UpdDateStart: formatDate(this.qf().UpdDateStart.value),
-      UpdDateEnd: formatDate(this.qf().UpdDateEnd.value),
+      VouDateStart: formatDate(this.qf().VouDateStart.value, 'start'),
+      VouDateEnd: formatDate(this.qf().VouDateEnd.value, 'end'),
+      CrtDateStart: formatDate(this.qf().CrtDateStart.value, 'start'),
+      CrtDateEnd: formatDate(this.qf().CrtDateEnd.value, 'end'),
+      UpdDateStart: formatDate(this.qf().UpdDateStart.value, 'start'),
+      UpdDateEnd: formatDate(this.qf().UpdDateEnd.value, 'end'),
     };
 
     const cleanedEntries = Object.entries(raw).filter(([, v]) =>
