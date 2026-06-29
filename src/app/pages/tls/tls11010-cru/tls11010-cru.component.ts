@@ -78,7 +78,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 建立表單欄位
   dataForm = this.formBuilder.nonNullable.group({
-    LOCATION_Name: ['', [Validators.maxLength(30)]], // 店位說明
+    LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]], // 店位說明
     org_id: ['', [Validators.maxLength(20)]], // 組織代碼
     building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別代碼
     FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]], // 樓層代碼
@@ -272,6 +272,13 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
   /** 送出：像 FIN13050 一樣，先用中文警告泡泡顯示所有錯誤 */
   onSubmit(form: FormGroup): void {
     this.handleSubmit(null, () => {
+      // ✨ 新增自動帶入邏輯：如果 LOCATION_Name 沒有值，就自動帶入 LOCATION_No
+      const currentName = this.dataForm.get('LOCATION_Name')?.value;
+      const currentNo = this.dataForm.get('LOCATION_No')?.value;
+      if (!currentName || String(currentName).trim() === '') {
+        this.dataForm.patchValue({ LOCATION_Name: currentNo });
+      }
+
       // 觸發 Angular 驗證
       for (const c of Object.values(this.dataForm.controls)) c.markAsTouched();
       this.submitted = true;
@@ -285,12 +292,8 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
       }
 
       const raw = this.dataForm.getRawValue() as any;
-
       // 正規化 payload
-      raw.GROSS_SPACE =
-        raw.GROSS_SPACE === null || raw.GROSS_SPACE === ''
-          ? null
-          : Number(raw.GROSS_SPACE);
+      raw.GROSS_SPACE = raw.GROSS_SPACE === null || raw.GROSS_SPACE === '' ? null : Number(raw.GROSS_SPACE);
       raw.NET_SPACE =
         raw.NET_SPACE === null || raw.NET_SPACE === ''
           ? null
