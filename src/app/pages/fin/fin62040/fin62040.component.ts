@@ -79,15 +79,49 @@ export class FIN62040Component extends BasicQueryPageComponent<FIN62040Data> imp
           finalize(() => this.loading = false)
         )
         .subscribe(response => {
-          this.data = response.Data ?? [];
+
+          this.data = this.addGroupRows(response.Data ?? []);
+
           this.totalRecords = this.data.length;
+
           this.historyRequestBody = body;
 
           this.queryStateService.setQueryState(this.ProgNo, body);
+
         });
     });
   }
+  private addGroupRows(rows: FIN62040Data[]): FIN62040Data[] {
+    const result: FIN62040Data[] = [];
 
+    rows.forEach(row => {
+
+      switch (row.AccNo) {
+
+        case '110301':
+          result.push({
+            BNK_NAME: '銀行存款'
+          });
+          break;
+
+        case '112101':
+          result.push({
+            BNK_NAME: '應收票據'
+          });
+          break;
+
+        case '2111':
+          result.push({
+            BNK_NAME: '應付票據'
+          });
+          break;
+      }
+
+      result.push(row);
+    });
+
+    return result;
+  }
   onExportPDF(): void {
     if (!this.historyRequestBody) return;
 
