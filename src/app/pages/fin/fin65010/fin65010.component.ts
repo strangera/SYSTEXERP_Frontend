@@ -1,152 +1,133 @@
 
 
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Services
 // Shared
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { APS3006Response, Fin65010Service, QueryFIN65010Response } from 'src/app/service/api/fin/fin65010.service';
+import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextRangeComponent } from 'src/app/shared/componentkit/input-text-range/input-text-range.component';
+import { Column, createPaginationConfig, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
 
 @Component({
   selector: 'app-fin65010',
   templateUrl: './fin65010.component.html',
   styleUrl: './fin65010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextRangeComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN65010Component extends BasicQpageComponent implements OnInit {
-
-
-
+export class FIN65010Component extends BasicQueryPageComponent<QueryFIN65010Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    startdate: [],
-    enddate: [],
-    FNCCode: [],
-    Accountcode: [],
-    display: [],
-    display2: [],
-    Ticketnumber: [],
-    Duesummonsnumber: [],
-    status: [],
-    vander: [],
-    STicketnumber: [],
-    ETicketnumber: [],
-    Billingordernumber: [],
-    Ssubpoenanumber: [],
-    Esubpoenanumber: [],
+    VEN_No: [null], // 廠商代碼
+    CHK_No_S: [null], // 票據號碼起
+    CHK_No_E: [null], // 票據號碼迄
+    CHK_IssueDate_S: [null], // 開票日期起
+    CHK_IssueDate_E: [null], // 開票日期迄
+    PAM_No: [null], // 開票單號
+    VouNo_S: [null], //傳票號碼起
+    VouNo_E: [null], //傳票號碼迄
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'CheckNo', order: 0 }]), // 分頁和排序參數
   });
 
-  // Dropdown options
-  statusOptions: any[] = [
-    { value: 1, label: '未異動' },
-    { value: 2, label: '到期' },
-    { value: 3, label: '兌現' },
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
-  // Table data
-  data: any[] = [
+  // 表格
+  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null; // 儲存最後一次查詢的條件
 
+  VEN_No_Options: apiOption[] = []; // 廠商的下拉選單
+  PAM_No_Options: apiOption[] = []; // 營運狀況的下拉選單
+
+  data: QueryFIN65010Response[] = [];
+  columns: Column[] = [
+    { field: 'CheckNo', header: '票據號碼', visible: true },
+    { field: 'IssueDate', header: '開票日期', visible: true },
+    { field: 'BNK_No', header: '銀行代號', visible: true },
+    { field: 'BNK_AccNo', header: '銀行帳號', visible: true },
+    { field: 'PaymentBank', header: '付款銀行', visible: true },
+    { field: 'DueDate', header: '到期日', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'Summary', header: '摘要', visible: true, align: 'left' },
+    { field: 'Amount', header: '金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'IssueAmount', header: '開票金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'ContactName', header: '聯絡人姓名', visible: true },
+    { field: 'ContactPhone', header: '聯絡人電話', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'signColumn', header: '簽收欄', visible: true }, // 新增簽收欄
-    { field: 'ticketDetails', header: '票據明細', visible: true } // 新增票據明細
-  ];
 
+  selectedItems: QueryFIN65010Response[] = [];// 多選項目
 
-  vendorOptions: any[] = [];
-
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin65010Service: Fin65010Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '160019';
-    // Initialize dropdown options
+    this.initializePage('FIN65010', 'FIN/FIN65010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
-
-
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+    this.handleSubmit(frm, () => {
+      console.log('request:', JSON.stringify(frm.value, null, 2));
+      this.fin65010Service.queryFIN65010(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  loadOptions() {
+    {
+      // 廠商代號 下拉選單
+      this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
+        this.VEN_No_Options = response.Data.map((item: any) => ({
+          No: item.VEN_No,
+          Name: item.Name,
+          Label: item.VEN_No + '-' + item.Name,
+        }));
+
+        console.log('VEN_No_Options:', this.VEN_No_Options);
+      });
+      // 開票單號 下拉選單
+      this.fin65010Service.queryAPS3006_DropDownList(null).pipe(untilDestroyed(this)).subscribe((response) => {
+        this.PAM_No_Options = response.Data.map((item: APS3006Response) => ({
+          No: item.PAM_No,
+          Name: item.BNK_AccName,
+          Label: item.PAM_No + '-' + item.BNK_AccName,
+        }));
+
+        console.log('PAM_No_Options:', this.PAM_No_Options);
+      });
+    }
   }
 }
