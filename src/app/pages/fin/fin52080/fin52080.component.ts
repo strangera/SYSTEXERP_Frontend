@@ -6,11 +6,11 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
-import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -27,6 +27,7 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Vou
     AccordionModule,
     ButtonComponent,
     FormsModule,
+    InputNumberComponent,
     ProgressSpinnerModule,
     ReactiveFormsModule,
     TranslateModule,
@@ -52,9 +53,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
    * - Voucher_Type: 傳票格式
    * - Budget_YN: 是否為預算科目
    * - Org_YN: 是否設定部門代號
-   * - rest_value: 折舊攤提年限
-   * - rest_value2: 殘值年限
    * - Input_YN: 是否可輸
+   * - EXP_YEAR: 折舊攤提年限
+   * - RESI_YEAR: 殘值年限
    */
   public readonly queryForm = this.formBuilder.group({
     AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
@@ -67,9 +68,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     Voucher_Type: new FormControl<VoucherType | void>(void 0),
     Budget_YN: new FormControl<'Y' | 'N' | void>(void 0),
     Org_YN: new FormControl<'Y' | 'N' | void>(void 0),
-    rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
-    rest_value2: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
     Input_YN: new FormControl<'Y' | 'N' | void>(void 0),
+    EXP_YEAR: new FormControl<number | null>(null),
+    RESI_YEAR: new FormControl<number | null>(null),
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -97,11 +98,11 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
    * - Voucher_Type: 傳票格式
    * - Budget_YN: 是否為預算科目
    * - Org_YN: 是否設定部門代號
-   * - rest_value: 折舊攤提年限
-   * - rest_value2: 殘值年限
    * - Input_YN: 是否可輸
+   * - EXP_YEAR: 折舊攤提年限
+   * - RESI_YEAR: 殘值年限
    */
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52080Data; })[] = [ //先放可視範圍內的
+  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52080Data; })[] = [
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccCName', header: '科目名稱' },
     { field: 'AccEName', header: '科目英文名稱' },
@@ -153,14 +154,12 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     {
       field: 'EXP_YEAR',
       header: '折舊攤提年限',
-      // hidden: true,
-      visible: false,
+      visible: true,
     },
     {
-      field: 'RESI_VALUE',
-      header: '殘值',
-      // hidden: true,
-      visible: false,
+      field: 'RESI_YEAR',
+      header: '殘值年限',
+      visible: true,
     },
   ];
 
@@ -184,7 +183,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   constructor(
     public readonly service: FIN52080Service,
-    private readonly validationService: ValidationService,
     private readonly logger: NGXLogger,
   ) {
     super();

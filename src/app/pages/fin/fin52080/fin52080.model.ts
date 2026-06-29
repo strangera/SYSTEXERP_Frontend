@@ -13,6 +13,9 @@ export interface FIN52080Data {
   CanDel?: boolean;
   EXP_YEAR?: number | null;
   RESI_VALUE?: number | null;
+  RESI_YEAR?: number | null;
+  DEPRE_AccNo?: string | null;
+  ACCUDEPRE_AccNo?: string | null;
 }
 
 export interface FIN52080Query {
@@ -27,6 +30,10 @@ export interface FIN52080Query {
   Budget_YN?: 'Y' | 'N';
   Org_YN?: 'Y' | 'N';
   Input_YN?: 'Y' | 'N';
+  EXP_YEAR?: number | null;
+  RESI_YEAR?: number | null;
+  DEPRE_AccNo?: string | null;
+  ACCUDEPRE_AccNo?: string | null;
 }
 
 export interface FIN52080ClassNo {
@@ -59,6 +66,10 @@ export interface UpdateFIN52080Request {
   Budget_YN?: string | null;
   Org_YN?: string | null;
   Input_YN?: string | null;
+  EXP_YEAR?: number | null;
+  RESI_YEAR?: number | null;
+  DEPRE_AccNo?: string | null;
+  ACCUDEPRE_AccNo?: string | null;
 }
 
 export interface UpdateFIN52080Response {

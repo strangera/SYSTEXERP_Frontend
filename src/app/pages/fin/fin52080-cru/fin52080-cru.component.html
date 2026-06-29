@@ -59,6 +59,22 @@
           [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
           [control]="df().Org_YN" [submitted]="submitted"></app-dropdown>
 
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="折舊攤提年限" controlName="EXP_YEAR"
+          [control]="df().EXP_YEAR" [useGrouping]="false" [submitted]="submitted"></app-input-number>
+
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="殘值年限" controlName="RESI_YEAR"
+          [control]="df().RESI_YEAR" [useGrouping]="false" [submitted]="submitted"></app-input-number>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="折舊會計科目" controlName="DEPRE_AccNo"
+          [options]="service.accNoOptions()" optionLabel="label" optionValue="value"
+          [loading]="service.accNoLoading()" [filter]="true"
+          [control]="df().DEPRE_AccNo" [submitted]="submitted"></app-dropdown>
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="累計折舊會計科目" controlName="ACCUDEPRE_AccNo"
+          [options]="service.accNoOptions()" optionLabel="label" optionValue="value"
+          [loading]="service.accNoLoading()" [filter]="true"
+          [control]="df().ACCUDEPRE_AccNo" [submitted]="submitted"></app-dropdown>
+
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否可輸" controlName="Input_YN"
           [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
           [control]="df().Input_YN" [submitted]="submitted"></app-dropdown>

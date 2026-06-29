@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { DeleteFIN52080Request, FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree, UpdateFIN52080Request, UpdateFIN52080Response } from '@pages/fin/fin52080/fin52080.model';
 import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
@@ -13,8 +14,10 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 export class FIN52080Service {
 
   public readonly classNoOptions = signal<Option[]>([]);
-
   public readonly classNoLoading = signal<boolean>(!1);
+
+  public readonly accNoOptions = signal<Option[]>([]);
+  public readonly accNoLoading = signal<boolean>(!1);
 
   public accNoFilter = /^\d{1,8}$/;
 
@@ -61,6 +64,7 @@ export class FIN52080Service {
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
+    private readonly dropdownApi: DropdownApiService,
   ) { }
 
   public loadFIN52080(payload: FIN52080Query): Observable<BaseQueryResponse<FIN52080Data>> {
@@ -128,6 +132,17 @@ export class FIN52080Service {
       tap(res => this.logger.debug('刪除FIN52080結果:', [res])),
     );
   };
+
+  /** 載入會計科目下拉（供 DEPRE_AccNo / ACCUDEPRE_AccNo 使用，queryGls1005 內建 shareReplay 快取不重打） */
+  public getAccNoOptions(): void {
+    if (this.accNoOptions().length > 0) return;
+    this.accNoLoading.set(!0);
+    this.dropdownApi.queryGls1005().pipe(
+      take(1),
+      tap(opts => this.accNoOptions.set(opts ?? [])),
+      finalize(() => this.accNoLoading.set(!1)),
+    ).subscribe();
+  }
 
   /** 檢查科目代號是否已存在 */
   public checkAccNoExists(accNo: string): Observable<BaseQueryResponse<boolean>> {
