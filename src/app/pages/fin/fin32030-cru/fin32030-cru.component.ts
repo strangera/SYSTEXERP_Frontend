@@ -4,9 +4,9 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from './table-edit/table-edit.component';
+import { EditColumn } from './table-edit/table-edit.model';
+import { validateRequired } from './table-edit/validate-field.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
