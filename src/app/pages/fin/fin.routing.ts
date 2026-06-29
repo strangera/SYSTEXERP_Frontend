@@ -324,7 +324,7 @@ export const finRoutes: Routes = [
   { path: 'fin62030', loadComponent: () => import('./fin62030/fin62030.component').then(m => m.FIN62030Component), data: { progNo: 'FIN62030' } },
   { path: 'fin62030cru', loadComponent: () => import('./fin62030-cru/fin62030-cru.component').then(m => m.FIN62030CRUComponent), data: { progNo: 'FIN62030' } },
   // 出納區間報表
-  // { path: 'fin62040', loadComponent: () => import('./fin62040/fin62040.component').then(m => m.FIN62040Component),data:{progNo:'FIN62040'} },
+  { path: 'fin62040', loadComponent: () => import('./fin62040/fin62040.component').then(m => m.FIN62040Component),data:{progNo:'FIN62040'} },
   // { path: 'fin62040cru', loadComponent: () => import('./fin62040-cru/fin62040-cru.component').then(m => m.FIN62040CRUComponent),data: { progNo: 'FIN62040'} },
   // 銀行往來調節表
   // { path: 'fin62050', loadComponent: () => import('./fin62050/fin62050.component').then(m => m.FIN62050Component),data:{progNo:'FIN62050'} },

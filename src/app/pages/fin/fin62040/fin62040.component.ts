@@ -2,12 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN62040Data, FIN62040Service, QueryFIN62040Request } from '@service/api/fin/fin62040.service';
+import {
+  FIN62040Data,
+  FIN62040Service,
+  QueryFIN62040Request
+} from '@service/api/fin/fin62040.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -19,6 +25,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   imports: [
     MenubarComponent,
     ButtonComponent,
+    ButtonModule,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
@@ -31,29 +38,29 @@ export class FIN62040Component extends BasicQueryPageComponent<FIN62040Data> imp
   queryForm = this.formBuilder.group({
     StartDate: [null, Validators.required],
     EndDate: [null, Validators.required],
-    pageSize: [30],
-    pageIndex: [1],
   });
 
   data: FIN62040Data[] = [];
-  selectedItems: FIN62040Data[] = [];
-  lastQueryBody: QueryFIN62040Request | null = null;
   totalRecords = 0;
+  btnLoading = false;
+
+  historyRequestBody: QueryFIN62040Request | null = null;
 
   columns: Column[] = [
     { field: 'AccNo', header: '科目代號' },
-    { field: 'AccCName', header: '科目代稱' },
+    { field: 'AccCName', header: '科目名稱' },
     { field: 'BNK_AccNo', header: '帳號' },
     { field: 'BNK_NAME', header: '銀行名稱' },
     { field: 'BNK_AccName', header: '戶名' },
     { field: 'BegAmt', header: '前期結餘', format: formatAmount },
-    { field: 'DebitAmt', header: '本期借方金額', format: formatAmount },
-    { field: 'CreditAmt', header: '本期貸方金額', format: formatAmount },
-    { field: 'EndAmt', header: '結餘', format: formatAmount }
+    { field: 'DebitAmt', header: '借方金額', format: formatAmount },
+    { field: 'CreditAmt', header: '貸方金額', format: formatAmount },
+    { field: 'EndAmt', header: '期末結餘', format: formatAmount }
   ];
 
   constructor(
-    public readonly fin62040Service: FIN62040Service
+    public readonly fin62040Service: FIN62040Service,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -62,16 +69,50 @@ export class FIN62040Component extends BasicQueryPageComponent<FIN62040Data> imp
     this.initializePage('FIN62040', '', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  onSubmit(form: FormGroup) {
+  onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      this.fin62040Service.queryFIN62040(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      const body = form.getRawValue() as QueryFIN62040Request;
+
+      this.fin62040Service.queryFIN62040(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
         .subscribe(response => {
-          this.data = response.Data;
-          this.lastQueryBody = form.getRawValue();
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.data = response.Data ?? [];
+          this.totalRecords = this.data.length;
+          this.historyRequestBody = body;
+
+          this.queryStateService.setQueryState(this.ProgNo, body);
         });
     });
+  }
+
+  onExportPDF(): void {
+    if (!this.historyRequestBody) return;
+
+    const export$ = this.fin62040Service.exportFIN62040PDF(this.historyRequestBody);
+
+    this.fileExportService
+      .executeFileExport(
+        export$.pipe(untilDestroyed(this)),
+        '.pdf',
+        (isLoading) => this.btnLoading = isLoading
+      )
+      .subscribe();
+  }
+
+  onExportXLSX(): void {
+    if (!this.historyRequestBody) return;
+
+    const export$ = this.fin62040Service.exportFIN62040Excel(this.historyRequestBody);
+
+    this.fileExportService
+      .executeFileExport(
+        export$.pipe(untilDestroyed(this)),
+        '.xlsx',
+        (isLoading) => this.btnLoading = isLoading
+      )
+      .subscribe();
   }
 }
