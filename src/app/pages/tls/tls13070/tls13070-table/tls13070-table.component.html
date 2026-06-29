@@ -1,226 +1,231 @@
 <div class="flex justify-content-end mb-2">
-  <p-button styleClass="p-2" label="匯出櫃位合約一覽表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
-    [disabled]="data.length === 0">
+  <p-button styleClass="p-2" label="匯出櫃位合約一覽表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+    (click)="onExportXLSX()" [disabled]="!data.length">
   </p-button>
 </div>
-<p-table #dt [value]="virtualData.length > 0 ? virtualData : data" [scrollable]="true" [dataKey]="dataKey"
-  scrollHeight="700px" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
-  [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines " [virtualScroll]="false" [loading]="loading"
-  [virtualScrollItemSize]="46" [lazy]="true" [virtualScrollDelay]="0" [virtualScrollOptions]="{
-      inline: true,
-      trackBy: trackByFn,
-      onScroll: onScroll,
-  }">
-  <ng-template pTemplate="header" let-columns>
-    <tr>
-      <th class="break-word text-center" [ngStyle]="{'min-width': '20px'}" rowspan="3" pFrozenColumn>序號</th>
-      <th class="break-word text-center" rowspan="3">招募編號</th>
-      <th class="break-word text-center" rowspan="3">更新時間</th>
-      <th class="break-word text-center" rowspan="3">位置編號</th>
-      <th class="break-word text-center" rowspan="3">廠商名稱</th>
-      <th class="break-word text-center" rowspan="3">廠商統一編號</th>
-      <!-- 店櫃資料 -->
-      <th class="break-word text-center" colspan="11">店櫃資料</th>
-      <!-- 租賃條件 -->
-      <th class="break-word text-center" colspan="18">租賃條件</th>
-      <!-- A 一次扣款 -->
-      <th class="break-word text-center" [attr.colspan]="(aps1003_A | async)?.length">一次扣款</th>
-      <!-- B 每月扣款 -->
-      <th class="break-word text-center" [attr.colspan]="(aps1003_B | async)?.length">每月扣款</th>
-      <!-- C 平均分攤 -->
-      <th class="break-word text-center" [attr.colspan]="((aps1003_C | async)?.length ?? 0) * 3">平均分攤</th>
-      <!-- D 比率分攤 -->
-      <th class="break-word text-center" [attr.colspan]="(aps1003_D | async)?.length">比率分攤</th>
 
-      <th class="break-word text-center" rowspan="3">結帳後幾天匯款</th>
-      <th class="w-17rem break-word text-center" rowspan="3">備註</th>
+<p-table #dt [value]="flatData" [scrollable]="true" scrollHeight="700px" sortMode="multiple"
+  [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
+  [loading]="loading || isLoading" [virtualScroll]="flatData.length >= 30" [virtualScrollItemSize]="46"
+  [virtualScrollDelay]="0" [virtualScrollOptions]="{
+    inline: true,
+    trackBy: trackByFn,
+    onScroll: onVirtualScroll,
+    numToleratedItems: numToleratedItems
+  }" styleClass="p-datatable-sm p-datatable-gridlines tls13070-table">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <!-- 序號: 數字最多3碼 -->
+      <th class="text-center" [style.min-width]="'42px'" rowspan="3" pFrozenColumn>序號</th>
+      <!-- 招募編號: "00002925" = 8碼 -->
+      <th class="text-center" [style.min-width]="'82px'" rowspan="3">招募編號</th>
+      <!-- 更新時間: "yyyy/MM/dd" = 10碼, 禁止換行 -->
+      <th class="text-center col-date" rowspan="3">更新時間</th>
+      <!-- 位置編號: "B1B20" 短碼，可能多個換行 -->
+      <th class="text-center" [style.min-width]="'68px'" rowspan="3">位置編號</th>
+      <!-- 廠商名稱: 最長"香港商梅光軒有限公司台灣分公司" 15碼 -->
+      <th class="break-word text-center" [style.min-width]="'130px'" rowspan="3">廠商名稱</th>
+      <!-- 廠商統一編號: 8位數字 -->
+      <th class="text-center" [style.min-width]="'82px'" rowspan="3">廠商統一編號</th>
+      <th class="text-center" colspan="11">店櫃資料</th>
+      <th class="text-center" colspan="18">租賃條件</th>
+      @if (aOptions.length) {
+        <th class="text-center" [attr.colspan]="aOptions.length">一次扣款</th>
+      }
+      @if (bOptions.length) {
+        <th class="text-center" [attr.colspan]="bOptions.length">每月扣款</th>
+      }
+      @if (cOptions.length) {
+        <th class="text-center" [attr.colspan]="cOptions.length * 3">平均分攤</th>
+      }
+      @if (dOptions.length) {
+        <th class="text-center" [attr.colspan]="dOptions.length">比率分攤</th>
+      }
+      <!-- 結帳後幾天匯款: 值只有 "15","30","45" -->
+      <th class="break-word text-center" [style.min-width]="'55px'" rowspan="3">結帳後幾天匯款</th>
+      <!-- 備註: 超長文字, word-wrap -->
+      <th class="break-word text-center" [style.min-width]="'200px'" rowspan="3">備註</th>
     </tr>
     <tr>
       <!-- 店櫃資料 -->
-      <th class="break-word text-center" rowspan="2">品牌名稱</th>
-      <th class="break-word text-center" rowspan="2">專櫃編號</th>
-      <th class="break-word text-center" rowspan="2">秤數</th>
-      <th class="break-word text-center" rowspan="2">POS機號</th>
-      <th class="break-word text-center" rowspan="2">營運期間(起)</th>
-      <th class="break-word text-center" rowspan="2">營運期間(迄)</th>
-      <th class="break-word text-center" rowspan="2">簽約年限</th>
-      <th class="break-word text-center" rowspan="2">準時開業保證金</th>
-      <th class="break-word text-center" rowspan="2">施工保證金</th>
-      <th class="break-word text-center" rowspan="2">契約屆滿保證金</th>
-      <th class="break-word text-center" rowspan="2">抽成別</th>
-      <!-- 租賃條件 -->
-      <th class="break-word text-center" colspan="4">抽成</th>
-      <th class="break-word text-center" colspan="5">階梯</th>
-      <th class="break-word text-center" colspan="5">包底</th>
-      <th class="break-word text-center" colspan="3">固定租金</th>
-      <th class="break-word text-center" rowspan="2">目標營業額</th>
-      <!-- A 一次扣款 -->
-      <ng-container *ngFor="let item of aps1003_A | async">
-        <th class="break-word text-center" rowspan="2" [ngStyle]="{'min-width': '42px'}"> {{item['No']}}
-          {{item['Name']}}
-        </th>
-      </ng-container>
+      <!-- 品牌名稱: "湯姆熊歡樂世界" 7碼 -->
+      <th class="break-word text-center" [style.min-width]="'90px'" rowspan="2">品牌名稱</th>
+      <!-- 專櫃編號: "000008" 6碼 -->
+      <th class="text-center" [style.min-width]="'66px'" rowspan="2">專櫃編號</th>
+      <!-- 秤數: "213.000" 7碼 -->
+      <th class="text-center" [style.min-width]="'58px'" rowspan="2">秤數</th>
+      <!-- POS機號: 類似位置編號 -->
+      <th class="text-center" [style.min-width]="'66px'" rowspan="2">POS機號</th>
+      <!-- 日期欄: "yyyy/MM/dd" 禁止換行 -->
+      <th class="text-center col-date" rowspan="2">營運期間(起)</th>
+      <th class="text-center col-date" rowspan="2">營運期間(迄)</th>
+      <!-- 簽約年限: "1年11個月" 6碼 -->
+      <th class="break-word text-center" [style.min-width]="'70px'" rowspan="2">簽約年限</th>
+      <!-- 保證金: 最大 "2,044,000" 9碼 -->
+      <th class="text-center" [style.min-width]="'88px'" rowspan="2">準時開業保證金</th>
+      <th class="text-center" [style.min-width]="'78px'" rowspan="2">施工保證金</th>
+      <th class="text-center" [style.min-width]="'88px'" rowspan="2">契約屆滿保證金</th>
+      <!-- 抽成別: "包底加階梯" 5碼 -->
+      <th class="break-word text-center" [style.min-width]="'72px'" rowspan="2">抽成別</th>
+      <!-- 租賃條件群組 -->
+      <th class="text-center" colspan="4">抽成</th>
+      <th class="text-center" colspan="5">階梯</th>
+      <th class="text-center" colspan="5">包底</th>
+      <th class="text-center" colspan="3">固定租金</th>
+      <!-- 目標營業額: "180,000,000" 11碼 -->
+      <th class="text-center" [style.min-width]="'95px'" rowspan="2">目標營業額</th>
+      <!-- A 一次扣款: e.g. "A01 開幕贊助費" -->
+      @for (item of aOptions; track item['No']) {
+        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      }
       <!-- B 每月扣款 -->
-      <ng-container *ngFor="let item of aps1003_B | async">
-        <th class="break-word text-center" rowspan="2" [ngStyle]="{'min-width': '42px'}">{{item['No']}} {{item['Name']}}
-        </th>
-      </ng-container>
-      <!-- C 平均分攤 -->
-      <ng-container *ngFor="let item of aps1003_C | async">
-        <th class="break-word text-center" colspan="3" [ngStyle]="{'min-width': '42px'}">{{item['No']}} {{item['Name']}}
-        </th>
-      </ng-container>
+      @for (item of bOptions; track item['No']) {
+        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      }
+      <!-- C 平均分攤: 每項目3子欄 -->
+      @for (item of cOptions; track item['No']) {
+        <th class="break-word text-center" colspan="3" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      }
       <!-- D 比率分攤 -->
-      <ng-container *ngFor="let item of aps1003_D | async">
-        <th class="break-word text-center" rowspan="2" [ngStyle]="{'min-width': '42px'}">{{item['No']}} {{item['Name']}}
-        </th>
-      </ng-container>
+      @for (item of dOptions; track item['No']) {
+        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      }
     </tr>
     <tr>
-      <th class="break-word text-center">抽成類別</th>
-      <th class="break-word text-center">帳務起</th>
-      <th class="break-word text-center">帳務迄</th>
-      <th class="break-word text-center">抽成比率(%)</th>
-      <th class="break-word text-center">帳務起</th>
-      <th class="break-word text-center">帳務迄</th>
-      <th class="break-word text-center">起始金額</th>
-      <th class="break-word text-center">終止金額</th>
-      <th class="break-word text-center">抽成率</th>
-      <th class="break-word text-center">帳務起</th>
-      <th class="break-word text-center">帳務迄</th>
-      <th class="break-word text-center">年包底</th>
-      <th class="break-word text-center">區間包底</th>
-      <th class="break-word text-center">月包底</th>
-      <th class="break-word text-center">帳務起</th>
-      <th class="break-word text-center">帳務迄</th>
-      <th class="break-word text-center">租金</th>
-      <!-- C 平均分攤 -->
-      <ng-container *ngFor="let item of aps1003_C | async">
-        <th class="break-word text-center">總金額</th>
-        <th class="break-word text-center">每月</th>
-        <th class="break-word text-center">頭期款</th>
-      </ng-container>
+      <!-- 抽成 (4欄) -->
+      <th class="break-word text-center" [style.min-width]="'72px'">抽成類別</th>
+      <th class="text-center col-date">帳務起</th>
+      <th class="text-center col-date">帳務迄</th>
+      <th class="text-center" [style.min-width]="'66px'">抽成比率(%)</th>
+      <!-- 階梯 (5欄) -->
+      <th class="text-center col-date">帳務起</th>
+      <th class="text-center col-date">帳務迄</th>
+      <th class="text-center" [style.min-width]="'76px'">起始金額</th>
+      <th class="text-center" [style.min-width]="'76px'">終止金額</th>
+      <th class="text-center" [style.min-width]="'56px'">抽成率</th>
+      <!-- 包底 (5欄) -->
+      <th class="text-center col-date">帳務起</th>
+      <th class="text-center col-date">帳務迄</th>
+      <th class="text-center" [style.min-width]="'76px'">年包底</th>
+      <th class="text-center" [style.min-width]="'76px'">區間包底</th>
+      <th class="text-center" [style.min-width]="'76px'">月包底</th>
+      <!-- 固定租金 (3欄) -->
+      <th class="text-center col-date">帳務起</th>
+      <th class="text-center col-date">帳務迄</th>
+      <th class="text-center" [style.min-width]="'66px'">租金</th>
+      <!-- C 平均分攤子欄 -->
+      @for (item of cOptions; track item['No']) {
+        <th class="text-center" [style.min-width]="'72px'">總金額</th>
+        <th class="text-center" [style.min-width]="'62px'">每月</th>
+        <th class="text-center" [style.min-width]="'66px'">頭期款</th>
+      }
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex">
-    <tr [pSelectableRow]="rowData" [style]="{'height': '46px'}" [pSelectableRowIndex]="rowIndex">
 
-      <td class="text-center" [ngStyle]="{'min-width': '20px'}" pFrozenColumn [attr.rowspan]="rowData.rowspanCount"
-        *ngIf="rowData.isMainRow">
-        {{ rowData.globalIndex }}
+  <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+    <tr [style.height]="'46px'"
+        [class.main-row]="rowData.isMainRow"
+        [class.sub-row]="!rowData.isMainRow"
+        [class.last-sub-row]="rowData.isLastSubRow"
+        [class.record-even]="rowData.recordEven">
+
+      <!-- ── 合併顯示欄 ─────────────────────────────────────────────────── -->
+      <td class="text-center" pFrozenColumn>
+        {{ rowData.isMainRow ? rowData.globalIndex : '' }}
       </td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.apply_no}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.upd_date |
-        date:'yyyy/MM/dd'}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow"
-        [ngStyle]="{'width': '70px', 'white-space': 'pre-wrap'}" [innerHTML]="splitWithLineBreaks(rowData.location_no)">
+      <td class="text-center">{{ rowData.isMainRow ? rowData.apply_no : '' }}</td>
+      <td class="text-center col-date">{{ rowData.isMainRow ? (rowData.upd_date | date:'yyyy/MM/dd') : '' }}</td>
+      <td class="text-center" [style]="{'white-space': 'pre-wrap'}">
+        @if (rowData.isMainRow) {
+          <span [innerHTML]="splitWithLineBreaks(rowData.location_no)"></span>
+        }
       </td>
-      <td class="text-center break-word" [ngStyle]="{'min-width': '70px'}" [attr.rowspan]="rowData.rowspanCount"
-        *ngIf="rowData.isMainRow">
-        {{rowData.VEN_Name}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.ven_uniform}}
+      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.VEN_Name : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? rowData.ven_uniform : '' }}</td>
+
+      <!-- 店櫃資料 -->
+      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_name : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? rowData.tlt_no : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? rowData.tlt_space : '' }}</td>
+      <td class="text-center" [style]="{'white-space': 'pre-wrap'}">
+        @if (rowData.isMainRow) {
+          <span [innerHTML]="splitWithLineBreaks(rowData.ECR_No)"></span>
+        }
       </td>
-
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.tlt_name}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.tlt_no}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.tlt_space}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow"
-        [ngStyle]="{'width': '70px', 'white-space': 'pre-wrap'}" [innerHTML]="splitWithLineBreaks(rowData.ECR_No)">
+      <td class="text-center col-date">
+        {{ rowData.isMainRow ? (rowData.tlt_contract_bdate | date:'yyyy/MM/dd') : '' }}
       </td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{rowData.tlt_contract_bdate |
-        date:'yyyy/MM/dd'}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{rowData.tlt_contract_edate |
-        date:'yyyy/MM/dd'}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{ rowData.contract_term
-        }}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{(rowData.open_fees ?? 0) | number}}
+      <td class="text-center col-date">
+        {{ rowData.isMainRow ? (rowData.tlt_contract_edate | date:'yyyy/MM/dd') : '' }}
       </td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{(rowData.construct_fees ?? 0) | number}}
-      </td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{(rowData.expiration_fees ?? 0) | number}}
-      </td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
-        {{rowData.tlt_term_type_Name}}</td>
+      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.contract_term : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? ((rowData.open_fees ?? 0) | number) : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? ((rowData.construct_fees ?? 0) | number) : '' }}</td>
+      <td class="text-center">{{ rowData.isMainRow ? ((rowData.expiration_fees ?? 0) | number) : '' }}</td>
+      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_term_type_Name : '' }}</td>
 
-      <td class="text-center">{{rowData.singleCag?.tlt_id_desc}}</td>
-      <td class="text-center">{{rowData.singleCag?.tlt_bdate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleCag?.tlt_edate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleCag?.cag_charge_rate | percent: '1.2-2'}}</td>
+      <!-- ── 每子行獨立顯示 (租賃條件) ──────────────────────────────────── -->
+      <td class="break-word text-center">{{ rowData.singleCag?.tlt_id_desc }}</td>
+      <td class="text-center col-date">{{ rowData.singleCag?.tlt_bdate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center col-date">{{ rowData.singleCag?.tlt_edate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center">{{ rowData.singleCag?.cag_charge_rate | percent:'1.2-2' }}</td>
 
-      <td class="text-center">{{rowData.singleLevel?.cag_bdate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleLevel?.cag_edate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleLevel?.level_bmount | number}}</td>
-      <td class="text-center">{{rowData.singleLevel?.level_eamount | number}}</td>
-      <td class="text-center">{{rowData.singleLevel?.level_charge_rate | percent: '1.2-2'}}</td>
+      <td class="text-center col-date">{{ rowData.singleLevel?.cag_bdate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center col-date">{{ rowData.singleLevel?.cag_edate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center">{{ rowData.singleLevel?.level_bmount | number }}</td>
+      <td class="text-center">{{ rowData.singleLevel?.level_eamount | number }}</td>
+      <td class="text-center">{{ rowData.singleLevel?.level_charge_rate | percent:'1.2-2' }}</td>
 
-      <td class="text-center">{{rowData.singleLimit?.cag_bdate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleLimit?.cag_edate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleLimit?.limit_amt_year | number}}</td>
-      <td class="text-center">{{rowData.singleLimit?.limit_amt_range | number}}</td>
-      <td class="text-center">{{rowData.singleLimit?.limit_amt_month | number}}</td>
+      <td class="text-center col-date">{{ rowData.singleLimit?.cag_bdate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center col-date">{{ rowData.singleLimit?.cag_edate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center">{{ rowData.singleLimit?.limit_amt_year | number }}</td>
+      <td class="text-center">{{ rowData.singleLimit?.limit_amt_range | number }}</td>
+      <td class="text-center">{{ rowData.singleLimit?.limit_amt_month | number }}</td>
 
-      <td class="text-center">{{rowData.singleRent?.cag_bdate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleRent?.cag_edate | date:'yyyy/MM/dd'}}</td>
-      <td class="text-center">{{rowData.singleRent?.base_rent | number}}</td>
+      <td class="text-center col-date">{{ rowData.singleRent?.cag_bdate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center col-date">{{ rowData.singleRent?.cag_edate | date:'yyyy/MM/dd' }}</td>
+      <td class="text-center">{{ rowData.singleRent?.base_rent | number }}</td>
 
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.total_amt |
-        number}}</td>
+      <!-- ── 合併顯示欄 (費用、備註) ───────────────────────────────────── -->
+      <td class="text-center">{{ rowData.isMainRow ? (rowData.total_amt | number) : '' }}</td>
 
-      <ng-container *ngFor="let item of aps1003_A | async">
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]}}</td>
-      </ng-container>
-      <ng-container *ngFor="let item of aps1003_B | async">
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]}}</td>
-      </ng-container>
-      <ng-container *ngFor="let item of aps1003_C | async">
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.tpy_totalamt}}
-        </td>
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.month_payment}}
-        </td>
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.down_payment}}
-        </td>
-      </ng-container>
-      <ng-container *ngFor="let item of aps1003_D | async">
-        <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
-          *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']] | percent: '1.2-2'}}</td>
-      </ng-container>
+      @for (item of aOptions; track item['No']) {
+        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
+      }
+      @for (item of bOptions; track item['No']) {
+        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
+      }
+      @for (item of cOptions; track item['No']) {
+        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.tpy_totalamt : '' }}</td>
+        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.month_payment : '' }}</td>
+        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.down_payment : '' }}</td>
+      }
+      @for (item of dOptions; track item['No']) {
+        <td class="text-center">{{ rowData.isMainRow ? (rowData.fareList?.[item['No']] | percent:'1.2-2') : '' }}</td>
+      }
 
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.check_day}}</td>
-      <td class="break-word text-center" [ngStyle]="{'min-width': '150px'}" [attr.rowspan]="rowData.rowspanCount"
-        *ngIf="rowData.isMainRow">
-        {{rowData.tlt_remark}}</td>
+      <td class="text-center">{{ rowData.isMainRow ? rowData.check_day : '' }}</td>
+      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_remark : '' }}</td>
     </tr>
   </ng-template>
+
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
       總筆數: {{ totalRecords }} 筆
     </div>
   </ng-template>
-  <ng-template pTemplate="emptymessage" let-columns>
-    <tr *ngIf="hasSearched">
-      <td [attr.colspan]="totalColspan">
-        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
-          <i class="pi pi-search mr-2"></i>
-          查無資料
-        </div>
-      </td>
-    </tr>
+
+  <ng-template pTemplate="emptymessage">
+    @if (hasSearched) {
+      <tr>
+        <td [attr.colspan]="totalColspan">
+          <div class="flex justify-content-center align-items-center p-5 font-bold text-xl text-500">
+            <i class="pi pi-search mr-2"></i>
+            查無資料
+          </div>
+        </td>
+      </tr>
+    }
   </ng-template>
 </p-table>

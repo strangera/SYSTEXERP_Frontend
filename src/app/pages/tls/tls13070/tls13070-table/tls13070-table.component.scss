@@ -29,15 +29,9 @@
       bottom: 0;
       top: unset;
     }
-    .table-footer {
-      background-color: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-width: 0 1px 1px 1px;
-    }
     .p-datatable-wrapper {
       border: 1px solid var(--surface-d);
     }
-    // 可選行的hover效果
     .p-selectable-row:not(.p-disabled-row) {
       &:hover {
         background-color: var(--p-selectable-row-hover) !important;
@@ -50,5 +44,34 @@
   }
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
+  }
+
+  .tls13070-table {
+    // 修正 scroll rebound: 新增資料時瀏覽器不自動調整捲動位置
+    .p-datatable-wrapper {
+      overflow-anchor: none;
+    }
+
+    // 日期欄統一設定: 禁止換行 + 最小寬度確保完整顯示 "yyyy/MM/dd"
+    th.col-date,
+    td.col-date {
+      white-space: nowrap;
+      min-width: 90px;
+    }
+
+    // 交替背景色：偶數序號記錄淡藍底，奇數保持白底
+    // 同一序號的所有 sub-row 共用相同背景，視覺上成為一組
+    .record-even > td {
+      background-color: #edf3fd !important;
+    }
+
+    // 記錄間的粗分隔線：只在每組第一行（main-row）加粗上邊框
+    .main-row > td {
+      border-top: 2px solid #9aacbf !important;
+    }
+    // sub-row 移除上邊框，與 main-row 融為同一群組
+    .sub-row > td {
+      border-top: none !important;
+    }
   }
 }
