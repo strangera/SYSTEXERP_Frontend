@@ -60,10 +60,13 @@ bootstrapApplication(AppComponent, {
         }
       }),
       LoggerModule.forRoot({
-        level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.TRACE, // 設定log等級
-        serverLogLevel: NgxLoggerLevel.ERROR, // 設定伺服器log等級
-        // serverLoggingUrl: `${environment.ApiUrl}/log`, // 設定伺服器接收log的API
-        // enableSourceMaps: !environment.production,
+        // 【地雷 6】ngx-logger 僅作為「本地 console 記錄器」：開發環境輸出 TRACE、production 全關。
+        // 伺服器端錯誤回報「不」走 ngx-logger，統一由 GlobalErrorHandler 手動 POST 至 ClientLog API，
+        // 以便完整帶入 user_No / url 等 ERP 需要的欄位（單一來源，避免雙軌）。
+        //
+        // 移除原本的 serverLogLevel：它被設成 ERROR，但 serverLoggingUrl 是註解狀態，
+        // 等於「設了等級卻沒有接收 URL」→ 設定形同虛設，且與 GlobalErrorHandler 重複，易誤導後人。
+        level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.TRACE, // 設定 log 等級
         timestampFormat: 'yyyy-MM-dd HH:mm:ss:SSS',
       }),
     ),
