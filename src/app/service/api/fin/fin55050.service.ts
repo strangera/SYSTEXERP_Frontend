@@ -93,6 +93,8 @@ export interface ExportFIN55050Payload {
   IsTarget: string;
   ReportMode: string;
   ACCT_KEY: string;
+  AmtFrom?: number | null;
+AmtTo?: number | null;
 }
 
 export interface DropDownResp<T = { No: string; Name: string }[]> {

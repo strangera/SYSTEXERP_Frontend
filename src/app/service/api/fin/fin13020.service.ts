@@ -44,7 +44,14 @@ export class FIN13020Service {
       param,
     );
   }
-
+queryFIN13100ByVoucherNo(voucherNo: string) {
+  return this.http.post<any>('/FIN0000/INV1000/queryFIN13100', {
+    PageSize: 10,
+    PageIndex: 1,
+    VouNoStart: voucherNo,
+    VouNoEnd: voucherNo,
+  });
+}
   // ✅ 依「字軌+號碼」查對應資訊（預設 Source=APS）
   queryCorrespondByGUINoCorrespond(param: {
     InvoiceNumber_Correspond: string;

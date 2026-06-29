@@ -23,6 +23,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 type RuleError = {
   controlName: string;
@@ -132,6 +133,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     this.initializePage('FIN13010', this.dataForm);
     this.updateDisabledState();
     this.setupAmountRelations();
+    this.setupVoucherNoWatcher();
     this.dataForm.valueChanges.subscribe(() => this.refreshAmountValidFlag());
 
     if (this.crudstatus === CRUDStatus.Create) {
@@ -153,7 +155,42 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     this.refreshAmountValidFlag();
   }
+private setupVoucherNoWatcher(): void {
+  this.dataForm.get('Voucher_No')?.valueChanges
+    .pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+    )
+    .subscribe((voucherNo) => {
+      const vouNo = String(voucherNo ?? '').trim();
 
+      if (!vouNo) {
+        this.dataForm.get('Voucher_No')?.setErrors(null);
+        return;
+      }
+
+      this.fin13010Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
+        next: (res: any) => {
+          const exists = Array.isArray(res?.Data) && res.Data.some((x: any) => x.VouNo === vouNo);
+
+          const ctrl = this.dataForm.get('Voucher_No');
+
+          if (!exists) {
+            ctrl?.setErrors({ voucherNotFound: true });
+            ctrl?.markAsTouched();
+            this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
+          } else {
+            const errors = { ...(ctrl?.errors || {}) };
+            delete errors['voucherNotFound'];
+            ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢傳票編號失敗');
+        },
+      });
+    });
+}
   /* ==================== GUI_Track + PUR_GUINo 對應資料 ==================== */
 
   /**

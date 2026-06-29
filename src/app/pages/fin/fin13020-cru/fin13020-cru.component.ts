@@ -6,7 +6,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, map, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
@@ -179,6 +179,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.setupTrackNoWatcher();
     this.setupGuiNoChangeWatcher();
     this.setupAmountRelations();
+    this.setupVoucherNoWatcher();
 
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -217,7 +218,45 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   /* ----------------- 編輯/檢視：依目前 GUI_Track + PUR_GUINo 撈 FIN13020 ----------------- */
+private setupVoucherNoWatcher(): void {
+  this.dataForm.get('Voucher_No')?.valueChanges
+    .pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    )
+    .subscribe((voucherNo) => {
+      const vouNo = String(voucherNo ?? '').trim();
+      const ctrl = this.dataForm.get('Voucher_No');
 
+      if (!vouNo) {
+        const errors = { ...(ctrl?.errors || {}) };
+        delete errors['voucherNotFound'];
+        ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+        return;
+      }
+
+      this.fin13020Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
+        next: (res: any) => {
+          const exists =
+            Array.isArray(res?.Data) &&
+            res.Data.some((x: any) => String(x.VouNo ?? '').trim() === vouNo);
+
+          if (!exists) {
+            ctrl?.setErrors({ ...(ctrl.errors || {}), voucherNotFound: true });
+            ctrl?.markAsTouched();
+            this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
+          } else {
+            const errors = { ...(ctrl?.errors || {}) };
+            delete errors['voucherNotFound'];
+            ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢傳票編號失敗');
+        },
+      });
+    });
+}
   private loadInvoiceInfoByCurrentGUINo(): void {
     const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
     const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
