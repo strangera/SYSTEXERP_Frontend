@@ -28,7 +28,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TableModule, TableRowReorderEvent } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { concatMap, EMPTY, finalize, forkJoin, Observable, startWith, switchMap, take, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
 import { mapFin53010ForUpdateResponseToStepRows } from '../fin53010/fin53010-detail-for-update.mapper';
@@ -619,7 +619,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-      SerNo: (index + 1) * 10, // 序號從 10 起，10 為單位遞增
+      SerNo: v.SerNo ?? (index + 1) * 10, // 保留 DB 原始 SerNo，缺值才補
     })));
 
     const rows = this.tableData();
@@ -1006,18 +1006,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return `${data.id}|${data.VouNo}|${JSON.stringify(rows)}`;
   }
 
-  /** 初次載入明細：借方在前、貸方在後；同側依會計科目代號遞增（與 onApplyTemplate 之 D/1、C/0 一致） */
+  /** 初次載入明細：純依 SerNo 遞增，保留使用者儲存時的排列順序 */
   private sortInitialLoadFin53010Details(details: FIN53010Detail[]): FIN53010Detail[] {
-    const isDebit = (dc: string | undefined): boolean => {
-      const s = String(dc ?? '').trim();
-      return s === 'D' || s === '1';
-    };
-    return [...details].sort((a, b) => {
-      const aD = isDebit(a.AccDC);
-      const bD = isDebit(b.AccDC);
-      if (aD !== bD) return aD ? -1 : 1;
-      return String(a.AccNo ?? '').localeCompare(String(b.AccNo ?? ''), void 0, { numeric: true });
-    });
+    return [...details].sort((a, b) => (a.SerNo ?? 0) - (b.SerNo ?? 0));
   }
 
   constructor(
@@ -2671,23 +2662,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.messageService.successBubble('刪除成功');
       },
     });
-  }
-
-  public onRowReorder(event: TableRowReorderEvent): void {
-    this.tableData.update(current => {
-      const newArray = [...current];
-      const movedItem = newArray.splice(event.dragIndex!, 1)[0];
-      newArray.splice(event.dropIndex!, 0, movedItem);
-
-      return newArray.map((item, index) => ({
-        ...item,
-        index,
-        displayIndex: index,
-        SerNo: (index + 1) * 10,
-      }));
-    });
-
-    this.logger.debug(`onRowReorder:`, [event, this.tableData()]);
   }
 
   public getVocherTemplate(): void {
