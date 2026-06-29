@@ -157,3 +157,32 @@ input[disabled],
     padding: 0.5rem;
   }
 }
+.p-datatable {
+  &.p-datatable-sm .p-datatable-footer {
+    padding: 0;
+  }
+  .p-datatable-wrapper {
+    border: 1px solid var(--surface-d);
+  }
+  // --- 表頭區樣式 (thead / header) ---
+  .p-datatable-header {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
+  // --- 資料列與單元格樣式 (tbody / tr / td) ---
+  .p-datatable-tbody > tr {
+    > td {
+      white-space: normal !important;
+      word-break: break-all !important; // 英文/數字過長強制斷行
+      overflow-wrap: break-word !important;
+    }
+  }
+  // --- 表尾與小計/總計區樣式 (tfoot / footer) ---
+  .p-datatable-tfoot > tr > td {
+    background: var(--table-footer-bg);
+  }
+}

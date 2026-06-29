@@ -34,8 +34,14 @@ interface InputBoxOptions {
   providedIn: 'root'
 })
 export class NotificationService {
-  add(arg0: { severity: string; summary: string; detail: any; }) {
-    throw new Error('Method not implemented.');
+  // 為相容 PrimeNG MessageService 介面而保留的入口；轉呼內部 bubble，
+  // 避免呼叫端踩到原本的 throw new Error（會被 GlobalErrorHandler 當成未處理前端異常回報）。
+  add(arg0: { severity: string; summary: string; detail: unknown; }) {
+    this.sendBubbleMessage(
+      (arg0?.severity as Message['severity']) || 'info',
+      arg0?.summary || '訊息',
+      arg0?.detail != null ? String(arg0.detail) : ''
+    );
   }
   private bubbleMsgSource = new BehaviorSubject<Message | null>(null);
   bubbleMsg$ = this.bubbleMsgSource.asObservable();

@@ -37,22 +37,6 @@
             [submitted]="submitted"
           ></app-input-text>
 
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="折舊攤提年限"
-            controlName="rest_value"
-            [control]="qf().rest_value"
-            [submitted]="submitted"
-          ></app-input-text>
-
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="殘值年限"
-            controlName="rest_value2"
-            [control]="qf().rest_value2"
-            [submitted]="submitted"
-          ></app-input-text>
-
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="傳票格式"
@@ -97,6 +81,24 @@
             [loading]="service.classNoLoading()"
             [submitted]="submitted"
           ></app-dropdown>
+
+          <app-input-number
+            class="col-12 md:col-6 lg:col-4"
+            label="折舊攤提年限"
+            controlName="EXP_YEAR"
+            [control]="qf().EXP_YEAR"
+            [useGrouping]="false"
+            [submitted]="submitted"
+          ></app-input-number>
+
+          <app-input-number
+            class="col-12 md:col-6 lg:col-4"
+            label="殘值年限"
+            controlName="RESI_YEAR"
+            [control]="qf().RESI_YEAR"
+            [useGrouping]="false"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="grid p-fluid">
@@ -135,6 +137,7 @@
             [showAll]="!0"
             [submitted]="submitted"
           ></app-radiobutton-yn>
+
         </div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"

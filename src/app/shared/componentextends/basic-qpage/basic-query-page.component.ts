@@ -5,7 +5,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
 import { FormStatusService } from '@shared/service/form-status.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
-import { take } from 'rxjs';
+import { finalize, Observable, take } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -113,6 +113,36 @@ export abstract class BasicQueryPageComponent<T> {
   }
   onCopy(data: T) {
     this.navigateWithState(CRUDStatus.Create, data);
+  }
+
+  /**
+   * 【地雷 3】共用 loading 收尾運算子。
+   *
+   * 把它放進 API 串流的 .pipe() 裡，不論「成功 / 失敗 / 被取消」都會自動：
+   *   1. 關閉 this.loading（按鈕、查詢列轉圈圈）
+   *   2. 解除全螢幕遮罩 unblockUi()
+   * 徹底解決「API 噴錯後 loading 旗標關不掉、轉圈圈卡死」的問題。
+   *
+   * 為什麼放這裡而不是各頁手寫 finalize？
+   *   全站 658 頁繼承本基底，手寫一定有人漏；集中在基底，一行 pipe 全站一致。
+   *
+   * 用法：
+   *   this.queryFunction(body).pipe(
+   *     this.withLoading(() => this.tableLoading.set(false)), // 選填：頁面自己的額外狀態
+   *     takeUntilDestroyed(this.destroyRef),                  // 訂閱仍要自行退訂
+   *   ).subscribe({ next: res => { ... } });
+   *
+   * @param onFinalize 選填，頁面專屬的額外收尾（例如關閉 table 自己的 loading signal）
+   */
+  protected withLoading<R>(onFinalize?: () => void) {
+    return (source$: Observable<R>): Observable<R> =>
+      source$.pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          onFinalize?.();
+        }),
+      );
   }
 
   // 送出查詢

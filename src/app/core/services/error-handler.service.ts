@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -11,10 +11,17 @@ import { NotificationService } from '../../shared/component/notification-message
 export class ErrorHandlerService {
   private readonly LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS: string = environment.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS;
 
+  // 專供「錯誤回報」用的 HttpClient：直接走 HttpBackend 繞過所有 interceptor。
+  // 若用一般 HttpClient，回報請求自己失敗時會再被 errorInterceptor 攔到 → 又呼叫 handleError → 無窮遞迴。
+  private readonly diagHttp: HttpClient;
+
   constructor(
     private readonly notificationService: NotificationService,
     private readonly authService: AuthService,
-  ) { }
+    httpBackend: HttpBackend,
+  ) {
+    this.diagHttp = new HttpClient(httpBackend);
+  }
 
   handleError(error: HttpErrorResponse): Observable<never> {
     let userFriendlyMessage: string;
@@ -136,7 +143,47 @@ export class ErrorHandlerService {
       console.error('Error logging to Session Storage:', e);
     }
 
-    // 重新拋出錯誤
-    return throwError(() => new Error(userFriendlyMessage));
+    // Phase 4：把「使用者實際遭遇的 API 錯誤」悄悄回報後端持久化，供維運儀表板觀察。
+    this.reportApiError(error, userFriendlyMessage);
+
+    // 【地雷 5】重拋「原始 HttpErrorResponse」，而非 new Error()。
+    // 原因：
+    //  1. 保留 error.status / error.error，讓 component 能針對特定狀態碼（如 409）做客製處理。
+    //  2. 讓 GlobalErrorHandler 的 `instanceof HttpErrorResponse` 守衛能正確攔到、避免重複落地。
+    // 注意：使用者提示 (Toast) 已在上面跳過，component 端只是「選擇性」加工，不需再跳一次。
+    return throwError(() => error);
+  }
+
+  /**
+   * 將前端遭遇的 API 錯誤回報後端（record-api-error）。
+   * 走 diagHttp（HttpBackend）繞過 interceptor，並排除「回報端點本身」避免遞迴。
+   */
+  private reportApiError(error: HttpErrorResponse, userFriendlyMessage: string): void {
+    try {
+      const apiUrl = error.url ?? '';
+
+      // 避免回報「回報端點本身」造成無窮遞迴（record-error / record-api-error）。
+      if (apiUrl.includes('/ClientLog/record')) {
+        return;
+      }
+
+      const userNo = this.authService.currentUserValue?.user_No || 'Unknown';
+      const userName = this.authService.currentUserValue?.user_Name || 'Unknown';
+
+      const payload = {
+        Status: error.status,
+        ApiUrl: apiUrl,
+        PageUrl: window.location.href,
+        User: `${userNo}(${userName})`,
+        Message: userFriendlyMessage,
+      };
+
+      const endpoint = environment.ApiUrl + '/BasicEIP_Core/DiagnosticsModule/api/ClientLog/record-api-error';
+      this.diagHttp.post(endpoint, payload).subscribe({
+        error: (err) => console.error('無法將 API 錯誤回報至後端:', err)
+      });
+    } catch (e) {
+      console.error('reportApiError 內部發生錯誤:', e);
+    }
   }
 }

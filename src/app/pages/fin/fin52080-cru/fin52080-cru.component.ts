@@ -7,6 +7,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
@@ -28,6 +29,7 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Upd
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
+    InputNumberComponent,
     InputTextComponent,
     MenubarComponent,
     TreeDropdownComponent,
@@ -47,8 +49,10 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
    * - Voucher_Type: 傳票格式
    * - Budget_YN: 是否為預算科目
    * - Org_YN: 是否設定部門代號
-   * - rest_value: 折舊攤提年限
-   * - rest_value2: 殘值年限
+   * - EXP_YEAR: 折舊攤提年限
+   * - RESI_YEAR: 殘值年限
+   * - DEPRE_AccNo: 折舊會計科目
+   * - ACCUDEPRE_AccNo: 累計折舊會計科目
    * - Input_YN: 是否可輸
    */
   public readonly dataForm = this.formBuilder.nonNullable.group({
@@ -62,8 +66,10 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     Voucher_Type: new FormControl<VoucherType | void>(void 0, [Validators.required]),
     Budget_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
     Org_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
-    rest_value: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
-    rest_value2: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
+    EXP_YEAR: new FormControl<number | null>(null),
+    RESI_YEAR: new FormControl<number | null>(null),
+    DEPRE_AccNo: new FormControl<string | null>(null),
+    ACCUDEPRE_AccNo: new FormControl<string | null>(null),
     Input_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
   }, {
     validators: [this.validationService.accNoClassNoMatchValidator('AccNo', 'ClassNo')]
@@ -167,6 +173,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
     this.treeLoading.set(!0);
     this.service.getClassNos();
+    this.service.getAccNoOptions();
     this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
       .subscribe(res => this.FIN52080Tree.set(res.Data || []));
 

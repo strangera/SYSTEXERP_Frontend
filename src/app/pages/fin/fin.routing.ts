@@ -324,11 +324,10 @@ export const finRoutes: Routes = [
   { path: 'fin62030', loadComponent: () => import('./fin62030/fin62030.component').then(m => m.FIN62030Component), data: { progNo: 'FIN62030' } },
   { path: 'fin62030cru', loadComponent: () => import('./fin62030-cru/fin62030-cru.component').then(m => m.FIN62030CRUComponent), data: { progNo: 'FIN62030' } },
   // 出納區間報表
-  // { path: 'fin62040', loadComponent: () => import('./fin62040/fin62040.component').then(m => m.FIN62040Component),data:{progNo:'FIN62040'} },
+  { path: 'fin62040', loadComponent: () => import('./fin62040/fin62040.component').then(m => m.FIN62040Component),data:{progNo:'FIN62040'} },
   // { path: 'fin62040cru', loadComponent: () => import('./fin62040-cru/fin62040-cru.component').then(m => m.FIN62040CRUComponent),data: { progNo: 'FIN62040'} },
   // 銀行往來調節表
-  // { path: 'fin62050', loadComponent: () => import('./fin62050/fin62050.component').then(m => m.FIN62050Component),data:{progNo:'FIN62050'} },
-  // { path: 'fin62050cru', loadComponent: () => import('./fin62050-cru/fin62050-cru.component').then(m => m.FIN62050CRUComponent),data: { progNo: 'FIN62050'} },
+  { path: 'fin62050', loadComponent: () => import('./fin62050/fin62050.component').then(m => m.FIN62050Component), data: { progNo: 'FIN62050' } },
   // 套印支票 - 票據套印
   // { path: 'fin63010', loadComponent: () => import('./fin63010/fin63010.component').then(m => m.FIN63010Component),data:{progNo:'FIN63010'} },
   // { path: 'fin63010cru', loadComponent: () => import('./fin63010-cru/fin63010-cru.component').then(m => m.FIN63010CRUComponent),data: { progNo: 'FIN63010'} },
@@ -357,7 +356,7 @@ export const finRoutes: Routes = [
   // 應收票據退票作業
   { path: 'fin64050', loadComponent: () => import('./fin64050/fin64050.component').then(m => m.FIN64050Component), data: { progNo: 'FIN64050' } },
   // 應付票據簽回單
-  // { path: 'fin65010', loadComponent: () => import('./fin65010/fin65010.component').then(m => m.FIN65010Component),data:{progNo:'FIN65010'} },
+  { path: 'fin65010', loadComponent: () => import('./fin65010/fin65010.component').then(m => m.FIN65010Component), data: { progNo: 'FIN65010' } },
   // { path: 'fin65010cru', loadComponent: () => import('./fin65010-cru/fin65010-cru.component').then(m => m.FIN65010CRUComponent),data: { progNo: 'FIN65010'} },
   // 零用金參數維護
   { path: 'fin71010', loadComponent: () => import('./fin71010/fin71010.component').then(m => m.FIN71010Component), data: { progNo: 'FIN71010' } },

@@ -7,6 +7,7 @@ import { UserInfo } from '@shared/models/system/userInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { finalize, Observable } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
@@ -107,6 +108,33 @@ export abstract class BasicCruPageComponent<T> {
         }
         break;
     }
+  }
+
+  /**
+   * 【地雷 3】共用 loading 收尾運算子（與查詢頁基底相同行為）。
+   *
+   * 放進 API 串流的 .pipe() 裡，不論「成功 / 失敗 / 被取消」都會自動：
+   *   1. 關閉 this.loading（送出按鈕轉圈圈）
+   *   2. 解除全螢幕遮罩 unblockUi()
+   * 解決「儲存 / 更新 API 噴錯後送出按鈕卡在 loading」的問題。
+   *
+   * 用法：
+   *   this.service.save(payload).pipe(
+   *     this.withLoading(),
+   *     takeUntilDestroyed(this.destroyRef),
+   *   ).subscribe({ next: res => { ... } });
+   *
+   * @param onFinalize 選填，頁面專屬的額外收尾
+   */
+  protected withLoading<R>(onFinalize?: () => void) {
+    return (source$: Observable<R>): Observable<R> =>
+      source$.pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          onFinalize?.();
+        }),
+      );
   }
 
   // 提交

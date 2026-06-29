@@ -6,9 +6,12 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 // -------------------------------------------------------------
 // 常數定義
 // -------------------------------------------------------------
-const maxRetries = 0;
-// 注意：100000000ms 大約是 27.7 小時，在實際應用中可能過長，這裡保持您原設定。
-const retryDelayMs = 100000000;
+// 【地雷 4】retry 常數修正
+// 原本 maxRetries=0 → 底下整段 retry 是死碼；retryDelayMs=100000000ms（約 27.7 小時）是等著被人誤觸的地雷。
+// 改為：網路錯誤時最多重試 2 次、每次間隔 1 秒（且僅限 GET，見下方 delay 邏輯）。
+const maxRetries = 2;
+const retryDelayMs = 1000;
+// timeout 維持 30 分鐘：ERP 長報表查詢需要較長等待時間（經確認刻意保留）。
 const timeoutMs = 1800000;
 
 
@@ -31,13 +34,16 @@ export const errorInterceptor: HttpInterceptorFn = (
     retry({
       count: maxRetries,
       delay: (error, retryCount) => {
-        // 這裡的錯誤必須是 HttpErrorResponse，因為 retry 運算符只會處理請求失敗的錯誤
-        if (error instanceof HttpErrorResponse && error.status === 0) {
-          console.warn(`Retry attempt ${retryCount} for network error. Retrying in ${retryDelayMs}ms...`);
+        // 只在「網路錯誤(status 0)」且「請求為 GET」時才重試。
+        // 為什麼限定 GET：status 0 代表沒收到回應，但伺服器可能其實已處理；
+        // 重送 POST/PUT/DELETE 在 ERP 會造成重複寫入/重複過帳，故僅重試冪等的 GET。
+        const isNetworkError = error instanceof HttpErrorResponse && error.status === 0;
+        const isIdempotent = req.method === 'GET';
+        if (isNetworkError && isIdempotent) {
+          console.warn(`Retry attempt ${retryCount} for network error on GET ${req.url}. Retrying in ${retryDelayMs}ms...`);
           return timer(retryDelayMs);
-        } else {
-          return throwError(() => error);
         }
+        return throwError(() => error);
       },
       resetOnSuccess: true
     }),

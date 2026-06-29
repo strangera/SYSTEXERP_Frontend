@@ -1,71 +1,119 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="日期"
-              controlName="searchDate "
-              [startControl]="queryForm.controls.SsearchDate"
-              [endControl]="queryForm.controls.EsearchDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="日期" startControlName="StartDate" endControlName="EndDate"
+              [startControl]="queryForm.controls.StartDate" [endControl]="queryForm.controls.EndDate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="銀行代號"
-              controlName="Companybankcode"
-              [options]="bankOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Companybankcode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="銀行代號" controlName="BankList" [options]="bankOptions()" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.BankList" [submitted]="submitted"
+              placeholder="全部"></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label=" 應兌未兌票據全部顯示"
-              controlName="display"
-            ></p-checkbox>
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center gap-2 pt-3">
+            <p-checkbox formControlName="ShowUnCheckYN" [binary]="true" inputId="showUnCheckYN"></p-checkbox>
+            <label for="showUnCheckYN">應兌未兌票據全部顯示</label>
           </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+@if (data().length > 0) {
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="flex justify-content-end gap-2">
+    <app-button label="匯出PDF" (click)="onExportPDF()" [loading]="btnLoading()"></app-button>
+    <app-button label="匯出Excel" (click)="onExportExcel()" [loading]="btnLoading()"></app-button>
   </div>
 </div>
+}
+
+@for (entry of bankGroups() | keyvalue; track entry.key) {
+<div class="card mb-3">
+
+  <!-- 銀行標題 -->
+  <div class="font-bold text-lg mb-3">
+    {{ entry.key }} &mdash; {{ entry.value[0].BNK_AccName }}
+  </div>
+
+  <!-- 存款簿金額〔A〕 -->
+  <div class="text-sm font-semibold mb-1">【存款簿金額〔A〕】</div>
+  <p-table [value]="getSectionA(entry.value)" styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 100px">日期</th>
+        <th>說明</th>
+        <th style="width: 130px; text-align: right">借方金額</th>
+        <th style="width: 130px; text-align: right">貸方金額</th>
+        <th style="width: 130px; text-align: right">餘額</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr [class.font-bold]="row.RowType === 'A'"
+        [style.backgroundColor]="row.RowType === 'A' ? 'var(--table-footer-bg)' : null">
+        <td>{{ row.VouDate }}</td>
+        <td [class.text-right]="row.RowType === 'A'">{{ row.NoteDesc }}</td>
+        <td class="text-right">{{ row.RowType !== 'INIT' ? (row.DebitAmt | number:'1.0-0') : '' }}</td>
+        <td class="text-right">{{ row.RowType !== 'INIT' ? (row.CreditAmt | number:'1.0-0') : '' }}</td>
+        <td class="text-right">{{ row.Balance | number:'1.0-0' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- 應兌未兌票據金額〔B〕 -->
+  @if (hasUncheckedRows(entry.value)) {
+  <div class="text-sm font-semibold mt-3 mb-1">【應兌未兌票據金額〔B〕】</div>
+  <p-table [value]="getSectionB(entry.value)" styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 100px">到期日</th>
+        <th style="width: 130px">票據號碼</th>
+        <th style="width: 120px">廠商代號</th>
+        <th>廠商名稱</th>
+        <th style="width: 80px; text-align: center">票據狀態</th>
+        <th style="width: 130px; text-align: right">貸方金額</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      @if (row.RowType === 'B') {
+      <tr class="font-bold" [style.backgroundColor]="'var(--table-footer-bg)'">
+        <td colspan="5" class="text-right">應兌未兌票據金額〔B〕合計：</td>
+        <td class="text-right">{{ row.CreditAmt | number:'1.0-0' }}</td>
+      </tr>
+      } @else {
+      <tr>
+        <td>{{ row.VouDate }}</td>
+        <td>{{ row.CHK_No }}</td>
+        <td>{{ row.VEN_No }}</td>
+        <td>{{ row.VEN_NAME }}</td>
+        <td class="text-center">{{ row.CHK_Status }}</td>
+        <td class="text-right">{{ row.CreditAmt | number:'1.0-0' }}</td>
+      </tr>
+      }
+    </ng-template>
+  </p-table>
+  }
+
+  <!-- 支存帳上金額（C 列） -->
+  @if (getCRow(entry.value); as cRow) {
+  <div class="flex justify-content-end align-items-center font-bold mt-2 p-2 border-1 surface-border"
+    [style.backgroundColor]="'var(--table-footer-bg)'">
+    <span>{{ cRow.NoteDesc }}：</span>
+    <span class="mr-2">{{ cRow.Balance | number:'1.0-0' }}</span>
+  </div>
+  }
+
+</div>
+}

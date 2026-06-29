@@ -440,6 +440,17 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢公司銀行科目代號(APS1002) - value 為 BNK_id，供 FIN62050 銀行往來調節表篩選使用 */
+  queryAps1002ForBankFilter(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1002Item>(
+      '/queryAPS1002_DropDownList',
+      'BNK_id',
+      'ACCCNAME'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢會計科目設定檔(GLS1005) */
   queryGls1005(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(

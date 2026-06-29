@@ -56,25 +56,29 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   ) { super(); }
   PDFBtnLoading = false;
   XLSXBtnLoading = false;
-  queryForm = this.formBuilder.group({
-    DateFrom: [yesterday, Validators.required],
-    DateTo: [yesterday, Validators.required],
-    OrgIdList: [null],
-    AccNoFrom: [null],
-    AccNoTo: [null],
-    VendorFrom: [null],
-    VendorTo: [null],
-    PTAFrom: [null],
-    PTATo: [null],
-    Target: [null],
-    Project: [null],
-    Notes: [null],
-    VoucherType: [null],
-    VouStatusList: [null],
-    IsTarget: [null],
-    ReportMode: ['1'],
-    ACCT_KEY: [null, [Validators.maxLength(30)]],
-  });
+queryForm = this.formBuilder.group({
+  DateFrom: [yesterday, Validators.required],
+  DateTo: [yesterday, Validators.required],
+  OrgIdList: [null],
+  AccNoFrom: [null],
+  AccNoTo: [null],
+  VendorFrom: [null],
+  VendorTo: [null],
+  PTAFrom: [null],
+  PTATo: [null],
+
+  AmtFrom: [null],
+  AmtTo: [null],
+
+  Target: [null],
+  Project: [null],
+  Notes: [null],
+  VoucherType: [null],
+  VouStatusList: [null],
+  IsTarget: [null],
+  ReportMode: ['1'],
+  ACCT_KEY: [null, [Validators.maxLength(30)]],
+});
   data: GroupedFIN55050Detail[] = [];
   selectedItems: GroupedFIN55050Detail[] = [];
   totalRecords = 0;
@@ -101,24 +105,28 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       const from = this.datePipe.transform(raw?.DateFrom, 'yyyy-MM-dd');
       const to = this.datePipe.transform(raw?.DateTo, 'yyyy-MM-dd');
       const payload: ExportFIN55050Payload = {
-        DateFrom: from ?? '',
-        DateTo: to ?? '',
-        OrgIdList: raw?.OrgIdList ?? [],
-        AccNoFrom: raw?.AccNoFrom ?? '',
-        AccNoTo: raw?.AccNoTo ?? '',
-        VendorFrom: raw?.VendorFrom ?? '',
-        VendorTo: raw?.VendorTo ?? '',
-        PTAFrom: raw?.PTAFrom ?? '',
-        PTATo: raw?.PTATo ?? '',
-        Target: raw?.Target ?? '',
-        Project: raw?.Project ?? '',
-        Notes: raw?.Notes ?? '',
-        VoucherType: raw?.VoucherType ?? '',
-        VouStatusList: raw?.VouStatusList ?? [],
-        IsTarget: raw?.IsTarget ?? '',
-        ReportMode: raw?.ReportMode ?? '',
-        ACCT_KEY: raw?.ACCT_KEY ?? '',
-      };
+  DateFrom: from ?? '',
+  DateTo: to ?? '',
+  OrgIdList: raw?.OrgIdList ?? [],
+  AccNoFrom: raw?.AccNoFrom ?? '',
+  AccNoTo: raw?.AccNoTo ?? '',
+  VendorFrom: raw?.VendorFrom ?? '',
+  VendorTo: raw?.VendorTo ?? '',
+  PTAFrom: raw?.PTAFrom ?? '',
+  PTATo: raw?.PTATo ?? '',
+
+  AmtFrom: raw?.AmtFrom ?? null,
+  AmtTo: raw?.AmtTo ?? null,
+
+  Target: raw?.Target ?? '',
+  Project: raw?.Project ?? '',
+  Notes: raw?.Notes ?? '',
+  VoucherType: raw?.VoucherType ?? '',
+  VouStatusList: raw?.VouStatusList ?? [],
+  IsTarget: raw?.IsTarget ?? '',
+  ReportMode: raw?.ReportMode ?? '',
+  ACCT_KEY: raw?.ACCT_KEY ?? '',
+};
       this.fin55050Service.queryFIN55050(payload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryConditions = payload;
         this.data = this.restructureData(response.Data);
