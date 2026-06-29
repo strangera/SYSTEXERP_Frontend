@@ -784,6 +784,7 @@ export interface Aps1002Item {
   BNK_No: string;           // 銀行代碼
   BNK_BRANCHNAME: string;   // 分行名稱
   BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+  BNK_id: string;           // GL 科目代號（對應 GLS1005.ACCNO），SP_FIN62050Query @BankList 使用此值
 }
 
 /**

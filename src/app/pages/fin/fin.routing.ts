@@ -327,8 +327,7 @@ export const finRoutes: Routes = [
   // { path: 'fin62040', loadComponent: () => import('./fin62040/fin62040.component').then(m => m.FIN62040Component),data:{progNo:'FIN62040'} },
   // { path: 'fin62040cru', loadComponent: () => import('./fin62040-cru/fin62040-cru.component').then(m => m.FIN62040CRUComponent),data: { progNo: 'FIN62040'} },
   // 銀行往來調節表
-  // { path: 'fin62050', loadComponent: () => import('./fin62050/fin62050.component').then(m => m.FIN62050Component),data:{progNo:'FIN62050'} },
-  // { path: 'fin62050cru', loadComponent: () => import('./fin62050-cru/fin62050-cru.component').then(m => m.FIN62050CRUComponent),data: { progNo: 'FIN62050'} },
+  { path: 'fin62050', loadComponent: () => import('./fin62050/fin62050.component').then(m => m.FIN62050Component), data: { progNo: 'FIN62050' } },
   // 套印支票 - 票據套印
   // { path: 'fin63010', loadComponent: () => import('./fin63010/fin63010.component').then(m => m.FIN63010Component),data:{progNo:'FIN63010'} },
   // { path: 'fin63010cru', loadComponent: () => import('./fin63010-cru/fin63010-cru.component').then(m => m.FIN63010CRUComponent),data: { progNo: 'FIN63010'} },
