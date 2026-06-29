@@ -34,6 +34,13 @@
         [rowValidate]="validateRow" (fieldChange)="fieldChange()" [showInsert]="!isFormReadable" (insert)="openDialog()"
         [selectedItems]="selectedItems" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
         [canInsert]="false">
+        <ng-template #customCell let-rowData="rowData" let-index="index">
+          @if (!isFormReadable) {
+            <span class="cursor-pointer text-primary underline" (click)="openEditDialog(index)">{{ rowData.TLT_No }}</span>
+          } @else {
+            {{ rowData.TLT_No }}
+          }
+        </ng-template>
         <header>
           <div class="flex justify-content-between align-items-center w-full">
             <div>

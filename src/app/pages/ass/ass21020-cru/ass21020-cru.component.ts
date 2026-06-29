@@ -68,7 +68,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   selectedItems: ASS21020Detail[] = [];
   lastQueryBody: any = {}; // 用於比較，防止重複查詢
   public readonly columns: EditColumn[] = [
-    { field: 'TLT_No', header: '專櫃編號', },
+    { field: 'TLT_No', header: '專櫃編號', type: 'custom' },
     { field: 'TLT_Name', header: '櫃位名稱', },
     // { field: 'LocationNo', header: '位置編號', },
     { field: 'ApplyNo', header: '招募編號', },
@@ -148,9 +148,17 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.dialogQuerySubject.complete();
   }
 
-  // string 【新增】開啟 Dialog 時重置查詢條件並載入資料的方法
   public openDialog(): void {
-    // 檢查是否已選擇 ENG_Type
+    this.editingRowIndex = -1;
+    this.openDialogCore();
+  }
+
+  public openEditDialog(rowIndex: number): void {
+    this.editingRowIndex = rowIndex;
+    this.openDialogCore();
+  }
+
+  private openDialogCore(): void {
     const currentEngType = this.dataForm.controls.ENG_Type.value;
     if (!currentEngType) {
       this.messageService.errorBubble('請先選擇能源類型');
@@ -160,17 +168,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.dialogVisible = true;
     this.dialogData = [];
     this.selectedItemsDialog = [];
-
-    // 重置 lastQueryBody，確保可以重新查詢
     this.lastQueryBody = {};
 
-    // 1. 重設查詢欄位 (TltNo 清空，但帶入 ENG_Type)
-    this.dialogQueryForm.patchValue({
-      TltNo: null,
-      ENG_Type: currentEngType, // 帶入當前選擇的能源類型
-    });
-
-    // 2. 重設分頁/排序到初始狀態 (這會觸發 loadDialogData)
     const initialQuery = {
       TltNo: null,
       ENG_Type: currentEngType,
@@ -180,10 +179,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     };
 
     this.dialogQueryForm.patchValue(initialQuery);
-
-    // 立即載入資料 (如果 patchValue 沒有觸發 valueChanges，則手動發送)
-    // 由於 dialogQueryForm.patchValue 已經會觸發 valueChanges，通常不需要手動 next，
-    // 但為確保萬一，如果 form 的初始值就是 initialQuery，需要強制查詢
     this.loadDialogData(initialQuery);
   }
 
@@ -294,6 +289,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     });
   }
 
+  editingRowIndex = -1;
+
   dialogVisible = false;
   dialogLoading = true;
   dialogData: Option[] = [];
@@ -361,22 +358,43 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   // ⬆️ 【修正結束】
 
   isRowSelectable(row: ASS21020Detail): boolean {
-    return !this.data || !this.data.some((item: ASS21020Detail) => item.TalentId === row.TalentId);
+    if (this.editingRowIndex >= 0) {
+      const currentTalentId = this.data[this.editingRowIndex]?.TalentId;
+      if (row['TalentId'] === currentTalentId) return true;
+    }
+    return !this.data || !this.data.some((item: ASS21020Detail) => item.TalentId === row['TalentId']);
   }
 
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
-      Id: 0,
-      TalentId: item['TalentId'] as number,
-      TLT_No: item['TltNo'],
-      TLT_Name: item['TltName'],
-      ApplyNo: item['ApplyNo'],
-      LocationNo: item['LocationNo'],
-      TltSpace: item['TltSpace'],
-      ENG_Rate: 0,
-      ENG_Remark: item['ApplyNo'] || null,  // 自動帶入招募編號到專櫃招募編號
-    }))];
+
+    if (this.editingRowIndex >= 0 && this.selectedItemsDialog.length > 0) {
+      const item = this.selectedItemsDialog[0];
+      this.data = this.data.map((row, i) => i === this.editingRowIndex ? {
+        ...row,
+        TalentId: item['TalentId'] as number,
+        TLT_No: item['TltNo'],
+        TLT_Name: item['TltName'],
+        ApplyNo: item['ApplyNo'],
+        LocationNo: item['LocationNo'],
+        TltSpace: item['TltSpace'],
+        ENG_Remark: item['ApplyNo'] || null,
+      } : row);
+      this.editingRowIndex = -1;
+    } else {
+      this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
+        Id: 0,
+        TalentId: item['TalentId'] as number,
+        TLT_No: item['TltNo'],
+        TLT_Name: item['TltName'],
+        ApplyNo: item['ApplyNo'],
+        LocationNo: item['LocationNo'],
+        TltSpace: item['TltSpace'],
+        ENG_Rate: 0,
+        ENG_Remark: item['ApplyNo'] || null,
+      }))];
+    }
+
     this.selectedItemsDialog = [];
     this.fieldChange();
   }
