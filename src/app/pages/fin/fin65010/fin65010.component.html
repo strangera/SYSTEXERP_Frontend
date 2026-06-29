@@ -74,24 +74,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      tableKey="FIN65010"
-      pageSizeSetting="A3"
-      [data]="data"
-      [columns]="columns"
-      [showSort]="false"
-      [showManage]="false"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'CheckNo', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [loading]="loading"
-    ></app-table>
-  </div>
+  <app-table-report
+    #dt
+    dataKey="CheckNo"
+    pageSizeSetting="A3"
+    [data]="data"
+    [columns]="columns"
+    [showDelete]="false"
+    [showManage]="false"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lazy]="true"
+    [lastQueryBody]="historyRequestBody"
+    [queryFunction]="fin65010Service.queryFIN65010.bind(fin65010Service)"
+  ></app-table-report>
 </div>

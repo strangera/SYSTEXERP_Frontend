@@ -6,6 +6,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { APS3006Response, Fin65010Service, QueryFIN65010Response } from 'src/app/service/api/fin/fin65010.service';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
@@ -17,14 +18,13 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin65010',
   templateUrl: './fin65010.component.html',
   styleUrl: './fin65010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextRangeComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextRangeComponent, CalendarRangeComponent, ButtonComponent, TableReportComponent, TranslateModule]
 })
 export class FIN65010Component extends BasicQueryPageComponent<QueryFIN65010Response> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -44,7 +44,7 @@ export class FIN65010Component extends BasicQueryPageComponent<QueryFIN65010Resp
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  lastQueryBody: any = null; // 儲存最後一次查詢的條件
+  historyRequestBody: any = null; // 儲存最後一次查詢的條件
 
   VEN_No_Options: apiOption[] = []; // 廠商的下拉選單
   PAM_No_Options: apiOption[] = []; // 營運狀況的下拉選單
@@ -71,7 +71,7 @@ export class FIN65010Component extends BasicQueryPageComponent<QueryFIN65010Resp
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly fin65010Service: Fin65010Service
+    public readonly fin65010Service: Fin65010Service
   ) {
     super();
   }
@@ -88,9 +88,8 @@ export class FIN65010Component extends BasicQueryPageComponent<QueryFIN65010Resp
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.historyRequestBody = frm.value;
+            this.totalRecords = response.TotalCount;
           } else {
             console.error('API error:', response.Status, response.Message);
           }
