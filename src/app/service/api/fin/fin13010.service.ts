@@ -51,13 +51,13 @@ export class FIN13010Service {
       );
   }
   queryFIN13100ByVoucherNo(voucherNo: string) {
-  return this.http.post<any>('/FIN0000/INV1000/queryFIN13100', {
-    PageSize: 10,
-    PageIndex: 1,
-    VouNoStart: voucherNo,
-    VouNoEnd: voucherNo,
-  });
-}
+    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13100`, {
+      PageSize: 10,
+      PageIndex: 1,
+      VouNoStart: voucherNo,
+      VouNoEnd: voucherNo,
+    });
+  }
 
   // ✅ 明細：依 PUR_GUINo 查明細
   queryDetailByPURGUINo(param: { PUR_GUINo: string }): Observable<any> {
