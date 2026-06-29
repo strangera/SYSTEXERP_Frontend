@@ -1,0 +1,27 @@
+:host ::ng-deep .fin62040-report .p-datatable table{
+    border-collapse: collapse;
+}
+
+/* 取消全部框線 */
+:host ::ng-deep .fin62040-report .p-datatable td,
+:host ::ng-deep .fin62040-report .p-datatable th{
+    border:none !important;
+}
+
+/* Header 上下線 */
+:host ::ng-deep .fin62040-report thead tr{
+    border-top:2px solid #222;
+    border-bottom:1px solid #222;
+}
+
+/* 每列不要線 */
+:host ::ng-deep .fin62040-report tbody tr{
+    border-bottom:none;
+}
+
+/* Footer(合計) */
+:host ::ng-deep .fin62040-report tfoot tr{
+    border-top:2px solid #222;
+    border-bottom:2px solid #222;
+    font-weight:bold;
+}
