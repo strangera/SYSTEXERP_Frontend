@@ -167,7 +167,6 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   //下傳
   btnLoading = false;
   onUpload() {
-    const storeNo = this.authService.getUserInfo()?.SYS_StoreNo ?? '';
     const items = this.selectedItems;
     if (!items.length) return;
 
@@ -176,10 +175,10 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     from(items).pipe(
       concatMap((item) => {
         const params = {
-          SYS_StoreNo: storeNo,
-          EXP_StoreNo: storeNo,
+          SYS_StoreNo: item.SYS_StoreNo,
+          EXP_StoreNo: item.SYS_StoreNo,
           EXP_Type: "POS1002",
-          EXP_DocNo: storeNo + ";" + item.ECR_No,
+          EXP_DocNo: item.SYS_StoreNo + ";" + item.ECR_No,
           EXP_DataFlag: "S2P",
           EXP_Desc: ""
         };
