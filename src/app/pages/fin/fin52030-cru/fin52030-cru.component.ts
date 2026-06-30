@@ -79,9 +79,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public selectedItems: FIN52030Data[] = [];
 
   public readonly rowEditCanSave = signal<boolean>(!1);
-  public readonly defaultNewRow = (): Partial<FIN52030DetailTable> => ({
-    ORG_ID: this.selectedOrgId(),
-  });
+  public readonly defaultNewRow = (): Partial<FIN52030DetailTable> => ({});
   public readonly footerData = (): Partial<FIN52030DetailTable> => ({
     AccAmtD: this.debitTotal(),
     AccAmtC: this.creditTotal(),
@@ -153,7 +151,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       VouType: data.VouType,
     });
 
-    const mappedTableData = data.Details.map((v, index) => ({
+    const mappedTableData = data.Details.map((v) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -161,7 +159,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? usrMap.get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
-      SerNo: (index + 1) * 10,
     }));
 
     this.tableData.set(mappedTableData);
@@ -211,10 +208,9 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        this.tableData.set((res.Data?.Details || []).map((v, index) => ({
+        this.tableData.set((res.Data?.Details || []).map((v) => ({
           ...v,
           NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
-          SerNo: (index + 1) * 10,
         })));
       },
     });
@@ -329,9 +325,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, AccName, DetailName, recKey, ...rest }, index) => ({
+        Details: this.tableData().filter(row => !!row.AccNo).map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }) => ({
           ...rest,
-          index,
+          index: rest.SerNo,
+          AccName: undefined,
+          DetailName: undefined,
+          recKey: undefined,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
           NoteDesc: NoteDesc !== undefined && NoteDesc !== null ? String(NoteDesc) : '',
@@ -400,9 +399,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           result[index].NoteDesc = event.value !== undefined && event.value !== null ? String(event.value) : '';
           break;
       }
-
-      // 更新 SerNo
-      result[index].SerNo = (index + 1) * 10;
 
       // 檢查是否可儲存
       this.rowEditCanSave.set(!!result[index].AccNo && !!result[index].ORG_ID || !!this.isBalanced());
