@@ -4,8 +4,8 @@
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      headerStyleClass="query-accordionTab">
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 申報年月 -->
           <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="queryForm.controls.REP_GUIYM"
@@ -30,9 +30,10 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- PDF Viewer -->
-<div class="card" *ngIf="pdfUrl">
-  <div style="height: 90vh">
-    <iframe title="PDF Viewer" [src]="pdfUrl" width="100%" height="100%" style="border: none"></iframe>
+@if (pdfUrl) {
+  <div class="card">
+    <div style="height: 90vh">
+      <iframe title="PDF Viewer" [src]="pdfUrl" width="100%" height="100%" style="border: none"></iframe>
+    </div>
   </div>
-</div>
+}

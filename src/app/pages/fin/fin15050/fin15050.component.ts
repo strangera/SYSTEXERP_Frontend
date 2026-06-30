@@ -1,7 +1,8 @@
-import { CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -20,8 +21,8 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
 @Component({
   selector: 'app-fin15050',
   templateUrl: './fin15050.component.html',
-  styleUrl: './fin15050.component.scss',
   standalone: true,
+  providers: [DatePipe],
   imports: [
     MenubarComponent,
     ButtonComponent,
@@ -32,39 +33,35 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     InputTextRangeComponent,
     DropdownComponent,
     TranslateModule,
-    CommonModule,
-    YearMonthComponent
-  ]
+    YearMonthComponent,
+  ],
 })
 export class FIN15050Component extends BasicQueryPageComponent<unknown> implements OnInit {
+  private readonly fin15050Service = inject(FIN15050Service);
+  private readonly validationService = inject(ValidationService);
+  private readonly datePipe = inject(DatePipe);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly destroyRef = inject(DestroyRef);
+
   queryForm = this.formBuilder.group({
-    REP_GUIYM: ['', Validators.required],                                                          // 申報年月
-    GUI_Track: ['', [Validators.maxLength(2)]],                                                   // 字軌
-    SAL_Type: [null],                                                                             // 使用別
-    INV_GUINumber_S: ['', [Validators.maxLength(10), this.validationService.numberValidator]],   // 發票號碼起
-    INV_GUINumber_E: ['', [Validators.maxLength(10), this.validationService.numberValidator]],   // 發票號碼訖
+    REP_GUIYM: ['', Validators.required],
+    GUI_Track: ['', [Validators.maxLength(2)]],
+    SAL_Type: [null as string | null],
+    INV_GUINumber_S: ['', [Validators.maxLength(10), this.validationService.numberValidator]],
+    INV_GUINumber_E: ['', [Validators.maxLength(10), this.validationService.numberValidator]],
   });
 
   usageTypeOptions = getSYS1000Options('T205');
-  pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
-
-  constructor(
-    private readonly fin15050Service: FIN15050Service,
-    private readonly validationService: ValidationService,
-    private readonly datePipe: DatePipe,
-  ) {
-    super();
-  }
+  pdfUrl: SafeResourceUrl | null = null;
 
   ngOnInit(): void {
     this.initializePage('FIN15050', 'fin/fin15050cru', this.queryForm, (form) => this.onSubmit(form));
-    // 設定REP_GUIYM預設值
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    const currentMonth = currentDate.getMonth() + 1;
     if (currentMonth % 2 !== 0) {
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-    this.queryForm.get('REP_GUIYM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
+    this.queryForm.get('REP_GUIYM')?.setValue(this.datePipe.transform(currentDate, 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup): void {
@@ -72,20 +69,18 @@ export class FIN15050Component extends BasicQueryPageComponent<unknown> implemen
       ...frm.getRawValue(),
       Mid: 0,
       STO_No: '10',
-    }
+    };
 
     this.handleSubmit(frm, () => {
       this.fin15050Service.printFIN15050(payload)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
         .subscribe(response => {
           if (response.Status === '0000' && response.Data?.Print_URL) {
-            let rawUrl = response.Data.Print_URL.startsWith('http')
+            const rawUrl = response.Data.Print_URL.startsWith('http')
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
-            rawUrl = decodeURIComponent(rawUrl);
-            this.pdfUrl = rawUrl;
-          }
-          else {
+            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(decodeURIComponent(rawUrl));
+          } else {
             this.messageService.errorBubble(response.Message);
           }
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
