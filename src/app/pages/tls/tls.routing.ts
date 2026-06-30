@@ -508,6 +508,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls57160', loadComponent: () => import('./TLS50000/tls57160/tls57160.component').then(m => m.TLS57160Component), data: { progNo: 'TLS57160' } },
   // 存貨評價分析表
   { path: 'tls57170', loadComponent: () => import('./TLS50000/tls57170/tls57170.component').then(m => m.TLS57170Component), data: { progNo: 'TLS57170' } },
+  // 自營廠商綜合對帳單
+  { path: 'tls57180', loadComponent: () => import('./TLS50000/tls57180/tls57180.component').then(m => m.TLS57180Component), data: { progNo: 'TLS57180' } },
   // 存貨評價分析表
   { path: 'tls57190', loadComponent: () => import('./TLS50000/tls57190/tls57190.component').then(m => m.TLS57190Component), data: { progNo: 'TLS57190' } },
   // 大分類維護作業 CRU

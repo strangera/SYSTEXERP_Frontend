@@ -56,29 +56,29 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   ) { super(); }
   PDFBtnLoading = false;
   XLSXBtnLoading = false;
-queryForm = this.formBuilder.group({
-  DateFrom: [yesterday, Validators.required],
-  DateTo: [yesterday, Validators.required],
-  OrgIdList: [null],
-  AccNoFrom: [null],
-  AccNoTo: [null],
-  VendorFrom: [null],
-  VendorTo: [null],
-  PTAFrom: [null],
-  PTATo: [null],
+  queryForm = this.formBuilder.group({
+    DateFrom: [yesterday, Validators.required],
+    DateTo: [yesterday, Validators.required],
+    OrgIdList: [null],
+    AccNoFrom: [null],
+    AccNoTo: [null],
+    VendorFrom: [null],
+    VendorTo: [null],
+    PTAFrom: [null],
+    PTATo: [null],
 
-  AmtFrom: [null],
-  AmtTo: [null],
+    AmtFrom: [null],
+    AmtTo: [null],
 
-  Target: [null],
-  Project: [null],
-  Notes: [null],
-  VoucherType: [null],
-  VouStatusList: [null],
-  IsTarget: [null],
-  ReportMode: ['1'],
-  ACCT_KEY: [null, [Validators.maxLength(30)]],
-});
+    Target: [null],
+    Project: [null],
+    Notes: [null],
+    VoucherType: [null],
+    VouStatusList: [null],
+    IsTarget: [null],
+    ReportMode: ['1'],
+    ACCT_KEY: [null, [Validators.maxLength(30)]],
+  });
   data: GroupedFIN55050Detail[] = [];
   selectedItems: GroupedFIN55050Detail[] = [];
   totalRecords = 0;
@@ -105,28 +105,28 @@ queryForm = this.formBuilder.group({
       const from = this.datePipe.transform(raw?.DateFrom, 'yyyy-MM-dd');
       const to = this.datePipe.transform(raw?.DateTo, 'yyyy-MM-dd');
       const payload: ExportFIN55050Payload = {
-  DateFrom: from ?? '',
-  DateTo: to ?? '',
-  OrgIdList: raw?.OrgIdList ?? [],
-  AccNoFrom: raw?.AccNoFrom ?? '',
-  AccNoTo: raw?.AccNoTo ?? '',
-  VendorFrom: raw?.VendorFrom ?? '',
-  VendorTo: raw?.VendorTo ?? '',
-  PTAFrom: raw?.PTAFrom ?? '',
-  PTATo: raw?.PTATo ?? '',
+        DateFrom: from ?? '',
+        DateTo: to ?? '',
+        OrgIdList: raw?.OrgIdList ?? [],
+        AccNoFrom: raw?.AccNoFrom ?? '',
+        AccNoTo: raw?.AccNoTo ?? '',
+        VendorFrom: raw?.VendorFrom ?? '',
+        VendorTo: raw?.VendorTo ?? '',
+        PTAFrom: raw?.PTAFrom ?? '',
+        PTATo: raw?.PTATo ?? '',
 
-  AmtFrom: raw?.AmtFrom ?? null,
-  AmtTo: raw?.AmtTo ?? null,
+        AmtFrom: this.toNullableNumber(raw?.AmtFrom),
+        AmtTo: this.toNullableNumber(raw?.AmtTo),
 
-  Target: raw?.Target ?? '',
-  Project: raw?.Project ?? '',
-  Notes: raw?.Notes ?? '',
-  VoucherType: raw?.VoucherType ?? '',
-  VouStatusList: raw?.VouStatusList ?? [],
-  IsTarget: raw?.IsTarget ?? '',
-  ReportMode: raw?.ReportMode ?? '',
-  ACCT_KEY: raw?.ACCT_KEY ?? '',
-};
+        Target: raw?.Target ?? '',
+        Project: raw?.Project ?? '',
+        Notes: raw?.Notes ?? '',
+        VoucherType: raw?.VoucherType ?? '',
+        VouStatusList: raw?.VouStatusList ?? [],
+        IsTarget: raw?.IsTarget ?? '',
+        ReportMode: raw?.ReportMode ?? '',
+        ACCT_KEY: raw?.ACCT_KEY ?? '',
+      };
       this.fin55050Service.queryFIN55050(payload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryConditions = payload;
         this.data = this.restructureData(response.Data);
@@ -136,11 +136,23 @@ queryForm = this.formBuilder.group({
     });
   }
   override onDetail(row: GroupedFIN55050Detail) {
+    if ((row as any)?.isVirtual) return;
+
     const vouNo = row?.VouNo;
-    if (!vouNo) { this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。'); return; }
-    const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now(), };
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
+    }
+
+    const handoff = {
+      vouNo,
+      fromRoute: globalThis.location.pathname,
+      ts: Date.now(),
+    };
+
     localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
     localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo);
+
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
     const finalUrl = `${globalThis.location.origin}${externalUrl}`;
     globalThis.open(finalUrl, '_blank', 'noopener');
@@ -153,26 +165,65 @@ queryForm = this.formBuilder.group({
       const details = parent._Details ?? [];
       if (details.length === 0) return;
 
-      details.forEach((detail, index) => {
-        const isFirst = index === 0;
-        const isLast = index === details.length - 1;
+      const openingBal = Number(details[0]?.OpeningBal ?? 0);
+      const totalDebit = details.reduce((sum, x) => sum + Number(x.AccAmt_D ?? 0), 0);
+      const totalCredit = details.reduce((sum, x) => sum + Number(x.AccAmt_C ?? 0), 0);
+      const endingBal = openingBal + totalDebit - totalCredit;
 
-        const newRow: any = {
+      // 期初餘額列
+      grouped.push({
+        ...details[0],
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: '',
+        VouNo: '【期初餘額】',
+        Ven_Name: '',
+        VouStatus: '',
+        ORG_ID: '',
+        Org_Name: '',
+        ProjectNo: '',
+        PTA: '',
+        NoteDesc: '',
+        AccAmt_D: null,
+        AccAmt_C: null,
+        OpeningBal: openingBal,
+        isVirtual: true
+      } as any);
+
+      // 明細列
+      details.forEach(detail => {
+        grouped.push({
           ...detail,
           AccNo: parent.AccNo,
           AccCName: parent.AccCName,
-          VouDate: isFirst || isLast ? '' : parent.VouDate, // 第一筆與最後一筆不顯示日期
-          // 需求 1: 在傳票號碼欄位顯示【期初餘額】
-          VouNo: isFirst ? '【期初餘額】' : (isLast ? '' : detail.VouNo),
-          // 需求 4: 對準部門名稱(Org_Name)顯示【總計】
-          Org_Name: isLast ? '【總計】' : detail.Org_Name,
-          isVirtual: isFirst || isLast
-        };
-
-        // 需求 2: 這裡直接 push，不再額外手動 push 虛擬列，避免多餘空白行
-        grouped.push(newRow);
+          VouDate: parent.VouDate,
+          VouNo: detail.VouNo,
+          Org_Name: detail.Org_Name,
+          isVirtual: false
+        } as any);
       });
+
+      // 總計列
+      grouped.push({
+        ...details[0],
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: '',
+        VouNo: '',
+        Ven_Name: '',
+        VouStatus: '',
+        ORG_ID: '',
+        Org_Name: '【總計】',
+        ProjectNo: '',
+        PTA: '',
+        NoteDesc: '',
+        AccAmt_D: totalDebit,
+        AccAmt_C: totalCredit,
+        OpeningBal: endingBal,
+        isVirtual: true
+      } as any);
     });
+
     return grouped;
   }
   onExportPDF() {
@@ -185,5 +236,22 @@ queryForm = this.formBuilder.group({
     if (!this.data?.length || !this.lastQueryConditions) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
     const export$ = this.fin55050Service.exportFIN55050Excel(this.lastQueryConditions);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.XLSXBtnLoading = isLoading).subscribe();
+  }
+  private toNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    // 轉成字串
+    const str = String(value)
+      .trim()            // 去除前後空白
+      .replace(/,/g, ''); // 去除千分位逗號
+
+    if (str === '') {
+      return null;
+    }
+
+    const num = Number(str);
+    return Number.isNaN(num) ? null : num;
   }
 }
