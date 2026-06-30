@@ -63,6 +63,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_USR_Name: [null as string | null, [Validators.maxLength(20)]],
     ECR_Status: ['A'],
     ECR_ActiveDate: [null as Date | null],
+    ECR_ExpireDate: [null as Date | null],
     ECR_Group: [null],
     ECR_AreaNo: [null],
     ECR_SubGroup: [null],
@@ -367,6 +368,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
               if (info.ECR_AreaNo) patch['ECR_AreaNo'] = info.ECR_AreaNo;
               if (info.tlt_bdate) patch['ECR_ActiveDate'] = new Date(info.tlt_bdate);
               if (info.tlt_edate) patch['ECR_CloseDate'] = new Date(info.tlt_edate);
+              // 新增模式：以櫃名自動帶入收銀機名稱（若尚未填寫）
+              if (this.isFormCreateable && info.tlt_name && !this.dataForm.get('ECR_Name')?.value) {
+                patch['ECR_Name'] = info.tlt_name;
+              }
               this.dataForm.patchValue(patch, { emitEvent: false });
             } else {
               console.warn('查詢櫃位資訊失敗:', res?.Message);
@@ -507,6 +512,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       ECR_Logo5: rawValue.ECR_Logo5 ?? undefined,
       ECR_Logo6: rawValue.ECR_Logo6 ?? undefined,
       ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
+      ECR_ExpireDate: this.toDateStr(rawValue.ECR_ExpireDate),
       ECR_CloseDate: this.toDateStr(rawValue.ECR_CloseDate),
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
