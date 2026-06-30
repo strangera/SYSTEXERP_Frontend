@@ -6,7 +6,7 @@ import { ASS16010Data, ASS16010Service, InsertASS16010Request, QueryASS11020Requ
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -44,34 +44,19 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
 
 
   // 根據表單值組裝要送後端的 payload
-  private buildASS16010LikePayload() {
+  private buildASS16010LikePayload(): InsertASS16010Request {
     const raw = this.dataForm.getRawValue();
+    const categoryParts = raw.categoryOptions?.split(' - ') ?? [];
 
-    const ASS11020_req: QueryASS11020Request = {
+    return {
       STO_NO: this.getUserInfoFromLocal().SYS_StoreNo,
-      M_CLASS_ID: raw.categoryOptions ?? '',
+      INV_TYPE: raw.invType?.toString() ?? '0',
+      WHIDs: raw.whCategory ? [raw.whCategory] : [],
+      B_CLASS_ID: categoryParts[0] ?? '',
+      M_CLASS_ID: categoryParts[1] ?? '',
+      CRT_USR_No: this.getUserInfoFromLocal().user_No,
+      CRT_USR_Name: this.getUserInfoFromLocal().user_Name,
     };
-
-    return this.ass16010Service.queryASS11020(ASS11020_req).pipe(
-      map(res => {
-        const bClassId =
-          res.Status === '0000'
-            ? res.Data.QueryData?.[0]?.B_CLASS_ID ?? ''
-            : '';
-
-        const payload: InsertASS16010Request = {
-          STO_NO: this.getUserInfoFromLocal().SYS_StoreNo,
-          INV_TYPE: raw.invType?.toString() ?? '0',
-          WHIDs: raw.whCategory ? [raw.whCategory] : [],
-          B_CLASS_ID: bClassId,
-          M_CLASS_ID: raw.categoryOptions ?? '',
-          CRT_USR_No: this.getUserInfoFromLocal().user_No,
-          CRT_USR_Name: this.getUserInfoFromLocal().user_Name,
-        };
-
-        return payload;
-      })
-    );
   }
 
   // Dropdown options
@@ -95,9 +80,9 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
   onSubmit() {
     this.handleSubmit(this.dataForm, () => {
       if (this.isFormCreateable) {
-        this.buildASS16010LikePayload()
+        const payload = this.buildASS16010LikePayload();
+        this.ass16010Service.insertASS16010(payload)
           .pipe(
-            switchMap(payload => this.ass16010Service.insertASS16010(payload)),
             finalize(() => {
               this.loading = false;
             })
@@ -105,6 +90,7 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
           .subscribe({
             next: res => {
               if (res.Status !== '0000') return;
+
               this.notification.successBubble('新增成功');
               this.onCancel();
             },
@@ -157,7 +143,7 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
         if (res.Status !== '0000') return;
         const options = (res.Data.QueryData ?? []).map(item => ({
           label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-          value: item.M_CLASS_ID,
+          value: `${item.B_CLASS_ID} - ${item.M_CLASS_ID}`,
         }));
         this.categoryOptions.set(options);
       },
