@@ -476,6 +476,12 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       });
   }
 
+  private toDateStr(val: Date | string | null | undefined): string | undefined {
+    if (!val) return undefined;
+    const d = val instanceof Date ? val : new Date(String(val).replace(/\//g, '-'));
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   /** 組裝 Body */
   private createBody(frm: FormGroup): TLS41010Item {
     const rawValue = frm.getRawValue();
@@ -501,6 +507,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       ECR_Logo5: rawValue.ECR_Logo5 ?? undefined,
       ECR_Logo6: rawValue.ECR_Logo6 ?? undefined,
       ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
+      ECR_CloseDate: this.toDateStr(rawValue.ECR_CloseDate),
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
       ECR_SettleHHNN: settleHHNN,

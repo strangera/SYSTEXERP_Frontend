@@ -224,6 +224,7 @@ export interface TLS41010Item {
   ECR_Device9Com: number | null;
   ECR_Device10Name: string | null;
   ECR_Device10Com: number | null;
+  ECR_CloseDate?: string;
   CRT_USR_No?: string;
   CRT_USR_Name?: string;
   CRT_Date?: string | null;
