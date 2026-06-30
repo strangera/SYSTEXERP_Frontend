@@ -1,17 +1,7 @@
 import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { PrimeTemplate } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { Button, ButtonDirective } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
-import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
-import { FileUploadModule } from 'primeng/fileupload';
-import { ImageModule } from 'primeng/image';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
@@ -26,27 +16,17 @@ export const COMMON_IMPORTS = [
   DividerModule,
   TableModule,
   PrimeTemplate,
-  MultiSelectModule,
   TooltipModule,
-  FormsModule,
-  Button, // 注意：Button 和 ButtonDirective 通常會被 ButtonModule 涵蓋
+  Button,
   NgClass,
-  ButtonDirective, // 注意：Button 和 ButtonDirective 通常會被 ButtonModule 涵蓋
-  FileUploadModule,
-  DropdownModule,
+  ButtonDirective,
   NgFor,
-  Ripple, // Ripple 是一個指令
-  InputTextModule,
-  InputNumberModule,
-  CalendarModule,
-  CheckboxModule,
+  Ripple,
   NgStyle,
   SkeletonModule,
-  AutoCompleteModule,
-  ImageModule,
 
-  TableExpansionComponent, // 自定義元件
+  TableExpansionComponent,
   TableCaptionComponent,
-  TableInputComponent
+  TableInputComponent,
 ];
 export { TableCaptionComponent, TableExpansionComponent, TableInputComponent };

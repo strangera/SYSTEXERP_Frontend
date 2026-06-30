@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowReorderEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
@@ -148,8 +147,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 資料小計
   /** table 群組資料 @default '' */
   @Input() groupRowsBy = '';
-  /** 用於緩存已分組的數據 @default new Map() */
-  groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */
   @Input() showSubTotal = false;
 
@@ -163,7 +160,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   /** 是否顯示 Row編輯按鈕 @default false */
   @Input() showRowEdit = false;
   /** 是否正在編輯Row @default false */
-  @Input() rowEditing = false;
+  rowEditing = false;
   /** Row編輯 是否可以儲存 給欄位驗證用 @default true */
   @Input() rowEditCanSave = true;
   /** Row編輯 改變(雙向綁定用) */
@@ -354,13 +351,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   toggleRowExpansion(rowData: any) {
     this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
-  // 過濾欄位記錄保存
-  onFilterChange(event: MultiSelectChangeEvent) {
-    for (const col of this.columns) {
-      col.visible = event.value.some((ev: any) => ev.field === col.field);
-    }
-    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
   // 行編輯初始化
   onRowEditInit(rowData: any) {
     this.dt.initRowEdit(rowData);   // 初始化編輯
@@ -449,8 +439,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
-  // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
-  getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
   // autoComplete觸發事件
   filterOptions(event: AutoCompleteCompleteEvent) {
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
