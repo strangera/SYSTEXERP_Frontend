@@ -1,18 +1,14 @@
-import { AsyncPipe } from '@angular/common';
+﻿import { AsyncPipe } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { formatDate } from '@shared/componentkit/table/table.model';
-import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
-import { Button } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -29,7 +25,6 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
-  styleUrls: ['./tls2d010.component.scss'],
   standalone: true,
   imports: [
     AsyncPipe,
@@ -44,7 +39,6 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
     DropdownComponent,
     TableComponent,
     TranslateModule,
-    Button,
     FileUploadModule,
     DialogComponent
   ]
@@ -108,11 +102,8 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   }
 
   constructor(
-    router: Router,
-    private route: ActivatedRoute,
     private tls2d010Service: Tls2d010Service,
     private dropDownListService: DropDownListService,
-    public sharedDropdownService: SharedDropdownService,
     private readonly fileExportService: FileExportService,
     public readonly dropdown: DropdownApiService,
   ) {

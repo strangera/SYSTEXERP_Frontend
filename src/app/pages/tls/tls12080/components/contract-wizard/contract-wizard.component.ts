@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TLS12080 專櫃意向書維護 - 合約精靈主組件
  *
  * 單頁面架構，包含所有步驟：
@@ -31,8 +31,8 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
 import { RenewalQueryResponse, TLS12080Service } from '@service/api/tls/tls12080.service';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { SharedDropdownService } from '@others/services/shared-dropdown.service';
+import { TlsContractBaseService } from '@others/services/tls/tls-contract-base.service';
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
 // V2 服務

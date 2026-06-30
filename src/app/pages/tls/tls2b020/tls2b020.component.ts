@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -17,6 +17,7 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
+import { Table2Component } from '@others/component/table2/table2.component';
 import { AccordionModule } from 'primeng/accordion';
 import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -25,7 +26,6 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 
 @Component({
   selector: 'app-tls2b020',

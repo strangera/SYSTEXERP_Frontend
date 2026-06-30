@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
 import { SortMeta } from "primeng/api";
-import { NotificationService } from "../../component/notification-message/notification.service";
+import { NotificationService } from "@shared/component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱
   header: string;    // 欄位標題

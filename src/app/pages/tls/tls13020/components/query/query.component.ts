@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -19,9 +19,9 @@ import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/
 
 // Shared Services
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatApproveStatus } from '@shared/constants/business.constants';
+import { formatApproveStatus } from '@others/constants/business.constants';
 import { Actions } from '@shared/service/permission-guard.service';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { SharedDropdownService } from '@others/services/shared-dropdown.service';
 
 // API Service
 import { TLS13010Service } from '@service/api/tls/tls13010.service';

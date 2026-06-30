@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+﻿import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -11,10 +11,9 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownOption } from '@shared/constants/business.constants';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Observable, debounceTime, finalize, map, tap } from 'rxjs';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { ExportContext } from 'src/app/shared/exports/report-export.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { TLS26060Data, TLS26060QueryRequest, TLS26060Service } from '../../../service/api/tls/tls26060.service';
@@ -139,9 +138,9 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
 
   // 2. 合約查詢條件相關下拉選項
   // 櫃別選項
-  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  operationsOptions = getSYS1000Options('TLT_Kind');
   // 抽成別選項
-  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   counterCodeOptions: any[] = []; // 專櫃編號選項
   tlt_floor_Option: IDropdownItem[] = []; // 樓層
   area_no_Option: IDropdownItem[] = []; // 區域
@@ -159,7 +158,6 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     private tls26060Service: TLS26060Service,
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
-    private sharedDropdownService: SharedDropdownService,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
   ) {

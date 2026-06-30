@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+﻿import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -11,10 +11,10 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
+import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 
 @Component({
   selector: 'app-tls2e100',
@@ -82,7 +82,7 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private locationOptionsService: LocationOptionsService,
+    private readonly dropDown: DropdownApiService,
     public readonly tls2e100Service: TLS2E100Service,
     private datePipe: DatePipe,
   ) {
@@ -117,12 +117,12 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
       });
 
     // 樓層
-    this.locationOptionsService.getFloorOptions()
+    this.dropDown.querySys3900()
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
+      .subscribe((res: any) => {
         this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value,
+          label: item.Name,
+          value: item.No,
         }));
       });
 

@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { ContractDateRange, ContractDateValidator } from '@shared/utils/contract-date-validator.util';
+﻿import { Injectable } from '@angular/core';
+import { ContractDateRange, ContractDateValidator } from '@others/utils/contract-date-validator.util';
 
 export interface ValidationResult {
   isValid: boolean;

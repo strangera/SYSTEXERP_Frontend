@@ -33,7 +33,7 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="Name" optionValue="No"
               [control]="queryForm.controls.tlt_floorList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -51,8 +51,7 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="業績統計截止日"
-              [control]="queryForm.controls.perf_edate"
+            <app-calendar calendarType="dateOne" label="業績統計截止日" [control]="queryForm.controls.perf_edate"
               [submitted]="submitted"></app-calendar>
           </div>
         </div>

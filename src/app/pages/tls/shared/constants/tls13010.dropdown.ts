@@ -1,12 +1,12 @@
-// TLS13010 下拉選單選項 - 整理後版本（含洽談者）
+﻿// TLS13010 下拉選單選項 - 整理後版本（含洽談者）
 import { Injectable } from '@angular/core';
 import { Sysb800DropdownService } from '@service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '@service/api/sys/sysb900-dropdown.service';
 import { catchError, forkJoin, map, Observable, of, retry, tap, timer } from 'rxjs';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from 'src/app/shared/services/dropdownservice/negotiator-options.service';
-import { BussclassDropdownService } from 'src/app/shared/services/dropdownservice/tltbussclass-options.service';
-import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownservice/vendor-category-options.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
+import { BussclassDropdownService } from '@others/services/dropdownservice/tltbussclass-options.service';
+import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 import {
   APPLY_STATUS_OPTIONS,
   APPROVE_STATUS_OPTIONS,

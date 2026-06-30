@@ -1,11 +1,11 @@
-/**
+﻿/**
  * 抽成資料載入服務
  * 負責載入折扣選項
  */
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
 import { DropdownOption } from '../../core/models/common.interface';
 
 @Injectable({ providedIn: 'root' })

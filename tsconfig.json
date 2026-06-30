@@ -35,7 +35,8 @@
       "@service/*": ["./src/app/service/*"],
       "@shared/*": ["./src/app/shared/*"],
       "@componentkit/*": ["./src/app/shared/componentkit/*"],
-      "@utils/*": ["./src/app/utils/*"]
+      "@utils/*": ["./src/app/utils/*"],
+      "@others/*": ["./src/app/others/*"]
     }
   },
   "exclude": ["node_modules", "dist", "tmp", "**/*.spec.ts", "api"],

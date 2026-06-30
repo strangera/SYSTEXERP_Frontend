@@ -1,4 +1,4 @@
-import { CommonModule, NgIf } from '@angular/common';
+﻿import { CommonModule, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -25,9 +25,9 @@ import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
-import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownservice/vendor-category-options.service';
+import { SharedDropdownService } from '@others/services/shared-dropdown.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
+import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 
 
 
@@ -35,7 +35,7 @@ import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownse
 import { BusinessClassificationService } from '@pages/tls/shared/services/business-classification.service';
 import { DateValidationService } from '@pages/tls/shared/services/date-validation.service';
 import { TLS12040ValidationService } from '@pages/tls/shared/services/tls12040-validation.service';
-import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { TlsContractBaseService } from '@others/services/tls/tls-contract-base.service';
 import { debounceTime, distinctUntilChanged, forkJoin, Subscription } from 'rxjs';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';
 

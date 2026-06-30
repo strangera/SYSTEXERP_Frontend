@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -25,7 +25,6 @@ import { Button } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 import { DOC_TYPE_COLUMNS } from './tls2a040.model';
 
 export interface FileItem {
@@ -79,13 +78,12 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   // 下拉選單資料
   ECRNoOptions: any[] = [];
   statusOptions = getSYS1000Options('check_status').filter(opt => opt.value !== '1');
-  floorOptions: any[] = [];
+  floorOptions: any = [];
   buildingNoOptions: IDropdownItem[] = [];
   selectedItems: any[] = [];
   btnLoading = false;
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
     private dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
     private tls2a040Service: Tls2a040Service
@@ -100,11 +98,11 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       this.ECRNoOptions = data ?? [];
     });
 
-    this.locationOptionsService.getFloorOptions().subscribe({
+    this.dropdownApiService.querySys3900().subscribe({
       next: (res) => {
-        this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value
+        this.floorOptions = res?.map((item: any) => ({
+          label: item.Name,
+          value: item.No
         }));
       },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')

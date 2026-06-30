@@ -4,8 +4,8 @@ import { catchError, map } from 'rxjs/operators';
 import { DropdownOption, Pos2013DropdownOption, SHARED_DROPDOWN_OPTIONS } from '../constants/business.constants';
 // API 服務注入
 import { HttpClient } from '@angular/common/http';
-import { BankOptionsService } from 'src/app/shared/services/dropdownservice/bank-option.service';
-import { BussclassDropdownService } from 'src/app/shared/services/dropdownservice/tltbussclass-options.service';
+import { BankOptionsService } from './dropdownservice/bank-option.service';
+import { BussclassDropdownService } from './dropdownservice/tltbussclass-options.service';
 import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../service/api/sys/sysb900-dropdown.service';
 import { LocationOptionsService } from './dropdownservice/location-options.service';

@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+﻿import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -8,7 +8,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';

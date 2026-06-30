@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
+import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 import { QueryTLS13050Request, TLS13050QueryItem, Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -15,7 +16,6 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -57,12 +57,11 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   // expansion 明細分頁選項（只在本頁使用）
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
-  floorOptions: any[] = [];
+  floorOptions: any = [];
   data: TLS13050QueryItem[] = [];
   selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
-  BUILDING_NO_Options: any[] = [];
-  organizationCodeOptions: any[] = [];
+  organizationCodeOptions: any = [];
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -84,20 +83,16 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   buildingNoOptions: IDropdownItem[] = [];
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
     private tls13050Service: Tls13050Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly dropDown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS13050', undefined, this.queryForm, (form) => this.onSubmit(form));
-
-    this.locationOptionsService.getBuildingOptions().subscribe({
-      next: (res) => this.BUILDING_NO_Options = res,
-    });
-    this.locationOptionsService.getFloorOptions().subscribe({
+    this.dropDown.querySys3900().subscribe({
       next: (res) => this.floorOptions = res,
     });
     // 館別

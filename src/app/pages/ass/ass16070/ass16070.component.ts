@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 
 import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
@@ -43,8 +43,8 @@ import {
   QueryDDLASS16070Request,
   QueryDDLASS16070Response,
 } from '../../../service/api/ass/ass16070.service';
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
-import { Column } from '../../../shared/componentkit/table2/table2.model';
+import { Table2Component } from '@others/component/table2/table2.component';
+import { Column } from '@others/component/table2/table2.model';
 
 interface SortItem {
   field: string;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Step 1: 合約基本資料子組件
  *
  * 接收父組件的 form 和資料，不管理自己的路由
@@ -37,11 +37,11 @@ import { LocationItem } from '../../../../core/models/contract';
 // 服務
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
-import { BankOptionsService } from 'src/app/shared/services/dropdownservice/bank-option.service';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from 'src/app/shared/services/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from 'src/app/shared/services/dropdownservice/vendor-category-options.service';
+import { TlsContractBaseService } from '@others/services/tls/tls-contract-base.service';
+import { BankOptionsService } from '@others/services/dropdownservice/bank-option.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 

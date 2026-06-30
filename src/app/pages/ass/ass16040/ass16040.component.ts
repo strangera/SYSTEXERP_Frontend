@@ -1,10 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 
+import { TLSFormUtils } from '@others/utils/tls-form-utils';
 import { ASS16040Service } from '@service/api/ass/ass16040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -18,7 +19,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { TLSFormUtils } from '@shared/utils/tls-form-utils';
 
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
@@ -52,20 +52,20 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
 
   /** SPEC §4.2：查詢條件皆非必填，MTAPPLY_STATUS 由使用者自選不預設值 */
   readonly queryForm = this.formBuilder.group({
-    MTAPPLY_ID:   new FormControl<string | null>(null, [Validators.maxLength(15)]),
-    EMP_ID:       new FormControl<string | null>(null),
-    FASITEM_ID:   new FormControl<number | null>(null),
+    MTAPPLY_ID: new FormControl<string | null>(null, [Validators.maxLength(15)]),
+    EMP_ID: new FormControl<string | null>(null),
+    FASITEM_ID: new FormControl<number | null>(null),
     APPLY_DATE_S: new FormControl<Date | null>(null),
     APPLY_DATE_E: new FormControl<Date | null>(null),
-    APRV_DATE_S:  new FormControl<Date | null>(null),
-    APRV_DATE_E:  new FormControl<Date | null>(null),
-    ORG_ID:       new FormControl<string | null>(null),
-    CHECK_DATE:   new FormControl<Date | null>(null),
-    APRV_EMP_ID:  new FormControl<string | null>(null),
-    WH_ID:        new FormControl<string | null>(null),
-    STATUS:       new FormControl<string | null>(null),
-    PageSize:     new FormControl<number>(30),
-    PageIndex:    new FormControl<number>(1),
+    APRV_DATE_S: new FormControl<Date | null>(null),
+    APRV_DATE_E: new FormControl<Date | null>(null),
+    ORG_ID: new FormControl<string | null>(null),
+    CHECK_DATE: new FormControl<Date | null>(null),
+    APRV_EMP_ID: new FormControl<string | null>(null),
+    WH_ID: new FormControl<string | null>(null),
+    STATUS: new FormControl<string | null>(null),
+    PageSize: new FormControl<number>(30),
+    PageIndex: new FormControl<number>(1),
   });
 
   readonly tableData = signal<ASS16040MasterRow[]>([]);
@@ -81,20 +81,20 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
 
   /** SPEC §4.3：結果表格欄位（代碼與名稱拆兩欄） */
   readonly columns: ReportColumn[] = [
-    { field: 'MTAPPLY_ID',     header: '領用單號' },
-    { field: 'EMP_ID',         header: '申請人代號' },
+    { field: 'MTAPPLY_ID', header: '領用單號' },
+    { field: 'EMP_ID', header: '申請人代號' },
     {
       field: 'EMP_NAME',
       header: '申請人名稱',
       format: (_v, _i, row: ASS16040MasterRow) => this.empNameMap.get(row?.EMP_ID ?? '') ?? '',
     },
-    { field: 'ORG_ID',         header: '部門代號' },
+    { field: 'ORG_ID', header: '部門代號' },
     {
       field: 'ORG_NAME',
       header: '部門名稱',
       format: (_v, _i, row: ASS16040MasterRow) => this.orgNameMap.get(row?.ORG_ID ?? '') ?? '',
     },
-    { field: 'APPLY_DATE',     header: '申請日期', format: (v: string) => formatDate(v) },
+    { field: 'APPLY_DATE', header: '申請日期', format: (v: string) => formatDate(v) },
     { field: 'MTAPPLY_STATUS', header: '領用單狀態代碼' },
     {
       field: 'MTAPPLY_STATUS_NAME',
@@ -102,22 +102,22 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
       format: (_v, _i, row: ASS16040MasterRow) =>
         this.statusNameMap.get(row?.MTAPPLY_STATUS ?? '') ?? '',
     },
-    { field: 'APRV_EMP_ID',    header: '審核者代號' },
+    { field: 'APRV_EMP_ID', header: '審核者代號' },
     {
       field: 'APRV_EMP_NAME',
       header: '審核者名稱',
       format: (_v, _i, row: ASS16040MasterRow) =>
         this.empNameMap.get(row?.APRV_EMP_ID ?? '') ?? '',
     },
-    { field: 'APRV_DATE',      header: '審核日期', format: (v: string) => formatDate(v) },
-    { field: 'WH_ID',          header: '倉別代號' },
+    { field: 'APRV_DATE', header: '審核日期', format: (v: string) => formatDate(v) },
+    { field: 'WH_ID', header: '倉別代號' },
     {
       field: 'WH_NAME',
       header: '倉別名稱',
       format: (_v, _i, row: ASS16040MasterRow) => this.whNameMap.get(row?.WH_ID ?? '') ?? '',
     },
-    { field: 'CHECK_DATE',     header: '發料日期', format: (v: string) => formatDate(v) },
-    { field: 'TOTAL_COUNT',    header: '明細筆數', align: 'right' },
+    { field: 'CHECK_DATE', header: '發料日期', format: (v: string) => formatDate(v) },
+    { field: 'TOTAL_COUNT', header: '明細筆數', align: 'right' },
   ];
 
   // ─── Dropdown options ─────────────────────────────────────────────────────────
@@ -221,22 +221,22 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
   private buildQueryBody(extra?: Partial<ASS16040QueryRequest>): ASS16040QueryRequest {
     const raw = this.queryForm.getRawValue();
     const body: ASS16040QueryRequest = {
-      MTAPPLY_ID:   raw.MTAPPLY_ID   ?? undefined,
-      EMP_ID:       raw.EMP_ID       ?? undefined,
-      FASITEM_ID:   raw.FASITEM_ID   ?? undefined,
+      MTAPPLY_ID: raw.MTAPPLY_ID ?? undefined,
+      EMP_ID: raw.EMP_ID ?? undefined,
+      FASITEM_ID: raw.FASITEM_ID ?? undefined,
       APPLY_DATE_S: raw.APPLY_DATE_S ? TLSFormUtils.formatDate(raw.APPLY_DATE_S) : undefined,
       APPLY_DATE_E: raw.APPLY_DATE_E ? TLSFormUtils.formatDate(raw.APPLY_DATE_E) : undefined,
-      APRV_DATE_S:  raw.APRV_DATE_S  ? TLSFormUtils.formatDate(raw.APRV_DATE_S)  : undefined,
-      APRV_DATE_E:  raw.APRV_DATE_E  ? TLSFormUtils.formatDate(raw.APRV_DATE_E)  : undefined,
-      ORG_ID:       raw.ORG_ID       ?? undefined,
-      CHECK_DATE:   raw.CHECK_DATE   ? TLSFormUtils.formatDate(raw.CHECK_DATE)   : undefined,
-      APRV_EMP_ID:  raw.APRV_EMP_ID  ?? undefined,
-      WH_ID:        raw.WH_ID        ?? undefined,
-      STATUS:       raw.STATUS       ?? undefined,
-      PageSize:     extra?.PageSize  ?? raw.PageSize  ?? 30,
-      PageIndex:    extra?.PageIndex ?? raw.PageIndex ?? 1,
+      APRV_DATE_S: raw.APRV_DATE_S ? TLSFormUtils.formatDate(raw.APRV_DATE_S) : undefined,
+      APRV_DATE_E: raw.APRV_DATE_E ? TLSFormUtils.formatDate(raw.APRV_DATE_E) : undefined,
+      ORG_ID: raw.ORG_ID ?? undefined,
+      CHECK_DATE: raw.CHECK_DATE ? TLSFormUtils.formatDate(raw.CHECK_DATE) : undefined,
+      APRV_EMP_ID: raw.APRV_EMP_ID ?? undefined,
+      WH_ID: raw.WH_ID ?? undefined,
+      STATUS: raw.STATUS ?? undefined,
+      PageSize: extra?.PageSize ?? raw.PageSize ?? 30,
+      PageIndex: extra?.PageIndex ?? raw.PageIndex ?? 1,
       // SPEC §4.5 / user-answer-Q-010：預設 APPLY_DATE DESC
-      SortBy:       extra?.SortBy    ?? [{ field: 'APPLY_DATE', order: 1 }],
+      SortBy: extra?.SortBy ?? [{ field: 'APPLY_DATE', order: 1 }],
     };
     return removeEmptyValues(body) as ASS16040QueryRequest;
   }

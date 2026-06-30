@@ -9,11 +9,9 @@
   [scrollHeight]="scrollHeight" [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
   [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full" [styleClass]="
-    'p-datatable-sm' +
-    (IsPrint ? ' p-datatable-gridlines' : ' ') +
-    (!disabled ? ' ' : ' ')
-  " [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
+  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
+  [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ')"
+  [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)" (onPage)="onPageChange($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
@@ -161,7 +159,7 @@
       <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns"
     let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 40.8px"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pReorderableRow]="index" [ngClass]="{

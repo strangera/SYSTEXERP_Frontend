@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN11050Data, FIN11050QueryRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
@@ -12,7 +13,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { removeEmptyValues } from '../../../shared/utils/object-utils';
 
 @Component({
   selector: 'app-fin11050',
