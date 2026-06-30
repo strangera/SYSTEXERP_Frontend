@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe, NgIf } from '@angular/common';
+﻿import { CommonModule, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,7 +8,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { formatAmount, formatDate } from '@shared/componentkit/table2/table2.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -91,7 +91,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
   ];
 
   btnLoading = false;       // 結帳按鈕
-  totalAmount: number = 0;  // 預售總金額
+  totalAmount = 0;  // 預售總金額
 
   constructor(
     private tls26040Service: TLS26040Service,

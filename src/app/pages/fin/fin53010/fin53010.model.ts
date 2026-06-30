@@ -1004,6 +1004,8 @@ export interface FIN53010StepSalesInvoiceRow {
   asset_flag?: string;
   /** 來自 POS4023（手開發票），唯讀，不送 insert/update API */
   isPOS4023?: boolean;
+  /** 發票作廢旗標 (來自 APS4023.Invoice_Cancel)，'Y' = 作廢 */
+  inv_cancel?: string;
   /** 已通過 APS2001/POS1017 配號驗證，submit 時必須為 true */
   _invoiceValidated?: boolean;
   /** 折讓用：區別 'R'=退出 'C'=折讓（格式 33/34 時帶入） */

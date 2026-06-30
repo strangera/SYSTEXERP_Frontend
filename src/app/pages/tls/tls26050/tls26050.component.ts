@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+﻿import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -11,11 +11,10 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownOption } from '@shared/constants/business.constants';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { debounceTime, finalize, map, Observable, tap } from 'rxjs';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { TLS26050Data, TLS26050QueryRequest, TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
@@ -139,9 +138,9 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
   // 2. 合約查詢條件相關下拉選項
   // 櫃別選項
-  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  operationsOptions = getSYS1000Options('TLT_Kind');
   // 抽成別選項
-  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   counterCodeOptions: any[] = []; // 專櫃編號選項
   tlt_floor_Option: IDropdownItem[] = []; // 樓層
   area_no_Option: IDropdownItem[] = []; // 區域
@@ -158,7 +157,6 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   constructor(
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
-    private sharedDropdownService: SharedDropdownService,
     private dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService,
     private dropdownApiService: DropdownApiService,

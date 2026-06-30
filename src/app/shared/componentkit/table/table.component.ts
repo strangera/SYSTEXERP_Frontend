@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowReorderEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
@@ -148,8 +147,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 資料小計
   /** table 群組資料 @default '' */
   @Input() groupRowsBy = '';
-  /** 用於緩存已分組的數據 @default new Map() */
-  groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */
   @Input() showSubTotal = false;
 
@@ -163,19 +160,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   /** 是否顯示 Row編輯按鈕 @default false */
   @Input() showRowEdit = false;
   /** 是否正在編輯Row @default false */
-  @Input() rowEditing = false;
+  rowEditing = false;
   /** Row編輯 是否可以儲存 給欄位驗證用 @default true */
   @Input() rowEditCanSave = true;
-  /** Row編輯 改變(雙向綁定用) */
-  @Output() rowEditingChange = new EventEmitter<boolean>();
   /** 儲存編輯前資料 @default {} */
   clonedProducts: Record<string, any> = {};
-  /** Row 編輯初始化事件 */
-  @Output() rowEditInit = new EventEmitter<any>();
   /** Row 編輯保存事件 */
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();
-  /** Row 編輯取消事件 */
-  @Output() rowEditCancel = new EventEmitter<any>();
   /** Row禁止編輯條件 @default () => false */
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;
   /** 是否總是編輯 @default false */
@@ -354,21 +345,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   toggleRowExpansion(rowData: any) {
     this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
-  // 過濾欄位記錄保存
-  onFilterChange(event: MultiSelectChangeEvent) {
-    for (const col of this.columns) {
-      col.visible = event.value.some((ev: any) => ev.field === col.field);
-    }
-    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
   // 行編輯初始化
   onRowEditInit(rowData: any) {
     this.dt.initRowEdit(rowData);   // 初始化編輯
     this.clonedProducts[rowData[this.dataKey]] = { ...rowData }; // 儲存原始數據
-    this.rowEditing = true;         // 开启编辑模式
-    this.rowEditInit.emit(rowData); // 發射事件
+    this.rowEditing = true;
     this.selectedItems = [];
-    this.rowEditingChange.emit(this.rowEditing);
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
@@ -405,7 +387,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
 
     this.rowEditing = false;
     this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null);
-    this.rowEditingChange.emit(this.rowEditing);
     this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data });
     this.dataChange.emit(this.data);
   }
@@ -428,8 +409,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     delete this.clonedProducts[rowId];// 無論是哪種情況，都刪除備份的原始數據
     this.rowEditing = false;
     this.dt.cancelRowEdit(rowData);
-    this.rowEditingChange.emit(this.rowEditing);
-    this.rowEditCancel.emit({ data: this.data, rowData, ri });
     this.cdr.detectChanges();
   }
   // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
@@ -449,8 +428,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
-  // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
-  getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
   // autoComplete觸發事件
   filterOptions(event: AutoCompleteCompleteEvent) {
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
@@ -470,7 +447,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
       this.data = data;
       this.clonedProducts[newRowData[this.dataKey]] = { ...newRowData }; // 儲存備份
-      this.rowEditingChange.emit(this.rowEditing);
       this.dataChange.emit(this.data);
       this.onRowEditInit(newRowData);
     } else {

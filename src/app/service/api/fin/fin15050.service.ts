@@ -1,29 +1,29 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
-// --- FIN15050 列印參數 Model 定義 ---
 export interface FIN15050PrintRequest {
   Mid: number;
   STO_No: string;
-  REP_GUIYM: string;                // 申報年月
-  GUI_Track: string;                // 字軌
-  SAL_Type: string;                 // 使用別
-  INV_GUINumber_S: string;          // 發票號碼起
-  INV_GUINumber_E: string;          // 發票號碼訖
+  REP_GUIYM: string;
+  GUI_Track: string | null;
+  SAL_Type: string | null;
+  INV_GUINumber_S: string | null;
+  INV_GUINumber_E: string | null;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface FIN15050PrintResponse {
+  Print_URL: string | null;
+}
+
+@Injectable({ providedIn: 'root' })
 export class FIN15050Service {
-  private printApiUrl: string = environment.ApiUrl + '/FIN0000/INV1000';
+  private readonly http = inject(HttpClient);
+  private readonly printApiUrl = `${environment.ApiUrl}/FIN0000/INV1000`;
 
-  constructor(private http: HttpClient) { }
-
-  // 列印
-  printFIN15050(data: FIN15050PrintRequest): Observable<any> {
-    return this.http.post<any>(`${this.printApiUrl}/PrintFIN15050`, data);
+  printFIN15050(data: FIN15050PrintRequest): Observable<ApiResponse<FIN15050PrintResponse>> {
+    return this.http.post<ApiResponse<FIN15050PrintResponse>>(`${this.printApiUrl}/PrintFIN15050`, data);
   }
 }

@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
-import { formatYYYYMM } from '@shared/componentkit/table2/table2.model';
+import { formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

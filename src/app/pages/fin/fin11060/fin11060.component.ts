@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table2/table2.model';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -184,7 +184,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     this.queryForm.get('TXN_GUINoStart')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
       const TXN_GUINoStart = this.queryForm.get('TXN_GUINoStart')?.value as unknown as string
       const TXN_GUINoEnd = this.queryForm.get('TXN_GUINoEnd')?.value
-      if (TXN_GUINoStart.length == 10 && TXN_GUINoEnd == null) { //這邊用 起號長度 + 終止為空 控制 
+      if (TXN_GUINoStart.length == 10 && TXN_GUINoEnd == null) { //這邊用 起號長度 + 終止為空 控制
         this.queryForm.get('TXN_GUINoEnd')?.setValue(value); // 自動設置迄號
       }
     });

@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DomSanitizer } from '@angular/platform-browser';
 import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { ButtonModule } from 'primeng/button';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { Table, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 
@@ -25,12 +25,14 @@ export interface FlattenedTls13070Row extends Tls13070Response {
 @Component({
   selector: 'app-tls13070-table',
   standalone: true,
-  imports: [CommonModule, TableModule, ButtonModule],
+  imports: [CommonModule, TableModule, ButtonModule, OverlayPanelModule],
   templateUrl: './tls13070-table.component.html',
   styleUrls: ['./tls13070-table.component.scss'],
 })
 export class Tls13070TableComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') private dt!: Table;
+  @ViewChild('opList') private opList!: OverlayPanel;
+  @ViewChild('opRemark') private opRemark!: OverlayPanel;
 
   @Input() lastQueryBody?: any;
   @Input() totalRecords = 0;
@@ -44,6 +46,9 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   @Input() aps1003_D?: Observable<any[] | null>;
 
   tableKey = 'TLS13070Table';
+  currentRemark = '';
+  currentListTitle = '';
+  currentListItems: string[] = [];
   flatData: FlattenedTls13070Row[] = [];
   isLoading = false;
   hasSearched = false;
@@ -54,9 +59,8 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   cOptions: any[] = [];
   dOptions: any[] = [];
 
-  readonly numToleratedItems = Math.ceil(700 / 46) * 2;
+  readonly numToleratedItems = Math.ceil(900 / 46) * 2;
 
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly tls13070Service = inject(Tls13070Service);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -104,6 +108,23 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
         this.recalcColspan();
       });
     }
+  }
+
+  formatItems(text: string | null | undefined, max: number): { display: string[]; remaining: number } {
+    if (!text) return { display: [], remaining: 0 };
+    const all = text.split(',').map(s => s.trim()).filter(Boolean);
+    return { display: all.slice(0, max), remaining: Math.max(0, all.length - max) };
+  }
+
+  showListOverlay(text: string | null | undefined, title: string, event: Event): void {
+    this.currentListTitle = title;
+    this.currentListItems = text ? text.split(',').map(s => s.trim()).filter(Boolean) : [];
+    this.opList.toggle(event);
+  }
+
+  showRemark(remark: string, event: Event): void {
+    this.currentRemark = remark;
+    this.opRemark.toggle(event);
   }
 
   splitWithLineBreaks(text: string | null | undefined): string {

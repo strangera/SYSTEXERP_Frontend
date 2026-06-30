@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Step 2: 代扣款設定子組件
  *
  * 功能:
@@ -24,7 +24,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
 
 import { getContractInfoColumns } from '../../../../core/constants/commission-columns';
 import {

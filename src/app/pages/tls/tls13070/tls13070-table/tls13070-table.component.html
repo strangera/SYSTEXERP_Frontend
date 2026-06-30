@@ -1,13 +1,12 @@
 <div class="flex justify-content-end mb-2">
-  <p-button styleClass="p-2" label="匯出櫃位合約一覽表.XLSX" [loading]="btnLoading" icon="pi pi-file"
-    (click)="onExportXLSX()" [disabled]="!data.length">
+  <p-button styleClass="p-2" label="匯出櫃位合約一覽表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
+    [disabled]="!data.length">
   </p-button>
 </div>
 
-<p-table #dt [value]="flatData" [scrollable]="true" scrollHeight="700px" sortMode="multiple"
-  [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
-  [loading]="loading || isLoading" [virtualScroll]="flatData.length >= 30" [virtualScrollItemSize]="46"
-  [virtualScrollDelay]="0" [virtualScrollOptions]="{
+<p-table #dt [value]="flatData" [scrollable]="true" scrollHeight="900px" sortMode="multiple" [rowTrackBy]="trackByFn"
+  [resizableColumns]="true" [reorderableColumns]="true" [loading]="loading || isLoading"
+  [virtualScroll]="flatData.length >= 30" [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
     onScroll: onVirtualScroll,
@@ -31,16 +30,16 @@
       <th class="text-center" colspan="11">店櫃資料</th>
       <th class="text-center" colspan="18">租賃條件</th>
       @if (aOptions.length) {
-        <th class="text-center" [attr.colspan]="aOptions.length">一次扣款</th>
+      <th class="text-center" [attr.colspan]="aOptions.length">一次扣款</th>
       }
       @if (bOptions.length) {
-        <th class="text-center" [attr.colspan]="bOptions.length">每月扣款</th>
+      <th class="text-center" [attr.colspan]="bOptions.length">每月扣款</th>
       }
       @if (cOptions.length) {
-        <th class="text-center" [attr.colspan]="cOptions.length * 3">平均分攤</th>
+      <th class="text-center" [attr.colspan]="cOptions.length * 3">平均分攤</th>
       }
       @if (dOptions.length) {
-        <th class="text-center" [attr.colspan]="dOptions.length">比率分攤</th>
+      <th class="text-center" [attr.colspan]="dOptions.length">比率分攤</th>
       }
       <!-- 結帳後幾天匯款: 值只有 "15","30","45" -->
       <th class="break-word text-center" [style.min-width]="'55px'" rowspan="3">結帳後幾天匯款</th>
@@ -77,24 +76,24 @@
       <th class="text-center" [style.min-width]="'95px'" rowspan="2">目標營業額</th>
       <!-- A 一次扣款: e.g. "A01 開幕贊助費" -->
       @for (item of aOptions; track item['No']) {
-        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- B 每月扣款 -->
       @for (item of bOptions; track item['No']) {
-        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- C 平均分攤: 每項目3子欄 -->
       @for (item of cOptions; track item['No']) {
-        <th class="break-word text-center" colspan="3" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th class="break-word text-center" colspan="3" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- D 比率分攤 -->
       @for (item of dOptions; track item['No']) {
-        <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
     </tr>
     <tr>
       <!-- 抽成 (4欄) -->
-      <th class="break-word text-center" [style.min-width]="'72px'">抽成類別</th>
+      <th class="break-word text-center" [style.min-width]="'85px'">抽成類別</th>
       <th class="text-center col-date">帳務起</th>
       <th class="text-center col-date">帳務迄</th>
       <th class="text-center" [style.min-width]="'66px'">抽成比率(%)</th>
@@ -116,54 +115,66 @@
       <th class="text-center" [style.min-width]="'66px'">租金</th>
       <!-- C 平均分攤子欄 -->
       @for (item of cOptions; track item['No']) {
-        <th class="text-center" [style.min-width]="'72px'">總金額</th>
-        <th class="text-center" [style.min-width]="'62px'">每月</th>
-        <th class="text-center" [style.min-width]="'66px'">頭期款</th>
+      <th class="text-center" [style.min-width]="'72px'">總金額</th>
+      <th class="text-center" [style.min-width]="'62px'">每月</th>
+      <th class="text-center" [style.min-width]="'66px'">頭期款</th>
       }
     </tr>
   </ng-template>
 
   <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-    <tr [style.height]="'46px'"
-        [class.main-row]="rowData.isMainRow"
-        [class.sub-row]="!rowData.isMainRow"
-        [class.last-sub-row]="rowData.isLastSubRow"
-        [class.record-even]="rowData.recordEven">
+    <tr [style.height]="'46px'" [class.main-row]="rowData.isMainRow" [class.sub-row]="!rowData.isMainRow"
+      [class.last-sub-row]="rowData.isLastSubRow" [class.record-even]="rowData.recordEven">
 
       <!-- ── 合併顯示欄 ─────────────────────────────────────────────────── -->
-      <td class="text-center" pFrozenColumn>
+      <td class="text-center span-cell" pFrozenColumn>
         {{ rowData.isMainRow ? rowData.globalIndex : '' }}
       </td>
-      <td class="text-center">{{ rowData.isMainRow ? rowData.apply_no : '' }}</td>
-      <td class="text-center col-date">{{ rowData.isMainRow ? (rowData.upd_date | date:'yyyy/MM/dd') : '' }}</td>
-      <td class="text-center" [style]="{'white-space': 'pre-wrap'}">
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.apply_no : '' }}</td>
+      <td class="text-center col-date span-cell">{{ rowData.isMainRow ? (rowData.upd_date | date:'yyyy/MM/dd') : '' }}
+      </td>
+      <td class="text-center span-cell">
         @if (rowData.isMainRow) {
-          <span [innerHTML]="splitWithLineBreaks(rowData.location_no)"></span>
+        @let loc = formatItems(rowData.location_no, 2);
+        <div class="items-cell">
+          @for (item of loc.display; track item) { <div>{{ item }}</div> }
+          @if (loc.remaining > 0) {
+          <a class="items-more-badge" (click)="showListOverlay(rowData.location_no, '位置編號', $event)">+{{ loc.remaining
+            }}</a>
+          }
+        </div>
         }
       </td>
-      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.VEN_Name : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? rowData.ven_uniform : '' }}</td>
+      <td class="break-word text-center span-cell">{{ rowData.isMainRow ? rowData.VEN_Name : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.ven_uniform : '' }}</td>
 
       <!-- 店櫃資料 -->
-      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_name : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? rowData.tlt_no : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? rowData.tlt_space : '' }}</td>
-      <td class="text-center" [style]="{'white-space': 'pre-wrap'}">
+      <td class="break-word text-center span-cell">{{ rowData.isMainRow ? rowData.tlt_name : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.tlt_no : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.tlt_space : '' }}</td>
+      <td class="text-center span-cell">
         @if (rowData.isMainRow) {
-          <span [innerHTML]="splitWithLineBreaks(rowData.ECR_No)"></span>
+        @let ecr = formatItems(rowData.ECR_No, 2);
+        <div class="items-cell">
+          @for (item of ecr.display; track item) { <div>{{ item }}</div> }
+          @if (ecr.remaining > 0) {
+          <a class="items-more-badge" (click)="showListOverlay(rowData.ECR_No, 'POS 機號', $event)">+{{ ecr.remaining
+            }}</a>
+          }
+        </div>
         }
       </td>
-      <td class="text-center col-date">
+      <td class="text-center col-date span-cell">
         {{ rowData.isMainRow ? (rowData.tlt_contract_bdate | date:'yyyy/MM/dd') : '' }}
       </td>
-      <td class="text-center col-date">
+      <td class="text-center col-date span-cell">
         {{ rowData.isMainRow ? (rowData.tlt_contract_edate | date:'yyyy/MM/dd') : '' }}
       </td>
-      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.contract_term : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? ((rowData.open_fees ?? 0) | number) : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? ((rowData.construct_fees ?? 0) | number) : '' }}</td>
-      <td class="text-center">{{ rowData.isMainRow ? ((rowData.expiration_fees ?? 0) | number) : '' }}</td>
-      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_term_type_Name : '' }}</td>
+      <td class="break-word text-center span-cell">{{ rowData.isMainRow ? rowData.contract_term : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? ((rowData.open_fees ?? 0) | number) : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? ((rowData.construct_fees ?? 0) | number) : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? ((rowData.expiration_fees ?? 0) | number) : '' }}</td>
+      <td class="break-word text-center span-cell">{{ rowData.isMainRow ? rowData.tlt_term_type_Name : '' }}</td>
 
       <!-- ── 每子行獨立顯示 (租賃條件) ──────────────────────────────────── -->
       <td class="break-word text-center">{{ rowData.singleCag?.tlt_id_desc }}</td>
@@ -188,25 +199,36 @@
       <td class="text-center">{{ rowData.singleRent?.base_rent | number }}</td>
 
       <!-- ── 合併顯示欄 (費用、備註) ───────────────────────────────────── -->
-      <td class="text-center">{{ rowData.isMainRow ? (rowData.total_amt | number) : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? (rowData.total_amt | number) : '' }}</td>
 
       @for (item of aOptions; track item['No']) {
-        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
       }
       @for (item of bOptions; track item['No']) {
-        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.fareList?.[item['No']] : '' }}</td>
       }
       @for (item of cOptions; track item['No']) {
-        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.tpy_totalamt : '' }}</td>
-        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.month_payment : '' }}</td>
-        <td class="text-center">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.down_payment : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.tpy_totalamt : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.month_payment : '' }}
+      </td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.fareList?.[item['No']]?.down_payment : '' }}</td>
       }
       @for (item of dOptions; track item['No']) {
-        <td class="text-center">{{ rowData.isMainRow ? (rowData.fareList?.[item['No']] | percent:'1.2-2') : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? (rowData.fareList?.[item['No']] | percent:'1.2-2') : ''
+        }}</td>
       }
 
-      <td class="text-center">{{ rowData.isMainRow ? rowData.check_day : '' }}</td>
-      <td class="break-word text-center">{{ rowData.isMainRow ? rowData.tlt_remark : '' }}</td>
+      <td class="text-center span-cell">{{ rowData.isMainRow ? rowData.check_day : '' }}</td>
+      <td class="break-word text-center span-cell">
+        @if (rowData.isMainRow && rowData.tlt_remark) {
+        <div class="remark-wrapper">
+          <div class="remark-text">{{ rowData.tlt_remark }}</div>
+          @if (rowData.tlt_remark.length > 50) {
+          <a class="remark-more-link" (click)="showRemark(rowData.tlt_remark, $event)">顯示更多</a>
+          }
+        </div>
+        }
+      </td>
     </tr>
   </ng-template>
 
@@ -218,14 +240,32 @@
 
   <ng-template pTemplate="emptymessage">
     @if (hasSearched) {
-      <tr>
-        <td [attr.colspan]="totalColspan">
-          <div class="flex justify-content-center align-items-center p-5 font-bold text-xl text-500">
-            <i class="pi pi-search mr-2"></i>
-            查無資料
-          </div>
-        </td>
-      </tr>
+    <tr>
+      <td [attr.colspan]="totalColspan">
+        <div class="flex justify-content-center align-items-center p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          查無資料
+        </div>
+      </td>
+    </tr>
     }
   </ng-template>
 </p-table>
+
+<p-overlayPanel #opList styleClass="list-overlay">
+  <div class="list-overlay-content">
+    <div class="list-overlay-header">{{ currentListTitle }}</div>
+    <div class="list-overlay-body">
+      @for (item of currentListItems; track item) {
+      <div class="list-overlay-item">{{ item }}</div>
+      }
+    </div>
+  </div>
+</p-overlayPanel>
+
+<p-overlayPanel #opRemark styleClass="remark-overlay">
+  <div class="remark-overlay-content">
+    <div class="remark-overlay-header">完整備註</div>
+    <div class="remark-overlay-body">{{ currentRemark }}</div>
+  </div>
+</p-overlayPanel>

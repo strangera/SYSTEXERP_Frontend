@@ -158,10 +158,6 @@ export class TableUtilityService {
       return !isValid;
     });
 
-    if (!hasValidationError) {
-      console.log(`欄位 ${column.header} 驗證通過`);
-    }
-
     return !hasValidationError; // 回傳是否通過驗證
   }
 

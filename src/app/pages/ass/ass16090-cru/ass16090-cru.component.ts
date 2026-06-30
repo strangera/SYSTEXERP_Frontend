@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import {
@@ -45,8 +45,8 @@ import {
 
 /** Dialog 查詢結果 table */
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
-import { Column } from '../../../shared/componentkit/table2/table2.model';
+import { Table2Component } from '@others/component/table2/table2.component';
+import { Column } from '@others/component/table2/table2.model';
 
 @UntilDestroy()
 @Component({

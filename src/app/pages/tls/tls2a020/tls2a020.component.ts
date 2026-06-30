@@ -1,4 +1,4 @@
-import { formatDate } from '@angular/common';
+﻿import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,7 +14,6 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
 
 @Component({
   templateUrl: './tls2a020.component.html',
@@ -54,12 +53,11 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   totalRecords = 0;
   historyRequestBody: any;
-  floorOptions: any[] = [];
+  floorOptions: any = [];
   ECRNoOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
+  BUILDING_NO_Options: any = [];
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
     private dropdownApiService: DropdownApiService,
     public tls2a020Service: TLS2A020Service
   ) {
@@ -74,21 +72,21 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
       error: () => this.messageService.errorBubble('載入收銀機號失敗')
     });
 
-    this.locationOptionsService.getBuildingOptions().subscribe({
+    this.dropdownApiService.querySys3800().subscribe({
       next: (res) => {
-        this.BUILDING_NO_Options = res.map((item: any) => ({
-          label: item.name || item.BUILDING_NAME || item.label,
-          value: item.code || item.BUILDING_NO || item.value
+        this.BUILDING_NO_Options = res?.map((item: any) => ({
+          label: item.Name,
+          value: item.No
         }));
       },
       error: () => this.messageService.errorBubble('載入館別選單失敗')
     });
 
-    this.locationOptionsService.getFloorOptions().subscribe({
+    this.dropdownApiService.querySys3900().subscribe({
       next: (res) => {
-        this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value
+        this.floorOptions = res?.map((item: any) => ({
+          label: item.Name,
+          value: item.No
         }));
       },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')

@@ -70,6 +70,10 @@
             [control]="dataForm.controls.ECR_ActiveDate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="到期日期" controlName="ECR_ExpireDate"
+            [control]="dataForm.controls.ECR_ExpireDate" [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="停用日期" controlName="ECR_CloseDate"
             [control]="dataForm.controls.ECR_CloseDate" [submitted]="submitted"></app-calendar>
         </div>

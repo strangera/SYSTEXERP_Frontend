@@ -1,4 +1,4 @@
-import { saveAs } from 'file-saver';
+﻿import { saveAs } from 'file-saver';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ChangeDetectorRef,
@@ -47,8 +47,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
 import { AuthService } from 'src/app/service/system/auth.service';
 import { SystemDataService } from 'src/app/service/system/system-data.service';
-import { REPORT_TITLES2 } from 'src/app/shared/componentkit/table2/report-titles2';
-import { TableExport2 } from 'src/app/shared/componentkit/table2/table-export2/table-export2.component';
+import { REPORT_TITLES2 } from '@others/component/table2/report-titles2';
+import { TableExport2 } from '@others/component/table2/table-export2/table-export2.component';
 import { TableService } from 'src/app/shared/exports/report.service';
 import { QueryStateService } from 'src/app/shared/service/query-state.service';
 import { TLS2B010TableExportComponent } from './tls2b010table-export/tls2b010table-export.component';

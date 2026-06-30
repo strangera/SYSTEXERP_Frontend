@@ -1,6 +1,6 @@
-// validation/tls12040-validation.service.ts
+﻿// validation/tls12040-validation.service.ts
 import { Injectable } from '@angular/core';
-import { BaseTLSValidationService, TLSValidationConfig } from '@shared/services/tls/base-tls-validation.service';
+import { BaseTLSValidationService, TLSValidationConfig } from '@others/services/tls/base-tls-validation.service';
 
 /**
  * TLS12040 專櫃要約書 - 驗證服務

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+﻿import { DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
@@ -17,7 +18,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatDate } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { removeEmptyValues } from '../../../shared/utils/object-utils';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({

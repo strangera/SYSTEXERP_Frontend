@@ -1,4 +1,4 @@
-/* eslint-disable no-sparse-arrays */
+﻿/* eslint-disable no-sparse-arrays */
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -25,9 +25,9 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { LocationOptionsService } from '../../../shared/services/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from '../../../shared/services/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from '../../../shared/services/dropdownservice/vendor-category-options.service';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 
 //專櫃契約書列印
 @Component({

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -16,7 +16,8 @@ import { Sys0110Service } from '@service/api/sys/sys0110.service';
 import { Tls43040Service } from '@service/api/tls/tls43040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { LocationOptionsService } from 'src/app/shared/services/dropdownservice/location-options.service';
+import { IDropdownItem } from 'src/app/service/utility/dropdown-api.model';
+import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 
 // 只用到欄位
 interface SYS1000 {
@@ -58,10 +59,10 @@ export interface TLS43040Detail {
 })
 export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   constructor(
-    private readonly locationOptionsService: LocationOptionsService,
     private readonly sys0110Service: Sys0110Service,
     private readonly dropDownListService: DropDownListService,
-    private readonly tls43040Service: Tls43040Service
+    private readonly tls43040Service: Tls43040Service,
+    private readonly dropDown: DropdownApiService
   ) {
     super();
   }
@@ -83,9 +84,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   POS1002_ECR_Options: { label: string; value: string }[] = [];
   SYS1000_ECRType_Options: { label: string; value: string }[] = [];
-  SYS3700_Options: { label: string; value: string }[] = []; // 館別
-  SYS3900_Options: { label: string; value: string }[] = []; // 樓層
-  SYS3A00_Options: { label: string; value: string }[] = []; // 區域
+  SYS3700_Options: IDropdownItem[] = []; // 館別
+  SYS3900_Options: IDropdownItem[] = []; // 樓層
+  SYS3A00_Options: IDropdownItem[] = []; // 區域
   TLTTALENT_OPTIONS: { label: string; No: string; Name?: string }[] = [];
 
   isTableDisabled = false; // 控制 table 是否禁用
@@ -196,9 +197,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       )
     );
 
-    const buildingOptions$ = this.locationOptionsService.getBuildingOptions();
-    const floorOptions$ = this.locationOptionsService.getFloorOptions();
-    const regionOptions$ = this.locationOptionsService.getRegionOptions();
+    const buildingOptions$ = this.dropDown.querySys3800();
+    const floorOptions$ = this.dropDown.querySys3900();
+    const regionOptions$ = this.dropDown.querySys3A00();
 
     const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
       map((res: any) => (res?.Data ?? []).map((i: any) => ({
@@ -230,9 +231,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
           { field: 'ECR_No', header: '收銀機號', type: 'dropdown', options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value' },
-          { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
-          { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
-          { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'Name', optionValue: 'No' },
+          { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'Name', optionValue: 'No' },
+          { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'Name', optionValue: 'No' },
         ];
       });
   }

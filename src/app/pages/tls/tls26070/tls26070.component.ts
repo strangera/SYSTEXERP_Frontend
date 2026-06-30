@@ -1,9 +1,8 @@
-import { DatePipe, NgIf } from '@angular/common';
+﻿import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownOption } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -12,9 +11,9 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { debounceTime, finalize, map } from 'rxjs';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { ExportContext } from 'src/app/shared/exports/report-export.service';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { TLS26070Data, TLS26070QueryRequest, TLS26070Service } from '../../../service/api/tls/tls26070.service';
@@ -141,9 +140,9 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
 
   // 2. 合約查詢條件相關下拉選項
   // 櫃別選項
-  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  operationsOptions = getSYS1000Options('TLT_Kind');
   // 抽成別選項
-  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   counterCodeOptions: any[] = []; // 專櫃編號選項
   tlt_floor_Option: IDropdownItem[] = []; // 樓層
   area_no_Option: IDropdownItem[] = []; // 區域
@@ -161,7 +160,6 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     private tls26070Service: TLS26070Service,
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
-    private sharedDropdownService: SharedDropdownService,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
   ) {

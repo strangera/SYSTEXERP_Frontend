@@ -117,6 +117,7 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
   const invoiceType = String(row.InvoiceType ?? '').trim();
   const isAllowance = invoiceType === '33' || invoiceType === '34';
+  const isVoid = row.Invoice_Cancel === 'Y';
   return {
     ...(id !== undefined ? { id } : {}),
     _invoiceValidated: true,
@@ -134,13 +135,14 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
     ),
     declare_ym: parseYyyyMmToMonthDate(row.INV_DeclareYM ?? undefined),
     buyer_uniform: row.Buyer_Uniform ?? undefined,
-    total_amount: row.PUR_Amt ?? undefined,
+    total_amount: isVoid ? 0 : (row.PUR_Amt ?? undefined),
     tax_type: row.PUR_TaxType ?? undefined,
-    net_amount: row.PUR_Net ?? undefined,
-    tax_amount: row.PUR_Tax ?? undefined,
+    net_amount: isVoid ? 0 : (row.PUR_Net ?? undefined),
+    tax_amount: isVoid ? 0 : (row.PUR_Tax ?? undefined),
     source_doc_no: row.Source_Doc_No ?? undefined,
     summary_count: undefined,
     asset_flag: row.AssetType ?? undefined,
+    inv_cancel: row.Invoice_Cancel ?? undefined,
     ...(isAllowance ? { credit_type: row.Credit_Type ?? undefined } : {}),
   };
 }

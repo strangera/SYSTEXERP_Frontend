@@ -40,11 +40,15 @@ export class TLS21020Service {
   ];
 
   public getEntryTypes(): void {
-    this.dropdownApi.queryGls1010().pipe(
-      take(1),
-      map(res => res ?? []),
-      tap(res => this.entryTypeOptions.set(res)),
-    ).subscribe();
+    this.entryTypeOptions.set([
+      { value: 'SD', label: 'SD銷售日傳票' },
+      { value: 'MR', label: 'MR租金傳票' },
+      { value: 'MD', label: 'MD代扣傳票' },
+      { value: 'PR', label: 'PR抽成傳票' },
+      { value: 'PN', label: 'PN進貨帳款-暫估應付' },
+      { value: 'PN', label: 'PN進貨帳款-成本結轉' },
+      { value: 'PT', label: 'PT進貨請款' },
+    ]);
   }
 
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
