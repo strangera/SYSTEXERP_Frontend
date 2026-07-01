@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -38,7 +38,7 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
-    GUI_YYMM: [null, [Validators.required, this.validationService.invoicePeriodValidator()]], // 發票年月
+    GUI_YYMM: [null as string | null, [Validators.required, this.validationService.invoicePeriodValidator()]], // 發票年月
   });
   monthOptions = monthOptions;
   minDate?: Date;
@@ -53,6 +53,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
   constructor(
     private readonly dropdownApiService: DropdownApiService,
+    private readonly datePipe: DatePipe,
     private fin11200Service: Fin11200Service,
     private validationService: ValidationService
   ) {
@@ -62,9 +63,14 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ngOnInit(): void {
     this.initializePage('FIN11200', this.dataForm);
     if (this.isFormCreateable) {
-      // 依然可以預設當期，但不用再寫監聽彈回邏輯了
-      this.dataForm.controls.GUI_YYMM.setValue('202605' as any);
-
+      // 設定GUI_YYMM預設值
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+      if (currentMonth % 2 === 0) {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+      }
+      this.dataForm.get('GUI_YYMM')?.setValue(
+        this.datePipe.transform((currentDate), 'yyyyMM'));
       // minDate 仍然保留，用來在 UI 上擋掉 2025 (讓使用者根本不能選舊年份)
       this.minDate = this.setMinDate();
     }
