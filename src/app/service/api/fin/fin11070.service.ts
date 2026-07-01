@@ -15,6 +15,7 @@ export interface FIN11070QueryRequest extends BaseQueryRequest {
 export interface FIN11070Data {
   SYS_StoreNo: string;             // 分店編號
   TXN_No: string;                  // 發票年月
+  TXN_GUINO: string;               // 發票字軌
   TXN_Time: string;                // 預計處理時間
   TXN_ProcStatus: string;          // 處理狀態
   TXN_RspnTime: string;            // 實際處理時間
