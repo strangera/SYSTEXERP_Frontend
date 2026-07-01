@@ -62,6 +62,9 @@ export interface ASS16040DetailRow extends ASS16040MasterRow {
   CHECK_QTY: number | null;
   RETURN_QTY: number | null;
   NOTES: string | null;             // 明細層 NOTES（單項說明）
+  GOODS_ID?: string;                // 攤平自 FASITEM lookup，供前端排序/顯示
+  GOODS_NAME?: string;
+  UNIT_NAME?: string;
   CRT_USR_No?: string | null;
   CRT_Date?: string | null;
   CRT_USR_Name?: string | null;
