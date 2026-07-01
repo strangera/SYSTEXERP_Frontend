@@ -125,6 +125,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+      if (this.crudstatus === CRUDStatus.Read) {
+    this.dataForm.get('Voucher_No')?.enable({ emitEvent: false });
+  }
 
     // 新增模式：預設申報年月（當期雙數月）及發票日期（今天）
     if (this.crudstatus === CRUDStatus.Create) {
