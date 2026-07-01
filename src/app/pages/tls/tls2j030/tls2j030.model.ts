@@ -192,6 +192,7 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'bus_type_name', header: '大分類名稱', type: 'dropdown', validate: [validateRequired] },
   { field: 'INV_ItemName', header: '項目名稱', type: 'dropdown', validate: [validateRequired] },
+  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
   { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];
@@ -199,6 +200,7 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
 export const COLUMNS_DETAIL_VIEW: Column[] = [
   { field: 'TXN_Item', header: '項次' },
   { field: 'INV_ItemName', header: '項目名稱' },
+  { field: 'PLU_TaxType', header: '稅別', format: (v) => getSYS1000('PLU_TaxType', v) },
   { field: 'INV_Qty', header: '銷售數量' },
   { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
 ];
