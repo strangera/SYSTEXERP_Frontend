@@ -185,7 +185,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Type: [''],
 
     Source_Doc_No: ['', [alnumMax16IfFilled]],
-    Voucher_No: [{ value: '', disabled: true }],
+    Voucher_No: [{ value: '' }],
     SYS_ORIGIN: ['G'],
     PUR_Remark: [''],
   });
@@ -396,7 +396,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private updateDisabledState(): void {
-    const alwaysDisabled = ['id', 'Voucher_No', 'PUR_VenName', 'PUR_Tax'];
+    const alwaysDisabled = ['id', 'PUR_VenName', 'PUR_Tax'];
 
     if (this.crudstatus === CRUDStatus.Read) {
       this.dataForm.disable();
