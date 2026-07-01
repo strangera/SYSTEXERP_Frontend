@@ -352,9 +352,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { initialValue: this.dataForm.controls.INV_YN.value },
   );
 
+  /** 追蹤實際傳票型態代碼（form 存 label，需另存 code 供判斷） */
+  readonly voucherTypeCode = signal<string>('GL');
+
   /** 過帳後進入編輯模式：只允許修改摘要(Remark)，其餘欄位唯讀 */
   get isPostedEdit(): boolean {
     return this.isFormEditable && this.dataForm.controls.PostFlag.value === '3';
+  }
+
+  /** 補發票欄位可編輯條件：傳票型態=GL 且 狀態=建立(1) */
+  get isInvYnEditable(): boolean {
+    if (this.isFormReadable) return false;
+    return this.voucherTypeCode() === 'GL' && this.dataForm.controls.PostFlag.value === '1';
   }
 
   /** 查詢傳票編號為空白（含僅空白字元）時，停用「載入傳票」 */
@@ -495,10 +504,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
     { field: 'DeclareYM', header: '申報年月', visible: true, align: 'left' },
     { field: 'BuyerUniform', header: '買受人統一編號', visible: true, align: 'left' },
-    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'TotalAmount', header: '發票總金額', visible: true, format: (v, _i, row) => reportFormatAmount((row as Record<string, unknown>)['Invoice_Cancel'] === 'Y' ? 0 : v), align: 'right' },
     { field: 'TaxType', header: '課稅別', visible: true, align: 'left' },
-    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: (v, _i, row) => reportFormatAmount((row as Record<string, unknown>)['Invoice_Cancel'] === 'Y' ? 0 : v), align: 'right' },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: (v, _i, row) => reportFormatAmount((row as Record<string, unknown>)['Invoice_Cancel'] === 'Y' ? 0 : v), align: 'right' },
     { field: 'SourceDocNo', header: '憑證單號', visible: true, align: 'left' },
     { field: 'SummaryCount', header: '彙開註記', visible: true, align: 'left' },
     { field: 'AssetFlag', header: '資產註記', visible: true, align: 'left' },
@@ -584,6 +593,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     // 將 VoucherType 的 value 轉換成 label
     const voucherTypeValue = data.VoucherType?.trim() ?? 'GL';
     const voucherTypeLabel = this.service.voucherTypeMap().get(voucherTypeValue)?.label ?? voucherTypeValue;
+    this.voucherTypeCode.set(voucherTypeValue);
 
     this.dataForm.patchValue({
       VouNo: data.VouNo,

@@ -1,7 +1,6 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -20,9 +19,16 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { AddButton } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { columns, TLS41010Data, TLS41010Item } from './tls41010.model';
+
+/** 專櫃編號查詢下拉選項（查詢頁：查詢條件不限制合約是否生效中，才能查到歷史/已停用專櫃的機台資料） */
+interface CounterFilterOption {
+  No: string;
+  Name: string;
+  label: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-tls41010',
@@ -32,18 +38,20 @@ import { columns, TLS41010Data, TLS41010Item } from './tls41010.model';
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
-    FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
     CalendarRangeComponent,
     DropdownComponent,
     TranslateModule,
     DialogComponent,
-    NgIf,
     TableReportComponent
   ],
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
+  readonly tls41010Service = inject(TLS41010Service);
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly dropdownApiService = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
   columns: ReportColumn[] = columns;
   queryForm = this.formBuilder.group({
     ECR_No: [null, [Validators.maxLength(10)]],
@@ -90,13 +98,12 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   });
 
   SrvIPOptions: IDropdownItem[] = [];
-  lastQueryForm: any;
+  lastQueryForm: Record<string, unknown> | null = null;
   footerTotal: TLS41010Data | null = null;
   CashierOptions: IDropdownItem[] = [];
   dialogSelectItem: TLS41010Data | null = null;
-  dialogSelectTargetItem: TLS41010Data | null = null;
   dialogOptions: { value: string; label: string }[] = [];
-  CounterOptions: any[] = [];
+  CounterOptions: CounterFilterOption[] = [];
   LocOptions: IDropdownItem[] = [];
 
   addButton: AddButton[] = [
@@ -109,84 +116,68 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     },
   ];
 
-  constructor(
-    public tls41010Service: TLS41010Service,
-    private readonly tls14030Service: Tls14030Service,
-    private readonly dropDownListService: DropDownListService,
-    private readonly dropdownApiService: DropdownApiService,
-  ) {
-    super();
-  }
-
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.dropdownApiService.queryTltTalent().subscribe((res) => {
-      this.CounterOptions = res?.map((x: any) => ({
-        No: x.value,
-        Name: x.label,
-        formLabel: x.label,
-        value: x.value
-      })) || [];
-    });
+    this.dropdownApiService.queryTltTalent()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        this.CounterOptions = (res ?? []) as CounterFilterOption[];
+      });
 
-    this.dropdownApiService.querySys3A00().subscribe(options => {
-      this.areaNoOptions = options ?? [];
-    });
+    this.dropdownApiService.querySys3A00()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.areaNoOptions = options ?? [];
+      });
 
-    this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.SrvIPOptions = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: item.No,
-          value: item.No
-        }));
-      }
-    });
+    this.dropdownApiService.queryPos10015()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.SrvIPOptions = (options ?? []) as IDropdownItem[];
+      });
 
-    this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.ECR_TmplNo_Option = res.Data.map(item => ({
-          value: item.ECR_TmplNo,
-          label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
-          No: item.ECR_TmplNo ?? '',
-          Name: item.ECR_TmplDesc,
-        }));
-      }
-    });
+    this.dropDownListService.queryPOS1002TML_ALL_DropDownList()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        if (res?.Data) {
+          this.ECR_TmplNo_Option = res.Data.map(item => ({
+            value: item.ECR_TmplNo,
+            label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
+            No: item.ECR_TmplNo ?? '',
+            Name: item.ECR_TmplDesc,
+          }));
+        }
+      });
 
-    this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.CashierOptions = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No} - ${item.Name}`,
-          value: item.No
-        }));
-      }
-    });
+    this.dropdownApiService.queryPos2001()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.CashierOptions = (options ?? []) as IDropdownItem[];
+      });
 
-    this.tls14030Service.querySYS3900_DropDownList({}).subscribe((response) => {
-      this.floorOption = response.Data.map((item: apiOption) => ({ ...item, label: item.Name, value: item.No }));
-    });
+    this.dropdownApiService.querySys3900()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.floorOption = (options ?? []).map(item => ({ ...item, label: item.Name, value: item.No }));
+      });
 
     // 🌟 初始載入收銀機下拉選單
     this.loadEcrOptions();
 
-    this.dropDownListService.queryPOS2002_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.LocOptions = res.Data.map(item => ({ ...item, value: item.No, label: item.Name }));
+    this.dropdownApiService.queryPos2002()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.LocOptions = (options ?? []) as IDropdownItem[];
       });
   }
 
   // 🌟【新增獨立方法】：負責向後端撈取最新的收銀機清單，更新下拉選單
   loadEcrOptions(): void {
     this.dropdownApiService.queryPos1002()
-      .pipe(untilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(data => {
-        this.dialogOptions = (data ?? []).map((x: any) => ({ value: x.value, label: x.label }));
+        this.dialogOptions = (data ?? []).map(x => ({ value: x.value, label: x.label }));
       });
   }
 
@@ -194,7 +185,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.handleSubmit(frm, () => {
       const raw = frm.value;
       this.tls41010Service.queryTLS41010(raw)
-        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef))
         .subscribe((res) => {
           this.lastQueryForm = raw;
           this.totalRecords = res?.TotalCount || 0;
@@ -205,8 +196,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
             }
-            const counter = this.CounterOptions.find(c => c.No === item.ECR_TLT_No);
-            return { ...item, ECR_SettleHHNN: dateValue, ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name };
+            return { ...item, ECR_SettleHHNN: dateValue };
           });
           this.queryStateService.setQueryState(this.ProgNo, this.ProgNo);
         });
@@ -221,11 +211,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     if (!selectedValue) return;
 
     const body: QueryTLS41010Request = { ECR_No: selectedValue, PageSize: 10, PageIndex: 0 };
-    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res?.Data?.length > 0) {
-        this.dialogSelectItem = res.Data[0];
-      }
-    });
+    this.tls41010Service.queryTLS41010(body)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        if (res?.Data?.length > 0) {
+          this.dialogSelectItem = res.Data[0];
+        }
+      });
   }
 
   get isSameEcr(): boolean {
@@ -251,7 +243,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.loading = true;
       const formValue = frm.value;
 
-      const newEcrBody: any = {
+      const newEcrBody: Partial<TLS41010Data> = {
         ...this.dialogSelectItem,
         id: 0,
         ECR_No: formValue.Target_ECR_No.trim(),
@@ -262,7 +254,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.tls41010Service.insertTLS41010(newEcrBody)
         .pipe(
           finalize(() => this.loading = false),
-          untilDestroyed(this)
+          takeUntilDestroyed(this.destroyRef)
         )
         .subscribe({
           next: (res) => {
@@ -288,12 +280,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     });
   }
 
-  openCru(data: TLS41010Item, mode: string): void {
-    console.log(`Opening CRU page with mode: ${mode}`, data);
-    this.router.navigate([`/TLS/TLS41010cru`], { queryParams: { id: data.id, mode } });
-  }
-
-  onDelete(rowData: any[]): void {
+  onDelete(rowData: TLS41010Data[]): void {
     const idList = rowData
       .map((item) => item.id)
       .filter((id) => id !== undefined && id !== null);
@@ -308,7 +295,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       message: '是否刪除所選項目?',
       accept: () => {
         this.tls41010Service.deleteTLS41010(idList)
-          .pipe(untilDestroyed(this))
+          .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: (res) => {
               if (res.Status === '0000') {

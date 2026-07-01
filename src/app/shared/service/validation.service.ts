@@ -633,7 +633,7 @@ export class ValidationService {
   invoicePeriodValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
-      if (!value || value.length < 6) return null;
+      if (!value || typeof value !== 'string' || value.length < 6) return null;
 
       const year = Number.parseInt(value.substring(0, 4), 10);
       const month = Number.parseInt(value.substring(4, 6), 10);

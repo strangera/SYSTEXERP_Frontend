@@ -37,7 +37,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 })
 export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    PAM_No: [null, Validators.maxLength(12)],           // 匯款來源單號
+    PAM_No: [null, Validators.maxLength(12)],           // 電匯來源單號
     CRT_Date_b: [null as Date | null],                    // 建立日期(起)
     CRT_Date_e: [null as Date | null],                    // 建立日期(迄)
     D_Date_b: [null as Date | null],                  // 收/付款日(起)
@@ -55,14 +55,14 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   totalRecords = 0;
   lastQueryBody: QueryFIN25010Request | null = null;
   columns: Column[] = [
-    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    { field: 'PAM_No', header: '電匯來源單號', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
     { field: 'D_Date', header: '收/付款日', visible: true, format: formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
     { field: 'WSLIP_NO', header: '匯款單號', visible: true }
   ];
 
-  //#region 匯款來源單號 查詢式dropdown table
+  //#region 電匯來源單號 查詢式dropdown table
   suggestions: QueryDropFIN25010Response[] = [];
   opData: QueryDropFIN25010Response[] = [];
   opTotalRecords = 0;
@@ -77,11 +77,11 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   });
 
   fieldsConfig: FieldsConfig[] = [
-    { field: '', header: '匯款來源單號', mainDataField: true }
+    { field: '', header: '電匯來源單號', mainDataField: true }
   ];
 
   opColumns: Column[] = [
-    { field: 'PAM_No', header: '匯款來源單號' },
+    { field: 'PAM_No', header: '電匯來源單號' },
     { field: 'D_Date', header: '建立日期', format: formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
   ];

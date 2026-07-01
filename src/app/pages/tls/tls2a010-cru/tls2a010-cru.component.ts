@@ -93,7 +93,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'PAY_NO',
       header: '付款方式',
       textAlign: 'center',
-      format: (_: any, __?: number, row?: any) => this.payNoMap[row?.PAY_NO] || row?.PAY_NO || '',
+      format: (_: unknown, __?: number, row?: Record<string, unknown>): string | number | null => this.payNoMap[row?.['PAY_NO'] as string] || (row?.['PAY_NO'] as string) || '',
     },
     { field: 'CRD_No', header: '付款卡號', textAlign: 'center', type: undefined },
     { field: 'TXN_PayAmt', header: '付款金額', textAlign: 'right', type: undefined, format: formatAmount },
@@ -141,7 +141,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('TLS2A010', this.dataForm);
 
     // 載入付款方式清單
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'FIN_PAY_Type' })
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'PAY_No' })
       .pipe(untilDestroyed(this))
       .subscribe(sysRes => {
         const sysOptions = sysRes.Data.map(item => ({

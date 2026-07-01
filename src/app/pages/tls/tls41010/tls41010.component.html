@@ -27,7 +27,7 @@
               controlName="ECR_TLT_No"
               [control]="queryForm.controls.ECR_TLT_No"
               [options]="CounterOptions"
-              optionLabel="formLabel"
+              optionLabel="label"
               optionValue="value"
               [submitted]="submitted"
             ></app-dropdown>
@@ -263,18 +263,19 @@
     </div>
   </form>
 
-  <small
-    class="text-red-500 block mt-2"
-    *ngIf="
-      submitted && dialogQueryForm.controls.Target_ECR_No.errors?.['required']
-    "
-  >
-    * 目標新收銀機號為必填項目
-  </small>
-  <small class="text-red-500 block mt-2" *ngIf="submitted && isSameEcr">
-    ❌ 無法複製到相同的收銀機號
-  </small>
-  <small class="text-red-500 block mt-2" *ngIf="submitted && isEcrDuplicate">
-    ❌ 該目標收銀機號已存在，不可重複建立
-  </small>
+  @if (submitted && dialogQueryForm.controls.Target_ECR_No.errors?.['required']) {
+    <small class="text-red-500 block mt-2">
+      * 目標新收銀機號為必填項目
+    </small>
+  }
+  @if (submitted && isSameEcr) {
+    <small class="text-red-500 block mt-2">
+      ❌ 無法複製到相同的收銀機號
+    </small>
+  }
+  @if (submitted && isEcrDuplicate) {
+    <small class="text-red-500 block mt-2">
+      ❌ 該目標收銀機號已存在，不可重複建立
+    </small>
+  }
 </app-dialog>

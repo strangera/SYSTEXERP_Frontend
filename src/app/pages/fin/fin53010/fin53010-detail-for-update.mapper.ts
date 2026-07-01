@@ -260,12 +260,23 @@ export function mapFin53010ForUpdateResponseToStepRows(
     return t === '33' || t === '34';
   });
 
+  // 排除已有對應 APS4023 的 POS4023，避免重複顯示（只保留 APS4023 沒有的發票）
+  const aps4023InvoiceNums = new Set(
+    arr(data._APS4023s).map(r => String(r.InvoiceNumber ?? '').trim()).filter(Boolean)
+  );
+  const pos4023Rows = arr(data._POS4023s)
+    .filter(r => {
+      const key = `${String(r.INV_GUITrack ?? '').trim()}${String(r.INV_GUINumber ?? '').trim()}`;
+      return !aps4023InvoiceNums.has(key);
+    })
+    .map(mapPos4023RowToStepSales);
+
   return {
     stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR).map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepSalesRows: [
       ...normalSales,
-      ...arr(data._POS4023s).map(mapPos4023RowToStepSales),
+      ...pos4023Rows,
     ].map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepSalesAllowanceRows: allowanceSales.map((r, i) => ({ ...r, SerNo: i + 1 })),
     stepPurchaseRows: normalPurchase.map((r, i) => ({ ...r, SerNo: i + 1 })),

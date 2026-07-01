@@ -239,6 +239,14 @@ export interface TDS1007Item {
   INV_GUIName: string;
 }
 
+// 機台鍵盤編號下拉(dropdownTLS42010)回傳項目，key/value 皆為 USR_Level，另附鍵盤型態/說明供組合顯示文字
+export interface ITLS42010KBLevelItem {
+  keyUSR_Level: string;
+  valueUSR_Level: string;
+  ECR_KBType: string;
+  ECR_KBDesc: string;
+}
+
 export interface TALPORDERMRequest {
   mid?: number;
   str_no?: string;
@@ -613,8 +621,8 @@ export class DropDownListService {
   queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
     return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
   }
-  queryTLS42010DropDownList(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
+  queryTLS42010DropDownList(): Observable<ApiResponse<ITLS42010KBLevelItem[]>> {
+    return this.http.post<ApiResponse<ITLS42010KBLevelItem[]>>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
   queryTLS42010FuncDropDownList(): Observable<{ label: string; value: string }[]> {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;

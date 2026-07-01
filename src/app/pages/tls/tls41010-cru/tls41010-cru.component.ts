@@ -1,7 +1,6 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -10,7 +9,8 @@ import { finalize } from 'rxjs';
 import { InputTextareaComponent } from "src/app/shared/componentkit/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
+import { DropDownListService, IDropdownItem, ITLS42010KBLevelItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -20,6 +20,18 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 
+/** 專櫃編號下拉選項：僅列出當下生效中的合約，並附帶可直接 patch 表單的相關欄位 */
+interface CounterOption extends TLTTALENTActiveContractItem {
+  label: string;
+  value: string;
+}
+
+/** 通用 label/value 下拉選項 */
+interface LabelValueOption {
+  label: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-tls41010-cru',
   templateUrl: './tls41010-cru.component.html',
@@ -28,25 +40,41 @@ import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
     MenubarComponent,
     ButtonComponent,
     PanelModule,
-    FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
     CalendarComponent,
     AccordionModule,
     InputNumberComponent,
-    NgIf,
     TranslateModule,
     InputTextareaComponent
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly tls41010Service = inject(TLS41010Service);
+  private readonly dropdownApiService = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** 預設 11:10 的時間 */
   private defaultTime1110(): Date {
     const d = new Date();
     d.setHours(11, 10, 0, 0);
     return d;
+  }
+
+  /** 解析清機提示時間：可能為 Date、3~4 碼數字字串(如 '2330')，其餘一律回退為預設時間 */
+  private parseSettleTime(val: string | number | Date | null | undefined): Date {
+    if (val instanceof Date) return val;
+    if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(val))) {
+      const s = String(val).padStart(4, '0');
+      const hh = Number.parseInt(s.substring(0, 2), 10);
+      const mm = Number.parseInt(s.substring(2, 4), 10);
+      const d = new Date();
+      d.setHours(hh, mm, 0, 0);
+      return d;
+    }
+    return this.defaultTime1110();
   }
 
   /** 表單定義 */
@@ -168,23 +196,21 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ECR_GUI_Type_Option = getSYS1000Options('ECR_GUI_Type');
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
-  CounterOptions: any[] = [];
+  CounterOptions: CounterOption[] = [];
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
-  KBLevelOptions: any[] = []; // 機台鍵盤編號 下拉選項
-  tmplDetailList: any[] = [];
-
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    private readonly tls41010Service: TLS41010Service,
-    private readonly dropdownApiService: DropdownApiService,
-  ) {
-    super();
-  }
+  KBLevelOptions: LabelValueOption[] = []; // 機台鍵盤編號 下拉選項
+  tmplDetailList: TLS41010Item[] = [];
 
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
-    this.dropdownApiService.queryTltTalent().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: x.label, value: x.value })) || []; });
+
+    // 專櫃編號下拉（共通：僅顯示當下生效中的合約，選取後直接帶入相關欄位，不需再打 API）
+    this.dropdownApiService.queryTltTalentActiveContract()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        this.CounterOptions = (res ?? []) as CounterOption[];
+      });
 
     // Disable 一些欄位
     for (const field of [
@@ -208,76 +234,66 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_USR_Name')?.disable();
     }
     // 環境變數下拉選單
-    this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.ECR_TmplNo_Option = res.Data.map(item => ({
-          value: item.ECR_TmplNo,
-          label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
-          No: item.ECR_TmplNo ?? '',
-          Name: item.ECR_TmplDesc,
-        }));
-        this.tmplDetailList = res.Data;
-      }
-    });
-    this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
-      this.ECR_SrvIP_Option = option.Data.map(item => ({
-        label: `${item.Name} - ${item.No}`, // 下拉顯示 IP
-        value: item.No,        // 實際值使用代碼(例如 DEVAP / TEST01)
-        No: item.No,
-        Name: item.Name,
-      }));
-    });
-
-    //收銀員下拉選單
-    this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.CashierOptions = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No} - ${item.Name}`, // 顯示時更清楚
-          value: item.No
-        }));
-      }
-    });
-
-    // 綁定下拉選單選取 → 自動帶出姓名
-    this.dataForm.get('ECR_USR_No')?.valueChanges.subscribe(selectedNo => {
-      const selected = this.CashierOptions.find(c => c.No === selectedNo);
-      this.dataForm.patchValue({
-        ECR_USR_Name: selected ? selected.Name : ''
-      }, { emitEvent: false });
-    });
-
-    //位置編號
-
-    this.dropDownListService.queryPOS2002_DropDownList()
-      .pipe(untilDestroyed(this))
+    this.dropDownListService.queryPOS1002TML_ALL_DropDownList()
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(res => {
-        this.LocOptions = res.Data.map(item => ({
-          ...item,
-          value: item.No,
-          label: item.Name
+        if (res?.Data) {
+          this.ECR_TmplNo_Option = res.Data.map(item => ({
+            value: item.ECR_TmplNo,
+            label: `${item.ECR_TmplNo}-${item.ECR_TmplDesc}`,
+            No: item.ECR_TmplNo ?? '',
+            Name: item.ECR_TmplDesc,
+          }));
+          this.tmplDetailList = res.Data;
+        }
+      });
+    this.dropdownApiService.queryPos10015()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.ECR_SrvIP_Option = (options ?? []).map(item => ({
+          label: `${item['Name']} - ${item['No']}`, // 下拉顯示 IP
+          value: item['No'],        // 實際值使用代碼(例如 DEVAP / TEST01)
+          No: item['No'],
+          Name: item['Name'],
         }));
       });
 
-    // 機台鍵盤編號下拉 (來自 TLS42010 下拉資料)
+    //收銀員下拉選單
+    this.dropdownApiService.queryPos2001()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.CashierOptions = (options ?? []) as IDropdownItem[];
+      });
+
+    // 綁定下拉選單選取 → 自動帶出姓名
+    this.dataForm.get('ECR_USR_No')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(selectedNo => {
+        const selected = this.CashierOptions.find(c => c.No === selectedNo);
+        this.dataForm.patchValue({
+          ECR_USR_Name: selected ? selected.Name : ''
+        }, { emitEvent: false });
+      });
+
+    //位置編號
+    this.dropdownApiService.queryPos2002()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(options => {
+        this.LocOptions = (options ?? []) as IDropdownItem[];
+      });
+
+    // 機台鍵盤編號下拉 (來自 TLS42010 下拉資料，key/value 皆為 USR_Level，附鍵盤說明組成顯示文字)
     this.dropDownListService.queryTLS42010DropDownList()
-      .pipe(untilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(res => {
-        const list = (res?.Data && Array.isArray(res.Data)) ? res.Data : (Array.isArray(res) ? res : (res && res.Data ? res.Data : []));
-        this.KBLevelOptions = (list || []).map((item: any) => {
-          if (!item || typeof item !== 'object') return { label: String(item ?? ''), value: item };
-          const keys = Object.keys(item);
-          const labelKey = keys.find(k => /value/i.test(k)) || keys.find(k => /name|label/i.test(k));
-          const valueKey = keys.find(k => /key|no|id/i.test(k)) || keys.find(k => /value/i.test(k)) || keys[0];
-          const label = labelKey ? item[labelKey] : (item.Name ?? item.label ?? Object.values(item)[1] ?? Object.values(item)[0]);
-          const value = valueKey ? item[valueKey] : (item.No ?? item.value ?? Object.values(item)[0]);
-          return { label: String(label ?? ''), value: value ?? '' };
-        });
+        this.KBLevelOptions = (res?.Data ?? []).map((item: ITLS42010KBLevelItem) => ({
+          label: item.ECR_KBDesc ? `${item.valueUSR_Level} - ${item.ECR_KBDesc}` : item.valueUSR_Level,
+          value: item.keyUSR_Level,
+        }));
       });
 
     this.dataForm.get('ECR_LocNo')?.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(selectedNo => {
         const selected = this.LocOptions.find(c => c.value === selectedNo);
         if (!selected) return;
@@ -295,90 +311,66 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         this.dataForm.patchValue(patch, { emitEvent: false });
       });
 
-    // 監聽欄位變化
     // 監聽欄位變化：環境變數（範本）切換
     this.dataForm.get('ECR_TmplNo')?.valueChanges
-      .pipe(untilDestroyed(this)) // 建議加上防記憶體洩漏
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((tmplNo) => {
-        if (tmplNo) {
-          const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
-          if (detail) {
-            const patchObj: Record<string, any> = {};
+        if (!tmplNo) return;
+        const detail = this.tmplDetailList.find(x => x.ECR_TmplNo === tmplNo);
+        if (!detail) return;
 
-            // 1. 先用迴圈把所有要更新的欄位值整理到 patchObj 物件中
-            for (const key of Object.keys(this.dataForm.controls)) {
-              if (detail[key] !== undefined) {
+        const patchObj: Record<string, string | number | Date | null> = {};
 
-                // 特別處理連接埠欄位為 null 的情況
-                if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
-                  patchObj[key] = 0;
-                  continue;
-                }
+        // 1. 先用迴圈把所有要更新的欄位值整理到 patchObj 物件中
+        for (const key of Object.keys(this.dataForm.controls)) {
+          const value = detail[key as keyof TLS41010Item] as string | number | Date | null | undefined;
+          if (value === undefined) continue;
 
-                // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
-                if (key === 'ECR_SettleHHNN') {
-                  const val = detail[key];
-                  if (val instanceof Date) {
-                    patchObj[key] = val;
-                  } else if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(String(val)))) {
-                    const s = String(val).padStart(4, '0');
-                    const hh = Number.parseInt(s.substring(0, 2), 10);
-                    const mm = Number.parseInt(s.substring(2, 4), 10);
-                    const d = new Date();
-                    d.setHours(hh, mm, 0, 0);
-                    patchObj[key] = d;
-                  } else {
-                    patchObj[key] = this.defaultTime1110();
-                  }
-                  continue;
-                }
-
-                // 其他欄位暫存入物件
-                patchObj[key] = detail[key];
-              }
-            }
-
-            this.dataForm.patchValue(patchObj, { emitEvent: false });
+          // 特別處理連接埠欄位為 null 的情況
+          if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && value === null) {
+            patchObj[key] = 0;
+            continue;
           }
+
+          // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
+          if (key === 'ECR_SettleHHNN') {
+            patchObj[key] = this.parseSettleTime(value);
+            continue;
+          }
+
+          // 其他欄位暫存入物件
+          patchObj[key] = value;
         }
+
+        this.dataForm.patchValue(patchObj, { emitEvent: false });
       });
-    this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
-      this.checkTltNoRequired(value);
-    });
+    this.dataForm.get('ECR_Type')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => {
+        this.checkTltNoRequired(value);
+      });
     this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
 
+    // 專櫃編號選取 → 直接從下拉選項帶入相關欄位，不需再打 API
     this.dataForm.get('ECR_TLT_No')?.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((selectedNo) => {
         if (!selectedNo) return;
 
-        this.tls41010Service.queryTLT_NoInfo(selectedNo).subscribe({
-          next: (res) => {
-            if (res?.Status === '0000' && res.Data) {
-              const info = res.Data;
-              console.log('自動帶入櫃位資訊:', info);
+        const selected = this.CounterOptions.find(c => c.No === selectedNo);
+        if (!selected) return;
 
-              //  無論新增或編輯，都可 patch，但限定特定欄位
-              const patch: Record<string, string | Date | number> = {};
+        // 只要專櫃資料有值，就覆蓋（不動沒給值的欄位）
+        const patch: Record<string, string | Date> = {};
+        if (selected.ECR_LocNo) patch['ECR_LocNo'] = selected.ECR_LocNo;
+        if (selected.ECR_Group) patch['ECR_Group'] = selected.ECR_Group;
+        if (selected.ECR_SubGroup) patch['ECR_SubGroup'] = selected.ECR_SubGroup;
+        if (selected.ECR_AreaNo) patch['ECR_AreaNo'] = selected.ECR_AreaNo;
+        if (selected.tlt_bdate) patch['ECR_ActiveDate'] = new Date(selected.tlt_bdate);
+        if (selected.tlt_edate) patch['ECR_CloseDate'] = new Date(selected.tlt_edate);
+        if (selected.Name) patch['ECR_Name'] = selected.Name;
 
-              // 只要櫃位查詢回來有值，就覆蓋（不動沒給值的欄位）
-              if (info.ECR_LocNo) patch['ECR_LocNo'] = info.ECR_LocNo;
-              if (info.ECR_Group) patch['ECR_Group'] = info.ECR_Group;
-              if (info.ECR_SubGroup) patch['ECR_SubGroup'] = info.ECR_SubGroup;
-              if (info.ECR_AreaNo) patch['ECR_AreaNo'] = info.ECR_AreaNo;
-              if (info.tlt_bdate) patch['ECR_ActiveDate'] = new Date(info.tlt_bdate);
-              if (info.tlt_edate) patch['ECR_CloseDate'] = new Date(info.tlt_edate);
-              // 新增模式：以櫃名自動帶入收銀機名稱（若尚未填寫）
-              if (this.isFormCreateable && info.tlt_name && !this.dataForm.get('ECR_Name')?.value) {
-                patch['ECR_Name'] = info.tlt_name;
-              }
-              this.dataForm.patchValue(patch, { emitEvent: false });
-            } else {
-              console.warn('查詢櫃位資訊失敗:', res?.Message);
-            }
-          },
-          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err),
-        });
+        this.dataForm.patchValue(patch, { emitEvent: false });
       });
 
     // 若後端/範本回傳 null/undefined 的連接埠欄位，畫面預設顯示 0
@@ -390,34 +382,6 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     }
 
 
-  }
-
-  /** 套用範本資料 */
-  callTLS41010Api(tmplNo: string) {
-    this.tls41010Service.queryTLS41010({ ECR_TmplNo: tmplNo }).subscribe({
-      next: (res) => {
-        if (res.Data?.length) {
-          const patchData = res.Data[0];
-          if ('ECR_SettleHHNN' in patchData) {
-            const val = patchData.ECR_SettleHHNN;
-            if (typeof val === 'string' && /^\d{4}$/.test(val)) {
-              const hh = Number.parseInt(val.substring(0, 2), 10);
-              const mm = Number.parseInt(val.substring(2, 4), 10);
-              const d = new Date();
-              d.setHours(hh, mm, 0, 0);
-              patchData.ECR_SettleHHNN = d;
-            } else if (!(val instanceof Date)) {
-              patchData.ECR_SettleHHNN = this.defaultTime1110();
-            }
-          }
-          // 這邊幫我有的值再patch
-          this.dataForm.patchValue({
-            ECR_SchNo: patchData.ECR_SchNo ?? '',
-          });
-
-        }
-      },
-    });
   }
 
   /** 判斷 TLT (專櫃編號) 必填 */
@@ -468,7 +432,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       : this.tls41010Service.updateTLS41010(body);
 
     serviceCall
-      .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      .pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.messageService.successBubble(res.Message);

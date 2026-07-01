@@ -81,6 +81,12 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   // 儲存 TDS1010 項目對應，用於動態生成下拉選單
   private itemMap: Record<string, { label: string; value: string }[]> = {};
 
+  // 非第一列需鎖定（自動跟隨第一列）的欄位
+  private readonly lockedChangeFields: (keyof TLS2J030Data)[] = [
+    'TXN_Date', 'TXN_GUIPaper',
+    'INV_CompanyName', 'TXN_Uniform', 'INV_NoneTax', 'BusTaxExmpCard', 'TXN_Notes',
+  ];
+
 
   constructor(
     public readonly tls2j030Service: TLS2j030Service,
@@ -125,60 +131,95 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     return { isValid: true, errorMessage: [] };
   }
   private updateColumnsChange(): void {
-    // 基礎欄位
-    let baseColumns: EditColumn[] = [
+    // 第二列起可獨立調整的欄位（其餘欄位對非第一列 disabled）
+    const freeFields = new Set(['PLU_TaxType', 'TXN_SaleTax', 'TXN_SaleNoTax', 'TXN_Net', 'TXN_Tax', 'TXN_SaleAmt']);
+    // 發票號碼欄只在二/三聯式時才顯示（所有列聯式相同，取第一列判斷即可）
+    const showGuiNo = ['2', '3'].includes(String(this.changeEditData[0]?.TXN_GUIPaper ?? ''));
+
+    const baseColumns: EditColumn[] = [
       {
-        field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired, this.validateInvoiceDateAfterLockDate.bind(this)], width: '150px',
-        disabled: (v: any, i?: number, row?: any) => String(row?.['TXN_GUIPaper']) === 'E'
+        field: 'TXN_Date', header: '發票日期', type: 'date',
+        validate: [validateRequired, this.validateInvoiceDateAfterLockDate.bind(this)],
+        width: '150px',
+        // 非第一列鎖定；第一列：選電子發票時 disabled
+        disabled: (_v: unknown, i?: number, row?: Record<string, unknown>) =>
+          (i ?? 0) > 0 || String(row?.['TXN_GUIPaper']) === 'E',
       },
       {
         field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS,
         optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
-        onChange: (value: any, rowData: any) => {
+        // 非第一列鎖定
+        disabled: (_v: unknown, i?: number) => (i ?? 0) > 0,
+        onChange: (value: unknown, rowData: Record<string, unknown>) => {
           if (value === 'E' && rowData) {
-            // 當選擇 'E' 時，強制將日期設為當日
             const today = new Date();
-            const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            rowData.TXN_Date = todayLocal as unknown as string;
-
-            // 強制更新陣列參考，以確保 table-edit 畫面正確重繪
+            const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate()) as unknown as string;
+            // 切換電子發票時：所有列日期設為今天、發票號碼清空
+            this.changeEditData.forEach(row => {
+              const r = row as Record<string, unknown>;
+              r['TXN_Date'] = todayLocal;
+              r['TXN_GUINo'] = null;
+            });
             this.changeEditData = [...this.changeEditData];
           }
           this.updateColumnsChange();
           if (rowData) {
-            const result = this.validateInvoiceDateAfterLockDate(rowData.TXN_Date, rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
-            if (!rowData._validationErrors) rowData._validationErrors = {};
+            const result = this.validateInvoiceDateAfterLockDate(rowData['TXN_Date'], rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
+            if (!rowData['_validationErrors']) rowData['_validationErrors'] = {};
             if (!result.isValid) {
-              rowData._validationErrors['TXN_Date'] = result.errorMessage[0];
+              (rowData['_validationErrors'] as Record<string, string>)['TXN_Date'] = result.errorMessage[0];
               this.messageService.warnBubble(result.errorMessage[0]);
             } else {
-              delete rowData._validationErrors['TXN_Date'];
+              delete (rowData['_validationErrors'] as Record<string, string>)['TXN_Date'];
             }
             this.changeEditData = [...this.changeEditData];
           }
         },
       },
+      // 發票號碼：僅二/三聯式時顯示，每列各自填寫
+      ...(showGuiNo ? [{
+        field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, minWidth: '120px',
+        validate: [validateRequired],
+      } as EditColumn] : []),
     ];
-    // 判斷是否要顯示發票號碼
-    const paperValue = String(this.changeEditData[0]?.TXN_GUIPaper ?? '');
-    const showGuiNo = ['2', '3'].includes(paperValue);
-    if (showGuiNo) {
-      baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, minWidth: '120px', validate: [validateRequired], });
-    }
-    // 組合剩餘欄位，並動態注入 TXN_Uniform(統編)的驗證
+
     const changeEditColumns = COLUMNS_CHANGE_EDIT.map(col => {
+      let processedCol: EditColumn;
       if (col.field === 'TXN_Uniform') {
-        return {
+        processedCol = { ...col, validate: [this.validateUniformNumber.bind(this)] };
+      } else if (col.field === 'INV_NoneTax') {
+        processedCol = {
           ...col,
-          validate: [this.validateUniformNumber.bind(this)]
+          onChange: (value: unknown, rowData: Record<string, unknown>) => {
+            // 切回「正常」時清空免徵營業稅證明卡卡號，並清除其驗證錯誤提示
+            if (value !== '1') {
+              rowData['BusTaxExmpCard'] = null;
+              const errors = rowData['_validationErrors'] as Record<string, string> | undefined;
+              if (errors) delete errors['BusTaxExmpCard'];
+              this.changeEditData = [...this.changeEditData];
+            }
+          },
+        };
+      } else {
+        processedCol = col;
+      }
+
+      // 不在 freeFields 的欄位，對非第一列強制 disabled
+      if (!freeFields.has(processedCol.field)) {
+        const orig = processedCol.disabled;
+        processedCol = {
+          ...processedCol,
+          disabled: (_v: unknown, i?: number, row?: unknown) => {
+            if ((i ?? 0) > 0) return true;
+            if (typeof orig === 'function') return orig(_v, i, row);
+            return Boolean(orig);
+          },
         };
       }
-      return col;
+      return processedCol;
     });
-    // 加入剩餘欄位
-    baseColumns = [...baseColumns, ...changeEditColumns]
 
-    this.columnschange = baseColumns;
+    this.columnschange = [...baseColumns, ...changeEditColumns];
   }
   // ===== 生命周期與初始化 =====
 
@@ -330,9 +371,18 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     }
   }
 
-  onChangeEditDataChange(data: any[]) {
-    this.changeEditData = data;
-    // 檢查邏輯（若有，但不影響功能）已簡化移除，因為主要驗證在 onSubmit
+  onChangeEditDataChange(data: (TLS2J030Data & { _TABLE_KEY?: string; status?: string })[]): void {
+    // 第二列起：自動同步鎖定欄位的值（跟隨第一列）
+    if (data.length > 1) {
+      const source = data[0] as Record<string, unknown>;
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i] as Record<string, unknown>;
+        this.lockedChangeFields.forEach(field => { row[field] = source[field]; });
+      }
+      this.changeEditData = [...data];
+    } else {
+      this.changeEditData = data;
+    }
   }
 
   onChangeFieldChange(event: FieldChangeEvent): void {
@@ -345,22 +395,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   onDetailEditDataChange(data: any[]) {
     this.detailEditData = data;
-
-    const total = data.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
-
-    if (this.changeEditData.length > 0) {
-      const row = this.changeEditData[0] as any;
-      // 自動調整換開發票金額
-      row.TXN_SaleAmt = total;
-
-      // 逐欄位觸發 calculate，使用 forEach/map 比 for 迴圈更具功能性
-      this.columnschange.filter(col => col.calculate).forEach(col => {
-        const result = col.calculate!(row, row[col.field]); // 加上 ! 確保 calculate 存在
-        Object.assign(row, result);
-      });
-
-      this.changeEditData = [...this.changeEditData];
-    }
   }
 
   /** 查詢來源發票 */
@@ -386,10 +420,36 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     const source = list[0];
     const sourceDate = source.TXN_Date;
-    const today = new Date().toISOString();
+    const today = new Date();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    const todayYear = today.getFullYear();
+    const sourceD = new Date(sourceDate);
+    const sourceMonth = sourceD.getMonth() + 1;
+    const sourceYear = sourceD.getFullYear();
 
-    // 1. 判斷是否為當期發票
-    if (this.formatDateToYYYYMM(sourceDate) !== this.formatDateToYYYYMM(today)) {
+    // 每期 2 個月：1-2, 3-4, 5-6, 7-8, 9-10, 11-12；periodStart 為期初奇數月
+    const periodStart = todayMonth % 2 === 1 ? todayMonth : todayMonth - 1;
+    const allowed = new Set([
+      `${todayYear}${String(periodStart).padStart(2, '0')}`,
+      `${todayYear}${String(periodStart + 1).padStart(2, '0')}`,
+    ]);
+
+    // 今天是奇數月且 <= 15 日：同時允許上一期
+    if (todayMonth % 2 === 1 && todayDay <= 15) {
+      if (periodStart > 2) {
+        allowed.add(`${todayYear}${String(periodStart - 2).padStart(2, '0')}`);
+        allowed.add(`${todayYear}${String(periodStart - 1).padStart(2, '0')}`);
+      } else {
+        // 第一期(1-2月)寬限至去年 11-12 月
+        allowed.add(`${todayYear - 1}11`);
+        allowed.add(`${todayYear - 1}12`);
+      }
+    }
+
+    // 1. 判斷是否為當期（或寬限上一期）發票
+    const sourceYYYYMM = `${sourceYear}${String(sourceMonth).padStart(2, '0')}`;
+    if (!allowed.has(sourceYYYYMM)) {
       this.messageService.warnBubble(`來源發票非當期發票，無法新增`);
       return;
     }
@@ -452,9 +512,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   }
 
   txnNotesChange(): void {
-    const row = this.changeEditData[0] as any;
-    // 換開發票的備註欄位，自動帶入所有來源發票的發票號碼
-    row.TXN_Notes = this.data.map(item => item.TXN_GUIBegNo).join('、');
+    const notes = this.data.map(item => item.TXN_GUIBegNo).join('、');
+    this.changeEditData.forEach(row => { row.TXN_Notes = notes; });
+    this.changeEditData = [...this.changeEditData];
   }
 
   // ===== 送出與驗證 =====
@@ -497,37 +557,54 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   private validateBeforeSubmit(): { warnings: string[], errors: string[] } {
     const warnings: string[] = [];
     const errors: string[] = [];
-    const changeData = this.changeEditData[0];
 
     // 必填資料檢查
     if (this.data.length === 0) warnings.push('請先查詢來源發票');
-    if (!changeData) warnings.push('請填寫換開發票資料');
+    if (this.changeEditData.length === 0) warnings.push('請填寫換開發票資料');
     if (this.detailEditData.length === 0) warnings.push('請填寫商品明細資料');
 
     if (warnings.length > 0) return { warnings, errors };
 
-    // 【已修正】來源發票總計只取應稅 + 免稅金額，排除 TXN_TotTax 稅額
-    const sourceSum = this.data.reduce((sum, item) =>
-      sum + (Number(item.TXN_TotGUISaleTax) || 0) + (Number(item.TXN_TotGUISaleNoTax) || 0), 0);
-    const changeTotalCheck = Number(changeData.TXN_SaleAmt) || 0;
-    if (Math.abs(sourceSum - changeTotalCheck) > 0.01) {
-      errors.push(`來源發票金額 (應稅+免稅) (${sourceSum.toFixed(2)}) 與換開發票金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
+    // 應稅發票金額加總
+    const sourceSaleTax = this.data.reduce((sum, item) => sum + (Number(item.TXN_TotGUISaleTax) || 0), 0);
+    const changeSaleTax = this.changeEditData.reduce((sum, row) => sum + (Number(row.TXN_SaleTax) || 0), 0);
+    if (Math.abs(sourceSaleTax - changeSaleTax) > 0.01) {
+      errors.push(`來源發票應稅金額合計 (${sourceSaleTax.toFixed(2)}) 與換開發票應稅發票金額合計 (${changeSaleTax.toFixed(2)}) 不一致`);
     }
 
-    if (String(changeData.PLU_TaxType) === '1') {
-      const net = Number(changeData.TXN_Net) || 0;
-      const tax = Number(changeData.TXN_Tax) || 0;
-      const saleTax = Number(changeData.TXN_SaleTax) || 0;
-      // 判斷 未稅 + 稅額 是否等於 應稅
-      if (Math.abs((net + tax) - saleTax) > 0.01) {
-        errors.push(`未稅發票金額(${net}) + 稅額(${tax}) 須等於應稅發票金額(${saleTax})`);
+    // 免稅發票金額加總
+    const sourceSaleNoTax = this.data.reduce((sum, item) => sum + (Number(item.TXN_TotGUISaleNoTax) || 0), 0);
+    const changeSaleNoTax = this.changeEditData.reduce((sum, row) => sum + (Number(row.TXN_SaleNoTax) || 0), 0);
+    if (Math.abs(sourceSaleNoTax - changeSaleNoTax) > 0.01) {
+      errors.push(`來源發票免稅金額合計 (${sourceSaleNoTax.toFixed(2)}) 與換開發票免稅發票金額合計 (${changeSaleNoTax.toFixed(2)}) 不一致`);
+    }
+
+    // 每列各自驗證稅額
+    this.changeEditData.forEach((row, idx) => {
+      if (String(row.PLU_TaxType) === '1') {
+        const net = Number(row.TXN_Net) || 0;
+        const tax = Number(row.TXN_Tax) || 0;
+        const saleTax = Number(row.TXN_SaleTax) || 0;
+        if (Math.abs((net + tax) - saleTax) > 0.01) {
+          errors.push(`換開發票第 ${idx + 1} 筆：未稅(${net}) + 稅額(${tax}) 須等於應稅金額(${saleTax})`);
+        }
       }
+    });
+
+    // 商品明細應稅金額加總 vs. 換開應稅發票金額加總
+    const detailSaleTax = this.detailEditData
+      .filter(item => item.PLU_TaxType === '1')
+      .reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+    if (Math.abs(detailSaleTax - changeSaleTax) > 0.01) {
+      errors.push(`明細應稅金額加總 (${detailSaleTax.toFixed(2)}) 與換開應稅發票金額加總 (${changeSaleTax.toFixed(2)}) 不一致，請檢查資料`);
     }
 
-    // 2. 商品明細總計 vs. 換開發票銷售金額
-    const detailTotal = this.detailEditData.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
-    if (Math.abs(detailTotal - changeTotalCheck) > 0.01) {
-      errors.push(`商品明細金額總計 (${detailTotal.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查資料`);
+    // 商品明細免稅金額加總 vs. 換開免稅發票金額加總
+    const detailSaleNoTax = this.detailEditData
+      .filter(item => item.PLU_TaxType === '0')
+      .reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+    if (Math.abs(detailSaleNoTax - changeSaleNoTax) > 0.01) {
+      errors.push(`明細免稅金額加總 (${detailSaleNoTax.toFixed(2)}) 與換開免稅發票金額加總 (${changeSaleNoTax.toFixed(2)}) 不一致，請檢查資料`);
     }
 
     return { warnings, errors };
@@ -538,7 +615,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 由於 onSubmit 已經做了驗證，這裡直接假設資料完整
     this.loading = true;
     const payload = this.formatInsertData();
-
     this.tls2j030Service.insertTLS2J030(payload)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
@@ -558,8 +634,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    * 格式化新增資料的 Payload
    */
   private formatInsertData(): any {
-    const changeItem = this.changeEditData[0];
-
     // 1. POS2100List: 來源發票資料 (使用更精簡的語法)
     const pos2100List = this.data.map(item => ({
       TXN_Date: item.TXN_Date || new Date().toISOString().split('T')[0],
@@ -574,11 +648,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       TXN_TotTax: item.TXN_TotTax || 0
     }));
 
-    // 2. POS2101List: 換開發票資料 (簡化日期處理)
-    const pos2101List = [{
+    // 2. POS2101List: 換開發票資料（支援多筆）
+    const pos2101List = this.changeEditData.map(changeItem => ({
       TXN_Date: changeItem.TXN_Date ? new Date(changeItem.TXN_Date as string).toISOString() : new Date().toISOString(),
       ECR_No: this.changeEcrNo,
-      TXN_GUINo: changeItem.TXN_GUIPaper === '2' || changeItem.TXN_GUIPaper === '3' ? changeItem.TXN_GUINo || '' : '', // 根據發票聯式決定是否傳入發票號碼
+      TXN_GUINo: changeItem.TXN_GUIPaper === '2' || changeItem.TXN_GUIPaper === '3' ? changeItem.TXN_GUINo || '' : '',
       TXN_GUIPaper: changeItem.TXN_GUIPaper || '',
       PLU_TaxType: changeItem.PLU_TaxType || '',
       TXN_SaleTax: changeItem.TXN_SaleTax || 0,
@@ -591,12 +665,13 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       INV_CompanyName: changeItem.INV_CompanyName ?? null,
       BusTaxExmpCard: changeItem.BusTaxExmpCard ?? null,
       TXN_Notes: changeItem.TXN_Notes || ''
-    }];
+    }));
 
     // 3. POS21011List: 商品明細資料
     const pos21011List = this.detailEditData.map(item => ({
       INV_ItemName: item.INV_ItemName || '',
-      TXN_SaleAmt: item.INV_SaleAmt || 0, // 使用 INV_SaleAmt 傳入
+      PLU_TaxType: item.PLU_TaxType || '',
+      TXN_SaleAmt: item.INV_SaleAmt || 0,
       INV_Qty: item.INV_Qty || 0
     }));
 
@@ -637,32 +712,4 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     return 'N';
   }
 
-  /** 將日期轉換為發票所屬期 (YYYYMM 格式，偶數月轉為前一個月) */
-  private formatDateToYYYYMM(dateString: string): string {
-    try {
-      let date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        date = new Date(); // 使用當前日期作為 fallback
-      }
-      const year = date.getFullYear();
-      let month = date.getMonth() + 1;
-
-      // 偶數月轉換為前一個月
-      if (month % 2 === 0) {
-        month -= 1;
-      }
-      if (month < 1) {
-        month = 1; // 邊界處理
-      }
-
-      return year.toString() + month.toString().padStart(2, '0');
-    } catch {
-      const now = new Date();
-      const year = now.getFullYear();
-      let month = now.getMonth() + 1;
-      if (month % 2 === 0) month -= 1;
-      if (month < 1) month = 1;
-      return year.toString() + month.toString().padStart(2, '0');
-    }
-  }
 }

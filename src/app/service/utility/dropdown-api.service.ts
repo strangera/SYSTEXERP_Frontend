@@ -94,6 +94,7 @@ import {
   TALPORDERMQueryForShare,
   TblUserOrgidItem,
   Tls55020Query,
+  TLTTALENTActiveContractItem,
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
@@ -998,6 +999,16 @@ export class DropdownApiService {
   /** 查詢專櫃主檔(TLTTALENT) (取得最新合約資料) */
   queryTltTalent(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /**
+   * 【共通】查詢專櫃主檔(TLTTALENT) (僅顯示當下日期落在合約有效期間內的專櫃)
+   * 已附帶店位/館別/樓層/區域資料，選取後可直接 patch 表單欄位，不需再打 API (例如 TLS41010 queryTLT_NoInfo)。
+   */
+  queryTltTalentActiveContract(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<TLTTALENTActiveContractItem>('/queryTLTTALENT_ActiveContract_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

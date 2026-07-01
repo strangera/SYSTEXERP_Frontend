@@ -55,8 +55,4 @@ export class TLS41010Service {
   deleteTLS41010(idList: number[]): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/deleteTLS41010`, { idList });
   }
-  queryTLT_NoInfo(ECR_TLT_No: string): Observable<ApiResponse<any>> {
-    const body = { ECR_TLT_No };
-    return this.http.post<ApiResponse<any>>(`${API_URL}/queryTLT_NoInfo`, body);
-  }
 }

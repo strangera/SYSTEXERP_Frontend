@@ -1,11 +1,9 @@
-import { DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
 import { SortOption } from '@shared/models/api/base-api.interface';
-import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -55,6 +53,11 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
       visible: true,
     },
     {
+      field: 'TXN_GUINO',
+      header: '發票字軌',
+      visible: true,
+    },
+    {
       field: 'TXN_Time',
       header: '預計處理時間',
       visible: true,
@@ -86,8 +89,6 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   constructor(
     private fin11070Service: FIN11070Service,
-    private datePipe: DatePipe,
-    private validationService: ValidationService
   ) {
     super();
   }
