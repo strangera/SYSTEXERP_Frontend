@@ -71,24 +71,9 @@ export class ASS16040CRUComponent
    * 用唯讀型 app-table-report（無 lazy 分頁）。
    */
   readonly detailColumns: ReportColumn[] = [
-    {
-      field: 'GOODS_ID',
-      header: '品項代號',
-      format: (_v, _i, row: ASS16040DetailRow) =>
-        this.fasItemGoodsIdMap.get(row?.FASITEM_ID) ?? '',
-    },
-    {
-      field: 'GOODS_NAME',
-      header: '品項名稱',
-      format: (_v, _i, row: ASS16040DetailRow) =>
-        this.fasItemGoodsNameMap.get(row?.FASITEM_ID) ?? '',
-    },
-    {
-      field: 'UNIT_NAME',
-      header: '單位',
-      format: (_v, _i, row: ASS16040DetailRow) =>
-        this.fasItemUnitMap.get(row?.FASITEM_ID) ?? '',
-    },
+    { field: 'GOODS_ID',   header: '品項代號' },
+    { field: 'GOODS_NAME', header: '品項名稱' },
+    { field: 'UNIT_NAME',  header: '單位' },
     { field: 'QTY',   header: '數量',     align: 'right' },
     { field: 'NOTES', header: '單項說明' },
   ];
@@ -180,7 +165,13 @@ export class ASS16040CRUComponent
             return;
           }
           const rows = detail.Data ?? [];
-          this.detailData = rows;
+          // 攤平 FASITEM lookup 到每一列，讓前端排序有真實 key 可比（顯示欄無底層欄位會排不動）
+          this.detailData = rows.map(r => ({
+            ...r,
+            GOODS_ID:   this.fasItemGoodsIdMap.get(r.FASITEM_ID) ?? '',
+            GOODS_NAME: this.fasItemGoodsNameMap.get(r.FASITEM_ID) ?? '',
+            UNIT_NAME:  this.fasItemUnitMap.get(r.FASITEM_ID) ?? '',
+          }));
 
           // 主檔欄位：以第一筆（後端 join 在每筆明細）取，回填到 rowdata（如有）
           const master = rows[0] ?? (this.rowdata as ASS16040MasterRow | null);
