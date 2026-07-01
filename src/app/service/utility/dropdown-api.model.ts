@@ -487,6 +487,21 @@ export interface TalentOpenFlagItem extends IDropdownItem {
 }
 
 /**
+ * 查詢 queryTLTTALENT_ActiveContract_DropDownList 回傳的項目型別
+ * 共通下拉：僅回傳「當下日期落在合約有效期間內」的專櫃，並直接附帶店位/館別/樓層/區域資料，
+ * 選取後可直接帶入表單欄位，不需再呼叫 queryTLT_NoInfo。
+ */
+export interface TLTTALENTActiveContractItem extends IDropdownItem {
+  talent_id: number;
+  tlt_bdate: string;
+  tlt_edate: string;
+  ECR_Group: string | null;
+  ECR_SubGroup: string | null;
+  ECR_AreaNo: string | null;
+  ECR_LocNo: string | null;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
