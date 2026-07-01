@@ -356,11 +356,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           next: (res) => {
             if (res?.Status === '0000' && res.Data) {
               const info = res.Data;
-              console.log('自動帶入櫃位資訊:', info);
-
               //  無論新增或編輯，都可 patch，但限定特定欄位
               const patch: Record<string, string | Date | number> = {};
-
               // 只要櫃位查詢回來有值，就覆蓋（不動沒給值的欄位）
               if (info.ECR_LocNo) patch['ECR_LocNo'] = info.ECR_LocNo;
               if (info.ECR_Group) patch['ECR_Group'] = info.ECR_Group;
@@ -368,8 +365,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
               if (info.ECR_AreaNo) patch['ECR_AreaNo'] = info.ECR_AreaNo;
               if (info.tlt_bdate) patch['ECR_ActiveDate'] = new Date(info.tlt_bdate);
               if (info.tlt_edate) patch['ECR_CloseDate'] = new Date(info.tlt_edate);
-              // 新增模式：以櫃名自動帶入收銀機名稱（若尚未填寫）
-              if (this.isFormCreateable && info.tlt_name && !this.dataForm.get('ECR_Name')?.value) {
+              if (info.tlt_name) {
                 patch['ECR_Name'] = info.tlt_name;
               }
               this.dataForm.patchValue(patch, { emitEvent: false });
