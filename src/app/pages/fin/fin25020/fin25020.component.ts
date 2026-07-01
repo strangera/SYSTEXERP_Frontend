@@ -50,7 +50,7 @@ export interface FIN25020Data {
 })
 export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    WSLIP_NO: [null], // 匯款來源單號
+    WSLIP_NO: [null], // 匯款單號
     D_Date_Start: [null], // 建立日期起
     D_Date_End: [null], // 建立日期迄
     RMT_Date_Start: [null], // 匯款日期起
@@ -77,7 +77,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
   ];
 
   columns: Column[] = [
-    { field: 'WSLIP_NO', header: '匯款來源單號', visible: true },
+    { field: 'WSLIP_NO', header: '匯款單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'RMT_Date', header: '匯款日期', visible: true, format: formatDate },
     { field: 'BNK_id', header: '銀行代號', visible: true },

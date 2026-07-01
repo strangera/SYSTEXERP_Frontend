@@ -54,7 +54,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   // 銀行下拉選項 (從 API 載入)
   bankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
 
-  // 匯款來源單號查詢對話框
+  // 電匯來源單號查詢對話框
   showTransferSourceDialog = false;
   transferSourceQueryForm = this.formBuilder.group({
     PAM_No: [''],
@@ -77,14 +77,14 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   };
 
   transferSourceColumns: Column[] = [
-    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    { field: 'PAM_No', header: '電匯來源單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: this.formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
   ];
 
   // 主表單中顯示已選單號的欄位
   confirmedSourceColumns: Column[] = [
-    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    { field: 'PAM_No', header: '電匯來源單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: this.formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
   ];
@@ -165,7 +165,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
       });
   }
 
-  // 開啟匯款來源單號查詢對話框
+  // 開啟電匯來源單號查詢對話框
   openTransferSourceDialog(): void {
     // 帶入已確認的選擇，讓使用者可以修改
     this.selectedTransferSources = [...this.confirmedTransferSources];
@@ -173,7 +173,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     this.loadTransferSourceData();
   }
 
-  // 載入匯款來源單號資料
+  // 載入電匯來源單號資料
   loadTransferSourceData(): void {
     const queryValue = this.transferSourceQueryForm.value;
 
@@ -188,15 +188,15 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
       });
   }
 
-  // 查詢匯款來源單號
+  // 查詢電匯來源單號
   onQueryTransferSource(): void {
     this.loadTransferSourceData();
   }
 
-  // 確認選擇匯款來源單號（多選）
+  // 確認選擇電匯來源單號（多選）
   confirmTransferSourceSelection(): void {
     if (!this.selectedTransferSources || this.selectedTransferSources.length === 0) {
-      this.messageService.errorBubble('請至少選擇一筆匯款來源單號');
+      this.messageService.errorBubble('請至少選擇一筆電匯來源單號');
       return;
     }
     this.confirmedTransferSources = [...this.selectedTransferSources];
@@ -224,7 +224,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
 
   onSubmit(frm: FormGroup): void {
     if (this.confirmedTransferSources.length === 0) {
-      this.messageService.errorBubble('請選擇至少一筆匯款來源單號');
+      this.messageService.errorBubble('請選擇至少一筆電匯來源單號');
       return;
     }
 
