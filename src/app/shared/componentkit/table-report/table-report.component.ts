@@ -209,7 +209,9 @@ export class TableReportComponent implements OnChanges {
 
   constructor() {
     this.permissionService.initPermission(this.tableKey, (newKey) => {
-      this.tableKey = newKey;
+      if (!this._explicitTableKey) {
+        this.tableKey = newKey;
+      }
     });
     this.onScroll = this.onScroll.bind(this);
   }
