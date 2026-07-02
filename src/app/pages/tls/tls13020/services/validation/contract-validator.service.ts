@@ -145,6 +145,18 @@ export class ContractValidatorService {
       }
     }
 
+    // 續約日期卡控：起始日不可早於上份契約截止日後一天
+    const tltBdateCtrl = form.get('tlt_bdate');
+    if (tltBdateCtrl?.hasError('renewalDateTooEarly')) {
+      const minDate = tltBdateCtrl.errors?.['renewalDateTooEarly']?.min;
+      errors.push({ field: 'tlt_bdate', message: `契約起始日不可早於上份契約截止日後一天（最早可選 ${minDate}）` });
+    }
+    const contractBdateCtrl = form.get('tlt_contract_bdate');
+    if (contractBdateCtrl?.hasError('renewalOperDateTooEarly')) {
+      const minDate = contractBdateCtrl.errors?.['renewalOperDateTooEarly']?.min;
+      errors.push({ field: 'tlt_contract_bdate', message: `營運起始日不可早於上份營運截止日後一天（最早可選 ${minDate}）` });
+    }
+
     // 動態驗證：根據抽成別
     const tltTermType = form.get('tlt_term_type')?.value || '';
     if (['4', '6'].includes(tltTermType) && !form.get('tlt_ctype_mtotal')?.value) {

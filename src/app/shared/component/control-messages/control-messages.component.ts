@@ -6,8 +6,8 @@ import { ValidationService } from '../../service/validation.service';
 @Component({
   selector: 'app-control-messages',
   template: `
-    <div class="text-red-600" *ngIf="errorMessage !== null">
-      <small>{{errorMessage}}</small>
+    <div class="text-red-600 text-sm" *ngIf="errorMessage !== null">
+      <span>{{errorMessage}}</span>
     </div>
   `,
   standalone: true,

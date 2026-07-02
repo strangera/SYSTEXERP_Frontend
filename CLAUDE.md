@@ -13,7 +13,7 @@
 - **Framework**: Angular 18.1.0 (Standalone Pattern), TypeScript (~5.5.2), RxJS (~7.8.0)
 - **UI Toolkit**: PrimeNG 17.18.15 + PrimeFlex 3.3.1.
   - **Global Header**: EVERY page/action component MUST include `app-menubar` (located in `src/app/shared/component/menubar/`) at the very top of the HTML, binding `[ProgNo]="ProgNo"`.
-  - **Allowed Shared Components**: Prioritize and ONLY use these 14 valid components in `src/app/shared/componentkit/`:
+  - **Allowed Shared Components**: Prioritize and ONLY use these 15 valid components in `src/app/shared/componentkit/`:
     - `auto-complete`
     - `button`
     - `calendar`
@@ -26,9 +26,10 @@
     - `input-text-range`
     - `input-textarea`
     - `multi-select`
+    - `table` (`app-table` — 通用分頁表格，支援 lazy server-side pagination)
     - `table-edit`
     - `table-report`
-  - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Never reference or mimic `src/app/pages/tls/tls13010/` (it violates architectural patterns and creates shared pollution). Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
+  - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
 - **Inheritance Pattern**:
   - Query/List pages MUST extend `BasicQueryPageComponent` (located in `src/app/shared/componentextends/basic-qpage/`).
   - Create/Read/Update pages MUST extend `BasicCruPageComponent` (located in `src/app/shared/componentextends/basic-crupage/`).

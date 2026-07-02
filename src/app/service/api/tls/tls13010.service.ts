@@ -280,6 +280,18 @@ export class TLS13010Service {
     );
   }
 
+  /** 檢查指定專櫃編號是否存在尚未審核的合約版本 */
+  checkUnapprovedVersion(tltNo: string): Observable<boolean> {
+    return this.http.post<any>(
+      `${this.apiUrl}/TLS0000/TLS1000/checkUnapprovedVersion`,
+      JSON.stringify(tltNo),
+      { headers: { 'Content-Type': 'application/json' } }
+    ).pipe(
+      map((res) => res.Data as boolean),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
   /**
    * 續約用 - 查詢廠商最新版次契約完整資料（從契約表 TLS13010 查詢）
    * @param ven_no 廠商編號 (唯一值，如 27669188-1)
