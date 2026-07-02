@@ -97,6 +97,18 @@ export interface ExportFIN55050Payload {
 AmtTo?: number | null;
 }
 
+export interface VendorPickerItem {
+  VEN_No: string;
+  VEN_Name: string;
+}
+
+export interface VendorPickerRequest {
+  VEN_No?: string;
+  VEN_Name?: string;
+  PageIndex?: number;
+  PageSize?: number;
+}
+
 export interface DropDownResp<T = { No: string; Name: string }[]> {
   Status: string;
   Data: T;
@@ -156,6 +168,10 @@ export class FIN55050Service {
     const url = `${environment.ApiUrl}/queryGLS1010_DropDownList`;
     return this.http.post<DropDownResp>(url, null);
   }
+  queryVendorPicker(req: VendorPickerRequest): Observable<DropDownResp<VendorPickerItem[]>> {
+    return this.http.post<DropDownResp<VendorPickerItem[]>>(`${this.apiUrl}/queryVendorPicker`, req);
+  }
+
   queryFIN55050Detail(body: { VouNo: string }): Observable<any> {
     const url = `${this.apiUrl}/queryFIN55050Detail`.replace('/FIN0000/GLS1000', '/FIN0000/GLS1000'); // 保持同路徑前綴
     return this.http.post<any>(`${environment.ApiUrl}/FIN0000/GLS1000/queryFIN55050Detail`, body);
