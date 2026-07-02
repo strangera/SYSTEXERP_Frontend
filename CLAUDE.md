@@ -120,3 +120,31 @@ imports: [..., ReportSignatureComponent]
 ```
 
 元件會自動呼叫 API 取資料，將 line1~line5 橫排顯示，空值的欄自動略去。
+
+---
+
+## 共通下拉選單 (Dropdown) — 固定寫法，禁止在頁面內手刻 http.post
+
+所有下拉一律走 `DropdownApiService`（`src/app/service/utility/dropdown-api.service.ts`），型別放 `dropdown-api.model.ts`。SYS1000 靜態代碼表用 `getSYS1000Options(sysType)`（`sys1000.service.ts`），不是 API 下拉。
+
+**唯一標準寫法**（新增下拉、消費下拉都照抄這個模式，範例見 `tls52010.component.ts:168`）：
+
+`.component.ts` — inject `DropdownApiService`，欄位直接指派 Observable，不 subscribe：
+```typescript
+private readonly dropdown = inject(DropdownApiService);
+warehouseOptions = this.dropdown.queryPos2034(); // 倉別
+brandOptions = this.dropdown.queryPluLogo();     // 品牌代碼
+```
+
+`.component.html` — 搭配 `| async`，`optionLabel`/`optionValue` 固定 `label`/`value`（imports 記得加 `AsyncPipe`）：
+```html
+<app-multi-select class="col-12 md:col-6 lg:col-3" label="倉庫代碼/名稱" controlName="HOS_No"
+  [options]="warehouseOptions | async" optionLabel="label" optionValue="value"
+  [control]="queryForm.controls.HOS_NoList" [submitted]="submitted" />
+```
+
+若該下拉還不存在：在 `dropdown-api.model.ts` 補 Item/Query interface，在 `dropdown-api.service.ts` 用 `queryAndMapDropdown`（回傳 `"No - Name"` label）或 `queryDropdown`/`queryDropdownWithParams`（原始陣列）新增一個 `query{XXX}()` 方法，接 `shareReplay({ bufferSize: 1, refCount: true })`。
+
+**⚠️ `getSYS1000Options(sysType)` 呼叫時機地雷**：production 有開 `PreloadAllModules`（`main.ts`），lazy route 的 module 頂層常數會在 App 啟動後就提早被 evaluate，很可能早於登入完成、SYS1000 尚未寫入 `localStorage` 的時間點，導致拿到空陣列且永久定型（module 常數只算一次，不會重算）。
+- 禁止在 module 頂層常數（如 `export const COLUMNS_XXX = [{ options: getSYS1000Options('X') }]`）或 class field 初始化式中直接呼叫 `getSYS1000Options()`。
+- 一律包成 function 在 render 時才呼叫：`options: () => getSYS1000Options('X')`（`EditColumn.options` 支援 function 形式），或改用 reactive 版本 `getSYS1000Options$()`。
