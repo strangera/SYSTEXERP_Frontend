@@ -15,15 +15,17 @@ import { CellInput } from './table-edit-cell.model';
         <ng-container *ngSwitchCase="'input'">
           <input type="text"
                  class="min-w-max p-inputtext p-component p-element"
-                 [placeholder]="isDisabled() ? '' : (cellInput.col.placeholder ?? '請輸入' + cellInput.col.header)"
+                 [placeholder]="isDisabled() ? '' : (isReadonly() ? '雙擊選取' : (cellInput.col.placeholder ?? '請輸入' + cellInput.col.header))"
                  [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                  [ngModelOptions]="{ standalone: true }"
                  [disabled]="isDisabled()"
+                 [readonly]="isReadonly()"
                  (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
                  [maxlength]="cellInput.col.maxLength || null"
                  [style]="{'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                  (focus)="handleFocus()"
                  (blur)="handleBlur()"
+                 (dblclick)="handleDblClick()"
                  (keydown.enter)="handleEnter($event)"
                  (input)="onInput()"
                  [ngClass]="{
@@ -60,6 +62,11 @@ export class InputCellComponent {
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
   }
 
+  isReadonly(): boolean {
+    const col = this.cellInput.col;
+    return !!(col.readonly && col.readonly(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData));
+  }
+
   /** 對齊 PrimeNG pInputText 的 filled 狀態（有值時套用 p-filled） */
   isInputFilled(): boolean {
     const v = this.cellInput.rowData[this.cellInput.col.field];
@@ -75,6 +82,15 @@ export class InputCellComponent {
 
   handleFocus() {
     this.cellInput.col.onFocus?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+  }
+
+  handleDblClick() {
+    this.cellInput.col.onDblClick?.(
       this.cellInput.rowData,
       this.cellInput.rowData[this.cellInput.col.field],
       this.cellInput.col,

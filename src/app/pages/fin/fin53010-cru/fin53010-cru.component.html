@@ -830,6 +830,47 @@
   />
 </p-dialog>
 
+<!-- 銷項發票：雙擊挑既有發票 Picker Dialog（31/32 查 POS4023、35 查 APS4023） -->
+<p-dialog
+  header="選取銷項發票"
+  [(visible)]="showSalesInvoicePickerDialog"
+  [modal]="true"
+  [style]="{ width: '65vw' }"
+>
+  <div class="flex gap-2 align-items-end mb-3">
+    <app-input-text
+      [style]="{ width: '280px' }"
+      label="發票號碼"
+      controlName="salesInvoicePickerQuery"
+      [control]="salesInvoicePickerQueryControl"
+      [customPlaceholder]="'輸入發票號碼（可留空查全部）'"
+      [alwaysShowPlaceholder]="true"
+      (keyup.enter)="loadSalesInvoicePickerList()"
+    />
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      [loading]="salesInvoicePickerLoading"
+      (click)="loadSalesInvoicePickerList()"
+    />
+  </div>
+  <app-table
+    tableKey="FIN53010_sales_invoice_picker"
+    [columns]="salesInvoicePickerColumns"
+    [data]="salesInvoicePickerList"
+    [totalRecords]="salesInvoicePickerTotalRecords"
+    [loading]="salesInvoicePickerLoading"
+    [showDelete]="false"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [selectionMode]="'single'"
+    [showReportMode]="false"
+    dataKey="InvoiceNumber"
+    [(selectedItems)]="salesInvoicePickerSelectedItem"
+    (itemClick)="onSalesInvoicePick($event)"
+  />
+</p-dialog>
+
 <!-- 進項折讓：原始發票查詢 Picker Dialog -->
 <p-dialog
   header="選取原始進項發票"

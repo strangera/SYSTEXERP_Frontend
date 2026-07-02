@@ -226,6 +226,9 @@ function buildInsertNext(
   const normalSalesRows = activeSteps.includes(6) && stepSales.length
     ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToInsert4023(r, deps))
     : [];
+  // 依發票格式分表：31/32 → POS4023；35 → APS4023
+  const normalSalesPos = normalSalesRows.filter(r => r.InvoiceType === '31' || r.InvoiceType === '32');
+  const normalSalesAps = normalSalesRows.filter(r => r.InvoiceType !== '31' && r.InvoiceType !== '32');
   const allowanceSalesRows = activeSteps.includes(9) && stepSalesAllowance.length
     ? stepSalesAllowance.map(r => mapStepSalesToInsert4023(r, deps))
     : [];
@@ -244,7 +247,8 @@ function buildInsertNext(
       activeSteps.includes(4) && stepAR.length
         ? stepAR.map(r => mapStepArToInsert(r, deps))
         : [],
-    insertAPS4023Datas: [...normalSalesRows, ...allowanceSalesRows],
+    insertAPS4023Datas: [...normalSalesAps, ...allowanceSalesRows],
+    insertPOS4023Datas: normalSalesPos,
     insertAPS2002Datas: [...normalPurchaseRows, ...allowancePurchaseRows],
     insertAPS4002Datas:
       activeSteps.includes(7) && stepBank.length
@@ -374,12 +378,18 @@ function buildUpdateNext(
   const normalSalesRows = activeSteps.includes(6)
     ? stepSales.filter(r => !r.isPOS4023).map(r => mapStepSalesToUpdate4023(r, deps))
     : [];
+  // 依發票格式分表：31/32 → POS4023；35 → APS4023
+  const normalSalesPos = normalSalesRows.filter(r => r.InvoiceType === '31' || r.InvoiceType === '32');
+  const normalSalesAps = normalSalesRows.filter(r => r.InvoiceType !== '31' && r.InvoiceType !== '32');
   const allowanceSalesRows = activeSteps.includes(9)
     ? stepSalesAllowance.map(r => mapStepSalesToUpdate4023(r, deps))
     : [];
-  const mergedSales = [...normalSalesRows, ...allowanceSalesRows];
+  const mergedSales = [...normalSalesAps, ...allowanceSalesRows];
   if (mergedSales.length) {
     next.updateAPS4023Datas = mergedSales;
+  }
+  if (normalSalesPos.length) {
+    next.updatePOS4023Datas = normalSalesPos;
   }
   const normalPurchaseRows = activeSteps.includes(5)
     ? stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id))
