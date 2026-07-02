@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS12030QueryRow, QueryASS12030Request } from '@pages/ass/ass12030/ass12030.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -78,7 +77,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   aprvEmpIdOptions: { value: string; label: string }[] = [];
   /** 部門：queryPOS2013_DropDownList */
   orgIdOptions = this.dropdownApiService.querySys3100();
-  /** 品項：queryFIN11040 */
+  /** 品項：queryASS11040_DropDownList */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 倉別：queryASS11100 */
   whIdOptions: { value: string; label: string }[] = [];
@@ -134,7 +133,6 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
     public readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
-    private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service
   ) {
     super();
@@ -198,18 +196,9 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
         }));
       });
     this.subpoenaStatusOptions = getSYS1000Options('NEEDS_STATUS');
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-          .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
-          }));
-        this.goodsIdOptions = options;
-      },
+    // 品項：queryASS11040_DropDownList（固定資產品項主檔，與整條資產採購流程一致）
+    this.dropdownApiService.queryASS11040_DropDownList().subscribe(options => {
+      this.goodsIdOptions = options ?? [];
     });
     this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
