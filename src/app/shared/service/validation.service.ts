@@ -57,6 +57,8 @@ export class ValidationService {
       invalidCompanyId: '統一編號格式錯誤',
       reserveAmtTooLarge: '保留款金額不可大於應付金額',
       invalidIp: 'IP 位址格式錯誤 (範例: 192.168.1.1)',
+      renewalDateTooEarly: `日期不可早於上份契約截止日後一天（最早可選 ${validatorValue?.min}）`,
+      renewalOperDateTooEarly: `日期不可早於上份營運截止日後一天（最早可選 ${validatorValue?.min}）`,
     };
     return config[validatorName];
   }

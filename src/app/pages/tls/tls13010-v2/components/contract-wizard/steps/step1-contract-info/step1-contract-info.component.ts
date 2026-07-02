@@ -222,6 +222,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.setupBusTypeListener();
     this.setupBusClassListener();
     this.setupDateAutoFillListeners();
+    this.setupTermTypeListener();
     this.updateDisplayLocationData();
 
     // 父組件透過 isInitialized 控制渲染時機，確保 dropdownService 已完成初始化
@@ -678,9 +679,24 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
 
 
+  private setupTermTypeListener(): void {
+    const sub = this.form.get('tlt_term_type')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(val => {
+        if (!['4', '5', '6'].includes(val)) {
+          this.form.get('tlt_ctype_mtotal')?.setValue(null);
+        }
+      });
+    if (sub) this.subscriptions.push(sub);
+  }
+
   // ========== 輔助方法 ==========
   get isFormReadonly(): boolean {
     return this.crudstatus === CRUDStatus.Read;
+  }
+
+  get isMtotalReadonly(): boolean {
+    return !['4', '5', '6'].includes(this.form.get('tlt_term_type')?.value);
   }
 
   /**

@@ -107,6 +107,11 @@ export interface RenewalBasicInfo {
   cap_saletype4: string;
   cap_saletype5: string;
   tlt_remark: string;
+  // 來源版本日期（供續約日期驗證）
+  source_tlt_bdate?: string | null;
+  source_tlt_edate?: string | null;
+  source_tlt_contract_bdate?: string | null;
+  source_tlt_contract_edate?: string | null;
 }
 
 /** 續約用位置資訊 */

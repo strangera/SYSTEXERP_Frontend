@@ -402,12 +402,22 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   /**
-   * 續約 - 以該列的 ven_no 帶入資料進入續約精靈
+   * 續約 - 先檢查是否有未審核版本，若有則提示並阻止進入
    */
-  onRenewal(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Create)) {
-      this.navigateWithState(CRUDStatus.Create, rowData);
+  async onRenewal(rowData: ContractItem): Promise<void> {
+    if (!this.hasPermission(Actions.Create)) return;
+
+    try {
+      const hasUnapproved = await this.apiService.checkUnapprovedVersion(rowData.tlt_no).toPromise();
+      if (hasUnapproved) {
+        this.messageService.warnBubble(`此櫃號:${rowData.tlt_no} 尚有未審核合約版本，請先檢視未審核版本合約!!`);
+        return;
+      }
+    } catch {
+      // 檢查失敗不阻止進入，交由後端 submit 時再卡控
     }
+
+    this.navigateWithState(CRUDStatus.Create, rowData);
   }
 
   /**
