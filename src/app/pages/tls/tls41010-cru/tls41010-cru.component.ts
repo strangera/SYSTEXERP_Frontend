@@ -18,9 +18,10 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
+import { TLS41010Data, TLS41010Item, tltNoPickerCruColumns } from '../tls41010/tls41010.model';
+import { TltNoPickerComponent } from '../tls41010/tlt-no-picker/tlt-no-picker.component';
 
-/** 專櫃編號下拉選項：僅列出當下生效中的合約，並附帶可直接 patch 表單的相關欄位 */
+/** 專櫃編號下拉選項：僅列出每個專櫃「最近一次已生效」的合約(排除未生效的未來合約，但保留已到期停用的歷史資料)，並附帶可直接 patch 表單的相關欄位 */
 interface CounterOption extends TLTTALENTActiveContractItem {
   label: string;
   value: string;
@@ -47,7 +48,8 @@ interface LabelValueOption {
     AccordionModule,
     InputNumberComponent,
     TranslateModule,
-    InputTextareaComponent
+    InputTextareaComponent,
+    TltNoPickerComponent
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
@@ -197,6 +199,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
   CounterOptions: CounterOption[] = [];
+  /** 專櫃編號選擇器彈窗欄位（11 欄） */
+  tltNoPickerColumns = tltNoPickerCruColumns;
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
   KBLevelOptions: LabelValueOption[] = []; // 機台鍵盤編號 下拉選項
@@ -205,7 +209,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
 
-    // 專櫃編號下拉（共通：僅顯示當下生效中的合約，選取後直接帶入相關欄位，不需再打 API）
+    // 專櫃編號下拉（共通：僅顯示每個專櫃最近一次已生效的合約，選取後直接帶入相關欄位，不需再打 API）
     this.dropdownApiService.queryTltTalentActiveContract()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(res => {
@@ -218,6 +222,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       'ECR_GUIPrn', 'ECR_SlipPrn', 'ECR_OrderPrn', 'ECR_LablePrn', 'ECR_EDC', 'ECR_EDC2',
       'ECR_ElecSVCrdA', 'ECR_ElecSVCrdB', 'ECR_ElecSVCrdC', 'ECR_ElecPay', 'ECR_Drawer',
       'CRT_Date', 'CRT_USR_No', 'CRT_USR_Name', 'UPD_Date', 'UPD_USR_No', 'UPD_USR_Name',
+      'ECR_TLT_Name',
     ]) this.dataForm.get(field)?.disable();
 
     if (this.isFormCreateable) {
@@ -369,6 +374,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         if (selected.tlt_bdate) patch['ECR_ActiveDate'] = new Date(selected.tlt_bdate);
         if (selected.tlt_edate) patch['ECR_CloseDate'] = new Date(selected.tlt_edate);
         if (selected.Name) patch['ECR_Name'] = selected.Name;
+        if (selected.Name) patch['ECR_TLT_Name'] = selected.Name;
 
         this.dataForm.patchValue(patch, { emitEvent: false });
       });

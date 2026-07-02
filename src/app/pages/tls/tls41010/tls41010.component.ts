@@ -10,6 +10,7 @@ import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
+import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -20,15 +21,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { AddButton } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
-import { columns, TLS41010Data, TLS41010Item } from './tls41010.model';
-
-/** 專櫃編號查詢下拉選項（查詢頁：查詢條件不限制合約是否生效中，才能查到歷史/已停用專櫃的機台資料） */
-interface CounterFilterOption {
-  No: string;
-  Name: string;
-  label: string;
-  value: string;
-}
+import { columns, TLS41010Data, TLS41010Item, tltNoPickerQueryColumns } from './tls41010.model';
+import { TltNoPickerComponent } from './tlt-no-picker/tlt-no-picker.component';
 
 @Component({
   selector: 'app-tls41010',
@@ -44,7 +38,8 @@ interface CounterFilterOption {
     DropdownComponent,
     TranslateModule,
     DialogComponent,
-    TableReportComponent
+    TableReportComponent,
+    TltNoPickerComponent
   ],
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
@@ -53,11 +48,14 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   private readonly dropdownApiService = inject(DropdownApiService);
   private readonly destroyRef = inject(DestroyRef);
   columns: ReportColumn[] = columns;
+  /** 專櫃編號選擇器彈窗欄位（7 欄） */
+  tltNoPickerColumns: ReportColumn[] = tltNoPickerQueryColumns;
   queryForm = this.formBuilder.group({
     ECR_No: [null, [Validators.maxLength(10)]],
     ECR_Type: [null, [Validators.maxLength(2)]],
     ECR_Name: [null, [Validators.maxLength(20)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
+    ECR_TLT_Name: [{ value: null as string | null, disabled: true }],
     ECR_ActiveDateStart: [null as Date | null],
     ECR_ActiveDateEnd: [null as Date | null],
     ECR_CloseDateStart: [null],
@@ -103,7 +101,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   CashierOptions: IDropdownItem[] = [];
   dialogSelectItem: TLS41010Data | null = null;
   dialogOptions: { value: string; label: string }[] = [];
-  CounterOptions: CounterFilterOption[] = [];
+  CounterOptions: TLTTALENTActiveContractItem[] = [];
   LocOptions: IDropdownItem[] = [];
 
   addButton: AddButton[] = [
@@ -119,11 +117,19 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.dropdownApiService.queryTltTalent()
+    // 專櫃編號下拉（共通：僅顯示每個專櫃「最近一次已生效」的合約，排除未生效的未來合約，但保留已到期停用的歷史資料）
+    this.dropdownApiService.queryTltTalentActiveContract()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(res => {
-        this.CounterOptions = (res ?? []) as CounterFilterOption[];
+        this.CounterOptions = (res ?? []) as unknown as TLTTALENTActiveContractItem[];
+        // 選項回來後，若欄位已有值(例如帶查詢條件回來)，補算一次對應名稱
+        this.syncTltName(this.queryForm.controls.ECR_TLT_No.value);
       });
+
+    // 專櫃編號輸入/選取後，自動帶出對應的專櫃名稱（僅顯示用，disabled 不會被當作查詢條件送出）
+    this.queryForm.controls.ECR_TLT_No.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(no => this.syncTltName(no));
 
     this.dropdownApiService.querySys3A00()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -170,6 +176,12 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       .subscribe(options => {
         this.LocOptions = (options ?? []) as IDropdownItem[];
       });
+  }
+
+  /** 依專櫃代號從 CounterOptions 找出對應名稱，帶入唯讀的 ECR_TLT_Name 欄位 */
+  private syncTltName(no: string | null | undefined): void {
+    const matched = this.CounterOptions.find(c => c.No === no);
+    this.queryForm.controls.ECR_TLT_Name.setValue(matched?.Name ?? null, { emitEvent: false });
   }
 
   // 🌟【新增獨立方法】：負責向後端撈取最新的收銀機清單，更新下拉選單

@@ -235,6 +235,38 @@ export interface TLS41010Item {
 }
 
 
+/**
+ * 專櫃編號選擇器彈窗欄位（查詢頁 tls41010，共 7 欄：序號由 app-tlt-no-picker 內部自動產生）
+ * 資料來源：DropdownApiService.queryTltTalentActiveContract()
+ */
+export const tltNoPickerQueryColumns: ReportColumn[] = [
+  { field: 'No', header: '專櫃代號' },
+  { field: 'Name', header: '專櫃名稱' },
+  { field: 'ECR_LocNo', header: '位置編號' },
+  { field: 'ECR_AreaNo', header: '區域' },
+  { field: 'area_desc', header: '區域名稱' },
+  { field: 'ECR_SubGroup', header: '樓層' },
+  { field: 'floor_desc', header: '樓層名稱' },
+  { field: 'contract_subno', header: '合約版本' },
+];
+
+/**
+ * 專櫃編號選擇器彈窗欄位（新增/編輯頁 tls41010-cru，共 11 欄：序號由 app-tlt-no-picker 內部自動產生）
+ * 資料來源：DropdownApiService.queryTltTalentActiveContract()
+ */
+export const tltNoPickerCruColumns: ReportColumn[] = [
+  { field: 'No', header: '專櫃代號' },
+  { field: 'Name', header: '專櫃名稱' },
+  { field: 'ECR_LocNo', header: '位置編號' },
+  { field: 'ECR_AreaNo', header: '區域' },
+  { field: 'area_desc', header: '區域名稱' },
+  { field: 'ECR_SubGroup', header: '樓層' },
+  { field: 'floor_desc', header: '樓層名稱' },
+  { field: 'tlt_bdate', header: '起始日期', format: formatDate },
+  { field: 'tlt_edate', header: '終止日期', format: formatDate },
+  { field: 'contract_subno', header: '合約版本' },
+];
+
 export const columns: ReportColumn[] = [
   { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
   { field: 'ECR_No', header: '收銀機號', visible: true },

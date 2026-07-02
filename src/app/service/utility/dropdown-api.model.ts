@@ -499,6 +499,10 @@ export interface TLTTALENTActiveContractItem extends IDropdownItem {
   ECR_SubGroup: string | null;
   ECR_AreaNo: string | null;
   ECR_LocNo: string | null;
+  building_desc?: string | null;
+  floor_desc?: string | null;
+  area_desc?: string | null;
+  contract_subno?: number;
 }
 
 /**

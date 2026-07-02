@@ -8,9 +8,13 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
-            [options]="CounterOptions" optionLabel="label" optionValue="value"
-            [submitted]="submitted"></app-dropdown>
+          <app-tlt-no-picker label="專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
+            [options]="CounterOptions" [columns]="tltNoPickerColumns" [dialogWidth]="'1300px'"
+            [submitted]="submitted"></app-tlt-no-picker>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="櫃位名稱" controlName="ECR_TLT_Name" [control]="dataForm.controls.ECR_TLT_Name"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <div class="grid p-fluid">
@@ -364,29 +368,29 @@
       </p-accordion>
       <hr />
       @if (!isFormCreateable) {
-        <div class="card">
-          <div class="grid p-fluid">
-            <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日期" controlName="CRT_Date"
-              [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
-            <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員編號" controlName="CRT_USR_No"
-              [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted" />
-            <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
-              [control]="dataForm.controls.CRT_USR_Name" [submitted]="submitted" />
-            <app-calendar class="col-12 md:col-6 lg:col-4" label="變更日期" controlName="UPD_Date"
-              [control]="dataForm.controls.UPD_Date" [submitted]="submitted" />
-            <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員編號" controlName="UPD_USR_No"
-              [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted" />
-            <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
-              [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted" />
-          </div>
+      <div class="card">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日期" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員編號" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
+            [control]="dataForm.controls.CRT_USR_Name" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="變更日期" controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員編號" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
+            [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted" />
         </div>
+      </div>
       }
 
       @if (!isFormReadable) {
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" [loading]="loading" />
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
       }
     </form>
   </p-panel>
