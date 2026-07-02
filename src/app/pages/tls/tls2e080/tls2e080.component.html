@@ -63,13 +63,12 @@
   <app-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
     [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
-    (selectButton)="onSelectButton($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    (selectAllChange)="isAllSelected = $event">
+    (selectButton)="onSelectButton($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
-          <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" icon="pi pi-file" (click)="exportZip()"
-            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.ExportZip)"
+          <p-button styleClass="p-2" label="專櫃對帳單PDF" [rounded]="true" icon="pi pi-file" (click)="exportPDF()"
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.Report)"
             [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
