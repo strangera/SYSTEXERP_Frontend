@@ -2,8 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
   ASS12040ApproveRequest,
-  ASS12040DetailRequest,
-  ASS12040DetailResponse,
   ASS12040QueryDataWrapper,
   ASS12040QueryRequest,
   ASS12040QueryRow,
@@ -41,16 +39,6 @@ export class ASS12040Service {
           return { ...res, Data: list, TotalCount: total } as ApiResponse<ASS12040QueryRow[]>;
         })
       );
-  }
-
-  /**
-   * 詳細功能（取得單筆）
-   */
-  detailASS12040(payload: ASS12040DetailRequest): Observable<ApiResponse<ASS12040DetailResponse>> {
-    return this.http.post<ApiResponse<ASS12040DetailResponse>>(
-      `${this.apiUrl}/detailASS12040`,
-      payload
-    );
   }
 
   /** 審核功能 */
