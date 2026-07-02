@@ -51,8 +51,7 @@ export interface ASS12040QueryRequest extends BaseQueryRequest {
 }
 
 /**
- * ASS12040 查詢結果一筆資料
- * TODO: 表格欄位名稱尚未確認，待規格確認後更新 field 與 API 回傳對應
+ * ASS12040 查詢結果一筆資料（含明細欄位，對應 queryASS12040 回傳）
  */
 export interface ASS12040QueryRow {
   /** 總筆數(分頁用) */
@@ -71,6 +70,18 @@ export interface ASS12040QueryRow {
   TAX_AMT?: number;
   /** 含稅總金額 */
   AMT?: number;
+  /** 品項編號(明細) */
+  GOODS_ID?: string;
+  /** 品項數量(明細) */
+  QTY?: number;
+  /** 單價(未稅)(明細) */
+  GOODS_PRICE?: string;
+  /** 總金額(未稅)(明細) */
+  D_NTAX_AMT?: number;
+  /** 倉別(明細) */
+  WH_ID?: string;
+  /** 委託部門(明細) */
+  D_ORG_ID?: string;
   /** 採購單狀態 */
   SUBPOENA_STATUS?: string;
   /** 審核人編號 */
@@ -97,57 +108,6 @@ export interface ASS12040QueryDataWrapper {
   Details?: ASS12040QueryRow[];
   TotalRows?: number;
   TotalPages?: number;
-}
-
-/**
- * ASS12040 詳細請求參數（以主鍵或單號取得單筆）
- */
-export interface ASS12040DetailRequest {
-  /** 採購單號 */
-  SUBPOENA_ID?: string;
-  /** 主檔 ID */
-  FAPurchaseM_ID?: number;
-}
-
-/**
- * ASS12040 詳細資料（唯讀表單對應）
- */
-export interface ASS12040DetailResponse {
-  /** 採購案說明 */
-  REMARK?: string;
-  /** 採購單號 */
-  SUBPOENA_ID?: string;
-  /** 採購單狀態 */
-  SUBPOENA_STATUS?: string;
-  /** 供應商編號 */
-  SUPPLIER_ID?: string;
-  /** 申請人編號 */
-  EMP_ID?: string;
-  /** 部門代號 */
-  ORG_ID?: string;
-  /** 申請日期 */
-  APPLY_DATE?: string | Date;
-  /** 未稅總金額 */
-  NTAX_AMT?: number;
-  /** 稅額 */
-  TAX_AMT?: number;
-  /** 含稅總金額 */
-  AMT?: number;
-  /** 品項編號 */
-  GOODS_ID?: string;
-  /** 品項數量 */
-  ITEM_QTY?: number;
-  /** 單價(未稅) */
-  UNIT_PRICE?: number;
-  /** 總金額(未稅) */
-  TOTAL_PRICE?: number;
-  /** 倉別 */
-  WH_ID?: string;
-  /** 委託部門 */
-  ENTRUST_ORG_ID?: string;
-  /** 說明 */
-  NOTES?: string;
-  [key: string]: unknown;
 }
 
 /**

@@ -28,6 +28,7 @@ import {
   TLS2J030Data,
   TLS2J030Source
 } from '../tls2j030/tls2j030.model';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 // 移除 @Component 裝飾器中的冗餘 imports，只保留必要的
@@ -185,7 +186,22 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     const changeEditColumns = COLUMNS_CHANGE_EDIT.map(col => {
       let processedCol: EditColumn;
-      if (col.field === 'TXN_Uniform') {
+      if (col.field === 'PLU_TaxType') {
+        processedCol = {
+          ...col,
+          options: (row: Record<string, unknown>) => {
+            const allOptions = getSYS1000Options('PLU_TaxType');
+            const usedByOthers = new Set(
+              this.changeEditData
+                .filter(r => (r as unknown) !== row)
+                .map(r => String((r as Record<string, unknown>)['PLU_TaxType'] ?? ''))
+                .filter(v => v !== '')
+            );
+            return allOptions.filter(opt => !usedByOthers.has(opt.value));
+          },
+          onChange: () => { this.updateColumnsChange(); },
+        };
+      } else if (col.field === 'TXN_Uniform') {
         processedCol = { ...col, validate: [this.validateUniformNumber.bind(this)] };
       } else if (col.field === 'INV_NoneTax') {
         processedCol = {
@@ -372,6 +388,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   }
 
   onChangeEditDataChange(data: (TLS2J030Data & { _TABLE_KEY?: string; status?: string })[]): void {
+    const rowCountChanged = data.length !== this.changeEditData.length;
     // 第二列起：自動同步鎖定欄位的值（跟隨第一列）
     if (data.length > 1) {
       const source = data[0] as Record<string, unknown>;
@@ -382,6 +399,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       this.changeEditData = [...data];
     } else {
       this.changeEditData = data;
+    }
+    // 只在 row 數量變動（新增/刪除）時重建 columns，避免 calendar popup 被打斷
+    if (rowCountChanged) {
+      this.updateColumnsChange();
     }
   }
 
