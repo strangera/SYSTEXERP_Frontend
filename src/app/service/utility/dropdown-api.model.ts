@@ -341,6 +341,14 @@ export interface TalentStoreWayQuery {
 }
 
 /**
+ * 查詢 TLTTALENT_Allowed_DropDownList 時的請求 body
+ */
+export interface TalentAllowedQuery {
+  ProgNo: string;
+  VEN_No?: string;
+}
+
+/**
  * 查詢 SYS1000_DropDownList 時的請求 body
  */
 export interface Sys1000Query {

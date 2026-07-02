@@ -86,6 +86,7 @@ import {
   TalentItem,
   TalentOpenFlagItem,
   TalentOpenFlagQuery,
+  TalentAllowedQuery,
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
@@ -1030,6 +1031,13 @@ export class DropdownApiService {
   /** 查詢專櫃主檔(TLTTALENT) (依照store_way查詢) */
   queryTltTalentStoreWay(body: TalentStoreWayQuery): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem, TalentStoreWayQuery>('/queryTLTTALENT_StoreWay_DropDownList', 'No', 'Name', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢專櫃主檔(TLTTALENT) (依功能代碼ProgNo過濾使用者有權限的專櫃) */
+  queryTltTalentAllowed(body: TalentAllowedQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, TalentAllowedQuery>('/queryTLTTALENT_Allowed_DropDownList', 'No', 'Name', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
