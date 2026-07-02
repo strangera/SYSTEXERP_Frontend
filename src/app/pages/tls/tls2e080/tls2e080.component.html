@@ -72,10 +72,11 @@
             [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
-          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()"
+          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-globe" (click)="netReport()"
             [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.OnlineCheck)"
             [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="dialogVisible = true"
+          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-envelope"
+            (click)="dialogVisible = true"
             [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.AUTOMAIL)"
             [loading]="btnLoading"></p-button>
         </div>
