@@ -72,7 +72,6 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   tlt_buildingListOption = this.dropdown.querySys3800();
   check_typeListOption = getSYS1000Options('check_type');
   totalRecords = 0;
-  isAllSelected = false;
   data: IQueryData[] = [];
   selectedItems: IQueryData[] = [];
   columns: ReportColumn[] = [
@@ -113,8 +112,6 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     const body = {
       ...formValue,
       sam_yyymm: sam_yyymm_string,
-      pageIndex: 1,
-      pageSize: 1000,
       SortBy: [{ field: 'tlt_no', order: 1 }],
     }
     this.handleSubmit(frm, () => {
@@ -137,11 +134,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
       tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
       check_typeList: this.historyRequestBody?.check_typeList || null,
       ven_uniform: this.historyRequestBody?.ven_uniform || null,
-      exportList: []
-    };
-
-    if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
-      body.exportList = this.selectedItems.map(item => {
+      exportList: this.selectedItems.map(item => {
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
           const date = new Date(item.sam_yyymm);
@@ -162,11 +155,11 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
           money_type: item.money_type,
           sam_termno: item.sam_termno
         };
-      });
-    }
-
+      })
+    };
+    this.loading = true;
     this.btnLoading = true;
-    this.tls2e080Service.onlineTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
+    this.tls2e080Service.onlineTLS2E080(body).pipe(untilDestroyed(this), finalize(() => { this.btnLoading = false; this.loading = false; })).subscribe(res => {
       this.messageService.successBubble(res.Data || '網路對帳執行成功');
       this.selectedItems = [];
     });
@@ -185,11 +178,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
         check_typeList: this.historyRequestBody?.check_typeList || null,
         ven_uniform: this.historyRequestBody?.ven_uniform || null,
-        exportList: []
-      };
-
-      if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
-        body.exportList = this.selectedItems.map(item => {
+        exportList: this.selectedItems.map(item => {
           let sam_yyymm_string = '';
           if (item.sam_yyymm) {
             const date = new Date(item.sam_yyymm);
@@ -214,8 +203,8 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
             VEN_Name: item.VEN_Name,
             email: item.email,
           };
-        });
-      }
+        })
+      };
       this.dialogLoading = true;
       this.tls2e080Service.autoMailTLS2E080(body).pipe(untilDestroyed(this), finalize(() => [this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
         this.messageService.successBubble(res.Message);
@@ -223,7 +212,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     })
   }
 
-  exportZip() {
+  exportPDF() {
     const body: any = {
       tlt_noList: this.historyRequestBody?.tlt_noList || null,
       tlt_term_typeList: this.historyRequestBody?.tlt_term_typeList || null,
@@ -234,11 +223,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
       tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
       check_typeList: this.historyRequestBody?.check_typeList || null,
       ven_uniform: this.historyRequestBody?.ven_uniform || null,
-      exportList: []
-    };
-
-    if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
-      body.exportList = this.selectedItems.map(item => {
+      exportList: this.selectedItems.map(item => {
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
           const date = new Date(item.sam_yyymm);
@@ -262,21 +247,25 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
           tlt_term_type_name: item.tlt_term_type_name || ''
         };
       })
-    }
+    };
+    this.loading = true;
     this.btnLoading = true;
     this.tls2e080Service.exportTLS2E080PDF(body)
       .pipe(map(response => {
         const contentDisposition = response.headers.get('content-disposition');
-        let filename = '專櫃月對帳單.zip';
+        let filename = `${this.historyRequestBody?.sam_yyymm ?? ''}專櫃對帳單.pdf`;
         if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename\*=UTF-8''(.+?)(;|$)/);
-          if (filenameMatch && filenameMatch[1]) {
-            filename = decodeURIComponent(filenameMatch[1]);
+          const utf8Match = contentDisposition.match(/filename\*=UTF-8''(.+?)(?:;|$)/);
+          const asciiMatch = contentDisposition.match(/filename="?([^";]+)"?/);
+          if (utf8Match?.[1]) {
+            filename = decodeURIComponent(utf8Match[1]);
+          } else if (asciiMatch?.[1]) {
+            filename = asciiMatch[1];
           }
         }
-        const blob = new Blob([response.body], { type: 'application/zip' });
+        const blob = new Blob([response.body], { type: 'application/pdf' });
         return { blob, filename };
-      }), untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(data => { saveAs(data.blob, data.filename); });
+      }), untilDestroyed(this), finalize(() => { this.btnLoading = false; this.loading = false; })).subscribe(data => { saveAs(data.blob, data.filename); });
   }
 
   onSelectButton(event: IQueryData) {
