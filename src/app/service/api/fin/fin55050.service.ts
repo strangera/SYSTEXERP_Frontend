@@ -29,6 +29,7 @@ export interface QueryFIN55050Request extends BaseQueryRequest {
 
 // 明細 Row
 export interface FIN55050Detail {
+  DataType?: string;   // 期初 / 明細 / 總計
   VouNo: string;
   Ven_Name: string;
   VouStatus: string;
