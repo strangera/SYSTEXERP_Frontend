@@ -92,8 +92,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_USR_No: [null, [Validators.maxLength(8)]],
     ECR_USR_Name: [null as string | null, [Validators.maxLength(20)]],
     ECR_Status: ['A'],
-    ECR_ActiveDate: [null as Date | null],
-    ECR_ExpireDate: [null as Date | null],
+    ECR_ActiveDate: [null as Date | null, [Validators.required]],
+    ECR_ExpireDate: [null as Date | null, [Validators.required]],
     ECR_Group: [null],
     ECR_AreaNo: [null],
     ECR_SubGroup: [null],
@@ -372,7 +372,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         if (selected.ECR_SubGroup) patch['ECR_SubGroup'] = selected.ECR_SubGroup;
         if (selected.ECR_AreaNo) patch['ECR_AreaNo'] = selected.ECR_AreaNo;
         if (selected.tlt_bdate) patch['ECR_ActiveDate'] = new Date(selected.tlt_bdate);
-        if (selected.tlt_edate) patch['ECR_CloseDate'] = new Date(selected.tlt_edate);
+        if (selected.tlt_edate) patch['ECR_ExpireDate'] = new Date(selected.tlt_edate);
         if (selected.Name) patch['ECR_Name'] = selected.Name;
         if (selected.Name) patch['ECR_TLT_Name'] = selected.Name;
 
