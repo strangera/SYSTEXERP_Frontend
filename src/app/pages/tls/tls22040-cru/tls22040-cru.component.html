@@ -4,24 +4,21 @@
     <app-button btnType="back" (click)="onCancel()" />
   </div>
   <div class="card">
-    <app-table
+    <app-table-report
+      tableKey="TLS22040cru"
       dataKey="id"
       [data]="data"
       [columns]="columns"
       [showCheckBox]="false"
-      (selectionChange)="selectedItems = $event"
-      [selectedItems]="selectedItems"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, dataForm)"
-      [lazy]="true"
+      [lazy]="false"
       [loading]="loading"
       [showEdit]="false"
       [showDetail]="false"
       [showDelete]="false"
       [showManage]="false"
       [showReportMode]="false"
-    ></app-table>
+    ></app-table-report>
     <div class="flex justify-content-end m-0 pt-3">
       <p-button label="全部重送" (click)="onReview(data)"></p-button>
     </div>
