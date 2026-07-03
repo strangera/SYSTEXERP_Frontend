@@ -9,6 +9,7 @@
     [variant]="variant" [group]="group" [optionGroupLabel]="optionGroupLabel" [appendTo]="appendTo"
     [optionGroupChildren]="optionGroupChildren" [resetFilterOnHide]="true" [selectedItemsLabel]="selectedItemsLabel"
     [maxSelectedLabels]="maxSelectedLabels" [virtualScroll]="options.length > 10" [virtualScrollItemSize]="40"
+    [scrollHeight]="'250px'"
     [dataKey]="dataKey" [filter]="filter" [loading]="loading" [showClear]="showClear" [display]="display"
     [styleClass]="styleClass" (onChange)="onValueChange($event)" (keydown.enter)="handleEnterKey($event)"
     (keydown.enter.capture)="handleEnterKey($event)">

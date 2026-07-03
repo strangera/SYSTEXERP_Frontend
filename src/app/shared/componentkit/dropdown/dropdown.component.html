@@ -15,7 +15,7 @@
       [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
       [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
       [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="options.length > 10"
-      [virtualScrollItemSize]="40" [editable]="false" [loading]="loading" [filter]="filter"
+      [virtualScrollItemSize]="40" [scrollHeight]="'250px'" [editable]="false" [loading]="loading" [filter]="filter"
       (keydown.enter)="handleEnterKey($event)" (keydown.enter.capture)="handleEnterKey($event)" [group]="group">
 
       <ng-template let-options pTemplate="item">
