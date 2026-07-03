@@ -21,6 +21,7 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
 @Component({
   selector: 'app-calendar',
   templateUrl: './calendar.component.html',
+  styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
@@ -53,6 +54,16 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   }
   get calendarType(): CalendarType {
     return this._calendarType;
+  }
+
+  // 只有「日期／日期時間」型別會在同一個面板內切換 日→月→年 三種檢視，
+  // 才需要靠固定面板高度避免切換時跳動；純年份/純年月選擇器本來就不會跳動，不需要也不應該撐高。
+  // dateTimeOne 另外標記 app-calendar-drilldown-time：因為切到月/年檢視時，下方的時間選擇器會整塊消失，
+  // 需要額外補高月/年檢視，否則一樣會因為少了時間選擇器的高度而跳動。
+  get panelStyleClass(): string {
+    if (this._calendarType === 'dateOne') return 'app-calendar-drilldown';
+    if (this._calendarType === 'dateTimeOne') return 'app-calendar-drilldown app-calendar-drilldown-time';
+    return '';
   }
 
   @Input() timeOnly = false;
@@ -192,8 +203,10 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       const formatted = this.formatFullString(value, this.calendarType);
       input.value = maxLen > 0 ? formatted.substring(0, maxLen) : formatted;
 
-      // 🌟 同步更新 FormControl 值與驗證狀態
-      this.control.setValue(input.value, { emitEvent: false });
+      // 🌟 若已能解析為完整日期，直接存 Date 物件；避免字串（yyyy/mm/dd）被原樣送到後端
+      const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
+      const parsedDate = this.parseDateWithOptionalTime(input.value, shouldKeepTime);
+      this.control.setValue(parsedDate ?? input.value, { emitEvent: false });
       this.control.updateValueAndValidity({ emitEvent: false });
 
       this.inputChange.emit(input.value);
@@ -269,14 +282,14 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     const value = input.value;
     if (!value) return;
 
+    // 🌟 離開欄位時一律嘗試將輸入字串轉為 Date 物件（不論是否為補值後的字串），
+    // 避免手key/貼上的完整日期字串（yyyy/mm/dd）殘留在 FormControl 中被原樣送到後端
     const completedValue = this.fillIncompleteDate(value, this.calendarType);
-    if (completedValue !== value) {
-      const dateValue = new Date(completedValue);
-      if (!isNaN(dateValue.getTime())) {
-        const adjustedDate = this.adjustDateTime(dateValue);
-        this.control.setValue(adjustedDate);
-        input.value = completedValue;
-      }
+    const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
+    const dateValue = this.parseDateWithOptionalTime(completedValue, shouldKeepTime);
+    if (dateValue) {
+      this.control.setValue(dateValue);
+      input.value = completedValue;
     }
   }
 

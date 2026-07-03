@@ -5,7 +5,7 @@
 </label>
 
 <ng-container *ngIf="!readonly; else readonlyMode">
-  <p-calendar [formControl]="control" [id]="controlName"
+  <p-calendar [formControl]="control" [id]="controlName" [panelStyleClass]="panelStyleClass"
     [placeholder]="control.disabled ? '' : customPlaceholder || placeholder" [timeOnly]="timeOnly" [showTime]="showTime"
     [hourFormat]="hourFormat" [showSeconds]="showSeconds" [view]="view" [dateFormat]="dateFormat"
     [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" [iconDisplay]="'input'" [keepInvalid]="true"

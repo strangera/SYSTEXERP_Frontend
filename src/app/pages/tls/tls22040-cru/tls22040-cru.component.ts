@@ -8,14 +8,14 @@ import {
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls22040-cru',
@@ -24,7 +24,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   imports: [
     MenubarComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
@@ -39,7 +39,7 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   selectedItems: any[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '銷售日期' },
     { field: 'MIG_Type', header: '發票類別代碼' },
     { field: 'MIG_Type_Name', header: '發票類別名稱' },

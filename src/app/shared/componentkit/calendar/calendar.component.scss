@@ -1,0 +1,26 @@
+// 修正 PrimeNG p-calendar（dateOne / dateTimeOne）在同一面板切換「日期／月份／年份」檢視時，
+// 以及切到不同天數的月份（28~31天，4~6週）時，因面板高度不一致，
+// 導致 appendTo="body" 的 overlay 重新定位、畫面上下跳動、面板在輸入框上方時容易誤點旁邊選項的問題。
+//
+// 作法：把「日期格子容器／月份選擇／年份選擇」三種子畫面固定成同一個高度（以最大 6 週高度為準），
+// 面板整體高度就不會再因為切換月份或切換檢視而改變，overlay 也就不需要重新定位。
+// 只加在 app-calendar-drilldown（見 calendar.component.ts 的 panelStyleClass）：
+// 純「年」/「年月」選擇器只有單一檢視、內容格數固定，本來就不會跳動，不需要也不應該撐高面板。
+::ng-deep {
+  .p-datepicker.app-calendar-drilldown {
+    .p-datepicker-calendar-container,
+    .p-monthpicker,
+    .p-yearpicker {
+      min-height: 26rem;
+    }
+  }
+
+  // dateTimeOne：切到月/年檢視時 .p-timepicker 會整塊消失（PrimeNG 只在 currentView === 'date' 時渲染），
+  // 額外把月/年檢視的高度補上時間選擇器的高度，讓三種檢視+有無時間選擇器的總高度維持一致。
+  .p-datepicker.app-calendar-drilldown-time {
+    .p-monthpicker,
+    .p-yearpicker {
+      min-height: 32.5rem;
+    }
+  }
+}

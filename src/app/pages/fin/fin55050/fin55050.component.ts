@@ -185,14 +185,20 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       const details = parent._Details ?? [];
       if (details.length === 0) return;
 
-      const openingBal = Number(details[0]?.OpeningBal ?? 0);
-      const totalDebit = details.reduce((sum, x) => sum + Number(x.AccAmt_D ?? 0), 0);
-      const totalCredit = details.reduce((sum, x) => sum + Number(x.AccAmt_C ?? 0), 0);
-      const endingBal = openingBal + totalDebit - totalCredit;
+      // 依後端 DataType 區分期初/明細/總計，避免把期初列、總計列也加進總計
+      const openingRow = details.find(d => d.DataType === '期初') ?? details[0];
+      const detailRows = details.filter(d => d.DataType === '明細');
+      const totalRow = details.find(d => d.DataType === '總計');
+
+      const openingBal = Number(openingRow?.OpeningBal ?? 0);
+      const totalDebit = Number(totalRow?.AccAmt_D ?? 0);
+      const totalCredit = Number(totalRow?.AccAmt_C ?? 0);
+      // 期末餘額直接採用後端總計列(已依科目借貸方向算好)，前端不自行加減
+      const endingBal = Number(totalRow?.OpeningBal ?? openingBal);
 
       // 期初餘額列
       grouped.push({
-        ...details[0],
+        ...openingRow,
         AccNo: parent.AccNo,
         AccCName: parent.AccCName,
         VouDate: '',
@@ -211,7 +217,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       } as any);
 
       // 明細列
-      details.forEach(detail => {
+      detailRows.forEach(detail => {
         grouped.push({
           ...detail,
           AccNo: parent.AccNo,
@@ -225,7 +231,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
       // 總計列
       grouped.push({
-        ...details[0],
+        ...(totalRow ?? details[0]),
         AccNo: parent.AccNo,
         AccCName: parent.AccCName,
         VouDate: '',

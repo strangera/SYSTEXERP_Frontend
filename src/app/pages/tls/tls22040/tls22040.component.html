@@ -12,6 +12,11 @@
             <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
               [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted" />
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="發票類型" controlName="MIG_TypeList" [options]="migTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.MIG_TypeList"
+              [submitted]="submitted" />
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -24,9 +29,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS22040" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_Date"
-    [multiSortMeta]="multiSortMeta" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [rows]="30"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showManage]="true" [showDelete]="false" [showDetail]="false"
-    [showEdit]="false" [addButton]="addButton" [columnGroup]="columnGroup4"></app-table>
+  <app-table-report tableKey="TLS22040" dataKey="RowKey" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [totalRecords]="totalRecords" [loading]="loading" [columnGroup]="columnGroup4" [showManage]="true"
+    [showDelete]="false" [showDetail]="false" [showEdit]="false" [addButton]="addButton"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tableQueryFunction"></app-table-report>
 </div>

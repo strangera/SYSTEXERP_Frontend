@@ -42,6 +42,12 @@ const alnumMax16IfFilled: ValidatorFn = (c: AbstractControl): ValidationErrors |
 const invoiceNoValidator: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
   const v = (c.value ?? '').toString().trim();
   if (!v) return { required: true };
+  if (/^00\d{8}$/.test(v)) {
+    if (!/^000{8}$/.test(v)) {
+      return { invoiceNo: { reason: '前2碼為00時，後8碼必須全部為0' } };
+    }
+    return null;
+  }
   if (!/^[A-Z]{2}\d{8}$/.test(v)) {
     return { invoiceNo: { reason: '格式需為2碼大寫英文+8碼數字（如AB12345678）' } };
   }
@@ -466,7 +472,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
   override onCancel(): void {
     this.router.navigate(['/account/fin', 'fin13050'], {
-      state: { fromCru: true },
+      state: { fromRoute: this.router.url },
     });
   }
 

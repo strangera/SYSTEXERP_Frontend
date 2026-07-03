@@ -5,6 +5,13 @@
   }
 }
 
+// p-scroller 內建 [autoSize]="true"，篩選時會用 JS 依當下結果筆數動態改寫 inline height，
+// 造成面板忽大忽小，用 height + !important 蓋掉 inline style 固定高度。
+::ng-deep .p-multiselect-items-wrapper .p-scroller {
+  height: 250px !important;
+  max-height: 250px !important;
+}
+
 /* 分組項目縮排 */
 ::ng-deep .p-multiselect-panel .p-multiselect-item {
   padding-left: 2rem;
