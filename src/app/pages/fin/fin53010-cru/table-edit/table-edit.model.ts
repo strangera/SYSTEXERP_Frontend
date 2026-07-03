@@ -67,6 +67,9 @@ export interface EditColumn {
   calculate?: (rowData: any, value: any) => Record<string, any>;
   onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;
   onBlur?: (rowData: any, value: any, col: EditColumn, index: number) => void;
+  onDblClick?: (rowData: any, value: any, col: EditColumn, index: number) => void;
+  /** 唯讀（可聚焦/雙擊但不可打字，用於「只能挑選不可手輸入」的欄位，如 35 發票） */
+  readonly?: (value: any, index: number, rowData: any) => boolean;
 
   /** Template 顯示相關配置 */
   templateRef?: TemplateRef<any>; // 自定義模板

@@ -155,7 +155,7 @@ export const COLUMNS_NATURAL_VIEW: Column[] = [
 // ===== 換開發票欄位定義 =====
 /** 新增模式用的換開發票欄位（用於 table-edit） */
 export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
-  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
+  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: () => getSYS1000Options('PLU_TaxType'), calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'TXN_SaleTax', header: '應稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '0', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_SaleNoTax', header: '免稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', disabled: (v, i, row) => String(row?.['PLU_TaxType']) !== '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
@@ -192,7 +192,7 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'bus_type_name', header: '大分類名稱', type: 'dropdown', validate: [validateRequired] },
   { field: 'INV_ItemName', header: '項目名稱', type: 'dropdown', validate: [validateRequired] },
-  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
+  { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: () => getSYS1000Options('PLU_TaxType'), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
   { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];

@@ -1,0 +1,72 @@
+<!-- @format -->
+<p-dialog
+  header="查詢"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  (onShow)="onShow()"
+  (onHide)="close()"
+>
+  <div class="flex flex-column gap-3">
+    <!-- 模式切換 -->
+    <div class="flex gap-4">
+      <div class="flex align-items-center gap-2">
+        <p-radioButton
+          name="mode"
+          value="vendor"
+          [(ngModel)]="mode"
+          (ngModelChange)="onModeChange()"
+          inputId="mode-vendor"
+        />
+        <label for="mode-vendor" class="cursor-pointer">廠商</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-radioButton
+          name="mode"
+          value="user"
+          [(ngModel)]="mode"
+          (ngModelChange)="onModeChange()"
+          inputId="mode-user"
+        />
+        <label for="mode-user" class="cursor-pointer">員工</label>
+      </div>
+    </div>
+
+    <!-- 搜尋列 -->
+    @if (mode === 'vendor') {
+      <div class="flex gap-2">
+        <input pInputText [(ngModel)]="venNo" placeholder="廠商編號" class="flex-1" (keyup.enter)="onSearch()" />
+        <input pInputText [(ngModel)]="venName" placeholder="廠商名稱" class="flex-1" (keyup.enter)="onSearch()" />
+        <p-button label="查詢" icon="pi pi-search" (click)="onSearch()" [loading]="loading" />
+      </div>
+    } @else {
+      <div class="flex gap-2">
+        <input pInputText [(ngModel)]="userId" placeholder="使用者編號" class="flex-1" (keyup.enter)="onSearch()" />
+        <input pInputText [(ngModel)]="userName" placeholder="使用者名稱" class="flex-1" (keyup.enter)="onSearch()" />
+        <p-button label="查詢" icon="pi pi-search" (click)="onSearch()" [loading]="loading" />
+      </div>
+    }
+
+    <!-- 結果清單：點整行即選取 -->
+    <app-table
+      [data]="tableData"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      [dataKey]="dataKey"
+      [loading]="loading"
+      [lazy]="true"
+      [rows]="pageSize"
+      [rowsPerPageOptions]="[30, 60, 90, 120]"
+      [scrollHeight]="'380px'"
+      [showCaption]="false"
+      [showManage]="false"
+      [showFilter]="false"
+      [showReportMode]="false"
+      [showReportPDF]="false"
+      [showReportExcel]="false"
+      [showSort]="false"
+      (lazyLoadData)="onLazyLoad($event)"
+      (itemClick)="onPickerDetail($event)"
+    />
+  </div>
+</p-dialog>

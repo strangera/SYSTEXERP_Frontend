@@ -77,7 +77,7 @@ export class FIN72050Component
   public readonly totalRecords = signal<number>(0);
 
   columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '序號', visible: true, align: 'right' },
+    { field: 'SeqNo', header: '序號', visible: true, align: 'right', showSort: false },
     { field: 'PCS_PST_No', header: '盤點單號', visible: true },
     { field: 'PCC_Date', header: '盤點日期', visible: true, format: formatDate },
     { field: 'Keep_UsrName', header: '保管人姓名', visible: true },

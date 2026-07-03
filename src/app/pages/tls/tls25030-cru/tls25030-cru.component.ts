@@ -90,7 +90,7 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
     this.updateDisabledState();
     // 2) Counter
     this.dropdown
-      .queryTltTalent()
+      .queryTltTalentAllowed({ ProgNo: this.ProgNo })
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (v) => {

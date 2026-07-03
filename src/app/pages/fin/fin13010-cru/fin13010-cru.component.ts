@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -23,13 +23,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-type RuleError = {
+interface RuleError {
   controlName: string;
   message: string;
   key: string;
-};
+}
 
 @Component({
   selector: 'app-fin13010-cru',
@@ -51,7 +50,7 @@ type RuleError = {
     TranslateModule,
   ],
 })
-export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
+export class FIN13010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   CRUDStatus = CRUDStatus;
 
   /** 金額規則是否通過，用來控制「確認」按鈕 disabled */
@@ -133,7 +132,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     this.initializePage('FIN13010', this.dataForm);
     this.updateDisabledState();
     this.setupAmountRelations();
-    this.setupVoucherNoWatcher();
     this.dataForm.valueChanges.subscribe(() => this.refreshAmountValidFlag());
 
     if (this.crudstatus === CRUDStatus.Create) {
@@ -155,42 +153,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     this.refreshAmountValidFlag();
   }
-private setupVoucherNoWatcher(): void {
-  this.dataForm.get('Voucher_No')?.valueChanges
-    .pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-    )
-    .subscribe((voucherNo) => {
-      const vouNo = String(voucherNo ?? '').trim();
-
-      if (!vouNo) {
-        this.dataForm.get('Voucher_No')?.setErrors(null);
-        return;
-      }
-
-      this.fin13010Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
-        next: (res: any) => {
-          const exists = Array.isArray(res?.Data) && res.Data.some((x: any) => x.VouNo === vouNo);
-
-          const ctrl = this.dataForm.get('Voucher_No');
-
-          if (!exists) {
-            ctrl?.setErrors({ voucherNotFound: true });
-            ctrl?.markAsTouched();
-            this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
-          } else {
-            const errors = { ...(ctrl?.errors || {}) };
-            delete errors['voucherNotFound'];
-            ctrl?.setErrors(Object.keys(errors).length ? errors : null);
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢傳票編號失敗');
-        },
-      });
-    });
-}
   /* ==================== GUI_Track + PUR_GUINo 對應資料 ==================== */
 
   /**
@@ -233,6 +195,17 @@ private setupVoucherNoWatcher(): void {
         Voucher_No: d.Voucher_No ?? null,
       }, { emitEvent: false });
 
+      if (d.GUI_Track) {
+        this.fin13010Service
+          .queryINV1000List({ GUI_Track: String(d.GUI_Track).trim() })
+          .subscribe((listRes) => {
+            this.guiNumberOptions = (listRes.Data || []).map((item: any) => ({
+              label: item.PUR_GUINo,
+              value: item.PUR_GUINo,
+            }));
+          });
+      }
+
       this.refreshAmountValidFlag();
     });
   }
@@ -269,35 +242,35 @@ private setupVoucherNoWatcher(): void {
             ? Math.round(this.originalRemainingAmt - currentTotal) : this.originalRemainingAmt;
 
           this.dataForm.patchValue({
-  Inv_Date: (detail as any).PUR_GUIDate ?? null,
-  Inv_Net: (detail as any).PUR_Net,
-  Inv_Tax: (detail as any).PUR_Tax,
-  PUR_VoucherType: this.normalizeVoucherType((detail as any).PUR_VoucherType) || '',
-  PUR_TaxType: (detail as any).PUR_TaxType,
-  Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt ?? null,
-  Total_Amt: remaining,
+            Inv_Date: (detail as any).PUR_GUIDate ?? null,
+            Inv_Net: (detail as any).PUR_Net,
+            Inv_Tax: (detail as any).PUR_Tax,
+            PUR_VoucherType: this.normalizeVoucherType((detail as any).PUR_VoucherType) || '',
+            PUR_TaxType: (detail as any).PUR_TaxType,
+            Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt ?? null,
+            Total_Amt: remaining,
 
-  // 查完發票後帶入
-  Source_Doc_No: (detail as any).Source_Doc_No ?? '',
-  Voucher_No: (detail as any).Voucher_No ?? '',
-}, { emitEvent: false });
+            // 查完發票後帶入
+            Source_Doc_No: (detail as any).Source_Doc_No ?? '',
+            Voucher_No: (detail as any).Voucher_No ?? '',
+          }, { emitEvent: false });
 
           this.updateCreditTypeByAmount(currentTotal);
         } else {
           this.originalRemainingAmt = null;
           this.dataForm.patchValue({
-  Inv_Date: null,
-  Inv_Net: null,
-  Inv_Tax: null,
-  PUR_VoucherType: '',
-  PUR_TaxType: '',
-  PUR_Amt: null,
-  Total_hitory_PUR_Amt: null,
-  Total_Amt: null,
-  Credit_Type: '',
-  Source_Doc_No: '',
-  Voucher_No: '',
-}, { emitEvent: false });
+            Inv_Date: null,
+            Inv_Net: null,
+            Inv_Tax: null,
+            PUR_VoucherType: '',
+            PUR_TaxType: '',
+            PUR_Amt: null,
+            Total_hitory_PUR_Amt: null,
+            Total_Amt: null,
+            Credit_Type: '',
+            Source_Doc_No: '',
+            Voucher_No: '',
+          }, { emitEvent: false });
         }
 
         this.refreshAmountValidFlag();
@@ -619,21 +592,15 @@ private setupVoucherNoWatcher(): void {
       raw.PUR_RepYYYYMM = this.toYYYYMM(raw.PUR_RepYYYYMM);
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.fin13010Service.insertFIN13010(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('success_message'));
-            this.router.navigate(['/account/fin', 'fin13010'], { state: { fromCru: true } });
-          },
-          error: () => this.messageService.errorBubble(this.translate.instant('create_failed')),
+        this.fin13010Service.insertFIN13010(raw).subscribe(() => {
+          this.messageService.successBubble(this.translate.instant('success_message'));
+          this.router.navigate(['/account/fin', 'fin13010'], { state: { fromCru: true } });
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         raw.id = this.rowdata?.id;
-        this.fin13010Service.updateFIN13010(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/account/fin', 'fin13010'], { state: { fromCru: true } });
-          },
-          error: () => this.messageService.errorBubble(this.translate.instant('update_failed')),
+        this.fin13010Service.updateFIN13010(raw).subscribe(() => {
+          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          this.router.navigate(['/account/fin', 'fin13010'], { state: { fromCru: true } });
         });
       }
     });

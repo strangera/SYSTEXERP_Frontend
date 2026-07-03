@@ -1,0 +1,15 @@
+<app-input-text [label]="label" [controlName]="controlName" [control]="control" [submitted]="submitted"
+  [showButton]="true" buttonLabel="查詢" (clickButton)="openDialog()"></app-input-text>
+
+<app-dialog [visible]="dialogVisible()" header="專櫃編號選擇" [showFooter]="false" [width]="dialogWidth"
+  (visibleChange)="dialogVisible.set($event)" (show)="tableReady.set(true)">
+  <div class="flex flex-column gap-2">
+    <input pInputText type="text" class="w-full" autocomplete="off" placeholder="輸入專櫃代號或專櫃名稱篩選" [value]="filterText()"
+      (input)="onFilterInput($event)" />
+    @if (tableReady()) {
+      <app-table-report tableKey="TltNoPicker" dataKey="No" [data]="filteredOptions()" [columns]="columns"
+        [totalRecords]="filteredOptions().length" [showManage]="false" [showCheckBox]="false" [showCaption]="false"
+        [lazy]="false" emptyMessage="查無資料" (itemClick)="selectRow($event)" [ItemSize]="24.25"></app-table-report>
+    }
+  </div>
+</app-dialog>

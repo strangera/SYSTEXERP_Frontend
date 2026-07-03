@@ -36,6 +36,8 @@ import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010Payload
 import {
   Aps2002DetailDataByInvoiceNoData,
   Aps4023DetailDataByInvoiceNumberData,
+  Pos4023DetailDataByInvoiceNumberData,
+  SalesInvoicePickItem,
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
@@ -135,6 +137,26 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'Buyer_Uniform', header: '買受人統一編號' },
     { field: 'AlreadyAllowanceAmt', header: '已退回/折讓金額', align: 'right', format: v => reportFormatAmount(v) },
     { field: 'PUR_TaxType', header: '課稅別', align: 'center' },
+  ];
+
+  // 銷項發票：雙擊「發票號碼」挑既有發票 Dialog（格式 31/32 查 POS4023、35 查 APS4023）
+  showSalesInvoicePickerDialog = false;
+  salesInvoicePickerRowIndex: number | null = null;
+  salesInvoicePickerRowData: FIN53010StepSalesInvoiceRow | null = null;
+  /** 目前 picker 來源：31/32 → POS4023；35 → APS4023 */
+  private salesInvoicePickerSource: '31/32' | '35' = '31/32';
+  salesInvoicePickerList: SalesInvoicePickItem[] = [];
+  salesInvoicePickerTotalRecords = 0;
+  salesInvoicePickerLoading = false;
+  salesInvoicePickerQueryControl = new FormControl<string>('');
+  salesInvoicePickerSelectedItem: SalesInvoicePickItem | null = null;
+  public readonly salesInvoicePickerColumns: Column[] = [
+    { field: 'InvoiceNumber', header: '發票號碼' },
+    { field: 'InvoiceType', header: '發票格式', align: 'center' },
+    { field: 'InvoiceDate', header: '發票日期', align: 'center', format: v => reportFormatDate(v) },
+    { field: 'TotalAmount', header: '發票總金額', align: 'right', format: v => reportFormatAmount(v) },
+    { field: 'BuyerUniform', header: '買受人統一編號' },
+    { field: 'VoucherNo', header: '傳票編號', align: 'center' },
   ];
 
   // 進項折讓：原始發票查詢 Dialog
@@ -808,8 +830,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly stepSalesColumns: EditColumn[] = [
     { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => o.value === '31' || o.value === '32' || o.value === '35'), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
-    { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validateSalesInvoicePrefix.bind(this)] },
-    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validateSalesInvoiceNo.bind(this)] },
+    { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validateSalesInvoicePrefix.bind(this)], readonly: (_v, _i, rd) => (rd as FIN53010StepSalesInvoiceRow)?.invoice_type === '35' },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validateSalesInvoiceNo.bind(this)], readonly: (_v, _i, rd) => (rd as FIN53010StepSalesInvoiceRow)?.invoice_type === '35', onDblClick: (rowData, _v, _col, index) => this.openSalesInvoicePickerDialog(rowData as FIN53010StepSalesInvoiceRow, index ?? 0) },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, showClear: true, validate: [this.validateUniformNumber.bind(this)] },
@@ -1429,6 +1451,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (this.lastSalesInvoiceLookupKey.get(index) === full) return;
     this.lastSalesInvoiceLookupKey.set(index, full);
 
+    // 1. 配號範圍驗證
     this.service.validateSalesInvoice({ InvoiceType: invoiceType, InvoicePrefix: prefix, InvoiceNo: no })
       .pipe(take(1))
       .subscribe({
@@ -1445,6 +1468,204 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
         },
       });
+
+    // 2. 依發票格式查既有發票帶出（31/32 → POS4023、35 → APS4023），已被別傳票占用則提醒且不帶入
+    const applyManualHydrate = (item: SalesInvoicePickItem | null): void => {
+      if (!item) return; // 查無 → 新發票，靜默
+      const occ = (item.VoucherNo ?? '').trim();
+      if (occ && occ !== this.currentVouNoOrEmpty()) {
+        this.messageService.errorBubble(`發票 ${full} 已被傳票 ${occ} 使用，無法帶入`);
+        this.stepSalesRows.update(rows => {
+          const next = [...rows];
+          if (!next[index]) return rows;
+          next[index] = { ...next[index], invoice_no: '', _invoiceValidated: false };
+          return next;
+        });
+        this.lastSalesInvoiceLookupKey.delete(index);
+        return;
+      }
+      const patch = this.mapPickToSalesRow(item);
+      // 手輸入帶出：只覆蓋來源有值的欄位，不清掉 user 已填的資料（如買受人統一編號）
+      const cleanPatch: Record<string, unknown> = {};
+      Object.entries(patch).forEach(([k, v]) => { if (v !== undefined && v !== null) cleanPatch[k] = v; });
+      this.stepSalesRows.update(rows => {
+        const next = [...rows];
+        if (!next[index]) return rows;
+        next[index] = this.withClearedInvoiceErrors({ ...next[index], ...cleanPatch });
+        return next;
+      });
+    };
+
+    if (invoiceType === '35') {
+      this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+        next: res => { if (res.Status === '0000' && res.Data) applyManualHydrate(this.normalizeAps4023(res.Data)); },
+      });
+    } else {
+      this.service.queryPos4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+        next: res => { if (res.Status === '0000' && res.Data) applyManualHydrate(this.normalizePos4023(res.Data)); },
+      });
+    }
+  }
+
+  /** 目前傳票號碼（新增時為 '自動給號' 視為空字串） */
+  private currentVouNoOrEmpty(): string {
+    const v = this.dataForm.getRawValue().VouNo?.trim() ?? '';
+    return v && v !== '自動給號' ? v : '';
+  }
+
+  private normalizePos4023(d: Pos4023DetailDataByInvoiceNumberData): SalesInvoicePickItem {
+    return {
+      InvoiceNumber: String(d.TXN_GUINo ?? '').trim(),
+      InvoiceType: String(d.INV_GUIType ?? '').trim(),
+      InvoiceDate: d.TXN_Date ?? null,
+      TotalAmount: d.TXN_SaleAmt ?? null,
+      NetAmount: d.TXN_Net ?? null,
+      TaxAmount: d.TXN_Tax ?? null,
+      TaxType: d.PLU_TaxType ?? null,
+      BuyerUniform: d.TXN_Uniform ?? null,
+      DeclareYM: d.INV_DeclareYM ?? null,
+      AssetType: d.AssetType ?? null,
+      SourceDocNo: d.Source_Doc_No ?? null,
+      VoucherNo: d.Voucher_No ?? null,
+      SourceId: d.ID ?? null,
+    };
+  }
+
+  private normalizeAps4023(d: Aps4023DetailDataByInvoiceNumberData): SalesInvoicePickItem {
+    return {
+      InvoiceNumber: String(d.InvoiceNumber ?? '').trim(),
+      InvoiceType: String(d.InvoiceType ?? '').trim(),
+      InvoiceDate: d.InvoiceDate ?? null,
+      TotalAmount: d.PUR_Amt ?? null,
+      NetAmount: d.PUR_Net ?? null,
+      TaxAmount: d.PUR_Tax ?? null,
+      TaxType: d.PUR_TaxType ?? null,
+      BuyerUniform: d.Buyer_Uniform ?? null,
+      DeclareYM: d.INV_DeclareYM ?? null,
+      AssetType: d.AssetType ?? null,
+      SourceDocNo: d.Source_Doc_No ?? null,
+      VoucherNo: d.Voucher_No ?? null,
+      SourceId: d.ID ?? null,
+    };
+  }
+
+  /** 帶入用日期解析：嚴格格式優先，失敗再退回寬鬆 new Date()（APS4023 DateTime 與 POS4023 DateOnly 序列化格式不同） */
+  private parsePickDate(s: string | null | undefined): Date | null {
+    if (s == null || String(s).trim() === '') return null;
+    const strict = parseApiDateToLocal(s);
+    if (strict) return strict;
+    const d = new Date(String(s));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private mapPickToSalesRow(item: SalesInvoicePickItem): Partial<FIN53010StepSalesInvoiceRow> {
+    const full = String(item.InvoiceNumber ?? '').trim();
+    const prefix = full.length === 10 ? full.slice(0, 2) : '';
+    const no = full.length === 10 ? full.slice(2) : full;
+    const ym = item.DeclareYM ? String(item.DeclareYM) : '';
+    const declareYm = /^\d{6}$/.test(ym)
+      ? new Date(Number(ym.slice(0, 4)), Number(ym.slice(4, 6)) - 1, 1)
+      : null;
+    return {
+      id: item.SourceId ?? undefined,
+      invoice_type: item.InvoiceType || undefined,
+      invoice_prefix: prefix || undefined,
+      invoice_no: no || undefined,
+      invoice_date: this.parsePickDate(item.InvoiceDate),
+      declare_ym: declareYm,
+      buyer_uniform: item.BuyerUniform ?? undefined,
+      total_amount: item.TotalAmount ?? undefined,
+      tax_type: item.TaxType ?? undefined,
+      net_amount: item.NetAmount ?? undefined,
+      tax_amount: item.TaxAmount ?? undefined,
+      source_doc_no: item.SourceDocNo ?? undefined,
+      asset_flag: item.AssetType ?? undefined,
+      _invoiceValidated: true,
+    };
+  }
+
+  /** 雙擊「發票號碼」→ 依格式開既有發票挑選視窗（31/32 查 POS4023、35 查 APS4023） */
+  public openSalesInvoicePickerDialog(rowData: FIN53010StepSalesInvoiceRow, index: number): void {
+    if (this.isFormReadable) return;
+    const invoiceType = String(rowData?.invoice_type ?? '').trim();
+    if (!['31', '32', '35'].includes(invoiceType)) {
+      this.messageService.errorBubble('請先選擇發票格式');
+      return;
+    }
+    this.salesInvoicePickerSource = invoiceType === '35' ? '35' : '31/32';
+    this.salesInvoicePickerRowIndex = index;
+    this.salesInvoicePickerRowData = rowData;
+    this.salesInvoicePickerQueryControl.setValue('');
+    this.salesInvoicePickerSelectedItem = null;
+    this.salesInvoicePickerList = [];
+    this.salesInvoicePickerTotalRecords = 0;
+    this.showSalesInvoicePickerDialog = true;
+    this.loadSalesInvoicePickerList();
+  }
+
+  public loadSalesInvoicePickerList(): void {
+    this.salesInvoicePickerList = [];
+    this.salesInvoicePickerTotalRecords = 0;
+    this.salesInvoicePickerLoading = true;
+    const body = {
+      InvoiceNumber: this.salesInvoicePickerQueryControl.value?.trim() || null,
+      PageIndex: 1,
+      PageSize: 200,
+    };
+    if (this.salesInvoicePickerSource === '35') {
+      this.service.queryAps4023SalesInvoicesForPicker(body).pipe(take(1)).subscribe({
+        next: res => {
+          this.salesInvoicePickerLoading = false;
+          if (res.Status === '0000') {
+            this.salesInvoicePickerList = (res.Data ?? []).map(d => this.normalizeAps4023(d));
+            this.salesInvoicePickerTotalRecords = res.TotalCount ?? 0;
+          }
+        },
+        error: () => { this.salesInvoicePickerLoading = false; },
+      });
+    } else {
+      this.service.queryPos4023SalesInvoicesForPicker(body).pipe(take(1)).subscribe({
+        next: res => {
+          this.salesInvoicePickerLoading = false;
+          if (res.Status === '0000') {
+            this.salesInvoicePickerList = (res.Data ?? []).map(d => this.normalizePos4023(d));
+            this.salesInvoicePickerTotalRecords = res.TotalCount ?? 0;
+          }
+        },
+        error: () => { this.salesInvoicePickerLoading = false; },
+      });
+    }
+  }
+
+  public onSalesInvoicePick(item: SalesInvoicePickItem): void {
+    const idx = this.salesInvoicePickerRowIndex;
+    if (idx === null || idx < 0) return;
+    const occ = (item.VoucherNo ?? '').trim();
+    if (occ && occ !== this.currentVouNoOrEmpty()) {
+      this.messageService.errorBubble(`發票 ${item.InvoiceNumber} 已被傳票 ${occ} 使用，無法選取`);
+      return; // 提醒且禁止選取
+    }
+    const patch = this.mapPickToSalesRow(item);
+    this.stepSalesRows.update(rows => {
+      const next = [...rows];
+      if (!next[idx]) return rows;
+      next[idx] = this.withClearedInvoiceErrors({ ...next[idx], ...patch });
+      return next;
+    });
+    const full = String(item.InvoiceNumber ?? '').trim();
+    if (full.length === 10) this.lastSalesInvoiceLookupKey.set(idx, full);
+    this.showSalesInvoicePickerDialog = false;
+  }
+
+  /** 帶入既有發票後，清掉字軌/發票號碼/格式殘留的欄位驗證錯誤（避免有值卻仍紅框報「未輸入」） */
+  private withClearedInvoiceErrors(row: FIN53010StepSalesInvoiceRow): FIN53010StepSalesInvoiceRow {
+    const errs = (row as Record<string, unknown>)['_validationErrors'] as Record<string, string> | undefined;
+    if (!errs) return row;
+    const cleaned = { ...errs };
+    delete cleaned['invoice_no'];
+    delete cleaned['invoice_prefix'];
+    delete cleaned['invoice_type'];
+    return { ...row, _validationErrors: cleaned } as FIN53010StepSalesInvoiceRow;
   }
 
   private hydratePurchaseRowByInvoice(index: number, prefix: string, no: string): void {
@@ -2257,6 +2478,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const idx = event.index;
     if (typeof idx !== 'number' || idx < 0) return;
     const row = event.rowData as FIN53010StepSalesInvoiceRow;
+
+    // 改發票號碼/字軌/格式 = 換一張發票：清掉既有 id → 存檔重新 link/insert，舊發票由後端解除綁定
+    if ((f === 'invoice_type' || f === 'invoice_prefix' || f === 'invoice_no') && row.id != null) {
+      event.rowData.id = undefined;
+    }
 
     if (f === 'invoice_date' || f === 'declare_ym') {
       const srcDate = f === 'invoice_date'

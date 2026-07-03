@@ -16,12 +16,14 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { ExportFIN55050Payload, FIN55050Data, FIN55050Detail, FIN55050Service, GroupedFIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableSubheaderComponent } from './table-subheader/table-subheader.component';
+import { VenUserPickerComponent } from './ven-user-picker/ven-user-picker.component';
 @Component({
   selector: 'app-fin55050',
   templateUrl: './fin55050.component.html',
@@ -43,6 +45,8 @@ import { TableSubheaderComponent } from './table-subheader/table-subheader.compo
     DropdownRangeComponent,
     DropdownComponent,
     ButtonModule,
+    InputTextModule,
+    VenUserPickerComponent,
     AsyncPipe
   ]
 })
@@ -85,8 +89,24 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   lastQueryConditions: ExportFIN55050Payload | null = null;
   OrgIdListOptions = this.dropdown.querySys3100();
   AccNoListOptions = this.dropdown.queryGls1005();
-  VendorNoListOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   VouStatusListOptions = [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }, { label: '確認', value: '2' }, { label: '過帳', value: '3' },];
+
+  pickerVisible = false;
+  pickerTarget: 'From' | 'To' = 'From';
+
+  openPicker(target: 'From' | 'To'): void {
+    this.pickerTarget = target;
+    this.pickerVisible = true;
+  }
+
+  onPickerSelected(code: string): void {
+    if (this.pickerTarget === 'From') {
+      this.queryForm.controls.VendorFrom.setValue(code as unknown as null);
+    } else {
+      this.queryForm.controls.VendorTo.setValue(code as unknown as null);
+    }
+  }
+
   TargetNoListOptions: { label: string, value: string }[] = [];
   VouTypeListOptions: { label: string, value: string }[] = [];
   ngOnInit(): void {

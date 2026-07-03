@@ -10,6 +10,7 @@
  * 資料統一在此組件管理，不需要 Session Storage
  */
 import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -1326,7 +1327,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       }
     } catch (error: any) {
       console.error('契約書續約資料提交失敗:', error);
-      this.messageService.errorBubble(error.message || '契約書續約資料提交失敗');
+      // HttpErrorResponse 已由 errorInterceptor 統一顯示 toast，此處不重複彈出
+      if (!(error instanceof HttpErrorResponse)) {
+        this.messageService.errorBubble(error.message || '契約書續約資料提交失敗');
+      }
     } finally {
       this.isSaving = false;
       this.messageService.unblockUi();

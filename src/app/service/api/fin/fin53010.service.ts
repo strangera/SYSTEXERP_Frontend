@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -293,6 +293,61 @@ export class FIN53010Service {
         take(1),
         catchError(err => {
           this.logger.error('API queryAPS4023OriginalInvoices_ForAllowance 失敗:', err);
+          return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>);
+        }),
+      );
+  }
+
+  /** 依發票號碼查 POS4023 銷項發票主檔（格式 31/32），供雙擊帶出／傳票號碼提醒 */
+  public queryPos4023DetailDataByInvoiceNumber(
+    body: QueryPos4023DetailDataByInvoiceNumberRequest
+  ): Observable<ApiResponse<Pos4023DetailDataByInvoiceNumberData | null>> {
+    return this.http
+      .post<ApiResponse<Pos4023DetailDataByInvoiceNumberData | null>>(
+        `${apiUrl}/queryPOS4023DetailData_ByInvoiceNumber`,
+        body
+      )
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API queryPOS4023DetailData_ByInvoiceNumber 失敗:', err);
+          const eb = err?.error as ApiResponse<unknown> | undefined;
+          return of({ Status: '9999', Data: null, Message: eb?.Message ?? '查詢失敗', Error: eb?.Error ?? null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Pos4023DetailDataByInvoiceNumberData | null>);
+        }),
+      );
+  }
+
+  /** POS4023 銷項發票清單（格式 31/32），供 picker 彈窗，分頁 */
+  public queryPos4023SalesInvoicesForPicker(
+    body: QuerySalesInvoicesForPickerRequest
+  ): Observable<ApiResponse<Pos4023DetailDataByInvoiceNumberData[]>> {
+    return this.http
+      .post<ApiResponse<Pos4023DetailDataByInvoiceNumberData[]>>(
+        `${apiUrl}/queryPOS4023SalesInvoices_ForPicker`,
+        body
+      )
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API queryPOS4023SalesInvoices_ForPicker 失敗:', err);
+          return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Pos4023DetailDataByInvoiceNumberData[]>);
+        }),
+      );
+  }
+
+  /** APS4023 銷項發票清單（格式 35），供 picker 彈窗，分頁 */
+  public queryAps4023SalesInvoicesForPicker(
+    body: QuerySalesInvoicesForPickerRequest
+  ): Observable<ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>> {
+    return this.http
+      .post<ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>>(
+        `${apiUrl}/queryAPS4023SalesInvoices_ForPicker`,
+        body
+      )
+      .pipe(
+        take(1),
+        catchError(err => {
+          this.logger.error('API queryAPS4023SalesInvoices_ForPicker 失敗:', err);
           return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<Aps4023DetailDataByInvoiceNumberData[]>);
         }),
       );

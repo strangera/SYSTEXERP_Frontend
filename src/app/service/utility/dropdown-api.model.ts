@@ -341,6 +341,14 @@ export interface TalentStoreWayQuery {
 }
 
 /**
+ * 查詢 TLTTALENT_Allowed_DropDownList 時的請求 body
+ */
+export interface TalentAllowedQuery {
+  ProgNo: string;
+  VEN_No?: string;
+}
+
+/**
  * 查詢 SYS1000_DropDownList 時的請求 body
  */
 export interface Sys1000Query {
@@ -499,6 +507,10 @@ export interface TLTTALENTActiveContractItem extends IDropdownItem {
   ECR_SubGroup: string | null;
   ECR_AreaNo: string | null;
   ECR_LocNo: string | null;
+  building_desc?: string | null;
+  floor_desc?: string | null;
+  area_desc?: string | null;
+  contract_subno?: number;
 }
 
 /**

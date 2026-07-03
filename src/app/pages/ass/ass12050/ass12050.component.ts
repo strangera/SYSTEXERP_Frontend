@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS12050QueryRow, QueryASS12050Request } from '@pages/ass/ass12050/ass12050.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -72,7 +72,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
     PageIndex: [1],
   });
 
-  /** 品項：queryFIN11040 */
+  /** 品項：queryASS11040_DropDownList */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 申請人：queryTBLUSER_DropDownList */
   empIdOptions: { value: string; label: string }[] = [];
@@ -121,7 +121,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   constructor(
     private readonly ass12050Service: ASS12050Service,
     private readonly dropDownListService: DropDownListService,
-    private readonly fin11040Service: Fin11040Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly ass11100Service: ASS11100Service,
     private readonly fileExportService: FileExportService,
   ) {
@@ -188,20 +188,12 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
         this.statusOptions = toOpt(res.Data ?? []);
       });
 
-    this.fin11040Service
-      .queryFIN11040({ PageSize: 9999, PageIndex: 1 })
+    // 品項：queryASS11040_DropDownList（固定資產品項主檔，與整條資產採購流程一致）
+    this.dropdownApiService
+      .queryASS11040_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          if (res.Status !== '0000') return;
-          const data: TDS1008Data[] = res.Data ?? [];
-          this.goodsIdOptions = data
-            .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-            .map(item => ({
-              label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-              value: item.INV_ItemNo,
-            }));
-        },
+      .subscribe(options => {
+        this.goodsIdOptions = options ?? [];
       });
 
     this.ass11100Service

@@ -1,6 +1,7 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -14,7 +15,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { ASS12040DetailResponse, ASS12040QueryRow } from '../ass12040/ass12040.model';
+import { ASS12040QueryRow } from '../ass12040/ass12040.model';
 
 /** 3.1.2.4 採購單審核作業 - 詳細頁（僅唯讀，僅支援從查詢頁「查看」進入） */
 @Component({
@@ -37,27 +38,27 @@ import { ASS12040DetailResponse, ASS12040QueryRow } from '../ass12040/ass12040.m
   ],
 })
 export class ASS12040CRUComponent
-  extends BasicCruPageComponent<ASS12040QueryRow | ASS12040DetailResponse>
+  extends BasicCruPageComponent<ASS12040QueryRow>
   implements OnInit
 {
-  public readonly dataForm = this.formBuilder.nonNullable.group({
-    remark: new FormControl<string | null>(null),
-    purchaseNumber: new FormControl<string | null>(null),
-    paperStatus: new FormControl<string | null>(null),
-    supplierCode: new FormControl<string | null>(null),
-    applicantCode: new FormControl<string | null>(null),
-    organizationNumber: new FormControl<string | null>(null),
-    applicationDate: new FormControl<Date | string | null>(null),
-    noTaxAmount: new FormControl<number | null>(null),
-    taxAmount: new FormControl<number | null>(null),
-    totalTaxAmount: new FormControl<number | null>(null),
-    itemCode: new FormControl<string | null>(null),
-    itemNumber: new FormControl<number | null>(null),
-    singlePrice: new FormControl<number | null>(null),
-    totalPrice: new FormControl<number | null>(null),
-    storage: new FormControl<string | null>(null),
-    department: new FormControl<string | null>(null),
-    itemRemark: new FormControl<string | null>(null),
+  public readonly dataForm = this.formBuilder.group({
+    remark: [null as string | null],
+    purchaseNumber: [null as string | null],
+    paperStatus: [null as string | null],
+    supplierCode: [null as string | null],
+    applicantCode: [null as string | null],
+    organizationNumber: [null as string | null],
+    applicationDate: [null as Date | string | null],
+    noTaxAmount: [null as number | null],
+    taxAmount: [null as number | null],
+    totalTaxAmount: [null as number | null],
+    itemCode: [null as string | null],
+    itemNumber: [null as number | null],
+    singlePrice: [null as number | null],
+    totalPrice: [null as number | null],
+    storage: [null as string | null],
+    department: [null as string | null],
+    itemRemark: [null as string | null],
   });
   public readonly df = computed(() => this.dataForm.controls);
 
@@ -67,12 +68,14 @@ export class ASS12040CRUComponent
   public readonly paperStatusOptions = signal<{ label: string; value: string }[]>([]);
   /** 品項編號下拉：queryASS11040_DropDownList（GOODS_ID / 名稱） */
   public readonly itemCodeOptions = signal<{ label: string; value: string }[]>([]);
-  /** TODO: 供應商編號、倉別下拉未實作，待 API 或規格提供後接上 */
-  public readonly supplierCodeOptions = signal<{ label: string; value: string }[]>([]);
+  /** 倉別下拉（來源 ASS11100） */
   public readonly storageOptions = signal<{ label: string; value: string }[]>([]);
+  /** 供應商下拉（來源 queryPos2013） */
+  public readonly supplierCodeOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
     private readonly ass12040Service: ASS12040Service,
+    private readonly ass11100Service: ASS11100Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
   ) {
@@ -82,36 +85,35 @@ export class ASS12040CRUComponent
   ngOnInit(): void {
     this.initializePage('ASS12040', this.dataForm);
     this.loadDropdownOptions();
-    const state = this.router.lastSuccessfulNavigation?.extras?.state as {
-      crudstatus?: string;
-      rowdata?: ASS12040QueryRow | ASS12040DetailResponse;
-    };
-    if (state?.rowdata) {
-      this.patchFromRow(state.rowdata);
+    if (this.rowdata) {
+      this.patchFromRow(this.rowdata);
       this.dataForm.disable();
     }
   }
 
-  private patchFromRow(row: ASS12040QueryRow | ASS12040DetailResponse): void {
+  private patchFromRow(row: ASS12040QueryRow): void {
     const r = row as Record<string, unknown>;
+    const toNum = (v: unknown): number | null =>
+      v == null || v === '' ? null : Number(v);
     this.dataForm.patchValue({
-      remark: (r['REMARK'] ?? r['remark']) as string | null,
+      remark: (r['NOTES'] ?? r['REMARK'] ?? r['remark']) as string | null,
+      // 說明 (itemRemark)：查詢回應無對應明細說明欄位，維持空白
       purchaseNumber: (r['SUBPOENA_ID'] ?? r['purchaseNumber']) as string | null,
       paperStatus: (r['SUBPOENA_STATUS'] ?? r['paperStatus']) as string | null,
       supplierCode: (r['SUPPLIER_ID'] ?? r['supplierCode']) as string | null,
       applicantCode: (r['EMP_ID'] ?? r['applicantCode']) as string | null,
       organizationNumber: (r['ORG_ID'] ?? r['organizationNumber']) as string | null,
       applicationDate: (r['APPLY_DATE'] ?? r['applicationDate']) as Date | string | null,
-      noTaxAmount: (r['NTAX_AMT'] ?? r['noTaxAmount']) as number | null,
-      taxAmount: (r['TAX_AMT'] ?? r['taxAmount']) as number | null,
-      totalTaxAmount: (r['AMT'] ?? r['totalTaxAmount']) as number | null,
+      noTaxAmount: toNum(r['NTAX_AMT'] ?? r['noTaxAmount']),
+      taxAmount: toNum(r['TAX_AMT'] ?? r['taxAmount']),
+      totalTaxAmount: toNum(r['AMT'] ?? r['totalTaxAmount']),
       itemCode: (r['GOODS_ID'] ?? r['itemCode']) as string | null,
-      itemNumber: (r['ITEM_QTY'] ?? r['itemNumber']) as number | null,
-      singlePrice: (r['UNIT_PRICE'] ?? r['singlePrice']) as number | null,
-      totalPrice: (r['TOTAL_PRICE'] ?? r['totalPrice']) as number | null,
+      itemNumber: toNum(r['QTY'] ?? r['itemNumber']),
+      singlePrice: toNum(r['GOODS_PRICE'] ?? r['singlePrice']),
+      totalPrice: toNum(r['D_NTAX_AMT'] ?? r['totalPrice']),
       storage: (r['WH_ID'] ?? r['storage']) as string | null,
-      department: (r['ENTRUST_ORG_ID'] ?? r['department']) as string | null,
-      itemRemark: (r['NOTES'] ?? r['itemRemark']) as string | null,
+      department: (r['D_ORG_ID'] ?? r['department']) as string | null,
+      itemRemark: (r['itemRemark'] ?? null) as string | null,
     });
   }
 
@@ -149,7 +151,24 @@ export class ASS12040CRUComponent
       this.itemCodeOptions.set(options ?? []);
     });
 
-    // TODO: 供應商編號、倉別下拉未實作，待 API 或規格提供後接上
+    // 倉別下拉：比照查詢頁，取 ASS11100 倉別清單
+    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? [])
+          .filter(item => item.WH_ID != null && item.WH_ID !== '')
+          .map(item => ({
+            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+            value: item.WH_ID!,
+          }));
+        this.storageOptions.set(options);
+      },
+    });
+
+    // 供應商下拉：比照查詢頁，取 queryPos2013
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '' }).subscribe(options => {
+      this.supplierCodeOptions.set(options ?? []);
+    });
   }
 
   override onCancel(): void {
@@ -161,10 +180,7 @@ export class ASS12040CRUComponent
   }
 
   private runApprove(): void {
-    const key =
-      this.rowdata &&
-      ((this.rowdata as ASS12040QueryRow).SUBPOENA_ID ??
-        (this.rowdata as ASS12040DetailResponse).SUBPOENA_ID);
+    const key = this.rowdata?.SUBPOENA_ID;
     if (!key) {
       this.messageService.warnBubble('無法取得單據識別，無法執行審核');
       return;

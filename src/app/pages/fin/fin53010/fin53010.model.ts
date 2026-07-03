@@ -225,7 +225,10 @@ export interface InsertFIN53010DetailDataNextBody {
   insertAPS3001Datas: InsertAPS3001DataBody[];
   insertAPS2002Datas: InsertAPS2002DataBody[];
   insertARS3001Datas: InsertARS3001DataBody[];
+  /** 銷項發票（格式 35，寫入 APS4023） */
   insertAPS4023Datas: InsertAPS4023DataBody[];
+  /** 銷項發票（格式 31/32，寫入 POS4023） */
+  insertPOS4023Datas: InsertAPS4023DataBody[];
   insertAPS4002Datas: InsertAPS4002DataBody[];
 }
 
@@ -277,7 +280,10 @@ export interface UpdateFIN53010DetailDataNextBody {
   updateAPS3001Datas?: UpdateAPS3001DataBody[] | null;
   updateAPS2002Datas?: UpdateAPS2002DataBody[] | null;
   updateARS3001Datas?: UpdateARS3001DataBody[] | null;
+  /** 銷項發票（格式 35，寫入 APS4023） */
   updateAPS4023Datas?: UpdateAPS4023DataBody[] | null;
+  /** 銷項發票（格式 31/32，寫入 POS4023） */
+  updatePOS4023Datas?: UpdateAPS4023DataBody[] | null;
   updateAPS4002Datas?: UpdateAPS4002DataBody[] | null;
 }
 
@@ -497,6 +503,60 @@ export interface QueryAps4023OriginalInvoicesForAllowanceRequest {
   InvoiceNumber?: string | null;
   PageSize?: number | null;
   PageIndex?: number | null;
+}
+
+/** queryPOS4023DetailData_ByInvoiceNumber Request */
+export interface QueryPos4023DetailDataByInvoiceNumberRequest {
+  InvoiceNumber?: string | null;
+}
+
+/** queryPOS4023SalesInvoices_ForPicker / queryAPS4023SalesInvoices_ForPicker Request */
+export interface QuerySalesInvoicesForPickerRequest {
+  InvoiceNumber?: string | null;
+  PageSize?: number | null;
+  PageIndex?: number | null;
+}
+
+/** 銷項發票 picker 正規化項目（POS4023 與 APS4023 統一成同一形狀供彈窗顯示／帶出） */
+export interface SalesInvoicePickItem {
+  /** 完整發票號碼（10碼） */
+  InvoiceNumber: string;
+  /** 發票格式（31/32/35） */
+  InvoiceType: string;
+  InvoiceDate: string | null;
+  /** 發票總金額（含稅） */
+  TotalAmount: number | null;
+  NetAmount: number | null;
+  TaxAmount: number | null;
+  TaxType: string | null;
+  BuyerUniform: string | null;
+  DeclareYM: string | null;
+  AssetType: string | null;
+  SourceDocNo: string | null;
+  /** 已綁定的傳票編號（有值＝已被某張傳票使用） */
+  VoucherNo: string | null;
+  /** 來源主檔 ID（POS4023.ID 或 APS4023.ID），帶回後存 row.id，存檔走 update */
+  SourceId: number | null;
+}
+
+/** POS4023 銷項發票主檔（格式 31/32），供帶出／picker（欄位對齊 Models.POS4023） */
+export interface Pos4023DetailDataByInvoiceNumberData {
+  ID?: number;
+  TXN_GUINo?: string | null;
+  INV_GUIType?: string | null;
+  INV_GUITrack?: string | null;
+  INV_GUINumber?: string | null;
+  TXN_Date?: string | null;
+  INV_DeclareYM?: string | null;
+  TXN_Uniform?: string | null;
+  TXN_SaleAmt?: number | null;
+  PLU_TaxType?: string | null;
+  TXN_Net?: number | null;
+  TXN_Tax?: number | null;
+  Source_Doc_No?: string | null;
+  AssetType?: string | null;
+  Voucher_No?: string | null;
+  INV_Cancel?: string | null;
 }
 
 /** getCalculatedPayDate Request */

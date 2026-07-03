@@ -107,6 +107,10 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   private isLoadingRenewalData = false;
   private lastRenewalVenNo: string | null = null;
 
+  // 續約日期下限（來源版本截止日）：新版起始日不得早於此
+  renewalMinContractDate: Date | null = null;
+  renewalMinOperDate: Date | null = null;
+
   // 位置表格欄位定義
   locationEditColumns: EditColumn[] = [
     { field: 'location_no', header: '位置編號', type: 'custom', minWidth: '160px' },
@@ -466,8 +470,11 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    */
   private setupDynamicValidators(): void {
     // 設定抽成別變更監聽
-    this.form.get('tlt_term_type')?.valueChanges.subscribe(() => {
+    this.form.get('tlt_term_type')?.valueChanges.subscribe((val) => {
       this.validationService.updateFieldValidators(this.form);
+      if (!['4', '5', '6'].includes(val)) {
+        this.form.get('tlt_ctype_mtotal')?.setValue(null);
+      }
     });
 
     // 設定付款方式變更監聽
@@ -829,6 +836,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   /**
    * 載入續約資料
    */
+  private addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
   private loadRenewalData(venNo: string, tltNo?: string): void {
     // 防止重複呼叫
     if (this.isLoadingRenewalData) {
@@ -847,6 +860,41 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       next: (renewalData) => {
         // 回填基本資料到表單
         this.patchFormForRenewal(renewalData.BasicInfo, renewalData.next_contract_subno);
+
+        // 設定日期下限（來源版截止日 +1 天），新版起始日必須在舊版結束後才不重疊
+        const bi = renewalData.BasicInfo;
+        this.renewalMinContractDate = bi.source_tlt_edate ? this.addDays(new Date(bi.source_tlt_edate), 1) : null;
+        this.renewalMinOperDate = bi.source_tlt_contract_edate ? this.addDays(new Date(bi.source_tlt_contract_edate), 1) : null;
+
+        // 加入 validator 防止手動輸入繞過 minDate 限制
+        const contractBdateCtrl = this.form.get('tlt_bdate');
+        const operBdateCtrl = this.form.get('tlt_contract_bdate');
+        if (this.renewalMinContractDate) {
+          const min = this.renewalMinContractDate;
+          contractBdateCtrl?.addValidators((ctrl) => {
+            if (!ctrl.value) return null;
+            const val = ctrl.value instanceof Date ? ctrl.value : new Date(ctrl.value);
+            return val < min ? { renewalDateTooEarly: { min: min.toLocaleDateString('zh-TW') } } : null;
+          });
+          contractBdateCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+        if (this.renewalMinOperDate) {
+          const min = this.renewalMinOperDate;
+          operBdateCtrl?.addValidators((ctrl) => {
+            if (!ctrl.value) return null;
+            const val = ctrl.value instanceof Date ? ctrl.value : new Date(ctrl.value);
+            return val < min ? { renewalOperDateTooEarly: { min: min.toLocaleDateString('zh-TW') } } : null;
+          });
+          operBdateCtrl?.updateValueAndValidity({ emitEvent: false });
+        }
+
+        // 清空日期欄位，讓使用者重新選擇（舊版日期不能沿用，避免區間重疊）
+        this.form.patchValue({
+          tlt_bdate: null,
+          tlt_edate: null,
+          tlt_contract_bdate: null,
+          tlt_contract_edate: null
+        }, { emitEvent: false });
 
         // 回填位置資料
         if (renewalData.Locations && renewalData.Locations.length > 0) {
@@ -1601,6 +1649,10 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    */
   canCopyAddress(): boolean {
     return !!this.form.get('VEN_Address')?.value?.trim() && !this.isViewMode;
+  }
+
+  get isMtotalReadonly(): boolean {
+    return !['4', '5', '6'].includes(this.form.get('tlt_term_type')?.value);
   }
 
   /**
