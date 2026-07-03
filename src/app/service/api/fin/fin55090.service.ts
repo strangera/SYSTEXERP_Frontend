@@ -11,7 +11,7 @@ export interface QueryFIN55090Request {
   DateFrom: string; // YYYY-MM-DD
   DateTo: string; // YYYY-MM-DD
   Ledger_MD: '0' | '1'; // '0'=統制, '1'=明細
-  OrgId: string | null; // 部門
+  OrgList: string[] | null; // 部門 (多選)
   ProjectNo: string | null; // 活動代碼
   ShowZero: boolean; // 是否顯示餘額為零的科目
   PrintSign: boolean; // 是否列印簽核欄
