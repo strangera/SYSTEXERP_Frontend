@@ -34,7 +34,6 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
   templateUrl: './fin13050.component.html',
 })
 export class FIN13050Component extends BasicQueryPageComponent<any> implements OnInit {
-  // --- 下拉選項 ---
   vendorOptions: any[] = [];
   PUR_VoucherTypeOptions: any[] = [];
   directTypeOptions: any[] = [];
@@ -42,16 +41,13 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   PUR_DiscNoOptions: any[] = [];
   typeOptions: any[] = [];
   SYS_ORIGINOptions: any[] = [];
-
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
   lastQueryBody: any = null;
-
   isRowSelectable = (row: any): boolean => !!row?.CanDel;
   editDisabled = (row: any): boolean => !row?.CanEdit;
   detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
-
   queryForm = this.formBuilder.group({
     ...createPaginationConfig([{ field: 'PUR_GUINo', order: 1 }, { field: 'PUR_GUIDate', order: 1 }]),
     PUR_VoucherType: [[]],
@@ -96,10 +92,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   ) { super(); }
 
   ngOnInit(): void {
-    // 1. 底層 initializePage 會自動處理還原狀態並 onSubmit
     this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm, (f) => this.onSubmit(f));
     this.initOptions();
-
     // 如果不是從 CRU 頁面回來，設定預設年月
     const previousRoute = this.router.lastSuccessfulNavigation?.extras.state?.['fromRoute'] || '';
     if (!previousRoute.includes(this.ProgNo.toLowerCase())) {
@@ -161,18 +155,9 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
         this.data = res?.Data ?? [];
         this.totalRecords = res?.TotalCount ?? this.data.length;
         this.lastQueryBody = { ...payload };
-        this.queryStateService.setQueryState(this.ProgNo, { formValue: raw, lastQueryBody: this.lastQueryBody });
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
       });
     });
-  }
-
-  onClear(): void {
-    this.queryForm.reset();
-    this.data = [];
-    this.totalRecords = 0;
-    this.lastQueryBody = null;
-    this.setDefaultRepYYYYMM();
-    this.queryStateService.clearQueryState(this.ProgNo);
   }
 
   onDelete = (selection: any | any[]) => {
