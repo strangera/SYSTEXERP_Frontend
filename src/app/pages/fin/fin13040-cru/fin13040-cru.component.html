@@ -3,6 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
@@ -11,6 +12,7 @@
             optionValue="value" [control]="dataForm.controls.InvoiceType" [submitted]="submitted">
           </app-dropdown>
         </div> -->
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="使用別"
@@ -23,10 +25,12 @@
           ></app-dropdown>
         </div>
       </div>
+
       <div class="grid p-fluid">
         <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
         </div> -->
+
         <div class="col-12 md:col-6 lg:col-4" *ngIf="showInvoiceNumberField">
           <app-input-text
             label="發票號碼"
@@ -35,6 +39,7 @@
             [readonly]="isInvoiceNumberReadonly"
           ></app-input-text>
         </div>
+
         <app-year-month
           class="col-12 md:col-6 lg:col-4"
           label="申報年月"
@@ -44,6 +49,7 @@
           [evenMonth]="true"
           (valueChanges)="loadGuiTrackOptions($event)"
         ></app-year-month>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             label="發票日期"
@@ -82,6 +88,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="是否作廢"
@@ -93,6 +100,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="傳票號碼 "
@@ -100,6 +108,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="資產註記"
@@ -110,6 +119,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="發票抬頭"
@@ -117,6 +127,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="未稅金額"
@@ -126,6 +137,7 @@
             [readonly]="true"
           ></app-input-number>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="稅額"
@@ -135,6 +147,7 @@
             [readonly]="true"
           ></app-input-number>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="含稅金額"
@@ -144,6 +157,7 @@
             [readonly]="true"
           ></app-input-number>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="備註"
@@ -152,7 +166,9 @@
           ></app-input-text>
         </div>
       </div>
+
       <br />
+
       <div class="grid p-fluid">
         <div class="col-12">
           <app-table-edit
@@ -161,7 +177,7 @@
             [columns]="columns"
             [data]="data"
             [showInsert]="false"
-            [disabled]="isFormReadable"
+            [disabled]="isFormReadable || isEditMode"
             (dataChange)="data = $event"
             [autoInsertDefaultRow]="true"
             [rowValidate]="validateDetailRow"
