@@ -466,7 +466,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
   override onCancel(): void {
     this.router.navigate(['/account/fin', 'fin13050'], {
-      state: { fromCru: true },
+      state: { fromRoute: this.router.url },
     });
   }
 
