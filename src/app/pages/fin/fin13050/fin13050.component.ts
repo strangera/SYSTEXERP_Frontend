@@ -54,7 +54,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     PUR_GUINo: [null, [Validators.maxLength(10)]],
     PUR_GUIDate_Start: [null], PUR_GUIDate_End: [null],
     PUR_GUIDate_YYYYMM: [null],
-    PUR_RepYYYYMM: [null as string | null],
+    PUR_RepYYYYMM: [`${(new Date()).getFullYear()}${String(((new Date()).getMonth() + 1) % 2 === 0 ? ((new Date()).getMonth() + 1) : Math.min(((new Date()).getMonth() + 1) + 1, 12)).padStart(2, '0')}` as string | null],
     PUR_VenUniform: [[]],
     PUR_Amt_Small: [null], PUR_Amt_Big: [null],
     PUR_Net_Small: [null], PUR_Net_Big: [null],
@@ -94,19 +94,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm, (f) => this.onSubmit(f));
     this.initOptions();
-    // 如果不是從 CRU 頁面回來，設定預設年月
-    const previousRoute = this.router.lastSuccessfulNavigation?.extras.state?.['fromRoute'] || '';
-    if (!previousRoute.includes(this.ProgNo.toLowerCase())) {
-      this.setDefaultRepYYYYMM();
-    }
-  }
-
-  private setDefaultRepYYYYMM() {
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const targetM = currentMonth % 2 === 0 ? currentMonth : Math.min(currentMonth + 1, 12);
-    const yyyymm = `${now.getFullYear()}${String(targetM).padStart(2, '0')}`;
-    this.queryForm.patchValue({ PUR_RepYYYYMM: yyyymm });
   }
 
   private initOptions() {
