@@ -1,13 +1,21 @@
 import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import {
+  DropdownTableComponent,
+  FieldsConfig,
+} from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Column } from '@shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
@@ -41,20 +49,26 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
     TranslateModule,
     TableEditComponent,
     ButtonModule,
-    NgClass,
+    // NgClass,
     NgIf,
     YearMonthComponent,
     DropdownTableComponent,
   ],
 })
-export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+export class FIN13040CRUComponent
+  extends BasicCruPageComponent<any>
+  implements OnInit
+{
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
     // InvoiceType hidden in UI; default to '35' so backend receives 35 when creating
     InvoiceType: ['35', Validators.required],
     SAL_Type: ['', Validators.required],
     GUI_Track: ['', [Validators.maxLength(2)]],
-    INV_GUINumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)]],
+    INV_GUINumber: [
+      '',
+      [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)],
+    ],
     InvoiceDate: [null as Date | null, Validators.required],
     Buyer_Uniform: [''],
     PUR_TaxType: ['', Validators.required],
@@ -69,7 +83,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     Invoice_Cancel: [{ value: 'N', disabled: true }],
     INV_DeclareYM: ['', Validators.required],
     INV_REMARK: [''],
-
   });
 
   /** 下拉選單與資料 */
@@ -82,7 +95,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   buyerOpForm: FormGroup = this.formBuilder.group({} as any);
   buyerFieldsConfig: FieldsConfig[] = [
-    { field: 'label', header: '買受人統一編號', mainDataField: true }
+    { field: 'label', header: '買受人統一編號', mainDataField: true },
   ];
   buyerDialogColumns: Column[] = [
     { field: 'value', header: '統一編號' },
@@ -90,8 +103,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   Invoice_CancelOptions = [
     { label: '是', value: 'Y' },
-    { label: '否', value: 'N' }
+    { label: '否', value: 'N' },
   ];
+  private isLoadingDetail = false;
   /** 明細資料表 */
   columns: EditColumn[] = [];
   data: any[] = [];
@@ -111,7 +125,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 在模板使用：新增模式且選到 InvoiceType='35' 時隱藏發票號碼欄位
   get showInvoiceNumberField(): boolean {
-    return !(this.crudstatus === CRUDStatus.Create && this.dataForm?.controls?.InvoiceType?.value === '35');
+    return !(
+      this.crudstatus === CRUDStatus.Create &&
+      this.dataForm?.controls?.InvoiceType?.value === '35'
+    );
   }
 
   // 在模板使用：發票號碼欄位是否應為唯讀（Edit 模式或 control 被停用）
@@ -120,14 +137,28 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     return this.crudstatus === CRUDStatus.Edit || !!ctrl?.disabled;
   }
 
+  get isEditMode(): boolean {
+    return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  private applyEditModeLock(): void {
+    if (!this.isEditMode) return;
+
+    Object.keys(this.dataForm.controls).forEach((key) => {
+      if (['Voucher_No', 'INV_REMARK'].includes(key)) {
+        this.dataForm.get(key)?.enable({ emitEvent: false });
+      } else {
+        this.dataForm.get(key)?.disable({ emitEvent: false });
+      }
+    });
+  }
+
   // ======================== 初始化 ========================
   ngOnInit(): void {
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
-      if (this.crudstatus === CRUDStatus.Read) {
-    this.dataForm.get('Voucher_No')?.enable({ emitEvent: false });
-  }
+    this.applyEditModeLock();
 
     // 新增模式：預設申報年月（當期雙數月）及發票日期（今天）
     if (this.crudstatus === CRUDStatus.Create) {
@@ -141,31 +172,42 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
 
-    // 若為編輯模式，僅停用發票號碼欄位（發票格式仍可變更）
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const invCtrl = this.dataForm.get('INV_GUINumber');
-      if (invCtrl && !invCtrl.disabled) invCtrl.disable({ emitEvent: false });
-    }
+    // 編輯模式：只允許修改傳票號碼、備註
+    this.applyEditModeLock();
 
     // 自動將發票號碼轉為大寫，方便使用者輸入小寫英文字母時仍符合格式
-    this.dataForm.get('INV_GUINumber')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
-      if (val && typeof val === 'string') {
-        this.dataForm.controls.INV_GUINumber.setValue(val.toUpperCase(), { emitEvent: false });
-      }
-    });
+    this.dataForm
+      .get('INV_GUINumber')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        if (val && typeof val === 'string') {
+          this.dataForm.controls.INV_GUINumber.setValue(val.toUpperCase(), {
+            emitEvent: false,
+          });
+        }
+      });
 
     // 若為新增且發票格式為 35，則隱藏/停用發票號碼欄位
-    this.dataForm.get('InvoiceType')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
-      if (this.crudstatus === CRUDStatus.Create && val === '35') {
-        this.dataForm.controls.INV_GUINumber.setValue('', { emitEvent: false });
-        this.dataForm.controls.INV_GUINumber.disable({ emitEvent: false });
-      } else {
-        // 若不是新增模式或不是 35，確保欄位可用（非 Read 模式）
-        if (!this.isFormReadable && this.dataForm.controls.INV_GUINumber.disabled) {
-          this.dataForm.controls.INV_GUINumber.enable({ emitEvent: false });
+    this.dataForm
+      .get('InvoiceType')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        if (this.crudstatus === CRUDStatus.Create && val === '35') {
+          this.dataForm.controls.INV_GUINumber.setValue('', {
+            emitEvent: false,
+          });
+          this.dataForm.controls.INV_GUINumber.disable({ emitEvent: false });
+        } else {
+          // 若不是新增模式或不是 35，確保欄位可用（非 Read/Edit 模式）
+          if (
+            !this.isFormReadable &&
+            !this.isEditMode &&
+            this.dataForm.controls.INV_GUINumber.disabled
+          ) {
+            this.dataForm.controls.INV_GUINumber.enable({ emitEvent: false });
+          }
         }
-      }
-    });
+      });
 
     // 初始檢查：若預設值為 '35'（例如已把 InvoiceType 預設為 '35'）且為新增模式，則一開始也要停用發票號碼
     try {
@@ -183,36 +225,47 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (rowData) {
       this.fillHeaderData(rowData);
+      this.applyEditModeLock();
       this.loadDetail(rowData);
     }
 
     // SAL_Type 改變時重新載入品項
-    this.dataForm.get('SAL_Type')?.valueChanges
-      .pipe(untilDestroyed(this))
+    this.dataForm
+      .get('SAL_Type')
+      ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val) => {
-        console.log('[valueChanges] SAL_Type 改變:', val);
-        this.loadINVItemOptions();
-      });
+  if (this.isLoadingDetail) return;
+  if (!val) return;
+
+  console.log('[valueChanges] SAL_Type 改變:', val);
+  this.loadINVItemOptions();
+});
 
     // 初始若已有 SAL_Type
-    setTimeout(() => {
-      const salType = this.dataForm.get('SAL_Type')?.value;
-      if (salType) this.loadINVItemOptions();
-    }, 200);
+  
 
     // 統編 free-text 輸入時，若剛好符合選項則帶入廠商資訊
     // （下拉選取的情境由 onBuyerSelect 處理）
-    this.dataForm.get('Buyer_Uniform')?.valueChanges
-      .pipe(untilDestroyed(this))
+    this.dataForm
+      .get('Buyer_Uniform')
+      ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val: any) => {
         if (val && typeof val === 'object') return; // 選取事件由 onBuyerSelect 處理
-        const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
-        this.dataForm.patchValue({
-          Buyer_VenNo: selected?.VEN_No ?? '',
-          Buyer_Name: selected?.VEN_Name ?? '',
-        }, { emitEvent: false });
+        const selected = this.Buyer_Uniform_Options.find(
+          (o) => o.value === val,
+        );
+        this.dataForm.patchValue(
+          {
+            Buyer_VenNo: selected?.VEN_No ?? '',
+            Buyer_Name: selected?.VEN_Name ?? '',
+          },
+          { emitEvent: false },
+        );
         if (selected) {
-          this.dataForm.patchValue({ PUR_InvoiceTitle: selected.VEN_Name }, { emitEvent: false });
+          this.dataForm.patchValue(
+            { PUR_InvoiceTitle: selected.VEN_Name },
+            { emitEvent: false },
+          );
         }
       });
 
@@ -220,22 +273,26 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('PUR_TaxType')?.valueChanges.subscribe((taxType) => {
       this.recalculateAllDetailByTaxType(taxType);
     });
-
   }
 
   loadGuiTrackOptions(event: any): void {
     // 根據申報年月載入字軌下拉（參考 FIN15010）
-    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
-      GUI_YYMM: event,
-      MID: 0,
-      STO_No: '10',
-      GUI_Type: this.dataForm.controls.InvoiceType.value ? [this.dataForm.controls.InvoiceType.value] : []
-    }).pipe(untilDestroyed(this)).subscribe(r => {
-      // 若回傳結構不同，嘗試從 r.Data.GuiTracks 取得陣列
-      const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
-      // 不直接存到 control，僅供其他下拉使用；若需要可存到 this.guiTrackOptions
-      console.log('[loadGuiTrackOptions] tracks', tracks);
-    });
+    this.dropDownListService
+      .queryPOS1018_GUI_TRACK_DropDownList({
+        GUI_YYMM: event,
+        MID: 0,
+        STO_No: '10',
+        GUI_Type: this.dataForm.controls.InvoiceType.value
+          ? [this.dataForm.controls.InvoiceType.value]
+          : [],
+      })
+      .pipe(untilDestroyed(this))
+      .subscribe((r) => {
+        // 若回傳結構不同，嘗試從 r.Data.GuiTracks 取得陣列
+        const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
+        // 不直接存到 control，僅供其他下拉使用；若需要可存到 this.guiTrackOptions
+        console.log('[loadGuiTrackOptions] tracks', tracks);
+      });
   }
   // ======================== 主檔填入 ========================
   private fillHeaderData(header: any): void {
@@ -245,9 +302,16 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       const normalize = (s: any) => (s ?? '').toString().trim().toUpperCase();
       const target = normalize(assetVal);
       if (target && this.AssetNoteOptions && this.AssetNoteOptions.length > 0) {
-        let match = this.AssetNoteOptions.find(opt => normalize(opt.value) === target || normalize(opt.label) === target);
+        let match = this.AssetNoteOptions.find(
+          (opt) =>
+            normalize(opt.value) === target || normalize(opt.label) === target,
+        );
         if (!match) {
-          match = this.AssetNoteOptions.find(opt => normalize(opt.value).startsWith(target) || normalize(opt.value).includes(target));
+          match = this.AssetNoteOptions.find(
+            (opt) =>
+              normalize(opt.value).startsWith(target) ||
+              normalize(opt.value).includes(target),
+          );
         }
         if (match) assetVal = match.value;
       }
@@ -269,38 +333,73 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       PUR_Net: header.PUR_Net ?? this.dataForm.controls.PUR_Net.value ?? 0,
       PUR_Tax: header.PUR_Tax ?? this.dataForm.controls.PUR_Tax.value ?? 0,
       PUR_Amt: header.PUR_Amt ?? this.dataForm.controls.PUR_Amt.value ?? 0,
-      Invoice_Cancel: header.Invoice_Cancel ?? this.dataForm.controls.Invoice_Cancel.value ?? 'N',
+      Invoice_Cancel:
+        header.Invoice_Cancel ??
+        this.dataForm.controls.Invoice_Cancel.value ??
+        'N',
       INV_REMARK: header.INV_REMARK ?? '',
     });
   }
 
   // ======================== 載入明細 ========================
   private loadDetail(rowData: any): void {
-    console.log('載入明細 rowData:', rowData);
-    const payload = {
-      MID: 0,
-      STO_No: rowData.STO_No ?? '',
-      ID: rowData.ID ?? rowData.id ?? rowData.No,
-    };
-    this.fin13040Service.queryFIN13040Detail(payload).pipe(untilDestroyed(this)).subscribe((res) => {
+  this.loading = true;
+  this.isLoadingDetail = true;
+
+  const payload = {
+    MID: 0,
+    STO_No: rowData.STO_No ?? '',
+    ID: rowData.ID ?? rowData.id ?? rowData.No,
+  };
+
+  this.fin13040Service
+    .queryFIN13040Detail(payload)
+    .pipe(
+  untilDestroyed(this)
+)
+    .subscribe((res) => {
       const data = res.Data;
       if (!data) return;
+
       const header = data.FIN13040Detail_APS4023;
       const details = data.FIN13040Detail_APS40235 ?? [];
+
       this.currentDetailId = header?.ID ?? null;
-      if (header?.InvoiceType) this.fillHeaderData(header);
+
+      if (header?.InvoiceType) {
+        this.fillHeaderData(header);
+      }
+
       const salType = header?.SAL_Type ?? '';
       if (salType) {
-        this.dataForm.patchValue({ SAL_Type: salType });
+        this.dataForm.patchValue(
+          { SAL_Type: salType },
+          { emitEvent: false }
+        );
       }
-      // 若尚未建立欄位 → 先載入品項再填入資料
-      if (this.columns.length === 0) {
-        this.loadINVItemOptions(() => this.fillDetailData(details));
-      } else {
-        this.fillDetailData(details);
-      }
-    });
+
+      this.loadINVItemOptions(() => {
+  this.fillDetailData(details);
+
+  if (this.formTitle === '編輯資料') {
+    this.lockEditModeFields();
   }
+
+  // 全部完成後才解除 Loading
+  this.loading = false;
+  this.isLoadingDetail = false;
+});
+    });
+}
+private lockEditModeFields(): void {
+  Object.keys(this.dataForm.controls).forEach((key) => {
+    if (!['Voucher_No', 'INV_REMARK'].includes(key)) {
+      this.dataForm.get(key)?.disable({ emitEvent: false });
+    } else {
+      this.dataForm.get(key)?.enable({ emitEvent: false });
+    }
+  });
+}
 
   /** 將明細轉為 table-edit 可用格式 */
   private fillDetailData(details: any[]): void {
@@ -311,14 +410,15 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    this.data = details.map(d => {
+    this.data = details.map((d) => {
       const saleAmt = Number(d.TXN_SaleAmt ?? 0);
       const tax = Number(d.TXN_Tax ?? 0);
       const qty = Number(d.TXN_Qty ?? 0);
       // 重算未稅單價，確保顯示一致
-      const unitPrice = qty > 0
-        ? Math.round((saleAmt / qty) - (saleAmt / qty) / 21)
-        : Number(d.PLU_SalePrc ?? 0);
+      const unitPrice =
+        qty > 0
+          ? Math.round(saleAmt / qty - saleAmt / qty / 21)
+          : Number(d.PLU_SalePrc ?? 0);
       return {
         PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
         PLU_Name: d.PLU_Name ?? '',
@@ -332,18 +432,32 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.totalRecords = this.data.length;
     if (this.INV_ItemName_Options && this.INV_ItemName_Options.length > 0) {
       const normalize = (s: any) => (s ?? '').toString().trim();
-      const stripCommon = (s: string) => s.replace(/收入|費用|費用|費|入/gi, '').trim();
-      this.data = this.data.map(row => {
+      const stripCommon = (s: string) =>
+        s.replace(/收入|費用|費用|費|入/gi, '').trim();
+      this.data = this.data.map((row) => {
         if ((!row.PLU_No || row.PLU_No === '') && row.PLU_Name) {
           const rawName = normalize(row.PLU_Name);
-          let match = this.INV_ItemName_Options.find(opt => normalize(opt.INV_ItemName) === rawName || normalize(opt.value) === rawName || normalize(opt.label) === rawName);
+          let match = this.INV_ItemName_Options.find(
+            (opt) =>
+              normalize(opt.INV_ItemName) === rawName ||
+              normalize(opt.value) === rawName ||
+              normalize(opt.label) === rawName,
+          );
           if (!match) {
-            match = this.INV_ItemName_Options.find(opt => normalize(opt.INV_ItemName).includes(rawName) || rawName.includes(normalize(opt.INV_ItemName)));
+            match = this.INV_ItemName_Options.find(
+              (opt) =>
+                normalize(opt.INV_ItemName).includes(rawName) ||
+                rawName.includes(normalize(opt.INV_ItemName)),
+            );
           }
           if (!match) {
             const alt = stripCommon(rawName);
             if (alt && alt !== rawName) {
-              match = this.INV_ItemName_Options.find(opt => normalize(opt.INV_ItemName).includes(alt) || stripCommon(normalize(opt.INV_ItemName)).includes(alt));
+              match = this.INV_ItemName_Options.find(
+                (opt) =>
+                  normalize(opt.INV_ItemName).includes(alt) ||
+                  stripCommon(normalize(opt.INV_ItemName)).includes(alt),
+              );
             }
           }
           if (match) {
@@ -368,72 +482,99 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   /** autocomplete 輸入時過濾建議（限50筆） */
   onBuyerInputChange(event: Record<string, string>): void {
     const query = (Object.values(event)[0] ?? '').toLowerCase();
-    this.filteredBuyerOptions = this.Buyer_Uniform_Options.filter(o =>
-      o.value.toLowerCase().includes(query) ||
-      (o.VEN_Name ?? '').toLowerCase().includes(query)
+    this.filteredBuyerOptions = this.Buyer_Uniform_Options.filter(
+      (o) =>
+        o.value.toLowerCase().includes(query) ||
+        (o.VEN_Name ?? '').toLowerCase().includes(query),
     ).slice(0, 50);
   }
 
   /** 載入買受人統一編號下拉清單 */
   loadBuyerUniformOptions(): void {
-    this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' }).pipe(untilDestroyed(this)).subscribe((res) => {
-      const data = res?.Data ?? [];
-      const uniqueDataMap = new Map();
-      (data as unknown[]).forEach((item) => {
-        const r = item as Record<string, string>;
-        if (r['No']) uniqueDataMap.set(r['No'], r);
+    this.dropDownListService
+      .queryPOS2013_DropDownList({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const data = res?.Data ?? [];
+        const uniqueDataMap = new Map();
+        (data as unknown[]).forEach((item) => {
+          const r = item as Record<string, string>;
+          if (r['No']) uniqueDataMap.set(r['No'], r);
+        });
+        this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map(
+          (item) => {
+            const r = item as Record<string, string>;
+            return {
+              label: `${r['No']} - ${r['Name']}`,
+              value: r['No'],
+              VEN_No: r['VEN_No'],
+              VEN_Name: r['Name'],
+            };
+          },
+        );
+        this.filteredBuyerOptions = this.Buyer_Uniform_Options.slice(0, 50);
       });
-      this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item) => {
-        const r = item as Record<string, string>;
-        return { label: `${r['No']} - ${r['Name']}`, value: r['No'], VEN_No: r['VEN_No'], VEN_Name: r['Name'] };
-      });
-      this.filteredBuyerOptions = this.Buyer_Uniform_Options.slice(0, 50);
-    });
   }
 
   loadInvoiceTypeOptions(): void {
-    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).pipe(untilDestroyed(this)).subscribe((res) => {
-      const allowed = ['31', '32', '35'];
-      const data = res?.Data?.INV_GUITypes ?? [];
-      const filtered = data.filter((x: any) => allowed.includes(x.INV_GUIType));
-      filtered.sort((a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType));
-      this.InvoiceType_Options = filtered.map((x: any) => ({
-        label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
-        value: x.INV_GUIType,
-      }));
-    });
+    this.dropDownListService
+      .queryTDS1007_DropDownList({ mid: 0 })
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const allowed = ['31', '32', '35'];
+        const data = res?.Data?.INV_GUITypes ?? [];
+        const filtered = data.filter((x: any) =>
+          allowed.includes(x.INV_GUIType),
+        );
+        filtered.sort(
+          (a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType),
+        );
+        this.InvoiceType_Options = filtered.map((x: any) => ({
+          label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
+          value: x.INV_GUIType,
+        }));
+      });
   }
 
   /** 載入品項下拉 (TDS1008)，支援 callback */
   loadINVItemOptions(done?: () => void): void {
     const salType = this.dataForm.get('SAL_Type')?.value || '';
     if (!salType) {
-      this.INV_ItemName_Options = [];
-      this.loadAndSetupColumns();
-      return;
-    }
+  this.INV_ItemName_Options = [];
+  this.loadAndSetupColumns();
 
-    this.dropDownListService.queryTDS1008_DropDownList([salType]).pipe(untilDestroyed(this)).subscribe((res) => {
-      let list: any[] = [];
-      if (Array.isArray((res as any)?.Data)) {
-        list = (res as any).Data.flatMap((d: any) => d?.Data ?? []);
-      } else if ((res as any)?.Data?.Data && Array.isArray((res as any).Data.Data)) {
-        list = (res as any).Data.Data;
-      }
-      this.INV_ItemName_Options = list.map((item: any) => ({
-        label: `${item.INV_ItemNo}`,
-        value: item.INV_ItemNo,
-        INV_ItemNo: item.INV_ItemNo,
-        INV_ItemName: item.INV_ItemName,
-        INV_UsageType: item.INV_UsageType,
-      }));
-      this.loadAndSetupColumns();
-      if (done) {
-        done();
-      } else {
-        setTimeout(() => this.tableEdit?.insertRow(true));
-      }
-    });
+  done?.();
+
+  return;
+}
+
+    this.dropDownListService
+      .queryTDS1008_DropDownList([salType])
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        let list: any[] = [];
+        if (Array.isArray((res as any)?.Data)) {
+          list = (res as any).Data.flatMap((d: any) => d?.Data ?? []);
+        } else if (
+          (res as any)?.Data?.Data &&
+          Array.isArray((res as any).Data.Data)
+        ) {
+          list = (res as any).Data.Data;
+        }
+        this.INV_ItemName_Options = list.map((item: any) => ({
+          label: `${item.INV_ItemNo}`,
+          value: item.INV_ItemNo,
+          INV_ItemNo: item.INV_ItemNo,
+          INV_ItemName: item.INV_ItemName,
+          INV_UsageType: item.INV_UsageType,
+        }));
+        this.loadAndSetupColumns();
+        if (done) {
+          done();
+        } else {
+          setTimeout(() => this.tableEdit?.insertRow(true));
+        }
+      });
   }
 
   // ======================== 工具 ========================
@@ -453,8 +594,14 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   updateMasterAmounts(): void {
-    const totalTax = this.data.reduce((sum, r) => sum + (Number(r.TXN_Tax) || 0), 0);
-    const totalAmt = this.data.reduce((sum, r) => sum + (Number(r.TXN_SaleAmt) || 0), 0);
+    const totalTax = this.data.reduce(
+      (sum, r) => sum + (Number(r.TXN_Tax) || 0),
+      0,
+    );
+    const totalAmt = this.data.reduce(
+      (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
+      0,
+    );
     const net = totalAmt - totalTax;
     this.dataForm.patchValue({
       PUR_Tax: totalTax,
@@ -466,23 +613,28 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   private loadAndSetupColumns(): void {
     this.columns = [
       {
-        field: 'PLU_No', header: '品名', type: 'dropdown',
-        options: () => this.INV_ItemName_Options.map(opt => ({
-          label: `${opt.INV_ItemNo} - ${opt.INV_ItemName}`,
-          value: opt.INV_ItemNo,
-          INV_ItemName: opt.INV_ItemName,
-        })),
+        field: 'PLU_No',
+        header: '品名',
+        type: 'dropdown',
+        options: () =>
+          this.INV_ItemName_Options.map((opt) => ({
+            label: `${opt.INV_ItemNo} - ${opt.INV_ItemName}`,
+            value: opt.INV_ItemNo,
+            INV_ItemName: opt.INV_ItemName,
+          })),
         optionLabel: 'label',
         optionValue: 'value',
         validate: [
           (value: any) => ({
             isValid: !!value,
-            errorMessage: ['請選擇品名']
+            errorMessage: ['請選擇品名'],
           }),
-          validateRequired
+          validateRequired,
         ],
         calculate: (rowData, value) => {
-          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
+          const selected = this.INV_ItemName_Options.find(
+            (opt) => opt.INV_ItemNo === value,
+          );
           return selected ? { PLU_Name: selected.INV_ItemName } : {};
         },
       },
@@ -494,9 +646,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         validate: [
           (value: any) => ({
             isValid: value !== null && !isNaN(value) && Number(value) > 0,
-            errorMessage: ['數量必須大於 0']
+            errorMessage: ['數量必須大於 0'],
           }),
-          validateRequired
+          validateRequired,
         ],
         // calculate: (rowData, value) => {
         //   const qty = Number(value) || 0;
@@ -513,9 +665,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         validate: [
           (value: any) => ({
             isValid: value !== null && value !== '' && !isNaN(Number(value)),
-            errorMessage: ['含稅金額為必填且須為數字']
+            errorMessage: ['含稅金額為必填且須為數字'],
           }),
-          validateRequired
+          validateRequired,
         ],
         calculate: (rowData, value) => {
           const taxType = this.dataForm.get('PUR_TaxType')?.value;
@@ -523,20 +675,20 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
           const qty = Number(rowData.TXN_Qty) || 0;
 
-          const tax = isNoTax
-            ? 0
-            : Math.round(value / 21);
+          const tax = isNoTax ? 0 : Math.round(value / 21);
 
           const saleAmt = value - tax;
           const unitPrice = isNoTax
-            ? (qty > 0 ? Math.round(value / qty) : value)
-            : Math.round((value / qty) - (value / qty) / 21);
+            ? qty > 0
+              ? Math.round(value / qty)
+              : value
+            : Math.round(value / qty - value / qty / 21);
 
           return {
             TXN_SaleAmt: value,
             TXN_Tax: tax,
             PLU_SalePrc: unitPrice,
-            SaleAmt: saleAmt
+            SaleAmt: saleAmt,
           };
         },
       },
@@ -551,7 +703,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Math.round(Number(value) * qty);
-          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const txnSaleAmt = isNoTax
+            ? saleAmt
+            : Math.round((saleAmt * 21) / 20);
           const tax = txnSaleAmt - saleAmt;
           return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
         },
@@ -567,18 +721,25 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Number(value);
-          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const txnSaleAmt = isNoTax
+            ? saleAmt
+            : Math.round((saleAmt * 21) / 20);
           const tax = txnSaleAmt - saleAmt;
           const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
-          return { TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax, PLU_SalePrc: unitPrice };
+          return {
+            TXN_SaleAmt: txnSaleAmt,
+            TXN_Tax: tax,
+            PLU_SalePrc: unitPrice,
+          };
         },
       },
     ];
   }
 
   // 判斷明細是否為空值
-  validateDetailRow = (rowData: any): { isValid: boolean; errorMessage: string } => {
-
+  validateDetailRow = (
+    rowData: any,
+  ): { isValid: boolean; errorMessage: string } => {
     const requiredFields = [
       { value: rowData.PLU_No?.trim(), name: '品名' },
       { value: rowData.TXN_Qty, name: '數量' },
@@ -587,14 +748,14 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       // { value: rowData.SaleAmt, name: '銷售金額' }
     ];
 
-    const emptyField = requiredFields.find(field =>
-      this.isEmptyValue(field.value)
+    const emptyField = requiredFields.find((field) =>
+      this.isEmptyValue(field.value),
     );
 
     if (emptyField) {
       return {
         isValid: false,
-        errorMessage: `${emptyField.name}不可為空，請輸入有效的${emptyField.name}。`
+        errorMessage: `${emptyField.name}不可為空，請輸入有效的${emptyField.name}。`,
       };
     }
     return { isValid: true, errorMessage: '' };
@@ -615,7 +776,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   private recalculateAllDetailByTaxType(taxType: any): void {
     const isNoTax = this.isNoTaxType(taxType);
 
-    this.data = this.data.map(row => {
+    this.data = this.data.map((row) => {
       return this.recalculateDetailAmount(row, taxType, isNoTax);
     });
 
@@ -623,21 +784,21 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // 重新計算明細金額
-  private recalculateDetailAmount(row: any, taxType: any, isNoTax: boolean): any {
+  private recalculateDetailAmount(
+    row: any,
+    taxType: any,
+    isNoTax: boolean,
+  ): any {
     const qty = Number(row.TXN_Qty) || 0;
     const txnSaleAmt = Number(row.TXN_SaleAmt) || 0; // 含稅金額
 
     // 稅額：免稅 / 零稅時強制為 0
-    const tax = isNoTax
-      ? 0
-      : Math.round(txnSaleAmt / 21);
+    const tax = isNoTax ? 0 : Math.round(txnSaleAmt / 21);
 
     // 未稅金額
     const saleAmt = txnSaleAmt - tax;
     // 含稅單價
-    const taxIncludedUnitPrice = qty > 0
-      ? txnSaleAmt / qty
-      : 0;
+    const taxIncludedUnitPrice = qty > 0 ? txnSaleAmt / qty : 0;
     // 未稅單價
     const unitPrice = isNoTax
       ? Math.round(taxIncludedUnitPrice)
@@ -646,9 +807,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     return {
       ...row,
       TXN_SaleAmt: txnSaleAmt, // 含稅金額
-      TXN_Tax: tax,            // 稅額
-      SaleAmt: saleAmt,        // 未稅金額
-      PLU_SalePrc: unitPrice   // 未稅單價
+      TXN_Tax: tax, // 稅額
+      SaleAmt: saleAmt, // 未稅金額
+      PLU_SalePrc: unitPrice, // 未稅單價
     };
   }
 
@@ -664,19 +825,20 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
     const purNet = purAmt - purTax;
 
-    this.dataForm.patchValue({
-      PUR_Amt: purAmt,
-      PUR_Tax: purTax,
-      PUR_Net: purNet
-    }, { emitEvent: false });
+    this.dataForm.patchValue(
+      {
+        PUR_Amt: purAmt,
+        PUR_Tax: purTax,
+        PUR_Net: purNet,
+      },
+      { emitEvent: false },
+    );
   }
-
-
 
   // ======================== 儲存 ========================
   onSubmit(form: FormGroup): void {
     // 驗證明細（排除自動插入的空白候選列）
-    for (const item of this.data.filter(d => !d._isAutoInsertCandidate)) {
+    for (const item of this.data.filter((d) => !d._isAutoInsertCandidate)) {
       const { isValid, errorMessage } = this.validateDetailRow(item);
       if (isValid) continue;
 
@@ -688,24 +850,31 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       console.log('Form submitted with values:', form.value);
       const v = form.getRawValue();
-      const uniformValue = (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
-        ? v.Buyer_Uniform.value
-        : v.Buyer_Uniform;
-      const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === uniformValue);
-      const validDetails = this.data.filter(d => !d._isAutoInsertCandidate);
+      const uniformValue =
+        v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object'
+          ? v.Buyer_Uniform.value
+          : v.Buyer_Uniform;
+      const selectedBuyer = this.Buyer_Uniform_Options.find(
+        (o) => o.value === uniformValue,
+      );
+      const validDetails = this.data.filter((d) => !d._isAutoInsertCandidate);
       if (validDetails.length === 0) {
         alert('明細中沒有有效資料');
         this.loading = false;
         return;
       }
-      const invalidDetail = validDetails.some((item) => !item.PLU_No || item.PLU_No.trim() === '');
+      const invalidDetail = validDetails.some(
+        (item) => !item.PLU_No || item.PLU_No.trim() === '',
+      );
       if (invalidDetail) {
         alert('明細中有缺少貨號的資料');
         this.loading = false;
         return;
       }
 
-      const toDateOnly = (d: Date | string | null | undefined): string | null => {
+      const toDateOnly = (
+        d: Date | string | null | undefined,
+      ): string | null => {
         if (!d) return null;
         const date = new Date(d);
         if (isNaN(date.getTime())) return null;
@@ -718,15 +887,21 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       const header = {
         MID: 0,
         STO_No: history.state?.rowdata?.STO_No ?? '10',
-        ID: this.currentDetailId ?? history.state?.rowdata?.ID ?? history.state?.rowdata?.id ?? history.state?.rowdata?.No ?? 0,
+        ID:
+          this.currentDetailId ??
+          history.state?.rowdata?.ID ??
+          history.state?.rowdata?.id ??
+          history.state?.rowdata?.No ??
+          0,
         InvoiceType: v.InvoiceType ?? '35',
         SAL_Type: v.SAL_Type,
         InvoiceNumber: v.INV_GUINumber,
         InvoiceDate: toDateOnly(v.InvoiceDate),
         INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
-        Buyer_Uniform: (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
-          ? v.Buyer_Uniform.value
-          : v.Buyer_Uniform,
+        Buyer_Uniform:
+          v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object'
+            ? v.Buyer_Uniform.value
+            : v.Buyer_Uniform,
         Buyer_VenNo: selectedBuyer?.VEN_No ?? '',
         Buyer_Name: selectedBuyer?.VEN_Name ?? v.PUR_InvoiceTitle ?? '',
         Group_Mark: 'N',
@@ -736,7 +911,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         AssetType: v.AssetType ?? '',
         INV_REMARK: v.INV_REMARK ?? '',
         InvoiceTime: new Date().toISOString(),
-        Invoice_Cancel: v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
+        Invoice_Cancel:
+          v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
         PUR_Net: this.dataForm.value.PUR_Net ?? 0,
         PUR_Tax: this.dataForm.value.PUR_Tax ?? 0,
         PUR_Amt: this.dataForm.value.PUR_Amt ?? 0,
@@ -762,37 +938,54 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         FIN13040Detail_APS4023: header,
         FIN13040Detail_APS40235: details,
       };
-      this.fin13040Service.updateFIN13040(payload).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })).subscribe(res => {
-        if (res?.Status === '0000') {
-          this.messageService.successBubble('新增成功');
-          const savedId = res?.Data?.ID ?? res?.Data?.id ?? this.currentDetailId ?? header.ID;
-          const savedInvoiceNumber = res?.Data?.InvoiceNumber ?? header.InvoiceNumber;
-          if (savedId != null) {
-            this.fin13040Service.printFIN13040({
-              MID: 0,
-              STO_No: header.STO_No ?? '10',
-              ID: savedId
-            }).subscribe({
-              next: (printRes) => {
-                const blob = new Blob([printRes.body as Blob], { type: 'application/pdf' });
-                const url = globalThis.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${savedInvoiceNumber || savedId}.pdf`;
-                a.click();
-                globalThis.URL.revokeObjectURL(url);
-                this.onCancel();
-              },
-              error: () => {
-                this.onCancel();
-              }
-            });
-          } else {
-            this.onCancel();
+      this.fin13040Service
+        .updateFIN13040(payload)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+          }),
+        )
+        .subscribe((res) => {
+          if (res?.Status === '0000') {
+            this.messageService.successBubble('新增成功');
+            const savedId =
+              res?.Data?.ID ??
+              res?.Data?.id ??
+              this.currentDetailId ??
+              header.ID;
+            const savedInvoiceNumber =
+              res?.Data?.InvoiceNumber ?? header.InvoiceNumber;
+            if (savedId != null) {
+              this.fin13040Service
+                .printFIN13040({
+                  MID: 0,
+                  STO_No: header.STO_No ?? '10',
+                  ID: savedId,
+                })
+                .subscribe({
+                  next: (printRes) => {
+                    const blob = new Blob([printRes.body as Blob], {
+                      type: 'application/pdf',
+                    });
+                    const url = globalThis.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${savedInvoiceNumber || savedId}.pdf`;
+                    a.click();
+                    globalThis.URL.revokeObjectURL(url);
+                    this.onCancel();
+                  },
+                  error: () => {
+                    this.onCancel();
+                  },
+                });
+            } else {
+              this.onCancel();
+            }
           }
-        }
-      });
-    })
+        });
+    });
   }
   // 匯出功能已搬至清單頁的列印按鈕 (FIN13040Component.onPrint)
 }
