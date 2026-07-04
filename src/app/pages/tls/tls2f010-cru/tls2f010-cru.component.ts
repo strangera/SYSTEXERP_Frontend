@@ -149,7 +149,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   bus_typeOptions = this.dropdown.queryTltBusType();
   bus_classOptions: IDropdownItem[] = [];
   invoiceTypeOptions = getSYS1000Options('invoice_type');
-  InvWayOptions = getSYS1000Options('Inv_Way');
+  // 發票用途：僅提供「營業用」「共同使用」兩種選項（不提供「免稅」），營業用排序在前且為預設值
+  InvWayOptions: { value: string; label: string }[] = [
+    { value: '2', label: '營業用' },
+    { value: '1', label: '共同使用' },
+  ];
   invoiceFormatOptions = [
     { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
     { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
@@ -625,9 +629,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               Deduct_Code: deductVal,
               // 預設發票格式為 21
               PUR_GUIPaper: '21',
+              // 預設發票用途為「營業用」
+              INV_UseType: '2',
             };
           } else {
-            this.detailDefaultInsert = {};
+            this.detailDefaultInsert = { INV_UseType: '2' };
           }
           // 取出未登錄餘額(免稅/含稅)做為第二個表格的 footer 總計（只在 footer 顯示，不當成欄位）
           if (data.length > 0) {

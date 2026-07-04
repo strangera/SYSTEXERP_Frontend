@@ -128,8 +128,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   }
   totalRecords = 0;
   data: any[] = [];
+  selectedItems: any[] = [];
   lastQueryBody: any = null;
   footerData: any = null;
+  // 已結帳(Status = 'Y')資料不可勾選/刪除
+  isRowSelectable = (row: any): boolean => row?.Status !== 'Y';
+  deleteDisabled = (row: any): boolean => row?.Status === 'Y';
   ven_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
     map(list =>
       (list ?? []).map(item => ({
