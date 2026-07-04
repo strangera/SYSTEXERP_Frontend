@@ -643,16 +643,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
     this._lastAppliedDetailTableFingerprint = fp;
 
-    this.tableData.set(data.Details.map((v, index) => ({
-      ...v,
-      AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
-      AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
-      AccCName: this.service.accNoMap().get(String(v.AccNo))?.label,
-      DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
-        ?? this.service.usrMap().get(String(v.DetailNo))?.label,
-      NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-      SerNo: v.SerNo ?? (index + 1) * 10, // 保留 DB 原始 SerNo，缺值才補
-    })));
+    this.tableData.set(data.Details.map((v, index) => {
+      const accNo = String(v.AccNo ?? '').trim(); // DB CHAR 欄位有 padding，trim 後才對得上下拉選項 value
+      return {
+        ...v,
+        AccNo: accNo,
+        AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
+        AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
+        AccCName: this.service.accNoMap().get(accNo)?.label,
+        DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
+          ?? this.service.usrMap().get(String(v.DetailNo))?.label,
+        NoteDesc: v.NoteDesc || this.service.noteDescMap().get(accNo)?.label,
+        SerNo: v.SerNo ?? (index + 1) * 10, // 保留 DB 原始 SerNo，缺值才補
+      };
+    }));
 
     const rows = this.tableData();
     this.logger.debug(`loadingDetail:`, {

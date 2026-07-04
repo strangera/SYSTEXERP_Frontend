@@ -415,8 +415,8 @@ export class FIN53010Service {
           return data
             ? data.map(item => ({
               ...item,
-              value: item.AccNo ?? '',
-              label: `${item.AccNo ?? ''} - ${item.AccCName ?? ''}`,
+              value: (item.AccNo ?? '').trim(),
+              label: `${(item.AccNo ?? '').trim()} - ${item.AccCName ?? ''}`,
             }))
             : null;
         }),
