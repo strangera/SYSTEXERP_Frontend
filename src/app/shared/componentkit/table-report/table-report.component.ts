@@ -347,6 +347,7 @@ export class TableReportComponent implements OnChanges {
       .subscribe(res => {
         if (res?.Data && res.Data.length > 0) {
           this.data = [...this.data, ...res.Data];
+          this._buildSelectableCache();
           this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
@@ -422,6 +423,7 @@ export class TableReportComponent implements OnChanges {
           this.subtotalService.clearGroupTotals();
           this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.data = res.Data;
+          this._buildSelectableCache();
           this.totalRecords = res.TotalCount || this.data.length;
           this.dt.virtualScroll = this.lazy && this.data.length >= 30;
           this.virtualData = this.data;
