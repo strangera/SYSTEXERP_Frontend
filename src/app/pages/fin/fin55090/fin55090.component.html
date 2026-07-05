@@ -16,8 +16,8 @@
               [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="部門" controlName="OrgId" [options]="OrgIdOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OrgId" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="部門" controlName="OrgList" [options]="OrgIdOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OrgList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="對帳 Key 值" controlName="ProjectNo" [control]="queryForm.controls.ProjectNo"

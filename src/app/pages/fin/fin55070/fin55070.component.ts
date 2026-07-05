@@ -103,7 +103,14 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
             footer.Total_DAmt += Number(row.Total_DAmt) || 0;
             footer.Total_CAmt += Number(row.Total_CAmt) || 0;
             return footer;
-          }, this.footerData);
+          }, {
+            Prior_DAmt: 0,
+            Prior_CAmt: 0,
+            Curr_DAmt: 0,
+            Curr_CAmt: 0,
+            Total_DAmt: 0,
+            Total_CAmt: 0,
+          });
           this.historyRequestBody = body;
         } else {
           this.data = [];

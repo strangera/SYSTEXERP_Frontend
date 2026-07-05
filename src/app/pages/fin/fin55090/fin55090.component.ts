@@ -15,7 +15,7 @@ import { finalize, Observable } from 'rxjs';
 import { InputTextComponent } from 'src/app/shared/componentkit/input-text/input-text.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table.component';
@@ -28,7 +28,7 @@ import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table
     TableSubheaderGroupingComponent, InputTextComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,
-    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
+    MultiSelectComponent, CheckboxModule, ButtonComponent, TranslateModule,
   ]
 })
 export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Response> implements OnInit {
@@ -38,7 +38,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     // 類別預設為 '0' (統制)
     Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
-    OrgId: this.formBuilder.control<string | null>(null),
+    OrgList: this.formBuilder.nonNullable.control([] as string[]),
     ProjectNo: this.formBuilder.control<string | null>(null, [Validators.maxLength(10)]),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
     ShowZero: this.formBuilder.nonNullable.control(false),

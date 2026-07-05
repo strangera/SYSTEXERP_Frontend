@@ -107,9 +107,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls2f010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="false"
-    [showReportMode]="false" [showCheckBox]="false" (edit)="onEdit($event)" [footerData]="footerData"
+  <app-table-report tableKey="tls2f010" dataKey="id" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [isRowSelectable]="isRowSelectable"
+    [deleteDisabled]="deleteDisabled"
+    [showReportMode]="false" [showCheckBox]="true" (edit)="onEdit($event)" [footerData]="footerData"
     [showManage]="true" [showExcel]="true" (detail)="onDetail($event)" (delete)="onDelete($event)"
     [showExcelExport]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
     (importExcel)="onImportExcel($event)" [loading]="loading">

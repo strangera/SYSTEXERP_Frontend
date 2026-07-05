@@ -182,7 +182,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
       const sam = this.toYYYYMM(frm.value.SamYyyymm);
 
       this.loading = true;
-      this.tls2h030Service.generateTLS2H030({ SamYyyymm: sam }).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+      this.tls2h030Service.generateTLS2H030({ SamYyyymm: sam, MoneyType: frm.value.COMM_MONEY_TYPE }).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
         .subscribe({
           next: (res: any) => {
             try {
