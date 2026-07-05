@@ -45,14 +45,11 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    // { field: 'VouNo', header: '暫存編號', visible: true },
     { field: 'SrcSheetType', header: '傳票型態代碼', visible: true },
     { field: 'Voucher_Name', header: '傳票型態名稱', visible: true },
     { field: 'PostFlag_Desc', header: '傳票狀態', visible: true },
     { field: 'Remark', header: '備註', visible: true },
   ];
-
-
 
   constructor(
     private readonly tlsService: Tls2f020Service,
@@ -73,7 +70,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       // 不自動設定 sam_termno 的預設值
     });
     // 初始載入時也更新一次
-    const initialVal = moneyCtrl.value as any;
+    const initialVal = moneyCtrl.value;
     let initialMoney: string | null = null;
     if (Array.isArray(initialVal) && initialVal.length) initialMoney = String(initialVal[0]);
     else if (initialVal != null && initialVal !== '') initialMoney = String(initialVal);
@@ -82,7 +79,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value as any;
+      const formValue = frm.value;
       const pageSize = formValue.pageSize ?? 0;
       const pageIndex = (formValue.pageIndex ?? 1);
 
@@ -107,19 +104,16 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
       this.tlsService.queryTLS2F020(params)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (res: any) => {
-            this.data = res?.Data ?? [];
-            this.totalRecords = res?.TotalCount ?? 0;
-          },
-
+        .subscribe((res) => {
+          this.data = res?.Data ?? [];
+          this.totalRecords = res?.TotalCount ?? 0;
         });
     });
   }
 
   // 覆寫新增/產生按鈕行為：直接呼叫 execTLS2F020
   override onCreate(): void {
-    const formValue = this.queryForm.getRawValue() as any;
+    const formValue = this.queryForm.getRawValue();
     // 轉換 sam_yyymm 為 yyyymm
     let sam_yyymm_string = '';
     if (formValue.sam_yyymm) {
@@ -132,7 +126,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     const sam_termno = formValue.sam_termno ?? null;
     const money_type = formValue.COMM_MONEY_TYPE ?? null;
     if (!sam_yyymm_string) {
-      this.messageService.warnBubble('請輸入 查核年月');
+      this.messageService.warnBubble('請輸入 結帳年月');
       return;
     }
     if (money_type == null) {
@@ -156,8 +150,17 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     this.tlsService.execTLS2F020(params)
       .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
       .subscribe({
-        next: (res: any) => {
-          this.messageService.successBubble(res?.Message ?? '產生完成');
+        next: (res) => {
+          const errCode = res?.Data?.ErrCode ?? 0;
+          const errMsg = res?.Data?.ErrMsg ?? '';
+          if (errCode !== 0) {
+            // SP 回傳錯誤（例如：傳票已拋轉，不可重覆產生）
+            this.messageService.errorBubble(errMsg || '產生失敗');
+            return;
+          }
+          this.messageService.successBubble(errMsg || '產生完成');
+          // 產生成功後自動重新查詢，讓畫面顯示最新(覆蓋後)的傳票資料
+          this.onSubmit(this.queryForm);
         },
 
       });
@@ -171,14 +174,12 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       this.sam_termnoOptions = [];
     }
     // 如果沒有可用的期別或目前值不在選項中，清除 sam_termno 的值（避免顯示為虛化但未清除）
-    try {
-      const ctrl: any = this.queryForm.controls.sam_termno as any;
-      const cur = ctrl?.value;
-      const availableValues = this.sam_termnoOptions.map(o => o.value);
-      if (this.sam_termnoOptions.length === 0 || (cur != null && !availableValues.includes(cur))) {
-        try { ctrl.setValue(null); } catch { ctrl.setValue(undefined); }
-      }
-    } catch { }
+    const ctrl = this.queryForm.controls.sam_termno as any;
+    const cur = ctrl?.value;
+    const availableValues = this.sam_termnoOptions.map(o => o.value);
+    if (this.sam_termnoOptions.length === 0 || (cur != null && !availableValues.includes(cur))) {
+      try { ctrl.setValue(null); } catch { ctrl.setValue(undefined); }
+    }
   }
 
 }
