@@ -16,10 +16,10 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
             [options]="vendorOptions | async" optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No"
             [submitted]="submitted" />
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted" />
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
             [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="ODM_Type"

@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -31,7 +31,7 @@ import { TLTTALENT_columns } from './tls13060.model';
     ReactiveFormsModule,
     InputTextComponent,
     MultiSelectComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     RadiobuttonYNComponent,
     ButtonComponent,
     TranslateModule,

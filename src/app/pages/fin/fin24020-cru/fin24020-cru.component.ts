@@ -8,7 +8,7 @@ import { DropDownListService, IAPS3001Item } from '@service/utility/dropDownList
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -35,7 +35,7 @@ import { finalize } from 'rxjs';
     TranslateModule,
     InputNumberComponent,
     CalendarComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     InputTextComponent,
     TableEditComponent,
     DialogModule,

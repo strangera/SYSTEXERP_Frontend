@@ -33,7 +33,7 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import {
   DropDownListService,
   IDropdownItem,
@@ -51,7 +51,7 @@ import {
     ReactiveFormsModule,
     ButtonComponent,
     TranslateModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     TableModule,
     InputTextModule,
     InputNumberModule,

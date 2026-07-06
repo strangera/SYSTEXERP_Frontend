@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -35,7 +35,7 @@ import { ASS13070QueryRequest, ASS13070QueryRow } from './ass13070.model';
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     MenubarComponent,
     TableReportComponent,
   ],
@@ -151,7 +151,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
     const mCtrl = this.queryForm.controls.M_CLASS_ID;
     const sCtrl = this.queryForm.controls.S_CLASS_ID;
 
-    type ClassOption = { label: string; value: string | number | null | undefined };
+    interface ClassOption { label: string; value: string | number | null | undefined }
 
     const valueInOptions = (opts: ClassOption[], v: unknown): boolean => {
       if (v == null) return false;
@@ -199,8 +199,8 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           return this.dropdownApi
             .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, M_CLASS_ID: mClassId })
             .pipe(
-            map(smallOptions => (smallOptions ?? []) as ClassOption[]),
-          );
+              map(smallOptions => (smallOptions ?? []) as ClassOption[]),
+            );
         }),
       )
       .subscribe(smallOptions => {

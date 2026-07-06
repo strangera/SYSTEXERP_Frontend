@@ -8,7 +8,6 @@ import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -69,7 +68,7 @@ export interface POS2013 {
   selector: 'app-tls12010',
   templateUrl: './tls12010.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS12010Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit {
   // 查詢

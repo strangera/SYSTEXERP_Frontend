@@ -17,7 +17,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="org_ID"
           [options]="SYS3100_Options$ | async" optionLabel="label" optionValue="value"
           [control]="dataForm.controls.org_ID" [submitted]="submitted" />
-        <app-calendar-range-quick class="col-12 lg:col-8" label="有效日期" [startControl]="dataForm.controls.str_date"
+        <app-calendar-range class="col-12 lg:col-8" label="有效日期" [startControl]="dataForm.controls.str_date"
           [endControl]="dataForm.controls.end_date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者狀態" controlName="status" [options]="userStatusOptions"
           optionLabel="label" optionValue="value" [control]="dataForm.controls.status" [submitted]="submitted" />

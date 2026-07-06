@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72010Data, FIN72010Service, QueryFIN72010Request, voidFIN72010Request } from '@service/api/fin/fin72010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -54,7 +54,7 @@ export interface sample72010 {
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     FormsModule,
     ReactiveFormsModule,
     InputNumberRangeComponent,

@@ -7,7 +7,7 @@ import { Fin32010Service } from '@service/api/fin/fin32010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -26,7 +26,7 @@ import { formatAmount } from './../../../shared/componentkit/table-report/table-
   selector: 'app-fin32010',
   templateUrl: './fin32010.component.html',
   standalone: true,
-  imports: [AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, CalendarRangeComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN32010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

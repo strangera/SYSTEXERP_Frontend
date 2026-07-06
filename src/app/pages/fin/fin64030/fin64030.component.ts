@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -30,7 +30,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     MenubarComponent, AccordionModule, ButtonModule, DialogModule,
     CalendarComponent, DropdownComponent,
     InputTextComponent, ButtonComponent, TableReportComponent,
-    DialogComponent, MultiSelectComponent, CalendarRangeQuickComponent
+    DialogComponent, MultiSelectComponent, CalendarRangeComponent
   ],
   providers: [DatePipe]
 })

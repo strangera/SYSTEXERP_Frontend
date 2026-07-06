@@ -4,56 +4,28 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="使用者代碼/名稱"
-              controlName="UserNo"
-              [options]="userOptions()"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.UserNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="使用者代碼/名稱" controlName="UserNo" [options]="userOptions()" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.UserNo" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="LOG時間"
-              [showTime]="true"
-              [startControl]="queryForm.controls.LogTime_S"
-              [endControl]="queryForm.controls.LogTime_E"
-              [submitted]="submitted"
-            />
+            <app-calendar-range label="LOG時間" [showTime]="true" [startControl]="queryForm.controls.LogTime_S"
+              [endControl]="queryForm.controls.LogTime_E" [submitted]="submitted" />
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="作業代碼"
-              controlName="FunctionCodeList"
-              [options]="functionCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.FunctionCodeList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="作業代碼" controlName="FunctionCodeList" [options]="functionCodeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.FunctionCodeList"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -63,36 +35,16 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    tableKey="SYS0790"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords()"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="sys0790Service.querySYS0790.bind(sys0790Service)"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showReportMode]="false"
-  >
+  <app-table-report tableKey="SYS0790" [data]="data" [columns]="columns" [totalRecords]="totalRecords()"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="sys0790Service.querySYS0790.bind(sys0790Service)" [lazy]="true"
+    [loading]="loading" [showManage]="false" [showReportMode]="false">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="列印PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnLoading"
-          (click)="onExportPDF()"
-          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.Print)"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="匯出Excel"
-          icon="pi pi-file-excel"
-          [loading]="btnLoading"
+        <p-button styleClass="p-2" label="列印PDF" icon="pi pi-file-pdf" [loading]="btnLoading" (click)="onExportPDF()"
+          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.Print)"></p-button>
+        <p-button styleClass="p-2" label="匯出Excel" icon="pi pi-file-excel" [loading]="btnLoading"
           (click)="onExportExcel()"
-          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.ExportExcel)"
-        ></p-button>
+          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.ExportExcel)"></p-button>
       </div>
     </header>
   </app-table-report>

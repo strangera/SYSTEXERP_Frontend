@@ -1,124 +1,56 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票/收據號碼"
-              controlName="RECEIPT_NO"
-              [control]="queryForm.controls.RECEIPT_NO"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票/收據號碼" controlName="RECEIPT_NO" [control]="queryForm.controls.RECEIPT_NO"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="供應商代碼/名稱"
-              controlName="SUPPLIER_ID"
-              [options]="SUPPLIER_ID_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.SUPPLIER_ID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="供應商代碼/名稱" controlName="SUPPLIER_ID" [options]="SUPPLIER_ID_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.SUPPLIER_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="單據種類"
-              controlName="RECEIPT_TYPE"
-              [options]="RECEIPT_TYPE_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.RECEIPT_TYPE"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="單據種類" controlName="RECEIPT_TYPE" [options]="RECEIPT_TYPE_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.RECEIPT_TYPE" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="驗收單號"
-              controlName="TOKEN_NO"
-              [options]="TOKEN_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.TOKEN_NO"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="驗收單號" controlName="TOKEN_NO" [options]="TOKEN_NO_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TOKEN_NO" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票維護單號"
-              controlName="RECEIPT_INS_ID"
-              [control]="queryForm.controls.RECEIPT_INS_ID"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票維護單號" controlName="RECEIPT_INS_ID" [control]="queryForm.controls.RECEIPT_INS_ID"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="發票格式"
-              controlName="INV_FORMAT"
-              [options]="INV_FORMAT_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.INV_FORMAT"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="發票格式" controlName="INV_FORMAT" [options]="INV_FORMAT_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.INV_FORMAT" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="課稅別"
-              controlName="TAX_CODE"
-              [options]="TAX_CODE_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.TAX_CODE"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="課稅別" controlName="TAX_CODE" [options]="TAX_CODE_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TAX_CODE" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="扣抵別"
-              controlName="REDU_CODE"
-              [options]="REDU_CODE_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.REDU_CODE"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="扣抵別" controlName="REDU_CODE" [options]="REDU_CODE_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.REDU_CODE" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="發票/收據日期"
-            [startControl]="queryForm.controls.RECEIPT_DATE_S"
-            [endControl]="queryForm.controls.RECEIPT_DATE_E"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票/收據日期"
+            [startControl]="queryForm.controls.RECEIPT_DATE_S" [endControl]="queryForm.controls.RECEIPT_DATE_E"
+            [submitted]="submitted"></app-calendar-range>
         </div>
 
         <!-- <div> -->
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -129,40 +61,17 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
-      tableKey="ASS14010"
-      [data]="data"
-      [columns]="columns"
-      [addButton]="addButton"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="true"
-      [showCheckBox]="true"
-      [showReportMode]="false"
-      dataKey="ID"
-      [multiSortMeta]="[{ field: 'RECEIPT_NO', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
-    >
+    <app-table tableKey="ASS14010" [data]="data" [columns]="columns" [addButton]="addButton" (edit)="onEdit($event)"
+      (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)" [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [showDelete]="true" [showCheckBox]="true" [showReportMode]="false"
+      dataKey="ID" [multiSortMeta]="[{ field: 'RECEIPT_NO', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+      [isRowSelectable]="isRowSelectable">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
-          <p-button
-            styleClass="p-2"
-            label="進貨發票建檔.PDF"
-            [loading]="btnInvoiceLoading"
-            icon="pi pi-file"
-            (click)="onReport(queryForm, 'Invoice')"
-            [disabled]="data.length === 0"
-          ></p-button>
+          <p-button styleClass="p-2" label="進貨發票建檔.PDF" [loading]="btnInvoiceLoading" icon="pi pi-file"
+            (click)="onReport(queryForm, 'Invoice')" [disabled]="data.length === 0"></p-button>
         </div>
       </header>
     </app-table>

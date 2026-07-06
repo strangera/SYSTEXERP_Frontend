@@ -5,8 +5,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { formatDate } from '@pages/tls/tls12040-v2/utils';
 import { fin72040Data } from '@service/api/fin/fin72040.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -14,7 +12,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
@@ -29,12 +26,9 @@ import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
     ButtonComponent,
     ButtonModule,
     AccordionModule,
-    CalendarRangeQuickComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
-    InputNumberRangeComponent,
     DropdownComponent,
     TableComponent,
     TranslateModule]
@@ -44,7 +38,7 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
   queryForm = this.formBuilder.group({
     // 檔案說明:
     //  POS2064M 收支主檔(I/O)
-    //  POS2064 收支明細檔(I/O) 
+    //  POS2064 收支明細檔(I/O)
     //  tblUser 使用者資料檔(O)
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo || null, [Validators.required]], // 公司編號/店號(必填)
     PCS_RqstNo: [null, [Validators.required]], // TC+YYYYMMDDXXXX, 必填
@@ -139,7 +133,7 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
       PCS_RqstNo: this.queryForm.get('PCS_RqstNo')?.value,
     };
 
-    console.log('撥補清單', payload); // test: TC202508180001	
+    console.log('撥補清單', payload); // test: TC202508180001
 
     this.btnLoading = true;
     this.fin72040Service.reimFIN72040(payload).subscribe({

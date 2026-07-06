@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -41,7 +41,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     AccordionModule,
     ButtonModule,
     ButtonComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     InputTextComponent,
     DropdownComponent,
     DialogComponent,

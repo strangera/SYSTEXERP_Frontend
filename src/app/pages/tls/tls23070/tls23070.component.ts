@@ -30,7 +30,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 interface SortItem { field: string; order: 1 | -1 }
@@ -42,7 +42,7 @@ interface SortItem { field: string; order: 1 | -1 }
   standalone: true,
   imports: [
     CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeQuickComponent, MultiSelectComponent, InputTextModule, ButtonComponent,
+    CalendarRangeComponent, MultiSelectComponent, InputTextModule, ButtonComponent,
     TranslateModule, CalendarComponent, ButtonModule, TableReportComponent, DialogComponent,
   ],
 })

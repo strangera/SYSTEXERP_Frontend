@@ -109,7 +109,7 @@
 <app-dialog [visible]="dialogVisible" header="查詢已退貨未開立折讓" (visibleChange)="dialogVisible = $event" [showFooter]="false">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-calendar-range-quick class="col-12" label="退貨日期" [startControl]="dialogQueryForm.controls.APRV_Date_Start"
+      <app-calendar-range class="col-12" label="退貨日期" [startControl]="dialogQueryForm.controls.APRV_Date_Start"
         [endControl]="dialogQueryForm.controls.APRV_Date_End" />
       <app-dropdown class="col-12 md:col-6" label="廠商編號/名稱" controlName="VEN_No"
         [control]="dialogQueryForm.controls.VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin62020FooterData, Fin62020QueryRequest, Fin62020QueryResponseItem, Fin62020Service, Fin62020Subtotals } from '@service/api/fin/fin62020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -22,7 +22,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
   selector: 'app-fin62020',
   templateUrl: './fin62020.component.html',
   standalone: true,
-  imports: [ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
+  imports: [ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
 export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResponseItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

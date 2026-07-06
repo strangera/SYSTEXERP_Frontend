@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
@@ -27,7 +27,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, TranslateModule,
     MenubarComponent, AccordionModule, ButtonModule, DialogModule,
-    CalendarRangeQuickComponent, CalendarComponent, InputTextComponent,
+    CalendarRangeComponent, CalendarComponent, InputTextComponent,
     ButtonComponent, TableReportComponent, DialogComponent, InputTextareaComponent
   ],
   providers: [DatePipe]

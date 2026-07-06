@@ -10,7 +10,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
@@ -49,7 +49,7 @@ import {
     InputTextRangeComponent,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     TableReportComponent,
     ButtonModule,
     DialogComponent,

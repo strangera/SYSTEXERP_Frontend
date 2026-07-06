@@ -42,9 +42,9 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="購入日期"
+            <app-calendar-range calendarType="dateRange" label="購入日期"
               [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo"
-              [submitted]="submitted"></app-calendar-range-quick>
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range label="原購入金額" [startControl]="queryForm.controls.original_priceFrom"
@@ -67,9 +67,8 @@
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="入帳日期"
-              [startControl]="queryForm.controls.entryDateFrom" [endControl]="queryForm.controls.entryDateTo"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="入帳日期" [startControl]="queryForm.controls.entryDateFrom"
+              [endControl]="queryForm.controls.entryDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -132,9 +131,9 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="處份日期(變賣或報廢)"
+            <app-calendar-range calendarType="dateRange" label="處份日期(變賣或報廢)"
               [startControl]="queryForm.controls.disposalDateFrom" [endControl]="queryForm.controls.disposalDateTo"
-              [submitted]="submitted"></app-calendar-range-quick>
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="處份廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions"

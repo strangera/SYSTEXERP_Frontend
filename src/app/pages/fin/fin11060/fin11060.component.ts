@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
@@ -58,7 +58,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   templateUrl: './fin11060.component.html',
   styleUrl: './fin11060.component.scss',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, TranslateModule, TableComponent]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, TranslateModule, TableComponent]
 })
 
 // 電子發票上送狀況表

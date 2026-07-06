@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -42,7 +42,7 @@ import { createPaginationConfig, formatAmount } from '../../../shared/componentk
     DropdownComponent,
     NgIf,
     MultiSelectComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     TableReportComponent,
     DropdownComponent
   ]

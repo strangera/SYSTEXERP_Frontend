@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -23,7 +23,7 @@ import { finalize } from 'rxjs';
   selector: 'app-tls57130',
   templateUrl: './tls57130.component.html',
   standalone: true,
-  imports: [CalendarRangeQuickComponent, ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [CalendarRangeComponent, ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

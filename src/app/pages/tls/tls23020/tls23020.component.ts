@@ -22,7 +22,7 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -35,7 +35,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
   standalone: true,
   imports: [
     CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeQuickComponent, MultiSelectComponent, InputNumberRangeComponent, InputTextComponent,
+    CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, InputTextComponent,
     DropdownComponent, CheckboxModule, InputTextModule, ButtonComponent, DialogModule,
     RadioButtonModule, TranslateModule, ButtonModule, TableReportComponent, InputTextRangeComponent,
   ],

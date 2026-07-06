@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CPM12070Request, CPM12070Response, Cpm12070Service } from '@service/api/cpm/cpm12070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -21,7 +21,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   selector: 'app-cpm12070',
   templateUrl: './cpm12070.component.html',
   standalone: true,
-  imports: [AsyncPipe, ButtonModule, CalendarRangeQuickComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule],
+  imports: [AsyncPipe, ButtonModule, CalendarRangeComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule],
   providers: [DatePipe]
 })
 export class CPM12070Component extends BasicQueryPageComponent<CPM12070Response> implements OnInit {

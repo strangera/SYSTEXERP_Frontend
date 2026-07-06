@@ -9,7 +9,7 @@ import { TLS31070Item, TLS31070PrintRequest, TLS31070Request, TLS31070Response, 
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -43,7 +43,7 @@ import { Tls31070CRUComponent } from './tls31070-cru/tls31070-cru.component';
     RadiobuttonComponent,
     CommonModule,
     CalendarComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,

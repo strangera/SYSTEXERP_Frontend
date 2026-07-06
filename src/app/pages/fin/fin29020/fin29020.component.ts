@@ -7,7 +7,7 @@ import { Fin24010Service, QueryBankAccountRequest } from '@service/api/fin/fin24
 import { FIN29020Detail, FIN29020QueryRequest, FIN29020Service } from '@service/api/fin/fin29020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -31,7 +31,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     CommonModule,
     TableReportComponent,
     InputTextRangeComponent,

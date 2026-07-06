@@ -8,13 +8,13 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="日期" [startControl]="queryForm.controls.TXN_BDATE"
-              [endControl]="queryForm.controls.TXN_EDATE" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="日期" [startControl]="queryForm.controls.TXN_BDATE"
+              [endControl]="queryForm.controls.TXN_EDATE" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="折讓規則" controlName="PKG_disc_rule_name"
-              [options]="PKG_disc_rule_name_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.PKG_disc_rule_name" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="折讓規則" controlName="PKG_disc_rule_name" [options]="PKG_disc_rule_name_Options"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.PKG_disc_rule_name"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

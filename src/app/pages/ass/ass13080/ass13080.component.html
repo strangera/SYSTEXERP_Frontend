@@ -4,160 +4,61 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="變賣單號"
-            controlName="assetSaleNo"
-            [control]="queryForm.controls.assetSaleNo"
-            [submitted]="submitted"
-          ></app-input-text>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="資產代號"
-            controlName="assetId"
-            [control]="queryForm.controls.assetId"
-            [submitted]="submitted"
-          ></app-input-text>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="品項編號"
-            controlName="goodsId"
-            [options]="goodsIdOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.goodsId"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變賣單號" controlName="assetSaleNo"
+            [control]="queryForm.controls.assetSaleNo" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="資產代號" controlName="assetId"
+            [control]="queryForm.controls.assetId" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="品項編號" controlName="goodsId" [options]="goodsIdOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.goodsId"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="購入日期"
-            [startControl]="queryForm.controls.getDateFrom"
-            [endControl]="queryForm.controls.getDateTo"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="資產狀態"
-            controlName="assetStatus"
-            [options]="assetStatusOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.assetStatus"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="攤提代號"
-            controlName="depreId"
-            [control]="queryForm.controls.depreId"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="購入日期"
+            [startControl]="queryForm.controls.getDateFrom" [endControl]="queryForm.controls.getDateTo"
+            [submitted]="submitted"></app-calendar-range>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產狀態" controlName="assetStatus"
+            [options]="assetStatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.assetStatus" [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="攤提代號" controlName="depreId"
+            [control]="queryForm.controls.depreId" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="保管單位"
-            controlName="holdOrgId"
-            [options]="orgOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.holdOrgId"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="保管人"
-            controlName="holdEmpId"
-            [options]="userOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.holdEmpId"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="資產類型"
-            controlName="assetType"
-            [options]="assetTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.assetType"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管單位" controlName="holdOrgId" [options]="orgOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.holdOrgId"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管人" controlName="holdEmpId" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.holdEmpId"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產類型" controlName="assetType"
+            [options]="assetTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.assetType" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="使用單位"
-            controlName="useOrgId"
-            [options]="orgOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.useOrgId"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="使用人"
-            controlName="useEmpId"
-            [options]="userOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.useEmpId"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="會計科目代號"
-            controlName="stypeId"
-            [options]="stypeIdOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.stypeId"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用單位" controlName="useOrgId" [options]="orgOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.useOrgId"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用人" controlName="useEmpId" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.useEmpId"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="會計科目代號" controlName="stypeId" [options]="stypeIdOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.stypeId"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-input-number-range
-            class="col-12 md:col-4 lg:col-4"
-            [useGrouping]="false"
-            label="購入金額"
-            [startControl]="queryForm.controls.getCostFrom"
-            [endControl]="queryForm.controls.getCostTo"
-            [submitted]="submitted"
-          ></app-input-number-range>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="驗收單號"
-            controlName="subcheckId"
-            [control]="queryForm.controls.subcheckId"
-            [submitted]="submitted"
-          ></app-input-text>
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="入帳日期"
-            [startControl]="queryForm.controls.billDateFrom"
-            [endControl]="queryForm.controls.billDateTo"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-input-number-range class="col-12 md:col-4 lg:col-4" [useGrouping]="false" label="購入金額"
+            [startControl]="queryForm.controls.getCostFrom" [endControl]="queryForm.controls.getCostTo"
+            [submitted]="submitted"></app-input-number-range>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收單號" controlName="subcheckId"
+            [control]="queryForm.controls.subcheckId" [submitted]="submitted"></app-input-text>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="入帳日期"
+            [startControl]="queryForm.controls.billDateFrom" [endControl]="queryForm.controls.billDateTo"
+            [submitted]="submitted"></app-calendar-range>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -166,28 +67,14 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    dataKey="ID"
-    tableKey="ASS13080_Data"
-    [data]="tableData()"
-    [columns]="columns"
-    [totalRecords]="totalRecords()"
-    [loading]="tableLoading()"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryFunction"
-    [showDelete]="false"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  >
+  <app-table-report dataKey="ID" tableKey="ASS13080_Data" [data]="tableData()" [columns]="columns"
+    [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction" [showDelete]="false" (edit)="onEdit($event)" (detail)="onDetail($event)">
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button
-          label="列印變賣清單"
-          icon="pi pi-file-pdf"
-          (click)="onExportPdf()"
+        <p-button label="列印變賣清單" icon="pi pi-file-pdf" (click)="onExportPdf()"
           [disabled]="tableLoading() || printBtnLoading || tableData().length === 0"
-          [loading]="printBtnLoading"
-        ></p-button>
+          [loading]="printBtnLoading"></p-button>
       </div>
     </header>
   </app-table-report>

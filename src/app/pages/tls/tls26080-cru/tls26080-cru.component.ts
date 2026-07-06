@@ -8,7 +8,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
@@ -45,7 +45,7 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, T
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DialogComponent,
     DropdownComponent,
     DropdownTableComponent,

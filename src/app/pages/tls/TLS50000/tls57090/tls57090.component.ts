@@ -14,7 +14,7 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -36,7 +36,7 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     DropdownComponent,
     MultiSelectComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
     ButtonModule,

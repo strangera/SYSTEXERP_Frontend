@@ -18,9 +18,9 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="信用卡卡種" controlName="CRD_Kind"
           [options]="cardCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.CRD_Kind"
           [submitted]="submitted"></app-dropdown>
-        <app-calendar-range-quick class="col-12 lg:col-8" calendarType="dateOne" startLabel="生效日期" endLabel="終止日期"
+        <app-calendar-range class="col-12 lg:col-8" startLabel="生效日期" endLabel="終止日期"
           [startControl]="dataForm.controls.Active_Date" [endControl]="dataForm.controls.Disable_Date"
-          [submitted]="submitted"></app-calendar-range-quick>
+          [submitted]="submitted"></app-calendar-range>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -31,7 +31,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     TranslateModule,
     TableReportComponent,

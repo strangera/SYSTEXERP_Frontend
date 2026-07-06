@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin24020Service } from '@service/api/fin/fin24020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -27,7 +27,7 @@ import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table
   selector: 'app-fin24020',
   templateUrl: './fin24020.component.html',
   standalone: true,
-  imports: [TableReportComponent, AsyncPipe, CalendarRangeQuickComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [TableReportComponent, AsyncPipe, CalendarRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

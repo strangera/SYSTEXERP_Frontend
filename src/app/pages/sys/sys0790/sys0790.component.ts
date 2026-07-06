@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -45,15 +45,14 @@ import {
     ButtonComponent,
     DropdownComponent,
     MultiSelectComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     TableReportComponent,
   ],
 })
 // 使用者作業按鈕歷程報表
 export class SYS0790Component
   extends BasicQueryPageComponent<SYS0790QueryData>
-  implements OnInit
-{
+  implements OnInit {
   // ── 查詢表單 ───────────────────────────────────────────
   queryForm = this.formBuilder.group({
     /** 使用者代碼/名稱（單選） */

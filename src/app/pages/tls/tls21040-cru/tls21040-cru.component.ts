@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
@@ -29,7 +29,7 @@ import { ValidationService } from './../../../shared/service/validation.service'
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     NgIf,
     TranslateModule,
   ],

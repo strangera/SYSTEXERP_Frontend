@@ -4,68 +4,32 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 交易日期 -->
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="交易日期"
-            [startControl]="queryForm.controls.TXN_BDate"
-            [endControl]="queryForm.controls.TXN_EDate"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="交易日期"
+            [startControl]="queryForm.controls.TXN_BDate" [endControl]="queryForm.controls.TXN_EDate"
+            [submitted]="submitted"></app-calendar-range>
 
           <!-- 支付別 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="支付別"
-            controlName="PAY_No"
-            [options]="paymentTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.PAY_No"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="支付別" controlName="PAY_No"
+            [options]="paymentTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.PAY_No"
+            [submitted]="submitted"></app-multi-select>
 
           <!-- 檢視模式（下拉選單） -->
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="檢視模式"
-            controlName="reportMode"
-            [options]="reportModeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.reportMode"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="檢視模式" controlName="reportMode"
+            [options]="reportModeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.reportMode" [submitted]="submitted"></app-dropdown>
 
           <!-- 收銀機號（機台彙總用） -->
-          <app-multi-select
-            *ngIf="reportMode === 'POS'"
-            class="col-12 md:col-6 lg:col-4"
-            label="收銀機號"
-            controlName="ECR_No"
-            [options]="ecrNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select *ngIf="reportMode === 'POS'" class="col-12 md:col-6 lg:col-4" label="收銀機號"
+            controlName="ECR_No" [options]="ecrNoOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -77,42 +41,19 @@
 <div class="card">
   <div class="col-12">
     <!-- 全館彙總 -->
-    <app-table-report
-      [exportContext]="{
+    <app-table-report [exportContext]="{
         apiUrl: apiUrl,
-      }"
-      *ngIf="reportMode === 'ALL'"
-      tableKey="CPM13020_ALL"
-      [lastQueryBody]="historyRequestBody"
-      [data]="rows"
-      [columns]="columnsAll"
-      [totalRecords]="totalRecords"
-      [footerData]="grandTotal"
-      [showDelete]="false"
-      [showManage]="false"
-      [showReportMode]="true"
-    ></app-table-report>
+      }" *ngIf="reportMode === 'ALL'" tableKey="CPM13020_ALL" [lastQueryBody]="historyRequestBody" [data]="rows"
+      [columns]="columnsAll" [totalRecords]="totalRecords" [footerData]="grandTotal" [showDelete]="false"
+      [showManage]="false" [showReportMode]="true"></app-table-report>
 
     <!-- 機台彙總 -->
-    <app-table-report
-      [exportContext]="{
+    <app-table-report [exportContext]="{
         apiUrl: apiUrlPOS,
-      }"
-      *ngIf="reportMode === 'POS'"
-      tableKey="CPM13020_POS"
-      [lastQueryBody]="historyRequestBody"
-      [data]="rows"
-      [columns]="columnsPos"
-      [totalRecords]="totalRecords"
-      [footerData]="grandTotal"
-      [showDelete]="false"
-      [showManage]="false"
-      [showReportMode]="true"
-      [showCaption]="true"
-      [groupRowsBy]="'groupKey'"
-      [dataKey]="'_rowKey'"
-      [queryFunction]="queryPosForReport"
-    ></app-table-report>
+      }" *ngIf="reportMode === 'POS'" tableKey="CPM13020_POS" [lastQueryBody]="historyRequestBody" [data]="rows"
+      [columns]="columnsPos" [totalRecords]="totalRecords" [footerData]="grandTotal" [showDelete]="false"
+      [showManage]="false" [showReportMode]="true" [showCaption]="true" [groupRowsBy]="'groupKey'" [dataKey]="'_rowKey'"
+      [queryFunction]="queryPosForReport"></app-table-report>
   </div>
 </div>
 本報表金額為含稅金額

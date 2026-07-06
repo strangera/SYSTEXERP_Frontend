@@ -20,7 +20,7 @@ import { TLS23010Data, TLS23010Service } from '../../../service/api/tls/tls23010
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -32,7 +32,7 @@ import { InputTextRange2Component } from './input-text-range2/input-text-range2.
   standalone: true,
   imports: [
     CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, DropdownComponent,
+    CalendarRangeComponent, MultiSelectComponent, InputTextComponent, DropdownComponent,
     InputTextModule, ButtonComponent, DialogModule, RadioButtonModule, TranslateModule,
     ButtonModule, CheckboxModule, TableReportComponent, InputTextRange2Component, AsyncPipe
   ],

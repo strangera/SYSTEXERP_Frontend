@@ -21,7 +21,7 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -41,7 +41,7 @@ const TOTAL_FIELD_MAP = {
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, TranslateModule,
     AccordionModule, CheckboxModule, ButtonModule, DialogModule, RadioButtonModule,
-    MenubarComponent, CalendarRangeQuickComponent, MultiSelectComponent, InputNumberRangeComponent,
+    MenubarComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent,
     DropdownComponent, InputTextComponent, ButtonComponent, InputTextRangeComponent, TableReportComponent,
   ],
 })

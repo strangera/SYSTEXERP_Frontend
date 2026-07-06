@@ -7,7 +7,6 @@ import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -43,7 +42,7 @@ const yesterday = new Date(today);
     CommonModule,
     CalendarComponent,
     CalendarRangeComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,

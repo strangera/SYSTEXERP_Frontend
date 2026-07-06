@@ -44,16 +44,18 @@
 <ng-content select="header"></ng-content>
 <div class="grid p-fluid" [class]="label ? 'pt-2' : 'pt-1'">
   <div class="col pb-0 pt-0">
-    <app-calendar class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
-      [calendarType]="calendarOneType" [minDate]="startMinDate" [maxDate]="startMaxDate" [disabled]="isEndDisabled"
+    <app-calendar class="w-full" [dateFormat]="dateFormat" [showTime]="true" [view]="view"
+      [controlName]="startControlName" [control]="startControl" [submitted]="submitted" [calendarType]="calendarOneType"
+      [minDate]="startMinDate" [maxDate]="startMaxDate" [disabled]="isEndDisabled"
       (calendarEvent)="startDateChange.emit($event)" (focusout)="fixStartOfDay()"></app-calendar>
   </div>
   <div class="flex flex-column justify-content-center align-items-center pt-1" [ngStyle]="{ 'height': '33.56px' }">
     <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
   </div>
   <div class="col pb-0 pt-0">
-    <app-calendar class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
-      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate" [disabled]="isEndDisabled"
+    <app-calendar class="w-full" [dateFormat]="dateFormat" [showTime]="true" [view]="view"
+      [controlName]="endControlName" [control]="endControl" [submitted]="submitted" [calendarType]="calendarOneType"
+      [minDate]="endMinDate" [maxDate]="endMaxDate" [disabled]="isEndDisabled"
       (calendarEvent)="endDateChange.emit($event)" (focusout)="fixEndOfDay()"></app-calendar>
   </div>
 </div>

@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -48,7 +48,7 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
     TableEditComponent, AsyncPipe, RadiobuttonComponent, TranslateModule,
     MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent,
     InputTextComponent, TableReportComponent, DialogComponent, ButtonComponent, NgIf, InputNumberComponent, TLS55030DialogComponent, ButtonModule,
-    CalendarRangeQuickComponent, RadioButtonModule,
+    CalendarRangeComponent, RadioButtonModule,
     DividerModule, DividerModule
   ]
 })

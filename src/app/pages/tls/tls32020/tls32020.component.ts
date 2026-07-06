@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -32,7 +32,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
     CalendarComponent, DropdownComponent, NgIf, DividerModule,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeQuickComponent, CategorySelectComponent, CheckboxModule,
+    MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -28,7 +28,7 @@ import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
@@ -39,7 +39,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
   standalone: true,
   imports: [
     CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeQuickComponent, RadiobuttonComponent, MultiSelectComponent, ButtonComponent,
+    CalendarRangeComponent, RadiobuttonComponent, MultiSelectComponent, ButtonComponent,
     TranslateModule, ButtonModule, TableReportComponent, DialogComponent,
   ],
 })

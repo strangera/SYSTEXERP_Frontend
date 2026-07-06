@@ -10,7 +10,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -46,7 +46,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls12070',
   templateUrl: './tls12070.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS12070Component extends BasicQueryPageComponent<Customer_interview> implements OnInit {
   activeReport: 'query' | 'willing' = 'query';

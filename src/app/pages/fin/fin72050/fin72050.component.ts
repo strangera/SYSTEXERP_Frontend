@@ -16,7 +16,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -45,14 +45,13 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     InputTextComponent,
     DropdownComponent,
     InputNumberRangeComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     TableReportComponent,
   ],
 })
 export class FIN72050Component
   extends BasicQueryPageComponent<FIN72050QueryData>
-  implements OnInit
-{
+  implements OnInit {
   // ── 查詢表單 ───────────────────────────────────────────
   queryForm = this.formBuilder.group({
     PCC_No: [null as string | null, [Validators.maxLength(20)]],         // 盤點單號

@@ -21,11 +21,11 @@
             [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
           <!-- 申請日期 -->
           <!-- 將 startControl/endControl 對應到新的 ODM_Date_Start/End -->
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted" />
           <!-- 審核日期 -->
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
             [submitted]="submitted" />
           <!-- 單據類型 -->

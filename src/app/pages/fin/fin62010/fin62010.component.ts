@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin62010Service, QueryFIN62010Request, QueryFIN62010Response } from '@service/api/fin/fin62010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,7 +19,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-fin62010',
   templateUrl: './fin62010.component.html',
   standalone: true,
-  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeQuickComponent, DropdownComponent, TranslateModule]
+  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, DropdownComponent, TranslateModule]
 })
 export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

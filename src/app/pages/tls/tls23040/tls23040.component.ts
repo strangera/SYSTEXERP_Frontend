@@ -19,7 +19,7 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatAmount, formatDate, ReportColumn, } from '../../../shared/componentkit/table-report/table-report.model';
@@ -30,7 +30,7 @@ import { formatAmount, formatDate, ReportColumn, } from '../../../shared/compone
   standalone: true,
   imports: [
     CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, ButtonComponent,
+    CalendarRangeComponent, MultiSelectComponent, InputTextComponent, ButtonComponent,
     CheckboxModule, DialogModule, RadioButtonModule, TranslateModule, ButtonModule,
     InputTextRangeComponent, TableReportComponent,
   ],

@@ -1,115 +1,58 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="使用者編號"
-              controlName="user_No"
-              [control]="queryForm.controls.user_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="使用者編號" controlName="user_No" [control]="queryForm.controls.user_No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="使用者名稱"
-              controlName="user_Name"
-              [control]="queryForm.controls.user_Name"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="使用者名稱" controlName="user_Name" [control]="queryForm.controls.user_Name"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="使用者等級"
-              controlName="user_priority"
-              [control]="queryForm.controls.user_priority"
-              [submitted]="submitted"
-              [options]="user_priorityOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-multi-select>
+            <app-multi-select label="使用者等級" controlName="user_priority" [control]="queryForm.controls.user_priority"
+              [submitted]="submitted" [options]="user_priorityOptions" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織編號"
-              controlName="org_ID"
-              [options]="SYS3100_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.org_ID"
-              [submitted]="submitted"
-            />
+            <app-multi-select label="組織編號" controlName="org_ID" [options]="SYS3100_Options" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.org_ID" [submitted]="submitted" />
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="帳號有效起始日期"
-              [startControl]="queryForm.controls.str_dateStart"
-              [endControl]="queryForm.controls.str_dateEnd"
-              [submitted]="submitted"
-            />
+            <app-calendar-range label="帳號有效起始日期" [startControl]="queryForm.controls.str_dateStart"
+              [endControl]="queryForm.controls.str_dateEnd" [submitted]="submitted" />
           </div>
 
           <!-- 還沒串 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="上次登入時間"
-              [startControl]="queryForm.controls.last_loginStart"
-              [endControl]="queryForm.controls.last_loginEnd"
-              [submitted]="submitted"
-            />
+            <app-calendar-range label="上次登入時間" [startControl]="queryForm.controls.last_loginStart"
+              [endControl]="queryForm.controls.last_loginEnd" [submitted]="submitted" />
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="使用者狀態"
-              controlName="status"
-              [options]="userStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="使用者狀態" controlName="status" [options]="userStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="使用者型態"
-              controlName="user_type"
-              [options]="userTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.user_type"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="使用者型態" controlName="user_type" [options]="userTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.user_type" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -118,24 +61,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    [exportContext]="{ apiUrl: 'queryUser' }"
-    tableKey="SYS0110"
-    dataKey="id"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)"
-    [showCheckBox]="true"
-    dataKey="id"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    deleteIcon="pi pi-ban"
-    deletepTooltip="停用"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="sys0110Service.queryUser.bind(sys0110Service)"
-  ></app-table-report>
+  <app-table-report [exportContext]="{ apiUrl: 'queryUser' }" tableKey="SYS0110" dataKey="id" [data]="data"
+    [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
+    [totalRecords]="totalRecords" [loading]="loading" deleteIcon="pi pi-ban" deletepTooltip="停用"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="sys0110Service.queryUser.bind(sys0110Service)"></app-table-report>
 </div>

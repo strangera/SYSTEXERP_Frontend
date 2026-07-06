@@ -10,7 +10,7 @@ import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
@@ -26,7 +26,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     MultiSelectComponent,
     ButtonComponent,
     TableReportComponent,

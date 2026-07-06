@@ -28,9 +28,8 @@
               [control]="queryForm.controls.Acp_TermNo" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="退保留款日期"
-              [startControl]="queryForm.controls.RetDate_From" [endControl]="queryForm.controls.RetDate_To"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="退保留款日期" [startControl]="queryForm.controls.RetDate_From"
+              [endControl]="queryForm.controls.RetDate_To" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range label="退保留款金額" [startControl]="queryForm.controls.RetAmt_From"

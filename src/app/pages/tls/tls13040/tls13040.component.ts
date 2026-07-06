@@ -20,7 +20,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 // untilDestroyed
@@ -41,7 +41,7 @@ import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/mult
     ReactiveFormsModule,
     MultiSelectComponent,
     MultiLocationFilterComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
     DropdownComponent,
