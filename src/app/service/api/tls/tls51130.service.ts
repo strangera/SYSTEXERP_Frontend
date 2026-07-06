@@ -46,4 +46,9 @@ export class TLS51130Service {
 
     );
   }
+
+  // ✅ 查詢LOGODISC最精確進貨折數 (供TLS51070依品牌+大/中/小分類由細到粗比對折數使用)
+  queryLOGODISC_OrderPrcRate(body: { LOGO_No: string; CAT_LNo: string; CAT_MNo?: string | null; CAT_SNo?: string | null }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/queryLOGODISC_OrderPrcRate`, body);
+  }
 }

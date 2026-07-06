@@ -5,6 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls51060Service } from '@service/api/tls/tls51060.service';
 import { Tls51070Service } from '@service/api/tls/tls51070.service';
+import { TLS51130Service } from '@service/api/tls/tls51130.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -233,6 +234,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   img1001Detail: IMG1001Detail[] = [];
   //---暫存品牌資料---
   cachedBrand: any = null;
+  //---目前生效的進價折數(LOGODISC優先，查無設定才用PLULOGO品牌折數)---
+  effectiveOrderPrcRate: number | null = null;
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // #region POS2005定義
   // 國際條碼編號	下拉
@@ -302,6 +305,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   constructor(
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
+    private tls51130Service: TLS51130Service, //查詢LOGODISC品牌進貨折數設定檔
     private dropDown51070: dropDown51070, //下拉選單 (選項固定)
     private validationService: ValidationService,
   ) {
@@ -369,6 +373,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.dataForm.get('CAT_MNo')?.enable();
         this.dataForm.get('CAT_SNo')?.enable();
       }
+
+      // 大分類變動，重新比對 進價折數(LOGODISC優先，查無設定才用PLULOGO品牌折數)
+      this.applyOrderPrcRate();
     });
 
     //觀察表單 中分類變化
@@ -399,35 +406,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       } else {
         this.smallOption = [];
       }
+
+      // 中分類變動，重新比對 進價折數(LOGODISC優先，查無設定才用PLULOGO品牌折數)
+      this.applyOrderPrcRate();
+    });
+
+    // 觀察 小分類 是否變更，重新比對 進價折數(LOGODISC優先，查無設定才用PLULOGO品牌折數)
+    this.dataForm.get('CAT_SNo')?.valueChanges.subscribe(() => {
+      this.applyOrderPrcRate();
     });
 
     // 觀察 品牌代碼 是否為變更(更新 進價折數、 標準進價)
     this.dataForm.get('LOGO_No')!.valueChanges.subscribe((newValue) => {
-      if (newValue) {
-        // 找到符合的品牌資料 (依照newValue 找到pluLogoOption對應的No)
-        const matched = this.pluLogoOption.find(item => item.No === newValue);
-        console.log('監聽品牌代碼變化', newValue, matched);
-
-        // 讀取整份 重新設置 進價折數、 標準進價
-        if (matched) {
-          // 暫存品牌資料
-          this.cachedBrand = matched;
-
-          // 設定進價折數
-          this.dataForm.get('PLU_OrderPrcRate')?.setValue(matched.PLU_OrderPrcRate);
-
-          // 試算標準進價
-          const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
-          const PLU_OrderPrcRate = matched.PLU_OrderPrcRate;
-          if (PLU_SalePrc && PLU_OrderPrcRate) {
-            const result = Number(((PLU_SalePrc * PLU_OrderPrcRate * 0.01) / 1.05).toFixed(2));
-            this.dataForm.get('PLU_OrderPrc')?.setValue(result);
-          }
-        } else {
-          // 若品牌代碼為空 不進行操作
-          this.cachedBrand = null; // 若清空品牌代碼，也清空暫存
-        }
-      }
+      console.log('監聽品牌代碼變化', newValue);
+      this.applyOrderPrcRate();
     });
 
     // 觀察 商品名稱(PLU_Name)發生變化時自動寫入給 PLU_Lable、PLU_PrnName
@@ -521,11 +513,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     });
 
-    //依照廠商暫存重新計算[標準進價]
+    //依照目前生效的進價折數重新計算[標準進價](LOGODISC優先，查無設定才用PLULOGO品牌折數)
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
-      if (this.crudstatus == CRUDStatus.Create && this.cachedBrand) {
+      if (this.crudstatus == CRUDStatus.Create && this.effectiveOrderPrcRate != null) {
         const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
-        const PLU_OrderPrcRate = this.cachedBrand.PLU_OrderPrcRate;
+        const PLU_OrderPrcRate = this.effectiveOrderPrcRate;
         if (PLU_SalePrc != null && PLU_OrderPrcRate != null) {
           const result = Number(((PLU_SalePrc * PLU_OrderPrcRate * 0.01) / 1.05).toFixed(2));
           this.dataForm.get('PLU_OrderPrc')?.setValue(result);
@@ -557,6 +549,64 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   initializeForm(crudstatus: CRUDStatus) {
     if (crudstatus != CRUDStatus.Create) {
       this.dataForm.get('PLU_No')?.setValidators(Validators.required);
+    }
+  }
+
+  // #region 進價折數比對(LOGODISC優先，查無設定才用PLULOGO品牌折數)
+  // 依 品牌代碼/大分類/中分類/小分類 目前選擇的內容，重新比對出目前生效的進價折數
+  // 優先序(由細到粗)：LOGODISC(品牌+大+中+小) > LOGODISC(品牌+大+中) > LOGODISC(品牌+大) > PLULOGO(品牌預設折數)
+  applyOrderPrcRate(): void {
+    const logoNo = this.dataForm.get('LOGO_No')?.value;
+    if (!logoNo) {
+      // 品牌代碼為空，維持原有行為不進行操作
+      return;
+    }
+
+    // 找到符合的品牌資料 (依照logoNo 找到pluLogoOption對應的No)
+    const matched = this.pluLogoOption.find(item => item.No === logoNo);
+    if (!matched) {
+      // 若品牌代碼查無資料，清空暫存
+      this.cachedBrand = null;
+      return;
+    }
+
+    // 暫存品牌資料
+    this.cachedBrand = matched;
+
+    const catLNo = this.dataForm.get('CAT_LNo')?.value;
+    if (!catLNo) {
+      // 尚未選擇大分類，無法比對LOGODISC，直接使用PLULOGO品牌折數
+      this.setOrderPrcRate(matched.PLU_OrderPrcRate);
+      return;
+    }
+
+    const catMNo = this.dataForm.get('CAT_MNo')?.value;
+    const catSNo = this.dataForm.get('CAT_SNo')?.value;
+
+    // 品牌+大分類已選，優先查詢LOGODISC最精確一筆折數(查無符合設定回傳null)
+    this.tls51130Service
+      .queryLOGODISC_OrderPrcRate({
+        LOGO_No: logoNo,
+        CAT_LNo: catLNo,
+        CAT_MNo: catMNo || null,
+        CAT_SNo: catSNo || null,
+      })
+      .subscribe((res) => {
+        const discRate = res?.Data?.PLU_OrderPrcRate;
+        // LOGODISC有符合的設定就用LOGODISC，否則fallback用PLULOGO品牌折數
+        this.setOrderPrcRate(discRate != null ? discRate : matched.PLU_OrderPrcRate);
+      });
+  }
+
+  // 統一設定 目前生效的進價折數，並連動試算標準進價
+  setOrderPrcRate(rate: number | null): void {
+    this.effectiveOrderPrcRate = rate;
+    this.dataForm.get('PLU_OrderPrcRate')?.setValue(rate);
+
+    const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
+    if (PLU_SalePrc && rate != null) {
+      const result = Number(((PLU_SalePrc * rate * 0.01) / 1.05).toFixed(2));
+      this.dataForm.get('PLU_OrderPrc')?.setValue(result);
     }
   }
 
