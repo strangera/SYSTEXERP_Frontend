@@ -405,10 +405,10 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     const alwaysDisabled = ['id', 'PUR_VenName', 'PUR_Tax'];
 
     if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
+      this.dataForm.disable({ emitEvent: false });
     } else {
-      this.dataForm.enable();
-      alwaysDisabled.forEach((name) => this.dataForm.get(name)?.disable());
+      this.dataForm.enable({ emitEvent: false });
+      alwaysDisabled.forEach((name) => this.dataForm.get(name)?.disable({ emitEvent: false }));
     }
   }
 
