@@ -31,7 +31,7 @@
       <tr>
         <th *ngIf="showReorder" class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
         <th class="w-1rem group-header text-center" rowspan="2" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox />
+          <p-tableHeaderCheckbox *ngIf="showSelectAll" />
         </th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length">
           收合/展開
@@ -75,7 +75,7 @@
       <tr>
         <th *ngIf="showReorder" class="w-1rem text-center" pFrozenColumn>序號</th>
         <th class="w-1rem text-center" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox />
+          <p-tableHeaderCheckbox *ngIf="showSelectAll" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn

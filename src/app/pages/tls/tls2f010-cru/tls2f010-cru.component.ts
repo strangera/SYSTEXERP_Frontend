@@ -805,9 +805,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       };
     });
 
-    // 若主區有多筆資料，要求先選取一筆主資料（selectedMain）才能新增明細
-    if ((this.changeEditData?.length ?? 0) > 1 && !this.selectedMain) {
-      this.messageService.errorBubble('此區有多筆主資料，請先選取一筆主資料再進行新增明細');
+    // 單筆處理：不論主區有幾筆資料，送出前都必須先勾選一筆主資料
+    if (!this.selectedMain) {
+      this.messageService.errorBubble('請先勾選一筆主資料再進行新增明細');
       this.messageService.unblockUi();
       this.loading = false;
       this.submitted = false;
@@ -815,7 +815,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     // 驗證：發票金額不得超過應付貨款，且若有應付貨款(免稅)則需包含免稅發票
-    const mainForValidation = this.selectedMain ?? (this.changeEditData && this.changeEditData.length ? this.changeEditData[0] : null);
+    const mainForValidation = this.selectedMain;
     if (mainForValidation) {
       // 1. 準備統計數據
       const newInvoices = details; // 新增單據資料
@@ -877,8 +877,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       money_type: formValue.COMM_MONEY_TYPE ?? formValue.money_type ?? '',
       sam_termno: Number(formValue.sam_termno ?? 0),
       tlt_no: this.getRawTltNo(formValue.tlt_no) ?? '',
-      // 優先使用選取的主資料的 talent_id，若無則 fallback 到 rowdata
-      talent_id: (this.selectedMain && this.selectedMain.talent_id) ? this.selectedMain.talent_id : ((this.rowdata as any)?.talent_id ?? 0),
+      // 單筆處理：talent_id 僅取自使用者勾選的那一筆主資料
+      talent_id: this.selectedMain?.talent_id ?? 0,
       COMM_YM: this.formatYearMonth(formValue.COMM_YM),
       details,
     };
@@ -907,10 +907,27 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     this.changeEditData = data;
   }
 
-  // 第一張表（主區）選取變更
+  // 第一張表（主區）選取變更：限制一次僅能勾選一筆，切換勾選時自動清除下方「新增單據」已輸入內容
   onChangeEditSelection(items: any): void {
-    this.selectedMainItems = Array.isArray(items) ? items : (items ? [items] : []);
-    this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
+    let newSelection: any[] = Array.isArray(items) ? items : (items ? [items] : []);
+
+    // 使用者一次只能勾選一筆：若同時勾選多筆（例如快速點擊），僅保留最新勾選的一筆
+    if (newSelection.length > 1) {
+      const previousSelection = this.selectedMainItems || [];
+      const newlyChecked = newSelection.find(item => !previousSelection.includes(item));
+      newSelection = [newlyChecked ?? newSelection[newSelection.length - 1]];
+    }
+
+    const previousMain = this.selectedMain;
+    const newMain = newSelection.length ? newSelection[0] : null;
+
+    // 中途切換勾選（改選其他筆或取消勾選），自動清除下方已輸入的新增單據內容
+    if (previousMain !== newMain) {
+      this.detailEditData = [];
+    }
+
+    this.selectedMainItems = newSelection;
+    this.selectedMain = newMain;
     // 當使用者選取主表時，同步 selectedMain 的一些欄位到新增單據的預設 insert 值
     try {
       if (this.selectedMain) {

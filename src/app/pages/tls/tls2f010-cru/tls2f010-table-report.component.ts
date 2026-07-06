@@ -45,6 +45,7 @@ export class TLS2F010TableReportComponent extends BasicPrintDataComponent implem
   public _loading = false;
   @Input() showReorder = true;
   @Input() showCheckBox = false;
+  @Input() showSelectAll = true;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
   @Output() selectAllChange = new EventEmitter<boolean>();
