@@ -189,17 +189,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   }
 
   /**
-   * 輔助函數：將陣列轉換為逗號分隔的字串
-   * 參考功能：TLS32020、TLS32030
-   */
-  private formatListForBackend(list: string[] | null): string | null {
-    if (Array.isArray(list) && list.length > 0) {
-      return list.map(item => String(item)).join(',');
-    }
-    return null;
-  }
-
-  /**
    * 單一入口：取得可送 API 的 payload。
    */
   public buildApiPayload(body?: FIN53010Payload): FIN53010Payload {
@@ -234,7 +223,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       ...this.queryForm.getRawValue(),
       VouNoStart: String(vns ?? ''),
       VouNoEnd: String(vne ?? ''),
-      VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
+      VoucherType: this.qf().VoucherType.value?.length ? this.qf().VoucherType.value! : null,
       VouDateStart: formatDate(this.qf().VouDateStart.value, 'start'),
       VouDateEnd: formatDate(this.qf().VouDateEnd.value, 'end'),
       CrtDateStart: formatDate(this.qf().CrtDateStart.value, 'start'),

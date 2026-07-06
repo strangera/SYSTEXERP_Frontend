@@ -268,7 +268,7 @@ function buildInsertDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD != null ? 'D' : AccAmtC != null ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.PTA != null ? String(rest.PTA) : (rest.recKey == null ? undefined : String(rest.recKey));
+    const pta = rest.PTA != null ? String(rest.PTA) : undefined;
     const body: InsertFIN53010DetailBody = {
       index,
       SerNo: ser,
@@ -281,6 +281,7 @@ function buildInsertDetails(
       ProjectNo: undefined,
       NoteDesc: noteResolved,
       PTA: pta,
+      ACCT_KEY: rest.recKey != null ? String(rest.recKey) : undefined,
     };
     return body;
   });
@@ -442,6 +443,7 @@ function buildUpdateDetails(
       ProjectNo: undefined,
       NoteDesc: noteResolved,
       PTA: pta,
+      ACCT_KEY: rest.recKey != null ? String(rest.recKey) : undefined,
     };
     return body;
   });
