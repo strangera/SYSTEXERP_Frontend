@@ -199,6 +199,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
   CounterOptions: CounterOption[] = [];
+  /** 使用者在專櫃選擇器彈窗實際點選的那一筆合約(同一專櫃可能同時有生效中/尚未生效多筆)，優先用這筆帶入表單，避免用專櫃代號 find 挑錯 */
+  private selectedCounterRow: TLTTALENTActiveContractItem | null = null;
   /** 專櫃編號選擇器彈窗欄位（11 欄） */
   tltNoPickerColumns = tltNoPickerCruColumns;
   CashierOptions: IDropdownItem[] = [];
@@ -362,7 +364,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       .subscribe((selectedNo) => {
         if (!selectedNo) return;
 
-        const selected = this.CounterOptions.find(c => c.No === selectedNo);
+        // 若剛好是使用者在彈窗選中的那筆，優先用它；否則(例如手動輸入代號)才回頭用專櫃代號 find(同專櫃若有多筆合約，會挑到最新一筆)
+        const selected = this.selectedCounterRow?.No === selectedNo
+          ? this.selectedCounterRow
+          : this.CounterOptions.find(c => c.No === selectedNo);
         if (!selected) return;
 
         // 只要專櫃資料有值，就覆蓋（不動沒給值的欄位）
@@ -388,6 +393,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     }
 
 
+  }
+
+  /** 專櫃選擇器彈窗點選某列：記住這筆(可能是生效中或尚未生效的營運區間)，供 ECR_TLT_No valueChanges 精確帶入表單 */
+  onCounterRowSelect(row: TLTTALENTActiveContractItem): void {
+    this.selectedCounterRow = row;
   }
 
   /** 判斷 TLT (專櫃編號) 必填 */

@@ -7,7 +7,7 @@
     <input pInputText type="text" class="w-full" autocomplete="off" placeholder="輸入專櫃代號或專櫃名稱篩選" [value]="filterText()"
       (input)="onFilterInput($event)" />
     @if (tableReady()) {
-      <app-table-report tableKey="TltNoPicker" dataKey="No" [data]="filteredOptions()" [columns]="columns"
+      <app-table-report tableKey="TltNoPicker" dataKey="talent_id" [data]="filteredOptions()" [columns]="columns"
         [totalRecords]="filteredOptions().length" [showManage]="false" [showCheckBox]="false" [showCaption]="false"
         [lazy]="false" emptyMessage="查無資料" (itemClick)="selectRow($event)" [ItemSize]="24.25"></app-table-report>
     }
