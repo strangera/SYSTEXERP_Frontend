@@ -1,6 +1,6 @@
 import { formatDate, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -110,6 +110,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   talentTotalRecords = 0;
   talentLastQueryBody: any | null = null;
 
+  // 專櫃模式（counter）：專櫃編號/名稱改為唯讀顯示，實際值仍存在 dataFormCounter.tlt_no
+  counterTltDisplayControl = new FormControl('');
+
   // 表單
   dataFormCounter = this.formBuilder.group({
     tlt_no: [null as any],
@@ -186,10 +189,25 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     this.loadTalentDialogData();
   }
 
+  /** 依現有選擇的資料項目，組出跟 tlt_noOptions 一致的物件結構（label、契約期間格式化、org_id） */
+  private mapTalentItemToOption(item: ITalentOption): ITalentOption {
+    return {
+      ...item,
+      label: `${item.tlt_no}-${item.tlt_name}-${item.contract_subno}`,
+      tlt_contract_bdate: item.tlt_contract_bdate
+        ? (this.parseBackendDate(item.tlt_contract_bdate) ? formatDate(this.parseBackendDate(item.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
+      tlt_contract_edate: item.tlt_contract_edate
+        ? (this.parseBackendDate(item.tlt_contract_edate) ? formatDate(this.parseBackendDate(item.tlt_contract_edate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
+      org_id: item.org_id ?? null,
+    };
+  }
+
   private loadTalentDialogData(): void {
     this.talentDialogLoading = true;
-    // 將畫面的扣款日期同步到開窗的扣款日期
-    const normalTpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
+    // 將畫面的扣款日期同步到開窗的扣款日期（counter 模式看 dataFormCounter，normal 模式看 dataFormNormal）
+    const normalTpyDate = this.currentCreateType === 'counter'
+      ? this.dataFormCounter.get('tpy_date')?.value ?? null
+      : this.dataFormNormal.get('tpy_date')?.value ?? null;
     this.talentDialogQueryForm.patchValue({ tpy_date: normalTpyDate });
     const formTpyDate = this.talentDialogQueryForm.get('tpy_date')?.value ?? null;
     if (!formTpyDate) {
@@ -203,7 +221,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       tlt_date: formTpyDate ? formatDateToYYYY_MM_DD(formTpyDate) : null,
     };
     this.talentLastQueryBody = body;
-    this.dropDownListService
+    this.tls2d010Service
       .queryTLS2D010TLTTALENTList({ ...body })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
@@ -228,9 +246,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
       }
       const payload = { ...body, ...(tlt_noList ? { tlt_noList } : {}) };
-      return this.dropDownListService.queryTLS2D010TLTTALENTList(payload);
+      return this.tls2d010Service.queryTLS2D010TLTTALENTList(payload);
     } catch (e) {
-      return this.dropDownListService.queryTLS2D010TLTTALENTList({ ...body });
+      return this.tls2d010Service.queryTLS2D010TLTTALENTList({ ...body });
     }
   };
 
@@ -246,7 +264,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       ...(tlt_noList ? { tlt_noList } : {}),
     };
     this.talentLastQueryBody = body;
-    this.dropDownListService.queryTLS2D010TLTTALENTList(body)
+    this.tls2d010Service.queryTLS2D010TLTTALENTList(body)
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
@@ -293,15 +311,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
     const newRows = this.selectedTalents.map((item: any) => {
       const matchedOption = this.tlt_noOptions.find(opt => opt.tlt_no === item.tlt_no || opt.No === item.tlt_no);
-      const tltValue = matchedOption ?? {
-        ...item,
-        label: `${item.tlt_no}-${item.tlt_name}-${item.contract_subno}`,
-        tlt_contract_bdate: item.tlt_contract_bdate
-          ? (this.parseBackendDate(item.tlt_contract_bdate) ? formatDate(this.parseBackendDate(item.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
-        tlt_contract_edate: item.tlt_contract_edate
-          ? (this.parseBackendDate(item.tlt_contract_edate) ? formatDate(this.parseBackendDate(item.tlt_contract_edate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
-        org_id: item.org_id ?? null,
-      };
+      const tltValue = matchedOption ?? this.mapTalentItemToOption(item);
       return {
         rowId: this.rowIdCounter++,
         tlt_no: tltValue,
@@ -324,6 +334,17 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       : [];
     const updatedData = this.ensureRowIds([...baseData, ...newRows]);
     this.onCounterDataChange(updatedData);
+    this.talentDialogVisible = false;
+    this.selectedTalents = [];
+  }
+
+  // 專櫃模式：點選 Dialog 內某一列，直接代入原本下拉選到會代入的欄位（比照 dataFormCounter.tlt_no 的 valueChanges 邏輯）
+  onTalentDialogRowClick(row: ITalentOption): void {
+    if (this.currentCreateType !== 'counter') {
+      return;
+    }
+    const tltOption = this.mapTalentItemToOption(row);
+    this.dataFormCounter.get('tlt_no')?.setValue(tltOption);
     this.talentDialogVisible = false;
     this.selectedTalents = [];
   }
@@ -398,6 +419,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
 
     this.dataFormCounter.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
+      this.counterTltDisplayControl.setValue(selected?.label ?? '', { emitEvent: false });
       if (selected) {
         this.dataFormCounter.patchValue({
           contract_no: selected.contract_no ?? '',
@@ -450,7 +472,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
-      tlt: this.currentCreateType === 'counter' ? this.dropDownListService.queryTLS2D010TLTTALENTList() : of(null),
+      tlt: this.currentCreateType === 'counter' ? this.tls2d010Service.queryTLS2D010TLTTALENTList() : of(null),
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
@@ -458,15 +480,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     })
       .pipe(untilDestroyed(this))
       .subscribe(({ tlt, pod, acc, org, capItem }) => {
-        this.tlt_noOptions = (tlt?.Data || []).map((item: any) => ({
-          ...item,
-          label: `${item.tlt_no}-${item.tlt_name}-${item.contract_subno}`,
-          tlt_contract_bdate: item.tlt_contract_bdate
-            ? (this.parseBackendDate(item.tlt_contract_bdate) ? formatDate(this.parseBackendDate(item.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
-          tlt_contract_edate: item.tlt_contract_edate
-            ? (this.parseBackendDate(item.tlt_contract_edate) ? formatDate(this.parseBackendDate(item.tlt_contract_edate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
-          org_id: item.org_id ?? null,
-        }));
+        this.tlt_noOptions = (tlt?.Data || []).map((item: ITalentOption) => this.mapTalentItemToOption(item));
 
         this.pod_noOptions = (pod?.Data || []).map((item: any) => ({
           value: item.No,
@@ -507,6 +521,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           if (n !== v) {
             counterCtrl.setValue(n, { emitEvent: false });
           }
+          this.counterTltDisplayControl.setValue(n?.label ?? '', { emitEvent: false });
         }
 
         const normalCtrl = this.dataFormNormal.get('tlt_no');
@@ -639,7 +654,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             if (!rowData?.tpy_date) {
               return of([]);
             }
-            return this.dropDownListService.queryTLS2D010TLTTALENTList({
+            return this.tls2d010Service.queryTLS2D010TLTTALENTList({
               tlt_date: formatDateToYYYY_MM_DD(rowData.tpy_date)
             }).pipe(
               map(res => {

@@ -1,9 +1,16 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ITalentOption } from '../../utility/dropDownList.service';
 
 export type ExportFileResponse = HttpResponse<Blob>;
+
+export interface queryTLS2D010TLTTALENTRequest {
+  tlt_noList?: string[]; // 查指定專櫃編號
+  tlt_date?: string | null; // 查詢包含該日期的專櫃資料，格式為 yyyy-MM-dd
+}
 
 @Injectable({
   providedIn: 'root'
@@ -37,5 +44,13 @@ export class Tls2d010Service {
   }
   queryMaxClsMonth(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryMaxClsMonth`, {});
+  }
+  // 查詢專櫃下拉 (取所有契約，含對應資料，依照傳入日期查詢有效的專櫃資料)
+  queryTLS2D010TLTTALENTList(params: queryTLS2D010TLTTALENTRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
+    return this.http.post<ApiResponse<ITalentOption[]>>(
+      `${this.apiUrl}/queryTLS2D010TLTTALENTList`, params
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 }

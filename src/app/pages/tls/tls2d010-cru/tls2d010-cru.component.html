@@ -75,8 +75,13 @@
     <!-- 新增專櫃扣款 -->
     <form *ngIf="currentCreateType === 'counter'" [formGroup]="dataFormCounter" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions"
-          optionLabel="label" [control]="dataFormCounter.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+        <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer" role="button" tabindex="0"
+          aria-label="專櫃編號/名稱 選擇" (click)="onOpenTalentDialog(); $event.stopPropagation()"
+          (keydown.enter)="$event.preventDefault(); onOpenTalentDialog()">
+          <app-input-text label="專櫃編號/名稱" controlName="tlt_no_display" [control]="counterTltDisplayControl"
+            [submitted]="submitted" [readonly]="true" [customPlaceholder]="'點擊選取專櫃編號'"
+            [alwaysShowPlaceholder]="true"></app-input-text>
+        </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number label="總金額" controlName="totalCash" [control]="dataFormCounter.controls.totalCash"
@@ -122,7 +127,8 @@
 </div>
 
 <app-dialog [visible]="talentDialogVisible" header="選擇專櫃" (visibleChange)="talentDialogVisible = $event"
-  (save)="onTalentDialogSave()" [disable]="!selectedTalents || selectedTalents.length === 0">
+  (save)="onTalentDialogSave()" [disable]="!selectedTalents || selectedTalents.length === 0"
+  [showFooter]="currentCreateType !== 'counter'">
 
   <form [formGroup]="talentDialogQueryForm" (ngSubmit)="onTalentDialogQuery(talentDialogQueryForm)">
     <div class="grid p-fluid">
@@ -141,7 +147,8 @@
   <app-table-report tableKey="tls2d010TalentDialogTable" dataKey="talent_id" [data]="talentDialogData"
     [columns]="talentDialogColumns" [selectedItems]="selectedTalents" (selectionChange)="selectedTalents = $event"
     [showCaption]="false" [showFilter]="false" [showReportMode]="false" [showExcel]="false" [showDelete]="false"
-    [showManage]="false" [showCheckBox]="true" [totalRecords]="talentTotalRecords" [lastQueryBody]="talentLastQueryBody"
-    [queryFunction]="queryTalentDialog" [loading]="talentDialogLoading">
+    [showManage]="false" [showCheckBox]="currentCreateType !== 'counter'" [totalRecords]="talentTotalRecords"
+    [lastQueryBody]="talentLastQueryBody" [queryFunction]="queryTalentDialog" [loading]="talentDialogLoading"
+    (itemClick)="onTalentDialogRowClick($event)">
   </app-table-report>
 </app-dialog>
