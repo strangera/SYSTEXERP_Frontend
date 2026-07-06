@@ -9,15 +9,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="反關帳年月"
-            controlName="DisplayYM" [control]="qf().DisplayYM" [submitted]="submitted"></app-calendar>
+            controlName="DisplayYM" [disabled]="true" [control]="qf().DisplayYM" [submitted]="submitted"></app-calendar>
           <app-input-number class="col-12 md:col-6 lg:col-4" label="建立狀態傳票張數" controlName="CntPostFlag1" [readonly]="!0"
             [control]="qf().CntPostFlag1" [submitted]="submitted"></app-input-number>
           <app-input-number class="col-12 md:col-6 lg:col-4" label="過帳狀態傳票張數" controlName="CntPostFlag3" [readonly]="!0"
             [control]="qf().CntPostFlag3" [submitted]="submitted"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="submit" label="反關帳" [disabled]="qf().CntPostFlag3.value! > 0"
-            [loading]="loading"></app-button>
+          <app-button btnType="submit" label="反關帳" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
