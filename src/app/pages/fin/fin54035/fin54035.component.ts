@@ -2,7 +2,7 @@ import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN54030Service } from '@service/api/fin/fin54030.service';
+import { FIN54035Service } from '@service/api/fin/fin54035.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -11,7 +11,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
-import { FIN54030Data } from '../fin54030/fin54030.model';
+import { FIN54035Data } from './fin54035.model';
 
 @Component({
   selector: 'app-fin54035',
@@ -28,7 +28,7 @@ import { FIN54030Data } from '../fin54030/fin54030.model';
     MenubarComponent,
   ]
 })
-export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> implements OnInit {
+export class FIN54035Component extends BasicQueryPageComponent<FIN54035Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
     DisplayYM: new FormControl<Date | void>(void 0),
@@ -39,7 +39,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly displayYMSignal = toSignal(this.qf().DisplayYM.valueChanges);
 
-  public readonly tableData = signal<FIN54030Data>(Object.create(null));
+  public readonly tableData = signal<FIN54035Data>(Object.create(null));
   public readonly tableLoading = signal<boolean>(!1);
   public readonly totalRecords = signal<number>(0);
 
@@ -70,7 +70,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   }, { allowSignalWrites: true });
 
   constructor(
-    public readonly service: FIN54030Service,
+    public readonly service: FIN54035Service,
     private readonly logger: NGXLogger,
   ) {
     super();
@@ -79,7 +79,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN54035', void 0, this.queryForm, this.onSubmit.bind(this));
 
-    this.service.loadFIN54030().pipe(
+    this.service.loadFIN54035().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
     ).subscribe({
       next: res => {
@@ -103,7 +103,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
-      this.service.closeFIN54030(this.qf().TargetYM.value!, 2).pipe(
+      this.service.closeFIN54035(this.qf().TargetYM.value!, 2).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
