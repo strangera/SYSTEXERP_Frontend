@@ -10,7 +10,7 @@ import { DropDownListService, IAPS1003Item } from '@service/utility/dropDownList
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -23,7 +23,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls13080',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, ButtonComponent, ReactiveFormsModule, TranslateModule, CalendarRangeQuickComponent, MultiSelectComponent, DropdownComponent, InputNumberComponent, AsyncPipe, PanelModule, TableReportComponent],
+  imports: [MenubarComponent, AccordionModule, ButtonComponent, ReactiveFormsModule, TranslateModule, CalendarRangeComponent, MultiSelectComponent, DropdownComponent, InputNumberComponent, AsyncPipe, PanelModule, TableReportComponent],
   templateUrl: './tls13080.component.html'
 })
 export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response> implements OnInit {

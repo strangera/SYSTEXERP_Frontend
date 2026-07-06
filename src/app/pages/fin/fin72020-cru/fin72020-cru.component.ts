@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClaimFIN72020ExecuteRequest, ClaimFIN72020QueryResponse, FIN72020Service } from '@service/api/fin/fin72020.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { PanelModule } from 'primeng/panel';
@@ -32,7 +32,7 @@ import { monthOptions } from '../fin11200/fin11200.model';
         NgIf,
         DialogComponent,
         TranslateModule,
-        CalendarRangeQuickComponent,
+        CalendarRangeComponent,
         TableReportComponent,
         DropdownComponent,
     ],

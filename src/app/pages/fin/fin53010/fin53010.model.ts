@@ -108,6 +108,7 @@ export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010
   CrtDateEnd?: Date;
   UpdDateStart?: Date;
   UpdDateEnd?: Date;
+  VoucherType?: string[];
 }
 
 export interface FIN53010Insert extends FIN53010Basic {
@@ -129,6 +130,7 @@ export interface InsertFIN53010DetailBody {
   ProjectNo?: string | null;
   NoteDesc?: string | null;
   PTA?: string | null;
+  ACCT_KEY?: string | null;
 }
 
 /** Swagger insertAPS3001Data */
@@ -267,6 +269,7 @@ export interface UpdateFIN53010DetailBody {
   ProjectNo?: string | null;
   NoteDesc?: string | null;
   PTA?: string | null;
+  ACCT_KEY?: string | null;
 }
 
 export type UpdateAPS3001DataBody = InsertAPS3001DataBody & { id?: number };

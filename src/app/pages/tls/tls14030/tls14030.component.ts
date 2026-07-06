@@ -8,7 +8,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -22,7 +22,7 @@ import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
   selector: 'app-tls14030',
   templateUrl: './tls14030.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, DropdownTableComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, DropdownTableComponent, TableComponent, TranslateModule]
 })
 export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> implements OnInit {
   // 查詢表單：保證傳票
@@ -30,7 +30,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     // id: [{ value: null, disabled: true }], // read only
     ven_uniformList: [[]], // 統一編號
     tlt_noList: [[]], // 專櫃編號
-    test: [''], // 測試用的 control 
+    test: [''], // 測試用的 control
     tlt_name: [''], // 專櫃名稱
     location_noList: [[]], // 位置
 

@@ -16,7 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { formatDate } from './../../../shared/componentkit/table-report/table-report.model';
 @Component({
@@ -26,7 +26,7 @@ import { formatDate } from './../../../shared/componentkit/table-report/table-re
   imports: [
     DropdownComponent,
     ButtonModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,

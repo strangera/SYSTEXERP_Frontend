@@ -8,7 +8,7 @@ import { finalize, map } from 'rxjs/operators';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { SortMeta } from 'primeng/api';
 import { FIN73040Service } from '../../../service/api/fin/fin73040.service';
@@ -37,7 +37,7 @@ import { FIN73040Data, FIN73040Option, FIN73040Query } from './fin73040.model';
     TranslateModule,
     MenubarComponent,
     ButtonComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     DropdownTableComponent,
     InputTextComponent,

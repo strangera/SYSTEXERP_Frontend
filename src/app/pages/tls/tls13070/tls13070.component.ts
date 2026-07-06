@@ -8,7 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { VendorNoMultiSelectComponent } from '@shared/biz-components/vendor-no-multi-select/vendor-no-multi-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonYNComponent } from "@shared/componentkit/radiobutton-yn/radiobutton-yn.component";
 import { AccordionModule } from 'primeng/accordion';
@@ -30,7 +30,7 @@ import { Tls13070TableComponent } from './tls13070-table/tls13070-table.componen
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberRangeComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
     AsyncPipe,

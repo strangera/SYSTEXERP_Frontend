@@ -552,10 +552,14 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       const netVal = Math.round(Number(value) || 0);
 
       if (taxType === '1') {
-        const taxVal = Math.round(netVal * 0.05);
-        const totalVal = netVal + taxVal;
-        taxCtrl.setValue(taxVal, { emitEvent: false });
-        saleAmtCtrl.setValue(totalVal, { emitEvent: false });
+        const currentSaleAmt = saleAmtCtrl.value;
+        if (currentSaleAmt !== null && currentSaleAmt !== undefined && String(currentSaleAmt) !== '') {
+          taxCtrl.setValue(Math.round(Number(currentSaleAmt)) - netVal, { emitEvent: false });
+        } else {
+          const taxVal = Math.round(netVal * 0.05);
+          taxCtrl.setValue(taxVal, { emitEvent: false });
+          saleAmtCtrl.setValue(netVal + taxVal, { emitEvent: false });
+        }
       } else if (taxType === '0') {
         taxCtrl.setValue(0, { emitEvent: false });
         saleAmtCtrl.setValue(netVal, { emitEvent: false });
@@ -771,11 +775,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
    */
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
+      this.dataForm.disable({ emitEvent: false });
       return;
     }
 
-    this.dataForm.enable();
+    this.dataForm.enable({ emitEvent: false });
     this.dataForm.controls.mid.disable({ emitEvent: false });
     this.dataForm.controls.SYS_StoreNo.disable({ emitEvent: false });
     this.dataForm.controls.ECR_No.disable({ emitEvent: false });

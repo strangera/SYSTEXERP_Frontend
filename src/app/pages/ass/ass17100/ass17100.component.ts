@@ -9,7 +9,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -34,7 +34,7 @@ import { QueryASS17100Request, QueryASS17100Response } from './ass17100.model';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
     TableReportComponent,

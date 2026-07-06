@@ -10,7 +10,7 @@ import { ExportLabelService, IExportLabelRequest } from '@service/utility/export
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -43,7 +43,7 @@ import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.mo
     InputTextComponent,
     DropdownComponent,
     MultiSelectComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     CheckboxModule,
     TranslateModule,
     AsyncPipe,

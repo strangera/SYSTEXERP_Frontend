@@ -21,7 +21,7 @@ import { UserCodeService } from '../../../service/system/user-code.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -39,7 +39,7 @@ import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sy
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     NgIf,
     CalendarComponent,
     TranslateModule,

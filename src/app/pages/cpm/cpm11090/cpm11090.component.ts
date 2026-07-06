@@ -7,7 +7,7 @@ import { Cpm11090Service, QueryCPM11090Request, QueryCPM11090Response } from '@s
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -17,7 +17,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-cpm11090',
   standalone: true,
-  imports: [CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TranslateModule],
+  imports: [CalendarRangeComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TranslateModule],
   templateUrl: './cpm11090.component.html'
 })
 export class Cpm11090Component extends BasicQueryPageComponent<QueryCPM11090Response> implements OnInit {

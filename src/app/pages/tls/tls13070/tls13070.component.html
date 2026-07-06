@@ -70,16 +70,16 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="回函日期" [startControl]="queryForm.controls.feedback_date_Start"
-              [endControl]="queryForm.controls.feedback_date_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="回函日期" [startControl]="queryForm.controls.feedback_date_Start"
+              [endControl]="queryForm.controls.feedback_date_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="回函期限" [startControl]="queryForm.controls.due_date_Start"
-              [endControl]="queryForm.controls.due_date_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="回函期限" [startControl]="queryForm.controls.due_date_Start"
+              [endControl]="queryForm.controls.due_date_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="洽談日期" [startControl]="queryForm.controls.contact_Date_Start"
-              [endControl]="queryForm.controls.contact_Date_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="洽談日期" [startControl]="queryForm.controls.contact_Date_Start"
+              [endControl]="queryForm.controls.contact_Date_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="營業型態" controlName="paper_type_List" [options]="paper_typeListOptions"
@@ -87,22 +87,20 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="契約起始日" [startControl]="queryForm.controls.tlt_bdate_Start"
-              [endControl]="queryForm.controls.tlt_bdate_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="契約起始日" [startControl]="queryForm.controls.tlt_bdate_Start"
+              [endControl]="queryForm.controls.tlt_bdate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="契約截止日" [startControl]="queryForm.controls.tlt_edate_Start"
-              [endControl]="queryForm.controls.tlt_edate_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="契約截止日" [startControl]="queryForm.controls.tlt_edate_Start"
+              [endControl]="queryForm.controls.tlt_edate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="營運起始日" [startControl]="queryForm.controls.tlt_contract_bdate_Start"
-              [endControl]="queryForm.controls.tlt_contract_bdate_End"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="營運起始日" [startControl]="queryForm.controls.tlt_contract_bdate_Start"
+              [endControl]="queryForm.controls.tlt_contract_bdate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="營運截止日" [startControl]="queryForm.controls.tlt_contract_edate_Start"
-              [endControl]="queryForm.controls.tlt_contract_edate_End"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="營運截止日" [startControl]="queryForm.controls.tlt_contract_edate_Start"
+              [endControl]="queryForm.controls.tlt_contract_edate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="tlt_kind_List" [options]="tlt_kindListOptions" optionLabel="label"

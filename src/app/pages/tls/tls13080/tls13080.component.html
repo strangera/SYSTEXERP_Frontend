@@ -40,9 +40,9 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="大分類" controlName="bus_type"
             [options]="bus_typeOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約起始日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="合約起始日期"
             [startControl]="queryForm.controls.tlt_bdate_Start" [endControl]="queryForm.controls.tlt_bdate_End"
-            [submitted]="submitted"></app-calendar-range-quick>
+            [submitted]="submitted"></app-calendar-range>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="抽成別" controlName="tlt_term_type"
             [options]="tlt_term_typeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.tlt_term_type" [submitted]="submitted"></app-dropdown>

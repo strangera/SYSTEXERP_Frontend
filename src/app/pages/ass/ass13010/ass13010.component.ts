@@ -19,7 +19,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -32,7 +32,7 @@ import { DeleteASS13010Request, ExportPDFASS13010Request, QueryASS13010Request, 
   templateUrl: './ass13010.component.html',
   styleUrl: './ass13010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, ButtonModule, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, ButtonModule, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
 })
 export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Response> implements OnInit {
   private validationService = inject(ValidationService);

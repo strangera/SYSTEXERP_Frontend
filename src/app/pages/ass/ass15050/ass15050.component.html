@@ -4,56 +4,29 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      [header]="'query-conditions' | translate"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="會計科目代碼"
-            controlName="STYPE_D"
-            [options]="accountOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.STYPE_D"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="會計科目代碼" controlName="STYPE_D" [options]="accountOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.STYPE_D"
+            [submitted]="submitted"></app-dropdown>
 
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-5"
-            label="折舊年限"
-            [view]="'month'"
-            [dateFormat]="'yy/mm'"
-            [startControl]="queryForm.controls.DEPRE_YM_S"
-            [endControl]="queryForm.controls.DEPRE_YM_E"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-calendar-range class="col-12 md:col-6 lg:col-5" label="折舊年限" [view]="'month'" [dateFormat]="'yy/mm'"
+            [startControl]="queryForm.controls.DEPRE_YM_S" [endControl]="queryForm.controls.DEPRE_YM_E"
+            [submitted]="submitted"></app-calendar-range>
 
-          <app-radiobutton
-            class="col-12 md:col-6 lg:col-4"
-            label="報表型式"
-            groupname="ASS15050_ReportType"
-            [control]="queryForm.controls.ReportType"
-            [options]="reportTypeOptions"
-            [submitted]="submitted"
-          ></app-radiobutton>
+          <app-radiobutton class="col-12 md:col-6 lg:col-4" label="報表型式" groupname="ASS15050_ReportType"
+            [control]="queryForm.controls.ReportType" [options]="reportTypeOptions"
+            [submitted]="submitted"></app-radiobutton>
 
           <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
-            <app-checkbox
-              [label]="'顯示折舊金額為 0 之明細'"
-              [control]="queryForm.controls.ShowZero"
-              [submitted]="submitted"
-            ></app-checkbox>
+            <app-checkbox [label]="'顯示折舊金額為 0 之明細'" [control]="queryForm.controls.ShowZero"
+              [submitted]="submitted"></app-checkbox>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -64,31 +37,14 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      tableKey="ASS15050_Data"
-      [data]="data"
-      [columns]="columns"
-      [totalRecords]="totalRecords"
-      dataKey="ROW_UID"
-      [loading]="loading"
-      [lazy]="true"
-      [showSort]="false"
-      [showManage]="false"
-      [showDelete]="false"
-      [footerData]="footerData"
-      [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryASS15050ForReport"
-      (dataChange)="onTableDataChange($event)"
-    >
+    <app-table-report tableKey="ASS15050_Data" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+      dataKey="ROW_UID" [loading]="loading" [lazy]="true" [showSort]="false" [showManage]="false" [showDelete]="false"
+      [footerData]="footerData" [lastQueryBody]="lastQueryBody" [queryFunction]="queryASS15050ForReport"
+      (dataChange)="onTableDataChange($event)">
       <header>
         <div class="flex justify-content-end gap-2">
-          <p-button
-            label="匯出折舊攤提報表"
-            icon="pi pi-file-pdf"
-            (click)="onExportPdf()"
-            [disabled]="loading || exportLoading || data.length === 0"
-            [loading]="exportLoading"
-          ></p-button>
+          <p-button label="匯出折舊攤提報表" icon="pi pi-file-pdf" (click)="onExportPdf()"
+            [disabled]="loading || exportLoading || data.length === 0" [loading]="exportLoading"></p-button>
         </div>
       </header>
     </app-table-report>

@@ -8,7 +8,7 @@ import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, T
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -41,7 +41,7 @@ import { Tls31020CruComponent } from './tls31020-cru/tls31020-cru.component';
     ReactiveFormsModule,
     CommonModule,
     CalendarComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,

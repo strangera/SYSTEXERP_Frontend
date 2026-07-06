@@ -7,11 +7,9 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -28,12 +26,10 @@ import { FIN73010Service } from './../../../service/api/fin/fin73010.service';
     ButtonComponent,
     ButtonModule,
     AccordionModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     DropdownComponent,
-    TableComponent,
     TableReportComponent,
     TranslateModule]
 

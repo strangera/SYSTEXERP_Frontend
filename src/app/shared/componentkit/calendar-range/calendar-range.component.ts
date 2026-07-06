@@ -5,8 +5,8 @@ import { CalendarModule } from 'primeng/calendar';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from '../calendar-range-quick/calendar-range-quick.model';
 import { CalendarComponent } from '../calendar/calendar.component';
+import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range.model';
 
 @Component({
   selector: 'app-calendar-range',
@@ -41,6 +41,9 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() endMinDate: Date | undefined | null = null;
   @Input() endMaxDate: Date | undefined | null = null;
   @Input() disabled = false;  // ← 新增
+  @Input() showTime = false;
+  @Input() view: 'date' | 'month' | 'year' = 'date';
+  @Input() dateFormat: string | undefined = 'yy/mm/dd';
   // 自訂義
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';  // 觸發事件
   @Output() startDateChange = new EventEmitter<any>();

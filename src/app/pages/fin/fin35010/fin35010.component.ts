@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN35010QueryRequest, FIN35010Response, Fin35010Service } from '@service/api/fin/fin35010.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
@@ -37,7 +37,7 @@ import { UpdateType } from './fin35010.model';
     DropdownComponent,
     InputTextComponent,
     TranslateModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
   ],
 })
 export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response> implements OnInit {

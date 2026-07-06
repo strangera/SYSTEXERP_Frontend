@@ -13,7 +13,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -39,7 +39,7 @@ import { distinctUntilChanged, finalize } from 'rxjs';
     ReactiveFormsModule,
     DropdownComponent,
     InputTextRangeComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TableReportComponent,
     TranslateModule,
@@ -48,8 +48,7 @@ import { distinctUntilChanged, finalize } from 'rxjs';
 })
 export class ASS15010Component
   extends BasicQueryPageComponent<QueryASS15010Response>
-  implements OnInit
-{
+  implements OnInit {
   readonly queryForm = this.formBuilder.nonNullable.group({
     depreYn: [null as string | null],
     goodsId: [null as string | null],
@@ -181,11 +180,11 @@ export class ASS15010Component
           .queryFaClass2({ B_CLASS_ID: bForSmall, M_CLASS_ID: mClassId })
           .pipe(untilDestroyed(this))
           .subscribe((options) => {
-          this.smallClassOptions = (options ?? []).map((item) => ({
-            value: String(item.value),
-            label: item.label,
-          }));
-        });
+            this.smallClassOptions = (options ?? []).map((item) => ({
+              value: String(item.value),
+              label: item.label,
+            }));
+          });
       });
 
     const initialBClassId = bCtrl.value;
@@ -203,11 +202,11 @@ export class ASS15010Component
         .queryFaClass2({ B_CLASS_ID: initialBClassId, M_CLASS_ID: initialMClassId })
         .pipe(untilDestroyed(this))
         .subscribe((options) => {
-        this.smallClassOptions = (options ?? []).map((item) => ({
-          value: String(item.value),
-          label: item.label,
-        }));
-      });
+          this.smallClassOptions = (options ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        });
     }
   }
 

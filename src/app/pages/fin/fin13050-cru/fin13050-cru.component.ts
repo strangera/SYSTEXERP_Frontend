@@ -405,10 +405,10 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     const alwaysDisabled = ['id', 'PUR_VenName', 'PUR_Tax'];
 
     if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
+      this.dataForm.disable({ emitEvent: false });
     } else {
-      this.dataForm.enable();
-      alwaysDisabled.forEach((name) => this.dataForm.get(name)?.disable());
+      this.dataForm.enable({ emitEvent: false });
+      alwaysDisabled.forEach((name) => this.dataForm.get(name)?.disable({ emitEvent: false }));
     }
   }
 
@@ -667,12 +667,16 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       const rawNet = Number(value);
       if (!isNaN(rawNet)) {
         const netInt = this.roundToInt(rawNet);
-        const taxInt = this.roundToInt(netInt * 0.05);
-        const totalInt = this.roundToInt(netInt + taxInt);
-
+        const currentAmt = amtControl.value;
+        if (currentAmt !== null && currentAmt !== undefined && String(currentAmt) !== '') {
+          const totalInt = this.roundToInt(Number(currentAmt));
+          taxControl.setValue(totalInt - netInt, { emitEvent: false });
+        } else {
+          const taxInt = this.roundToInt(netInt * 0.05);
+          taxControl.setValue(taxInt, { emitEvent: false });
+          amtControl.setValue(this.roundToInt(netInt + taxInt), { emitEvent: false });
+        }
         netControl.setValue(netInt, { emitEvent: false });
-        taxControl.setValue(taxInt, { emitEvent: false });
-        amtControl.setValue(totalInt, { emitEvent: false });
       }
 
       updatingFromNet = false;

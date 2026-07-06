@@ -7,7 +7,6 @@ import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { TLS32050Request, TLS32050Response, TLS32050Service } from '@service/api/tls/tls32050.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -24,8 +23,8 @@ import { yesterday } from 'src/app/shared/models/system/query-form.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 
 @Component({
   selector: 'app-tls32050',
@@ -39,7 +38,7 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
     CommonModule,
     CalendarComponent,
     CalendarRangeComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,

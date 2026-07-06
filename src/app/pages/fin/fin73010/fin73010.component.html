@@ -3,81 +3,31 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="零用金單號"
-            controlName="PCS_No"
-            [options]="PCS_No_Options"
-            optionLabel="PCS_No"
-            optionValue="PCS_No"
-            [control]="queryForm.controls.PCS_No"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="申請日期"
-            [startControl]="queryForm.controls.DateFrom"
-            [endControl]="queryForm.controls.DateTo"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="保管單位"
-            controlName="Keep_OrgID"
-            [options]="Keep_OrgID_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="queryForm.controls.Keep_OrgID"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="零用金單號" controlName="PCS_No" [options]="PCS_No_Options"
+            optionLabel="PCS_No" optionValue="PCS_No" [control]="queryForm.controls.PCS_No"
+            [submitted]="submitted"></app-dropdown>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="申請日期" [startControl]="queryForm.controls.DateFrom"
+            [endControl]="queryForm.controls.DateTo" [submitted]="submitted"></app-calendar-range>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管單位" controlName="Keep_OrgID"
+            [options]="Keep_OrgID_Options" optionLabel="Label" optionValue="No"
+            [control]="queryForm.controls.Keep_OrgID" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="零用金申請人"
-            controlName="PCS_UsrNo"
-            [options]="UsrNo_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="queryForm.controls.PCS_UsrNo"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="零用金保管人"
-            controlName="Keep_UsrNo"
-            [options]="UsrNo_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="queryForm.controls.Keep_UsrNo"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="狀態"
-            controlName="PCS_Status"
-            [options]="PCS_Status_Options"
-            optionLabel="Name"
-            optionValue="No"
-            [control]="queryForm.controls.PCS_Status"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="零用金申請人" controlName="PCS_UsrNo"
+            [options]="UsrNo_Options" optionLabel="Label" optionValue="No" [control]="queryForm.controls.PCS_UsrNo"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="零用金保管人" controlName="Keep_UsrNo"
+            [options]="UsrNo_Options" optionLabel="Label" optionValue="No" [control]="queryForm.controls.Keep_UsrNo"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀態" controlName="PCS_Status"
+            [options]="PCS_Status_Options" optionLabel="Name" optionValue="No" [control]="queryForm.controls.PCS_Status"
+            [submitted]="submitted"></app-dropdown>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -86,46 +36,17 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    [data]="data"
-    [dataKey]="'SeqNo'"
-    [tableKey]="'FIN73010_Data'"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showSort]="false"
-    [showReorder]="false"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [groupRowsBy]="'PCS_No'"
-    [showFooterTotal]="false"
-    [footerData]="footerData"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [lazy]="true"
-    [loading]="loading"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryFunction"
-  >
+  <app-table-report [data]="data" [dataKey]="'SeqNo'" [tableKey]="'FIN73010_Data'" [columns]="columns"
+    [totalRecords]="totalRecords" [showCheckBox]="false" [showManage]="false" [showSort]="false" [showReorder]="false"
+    [showReportMode]="false" [showDelete]="false" [groupRowsBy]="'PCS_No'" [showFooterTotal]="false"
+    [footerData]="footerData" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [lazy]="true"
+    [loading]="loading" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="零用金支付表.PDF"
-          icon="pi pi-file"
-          (click)="printPDF(true)"
-          [disabled]="data.length === 0"
-          [loading]="btn_pdf_Loading"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="零用金支付表.XLSX"
-          icon="pi pi-file"
-          (click)="printPDF(false)"
-          [disabled]="data.length === 0"
-          [loading]="btn_excel_Loading"
-        ></p-button>
+        <p-button styleClass="p-2" label="零用金支付表.PDF" icon="pi pi-file" (click)="printPDF(true)"
+          [disabled]="data.length === 0" [loading]="btn_pdf_Loading"></p-button>
+        <p-button styleClass="p-2" label="零用金支付表.XLSX" icon="pi pi-file" (click)="printPDF(false)"
+          [disabled]="data.length === 0" [loading]="btn_excel_Loading"></p-button>
       </div>
     </header>
   </app-table-report>

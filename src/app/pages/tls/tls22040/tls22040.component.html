@@ -9,13 +9,12 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
+            <app-calendar-range label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
               [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="發票類型" controlName="MIG_TypeList" [options]="migTypeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.MIG_TypeList"
-              [submitted]="submitted" />
+            <app-multi-select label="發票類型" controlName="MIG_TypeList" [options]="migTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.MIG_TypeList" [submitted]="submitted" />
           </div>
         </div>
 
@@ -31,6 +30,6 @@
 <div class="card">
   <app-table-report tableKey="TLS22040" dataKey="RowKey" [data]="data" [columns]="columns" [showCheckBox]="false"
     [totalRecords]="totalRecords" [loading]="loading" [columnGroup]="columnGroup4" [showManage]="true"
-    [showDelete]="false" [showDetail]="false" [showEdit]="false" [addButton]="addButton"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="tableQueryFunction"></app-table-report>
+    [showDelete]="false" [showDetail]="false" [showEdit]="false" [addButton]="addButton" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tableQueryFunction"></app-table-report>
 </div>

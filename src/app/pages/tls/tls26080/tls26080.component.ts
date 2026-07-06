@@ -6,7 +6,7 @@ import { TLS26080Service } from '@service/api/tls/tls26080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -30,7 +30,7 @@ import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls2608
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     InputTextComponent,
     MenubarComponent,
     TableReportComponent,

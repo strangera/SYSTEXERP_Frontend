@@ -4,72 +4,36 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text
-              label="調撥單號"
-              controlName="Tran_No"
-              [control]="queryForm.controls.Tran_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="調撥單號" controlName="Tran_No" [control]="queryForm.controls.Tran_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="建立日期"
-              controlName="creationDate"
-              [startControl]="queryForm.controls.CRT_Date_Start"
-              [endControl]="queryForm.controls.CRT_Date_End"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="建立日期" controlName="creationDate"
+              [startControl]="queryForm.controls.CRT_Date_Start" [endControl]="queryForm.controls.CRT_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="轉帳日期"
-              controlName="transferdate"
-              [startControl]="queryForm.controls.Tran_Date_Start"
-              [endControl]="queryForm.controls.Tran_Date_End"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="轉帳日期" controlName="transferdate"
+              [startControl]="queryForm.controls.Tran_Date_Start" [endControl]="queryForm.controls.Tran_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="轉入公司銀行科目代號"
-              controlName="BNK_No_In"
-              [options]="BNK_NoOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.BNK_No_In"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="轉入公司銀行科目代號" controlName="BNK_No_In" [options]="BNK_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.BNK_No_In"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="轉出公司銀行科目代號"
-              controlName="BNK_No_Out"
-              [options]="BNK_NoOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.BNK_No_Out"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="轉出公司銀行科目代號" controlName="BNK_No_Out" [options]="BNK_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.BNK_No_Out"
+              [submitted]="submitted"></app-dropdown>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -78,23 +42,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    [exportContext]="{ apiUrl: 'queryFIN62010' }"
-    tableKey="fin62010query"
-    dataKey="ID"
-    [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords"
-    [data]="data"
-    [showCheckBox]="true"
-    (edit)="onEdit($event)"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (detail)="onDetail($event)"
-    [columns]="columns"
-    (delete)="onDelete($event)"
-    [isRowSelectable]="isRowSelectable"
-    [editDisabled]="editDisabled"
-    [queryFunction]="fin62010Service.queryFIN62010.bind(fin62010Service)"
-    [loading]="loading"
-  ></app-table-report>
+  <app-table-report [exportContext]="{ apiUrl: 'queryFIN62010' }" tableKey="fin62010query" dataKey="ID"
+    [lastQueryBody]="lastQueryBody" [totalRecords]="totalRecords" [data]="data" [showCheckBox]="true"
+    (edit)="onEdit($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (detail)="onDetail($event)" [columns]="columns" (delete)="onDelete($event)" [isRowSelectable]="isRowSelectable"
+    [editDisabled]="editDisabled" [queryFunction]="fin62010Service.queryFIN62010.bind(fin62010Service)"
+    [loading]="loading"></app-table-report>
 </div>

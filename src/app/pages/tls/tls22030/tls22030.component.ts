@@ -15,7 +15,7 @@ import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -24,7 +24,7 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
   selector: 'app-tls22030',
   templateUrl: './tls22030.component.html',
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableReportComponent, DropdownComponent, TranslateModule],
+  imports: [AsyncPipe, MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableReportComponent, DropdownComponent, TranslateModule],
   styles: [
     `
     :host ::ng-deep {

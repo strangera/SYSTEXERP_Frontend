@@ -19,11 +19,10 @@ import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
@@ -42,7 +41,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     ReactiveFormsModule,
     MultiSelectComponent,
     MultiLocationFilterComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TableReportComponent,
     TranslateModule,

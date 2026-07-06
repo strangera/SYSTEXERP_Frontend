@@ -15,7 +15,7 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { TLS2F010TableReportComponent } from '../tls2f010-cru/tls2f010-table-report.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
@@ -41,7 +41,7 @@ interface SalesRecord {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownRangeComponent,
     ButtonComponent,
     TranslateModule,

@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -41,7 +41,7 @@ import {
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     CalendarComponent,
     ButtonComponent,
     TableReportComponent,
@@ -50,8 +50,7 @@ import {
 })
 export class ASS16050Component
   extends BasicQueryPageComponent<Ass16050MasterDisplayRow>
-  implements OnInit
-{
+  implements OnInit {
   queryForm = this.formBuilder.group({
     MTAPPLY_ID: [null as string | null, [Validators.maxLength(15)]],
     EMP_ID: [null as string | null],

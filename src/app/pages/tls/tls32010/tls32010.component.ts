@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -30,7 +29,7 @@ import { formatAmount, formatAmountCN } from '../../../shared/componentkit/table
   selector: 'app-tls32010',
   templateUrl: './tls32010.component.html',
   standalone: true,
-  imports: [CategorySelectComponent, ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CheckboxModule,]
+  imports: [CategorySelectComponent, ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeComponent, CheckboxModule,]
 })
 export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> implements OnInit {
   @ViewChild('dt') tableReport!: TableReportComponent;

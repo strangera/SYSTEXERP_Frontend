@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
 import { SYS0760Service, userLoginErrorRequest, userLoginErrorResponse } from '@service/api/sys/sys0760.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -26,7 +26,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     ButtonComponent,
     TableReportComponent,
     TranslateModule,

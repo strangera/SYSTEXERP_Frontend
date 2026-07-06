@@ -18,7 +18,7 @@ import { finalize, map } from 'rxjs/operators';
 import { Cpm13020Service, ECRDropDownOption, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
@@ -33,7 +33,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     ReactiveFormsModule,
     MenubarComponent,
     AccordionModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
     RadioButtonModule,
@@ -260,24 +260,24 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
 
       const val: any = this.queryForm.getRawValue();
       const payNo: string[] | undefined =
-  Array.isArray(val?.PAY_No) && val.PAY_No.length > 0
-    ? val.PAY_No
-    : undefined;
+        Array.isArray(val?.PAY_No) && val.PAY_No.length > 0
+          ? val.PAY_No
+          : undefined;
 
       const ecrNo: string[] | undefined =
         Array.isArray(val?.ECR_No) && val.ECR_No.length > 0 ? val.ECR_No : undefined;
 
       const sortBy = this.normalizeSortMeta(val?.SortBy?.length ? val.SortBy : this._currentSortBy);
 
-    const payload: QueryCPM13020Request = {
-  TXN_BDate: this.toDateOnly(val?.TXN_BDate),
-  TXN_EDate: this.toDateOnly(val?.TXN_EDate),
-  PAY_No: payNo,
-  ECR_No: ecrNo,
-  pageIndex: Number(val?.pageIndex ?? 1),
-  pageSize: Number(val?.pageSize ?? 30),
-  SortBy: sortBy,
-};
+      const payload: QueryCPM13020Request = {
+        TXN_BDate: this.toDateOnly(val?.TXN_BDate),
+        TXN_EDate: this.toDateOnly(val?.TXN_EDate),
+        PAY_No: payNo,
+        ECR_No: ecrNo,
+        pageIndex: Number(val?.pageIndex ?? 1),
+        pageSize: Number(val?.pageSize ?? 30),
+        SortBy: sortBy,
+      };
 
       this.historyRequestBody = { ...payload };
       this.lastQueryBody = { ...payload };
@@ -329,7 +329,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     const rawPay = body?.PAY_No ?? this.queryForm.value?.PAY_No;
 
     const payNo: string[] | undefined =
-  Array.isArray(rawPay) && rawPay.length > 0 ? rawPay : undefined;
+      Array.isArray(rawPay) && rawPay.length > 0 ? rawPay : undefined;
     const sortBy = this.normalizeSortMeta(
       body?.SortBy ?? this.queryForm.value?.SortBy ?? this._currentSortBy
     );
@@ -360,7 +360,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     const rawPay = body?.PAY_No ?? this.queryForm.value?.PAY_No;
 
     const payNo: string[] | undefined =
-  Array.isArray(rawPay) && rawPay.length > 0 ? rawPay : undefined;
+      Array.isArray(rawPay) && rawPay.length > 0 ? rawPay : undefined;
 
     // ✅ 如果 body.SortBy 沒帶，就用 POS 預設排序
     const baseSort =

@@ -31,14 +31,14 @@
               optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="申請日期" startControlName="APPLY_Date_Start"
+            <app-calendar-range calendarType="dateRange" label="申請日期" startControlName="APPLY_Date_Start"
               endControlName="APPLY_Date_End" [startControl]="queryForm.controls.APPLY_Date_Start"
-              [endControl]="queryForm.controls.APPLY_Date_End" [submitted]="submitted"></app-calendar-range-quick>
+              [endControl]="queryForm.controls.APPLY_Date_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="審核日期" startControlName="APRV_Date_Start"
+            <app-calendar-range calendarType="dateRange" label="審核日期" startControlName="APRV_Date_Start"
               endControlName="APRV_Date_End" [startControl]="queryForm.controls.APRV_Date_Start"
-              [endControl]="queryForm.controls.APRV_Date_End" [submitted]="submitted"></app-calendar-range-quick>
+              [endControl]="queryForm.controls.APRV_Date_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="倉別" controlName="HOS_NoList" [options]="warehouseOptions | async"

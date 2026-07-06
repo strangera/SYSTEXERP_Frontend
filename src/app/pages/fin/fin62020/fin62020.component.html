@@ -3,83 +3,40 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text
-              label="調撥單號"
-              controlName="Tran_No"
-              [control]="queryForm.controls.Tran_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="調撥單號" controlName="Tran_No" [control]="queryForm.controls.Tran_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="建立日期"
-              controlName="creationDate"
-              [startControl]="queryForm.controls.CRT_Date_Start"
-              [endControl]="queryForm.controls.CRT_Date_End"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="建立日期" controlName="creationDate"
+              [startControl]="queryForm.controls.CRT_Date_Start" [endControl]="queryForm.controls.CRT_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="轉帳日期"
-              controlName="transferdate"
-              [startControl]="queryForm.controls.Tran_Date_Start"
-              [endControl]="queryForm.controls.Tran_Date_End"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range calendarType="dateRange" label="轉帳日期" controlName="transferdate"
+              [startControl]="queryForm.controls.Tran_Date_Start" [endControl]="queryForm.controls.Tran_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="轉入公司銀行科目代號"
-              controlName="BNK_No_In"
-              [options]="BNK_NoOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.BNK_No_In"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="轉入公司銀行科目代號" controlName="BNK_No_In" [options]="BNK_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.BNK_No_In"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="轉出公司銀行科目代號"
-              controlName="BNK_No_Out"
-              [options]="BNK_NoOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.BNK_No_Out"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="轉出公司銀行科目代號" controlName="BNK_No_Out" [options]="BNK_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.BNK_No_Out"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否列印備註"
-              controlName="IsLoadRemark"
-              [options]="ifOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.IsLoadRemark"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="是否列印備註" controlName="IsLoadRemark" [options]="ifOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.IsLoadRemark" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -88,44 +45,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    [exportContext]="{
+  <app-table-report [exportContext]="{
       apiUrl: 'queryFIN62020',
       printRemark: lastQueryBody?.IsLoadRemark || false,
-    }"
-    tableKey="fin62020query"
-    [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords"
-    [data]="data"
-    [columns]="columns"
-    [showManage]="false"
-    [showDelete]="false"
-    [queryFunction]="fin62020Service.queryFIN62020.bind(fin62020Service)"
-    [loading]="loading"
-    groupRowsBy="Tran_Date"
-    [footerData]="footerData"
-    [showReportMode]="false"
-  >
+    }" tableKey="fin62020query" [lastQueryBody]="lastQueryBody" [totalRecords]="totalRecords" [data]="data"
+    [columns]="columns" [showManage]="false" [showDelete]="false"
+    [queryFunction]="fin62020Service.queryFIN62020.bind(fin62020Service)" [loading]="loading" groupRowsBy="Tran_Date"
+    [footerData]="footerData" [showReportMode]="false">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="產出銀行資金調撥單.PDF"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportPDF()"
-          [disabled]="data.length === 0 || !this.hasPermission(Actions.Print)"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="產出銀行資金調撥單.XLSX"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportXLSX()"
-          [disabled]="
+        <p-button styleClass="p-2" label="產出銀行資金調撥單.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportPDF()" [disabled]="data.length === 0 || !this.hasPermission(Actions.Print)"></p-button>
+        <p-button styleClass="p-2" label="產出銀行資金調撥單.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="
             data.length === 0 || !this.hasPermission(Actions.ExportExcel)
-          "
-        ></p-button>
+          "></p-button>
       </div>
     </header>
   </app-table-report>

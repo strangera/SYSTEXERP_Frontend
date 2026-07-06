@@ -8,8 +8,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="退票日" [startControl]="queryForm.controls.BackDateFrom"
-              [endControl]="queryForm.controls.BackDateTo" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range label="退票日" [startControl]="queryForm.controls.BackDateFrom"
+              [endControl]="queryForm.controls.BackDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="票據號碼" controlName="ChkNo" [control]="queryForm.controls.ChkNo"

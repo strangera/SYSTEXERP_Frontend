@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin63050ListData, Fin63050Service, QueryFin63050Request } from '@service/api/fin/fin63050.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -26,7 +26,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-fin63050',
   templateUrl: './fin63050.component.html',
   standalone: true,
-  imports: [CheckboxModule, CalendarComponent, DropdownComponent, DialogComponent, ButtonModule, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [CheckboxModule, CalendarComponent, DropdownComponent, DialogComponent, ButtonModule, CalendarRangeComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData> implements OnInit {
   queryForm = this.formBuilder.group({

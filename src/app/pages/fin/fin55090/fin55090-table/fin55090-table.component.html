@@ -58,8 +58,16 @@
               </ng-template>
             </ng-container>
 
-            <ng-container *ngSwitchCase="'Cur_LTYPE_SUM'"></ng-container>
-            <ng-container *ngSwitchCase="'YTD_LTYPE_SUM'"></ng-container>
+            <ng-container *ngSwitchCase="'Cur_LTYPE_SUM'">
+              <ng-container *ngIf="!rowData.STYPE_ID">
+                {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+              </ng-container>
+            </ng-container>
+            <ng-container *ngSwitchCase="'YTD_LTYPE_SUM'">
+              <ng-container *ngIf="!rowData.STYPE_ID">
+                {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+              </ng-container>
+            </ng-container>
 
             <ng-container *ngSwitchDefault>
               {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}

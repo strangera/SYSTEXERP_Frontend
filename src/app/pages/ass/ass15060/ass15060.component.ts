@@ -7,7 +7,7 @@ import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -58,7 +58,7 @@ export interface ass15060 {
     ButtonModule,
     AccordionModule,
     CommonModule,
-    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,

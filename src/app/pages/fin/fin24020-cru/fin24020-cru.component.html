@@ -69,9 +69,9 @@
       [control]="dialogQueryForm.controls.VEN_No"></app-input-text>
     <app-input-text class="col-12 md:col-4" label="廠客名稱" controlName="VEN_Name"
       [control]="dialogQueryForm.controls.VEN_Name"></app-input-text>
-    <app-calendar-range-quick class="col-12 md:col-4" calendarType="dateRange" label="立帳日期"
+    <app-calendar-range class="col-12 md:col-4" calendarType="dateRange" label="立帳日期"
       [startControl]="dialogQueryForm.controls.ACP_Date_From"
-      [endControl]="dialogQueryForm.controls.ACP_Date_To"></app-calendar-range-quick>
+      [endControl]="dialogQueryForm.controls.ACP_Date_To"></app-calendar-range>
 
     <div class="col-12 flex justify-content-end gap-2 border-top-1 surface-border pt-2">
       <app-button btnType="query" (click)="onApsDialogSearch()"></app-button>

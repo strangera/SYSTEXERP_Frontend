@@ -9,7 +9,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from "@shared/componentkit/input-number-range/input-number-range.component";
@@ -47,7 +47,7 @@ import {
     TableReportComponent,
     TranslateModule,
     InputNumberRangeComponent,
-    CalendarRangeQuickComponent
+    CalendarRangeComponent
   ],
 })
 export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow> implements OnInit {

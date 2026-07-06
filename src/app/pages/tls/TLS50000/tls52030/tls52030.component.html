@@ -41,17 +41,17 @@
           <app-dropdown class="col-12 md:col-4 lg:col-3" label="申請人" controlName="ODM_USR"
             [options]="userOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ODM_USR" [submitted]="submitted"></app-dropdown>
-          <app-calendar-range-quick class="col-12 md:col-8 lg:col-5" calendarType="dateRange" label="申請日期"
+          <app-calendar-range class="col-12 md:col-8 lg:col-5" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
-            [submitted]="submitted"></app-calendar-range-quick>
+            [submitted]="submitted"></app-calendar-range>
           <div class="lg:col-4 hidden lg:block"></div>
 
           <app-dropdown class="col-12 md:col-4 lg:col-3" label="審核人" controlName="APRV_USR"
             [options]="userOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
-          <app-calendar-range-quick class="col-12 md:col-8 lg:col-5" calendarType="dateRange" label="審核日期"
+          <app-calendar-range class="col-12 md:col-8 lg:col-5" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
-            [submitted]="submitted"></app-calendar-range-quick>
+            [submitted]="submitted"></app-calendar-range>
         </div>
 
         <div class="flex justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
