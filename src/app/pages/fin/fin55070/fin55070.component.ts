@@ -62,14 +62,14 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
   };
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'AccNo', header: '科目代號', align: 'left' },
-    { field: 'AccCname', header: '科目名稱', align: 'left' },
-    { field: 'Prior_DAmt', header: '借方金額', groupField: '前期', format: formatAmount, align: 'right' },
-    { field: 'Prior_CAmt', header: '貸方金額', groupField: '前期', format: formatAmount, align: 'right' },
-    { field: 'Curr_DAmt', header: '借方金額', groupField: '本期', format: formatAmount, align: 'right' },
-    { field: 'Curr_CAmt', header: '貸方金額', groupField: '本期', format: formatAmount, align: 'right' },
-    { field: 'Total_DAmt', header: '借方金額', groupField: '累積', format: formatAmount, align: 'right' },
-    { field: 'Total_CAmt', header: '貸方金額', groupField: '累積', format: formatAmount, align: 'right' },
+    { field: 'AccNo', header: '科目代號', align: 'left', width: '110px' },
+    { field: 'AccCname', header: '科目名稱', align: 'left', width: '200px' },
+    { field: 'Prior_DAmt', header: '借方金額', groupField: '前期', format: formatAmount, align: 'right', width: '140px' },
+    { field: 'Prior_CAmt', header: '貸方金額', groupField: '前期', format: formatAmount, align: 'right', width: '140px' },
+    { field: 'Curr_DAmt', header: '借方金額', groupField: '本期', format: formatAmount, align: 'right', width: '140px' },
+    { field: 'Curr_CAmt', header: '貸方金額', groupField: '本期', format: formatAmount, align: 'right', width: '140px' },
+    { field: 'Total_DAmt', header: '借方金額', groupField: '累積', format: formatAmount, align: 'right', width: '140px' },
+    { field: 'Total_CAmt', header: '貸方金額', groupField: '累積', format: formatAmount, align: 'right', width: '140px' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '前期', header: '前期' },

@@ -112,16 +112,14 @@
 
       <ng-container *ngIf="showResultTables">
         <app-tls2f010-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1"
-          [data]="changeEditData" [totalRecords]="changeEditData.length" [loading]="queryLoading" [lazy]="false"
-          [showManage]="false" [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
-          [selectedItems]="selectedMainItems" (selectionChange)="onChangeEditSelection($event)">
+          [data]="changeEditData" [totalRecords]="changeEditData.length" [loading]="queryLoading"
+          [showRadioButton]="true" [selectedItem]="selectedMain" (selectionChange)="onChangeEditSelection($event)">
         </app-tls2f010-table-report>
         <br />
 
         <app-tls2f010-table-report tableKey="TLS2F010SourceInvoice" class="col-12" [columns]="columns2"
-          [data]="sourceInvoiceData" [totalRecords]="sourceInvoiceData.length" [loading]="queryLoading" [lazy]="false"
-          [showManage]="false" [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
-          [footerData]="null" [extraFooterData]="footer2" footerLabel="" [autoHeight]="true" [showFooterTotal]="false">
+          [data]="sourceInvoiceData" [totalRecords]="sourceInvoiceData.length" [loading]="queryLoading"
+          [extraFooterData]="footer2" [autoHeight]="true">
         </app-tls2f010-table-report>
 
         <app-table-edit #detailEdit title="新增單據" tableKey="VEN_No" class="col-12" [columns]="columns3"

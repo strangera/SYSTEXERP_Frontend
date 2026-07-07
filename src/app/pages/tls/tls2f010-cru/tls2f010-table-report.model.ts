@@ -26,12 +26,6 @@ export interface ColumnGroup {
   header: string;
   align?: 'left' | 'center' | 'right';
 }
-export interface AddButton {
-  label: string;
-  icon?: string;
-  action: (rowData: any, event?: Event) => void;
-  disabled?: (rowData: any) => boolean;
-}
 export interface TableQueryPayload {
   data: any;
   mode: 'single' | 'multiple';
@@ -45,18 +39,6 @@ export const formatDate = (dateStr: string) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}/${month}/${day}`;
-};
-export const formatDateTime = (dateStr: string) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
 export const formatYYYYMM = (value: string | Date | null): string => {
   if (value === null || value === undefined || value === '') {
@@ -78,9 +60,6 @@ export const formatAmount = (val: number | string): string => {
   const num = Number(val);
   if (isNaN(num)) return '0';
   return num.toLocaleString();
-};
-export const formatYN = (value: string): string => {
-  return value === 'Y' ? '是' : '否';
 };
 export const formatAmount2 = (val: number | string | null | undefined): string => {
   if (val === null || val === undefined || val === '') {
@@ -106,17 +85,6 @@ export function formatAmountWithDecimals(value: any, decimals = 2): string {
     useGrouping: true,
   }).format(num);
 }
-export const formatYYYYMMDD = (value: string | number | null | undefined): string => {
-  if (!value) return '';
-  const str = String(value).trim();
-  if (str.length === 8) {
-    const year = str.substring(0, 4);
-    const month = str.substring(4, 6);
-    const day = str.substring(6, 8);
-    return `${year}/${month}/${day}`;
-  }
-  return formatDate(str);
-};
 export const expandAnimation =
   trigger('fadeInOut', [
     transition(':enter', [

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, Input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { TLTTALENTActiveContractItem } from '../../../../service/utility/dropdown-api.model';
@@ -41,6 +41,13 @@ export class TltNoPickerComponent {
 
   /** 彈窗寬度（新增頁欄位較多，由外部頁面傳入較寬的值） */
   @Input() dialogWidth = '960px';
+
+  /**
+   * 使用者實際點選的那一整筆合約資料。
+   * 同一專櫃(No)現在可能同時存在「目前生效中」與「尚未生效的新營運區間」多筆合約(以 talent_id 區分)，
+   * 外部頁面應改用這筆資料直接帶入表單欄位，不要再用專櫃代號(No)回頭去 CounterOptions 裡 find(可能挑到錯的那一筆)。
+   */
+  @Output() rowSelect = new EventEmitter<TLTTALENTActiveContractItem>();
 
   /** 下拉資料來源：queryTltTalentActiveContract() 回傳的專櫃合約清單（已全部載入記憶體） */
   private readonly _options = signal<TLTTALENTActiveContractItem[]>([]);
@@ -87,8 +94,9 @@ export class TltNoPickerComponent {
     this.filterText.set((event.target as HTMLInputElement).value);
   }
 
-  /** 點選清單某列：只把專櫃代號(No)寫回 FormControl，不帶名稱 */
+  /** 點選清單某列：把專櫃代號(No)寫回 FormControl(不帶名稱)，同時把整筆資料 emit 出去讓外部精確帶入 */
   selectRow(row: TLTTALENTActiveContractItem): void {
+    this.rowSelect.emit(row);
     this.control.setValue(row.No);
     this.control.markAsDirty();
     this.closeDialog();

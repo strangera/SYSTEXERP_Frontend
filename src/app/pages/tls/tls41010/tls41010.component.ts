@@ -103,6 +103,8 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   dialogOptions: { value: string; label: string }[] = [];
   CounterOptions: TLTTALENTActiveContractItem[] = [];
   LocOptions: IDropdownItem[] = [];
+  /** 使用者在專櫃選擇器彈窗實際點選的那一筆合約(同一專櫃可能同時有生效中/尚未生效多筆)，優先用這筆帶名稱，避免用專櫃代號 find 挑錯 */
+  private selectedCounterRow: TLTTALENTActiveContractItem | null = null;
 
   addButton: AddButton[] = [
     {
@@ -178,9 +180,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       });
   }
 
-  /** 依專櫃代號從 CounterOptions 找出對應名稱，帶入唯讀的 ECR_TLT_Name 欄位 */
+  /** 專櫃選擇器彈窗點選某列：記住這筆(可能是生效中或尚未生效的營運區間)，供 syncTltName 精確帶名稱 */
+  onCounterRowSelect(row: TLTTALENTActiveContractItem): void {
+    this.selectedCounterRow = row;
+  }
+
+  /** 依專櫃代號從 CounterOptions 找出對應名稱，帶入唯讀的 ECR_TLT_Name 欄位；若剛好是使用者彈窗選中的那筆，優先用它(避免同專櫃多筆合約時 find 挑錯) */
   private syncTltName(no: string | null | undefined): void {
-    const matched = this.CounterOptions.find(c => c.No === no);
+    const matched = this.selectedCounterRow?.No === no
+      ? this.selectedCounterRow
+      : this.CounterOptions.find(c => c.No === no);
     this.queryForm.controls.ECR_TLT_Name.setValue(matched?.Name ?? null, { emitEvent: false });
   }
 

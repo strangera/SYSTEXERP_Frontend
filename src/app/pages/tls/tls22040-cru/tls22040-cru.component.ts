@@ -67,10 +67,7 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.dataForm = this.fb.group({});
     this.initializePage('TLS22040', this.dataForm);
-
     const stateData = history.state as any;
-    console.log('CRU 收到的 stateData:', stateData.rowdata.details);
-
     if (stateData.rowdata?.details) {
 
       this.data = stateData.rowdata.details.map((item: any, index: number) => ({
@@ -79,7 +76,6 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
       }));
       this.totalRecords = this.data.length;
     }
-    console.log('CRU data details:', this.data);
   }
   override onCancel(returnValue?: any) {
     const queryPageRoute = `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;

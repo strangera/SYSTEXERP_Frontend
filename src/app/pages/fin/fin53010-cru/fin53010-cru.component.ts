@@ -655,6 +655,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           ?? this.service.usrMap().get(String(v.DetailNo))?.label,
         NoteDesc: v.NoteDesc || this.service.noteDescMap().get(accNo)?.label,
         SerNo: v.SerNo ?? (index + 1) * 10, // 保留 DB 原始 SerNo，缺值才補
+        recKey: v.ACCT_KEY ?? void 0,
       };
     }));
 

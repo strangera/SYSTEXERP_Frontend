@@ -106,15 +106,64 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
 
   ngOnInit(): void {
     this.initializePage('FIN24010', this.dataForm);
-    this.route.queryParams.pipe(untilDestroyed(this)).subscribe(params => {
-      const acpId = params['acpid'];
-      if (acpId) {
-        const body = { ACP_No: params['acpid'] }
-        this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
-          this.dataForm.patchValue(response.Data[0] as any);
-        })
-      }
-    });
+
+    // 路徑一：FIN24010 list → 編輯/檢視，router state 已由 initializePage patchValue，結束
+    if (this.rowdata) return;
+
+    // 路徑二：FIN34030 廠客/付款總表 → 新分頁，使用 localStorage handoff（同 FIN32010 模式）
+    const handoff = this.readHandoffLocal();
+    if (handoff?.arsId) {
+      this.loading = true;
+      this.fin24010Service.queryFIN24010({ ACP_No: handoff.arsId })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe({
+          next: res => {
+            const data = res?.Data?.[0];
+            if (data) {
+              this.dataForm.patchValue(data as any);
+              this.dataForm.disable();
+            } else {
+              this.messageService.warnBubble('查無資料。');
+            }
+            localStorage.removeItem('FIN24010_CRU_HANDOFF');
+          },
+          error: () => {
+            this.messageService.errorBubble('載入應付帳款資料失敗。');
+            localStorage.removeItem('FIN24010_CRU_HANDOFF');
+          }
+        });
+      return;
+    }
+
+    // 路徑三：FIN29120 → 新分頁，使用 query param ?acpId=
+    const acpNoFromQuery: string | undefined = this.route.snapshot.queryParams['acpId'];
+    if (acpNoFromQuery) {
+      this.loading = true;
+      this.fin24010Service.queryFIN24010({ ACP_No: acpNoFromQuery })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe({
+          next: res => {
+            const data = res?.Data?.[0];
+            if (data) {
+              this.dataForm.patchValue(data as any);
+              this.dataForm.disable();
+            } else {
+              this.messageService.warnBubble('查無資料。');
+            }
+          }
+        });
+    }
+  }
+
+  private readHandoffLocal(): { arsId?: string; fromRoute?: string } | null {
+    try {
+      const raw = localStorage.getItem('FIN24010_CRU_HANDOFF');
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      return { arsId: obj?.arsId, fromRoute: obj?.fromRoute };
+    } catch {
+      return null;
+    }
   }
 
   onSubmit(form: FormGroup): void {

@@ -127,7 +127,6 @@
     [showManage]="false"
     [showFilter]="true"
     [showExcel]="false"
-    [queryFunction]="queryFIN34030ForReport"
     [lastQueryBody]="lastQueryBody"
     [showDelete]="false"
     [showReportMode]="false"
@@ -135,6 +134,8 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     (linkClick)="onLinkClick($event)"
+    groupRowsBy="PartyNo"
+    [footerData]="footerData"
   >
     <header>
       <div class="flex justify-content-end gap-2">

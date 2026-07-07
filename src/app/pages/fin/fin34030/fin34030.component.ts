@@ -62,6 +62,7 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: Fin34030Response[] = [];
   lastQueryBody: any = null;
   tableVer = 0;
+  footerData: any = null;
 
   // 欄位定義
   columns: ReportColumn[] = [
@@ -97,21 +98,29 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
       field: 'DocAmount',
       header: '應收(付)立帳金額',
       format: this.moneyFormat.bind(this),
+      isSubTotal: true,
+      align: 'right',
     },
     {
       field: 'PayAmount',
       header: '收(付)款金額',
       format: this.moneyFormat.bind(this),
+      isSubTotal: true,
+      align: 'right',
     },
     {
       field: 'AdjAmount',
       header: '調整金額',
       format: this.moneyFormat.bind(this),
+      isSubTotal: true,
+      align: 'right',
     },
     {
       field: 'BalanceAmount',
       header: '應收(付)帳款餘額',
       format: this.moneyFormat.bind(this),
+      isSubTotal: true,
+      align: 'right',
     },
   ];
 
@@ -240,13 +249,26 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     return payload;
   }
 
-  /** 匯出用：沿用查詢條件，但移除分頁 */
+  /** 匯出用 / 一次取全部資料用：沿用查詢條件，但移除分頁 */
   private buildExportPayload(): Fin34030Request {
     const base = this.queryForm.getRawValue();
     const payload = this.buildPayload(base);
     delete payload.PageIndex;
     delete payload.PageSize;
     return payload;
+  }
+
+  private computeFooterData(rows: Fin34030Response[]): void {
+    const sum = rows.reduce(
+      (acc, row) => ({
+        DocAmount: acc.DocAmount + (Number(row.DocAmount) || 0),
+        PayAmount: acc.PayAmount + (Number(row.PayAmount) || 0),
+        AdjAmount: acc.AdjAmount + (Number(row.AdjAmount) || 0),
+        BalanceAmount: acc.BalanceAmount + (Number(row.BalanceAmount) || 0),
+      }),
+      { DocAmount: 0, PayAmount: 0, AdjAmount: 0, BalanceAmount: 0 }
+    );
+    this.footerData = sum;
   }
 
   /** 把後端回傳的 Data 轉成 Fin34030Response[] */
@@ -289,13 +311,15 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     }
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildPayload(raw);
+    // 一次載入全部資料（不分頁），以便計算正確的廠客小計與總計
+    const payload = this.buildExportPayload();
 
     this.loading = true;
     this.data = [];
     this.selectedItems = [];
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
+    this.footerData = null;
     this.tableVer++;
 
     this.fin34030Service
@@ -306,27 +330,21 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
           const rows = this.mapRowsFromResponse(response);
 
           this.data = rows;
+          this.totalRecords = rows.length;
+          this.viewTotalRecords = rows.length;
 
-          const realTotal =
-            Number(response?.TotalCount ?? rows.length) || rows.length;
-          this.totalRecords = realTotal;
-          this.viewTotalRecords = realTotal;
+          this.computeFooterData(rows);
 
-          // 保存小寫格式供 table-report 使用
           this.lastQueryBody = { ...raw };
-
-          this.queryStateService.setQueryState(
-            this.ProgNo,
-            this.queryForm.value
-          );
+          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
           this.loading = false;
         },
         error: (err: any) => {
           console.error('=== FIN34030 API Error ===', err);
-          console.error('Error response:', err.error);
           this.data = [];
           this.totalRecords = 0;
           this.viewTotalRecords = 0;
+          this.footerData = null;
           this.loading = false;
         },
       });
