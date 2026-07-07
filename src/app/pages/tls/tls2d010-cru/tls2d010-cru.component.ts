@@ -89,6 +89,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   private rowIdCounter = 1;
   // 月結鎖定年月快取（格式 yyyymm 整數）
   private maxClsMonthNum: number | null = null;
+  // 拋轉狀態快取（key 為 yyyymm 整數，value 為 Trans_Status）
+  private transStatusMap = new Map<number, string>();
 
   // 專櫃選擇 Dialog 相關
   talentDialogVisible = false;
@@ -351,6 +353,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initMaxClsMonth(); // 取得月結鎖定年月
+    this.initTransStatus(); // 取得各年月拋轉狀態
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
       this.syncNormalTpyDateToRows(date);
     });
@@ -466,6 +469,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   private initMaxClsMonth() {
     this.tls2d010Service.queryMaxClsMonth().pipe(untilDestroyed(this)).subscribe(res => {
       this.maxClsMonthNum = this.parseLockYmFromResponse(res);
+    });
+  }
+
+  /** 初始化各年月拋轉狀態 */
+  private initTransStatus() {
+    this.tls2d010Service.queryTransStatusTLS2D010().pipe(untilDestroyed(this)).subscribe(res => {
+      const raw = res?.Data ?? [];
+      this.transStatusMap = new Map(
+        raw.map(item => [Number(item.Trans_yyyymm), item.Trans_Status])
+      );
     });
   }
 
@@ -800,18 +813,31 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const counterValue = this.dataFormCounter.getRawValue();
 
     for (const row of rowsToCheck) {
-      // 1. 取得專櫃資訊
-      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
-      if (!rowTlt) continue;
-
-      // 2. 取得扣款日期 (優先拿 row 自己的，沒有才拿表單的)
+      // 1. 取得扣款日期 (優先拿 row 自己的，沒有才拿表單的)
       const tpyDateRaw = row.tpy_date || (this.currentCreateType === 'counter' ? counterValue.tpy_date : normalValue.tpy_date);
       if (!tpyDateRaw) continue; // 尚未填寫則跳過即時檢查
 
       const d = this.parseBackendDate(tpyDateRaw) ?? new Date(tpyDateRaw);
       if (!d || isNaN(d.getTime())) continue;
 
-      // 3. 取得契約期間
+      // 2. 校驗月結鎖定、拋轉狀態
+      const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+      if (this.maxClsMonthNum != null) {
+        if (tpyYm <= this.maxClsMonthNum) {
+          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
+          return;
+        }
+      }
+      if (this.transStatusMap.get(tpyYm) === 'Y') {
+        this.messageService.errorBubble(`${tpyYm} 已拋轉 無法再輸入扣款資料`);
+        return;
+      }
+
+      // 3. 取得專櫃資訊
+      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
+      if (!rowTlt) continue;
+
+      // 4. 取得契約期間
       // Normal 模式要拿每一筆專櫃自己的 buildTltInfo
       const fullTlt = this.buildTltInfo(rowTlt, row.pod_no || (this.currentCreateType === 'counter' ? counterValue.pod_no : normalValue.pod_no));
       const bDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_bdate : fullTlt.tlt_contract_bdate;
@@ -827,15 +853,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           this.messageService.errorBubble(
             `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
           );
-          return;
-        }
-      }
-
-      // 5. 校驗月結鎖定 (使用快取，不重複打 API)
-      if (this.maxClsMonthNum != null) {
-        const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
-        if (tpyYm <= this.maxClsMonthNum) {
-          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
           return;
         }
       }
@@ -1256,14 +1273,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const counterValue = this.dataFormCounter.getRawValue();
 
     for (const row of rowsToValidate) {
-      // 1. 決定專櫃來源
-      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
-      if (!rowTlt) continue;
-
-      // 2. 取得該筆專櫃的完整資訊 (包含契約起迄)
-      const fullTlt = this.buildTltInfo(rowTlt, row.pod_no || (this.currentCreateType === 'counter' ? counterValue.pod_no : normalValue.pod_no));
-
-      // 3. 取得扣款日期：優先取 row 上的，若無則取表單上的
+      // 1. 取得扣款日期：優先取 row 上的，若無則取表單上的
       const tpyDateRaw = row.tpy_date || (this.currentCreateType === 'counter' ? counterValue.tpy_date : normalValue.tpy_date);
       const d = this.parseBackendDate(tpyDateRaw) ?? new Date(tpyDateRaw);
 
@@ -1272,7 +1282,27 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         return false;
       }
 
-      // 4. 決定契約日期來源
+      // 2. 月結鎖定、拋轉狀態校驗
+      const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+      if (this.maxClsMonthNum != null) {
+        if (tpyYm <= this.maxClsMonthNum) {
+          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
+          return false;
+        }
+      }
+      if (this.transStatusMap.get(tpyYm) === 'Y') {
+        this.messageService.errorBubble(`${tpyYm} 已拋轉 無法再輸入扣款資料`);
+        return false;
+      }
+
+      // 3. 決定專櫃來源
+      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
+      if (!rowTlt) continue;
+
+      // 4. 取得該筆專櫃的完整資訊 (包含契約起迄)
+      const fullTlt = this.buildTltInfo(rowTlt, row.pod_no || (this.currentCreateType === 'counter' ? counterValue.pod_no : normalValue.pod_no));
+
+      // 5. 決定契約日期來源
       // Counter 模式：契約日期統一看表單上方
       // Normal 模式：契約日期看該列專櫃自己的 (fullTlt)
       const bDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_bdate : fullTlt.tlt_contract_bdate;
@@ -1289,21 +1319,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
       const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
 
-      // 5. 執行校驗：格式依照妳的要求
+      // 6. 專櫃期間驗證：扣款日期必須在契約期間內
       if (d < start || d > end) {
         this.messageService.errorBubble(
           `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
         );
         return false;
-      }
-
-      // 6. 月結鎖定校驗
-      if (this.maxClsMonthNum != null) {
-        const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
-        if (tpyYm <= this.maxClsMonthNum) {
-          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
-          return false;
-        }
       }
     }
     return true;
