@@ -68,7 +68,11 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
 
-    this.service.loadFIN54030().pipe(
+    this.queryFIN54030();
+  }
+
+  private queryFIN54030(): void {
+    this.service.queryFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
     ).subscribe({
       next: res => {
@@ -95,7 +99,8 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
         ).subscribe({
           next: res => {
             if (res.Status !== '0000') return;
-            this.messageService.successBubble('儲存成功');
+            this.messageService.successBubble('關帳成功');
+            this.queryFIN54030();
           },
         });
       }

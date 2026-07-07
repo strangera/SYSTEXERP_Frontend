@@ -74,6 +74,7 @@ export interface FIN53010Detail {
   SerNo: number;
   SubDetailNo?: string;
   id: number;
+  ACCT_KEY?: string | null;
 }
 
 /**
@@ -93,7 +94,7 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   DetailName?: string;
   ReflNo?: string;
   PTA?: string;
-  recKey?: number;
+  recKey?: string;
 }
 
 export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
