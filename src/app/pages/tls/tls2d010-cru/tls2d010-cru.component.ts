@@ -818,12 +818,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const contractE = this.parseBackendDate(eDate);
 
       if (contractB && contractE) {
-        const start = new Date(contractB.getFullYear(), contractB.getMonth(), 1, 0, 0, 0, 0);
-        const end = new Date(contractE.getFullYear(), contractE.getMonth() + 1, 0, 23, 59, 59, 999);
+        const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+        const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
         if (d < start || d > end) {
           this.messageService.errorBubble(
-            `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的月結區間內 ` +
-            `(${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')})`
+            `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
           );
           return;
         }
@@ -1284,13 +1283,13 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         return false;
       }
 
-      const start = new Date(contractB.getFullYear(), contractB.getMonth(), 1, 0, 0, 0, 0);
-      const end = new Date(contractE.getFullYear(), contractE.getMonth() + 1, 0, 23, 59, 59, 999);
+      const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+      const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
 
       // 5. 執行校驗：格式依照妳的要求
       if (d < start || d > end) {
         this.messageService.errorBubble(
-          `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的月結區間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
+          `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
         );
         return false;
       }
