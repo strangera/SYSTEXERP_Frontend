@@ -72,8 +72,6 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     Status: [[]],
     CRT_Date_To: [null],
     CRT_Date_From: [null],
-    COMM_NUM_Start: [null],
-    COMM_NUM_End: [null],
     // 分頁欄位
     pageSize: [1000],
     pageIndex: [1],
