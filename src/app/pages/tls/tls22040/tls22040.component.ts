@@ -19,7 +19,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-tls22040',
   templateUrl: './tls22040.component.html',
-  styleUrls: ['./tls22040.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -43,7 +42,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     pageSize: [30],
   });
 
-  migTypeOptions: { value: string; label: string }[] = [];
+  migTypeOptions = getSYS1000Options('MIG_Type_TLS22040');
 
   data: any[] = [];
   totalRecords = 0;
@@ -88,7 +87,6 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     );
 
   ngOnInit(): void {
-    this.migTypeOptions = getSYS1000Options('MIG_Type');
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 若有已存在的查詢狀態，優先還原完整狀態（包含 pageIndex）
