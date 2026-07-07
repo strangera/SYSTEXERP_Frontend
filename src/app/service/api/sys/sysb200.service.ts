@@ -56,7 +56,9 @@ export interface BankBranchItem {
   BNK_BranchNo?: string | null;
   BNK_BranchName?: string | null;
 }
-
+export interface DeleteSYSB200Request {
+  idList: number[];
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -87,5 +89,11 @@ export class Sysb200Service {
 
   queryBankBranchDropdown(): Observable<ApiResponse<BankBranchItem[]>> {
     return this.http.post<ApiResponse<BankBranchItem[]>>(`${environment.ApiUrl}/FIN0000/ARS1000/queryBankBranchDropdown`, {});
+  }
+  /**
+   * 批次刪除廠商資料
+   */
+  deleteSYSB200(body: DeleteSYSB200Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${API_URL}/deleteSYSB200`, body);
   }
 }
