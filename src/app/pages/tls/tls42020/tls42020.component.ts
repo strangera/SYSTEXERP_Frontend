@@ -164,6 +164,16 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
             `匯入失敗：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆`
           );
           this.fileUploadComponent.clearFiles(); // 檢核失敗也清空檔案
+        } else if (data?.SkippedFilePath) {
+          // 部分資料因業務卡控(重疊/查無對應)被略過，提供下載清單查看略過原因
+          this.errorReportService.showImportError(
+            data.SkippedFilePath,
+            `匯入完成：成功 ${data.SuccessCount} 筆，略過 ${data.SkippedCount} 筆，請下載清單查看略過原因`,
+            '部分資料未匯入'
+          );
+          this.fileUploadComponent.clearFiles();
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
         } else if (res.Status !== '0000') {
           this.messageService.errorBubble(res.Message);
         } else {
