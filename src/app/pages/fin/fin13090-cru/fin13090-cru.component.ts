@@ -17,7 +17,10 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 import { finalize, forkJoin } from 'rxjs';
 
 //3.1.4.1  進貨發票建檔作業 CRU
@@ -28,6 +31,9 @@ import { finalize, forkJoin } from 'rxjs';
     MenubarComponent,
     MultiSelectComponent,
     ButtonComponent,
+    ButtonModule,
+    DialogModule,
+    TableModule,
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
@@ -58,6 +64,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   PUR_DiscNo_Options: { value: string; label: string }[] = []; // 扣抵代號
   PUR_Type_Options: { value: string; label: string }[] = []; // 類別區分
   readonly rowSelectableFn = (row: any) => !row?.IsLocked;
+  // ---------廠商查詢 Dialog-------------------------------------------------------
+  vendorDialogVisible = false;
+  vendorKeyword = '';
+  vendorFiltered: { No: string; Name: string; VEN_No: string; Label: string }[] = [];
+  private dialogTargetRow: fin13090Detail | null = null;
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
@@ -67,7 +78,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     'id': 0, // APS2002 主鍵 新增為0
     'ACP_Type': "7", // 應付帳款類別 (預設值7總帳管理)
     'PUR_VoucherType': null, // 發票格式 (憑證類別 21~29)
-    'PUR_GUINo': null, // 發票號碼
+    'PUR_GUINo': '', // 發票號碼
     'PUR_GUIDate': null, // 發票日期
     'PUR_RepYYYYMM': null, // 申報年月 (固定為雙數月)
     'PUR_VenNo': null, // 廠商編號
@@ -95,6 +106,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   ngOnInit(): void {
     this.initializePage('FIN13090', this.dataForm);
     this.loadOptions();
+    if (!this.isFormReadable) {
+      this.infoDialogVisible = true;
+    }
   }
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
@@ -175,9 +189,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           // 2. 程式碼存取時要加上索引
           if (res.Data) {
             const detailRow = res.Data.Details;
+            const normalize = (item: fin13090Detail) => ({ ...item, PUR_GUINo: item.PUR_GUINo ?? '' });
             this.detailData = Array.isArray(detailRow)
-              ? [...detailRow]
-              : (detailRow ? [detailRow] : []);
+              ? detailRow.map(normalize)
+              : (detailRow ? [normalize(detailRow)] : []);
 
             // 深拷備份(切斷與原始資料物件的參考連結)
             this.orgDetailData = JSON.parse(JSON.stringify(this.detailData));
@@ -260,36 +275,16 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   private initSupplierColumns() {
     const locked = (_v: any, _i: any, row: any) => !!row?.IsLocked;
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo], disabled: locked },
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '190px', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', width: '130px', maxLength: 10, validate: [this.validateGUINo], disabled: locked },
+      { field: 'PUR_GUIDate', header: '發票日期', type: 'date', width: '140px', validate: [validateRequired], disabled: locked },
+      { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input', width: '110px', validate: [this.validateEvenMonth], disabled: () => true },
+      { field: 'PUR_VenNo', header: '廠商編號', type: 'custom', width: '190px', validate: [validateRequired], disabled: locked },
+      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', width: '140px', maxLength: 10, disabled: locked },
+      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', width: '180px', maxLength: 60, disabled: locked },
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', width: '130px', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
       {
-        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired], disabled: locked
-      },
-      {
-        field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input',
-        validate: [this.validateEvenMonth], disabled: () => true
-      },
-      {
-        field: 'PUR_VenNo', header: '廠商編號', type: 'dropdown', validate: [validateRequired]
-        , options: this.VEN_Uniform_Option, optionValue: 'VEN_No', optionLabel: 'Label',
-        disabled: locked,
-        onChange: (event: string, row: fin13090Detail) => {
-          const selectedValue = event;
-          console.log('PUR_VenNo', selectedValue);
-          const vendor = this.VEN_Uniform_Option.find(v => v.VEN_No === selectedValue);
-          if (vendor) {
-            row.PUR_VenName = vendor.Name;
-            row.PUR_VenUniform = vendor.No;
-          }
-        }
-      },
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true },
-      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true },
-
-      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' },
-      {
-        field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired],
+        field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', width: '150px', validate: [validateRequired], textAlign: 'right',
         disabled: locked,
         calculate: (rowData: fin13090Detail, value: any) => {
           const amt = Number(value) || 0;
@@ -301,7 +296,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
         }
       },
       {
-        field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label',
+        field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', width: '110px', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label',
         disabled: locked,
         calculate: (rowData: fin13090Detail, value: any) => {
           const amt = Number(rowData.PUR_Amt) || 0;
@@ -313,7 +308,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
         }
       },
       {
-        field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired],
+        field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', width: '130px', validate: [validateRequired], textAlign: 'right',
         disabled: locked,
         calculate: (_rowData: fin13090Detail, value: any) => {
           const net = Number(value) || 0;
@@ -322,7 +317,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
         }
       },
       {
-        field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired],
+        field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', width: '120px', validate: [validateRequired], textAlign: 'right',
         disabled: locked,
         calculate: (rowData: fin13090Detail, value: any) => {
           const tax = Number(value) || 0;
@@ -330,11 +325,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           return { PUR_Amt: net + tax };
         }
       },
-      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', options: this.PUR_DiscNo_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'PUR_Type', header: '類別區分', type: 'dropdown', options: this.PUR_Type_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'Source_Doc_No', header: '憑證單號', type: 'input', maxLength: 16, disabled: locked },
-      { field: 'PUR_Comb_Cnt', header: '彙總張數', type: 'inputNumber', disabled: locked },
-      { field: 'PUR_Comb', header: '彙加註記', type: 'input', maxLength: 20, disabled: locked },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', width: '140px', options: this.PUR_DiscNo_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_Type', header: '類別區分', type: 'dropdown', width: '130px', options: this.PUR_Type_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'Source_Doc_No', header: '憑證單號', type: 'input', width: '140px', maxLength: 10, validate: [this.validateSourceDocNo], disabled: locked },
+      { field: 'PUR_Comb_Cnt', header: '彙總張數', type: 'inputNumber', width: '100px', validate: [this.validateCombCntRequired], disabled: locked },
+      { field: 'PUR_Comb', header: '彙加註記', type: 'input', width: '160px', maxLength: 20, disabled: locked },
     ];
   }
 
@@ -385,6 +380,22 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     return { isValid: true, errorMessage: [] };
   };
 
+  // 驗證憑證單號長度 ≤ 10
+  validateSourceDocNo = (value: unknown) => {
+    if (!value) return { isValid: true, errorMessage: [] };
+    if (String(value).length > 10) return { isValid: false, errorMessage: ['憑證單號長度為10碼!!'] };
+    return { isValid: true, errorMessage: [] };
+  };
+
+  // 有填憑證單號時彙總張數必填
+  validateCombCntRequired = (value: unknown, rowData: fin13090Detail) => {
+    const hasDocNo = !!String(rowData?.Source_Doc_No ?? '').trim();
+    if (hasDocNo && (value === null || value === undefined || value === '')) {
+      return { isValid: false, errorMessage: ['填寫憑證單號時彙總張數為必填'] };
+    }
+    return { isValid: true, errorMessage: [] };
+  };
+
   // 明細送出前的驗證
   validateAllRows(): boolean {
     //必填
@@ -414,6 +425,15 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           );
           return false;
         }
+      }
+    }
+
+    // 發票號碼必填
+    for (let i = 0; i < this.detailData.length; i++) {
+      const row = this.detailData[i];
+      if (!String(row.PUR_GUINo ?? '').trim()) {
+        this.messageService.errorBubble(`第 ${i + 1} 筆明細：請輸入發票號碼`);
+        return false;
       }
     }
 
@@ -454,6 +474,36 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
     // 更新資料源
     this.detailData = [...newData];
+  }
+
+  // ---進頁提示 Dialog---
+  infoDialogVisible = false;
+
+  // ---廠商查詢 Dialog---
+  openVendorDialog(row: fin13090Detail, isDisabled: boolean): void {
+    if (isDisabled) return;
+    this.dialogTargetRow = row;
+    this.vendorKeyword = '';
+    this.vendorFiltered = [...this.VEN_Uniform_Option];
+    this.vendorDialogVisible = true;
+  }
+
+  filterVendors(): void {
+    const kw = this.vendorKeyword.trim().toLowerCase();
+    this.vendorFiltered = kw
+      ? this.VEN_Uniform_Option.filter(v =>
+          v.VEN_No.toLowerCase().includes(kw) || v.Name.toLowerCase().includes(kw)
+        )
+      : [...this.VEN_Uniform_Option];
+  }
+
+  selectVendor(vendor: { No: string; Name: string; VEN_No: string }): void {
+    if (this.dialogTargetRow) {
+      this.dialogTargetRow.PUR_VenNo = vendor.VEN_No;
+      this.dialogTargetRow.PUR_VenName = vendor.Name;
+      this.dialogTargetRow.PUR_VenUniform = vendor.No;
+    }
+    this.vendorDialogVisible = false;
   }
 
   //清除明細內容

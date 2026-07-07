@@ -122,8 +122,15 @@ export class FIN55080ReportComponent implements OnInit {
     const grouped: GroupedFIN55050Detail[] = [];
 
     (data ?? []).forEach(parent => {
-      const details = parent._Details ?? [];
-      if (details.length === 0) return;
+      const allDetails = parent._Details ?? [];
+      if (allDetails.length === 0) return;
+
+      // API 已包含 DataType='期初'/'總計' 的摘要列，排除後只保留明細列計算合計
+      const detailsOnly = allDetails.filter(d => d.DataType !== '期初' && d.DataType !== '總計');
+
+      // 開期餘額：優先取 DataType='期初' 的 row，否則取第一筆
+      const openingRow = allDetails.find(d => d.DataType === '期初');
+      const openingBal = openingRow?.OpeningBal ?? allDetails[0]?.OpeningBal ?? 0;
 
       // 1. 期初餘額列
       grouped.push({
@@ -132,7 +139,7 @@ export class FIN55080ReportComponent implements OnInit {
         VouDate: parent.VouDate,
         VouNo: '',
         NoteDesc: '【期初餘額】',
-        OpeningBal: details[0].OpeningBal ?? 0,
+        OpeningBal: openingBal,
         VouStatus: '',
         isVirtual: true
       } as any);
@@ -140,7 +147,7 @@ export class FIN55080ReportComponent implements OnInit {
       // 2. 明細列與計算總計
       let totalD = 0;
       let totalC = 0;
-      details.forEach(detail => {
+      detailsOnly.forEach(detail => {
         totalD += (detail.AccAmt_D ?? 0);
         totalC += (detail.AccAmt_C ?? 0);
         grouped.push({
@@ -151,6 +158,10 @@ export class FIN55080ReportComponent implements OnInit {
         });
       });
 
+      // 結束餘額：優先取 DataType='總計' 的 row，否則取最後一筆明細
+      const totalRow = allDetails.find(d => d.DataType === '總計');
+      const closingBal = totalRow?.OpeningBal ?? detailsOnly[detailsOnly.length - 1]?.OpeningBal ?? 0;
+
       // 3. 本期合計列
       grouped.push({
         AccNo: parent.AccNo,
@@ -160,7 +171,7 @@ export class FIN55080ReportComponent implements OnInit {
         NoteDesc: '【本期合計】',
         AccAmt_D: totalD,
         AccAmt_C: totalC,
-        OpeningBal: details[details.length - 1].OpeningBal ?? 0,
+        OpeningBal: closingBal,
         VouStatus: '',
         isVirtual: true
       } as any);
