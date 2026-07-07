@@ -130,7 +130,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   showEditArea = false;
   showResultTables = false;
   changeEditData: any[] = [];
-  selectedMainItems: any[] = [];
   selectedMain: any | null = null;
 
   columns1: ReportColumn[] = [
@@ -205,9 +204,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       },
       validate: [
         (value, rowData, _data, _field, header) => {
+          const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, rowData?.GUIType);
+          const isReceipt = (guiLabel ?? String(rowData?.GUIType ?? '')).includes('收據');
           const taxLabel = this.mapValueToLabel(this.taxTypeOptions, rowData?.TAX_TYPE);
+          const isTaxFree = (taxLabel ?? '').includes('免稅');
           const isTaxable = (taxLabel ?? '').includes('應稅');
-          if (!isTaxable) {
+          if (isReceipt || isTaxFree || !isTaxable) {
             return { isValid: true, errorMessage: [], };
           }
           const num = Number(value ?? 0);
@@ -418,9 +420,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           const data = res?.Data ?? [];
           const mains = data.flatMap((item: any) => item?.Mains ?? []);
           const details = data.flatMap((item: any) => item?.Details ?? []);
+          const prevTalentId = this.selectedMain?.talent_id ?? null;
           this.changeEditData = mains;
           this.sourceInvoiceData = details;
-          this.checkIsInsertDisable();
 
           const firstDetail = details[0] ?? null;
           const firstMain = mains[0] ?? null;
@@ -477,9 +479,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             this.showResultTables = true;
           }
 
-          if (mains.length === 1 && !this.selectedMain) {
-            this.selectedMain = mains[0];
-            this.selectedMainItems = [mains[0]];
+          const reselect = prevTalentId != null ? (mains.find((m: any) => m?.talent_id === prevTalentId) ?? null) : null;
+          if (reselect) {
+            this.onChangeEditSelection(reselect);
+          } else if (mains.length === 1) {
+            this.onChangeEditSelection(mains[0]);
+          } else {
+            this.selectedMain = null;
+            this.checkIsInsertDisable();
           }
           this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
         },
@@ -489,9 +496,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private checkIsInsertDisable(): void {
-    const formCommYm = this.datePipe.transform(this.dataForm.controls.COMM_YM.value, 'yyyyMM'); // 改用 DatePipe
-    const hasLockedMain = (this.changeEditData ?? []).some((m: any) => !!m?.COMM_YM && m.COMM_YM === formCommYm);
-    this.isInsertDisable = this.isFormCreateable && hasLockedMain;
+    this.isInsertDisable = this.isFormCreateable && !this.selectedMain;
   }
 
   private buildUpdateParams(): any {
@@ -578,13 +583,22 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
+    const selectedMain = this.selectedMain;
+    if (!selectedMain) {
+      this.messageService.errorBubble('請先選擇一筆結帳資料');
+      this.messageService.unblockUi();
+      this.loading = false;
+      this.submitted = false;
+      return;
+    }
+
     const formValue = this.dataForm.getRawValue();
     const details = effectiveDetails.map((row: any) => {
       const net = Number(row.GUINet ?? 0);
       const tax = Number(row.GUITax ?? 0);
       const amt = row.GUIAmt != null ? Number(row.GUIAmt) : net + tax;
       return {
-        talent_id: 0,
+        talent_id: selectedMain.talent_id ?? 0,
         PUR_GUIType: row.GUIType ?? '',
         ven_no: row.VEN_No ?? '',
         PUR_GUINO: row.PUR_GUINO ?? '',
@@ -601,54 +615,46 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       };
     });
 
-    this.assignTalentIdsToNewDetails(details);
+    const getTaxLabel = (d: any): string => {
+      if (d?.TaxType_desc) return String(d.TaxType_desc);
+      return this.mapValueToLabel(this.taxTypeOptions, d?.PUR_TaxType ?? d?.TAX_TYPE ?? d?.TaxType) ?? '';
+    };
+    const sumField = (arr: any[], field: string) => arr.reduce((s, d) => s + (Number(d[field] ?? 0)), 0);
 
-    const mainsForValidation = this.changeEditData ?? [];
-    if (mainsForValidation.length) {
-      const getTaxLabel = (d: any): string => {
-        if (d?.TaxType_desc) return String(d.TaxType_desc);
-        return this.mapValueToLabel(this.taxTypeOptions, d?.PUR_TaxType ?? d?.TAX_TYPE ?? d?.TaxType) ?? '';
-      };
-      const sumField = (arr: any[], field: string) => arr.reduce((s, d) => s + (Number(d[field] ?? 0)), 0);
+    const talentId = selectedMain.talent_id;
+    const oldDetails = (this.sourceInvoiceData ?? []).filter((d: any) => d?.talent_id === talentId);
+    const allInvoices = [...details, ...oldDetails];
 
-      for (const main of mainsForValidation) {
-        const talentId = main?.talent_id;
-        const newDetails = details.filter(d => d.talent_id === talentId);
-        const oldDetails = (this.sourceInvoiceData ?? []).filter((d: any) => d?.talent_id === talentId);
-        const allInvoices = [...newDetails, ...oldDetails];
+    const noTaxInvoices = allInvoices.filter(d => getTaxLabel(d).includes('免稅'));
+    const taxableInvoices = allInvoices.filter(d => getTaxLabel(d).includes('應稅'));
 
-        const noTaxInvoices = allInvoices.filter(d => getTaxLabel(d).includes('免稅'));
-        const taxableInvoices = allInvoices.filter(d => getTaxLabel(d).includes('應稅'));
+    const sumNoTaxAmt = sumField(noTaxInvoices, 'ACP_GUIAmt');
+    const sumTaxableNet = sumField(taxableInvoices, 'ACP_GUINet');
+    const sumTax = sumField(allInvoices, 'ACP_GUITax');
+    const sumAmt = sumField(allInvoices, 'ACP_GUIAmt');
 
-        const sumNoTaxAmt = sumField(noTaxInvoices, 'ACP_GUIAmt');
-        const sumTaxableNet = sumField(taxableInvoices, 'ACP_GUINet');
-        const sumTax = sumField(allInvoices, 'ACP_GUITax');
-        const sumAmt = sumField(allInvoices, 'ACP_GUIAmt');
+    const noTaxPayable = Number(selectedMain?.sam_ap_notaxamt ?? 0);
+    if (noTaxPayable !== sumNoTaxAmt) {
+      this.messageService.errorBubble(`專櫃合約 ${talentId} 應付貨款(免稅)合計 (${noTaxPayable}) 需與該筆免稅單據加總 (${sumNoTaxAmt}) 相同`);
+      this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
+    }
 
-        const noTaxPayable = Number(main?.sam_ap_notaxamt ?? 0);
-        if (noTaxPayable !== sumNoTaxAmt) {
-          this.messageService.errorBubble(`專櫃合約 ${talentId} 應付貨款(免稅)合計 (${noTaxPayable}) 需與該筆免稅單據加總 (${sumNoTaxAmt}) 相同`);
-          this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
-        }
+    const namt = Number(selectedMain?.sam_ap_namt ?? 0);
+    if (namt !== sumTaxableNet) {
+      this.messageService.errorBubble(`專櫃合約 ${talentId} 廠商應開立發票額(收據)合計 (${namt}) 需與該筆應稅單據未稅金額加總 (${sumTaxableNet}) 相同`);
+      this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
+    }
 
-        const namt = Number(main?.sam_ap_namt ?? 0);
-        if (namt !== sumTaxableNet) {
-          this.messageService.errorBubble(`專櫃合約 ${talentId} 廠商應開立發票額(收據)合計 (${namt}) 需與該筆應稅單據未稅金額加總 (${sumTaxableNet}) 相同`);
-          this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
-        }
+    const taxLimit = Number(selectedMain?.sam_ap_tax ?? 0);
+    if (taxLimit !== sumTax) {
+      this.messageService.errorBubble(`專櫃合約 ${talentId} 營業稅合計 (${taxLimit}) 需與該筆稅額加總 (${sumTax}) 相同`);
+      this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
+    }
 
-        const taxLimit = Number(main?.sam_ap_tax ?? 0);
-        if (taxLimit !== sumTax) {
-          this.messageService.errorBubble(`專櫃合約 ${talentId} 營業稅合計 (${taxLimit}) 需與該筆稅額加總 (${sumTax}) 相同`);
-          this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
-        }
-
-        const totalLimit = Number(main?.sam_ap_amt ?? 0);
-        if (totalLimit !== sumAmt) {
-          this.messageService.errorBubble(`專櫃合約 ${talentId} 總額合計 (${totalLimit}) 需與該筆應稅金額加總 (${sumAmt}) 相同`);
-          this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
-        }
-      }
+    const totalLimit = Number(selectedMain?.sam_ap_amt ?? 0);
+    if (totalLimit !== sumAmt) {
+      this.messageService.errorBubble(`專櫃合約 ${talentId} 總額合計 (${totalLimit}) 需與該筆應稅金額加總 (${sumAmt}) 相同`);
+      this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const body = {
@@ -669,55 +675,16 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe({
         next: () => {
           this.messageService.successBubble('新增成功');
-          this.onCancel();
+          this.detailEditData = [];
+          this.originalDetailSnapshot = [];
+          this.querySourceInvoice();
         }
       });
   }
 
-  /**
-   * 依主資料表格順序，自動判斷每筆新增明細要算在哪一筆主資料(合約)底下：
-   * 依課稅別分免稅/應稅兩個額度，先填滿第一筆主資料的剩餘額度，滿了才輪到下一筆。
-   */
-  private assignTalentIdsToNewDetails(newDetails: any[]): void {
-    const mains = this.changeEditData ?? [];
-    if (!mains.length) return;
-
-    const existing = this.sourceInvoiceData ?? [];
-    const getTaxLabel = (d: any): string => {
-      if (d?.TaxType_desc) return String(d.TaxType_desc);
-      return this.mapValueToLabel(this.taxTypeOptions, d?.PUR_TaxType ?? d?.TAX_TYPE ?? d?.TaxType) ?? '';
-    };
-    const isTaxableRow = (d: any) => getTaxLabel(d).includes('應稅');
-
-    const remainingNoTax = mains.map((m: any) => {
-      const used = existing.filter((d: any) => d?.talent_id === m?.talent_id && !isTaxableRow(d))
-        .reduce((s: number, d: any) => s + Number(d?.ACP_GUIAmt ?? 0), 0);
-      return Number(m?.sam_ap_notaxamt ?? 0) - used;
-    });
-    const remainingTaxable = mains.map((m: any) => {
-      const used = existing.filter((d: any) => d?.talent_id === m?.talent_id && isTaxableRow(d))
-        .reduce((s: number, d: any) => s + Number(d?.ACP_GUINet ?? 0), 0);
-      return Number(m?.sam_ap_namt ?? 0) - used;
-    });
-
-    for (const detail of newDetails) {
-      const isTaxable = (this.mapValueToLabel(this.taxTypeOptions, detail.PUR_TaxType) ?? '').includes('應稅');
-      const remaining = isTaxable ? remainingTaxable : remainingNoTax;
-      const amountUsed = isTaxable ? detail.ACP_GUINet : detail.ACP_GUIAmt;
-
-      let idx = remaining.findIndex((r: number) => r > 0);
-      if (idx === -1) idx = mains.length - 1; // 全部額度已用完，仍歸到最後一筆主資料，交由金額卡控攔截
-
-      detail.talent_id = mains[idx]?.talent_id ?? 0;
-      remaining[idx] -= Number(amountUsed ?? 0);
-    }
-  }
-
-  onChangeEditDataChange(data: any[]): void { this.changeEditData = data; }
-
-  onChangeEditSelection(items: any): void {
-    this.selectedMainItems = Array.isArray(items) ? items : (items ? [items] : []);
-    this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
+  onChangeEditSelection(item: any): void {
+    this.selectedMain = item ?? null;
+    this.checkIsInsertDisable();
     if (this.selectedMain) {
       const m = this.selectedMain as any;
       this.detailDefaultInsert = {
@@ -739,7 +706,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       this.detailEditData = [];
     }
     this.selectedMain = null;
-    this.selectedMainItems = [];
+    this.checkIsInsertDisable();
   }
 
   onDetailFieldChange(_event: any): void {

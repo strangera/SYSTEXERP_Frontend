@@ -17,8 +17,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
-import { TLS2F010TableReportComponent } from '../tls2f010-cru/tls2f010-table-report.component';
-import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { TLS2A030TableReportComponent } from './tls2a030-table-report.component';
+import { ReportColumn } from './tls2a030-table-report.model';
 
 
 interface SalesRecord {
@@ -46,7 +46,7 @@ interface SalesRecord {
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TLS2F010TableReportComponent
+    TLS2A030TableReportComponent
   ]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -64,7 +64,6 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   historyRequestBody: any;
   data: SalesRecord[] = [];
   totalRecords = 0;
-  selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
   btnLoading2 = false;
   closeDate = ''; // 最後關帳日期
