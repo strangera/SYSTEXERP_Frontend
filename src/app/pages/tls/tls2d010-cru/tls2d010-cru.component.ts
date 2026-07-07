@@ -685,7 +685,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           type: 'date',
           width: '12rem',
           calculate: () => {
-            return { 'tlt_no': null };
+            // 扣款日期改變時，該列的專櫃需要重選，一併清空跟著專櫃帶出來的欄位，避免殘留舊資料
+            return { tlt_no: null, contract_no: '', contract_subno: '', org_id: '' };
           },
           validate: [
             (value: any, rowData: any, data: any[], field: string, header: string) => {
@@ -772,17 +773,19 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   onFieldChange(event: { field?: string, rowData: any, index?: number }) {
     if (this.currentCreateType === 'normal' && event.field === 'tlt_no') {
-      this.data.forEach(row => {
-        if (row.tlt_no) {
-          row.org_id = row.tlt_no.org_id ?? '';
-          row.contract_no = row.tlt_no.contract_no ?? '';
-          row.contract_subno = row.tlt_no.contract_subno ?? '';
-        } else {
-          row.org_id = '';
-          row.contract_no = '';
-          row.contract_subno = '';
-        }
-      });
+      // 只處理被改動的那一列，避免覆蓋其他列已存在的資料
+      const row = event.rowData;
+      if (row.tlt_no) {
+        row.org_id = row.tlt_no.org_id ?? '';
+        row.contract_no = row.tlt_no.contract_no ?? '';
+        row.contract_subno = row.tlt_no.contract_subno ?? '';
+      } else {
+        row.org_id = '';
+        row.contract_no = '';
+        row.contract_subno = '';
+      }
+      // 換新陣列參考，確保 table-edit (OnPush) 能立即感知並重繪
+      this.data = Array.isArray(this.data) ? [...this.data] : this.data;
     }
   }
 
