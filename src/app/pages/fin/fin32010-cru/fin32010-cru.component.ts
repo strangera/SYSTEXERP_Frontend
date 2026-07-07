@@ -86,7 +86,7 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
     const handoff = this.readHandoffLocal();
     if (handoff?.arsId && !this.rowdata) {
       this.loading = true;
-      this.fin32010Service.queryFIN32010({ ARS_ID: handoff.arsId })
+      this.fin32010Service.queryFIN32010({ ARS_No: handoff.arsId })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe({
           next: res => {
