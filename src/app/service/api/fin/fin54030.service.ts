@@ -25,7 +25,7 @@ export class FIN54030Service {
     { value: '3', label: '過帳' },
   ];
 
-  public loadFIN54030(): Observable<FIN54030Response> {
+  public queryFIN54030(): Observable<FIN54030Response> {
     return this.http.post<FIN54030Response>(`${apiUrl}/queryFIN54030`, {}).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN54030結果:', [res])),
