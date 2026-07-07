@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -17,7 +17,6 @@ import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.m
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin13100-cru',
@@ -48,7 +47,6 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   detailLoading = false;
   assetTypeOptions = getSYS1000Options('AssetType');
   invoiceTypeOptions: { value: string; label: string }[] = [];
-  Buyer_Uniform_Options: any[] = [];
   taxTypeOptions = [
     { label: '免稅', value: '0' },
     { label: '應稅', value: '1' },
@@ -82,7 +80,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     return this.crudstatus === CRUDStatus.Read;
   }
 
-  constructor(private fin13100Service: FIN13100Service, private dropDownListService: DropDownListService) {
+  constructor(private fin13100Service: FIN13100Service) {
     super();
   }
 
@@ -110,27 +108,13 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
 
     this.dataForm.disable();
 
-    forkJoin({
-      guiType: this.fin13100Service.getFIN13100GUITypeDropdown(),
-      uniform: this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' }),
-    }).subscribe({
-      next: ({ guiType, uniform }) => {
+    this.fin13100Service.getFIN13100GUITypeDropdown().subscribe({
+      next: (guiType: any) => {
         const guiList = Array.isArray(guiType?.Data) ? guiType.Data : [];
         this.invoiceTypeOptions = guiList.map((x: any) => ({
           value: String(x.INV_GUIType ?? '').trim(),
           label: `${x.INV_GUIType}-${x.INV_GUIName}`,
         }));
-
-        const uniformData: any[] = (uniform as any)?.Data ?? uniform ?? [];
-        const uniqueMap = new Map<string, any>();
-        uniformData.forEach((item: any) => {
-          if (item.No) uniqueMap.set(item.No, item);
-        });
-        this.Buyer_Uniform_Options = Array.from(uniqueMap.values()).map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        }));
-
         this.initColumns();
       },
       complete: () => {
@@ -199,11 +183,9 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       {
         field: 'TXN_Uniform',
         header: '買受人統一編號',
-        type: 'dropdown',
-        width: '220px',
-        options: this.Buyer_Uniform_Options,
-        optionLabel: 'label',
-        optionValue: 'value',
+        type: 'input',
+        width: '160px',
+        maxLength: 10,
         disabled: locked,
       },
       {
@@ -272,6 +254,8 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
         header: '憑證單號',
         type: 'input',
         width: '150px',
+        maxLength: 10,
+        validate: [this.validateSourceDocNo],
         disabled: locked,
       },
       {
@@ -354,7 +338,11 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     rows.forEach((x, i) => {
       const rowLabel = `第 ${i + 1} 筆`;
       if (!String(x.INV_GUIType ?? '').trim()) missingFields.push(`${rowLabel}：發票格式`);
-      if (!/^[A-Z]{2}\d{8}$/.test(String(x.InvoiceNo ?? '').trim())) missingFields.push(`${rowLabel}：發票號碼（需 2 大寫字母 + 8 數字）`);
+      const invoiceNo = String(x.InvoiceNo ?? '').trim();
+      if (!invoiceNo) missingFields.push(`${rowLabel}：發票號碼`);
+      else if (!/^[A-Z]{2}\d{8}$/.test(invoiceNo)) missingFields.push(`${rowLabel}：發票號碼格式錯誤（需 2 大寫字母 + 8 數字）`);
+      const sourceDocNo = String(x.Source_Doc_No ?? '').trim();
+      if (sourceDocNo.length > 10) missingFields.push(`${rowLabel}：憑證單號長度為10碼!!`);
       if (!x.InvoiceDate) missingFields.push(`${rowLabel}：發票日期`);
       if (!String(x.INV_YM ?? '').trim()) missingFields.push(`${rowLabel}：資料所屬年月`);
       if (!String(x.INV_DeclareYM ?? '').trim()) missingFields.push(`${rowLabel}：申報年月`);
@@ -441,6 +429,12 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       _rowIndex: index,
     };
   }
+
+  readonly validateSourceDocNo = (value: unknown) => {
+    if (!value) return { isValid: true, errorMessage: [] };
+    if (String(value).length > 10) return { isValid: false, errorMessage: ['憑證單號長度為10碼!!'] };
+    return { isValid: true, errorMessage: [] };
+  };
 
   goBack(): void {
     this.router.navigate(['/account/fin', 'fin13100'], {

@@ -1,24 +1,21 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-
-import { AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { ValidationService } from '../../../shared/service/validation.service';
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 
 export interface VendorData {
@@ -57,14 +54,12 @@ export interface VendorData {
     MultiSelectComponent,
     InputTextComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     AsyncPipe,
     TranslateModule,
   ],
 })
 export class SYSB200Component extends BasicQueryPageComponent<any> implements OnInit {
-
-  // ====== Form ======
   queryForm = this.formBuilder.group({
     VEN_NoList: [[]],
     VEN_Status: [''],
@@ -85,26 +80,17 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_Fax: ['', [Validators.maxLength(15)]],
     VEN_Remark: ['', [Validators.maxLength(160)]],
     VEN_PayConditionDay: ['', [this.validationService.numberValidator]],
-    ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
     pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
-
-  // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
     { label: '未審核', value: '0' },
     { label: '已審核', value: '1' },
   ];
-
   columns: Column[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
-    {
-      field: 'VEN_Status',
-      header: '審核狀態',
-      visible: true,
-      format: (value: string) =>
-        this.approvalOptions.find(x => x.value === value)?.label ?? value,
-    },
+    { field: 'VEN_Status', header: '審核狀態', visible: true, format: (v) => v === '0' ? '未審核' : '已審核' },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱(中文)', visible: true },
     { field: 'VEN_EngName', header: '廠商名稱(英文)', visible: true },
@@ -126,11 +112,9 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_AccountName', header: '戶名', visible: false },
     { field: 'VEN_Remark', header: '備註', visible: true },
   ];
-
-
-  // ====== State ======
   data: VendorData[] = [];
   totalRecords = 0;
+  lastQueryBody: any;
   selectedRows: VendorData[] = [];
   selectedItems: VendorData[] = [];
   VEN_NoList: IDropdownItem[] = [];
@@ -138,8 +122,6 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   t111Options: any[] = [];
   bankOptions$!: Observable<any[]>;
   contacts: any[] = [];
-
-  /** 單筆操作中的 row id，避免重複點擊 */
   actionLoadingId: string | number | null = null;
 
   // ====== Row Buttons ======
@@ -155,6 +137,9 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         }
         this.statusChange(row, '1');
       },
+      disabled: (row: VendorData) => {
+        return row.VEN_Status === '1'
+      }
     },
     {
       label: '反審核',
@@ -167,14 +152,17 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         }
         this.statusChange(row, '0');
       },
+      disabled: (row: VendorData) => {
+        return row.VEN_Status === '0'
+      }
     },
   ];
 
   constructor(
-    private dropDownListService: DropDownListService,
-    private validationService: ValidationService,
-    private sysbc00Service: Sysbc00Service,
-    private sysb200Service: Sysb200Service
+    private readonly dropDownListService: DropDownListService,
+    private readonly validationService: ValidationService,
+    private readonly sysbc00Service: Sysbc00Service,
+    public readonly sysb200Service: Sysb200Service
   ) {
     super();
   }
@@ -193,14 +181,12 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         value: item.VEN_No,
       }));
     });
-
     this.t111Options = [
       { SYS_Name: '即期', id: 0 },
       { SYS_Name: '15天', id: 15 },
       { SYS_Name: '30天', id: 30 },
       { SYS_Name: '45天', id: 45 },
     ];
-
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
       map(res => (res.Data ?? []).map((item: any) => ({
         label: `${item.BNK_No} - ${item.BNK_Name}`,
@@ -240,34 +226,63 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         PageSize: raw.pageSize,
         PageIndex: raw.pageIndex,
         SortBy: raw.SortBy,
-        OrderBy: '',
-        Offset: 0,
       };
-
-
-      this.sysb200Service.querySYSB200(queryData).subscribe({
-        next: (res) => {
-          this.data = res.Data ?? [];
-          this.totalRecords = res.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState('SYSB200', form.value);
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-          this.messageService.errorBubble('查詢失敗，請稍後再試');
-        },
+      this.sysb200Service.querySYSB200(queryData).pipe(finalize(() => (this.loading = false))).subscribe((res) => {
+        this.data = res.Data ?? [];
+        this.lastQueryBody = queryData;
+        this.totalRecords = res.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState('SYSB200', form.value);
+        this.loading = false;
       });
     });
-
-    // 記錄查詢條件
     localStorage.setItem('SYSB200_queryForm', JSON.stringify(this.queryForm.getRawValue()));
   }
-
+  isRowSelectable(row: any): boolean {
+    return row.VEN_Status !== '1';
+  }
   // ====== Table Actions ======
   onDelete(rows: VendorData[]): void {
-    this.contacts = this.contacts.filter(item => !rows.includes(item));
-    this.selectedRows = [];
-    this.messageService.successBubble('已刪除選取資料');
+    if (!rows || rows.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的廠商資料');
+      return;
+    }
+
+    // 1. 前端先行卡控：檢查是否有非「未審核」的單據
+    const illegalRows = rows.filter(row => row.VEN_Status !== '0');
+    if (illegalRows.length > 0) {
+      const illegalNos = illegalRows.map(r => r.VEN_No).join(', ');
+      this.messageService.errorBubble(
+        `選取的廠商中包含已審核資料（廠商編號: ${illegalNos}），必須為「未審核」狀態才可刪除！`,
+        '刪除失敗'
+      );
+      return;
+    }
+
+    // 2. 彈出確認視窗防呆 (利用專案既有的 messageService.confirm)
+    this.messageService.confirm({
+      message: `確定要刪除這 ${rows.length} 筆廠商資料嗎？刪除後將連同聯絡人明細一併移除。`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        const idList = rows
+          .map(row => row.id)
+          .filter((id): id is number => id !== undefined);
+
+        if (idList.length === 0) {
+          this.messageService.errorBubble('找不到有效的資料 ID');
+          this.loading = false;
+          return;
+        }
+        this.sysb200Service.deleteSYSB200({ idList }).pipe(
+          finalize(() => this.loading = false)
+        ).subscribe((res) => {
+          this.messageService.successBubble(res.Message || '資料刪除成功！');
+          this.selectedItems = [];
+          this.onSubmit(this.queryForm);
+        });
+      }
+    });
   }
 
   statusChange(row: VendorData, status: '0' | '1') {
