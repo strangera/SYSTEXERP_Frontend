@@ -48,7 +48,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     VouType: new FormControl<'1' | '2' | '3' | void>('3'),
     VouDateStart: new FormControl<Date | void>(void 0),
     VouDateEnd: new FormControl<Date | void>(void 0),
-    /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
+    /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */ // 需求#566: 傳票狀態的"確認"選項，請移除
     PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     Remark: new FormControl<string | void>(void 0),
     /** 傳票型態(SYS1000.VoucherType) (多選) */
@@ -64,6 +64,9 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     ...createPaginationConfig(this.multiSortMeta),
   });
   public readonly qf = computed(() => this.queryForm.controls);
+
+  /** 傳票狀態查詢選項：需求#566，查詢條件排除 2:確認 */
+  public readonly postFlagOptions = this.service.postFlagOptions.filter(({ value }) => value !== '2');
 
   public readonly tableData = signal<FIN53010Data[]>([]);
   public readonly totalRecords = signal(0);
