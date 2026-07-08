@@ -367,13 +367,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   });
 
-  private readonly invYnSignal = toSignal(
-    this.dataForm.controls.INV_YN.valueChanges.pipe(
-      startWith(this.dataForm.controls.INV_YN.value),
-    ),
-    { initialValue: this.dataForm.controls.INV_YN.value },
-  );
-
   /** 追蹤實際傳票型態代碼（form 存 label，需另存 code 供判斷） */
   readonly voucherTypeCode = signal<string>('GL');
 
@@ -479,7 +472,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'VoucherType', header: '發票格式', visible: true, align: 'left' },
     {
       field: 'TrackNo',
-      header: '字軌／發票號碼',
+      header: '發票號碼',
+      format: (_v, _i, row) => {
+        const r = row as Record<string, unknown>;
+        return `${String(r['TrackNo'] ?? '')}${String(r['InvoiceNo'] ?? '')}`;
+      },
       align: 'left'
     },
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
@@ -1171,7 +1168,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly stepFlowEffect = effect(() => {
     if (this.isFormReadable) return;
     if (!this.isFormCreateable && !this.isFormEditable) return;
-    const invYn = this.invYnSignal();
     const accVtMap = this.service.accVoucherTypeMap();
     const accMap = this.service.accNoMap();
     const normalTypes = new Set<string>();
@@ -1200,11 +1196,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
-    // 補發票選否時，不顯示進項(5)/銷項(6)及折讓(8/9)步驟
     const ordered = ['3', '4', '5', '8', '6', '9', '7']
       .filter(v => {
-        if (v === '5' || v === '6') return normalTypes.has(v) && invYn === 'Y';
-        if (v === '8' || v === '9') return allowanceTypes.has(v) && invYn === 'Y';
+        if (v === '5' || v === '6') return normalTypes.has(v);
+        if (v === '8' || v === '9') return allowanceTypes.has(v);
         return normalTypes.has(v);
       })
       .map(v => Number(v));
