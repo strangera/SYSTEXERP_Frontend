@@ -12,6 +12,11 @@ export interface queryTLS2D010TLTTALENTRequest {
   tlt_date?: string | null; // 查詢包含該日期的專櫃資料，格式為 yyyy-MM-dd
 }
 
+export interface queryTransStatusTLS2D010Response {
+  Trans_yyyymm: string;
+  Trans_Status: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -44,6 +49,9 @@ export class Tls2d010Service {
   }
   queryMaxClsMonth(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryMaxClsMonth`, {});
+  }
+  queryTransStatusTLS2D010(): Observable<ApiResponse<queryTransStatusTLS2D010Response[]>> {
+    return this.http.post<ApiResponse<queryTransStatusTLS2D010Response[]>>(`${this.apiUrl}/queryTransStatusTLS2D010`, {});
   }
   // 查詢專櫃下拉 (取所有契約，含對應資料，依照傳入日期查詢有效的專櫃資料)
   queryTLS2D010TLTTALENTList(params: queryTLS2D010TLTTALENTRequest = {}): Observable<ApiResponse<ITalentOption[]>> {

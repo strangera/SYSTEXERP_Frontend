@@ -194,6 +194,12 @@ export class DropdownCellComponent {
         this.internalLoading = true;
         this._isSubscribing = true; // 加鎖
 
+        // 先強制清空選項再帶入新資料：若新舊選項內容剛好相同，直接用新陣列覆蓋容易被
+        // PrimeNG／變更偵測誤判成「沒有變化」而沒有正確刷新，先清空可確保一定會經過一次
+        // 明確的重置，跟使用者手動清空再重選觸發的路徑一致。
+        this._resolvedOptions = [];
+        this.cdr.markForCheck();
+
         optionsResult.subscribe({
           next: (data: any) => {
             this._resolvedOptions = data;

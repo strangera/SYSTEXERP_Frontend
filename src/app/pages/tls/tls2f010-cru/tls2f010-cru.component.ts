@@ -56,8 +56,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     ACP_GUITax_From: [null],
     ACP_GUITax_To: [null],
     PUR_GUIPaper: [null],
-    COMM_NUM_Start: [null],
-    COMM_NUM_End: [null],
     CRT_USR_No: [''],
     floor_no: [[]],
     ACP_GUIAmt: [null],
