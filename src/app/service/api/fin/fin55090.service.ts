@@ -69,4 +69,16 @@ export class Fin55090Service {
       responseType: 'blob'
     });
   }
+
+  /**
+   * 匯出部門別損益比較表檔案 (Excel)
+   * @param request 查詢請求參數
+   * @returns 報表檔案的位元組陣列 (透過 HttpResponse<Blob> 接收)
+   */
+  exportFIN55090Excel(request: QueryFIN55090Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportFIN55090Excel`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }
