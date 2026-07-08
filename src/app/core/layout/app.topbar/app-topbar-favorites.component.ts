@@ -20,7 +20,7 @@ import { finalize, take } from 'rxjs'; // 導入 finalize 和 take
  pTooltip="我的最愛" (click)="toggleFavoritesPanel($event)">
  <i class="pi pi-star-fill text-yellow-400"></i>
  </button>
- <p-overlayPanel #op styleClass="select-none w-30rem p-0">
+ <p-overlayPanel #op styleClass="select-none w-30rem max-w-full p-0">
  <div class="flex flex-column gap-1">
   <div class="flex justify-content-between align-items-center">
   <span class="text-xl font-semibold">我的最愛</span>

@@ -55,6 +55,8 @@ export class AppTopbarComponent {
   @ViewChild('menubutton') menuButton!: ElementRef;
   @ViewChild('topbarmenubutton') topbarMenuButton!: ElementRef;
   @ViewChild('topbarmenu') topbarMenu!: ElementRef;
+  // 讓 LayoutComponent 能讀取 topbar 實際渲染高度（換行、非同步選單載入後量測用）
+  @ViewChild('appTopbarDiv') appTopbarDiv!: ElementRef<HTMLElement>;
 
   // **狀態 (Signals & toSignal)**
   public readonly user = toSignal(this.authService.user, { initialValue: null });

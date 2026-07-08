@@ -23,7 +23,9 @@ import { LayoutService } from './layout.service';
 })
 export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使用 takeUntilDestroyed)
   @ViewChild(AppMenulistComponent) appSidebar!: AppMenulistComponent;
-  @ViewChild('appTopbarDiv') appTopbarDivRef!: ElementRef;
+  // 注意：#appTopbarDiv 這個模板變數是宣告在 AppTopbarComponent 自己的模板裡，
+  // 父層的 @ViewChild 無法直接穿透子元件模板抓到它，只能先拿到元件實例再讀它公開的 ViewChild
+  @ViewChild(AppTopbarComponent) appTopbarComponent!: AppTopbarComponent;
   @ViewChild('layoutMainContainer', { static: false }) layoutMainContainer!: ElementRef;
   @ViewChild('sidebarContainer') sidebarContainer!: ElementRef;
   @ViewChild('scrollContent') scrollContent!: ElementRef;
@@ -66,6 +68,14 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
   ngAfterViewInit() {
     // 初始載入後調整 Padding
     this.adjustMainContainerPadding();
+    // Topbar 高度會因為選單項目非同步載入、換行等原因在初始測量之後才變動，
+    // 用 ResizeObserver 持續同步，避免手機版選單換行變高後蓋住下方內容
+    const topbarEl = this.appTopbarComponent?.appTopbarDiv?.nativeElement;
+    if (topbarEl) {
+      const topbarResizeObserver = new ResizeObserver(() => this.adjustMainContainerPadding());
+      topbarResizeObserver.observe(topbarEl);
+      this.destroyRef.onDestroy(() => topbarResizeObserver.disconnect());
+    }
     // 監聽 layoutService 的 overlayOpen$ 事件，這是一個冗餘的訂閱，因為 effect 已經處理了。
     // 如果 overlayOpen$ 是唯一觸發滾動鎖定的 Signal，則不需要這個訂閱。
     // 這裡我們移除它，因為 Menu 狀態變化已經被第一個 effect 追蹤。
@@ -117,13 +127,13 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
    * 將 DOM 讀取/寫入邏輯隔離在專門的方法中
    */
   adjustMainContainerPadding(): void {
-    // 使用 appTopbarDivRef 替代 this.appTopbar.appTopbarDiv
-    if (this.appTopbarDivRef?.nativeElement && this.layoutMainContainer?.nativeElement) {
+    const topbarEl = this.appTopbarComponent?.appTopbarDiv?.nativeElement;
+    if (topbarEl && this.layoutMainContainer?.nativeElement) {
       // 使用 Renderer2 設置樣式
       this.renderer.setStyle(
         this.layoutMainContainer.nativeElement,
         'paddingTop',
-        `${this.appTopbarDivRef.nativeElement.offsetHeight}px` // 直接讀取 ElementRef
+        `${topbarEl.offsetHeight}px`
       );
     }
   }
@@ -152,13 +162,19 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
     this.layoutService.toggleColorScheme();
   }
 
+  // 點選頂部選單時，如果側邊欄目前是關閉的就自動打開，避免手機版點了看起來毫無反應
+  onTopMenuClick(progNo: string | null) {
+    this.selectedTopMenuProgNo.set(progNo);
+    if (progNo) this.layoutService.openMenu();
+  }
+
   windowWidth = signal(window.innerWidth);
   loadingMaskStyle = computed(() => {
     this.windowWidth(); // 訂閱視窗變化
     const isDesktop = this.windowWidth() > 991;
     const isMenuCollapsed = this.layoutService.isStaticMenuDesktopInactive();
     // 取得 Topbar 實際高度
-    const topbarHeight = this.appTopbarDivRef?.nativeElement?.offsetHeight || 80;
+    const topbarHeight = this.appTopbarComponent?.appTopbarDiv?.nativeElement?.offsetHeight || 80;
     // 1. 手機版：全寬
     if (!isDesktop) {
       return {

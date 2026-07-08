@@ -10,10 +10,11 @@ import { InputIconModule } from 'primeng/inputicon';
 @Component({
   selector: 'app-topbar-search',
   template: `
-    <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm);" class="mx-2">
-      <p-iconField iconPosition="right" class="h-full" styleClass="h-full">
+    <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm);" class="mx-2 w-full lg:w-auto">
+      <p-iconField iconPosition="right" class="h-full w-full" styleClass="h-full">
         <p-autoComplete formControlName="query_data" [suggestions]="filteredProgs()" emptyMessage="查無此快速碼"
-          (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
+          (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號"
+          styleClass="h-2.5rem lg:h-2rem w-full" inputStyleClass="text-base"
           (keydown.enter)="onSubmit(queryForm)" (onSelect)="onSubmit(queryForm)" />
         <!-- 這裡的 (click) 在 AutoComplete 的 InputIcon 上，不需要額外 A11Y 修正，因為 form 響應 enter -->
         <p-inputIcon styleClass="pi pi-search" (click)="onSubmit(queryForm)" />

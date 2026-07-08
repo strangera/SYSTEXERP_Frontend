@@ -137,22 +137,40 @@
   .layout-topbar {
     flex-wrap: wrap;
     height: auto;
-    padding: 1rem;
-    padding-bottom: 0;
+    padding: 1rem calc(1rem + env(safe-area-inset-right)) 0 calc(1rem + env(safe-area-inset-left));
 
     .layout-topbar-logo {
       width: auto;
     }
 
+    /* 觸控熱區加大到接近 44px，menubutton / topbarmenubutton 共用 */
+    .layout-menu-button,
+    .layout-topbar-menu-button {
+      padding: 0.75rem;
+    }
+
     .topbar-menu {
       order: 4;
       width: 100%;
-      margin: 0; /* 增加一些上下 margin */
+      margin: 0;
       display: flex;
+      flex-wrap: wrap; /* 項目太多時換行，避免擠壓或溢出 */
       justify-content: space-around;
+      row-gap: 0.5rem;
+
+      button {
+        padding: 0.65rem 0.75rem; /* 加大觸控熱區 */
+      }
     }
 
+    /* 右上角「...」彈出的行動版選單面板：改用相對於 topbar 底部定位，
+       避免桌面版寫死的 top: 5rem 在 topbar 因換行變高後跟內容脫節 */
     .layout-topbar-menu {
+      top: 100%;
+      right: calc(1rem + env(safe-area-inset-right));
+      left: auto;
+      max-width: calc(100vw - 2rem);
+
       .layout-topbar-button {
         border-radius: var(--border-radius) !important;
         margin-left: 0 !important;

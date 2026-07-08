@@ -125,6 +125,17 @@ export class LayoutService {
     localStorage.setItem('app-menu-mobile-active', 'false');
   }
 
+  // 若側邊欄目前是關閉狀態才將其打開，已開啟則不動作（避免點選頂部選單被誤判成關閉）
+  openMenu() {
+    if (this.isOverlay()) {
+      if (!this.isOverlayMenuActive()) this.onMenuToggle();
+    } else if (this.isDesktop()) {
+      if (this.isStaticMenuDesktopInactive()) this.onMenuToggle();
+    } else if (!this.isStaticMenuMobileActive()) {
+      this.onMenuToggle();
+    }
+  }
+
   showProfileSidebar() {
     this.isProfileSidebarVisible.update(val => !val); // 切換顯示狀態
     if (this.isProfileSidebarVisible()) {
