@@ -15,7 +15,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted"
+          <app-product-autocomplete class="col-12" [control]="queryForm.controls.KeyWord" [submitted]="submitted"
             optionValue="PLU_No"></app-product-autocomplete>
         </div>
 
@@ -25,8 +25,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOption | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號/名稱" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
@@ -35,12 +35,12 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="小分類代碼/名稱" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
@@ -53,8 +53,8 @@
               optionValue="value" [control]="queryForm.controls.PLU_Attribute" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="商品單位" controlName="PLU_Unit" [options]="unitOptions" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.PLU_Unit" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="商品單位" controlName="PLU_Unit" [options]="unitOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PLU_Unit" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="EC商品狀態" controlName="PLU_ECStatus" [options]="statusOptions" optionLabel="label"

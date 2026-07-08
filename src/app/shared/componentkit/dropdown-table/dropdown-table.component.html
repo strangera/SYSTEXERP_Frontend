@@ -14,7 +14,7 @@
           [suggestions]="suggestions"
           [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder"
-          (keydown.enter)="handleEnterKey($event)"
+          (keydown.enter)="handleEnterKey($event); enterKey.emit($event)"
           (completeMethod)="onCompleteMethod($event)"
           (onSelect)="onAutoCompleteSelect($event)"
           [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"

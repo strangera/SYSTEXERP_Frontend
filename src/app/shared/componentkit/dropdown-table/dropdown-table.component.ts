@@ -41,6 +41,8 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() templateLabel = '';
   @Input() fieldsConfig: FieldsConfig[] = [];
   @Output() inputValueChanged = new EventEmitter<Record<string, string>>();
+  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 handleEnterKey 跳到下一欄位
+  @Output() enterKey = new EventEmitter<Event>();
 
   // OverlayPanel 與 Table 基礎屬性
   @Input() showOverlay = true;
