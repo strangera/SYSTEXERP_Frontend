@@ -1,5 +1,5 @@
-import { inject, isDevMode } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { ENVIRONMENT_INITIALIZER, EnvironmentProviders, inject, isDevMode, makeEnvironmentProviders } from '@angular/core';
+import { NavigationStart, Router } from '@angular/router';
 import { filter, Subject } from 'rxjs';
 
 // -------------------------------------------------------------------------
@@ -10,7 +10,15 @@ import { filter, Subject } from 'rxjs';
 export const cancelRequests$ = new Subject<void>();
 
 // 這是您原始 Class 中定義的排除清單，現在作為外部可選參數
-export const excludedUrls: string[] = [];
+// 這兩支是 fire-and-forget 的稽核／診斷紀錄 API：呼叫端用 catchError(() => EMPTY) 吞掉錯誤，
+// 且常常緊接在「會觸發導航」的按鈕點擊之後送出（例如表格列點擊「detail」導頁、或導頁瞬間拋出的
+// JS 例外），若被路由取消機制打斷，稽核軌跡／錯誤診斷會被靜默遺失且無感知，故排除。
+export const excludedUrls: string[] = [
+  '/SYS0700/insertSYS0790', // SYS0790 使用者作業按鈕歷程 LOG（OperationLogService）
+  '/ClientLog/record-error', // 前端未攔截例外回報（GlobalErrorHandler）
+  '/assets/i18n/', // ngx-translate 翻譯檔（TranslateHttpLoader），App 啟動期載入，
+                   // 時間點常與「初始導航」的 NavigationStart 重疊，不屬於特定頁面生命週期，不可被取消
+];
 export const excludedRoutes: string[] = [];
 
 
@@ -21,18 +29,19 @@ export const excludedRoutes: string[] = [];
 function setupRequestCancellation(router: Router): void {
   // 僅設置一次路由監聽
   router.events.pipe(
-    filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-  ).subscribe((event: NavigationEnd) => {
+    filter((event): event is NavigationStart => event instanceof NavigationStart)
+  ).subscribe((event: NavigationStart) => {
     // 檢查是否為排除的路由
     const shouldExclude = excludedRoutes.some(excludedRoute =>
       event.url.startsWith(excludedRoute)
     );
 
     if (!shouldExclude) {
-      // 路由改變時，發送中斷信號
+      // 導航一開始（Guard/Resolver/新元件建構之前）就發送中斷信號，
+      // 避免舊頁面請求與新頁面請求、DOM 卸載/建立同時搶資源
       cancelRequests$.next();
       if (isDevMode()) {
-        console.log('Requests cancelled due to NavigationEnd.');
+        console.log('Requests cancelled due to NavigationStart.');
       }
     }
   });
@@ -40,12 +49,16 @@ function setupRequestCancellation(router: Router): void {
 
 /**
  *  最佳實踐：創建一個 Provider 函式，用於設置路由監聽並提供攔截器
+ *  必須在 main.ts 的 providers 陣列中以 provideRequestCancellationInterceptor() 註冊，
+ *  否則 setupRequestCancellation 永遠不會執行，cancelRequests$ 永遠不會 emit，
+ *  httpRequestInterceptor 的 takeUntil(cancelRequests$) 會形同虛設。
  */
-export function provideRequestCancellationInterceptor() {
-  const router = inject(Router);
-  setupRequestCancellation(router); // 在應用程式啟動時設置監聽
-
-  // 返回一個空陣列或一個提供者，但主要目的是運行 setup
-  // 實際上，我們會將攔截器函式在 main.ts 中註冊
-  return [];
+export function provideRequestCancellationInterceptor(): EnvironmentProviders {
+  return makeEnvironmentProviders([
+    {
+      provide: ENVIRONMENT_INITIALIZER,
+      multi: true,
+      useValue: () => setupRequestCancellation(inject(Router)),
+    },
+  ]);
 }

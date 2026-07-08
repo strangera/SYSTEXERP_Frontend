@@ -19,6 +19,7 @@ import { debugHeaderInterceptor } from './app/core/interceptors/debug-header.int
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 import { httpRequestInterceptor } from './app/core/interceptors/http-request.interceptor';
 import { queryCacheInterceptor } from './app/core/interceptors/query-cache.interceptor';
+import { provideRequestCancellationInterceptor } from './app/core/interceptors/request-cancellation.provider';
 import { GlobalErrorHandler } from './app/core/services/global-error-handler/global-error-handler';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
@@ -84,6 +85,7 @@ bootstrapApplication(AppComponent, {
       queryCacheInterceptor
     ])), // 啟用 HttpClient 並讓其支援 DI 提供的攔截器
     ...primeNgProviders,
+    provideRequestCancellationInterceptor(),
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
     { provide: ErrorHandler, useClass: GlobalErrorHandler }
