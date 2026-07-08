@@ -91,7 +91,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   PostFlagOptions = [
     { label: '作廢', value: '0' },
     { label: '建立', value: '1' },
-    { label: '確認', value: '2' },
+    // { label: '確認', value: '2' }, // 需求#566: 傳票狀態的"確認"選項，請移除
     { label: '過帳', value: '3' }
   ];
   ifOptions = [
