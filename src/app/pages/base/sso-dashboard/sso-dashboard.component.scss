@@ -1,7 +1,7 @@
 :host {
   display: block;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -14,8 +14,8 @@
 /* 懸浮選單樣式 */
 .user-profile-float {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: calc(20px + env(safe-area-inset-top));
+  right: calc(20px + env(safe-area-inset-right));
   z-index: 100;
 
   .profile-btn {
@@ -58,45 +58,13 @@
   }
 }
 
-/* 全螢幕 Grid */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  // 4個(含)以下：維持四象限
-  &:not(.more-than-four) {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-
-  // 5個以上：自動排列
-  &.more-than-four {
-    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
-    overflow-y: auto; // 允許滾動
-    padding: 40px;
-    gap: 20px;
-
-    .system-block {
-      height: 45vh; // 縮小高度
-      border-radius: 20px; // 變成圓角塊狀比較好看
-    }
-    .icon-circle {
-      width: 140px;
-      height: 140px;
-      border: 4px solid transparent;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-  }
-}
 /* 視口容器：隱藏溢出 */
 .slider-viewport {
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
+  touch-action: pan-y;
 }
 
 /* 滑動軌道：關鍵在於 transition */
@@ -108,8 +76,8 @@
 }
 /* 每一頁都是全螢幕的四象限 Grid */
 .page-grid {
-  min-width: 100vw;
-  height: 100vh;
+  min-width: 100dvw;
+  height: 100dvh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -154,10 +122,10 @@
     transform: translateY(-50%) scale(0.95); /* 按下時的縮小反饋 */
   }
   &.prev {
-    left: 40px;
+    left: calc(40px + env(safe-area-inset-left));
   }
   &.next {
-    right: 40px;
+    right: calc(40px + env(safe-area-inset-right));
   }
 }
 /* 處理空白區塊 (第 5 個出現時，第 6,7,8 個位置的底色) */
@@ -222,6 +190,9 @@
   font-weight: 800; // 加粗
   color: #555;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  max-width: 85%;
+  text-align: center;
+  overflow-wrap: break-word;
 }
 
 /* 中央圓圈優化 */
@@ -267,4 +238,49 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+
+/* 手機版：縮小中央 Logo 圓圈與四象限元件，避免窄螢幕互相重疊、跑版 */
+@media screen and (max-width: 575.98px) {
+  .center-circle {
+    width: clamp(130px, 34vw, 220px);
+    height: clamp(130px, 34vw, 220px);
+    padding: 12px;
+  }
+
+  .icon-circle {
+    width: clamp(80px, 20vw, 180px);
+    height: clamp(80px, 20vw, 180px);
+    margin-bottom: 0.75rem;
+  }
+
+  .system-label {
+    padding: 6px 16px;
+    font-size: 0.95rem;
+  }
+
+  .nav-btn {
+    width: 48px;
+    height: 48px;
+
+    i {
+      font-size: 1.6rem;
+    }
+
+    &.prev {
+      left: calc(8px + env(safe-area-inset-left));
+    }
+    &.next {
+      right: calc(8px + env(safe-area-inset-right));
+    }
+  }
+
+  .user-profile-float .profile-btn {
+    padding: 8px 14px;
+    gap: 8px;
+
+    .user-info .user-name {
+      font-size: 0.875rem;
+    }
+  }
 }

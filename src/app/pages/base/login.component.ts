@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,40 +15,42 @@ import { SsoDashboardService } from './sso-dashboard/sso-dashboard.service';
   selector: 'app-login',
   template: `
   <div
-    class="fadein animation-duration-500 surface-ground flex align-items-center justify-content-center relative"
+    class="login-page fadein animation-duration-500 surface-ground flex align-items-center justify-content-center relative"
     style="min-height: 100dvh;">
-    <div class="flex flex-column align-items-center justify-content-center w-full sm:w-auto py-4">
+    <div class="login-wrap flex flex-column align-items-center justify-content-center w-full sm:w-auto sm:py-4">
       <img [src]="logoPath" fetchpriority="high" alt="logo" loading="lazy"
         (click)="loginForm.controls.password.setValue(devPassword)"
-        class="fadeindown animation-duration-500 hidden sm:block mb-5 w-18rem flex-shrink-0" />
-      <div class="card w-full sm:w-auto flex flex-column align-items-center justify-content-center">
+        class="fadeindown animation-duration-500 hidden sm:block mb-5 w-full h-auto" style="max-width: 18rem;" />
+      <div class="login-box card w-full sm:w-auto flex flex-column align-items-center justify-content-center">
         <div
-          class="w-full surface-card py-6 px-4 sm:px-6 login-card flex flex-column justify-content-center">
+          class="login-card w-full surface-card py-6 px-4 sm:px-6 flex flex-column justify-content-center">
           <div class="text-center mb-4">
             <img [src]="logoPath" fetchpriority="high" alt="logo"
-              class="fadeindown animation-duration-500 sm:hidden mb-4 w-18rem flex-shrink-0 mx-auto" />
+              (click)="loginForm.controls.password.setValue(devPassword)"
+              class="fadeindown animation-duration-500 sm:hidden mb-4 w-full h-auto mx-auto" style="max-width: 18rem;" />
             <div class="fadeindown animation-duration-500 text-900 text-3xl font-medium mb-3">請登入管理帳號</div>
           </div>
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit(loginForm)">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit(loginForm)" autocomplete="on">
             <div class="zoomin animation-duration-500 w-full sm:w-30rem mb-4">
               <label for="account_id" class="block text-900 text-xl font-medium mb-2">使用者帳號</label>
-              <input id="account_id" type="text" formControlName="code" placeholder="帳號"
-                class="w-full p-3 p-inputtext" />
-              @if (submitted && loginForm.get('code')?.hasError('required')) {
-                <span class="p-error">請輸入帳號</span>
-              }
+              <input #accountInput id="account_id" name="username" type="text" formControlName="code"
+                placeholder="帳號" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
+                enterkeyhint="next" class="w-full p-3 p-inputtext text-base" />
+              <small class="p-error block mt-1" style="min-height: 1.25rem;">
+                @if (submitted && loginForm.get('code')?.hasError('required')) { 請輸入帳號 }
+              </small>
             </div>
             <div class="zoomin animation-duration-500 w-full mb-4">
               <label for="password" class="block text-900 font-medium text-xl mb-2">使用者密碼</label>
               <p-password id="password" formControlName="password" placeholder="密碼"
                 [class.ng-invalid]="submitted && !!loginForm.controls.password.errors"
                 [class.ng-dirty]="submitted && !!loginForm.controls.password.errors"
-                [toggleMask]="true" [feedback]="false"
-                inputStyleClass="w-full p-3" styleClass="w-full">
+                [toggleMask]="true" [feedback]="false" autocomplete="current-password"
+                inputStyleClass="w-full p-3 text-base" styleClass="w-full">
               </p-password>
-              @if (submitted && loginForm.get('password')?.hasError('required')) {
-                <span class="p-error">請輸入密碼</span>
-              }
+              <small class="p-error block mt-1" style="min-height: 1.25rem;">
+                @if (submitted && loginForm.get('password')?.hasError('required')) { 請輸入密碼 }
+              </small>
             </div>
             <p-button type="submit" pButton pRipple label="登入" class="zoomin animation-duration-500 w-full p-0"
               styleClass="w-full p-3 text-xl" [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'"
@@ -59,11 +61,21 @@ import { SsoDashboardService } from './sso-dashboard/sso-dashboard.service';
       </div>
     </div>
 
-    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 0.875rem; color: #666; z-index: 10;">
+    <div class="fixed text-color-secondary text-sm z-1"
+      style="bottom: calc(10px + env(safe-area-inset-bottom)); right: calc(10px + env(safe-area-inset-right));">
       {{ version }}
     </div>
   </div>
   `,
+  styles: [`
+    /* 手機版：登入卡片改為滿版鋪滿上下邊界，貼合真實 App 的登入頁感受 */
+    @media screen and (max-width: 575.98px) {
+      .login-page { align-items: stretch; }
+      .login-wrap { min-height: 100dvh; }
+      .login-box { min-height: 100dvh; border: none; border-radius: 0; box-shadow: none; margin-bottom: 0; }
+      .login-card { min-height: 100dvh; }
+    }
+  `],
   standalone: true,
   imports: [
     FormsModule,
@@ -73,13 +85,14 @@ import { SsoDashboardService } from './sso-dashboard/sso-dashboard.service';
     ButtonDirective,
   ],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, AfterViewInit {
   private readonly ssoDashboardService = inject(SsoDashboardService);
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly notemessage = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  @ViewChild('accountInput') accountInput?: ElementRef<HTMLInputElement>;
 
   logoPath = 'assets/layout/images/login_logo.webp';
   devPassword = environment.devPassword;
@@ -138,11 +151,19 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  ngAfterViewInit(): void {
+    // 觸控裝置不搶先 focus，避免一進頁面就跳出虛擬鍵盤蓋住登入卡片
+    if (globalThis.matchMedia?.('(pointer: fine)').matches) {
+      this.accountInput?.nativeElement.focus();
+    }
+  }
+
   onSubmit(frm: FormGroup): void {
     this.submitted = true;
     if (frm.invalid) return;
 
     this.loading = true;
+    frm.disable();
     this.authService
       .login(this.loginForm.value as userLogin, { skipNavigate: true })
       .pipe(first(), takeUntilDestroyed(this.destroyRef))
@@ -171,6 +192,7 @@ export class LoginComponent implements OnInit {
         },
         error: () => {
           this.loginForm.patchValue({ password: '' });
+          this.loginForm.enable();
           this.loading = false;
         },
       });
