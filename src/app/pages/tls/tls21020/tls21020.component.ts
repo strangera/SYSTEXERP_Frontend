@@ -9,7 +9,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { Maps } from '@shared/componentkit/table/table.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -20,16 +20,7 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
   selector: 'app-tls21020',
   templateUrl: './tls21020.component.html',
   standalone: true,
-  imports: [
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    TranslateModule,
-    ButtonComponent,
-    DropdownComponent,
-    MenubarComponent,
-    TableEditComponent,
-  ],
+  imports: [AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, ButtonComponent, DropdownComponent, MenubarComponent, TableEditComponent,],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
   public readonly service = inject(TLS21020Service);
@@ -38,7 +29,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
-    ...createPaginationConfig([{ field: 'AccDC', order: 0 }, { field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
@@ -92,20 +82,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccDC: true,
     ItemDesc: true,
     AccNo: true,
-    // ABAT_YN: false, 照要求隱藏
     Org_ID: true,
     AccNotes: true,
-    // PAY_No: false,
   });
 
   // allColumns 沒有呼叫任何 signal（選項以 Signal reference 傳入），computed 追蹤不到依賴，
   // 等同 plain property 但多一層包裹；改為 readonly 後每次存取不再重新建立陣列。
   private readonly allColumns: EditColumn[] = [
-    {
-      field: 'AccDC',
-      header: '借/貸',
-      format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
-    },
+    { field: 'AccDC', header: '借/貸', format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v, },
     { field: 'ItemDesc', header: '項目名稱' },
     {
       field: 'AccNo',
@@ -129,11 +113,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       },
       width: '250px',
     },
-    {
-      field: 'ABAT_YN',
-      header: '立沖科目',
-      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
-    },
+    { field: 'ABAT_YN', header: '立沖科目', format: (v: 'Y' | 'N') => Maps.YN.get(v) || v },
     {
       field: 'Org_ID',
       header: '組織代碼',
@@ -146,13 +126,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       showClear: false,
       width: '200px',
     },
-    {
-      field: 'AccNotes',
-      header: '傳票備註',
-      type: 'input',
-      validate: [this.validator],
-      width: '300px',
-    },
+    { field: 'AccNotes', header: '傳票備註', type: 'input', validate: [this.validator], width: '300px' },
     {
       field: 'ObjectNo',
       header: '是否依合約拆立組織',
@@ -194,12 +168,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       disabled: (_v, _i, r) => (r as TLS21020Data).Voucher_Type !== '4',
       width: '1rem',
     },
-    {
-      field: 'PAY_No',
-      header: '付款別編號',
-      type: 'input',
-      validate: [this.validator],
-    },
+    { field: 'PAY_No', header: '付款別編號', type: 'input', validate: [this.validator] },
   ];
 
   /** 根據 columnsKeys 動態產生最終欄位 */
@@ -224,36 +193,26 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
-    this.service.getEntryTypes();
-
-    // switchMap 確保切換傳票種類時取消前一個進行中的請求，避免舊請求覆蓋新結果
-    this.qf().ENTRY_TYPE.valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef),
-      tap(type => {
-        if (!type) {
-          this.tableData.set([]);
-          this.totalRecords.set(0);
-        } else {
-          this.updateColumnsKeys(type);
-        }
-      }),
-      filter((type): type is EntryType => !!type),
-      switchMap(() => {
-        this.loading = true;
-        this.tableLoading.set(true);
-        return this.queryTLS21020().pipe(
-          finalize(() => {
-            this.loading = false;
-            this.tableLoading.set(false);
-          }),
-        );
-      }),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.tableData.set(res.Data || []);
-        this.totalRecords.set(res.TotalCount || 0);
-      },
+    this.qf().ENTRY_TYPE.valueChanges.pipe(takeUntilDestroyed(this.destroyRef), tap(type => {
+      if (!type) {
+        this.tableData.set([]);
+        this.totalRecords.set(0);
+      } else {
+        this.updateColumnsKeys(type);
+      }
+    }), filter((type): type is EntryType => !!type), switchMap(() => {
+      this.loading = true;
+      this.tableLoading.set(true);
+      return this.queryTLS21020().pipe(
+        finalize(() => {
+          this.loading = false;
+          this.tableLoading.set(false);
+        }),
+      );
+    })).subscribe(res => {
+      if (res.Status !== '0000') return;
+      this.tableData.set(res.Data || []);
+      this.totalRecords.set(res.TotalCount || 0);
     });
   }
 
