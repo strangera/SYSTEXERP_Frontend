@@ -14,10 +14,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!--!!! 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.KeyWord"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"></app-dropdown-table>
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted"
+            optionValue="PLU_No"></app-product-autocomplete>
         </div>
 
         <div class="grid p-fluid">
@@ -86,10 +85,12 @@
   <div class="col-13">
     <app-table-report tableKey="TLS51070" [data]="data" [columns]="columns" (edit)="onEdit($event)"
       (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)" [showExcel]="true" [showExcelImport]="false" [showCustomExcelImport]="true"
-      (exportExcel)="onExportExcel()" [exportExcelLoading]="excelLoading" (importExcel)="onOpenImportDialog()"
-      [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords" [loading]="loading"
-      [isRowSelectable]="isRowSelectable" [lastQueryBody]="lastQueryBody" [queryFunction]="query">
+      (delete)="onDelete($event)" [deleteDisabled]="rowNotDeletable" [showExcel]="true" [showExcelImport]="false"
+      [showCustomExcelImport]="true" (exportExcel)="onExportExcel()" [exportExcelLoading]="excelLoading"
+      (importExcel)="importForm.reset();importDialogVisible = true" [showCheckBox]="true" dataKey="id"
+      [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls51070Service.queryTLS51070.bind(tls51070Service)"
+      [customTemplates]="{ CanDel: canDelTemplate }">
       <header>
         <p-button [style]="{ width: '35px', height: '35px', 'border-radius': '50%' }" pTooltip="下傳POS"
           tooltipPosition="top" icon="pi pi-upload rotate-180" severity="success" class="p-button-rounded p-button-text"
@@ -97,6 +98,12 @@
           [loading]="btnLoading" />
       </header>
     </app-table-report>
+    <ng-template #canDelTemplate let-rowData>
+      @if (!rowData.CanDel) {
+      <p-tag severity="secondary" icon="pi pi-trash" styleClass="can-del-tag" pTooltip="此商品資料已被使用，無法刪除"
+        tooltipPosition="top"></p-tag>
+      }
+    </ng-template>
   </div>
 </div>
 
@@ -117,6 +124,6 @@
     </div>
   </form>
 
-  <app-file-upload #excelUploadComponent [accept]="'.xlsx,.xls'" [customUpload]="true" [loading]="excelLoading"
+  <app-file-upload [accept]="'.xlsx,.xls'" [customUpload]="true" [loading]="excelLoading"
     (uploadHandler)="onImportExcelSubmit($event)" chooseLabel="匯入檔案"></app-file-upload>
 </app-dialog>
