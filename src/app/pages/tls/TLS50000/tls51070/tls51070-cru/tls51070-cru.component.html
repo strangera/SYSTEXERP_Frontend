@@ -1,35 +1,20 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      label="基本資料"
-      (click)="switchButton(1)"
-      [severity]="buttonID === 1 ? undefined : 'secondary'"
-    ></app-button>
+    <app-button label="基本資料" (click)="switchButton(1)"
+      [severity]="buttonID === 1 ? undefined : 'secondary'"></app-button>
 
-    <app-button
-      label="商品規格"
-      (click)="switchButton(2)"
-      [severity]="buttonID === 2 ? undefined : 'secondary'"
-    ></app-button>
+    <app-button label="商品規格" (click)="switchButton(2)"
+      [severity]="buttonID === 2 ? undefined : 'secondary'"></app-button>
 
-    <app-button
-      label="商品規格(二)"
-      (click)="switchButton(3)"
-      [severity]="buttonID === 3 ? undefined : 'secondary'"
-    ></app-button>
+    <app-button label="商品規格(二)" (click)="switchButton(3)"
+      [severity]="buttonID === 3 ? undefined : 'secondary'"></app-button>
 
-    <app-button
-      label="商品資訊"
-      (click)="switchButton(4)"
-      [severity]="buttonID === 4 ? undefined : 'secondary'"
-    ></app-button>
+    <app-button label="商品資訊" (click)="switchButton(4)"
+      [severity]="buttonID === 4 ? undefined : 'secondary'"></app-button>
 
-    <app-button
-      label="商品圖檔"
-      (click)="switchButton(5)"
-      [severity]="buttonID === 5 ? undefined : 'secondary'"
-    ></app-button>
+    <app-button label="商品圖檔" (click)="switchButton(5)"
+      [severity]="buttonID === 5 ? undefined : 'secondary'"></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -38,129 +23,64 @@
       <ng-container *ngIf="buttonID === 1">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="商品管理編號"
-              controlName="PLU_MagNo"
-              [control]="dataForm.controls.PLU_MagNo"
-              [submitted]="submitted"
-              [disabled]="true"
-            ></app-input-text>
+            <app-input-text label="商品管理編號" controlName="PLU_MagNo" [control]="dataForm.controls.PLU_MagNo"
+              [submitted]="submitted" [disabled]="true"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="商品中文名稱"
-              controlName="PLU_Name"
-              [control]="dataForm.controls.PLU_Name"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="商品中文名稱" controlName="PLU_Name" [control]="dataForm.controls.PLU_Name"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="商品英文名稱"
-              controlName="PLU_EngName"
-              [control]="dataForm.controls.PLU_EngName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="商品英文名稱" controlName="PLU_EngName" [control]="dataForm.controls.PLU_EngName"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="列印名稱"
-              controlName="PLU_PrnName"
-              [control]="dataForm.controls.PLU_PrnName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="列印名稱" controlName="PLU_PrnName" [control]="dataForm.controls.PLU_PrnName"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商編號"
-              controlName="VEN_No"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.VEN_No"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商貨號"
-              controlName="PLU_OrgPLUNo"
-              [control]="dataForm.controls.PLU_OrgPLUNo"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="dataForm.controls.PLU_OrgPLUNo"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="國際條碼"
-              controlName="PLU_No"
-              [control]="dataForm.controls.PLU_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="國際條碼" controlName="PLU_No" [control]="dataForm.controls.PLU_No"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼/名稱"
-              controlName="CAT_LNo"
-              [options]="largeOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.CAT_LNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼/名稱"
-              controlName="CAT_MNo"
-              [options]="middleOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.CAT_MNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類代碼/名稱"
-              controlName="CAT_SNo"
-              [options]="smallOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.CAT_SNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="小分類代碼/名稱" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.CAT_SNo" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="最小訂購量"
-              controlName="PLU_MinOrder"
-              [control]="dataForm.controls.PLU_MinOrder"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="最小訂購量" controlName="PLU_MinOrder" [control]="dataForm.controls.PLU_MinOrder"
+              [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="標籤名稱"
-              controlName="PLU_Lable"
-              [control]="dataForm.controls.PLU_Lable"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="標籤名稱" controlName="PLU_Lable" [control]="dataForm.controls.PLU_Lable"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="說明"
-              controlName="PLU_Reserve1"
-              [control]="dataForm.controls.PLU_Reserve1"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="說明" controlName="PLU_Reserve1" [control]="dataForm.controls.PLU_Reserve1"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
       </ng-container>
@@ -168,118 +88,54 @@
       <ng-container *ngIf="buttonID === 2">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="商品型態"
-              controlName="PLU_Attribute"
-              [options]="attributeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_Attribute"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="商品型態" controlName="PLU_Attribute" [options]="attributeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_Attribute" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="進價稅別"
-              controlName="PLU_StockTaxType"
-              [options]="taxTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_StockTaxType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="進價稅別" controlName="PLU_StockTaxType" [options]="taxTypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_StockTaxType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="商品單位"
-              controlName="PLU_Unit"
-              [options]="unitOptions"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.PLU_Unit"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="商品單位" controlName="PLU_Unit" [options]="unitOptions" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.PLU_Unit" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="售價稅別"
-              controlName="PLU_TaxType"
-              [options]="taxTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_TaxType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="售價稅別" controlName="PLU_TaxType" [options]="taxTypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_TaxType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="商品類別"
-              controlName="PLU_Type"
-              [options]="pluTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_Type"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="商品類別" controlName="PLU_Type" [options]="pluTypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_Type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="包裝入數"
-              controlName="PLU_BoxQty"
-              [control]="dataForm.controls.PLU_BoxQty"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="包裝入數" controlName="PLU_BoxQty" [control]="dataForm.controls.PLU_BoxQty"
+              [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="長(cm)"
-              controlName="PLU_Length"
-              [control]="dataForm.controls.PLU_Length"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="長(cm)" controlName="PLU_Length" [control]="dataForm.controls.PLU_Length"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="寬度(cm)"
-              controlName="PLU_Width"
-              [control]="dataForm.controls.PLU_Width"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="寬度(cm)" controlName="PLU_Width" [control]="dataForm.controls.PLU_Width"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="高(cm)"
-              controlName="PLU_Height"
-              [control]="dataForm.controls.PLU_Height"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="高(cm)" controlName="PLU_Height" [control]="dataForm.controls.PLU_Height"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="重量(g)"
-              controlName="PLU_Weight"
-              [control]="dataForm.controls.PLU_Weight"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="重量(g)" controlName="PLU_Weight" [control]="dataForm.controls.PLU_Weight"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="容量(ml)"
-              controlName="PLU_Volume"
-              [control]="dataForm.controls.PLU_Volume"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="容量(ml)" controlName="PLU_Volume" [control]="dataForm.controls.PLU_Volume"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
       </ng-container>
@@ -287,20 +143,12 @@
       <ng-container *ngIf="buttonID === 3">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="規格說明"
-              controlName="PLU_Reserve2"
-              [control]="dataForm.controls.PLU_Reserve2"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="規格說明" controlName="PLU_Reserve2" [control]="dataForm.controls.PLU_Reserve2"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="系列"
-              controlName="PLU_Reserve3"
-              [control]="dataForm.controls.PLU_Reserve3"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="系列" controlName="PLU_Reserve3" [control]="dataForm.controls.PLU_Reserve3"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
       </ng-container>
@@ -309,85 +157,40 @@
       <ng-container *ngIf="buttonID === 4">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="專櫃編號"
-              controlName="TLT_NO"
-              [options]="TLT_NO_Option"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.TLT_NO"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="專櫃編號" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.TLT_NO" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌代碼"
-              controlName="LOGO_No"
-              [options]="pluLogoOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="dataForm.controls.LOGO_No"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="EC商品狀態"
-              controlName="PLU_ECStatus"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_ECStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="EC商品狀態" controlName="PLU_ECStatus" [options]="statusOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PLU_ECStatus" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="商品售價"
-              controlName="PLU_SalePrc"
-              [control]="dataForm.controls.PLU_SalePrc"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="庫存量"
-              controlName="STK_CurrentQty"
-              [control]="dataForm.controls.STK_CurrentQty"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="庫存量" controlName="STK_CurrentQty" [control]="dataForm.controls.STK_CurrentQty"
+              [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="標準進價"
-              controlName="PLU_OrderPrc"
-              [control]="dataForm.controls.PLU_OrderPrc"
-              [submitted]="submitted"
-              [maxFractionDigits]="2"
-            ></app-input-number>
+            <app-input-number label="標準進價" controlName="PLU_OrderPrc" [control]="dataForm.controls.PLU_OrderPrc"
+              [submitted]="submitted" [maxFractionDigits]="2"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="安全存量"
-              controlName="PLU_SafeQty"
-              [control]="dataForm.controls.PLU_SafeQty"
-              [submitted]="submitted"
-              [maxFractionDigits]="4"
-            ></app-input-number>
+            <app-input-number label="安全存量" controlName="PLU_SafeQty" [control]="dataForm.controls.PLU_SafeQty"
+              [submitted]="submitted" [maxFractionDigits]="4"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="進價折數"
-              controlName="PLU_OrderPrcRate"
-              [control]="dataForm.controls.PLU_OrderPrcRate"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="進價折數" controlName="PLU_OrderPrcRate" [control]="dataForm.controls.PLU_OrderPrcRate"
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
       </ng-container>
@@ -397,74 +200,41 @@
           <b class="text-primary">上傳圖片</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-img-upload
-            class="col-12"
-            (uploadFiles)="files = $event"
-            [images]="img1001Data"
-            [fileLimit]="10 - img1001Data.length"
-            (imagesChange)="img1001Data = $event"
-            [showEdit]="!isFormReadable"
-            (imagesDeleteChange)="confirmDeleteImages = $event"
-            [disabled]="
+          <app-img-upload class="col-12" (uploadFiles)="files = $event" [images]="img1001Data"
+            [fileLimit]="10 - img1001Data.length" (imagesChange)="img1001Data = $event" [showEdit]="!isFormReadable"
+            (imagesDeleteChange)="confirmDeleteImages = $event" [disabled]="
               !hasPermission(Actions.ImageImport) && img1001Data.length < 10
-            "
-          ></app-img-upload>
+            "></app-img-upload>
         </div>
       </ng-container>
 
       <!-- 有管理號碼PLU_MagNo才能編輯 -->
       <ng-container>
-        <h6>第一筆為最主要的國際條碼</h6>
         <!-- 國際條碼 POS2005 -->
-        <app-table-edit
-          title="多筆國際條碼"
-          tableKey="PLU_No"
-          [data]="POS2005Data"
-          class="col-12"
-          [columns]="POS2005DataColumn"
-          (selectionChange)="selectedPOS2005Items = $event"
-          [selectedItems]="selectedPOS2005Items"
-          [rowValidate]="validate2005Row"
-          (dataChange)="POS2005Data = $event"
-          dataStatusField="status"
-          [loading]="loading"
-          [disabled]="isFormReadable"
-        ></app-table-edit>
+        <app-table-edit title="多筆國際條碼" tableKey="PLU_No" [data]="POS2005Data" class="col-12"
+          [columns]="POS2005DataColumn" (selectionChange)="selectedPOS2005Items = $event"
+          [selectedItems]="selectedPOS2005Items" [rowValidate]="validate2005Row" (dataChange)="POS2005Data = $event"
+          dataStatusField="status" [loading]="loading" [disabled]="isFormReadable">
+          <header>
+            <span>第一筆為主要的國際條碼</span>
+          </header>
+        </app-table-edit>
         <!-- 輸入廠商編號才能填寫   -->
         <!-- <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null"> -->
         <!-- 商品採購廠商 POS2020 -->
-        <app-table-edit
-          title="商品採購廠商"
-          tableKey="VEN_No"
-          [data]="POS2020Data"
-          class="col-12"
-          [columns]="POS2020DataColumn"
-          (selectionChange)="selectedPOS2020Items = $event"
-          [selectedItems]="selectedPOS2020Items"
-          [dataStatusValue]="{
+        <app-table-edit title="商品採購廠商" tableKey="VEN_No" [data]="POS2020Data" class="col-12"
+          [columns]="POS2020DataColumn" (selectionChange)="selectedPOS2020Items = $event"
+          [selectedItems]="selectedPOS2020Items" [dataStatusValue]="{
             Original: 'old',
             New: 'new',
             Modified: 'modified',
             Deleted: 'deleted',
-          }"
-          [rowValidate]="validate2020Row"
-          [defaultInsertData]="defaultNew2020"
-          (dataChange)="POS2020Data = $event"
-          dataStatusField="status"
-          [loading]="loading"
-          [disabled]="isFormReadable"
-        ></app-table-edit>
+          }" [rowValidate]="validate2020Row" [defaultInsertData]="defaultNew2020" (dataChange)="POS2020Data = $event"
+          dataStatusField="status" [loading]="loading" [disabled]="isFormReadable"></app-table-edit>
         <!-- </ng-container> -->
       </ng-container>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (click)="reset51070()"
-        ></app-button>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+        <app-button btnType="cancel" [form]="dataForm" (click)="reset51070()"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
