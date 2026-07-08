@@ -9,8 +9,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { POS2034 } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -20,7 +21,7 @@ import { AccordionModule } from 'primeng/accordion';
   selector: 'app-tls51080',
   templateUrl: './tls51080.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableReportComponent, TranslateModule]
 })
 export class TLS51080Component extends BasicQueryPageComponent<POS2034> implements OnInit {
   // 查詢
@@ -39,13 +40,14 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null;
 
   org_idOptions: apiOption[] = [];
   SYS3100_Options: apiOption[] = [];
   building_noOptions: apiOption[] = [];
 
   data: POS2034[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'STO_No', header: '公司編號/店號', visible: false },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
@@ -78,6 +80,8 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
 
   selectedItems: POS2034[] = [];// 多選項目
 
+  readonly query = (body: any) => this.tls51080Service.queryTLS51080(body);
+
   // ----------------------------------------------------------------
   constructor(
     private tls51080Service: Tls51080Service,
@@ -105,6 +109,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
+            this.lastQueryBody = frm.value;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response.Status, response.Message);

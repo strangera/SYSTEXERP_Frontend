@@ -11,10 +11,10 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import {
   AddButton,
-  Column,
   createPaginationConfig,
   formatAmount,
 } from '@shared/componentkit/table/table.model';
@@ -53,7 +53,7 @@ interface LogoBudget {
     ReactiveFormsModule,
     CalendarComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -64,11 +64,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     YYYYMM2: [new Date(), Validators.required],
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
   });
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   BUD_StatusOptions = getSYS1000Options('BUD_Status');
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'YYYYMM', header: '年月', visible: true },
@@ -87,6 +86,8 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
   totalRecords = 0;
   data: LogoBudget[] = [];
   selectedItems: LogoBudget[] = [];
+  lastQueryBody: any = null;
+  readonly query = (body: any) => this.apiService.queryTLS51110(body);
   editDisabled(rowData: LogoBudget) {
     return rowData.BUD_Status === "1";
   }
@@ -150,6 +151,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       this.apiService.queryTLS51110(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount || this.data.length;
+        this.lastQueryBody = body;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });

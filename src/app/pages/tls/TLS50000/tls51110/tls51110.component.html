@@ -27,11 +27,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [addButton]="addButton" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    [expansionRowsPerPageOptions]="expansionRowsPerPageOptions" [rows]="30" [data]="data" [columns]="columns"
+  <app-table-report [addButton]="addButton" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)" dataKey="id"
-    [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [totalRecords]="totalRecords" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="true"
-    (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" [editDisabled]="editDisabled"></app-table>
+    (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" [editDisabled]="editDisabled"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="query"></app-table-report>
 </div>
