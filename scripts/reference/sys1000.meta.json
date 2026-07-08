@@ -1,0 +1,6 @@
+{
+  "source": "http://localhost:5142/User/queryAllSystemCode",
+  "snapshotDate": "2026-07-08T06:16:17.123Z",
+  "recordCount": 1483,
+  "note": "此檔案僅供靜態比對「寫死下拉是否對應 SYS1000」使用，非執行期資料源。執行期真實資料來自 SystemDataService（登入後打 /User/queryAllSystemCode，存入 localStorage['SYS1000']）。過時只影響比對判斷的準確度，不影響已轉換程式（呼叫 getSYS1000Options()）的正確性。"
+}
