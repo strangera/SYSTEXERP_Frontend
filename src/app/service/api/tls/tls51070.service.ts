@@ -31,6 +31,11 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51070`, body);
   }
 
+  // 下傳POS2004異動資料
+  ExecSpFuncTLS51070(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ExecSpFuncTLS51070`, body);
+  }
+
   // 查詢 POS2005_國際條碼、POS2020_採購廠商、IMG1001_商品圖檔
   queryTLS51070_Detail(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
