@@ -84,16 +84,15 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table-report tableKey="TLS51070" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showExcel]="true" [showExcelImport]="false" [showCustomExcelImport]="true" (exportExcel)="onExportExcel()"
-      [exportExcelLoading]="excelLoading" (importExcel)="onOpenImportDialog()" [showCheckBox]="true"
-      dataKey="id" [totalRecords]="totalRecords" [loading]="loading"
+    <app-table-report tableKey="TLS51070" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)" [showExcel]="true" [showExcelImport]="false" [showCustomExcelImport]="true"
+      (exportExcel)="onExportExcel()" [exportExcelLoading]="excelLoading" (importExcel)="onOpenImportDialog()"
+      [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords" [loading]="loading"
       [isRowSelectable]="isRowSelectable" [lastQueryBody]="lastQueryBody" [queryFunction]="query">
       <header>
         <p-button [style]="{ width: '35px', height: '35px', 'border-radius': '50%' }" pTooltip="下傳POS"
-          tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
-          class="p-button-rounded p-button-text"
+          tooltipPosition="top" icon="pi pi-upload rotate-180" severity="success" class="p-button-rounded p-button-text"
           [disabled]="selectedItems.length === 0 || !hasPermission(Actions.Download)" (click)="onUpload()"
           [loading]="btnLoading" />
       </header>
