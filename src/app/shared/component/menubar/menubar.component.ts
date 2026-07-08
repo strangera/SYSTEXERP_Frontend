@@ -1,37 +1,36 @@
-import { AsyncPipe, NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit, computed, inject, signal } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, Input, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { finalize, map, take } from 'rxjs';
+import { Observable, finalize, map, take } from 'rxjs';
 import { FavoriteStoreService } from 'src/app/core/layout/app.topbar/favorite-store.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NotificationService } from '../notification-message/notification.service';
 import { SystemDataService } from './../../../service/system/system-data.service';
 
-@UntilDestroy()
 @Component({
   selector: 'app-menubar',
   template: `
-  <div class="relative w-full">
+  <div class="relative w-full min-w-0">
     <div class="w-full overflow-x-auto whitespace-nowrap">
       <p-breadcrumb class="inline-block min-w-max w-full"
         [model]="(customBreadcrumbItems.length ? customBreadcrumbItems : (breadcrumbItems$ | async)) ?? undefined"
         [home]="home">
         <ng-template pTemplate="item" let-item>
           <div class="cursor-pointer" [routerLink]="item.url">
-            <span class="text-sm font-semibold" [ngClass]="noProgNo ? 'text-red-500' : 'text-color'">
+            <span class="text-sm font-semibold" [class.text-red-500]="noProgNo" [class.text-color]="!noProgNo">
               {{ item.label }}
             </span>
-            
-            <ng-container *ngIf="item.isLast && !noProgNo">
-              <i *ngIf="isUpdating()" class="pi pi-spinner pi-spin text-color"></i>
-              
-              <i *ngIf="!isUpdating()" 
-                [class]="isFavorite() ? 'pi pi-star-fill text-yellow-400' : 'pi pi-star text-color'">
-              </i>
-            </ng-container>
+
+            @if (item.isLast && !noProgNo) {
+              @if (isUpdating()) {
+                <i class="pi pi-spinner pi-spin text-color"></i>
+              } @else {
+                <i [class]="isFavorite() ? 'pi pi-star-fill text-yellow-400' : 'pi pi-star text-color'"></i>
+              }
+            }
           </div>
         </ng-template>
       </p-breadcrumb>
@@ -40,12 +39,11 @@ import { SystemDataService } from './../../../service/system/system-data.service
   `,
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush, // 保持 OnPush
+  host: { class: 'block min-w-0' },
   imports: [
     BreadcrumbModule,
     PrimeTemplate,
     RouterLink,
-    NgIf,
-    NgClass,
     AsyncPipe
   ],
 })
@@ -56,6 +54,7 @@ export class MenubarComponent implements OnInit {
   private readonly messageService = inject(NotificationService);
   private readonly systemDataService = inject(SystemDataService);
   private readonly favoriteStore = inject(FavoriteStoreService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly isUpdating = signal(false);
   readonly home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
 
@@ -64,19 +63,18 @@ export class MenubarComponent implements OnInit {
     this.favoriteStore.favorites().some(fav => fav.prog_No === this.ProgNo)
   );
 
-  // 將 breadcrumb 轉為 Observable，配合 AsyncPipe 自動觸發變更偵測
-  breadcrumbItems$!: import('rxjs').Observable<MenuItem[]>;
+  // 將 breadcrumb 轉為 Observable，配合 AsyncPipe 自動觸發變更偵測（AsyncPipe 會在元件銷毀時自動取消訂閱）
+  breadcrumbItems$!: Observable<MenuItem[]>;
   noProgNo = false;
 
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) return;
 
     // 初始化載入
-    this.favoriteStore.fetchFavorites().pipe(untilDestroyed(this)).subscribe();
+    this.favoriteStore.fetchFavorites().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
 
     // 優化邏輯：將數據轉換邏輯封裝在 pipe 中
     this.breadcrumbItems$ = this.systemDataService.menuUpdated.pipe(
-      untilDestroyed(this),
       map((newData: FunsrightInfo[]) => {
         const menuPath = this.getMenuPath(newData, this.ProgNo);
 
