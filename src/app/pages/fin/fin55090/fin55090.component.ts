@@ -39,6 +39,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
     OrgList: this.formBuilder.nonNullable.control([] as string[]),
+    IsCludeDownOrg: this.formBuilder.control('N'), // 預設不含下層部門
     ProjectNo: this.formBuilder.control<string | null>(null, [Validators.maxLength(10)]),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
     ShowZero: this.formBuilder.nonNullable.control(false),
