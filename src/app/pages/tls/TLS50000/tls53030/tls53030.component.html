@@ -55,9 +55,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS53030" dataKey="PST_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table-report tableKey="TLS53030" dataKey="PST_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [showDelete]="false" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'PST_No', order: -1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" [editDisabled]="editDisabled"></app-table>
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls53030Service.queryTLS53030.bind(tls53030Service)" [loading]="loading"
+    [addButton]="addButton" [buttonsLoading]="buttonsLoading" [editDisabled]="editDisabled"></app-table-report>
 </div>

@@ -14,7 +14,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -51,7 +51,7 @@ interface IQueryPOS2004DetailResponse {
     DropdownComponent,
     CalendarRangeComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     MultiSelectComponent,
     DropdownTableComponent,
     ButtonModule
@@ -77,7 +77,6 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     issuanceNoteCode: [null],
     ...createPaginationConfig([{ field: 'SPM_No', order: 1 }]),
   });
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // 下拉選項
   warehouseOptions: { label: string; value: string }[] = []; // 倉別
@@ -98,10 +97,11 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   data: TLS56020Item[] = [];
   selectedItems: TLS56020Item[] = [];
   totalRecords = 0;
+  lastQueryBody: any = null;
   columns: Column[] = TLS56020_COLUMNS;
 
   constructor(
-    private readonly tls56020Service: Tls56020Service,
+    public readonly tls56020Service: Tls56020Service,
     private readonly dropDownListService: DropDownListService,
     private readonly tls52010Service: Tls52010Service,
   ) {
@@ -143,10 +143,14 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
       this.tls56020Service.queryTLS56020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = (res?.Data ?? []) as TLS56020Item[];
         this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.lastQueryBody = frm.value;
         this.queryStateService.setQueryState(this.ProgNo, body);
       });
     });
   }
+
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁／排序），把 form 形狀的 lastQueryBody 轉成後端規格
+  queryTLS56020Report = (body: any) => this.tls56020Service.queryTLS56020(buildTLS56020QueryBody(body, body, true));
 
   onSubmitQuery(frm: FormGroup) {
     this.onSubmit(frm);

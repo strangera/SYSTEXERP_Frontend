@@ -107,7 +107,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true, width: '110px' },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true, width: '100px' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true, width: '95px' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true, width: '100px' },
     { field: 'LOGO_No', header: '品牌代碼', visible: false },
     { field: 'LOGO_Name', header: '品牌', visible: true },
     { field: 'CAT_LNo', header: '大分類代碼', visible: false },

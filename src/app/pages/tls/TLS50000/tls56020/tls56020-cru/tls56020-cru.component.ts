@@ -21,8 +21,8 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map } from 'rxjs';
@@ -42,7 +42,7 @@ import { mapPagingToBackend } from '../../tls56020/tls56020.model';
     NgIf,
     CalendarComponent,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
@@ -491,6 +491,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
   });
   totalRecords = 0;
+  dialogLastQueryBody: any = null;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
@@ -544,15 +545,13 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
   }
-  onQuery(frm: FormGroup) {
-    this.dialogLoading = true;
-    const raw = frm.getRawValue();
+  // 把 dialogQueryForm 的原始值轉成 queryPOS2004Detail 需要的後端規格
+  private buildDialogQueryBody(raw: any): any {
     const sortVal = raw.SortBy ?? raw.sortBy ?? [{ field: 'PLU_MagNo', order: 1 }];
     const pageSizeVal = raw.PageSize ?? raw.pageSize ?? 30;
     const pageIndexVal = raw.PageIndex ?? raw.pageIndex ?? 1;
-    // 先把分頁排序映射為後端需要的鍵
     const pagingMapped = mapPagingToBackend({ PageSize: pageSizeVal, PageIndex: pageIndexVal, SortBy: sortVal });
-    const body: any = {
+    return {
       ...pagingMapped,
       queryNo: raw.PLU_MagNo || raw.queryNo || '',
       PLU_Name: raw.PLU_Name ?? '',
@@ -565,11 +564,20 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       HOS_No: this.dataForm.controls.HOS_No.value || '',
       VEN_No: '',
     };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe((response: any) => {
+  }
+
+  onQuery(frm: FormGroup) {
+    this.dialogLoading = true;
+    const raw = frm.getRawValue();
+    this.tls52010Service.queryPOS2004Detail(this.buildDialogQueryBody(raw)).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe((response: any) => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
+      this.dialogLastQueryBody = raw;
     });
   }
+
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁／排序）
+  queryDialogDetail = (body: any) => this.tls52010Service.queryPOS2004Detail(this.buildDialogQueryBody(body));
   saveDialog() {
     this.dialogVisible = false;
     const newItems = this.selectedItemsDialog.map(item => {

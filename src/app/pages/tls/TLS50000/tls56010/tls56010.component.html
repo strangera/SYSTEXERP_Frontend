@@ -58,10 +58,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS56010" [data]="filteredData" [columns]="columns" [showCheckBox]="false" dataKey="id"
-    [showSort]="true" [multiSortMeta]="queryForm.value.SortBy || [{ field: 'PLU_MagNo', order: 1 }]"
-    [totalRecords]="totalRecords" [rows]="30" [lazy]="true" [loading]="loading" (lazyLoadData)="onTableLazy($event)"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [showManage]="false" [showDelete]="false">
-  </app-table>
+  <app-table-report tableKey="TLS56010" [data]="filteredData" [columns]="columns" [showCheckBox]="false" dataKey="id"
+    [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryTLS56010Report" [showManage]="false" [showDelete]="false">
+  </app-table-report>
 </div>
