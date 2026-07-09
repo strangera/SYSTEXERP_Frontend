@@ -13,8 +13,9 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
 import { ProductAutocompleteComponent } from "src/app/shared/biz-components/product-autocomplete/product-autocomplete";
@@ -41,14 +42,14 @@ export interface Label {
     NgIf,
     FormsModule,
     ReactiveFormsModule,
-    TableComponent,
+    TableReportComponent,
     TableEditComponent,
     ProductAutocompleteComponent
   ]
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements OnInit {
-  private tls51070Service = inject(Tls51070Service);
+  public readonly tls51070Service = inject(Tls51070Service);
   private readonly exportLabelService = inject(ExportLabelService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly dropDown = inject(DropdownApiService);
@@ -60,6 +61,7 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null;
   labelData: Label[] = [];
   labelColumn: EditColumn[] = [
     {
@@ -79,35 +81,25 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
   // ---------變價記錄 (price) 編輯表格 -------------------------------------------------------
   priceData: Label[] = [];
   selectedItems: Label[] = [];// 多選項目
-  priceColumn1: Column[] = [
-    { field: 'LOGO_Name', header: '品牌代碼', visible: true },
-    { field: 'PLU_MagNo', header: '商品編號', visible: true },
-    { field: 'PLU_Name', header: '品名', visible: true },
-    { field: 'PLU_NO', header: '國際條碼', visible: true },
-    { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: true },
-    { field: 'CAT_LName', header: '大分類', visible: true },
-    { field: 'CAT_MName', header: '中分類', visible: true },
-    { field: 'CAT_SName', header: '小分類', visible: true },
-    { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
-    { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
+  priceColumn1: ReportColumn[] = [
+    { field: 'LOGO_Name', header: '品牌代碼' },
+    { field: 'PLU_MagNo', header: '商品編號' },
+    { field: 'PLU_Name', header: '品名' },
+    { field: 'PLU_NO', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '商品貨號' },
+    { field: 'CAT_LName', header: '大分類' },
+    { field: 'CAT_MName', header: '中分類' },
+    { field: 'CAT_SName', header: '小分類' },
+    { field: 'PLU_OrderPrc_POS2004', header: '標準進價', format: formatAmount },
+    { field: 'PLU_SalePrc_POS2004', header: '商品售價', format: formatAmount },
   ];
-  priceColumn2: Column[] = [
-    { field: 'LOGO_Name', header: '品牌代碼', visible: false },
-    { field: 'PLU_MagNo', header: '商品編號', visible: false },
-    { field: 'PLU_Name', header: '品名', visible: false },
-    { field: 'PLU_NO', header: '國際條碼', visible: false },
-    { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: false },
-    { field: 'CAT_LName', header: '大分類', visible: false },
-    { field: 'CAT_MName', header: '中分類', visible: false },
-    { field: 'CAT_SName', header: '小分類', visible: false },
-    { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: false, format: formatAmount },
-    { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: false, format: formatAmount },
-    { field: 'MAM_Date', header: '變價日期', visible: true, format: formatDate },
-    { field: 'MAM_NO', header: '變價單號', visible: true },
-    { field: 'PLU_SalePrc', header: '變價前售價', visible: true, format: formatAmount },
-    { field: 'MAM_UnitPrc', header: '變價後售價', visible: true, format: formatAmount },
-    { field: 'PLU_OrderPrc', header: '變價前進價', visible: true, format: formatAmount },
-    { field: 'MAM_OrderPrc', header: '變價後進價', visible: true, format: formatAmount },
+  priceColumn2: ReportColumn[] = [
+    { field: 'MAM_Date', header: '變價日期', format: formatDate },
+    { field: 'MAM_NO', header: '變價單號' },
+    { field: 'PLU_SalePrc', header: '變價前售價', format: formatAmount, align: 'right' },
+    { field: 'MAM_UnitPrc', header: '變價後售價', format: formatAmount, align: 'right' },
+    { field: 'PLU_OrderPrc', header: '變價前進價', format: formatAmount, align: 'right' },
+    { field: 'MAM_OrderPrc', header: '變價後進價', format: formatAmount, align: 'right' },
   ];
   expandpriceLoading = false;
 
@@ -135,6 +127,8 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
     this.runQuery(frm, () => {
       this.tls51070Service.queryTLS51070_PriceChangeRecord(frm.value).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false)).subscribe(response => {
         this.priceData = response.Data;
+        this.totalRecords = response.TotalCount || this.priceData?.length || 0;
+        this.lastQueryBody = frm.value;
         if (!this.priceData || this.priceData.length === 0) {
           this.messageService.infoBubble('該商品無變價紀錄');
         }

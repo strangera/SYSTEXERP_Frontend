@@ -36,17 +36,17 @@
 
 <ng-container *ngIf="state.destination === 'history'">
   <div class="card">
-    <app-table tableKey="TLS51070OS" [data]="priceData[0] ? [priceData[0]] : []" [columns]="priceColumn1"
+    <app-table-report tableKey="TLS51070OS" [data]="priceData[0] ? [priceData[0]] : []" [columns]="priceColumn1"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCaption]="false"
-      [showCheckBox]="false" [showPaginator]="false" [showManage]="false" dataKey="id"
-      [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
-          onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)
-        " [lazy]="true" [loading]="loading"></app-table>
+      [showCheckBox]="false" [showManage]="false" dataKey="id" [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls51070Service.queryTLS51070_PriceChangeRecord.bind(tls51070Service)" [loading]="loading"
+      [showSummary]="false"></app-table-report>
     <br />
-    <app-table tableKey="TLS51070OS" [data]="priceData" [columns]="priceColumn2" [selectedItems]="selectedItems"
+    <app-table-report tableKey="TLS51070OS" [data]="priceData" [columns]="priceColumn2" [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event" [showCheckBox]="false" [showCaption]="false" [showManage]="false"
-      dataKey="id" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
-          onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)
-        " [lazy]="true" [loading]="loading"></app-table>
+      dataKey="id" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls51070Service.queryTLS51070_PriceChangeRecord.bind(tls51070Service)"
+      [loading]="loading"></app-table-report>
   </div>
 </ng-container>
