@@ -39,6 +39,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
     OrgList: this.formBuilder.nonNullable.control([] as string[]),
+    IsCludeDownOrg: this.formBuilder.control('N'), // 預設不含下層部門
     ProjectNo: this.formBuilder.control<string | null>(null, [Validators.maxLength(10)]),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
     ShowZero: this.formBuilder.nonNullable.control(false),
@@ -118,6 +119,22 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'pdf', 			 // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
+  }
+
+  // 匯出 Excel 事件處理
+  onExportExcel() {
+    if (this.data.length === 0) {
+      return;
+    }
+    // 確保使用 historyRequestBody
+    const export$: Observable<HttpResponse<Blob>> = this.fin55090Service.exportFIN55090Excel(this.historyRequestBody);
+
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'xlsx', 			 // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
   }

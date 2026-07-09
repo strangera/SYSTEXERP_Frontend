@@ -66,13 +66,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
-    [loading]="loading" [showDelete]="false" (selectionChange)="onSelectionChange($event)"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [rows]="30" [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable"
-    [editDisabled]="isEditDisabled.bind(this)">
+  <app-table-report tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="queryTLS56020Report" [showManage]="true" [loading]="loading"
+    [showDelete]="false" (selectionChange)="onSelectionChange($event)" [selectedItems]="selectedItems"
+    [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable" [editDisabled]="isEditDisabled.bind(this)">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"
@@ -81,5 +79,5 @@
           severity="success" [loading]="issueLoading" (click)="onIssueClick()" [disabled]="!canIssueSelected()" />
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

@@ -11,6 +11,7 @@ export interface QueryFIN55080Request {
   DateTo: string; // YYYY-MM-DD (結束日期)
   Ledger_MD: '0' | '1'; // '0'=統制, '1'=明細
   OrgId: string | null; // 部門 (選填)
+  IsCludeDownOrg: 'Y' | 'N'; // 是否含下層部門 (選填)
   ProjectNo: string | null; // 活動代碼 (選填)
   ShowZero: boolean; // 是否顯示餘額為零的科目 (Component 統一用 boolean)
   PrintSign: boolean; // 是否列印簽核欄 (Component 統一用 boolean)

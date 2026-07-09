@@ -40,8 +40,8 @@
       <img [src]="logo" alt="logo" class="center-img">
     </div>
   </div>
-  <div *ngIf="!loading" class="slider-viewport">
-    <div class="slider-track" [style.transform]="'translateX(' + (currentPage * -100) + 'vw)'">
+  <div *ngIf="!loading" class="slider-viewport" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+    <div class="slider-track" [style.transform]="'translateX(' + (currentPage * -100) + 'dvw)'">
       <div class="page-grid" *ngFor="let page of pagedItems">
         <div *ngFor="let item of page; let i = index" class="system-block" [style.background-color]="item.dynamicColor"
           (click)="navigateToUrl(item)">
@@ -67,7 +67,8 @@
       <label for="oldPassword" class="col-12 mb-2 md:col-2 md:mb-0">舊密碼</label>
       <div class="col-12 md:col-10">
         <p-password id="oldPassword" formControlName="oldPassword" class="w-full" styleClass="w-full"
-          inputStyleClass="w-full" placeholder="請輸入舊密碼" [toggleMask]="true" [feedback]="false" />
+          inputStyleClass="w-full text-base" autocomplete="current-password" placeholder="請輸入舊密碼" [toggleMask]="true"
+          [feedback]="false" />
         <small *ngIf="form.controls['oldPassword'].touched && form.controls['oldPassword'].errors?.['required']"
           class="p-error block">舊密碼為必填項。</small>
       </div>
@@ -75,9 +76,10 @@
     <div class="field grid">
       <label for="newPassword" class="col-12 mb-2 md:col-2 md:mb-0">密碼</label>
       <div class="col-12 md:col-10">
-        <p-password id="newPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full"
-          formControlName="newPassword" placeholder="請輸入新密碼" [maxLength]="8" promptLabel="設定密碼" weakLabel="太簡單"
-          mediumLabel="中等複雜度" strongLabel="複雜密碼" [toggleMask]="true" [strongRegex]="strongRegex" appendTo="body">
+        <p-password id="newPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full text-base"
+          autocomplete="new-password" formControlName="newPassword" placeholder="請輸入新密碼" [maxLength]="8"
+          promptLabel="設定密碼" weakLabel="太簡單" mediumLabel="中等複雜度" strongLabel="複雜密碼" [toggleMask]="true"
+          [strongRegex]="strongRegex" appendTo="body">
           <ng-template pTemplate="footer">
             <div class="flex flex-column">
               <p-divider />
@@ -110,9 +112,9 @@
     <div class="field grid">
       <label for="confirmPassword" class="col-12 mb-2 md:col-2 md:mb-0">確認密碼</label>
       <div class="col-12 md:col-10">
-        <p-password id="confirmPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full"
-          formControlName="confirmPassword" placeholder="請再次輸入密碼" [maxLength]="8" [toggleMask]="true" appendTo="body"
-          [feedback]="false" />
+        <p-password id="confirmPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full text-base"
+          autocomplete="new-password" formControlName="confirmPassword" placeholder="請再次輸入密碼" [maxLength]="8"
+          [toggleMask]="true" appendTo="body" [feedback]="false" />
         <small *ngIf="form.controls['confirmPassword'].touched && form.controls['confirmPassword'].errors?.['required']"
           class="p-error block">確認密碼為必填項。</small>
         <small *ngIf="form.errors?.['passwordsMismatch']" class="p-error block">密碼與確認密碼不符。</small>

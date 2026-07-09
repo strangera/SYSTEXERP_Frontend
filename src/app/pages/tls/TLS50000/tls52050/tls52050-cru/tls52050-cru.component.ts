@@ -22,8 +22,9 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { tomorrow } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -48,7 +49,7 @@ import { columnGroup } from './tls52050-cru.model';
     CheckboxModule,
     CalendarComponent,
     InputNumberComponent,
-    TableComponent,
+    TableReportComponent,
     NgIf,
     DialogComponent,
     TranslateModule,
@@ -397,15 +398,16 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   CAT_SNoOptions: IDropdownItem[] = [];
   dialogData: IQueryTLS52050DetailData[] = [];
   selectedItemsDialog: IQueryTLS52050DetailData[] = [];
-  dialogColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'UNIT_NAME', header: '單位' },
-    { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
-    { field: 'PLU_OrderPrc', header: '單價', showSort: false },
-    { field: 'PLU_SalePrc', header: '售價' },
+  dialogLastQueryBody: IQueryTLS52050DetailRequest | null = null;
+  dialogColumns: ReportColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號', width: '110px' },
+    { field: 'PLU_Name', header: '商品名稱', align: 'left' },
+    { field: 'PLU_No', header: '國際條碼', align: 'left', width: '110px' },
+    { field: 'UNIT_NAME', header: '單位', width: '40px' },
+    { field: 'PLU_BoxQty', header: '包裝入數', width: '40px' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value), width: '40px' },
+    { field: 'PLU_OrderPrc', header: '單價', showSort: false, align: 'right', width: '80px' },
+    { field: 'PLU_SalePrc', header: '售價', align: 'right', width: '80px' },
   ];
   dialogLoading = false;
   loadDialogData() {
@@ -453,11 +455,14 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       LOGO_No: this.dataForm.controls.LOGO_No.value,
       ...frm.getRawValue(),
     } as IQueryTLS52050DetailRequest;
+    this.dialogLastQueryBody = body;
     this.tls52050Service.queryTLS52050Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
     });
   }
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁／排序）
+  queryDialogDetail = (body: IQueryTLS52050DetailRequest) => this.tls52050Service.queryTLS52050Detail(body);
   saveDialog() {
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({

@@ -20,18 +20,14 @@
       <ng-container *ngIf="state.destination === 'history'">
         <form [formGroup]="queryPriceForm" id="queryPriceForm" (ngSubmit)="onSubmitPrice(queryPriceForm)">
           <div class="grid p-fluid">
-            <!--!!! 國際條碼/商品管理編號/廠商貨號 -->
-            <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryPriceForm.controls.KeyWord"
-              [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-              [fieldsConfig]="fieldsConfig"
-              (inputValueChanged)="onAutoCompleteInputChange($event)"></app-dropdown-table>
+            <!-- 國際條碼/商品管理編號/廠商貨號 -->
+            <app-product-autocomplete class="col-12" [control]="queryPriceForm.controls.KeyWord" optionValue="PLU_No"
+              controlName="KeyWord" (enterKey)="onSubmitPrice(queryPriceForm)"></app-product-autocomplete>
           </div>
-          <!-- <div> -->
           <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
             <app-button btnType="clear" [form]="queryPriceForm"></app-button>
             <app-button btnType="query" [loading]="loading"></app-button>
           </div>
-          <!-- </div> -->
         </form>
       </ng-container>
     </p-accordionTab>
@@ -40,20 +36,17 @@
 
 <ng-container *ngIf="state.destination === 'history'">
   <div class="card">
-    <div class="col-13">
-      <app-table tableKey="TLS51070OS" [data]="priceData[0] ? [priceData[0]] : []" [columns]="priceColumn1"
-        [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCaption]="false"
-        [showCheckBox]="false" [showPaginator]="false" [showManage]="false" dataKey="id"
-        [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
-          onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)
-        " [lazy]="true" [loading]="loading"></app-table>
-      <br />
-
-      <app-table tableKey="TLS51070OS" [data]="priceData" [columns]="priceColumn2" [selectedItems]="selectedItems"
-        (selectionChange)="selectedItems = $event" [showCheckBox]="false" [showCaption]="false" [showManage]="false"
-        dataKey="id" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
-          onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)
-        " [lazy]="true" [loading]="loading"></app-table>
-    </div>
+    <app-table-report tableKey="TLS51070OS" [data]="priceData[0] ? [priceData[0]] : []" [columns]="priceColumn1"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCaption]="false"
+      [showCheckBox]="false" [showManage]="false" dataKey="id" [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls51070Service.queryTLS51070_PriceChangeRecord.bind(tls51070Service)" [loading]="loading"
+      [showSummary]="false"></app-table-report>
+    <br />
+    <app-table-report tableKey="TLS51070OS" [data]="priceData" [columns]="priceColumn2" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showCheckBox]="false" [showCaption]="false" [showManage]="false"
+      dataKey="id" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls51070Service.queryTLS51070_PriceChangeRecord.bind(tls51070Service)"
+      [loading]="loading"></app-table-report>
   </div>
 </ng-container>

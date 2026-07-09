@@ -41,6 +41,8 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() templateLabel = '';
   @Input() fieldsConfig: FieldsConfig[] = [];
   @Output() inputValueChanged = new EventEmitter<Record<string, string>>();
+  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 handleEnterKey 跳到下一欄位
+  @Output() enterKey = new EventEmitter<Event>();
 
   // OverlayPanel 與 Table 基礎屬性
   @Input() showOverlay = true;
@@ -165,32 +167,24 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   }
 
   /**
-   * 原生 p-table 的行選擇觸發
+   * 原生 p-table 的選取變更事件：多選持續更新 control 值；單選則選完立即關閉並重置查詢表單
    */
-  onPrimeTableRowSelect(event: any): void {
-    const rowData = event.data;
-    if (rowData) {
-      this.handleRowSelected(rowData);
-    }
-  }
-
-  /**
-   * 原生 p-table 的行點擊觸發
-   */
-  onPrimeTableRowClick(rowData: any): void {
-    if (rowData) {
-      this.handleRowSelected(rowData);
-    }
-  }
-
-  private handleRowSelected(rowData: any) {
-    this.selectedItems = rowData;
-    this.select.emit(rowData);
+  onSelectionChange(event: any): void {
+    this.selectedItems = event ?? [];
+    this.select.emit(this.selectedItems);
     this.suggestions = [...this.dialogData];
-    this.control.setValue(this.optionValue ? rowData[this.optionValue] : rowData);
-    this.op?.hide();
-    this.selectedItems = [];
-    this.formGroup?.reset();
+
+    if (this.selectionMode === 'single') {
+      const rowData = Array.isArray(this.selectedItems) ? this.selectedItems[0] : this.selectedItems;
+      this.control.setValue(this.optionValue ? rowData?.[this.optionValue] : rowData);
+      this.op?.hide();
+      this.selectedItems = [];
+      this.formGroup?.reset();
+      return;
+    }
+
+    const items: any[] = Array.isArray(this.selectedItems) ? this.selectedItems : [];
+    this.control.setValue(this.optionValue ? items.map(item => item[this.optionValue]) : items);
   }
 
   /**

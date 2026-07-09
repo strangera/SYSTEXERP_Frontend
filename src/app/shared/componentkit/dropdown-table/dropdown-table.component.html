@@ -14,7 +14,7 @@
           [suggestions]="suggestions"
           [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder"
-          (keydown.enter)="handleEnterKey($event)"
+          (keydown.enter)="handleEnterKey($event); enterKey.emit($event)"
           (completeMethod)="onCompleteMethod($event)"
           (onSelect)="onAutoCompleteSelect($event)"
           [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
@@ -64,7 +64,8 @@
           #dt
           [value]="dialogData"
           [columns]="dialogColumns"
-          [(selection)]="selectedItems"
+          [selection]="selectedItems"
+          (selectionChange)="onSelectionChange($event)"
           [selectionMode]="selectionMode"
           [dataKey]="optionValue"
           [loading]="loading"
@@ -77,7 +78,6 @@
           [scrollable]="true"
           [scrollHeight]="scrollHeight"
           styleClass="p-datatable-sm p-datatable-gridlines"
-          (onRowSelect)="onPrimeTableRowSelect($event)"
         >
           <ng-template pTemplate="header" let-columns>
             <tr>
@@ -106,7 +106,6 @@
             <tr
               [pSelectableRow]="rowData"
               [pSelectableRowIndex]="rowIndex"
-              (click)="onPrimeTableRowClick(rowData)"
             >
               <td
                 *ngIf="showCheckBox && selectionMode === 'multiple'"

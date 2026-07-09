@@ -1,27 +1,33 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls51070Service } from '@service/api/tls/tls51070.service';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { apiOption, option } from '@shared/models/sys/sysb000.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 import { POS2004 } from '@shared/models/tls/tls000.model';
-import { ErrorReportService } from '@shared/service/error-report.service';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
-import { finalize, firstValueFrom } from 'rxjs';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize, firstValueFrom, map } from 'rxjs';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
+import { ProductAutocompleteComponent } from "src/app/shared/biz-components/product-autocomplete/product-autocomplete";
 import { environment } from '../../../../../environments/environment';
 
 // 2.5.1.7  商品基本資料
@@ -40,235 +46,184 @@ import { environment } from '../../../../../environments/environment';
     InputTextComponent,
     DialogComponent,
     DropdownComponent,
-    DropdownTableComponent,
-    TableComponent,
-    TranslateModule]
+    TableReportComponent,
+    TranslateModule,
+    ButtonModule,
+    TooltipModule,
+    TagModule,
+    ProductAutocompleteComponent,
+    AsyncPipe
+  ],
+  styles: [
+    `
+    :host ::ng-deep {
+      .can-del-tag {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        .p-tag-value {
+          display: none;
+        }
+
+        .p-tag-icon {
+          margin: 0;
+        }
+      }
+    }
+    `
+  ]
 })
 export class TLS51070Component extends BasicQueryPageComponent<POS2004> implements OnInit {
-  // 查詢
+  public readonly tls51070Service = inject(Tls51070Service);
+  private readonly dropDown = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
   queryForm = this.formBuilder.group({
-    // POS2004 商品主檔
-
-    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
-    queryNo: [null, [Validators.maxLength(20)]], // 查詢編號 input //新增
-    CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
-    CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
-    CAT_SNo: ['', [Validators.maxLength(6)]], // 小分類代碼 POS20032
+    LOGO_No: [null, [Validators.maxLength(4)]], // 品牌代碼
+    KeyWord: [null, [Validators.maxLength(20)]], // 查詢編號 input //新增
+    CAT_LNo: [null, [Validators.maxLength(6)]], // 大分類代碼 --POS2003
+    CAT_MNo: [null, [Validators.maxLength(6)]], // 中分類代碼 POS20031
+    CAT_SNo: [null, [Validators.maxLength(6)]], // 小分類代碼 POS20032
     PLU_Attribute: [null, [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
-    PLU_Unit: ['', [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
-    PLU_ECStatus: ['', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    PLU_Unit: [null, [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
+    PLU_ECStatus: [null, [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
-    TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
-
-    //分頁查詢
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+    TLT_NO: [null, [Validators.maxLength(12)]], // 專櫃編號
+    pageSize: [500],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  totalRecords = 0;// 分頁和排序參數 // 排序需要
-
-  largeOption: apiOption[] = [];
-  middleOption: apiOption[] = [];
-  smallOption: apiOption[] = [];
-  brandOption: apiOption[] = [];  // 品牌代碼
-  TLT_NO_Option: apiOption[] = []; // 專櫃編號
-  attributeOptions: option[] = [ // 商品型態
-    { value: '1', label: '一般' },
-    { value: '2', label: '進口' },
-    { value: '3', label: '買斷' },
-    { value: '4', label: '試銷' },
-    { value: '5', label: '寄賣' },
-  ];
-  unitOptions: apiOption[] = [];  //商品單位
-  statusOptions: option[] = [  // EC商品狀態
-    { value: '1', label: '正常' },
-    { value: '2', label: '停用' },
-    { value: '3', label: '停進' },
-    { value: '4', label: '下架' },
-  ];
-
   data: POS2004[] = [];
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+  selectedItems: POS2004[] = [];// 多選項目
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null;
+  columns: ReportColumn[] = [
+    { field: 'CanDel', header: '刪除', visible: true, width: '29px', align: 'center', showSort: false },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true, width: '110px' },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true, width: '100px' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true, width: '100px' },
     { field: 'LOGO_No', header: '品牌代碼', visible: false },
     { field: 'LOGO_Name', header: '品牌', visible: true },
-    {
-      field: 'CAT_LNo', header: '大分類代碼', visible: false,
-    },
-    {
-      field: 'CAT_LName', header: '大分類', visible: true,
-    },
-    {
-      field: 'CAT_MNo', header: '中分類代碼', visible: false,
-    },
-    {
-      field: 'CAT_MName', header: '中分類', visible: true,
-    },
-    {
-      field: 'CAT_SNo', header: '小分類代碼', visible: false,
-    },
-    {
-      field: 'CAT_SName', header: '小分類', visible: true,
-    },
-    {
-      field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount
-    },
-    {
-      field: 'PLU_Attribute', header: '商品型態代碼', visible: false,
-    },
-    {
-      field: 'PLU_AttributeName', header: '商品型態', visible: true,
-    },
-    {
-      field: 'PLU_Unit', header: '單位代碼', visible: false,
-    },
-    {
-      field: 'PLU_UnitNAME', header: '單位', visible: true,
-    },
+    { field: 'CAT_LNo', header: '大分類代碼', visible: false },
+    { field: 'CAT_LName', header: '大分類', visible: true, },
+    { field: 'CAT_MNo', header: '中分類代碼', visible: false, },
+    { field: 'CAT_MName', header: '中分類', visible: true, },
+    { field: 'CAT_SNo', header: '小分類代碼', visible: false, },
+    { field: 'CAT_SName', header: '小分類', visible: true, },
+    { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount, width: '80px' },
+    { field: 'PLU_Attribute', header: '商品型態代碼', visible: false, width: '40px' },
+    { field: 'PLU_AttributeName', header: '商品型態', visible: true, width: '40px' },
+    { field: 'PLU_Unit', header: '單位代碼', visible: false, width: '20px' },
+    { field: 'PLU_UnitNAME', header: '單位', visible: true, width: '20px' },
     {
       field: 'PLU_ECStatus', header: 'EC商品狀態', visible: true,
       format: (value: string) =>
         this.statusOptions.find((option) => option.value === value)?.label ||
-        value,
+        value, width: '40px'
     },
     { field: 'PLU_Reserve1', header: '說明', visible: true },
     { field: 'PLU_Reserve3', header: '系列', visible: true },
-
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate, width: '80px' },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false, width: '80px' },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate, width: '80px' },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false, width: '80px' },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
 
-  selectedItems: POS2004[] = [];// 多選項目
+  largeOption = this.dropDown.queryPos2003(); // 大分類（改走共用 DropdownApiService，endpoint 與原本一致）
+  middleOption: Option[] = []; // 中分類（依大分類連動查詢，改走共用 DropdownApiService）
+  smallOption: apiOption[] = []; // 小分類：DropdownApiService.queryPos20032 送出的 body 是扁平陣列，跟後端要求的 CATList 結構不符（且全站無人呼叫過），維持既有 API 避免打壞
+  brandOption = this.dropDown.queryPluLogo(); // 品牌代碼（改走共用 DropdownApiService，endpoint 與原本一致）
+  TLT_NO_Option: apiOption[] = []; // 專櫃編號：此頁篩選條件多了 tlt_openflag，跟共用下拉對應的 endpoint 不同，維持既有 API
+  unitOptions = this.dropDown.queryPluUnit().pipe(
+    map(items => (items ?? []).map(item => ({ value: item.No, label: `${item.No}-${item.Name}` })))
+  ); // 商品單位（改走共用 DropdownApiService，endpoint 與原本一致）
+  attributeOptions = getSYS1000Options('PLU_Attribute');
+  statusOptions = getSYS1000Options('PLU_ECStatus');
 
   excelLoading = false; //excel讀條
-
-  // #region 匯入 Excel Dialog 相關
-  @ViewChild('excelUploadComponent') excelUploadComponent!: FileUploadComponent;
+  btnLoading = false; //下傳POS讀條
   importDialogVisible = false;
-
   importForm = this.formBuilder.group({
     sheetName: ['', [Validators.maxLength(50)]] // 指定頁籤名稱
   });
-  private readonly erroreportService = inject(ErrorReportService);
-  // ----------------------------------------------------------------
-  constructor(
-    private tls51070Service: Tls51070Service,
-    private tls52010Service: Tls52010Service,
-  ) {
-    super();
-  }
-
   ngOnInit(): void {
     this.initializePage('TLS51070', 'TLS/TLS51070cru', this.queryForm, (form) => this.onSubmit(form));
-    //導入下拉清單
     this.loadOptions();
 
-    //初始導入所有大分類、中分類、小分類表單
-    this.loadCATOptions();
+    // 初始狀態：尚未選擇大分類，中、小分類皆停用
+    this.queryForm.get('CAT_MNo')?.disable();
+    this.queryForm.get('CAT_SNo')?.disable();
 
-    // 監聽 大分類 是否為''
-    this.queryForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
-      // console.log('大分類變更為:', newValue);
-      if (!newValue) {
-        // 讀取整份 大分類、中分類、小分類 dropDown
-        this.loadCATOptions();
-      } else {
-        // 若大分類為空 禁用中分類、小分類
+    // 監聽大分類變化：控制中/小分類的啟用與清空，並連動查詢中分類選單
+    this.queryForm.get('CAT_LNo')!.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((lno) => {
+        if (!lno) {
+          this.middleOption = [];
+          this.smallOption = [];
+          this.queryForm.get('CAT_MNo')?.setValue(null);
+          this.queryForm.get('CAT_SNo')?.setValue(null);
+          this.queryForm.get('CAT_MNo')?.disable();
+          this.queryForm.get('CAT_SNo')?.disable();
+          return;
+        }
+
         this.queryForm.get('CAT_MNo')?.enable();
         this.queryForm.get('CAT_SNo')?.enable();
-      }
-    });
 
-    //觀察表單 中分類變化
-    this.queryForm.get('CAT_LNo')?.valueChanges.subscribe((lno) => {
-      if (lno) {
-        console.log('觀察中分類變化', lno);
-        this.tls51070Service
-          .queryCAT_MNo_DropDownList({ CAT_LNo: [lno] })
+        this.dropDown.queryPos20031({ CAT_LNo: [lno] })
+          .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((res) => {
-            this.middleOption = res.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-            this.queryForm.get('CAT_MNo')?.setValue('');
-            this.queryForm.get('CAT_SNo')?.setValue('');
+            this.middleOption = (res ?? []).map(item => ({ value: item.No, label: `${item.No}-${item.Name}` }));
+            this.queryForm.get('CAT_MNo')?.setValue(null);
+            this.queryForm.get('CAT_SNo')?.setValue(null);
             this.smallOption = [];
           });
-      } else {
-        this.middleOption = [];
-        this.smallOption = [];
-        this.queryForm.get('CAT_MNo')?.setValue('');
-        this.queryForm.get('CAT_SNo')?.setValue('');
-      }
-    });
-    //觀察表單 小分類變化
-    this.queryForm.get('CAT_MNo')?.valueChanges.subscribe((mno) => {
-      const lno = this.queryForm.get('CAT_LNo')?.value;
-      if (lno && mno) {
-        //新版api改成list傳送
-        const requestPayload = {
-          CATList: [
-            {
-              CAT_LNo: lno,
-              CAT_MNo: mno
-            }
-          ]
-        };
+      });
 
-        this.tls51070Service
-          .queryCAT_SNo_DropDownList(requestPayload)
+    // 監聽中分類變化：連動查詢小分類選單
+    this.queryForm.get('CAT_MNo')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((mno) => {
+        const lno = this.queryForm.get('CAT_LNo')?.value;
+        if (!lno || !mno) {
+          this.smallOption = [];
+          this.queryForm.get('CAT_SNo')?.setValue(null);
+          return;
+        }
+
+        // API 要求以 CATList 傳送
+        const requestPayload = { CATList: [{ CAT_LNo: lno, CAT_MNo: mno }] };
+        this.tls51070Service.queryCAT_SNo_DropDownList(requestPayload)
+          .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((res) => {
-            this.smallOption = res.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-            this.queryForm.get('CAT_SNo')?.setValue('');
-
-            console.log('小分類', this.smallOption);
+            this.smallOption = this.mapToApiOptions(res.Data);
+            this.queryForm.get('CAT_SNo')?.setValue(null);
           });
-      } else {
-        this.smallOption = [];
-        this.queryForm.get('CAT_SNo')?.setValue('');
-      }
-    });
+      });
+  }
+
+  // 將 {No, Name} 陣列轉換為下拉選單需要的 {No, Name, Label} 格式
+  private mapToApiOptions(data: { No: string; Name: string }[]): apiOption[] {
+    return (data ?? []).map(item => ({ No: item.No, Name: item.Name, Label: `${item.No}-${item.Name}` }));
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 將KeyWord值設定到queryNo
-      frm.get('queryNo')?.setValue(frm.get('KeyWord')?.value);
-      console.log('query condition', frm.value);
-      this.tls51070Service.queryTLS51070(frm.value).subscribe({
-        next: (response) => {
-          // console.log('回傳階層:', response.Data);
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.tls51070Service.queryTLS51070(frm.value).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount || response.Data.length;
+        this.lastQueryBody = frm.value;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.messageService.unblockUi();
       });
     });
   }
@@ -287,11 +242,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       message: `是否確認刪除選中的商品基本資料?`,
       header: `確認刪除`,
       accept: () => {
-        console.log('Delete data:', JSON.stringify(data, null, 2));
-
         const items = Array.isArray(data) ? data : [data];
         if (items.length === 0) {
-          console.error('No items to delete');
           this.messageService.errorBubble('無法刪除：沒有選中的項目');
           return;
         }
@@ -302,7 +254,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           .map((item) => item.id);
 
         if (idList.length === 0) {
-          console.error('No valid IDs to delete');
           this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
           return;
         }
@@ -311,7 +262,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         const canDelete = items.every((item) => item.CanDel);
 
         if (!canDelete) {
-          console.error('Some items cannot be deleted');
           this.messageService.errorBubble('無法刪除：組織階層互相關連');
           return;
         }
@@ -319,83 +269,63 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         const deleteBody = {
           idList: idList, // 符合 API 的 idList 格式
         };
-        this.tls51070Service.deleteTLS51070(deleteBody).subscribe({
-          next: (response) => {
-            if (response.Status === '0000') {
-              this.messageService.successBubble('刪除成功');
-            } else {
-              console.error('API error:', response.Status, response.Message);
-              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-            }
-          },
-          error: (err: string) => {
-            console.error('API error:', err);
-            this.messageService.errorBubble('刪除失敗');
-          },
-          complete: () => {
-            this.onSubmit(this.queryForm);
-          },
-        });
+        this.tls51070Service.deleteTLS51070(deleteBody)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+              } else {
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+            error: () => {
+              this.messageService.errorBubble('刪除失敗');
+            },
+            complete: () => {
+              this.onSubmit(this.queryForm);
+            },
+          });
 
         this.selectedItems = [];
       },
     });
   }
 
-  loadOptions() {
-    //查詢 商品單位
-    this.tls51070Service
-      .queryPLUUNIT_DropDownList({}).pipe(untilDestroyed(this))
-      .subscribe((response) => {
-        this.unitOptions = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-      });
-
-    // 查詢 品牌代碼
-    this.tls51070Service
-      .queryPLULOGO_DropDownList({}).pipe(untilDestroyed(this))
-      .subscribe((response) => {
-        this.brandOption = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-      });
-
-    // 查詢 專櫃編號
-    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.TLT_NO_Option = response.Data.map((item: any) => ({
-        No: item.No, // 專櫃編號代碼
-        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
-      }));
+  // 下傳POS2004異動資料
+  onUpload() {
+    this.btnLoading = true;
+    const idList = this.selectedItems.map((item) => item.id);
+    this.tls51070Service.ExecSpFuncTLS51070({ idList }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('下傳成功');
+          this.selectedItems = [];
+        } else {
+          this.messageService.errorBubble(`下傳失敗: ${response.Message}`);
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('下傳失敗');
+      },
     });
   }
 
-  //讀取 大分類表單 (該情況禁止 中小下拉選擇)
-  loadCATOptions() {
-    {
-      //查詢 大分類
-      this.tls51070Service
-        .queryCAT_LNo_DropDownList({}).pipe(untilDestroyed(this))
-        .subscribe((response) => {
-          this.largeOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
-        });
-
-      // 禁用中分類、小分類
-      this.queryForm.get('CAT_MNo')?.disable();
-      this.queryForm.get('CAT_SNo')?.disable();
-    }
+  loadOptions() {
+    // 查詢 專櫃編號：此頁篩選條件含 tlt_openflag，與共用下拉的 endpoint 不同，維持既有 API
+    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({})
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.TLT_NO_Option = this.mapToApiOptions(response.Data);
+      });
   }
 
-  isRowSelectable(rowData: POS2004): boolean {
-    return rowData.CanDel
+  // 下傳POS不受限，故每一列皆可勾選；刪除限制改由 rowNotDeletable 控管刪除鈕本身
+  rowNotDeletable(rowData: POS2004): boolean {
+    return !rowData.CanDel;
   }
 
   //移動到 歷史紀錄查詢/標籤檔案
@@ -409,36 +339,17 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     this.router.navigate(['account/tls/tls51070os'], extras);
   }
 
-  // 開啟匯入 Dialog
-  onOpenImportDialog() {
-    this.importForm.reset();
-    if (this.excelUploadComponent) {
-      this.excelUploadComponent.clearFiles();
-    }
-    this.importDialogVisible = true;
-  }
-
-  // #reigion Excel匯入
   onImportExcelSubmit(event: FileUploadHandlerEvent) {
     if (!event || !event.files || event.files.length === 0) return;
     this.excelLoading = true;
     const file = event.files[0];
     const sheetName = this.importForm.get('sheetName')?.value || '';
-
-    this.tls51070Service.uploadTLS51070(file, sheetName).pipe(
-      untilDestroyed(this),
-      finalize(() => {
-        this.excelUploadComponent.clearFiles();
-        this.excelLoading = false;
-      })
-    ).subscribe(res => {
+    this.tls51070Service.uploadTLS51070(file, sheetName).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { this.excelLoading = false; })).subscribe(res => {
       const data = res?.Data;
-
       // --- 第一層：處理 ErrorFilePath (匯入失敗，包含錯誤檔案路徑) ---
       if (data?.ErrorFilePath) {
         // 拼接後端完整網址連結
         const fullDownloadUrl = `${environment.ApiUrl}/${data.ErrorFilePath}`;
-
         this.messageService.confirm({
           header: '匯入失敗',
           // 第一行：成功與失敗筆數
@@ -451,8 +362,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           showRejectButton: false, // 只留下一顆確定按鈕
           accept: () => {
             // 點擊下方確定按鈕時，一樣貼心幫他觸發下載
-            // this.downloadErrorFile(data.ErrorFilePath);
-
             if (data.SuccessCount > 0) {
               this.importDialogVisible = false;
               this.onSubmit(this.queryForm);
@@ -461,14 +370,12 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         });
         return;
       }
-
       // --- 第二層：處理 Data.Errors (預檢失敗，例如找不到工作表) ---
       if (data?.Errors && data.Errors.length > 0) {
         const errorDetail = data.Errors.join('；');
         this.messageService.errorBubble(errorDetail);
         return;
       }
-
       // --- 第三層：完全成功判斷 ---
       if (data?.Success === true || res?.Status === "0000") {
         this.messageService.successBubble(`匯入成功，共 ${data?.SuccessCount || 0} 筆`);
@@ -482,20 +389,25 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
+  // 匯出Excel範本
+  onExportExcel() {
+    this.tls51070Service.downloadTLS51070Template().subscribe((res: Blob) => {
+      const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, 'TLS51070_Template.xlsx');
+    });
+  }
+
   // 匯入圖片檔
   async onIMGUpload(event: FileSelectEvent) {
     // 1. 檢查是否有檔案
     if (!event.files || event.files.length === 0) return;
-
     // 正則表達式解釋：
     // ^[a-zA-Z0-9]+ : 開頭為英數字（條碼）
     // (-\d+)?      : 可選的橫線加上一個或多個數字（如 -1, -2）
     // \.[a-zA-Z]+$  : 檔案結尾的副檔名
     const fileNamePattern = /^[a-zA-Z0-9]+(-\d+)?\.[a-zA-Z]+$/;
-
     const formData = new FormData();
     const invalidFiles: string[] = [];
-
     for (const file of event.files) {
       // 檢查檔名格式
       if (!fileNamePattern.test(file.name)) {
@@ -504,19 +416,16 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       }
       formData.append('files', file);
     }
-
     // 如果有格式不符的檔案，阻斷上傳並提示
     if (invalidFiles.length > 0) {
       this.messageService.errorBubble(`檔名格式錯誤：${invalidFiles.join(', ')}。必須為「國際條碼.png」或「國際條碼-1.png」`);
       return;
     }
-
     try {
       this.messageService.blockUi(); // 開始上傳時鎖定 UI
-      await firstValueFrom(this.tls51070Service.uploadTLS51070Image(formData).pipe(untilDestroyed(this)));
+      await firstValueFrom(this.tls51070Service.uploadTLS51070Image(formData).pipe(takeUntilDestroyed(this.destroyRef)));
       this.messageService.successBubble('圖片上傳成功');
-    } catch (error) {
-      console.error('❌ 圖片上傳失敗:', error);
+    } catch {
       this.messageService.errorBubble('圖片上傳失敗');
     } finally {
       this.messageService.unblockUi();
@@ -525,38 +434,5 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   downloadErrorFile(filePath: string) {
     globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
-  }
-
-  //!!! 國際條碼/商品管理編號/廠商貨號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    // !!! 若有自己這隻的API請改成自己的
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
-  }
-
-  // 匯出Excel範本
-  onExportExcel() {
-    this.tls51070Service.downloadTLS51070Template().subscribe({
-      next: (res: Blob) => {
-        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blob, 'TLS51070_Template.xlsx');
-      },
-    });
   }
 }

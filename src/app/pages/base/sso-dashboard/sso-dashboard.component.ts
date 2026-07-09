@@ -121,6 +121,18 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
   prevPage() { if (this.currentPage > 0) this.currentPage--; }
   hasMorePages() { return this.currentPage < this.pagedItems.length - 1; }
   getFillerArray(page: ApiItem[]) { return new Array(4 - page.length); }
+
+  // 手機滑動換頁
+  private readonly swipeThreshold = 50;
+  private touchStartX = 0;
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.changedTouches[0].screenX;
+  }
+  onTouchEnd(event: TouchEvent): void {
+    const deltaX = event.changedTouches[0].screenX - this.touchStartX;
+    if (deltaX <= -this.swipeThreshold) this.nextPage();
+    else if (deltaX >= this.swipeThreshold) this.prevPage();
+  }
   navigateToUrl(item: ApiItem): void {
     this.loading = true;
     if (item.System_Id === ERP_SYSTEM_ID) {

@@ -101,10 +101,11 @@ export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoice
     invoice_date: parseYmdToDate(row.TXN_Date ?? undefined),
     declare_ym: parseYyyyMmToMonthDate(row.INV_YM ?? undefined),
     buyer_uniform: row.TXN_Uniform ?? undefined,
-    total_amount: row.TXN_SaleAmt ?? undefined,
+    inv_cancel: row.INV_Cancel ?? undefined,
+    total_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_SaleAmt ?? undefined),
     tax_type: row.PLU_TaxType ?? undefined,
-    net_amount: row.TXN_Net ?? undefined,
-    tax_amount: row.TXN_Tax ?? undefined,
+    net_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Net ?? undefined),
+    tax_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Tax ?? undefined),
   };
 }
 

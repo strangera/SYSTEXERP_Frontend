@@ -50,13 +50,13 @@ INSERT INTO tblPrivilegeBehavior (
 )
 VALUES
     ('tls52040', '110', 'Y', GETDATE(), '2400215', N'Leo');
-
+--驗證
 select
 a.prog_no,a.function_code,b.function_desc
 from tblPrivilegeBehavior a
 left join tblBehaviorType b on b.function_code = a.function_code
 where prog_no = 'tls2e080' order by a.id
-
+-- 刪除
 delete tblPrivilegeBehavior where prog_no = 'tls2e070' and function_code in ('20','30','40')
 ----------------------------------------------------------------
 -- 3. 新增作業

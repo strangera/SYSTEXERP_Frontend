@@ -8,8 +8,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { PluLogo } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -21,7 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
   selector: 'app-tls51060',
   templateUrl: './tls51060.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableReportComponent, TranslateModule]
 })
 export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   implements OnInit {
@@ -45,11 +46,12 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null;
 
   storageOptions: apiOption[] = [];
 
   data: PluLogo[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌中文名稱', visible: true },
     { field: 'LOGO_EN_NAME', header: '品牌英文名稱', visible: true },
@@ -62,6 +64,8 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   ];
 
   selectedItems: PluLogo[] = [];// 多選項目
+
+  readonly query = (body: any) => this.tls51060Service.queryTLS51060(body);
 
   // ----------------------------------------------------------------
   constructor(
@@ -84,6 +88,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
+            this.lastQueryBody = frm.value;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response.Status, response.Message);

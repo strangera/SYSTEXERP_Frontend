@@ -42,6 +42,20 @@
             ></app-multi-select>
           </div>
 
+          <!-- 是否含以下所屬部門 -->
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
+            <div class="field-checkbox mb-0">
+              <p-checkbox
+                inputId="IsCludeDownOrg"
+                formControlName="IsCludeDownOrg"
+                [binary]="true"
+                trueValue="Y"
+                falseValue="N"
+              ></p-checkbox>
+              <label for="IsCludeDownOrg">是否含以下所屬部門</label>
+            </div>
+          </div>
+
           <!-- 科目代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range

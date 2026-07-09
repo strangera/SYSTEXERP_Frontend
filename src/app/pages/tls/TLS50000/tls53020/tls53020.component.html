@@ -43,10 +43,10 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS53020" [data]="data" [columns]="columns" [multiSortMeta]="[{ field: 'PST_Date', order: -1 }]"
-    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [showManage]="true" [showDetail]="false"
-    [showEdit]="false" [showDelete]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [addButton]="addButton"></app-table>
+  <app-table-report tableKey="TLS53020" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [showManage]="true" [showDetail]="false" [showEdit]="false" [showDelete]="false"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls53020Service.queryTLS53020.bind(tls53020Service)"
+    [addButton]="addButton"></app-table-report>
 </div>
 
 <!-- 匯入視窗 -->

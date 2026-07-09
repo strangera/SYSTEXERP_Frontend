@@ -39,7 +39,7 @@ export class FIN55020Component extends BasicQueryPageComponent<FIN55020Data> imp
   ProjectNoOptions = this.dropdown.queryTALPORDERM_DropDownList();
   DetailNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   VOUCHER_KINDOptions = getSYS1000Options('Voucher_Type');
-  PostFlagOptions = getSYS1000Options('PostFlag');
+  PostFlagOptions = getSYS1000Options('PostFlag').filter((option: any) => option.value !== '2'); // 需求#566: 傳票狀態的"確認"選項，請移除
   totalRecords = 0;
   historyRequestBody: any;
   data: FIN55020Data[] = [];

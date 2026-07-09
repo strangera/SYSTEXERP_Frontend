@@ -12,6 +12,7 @@ export interface QueryFIN55090Request {
   DateTo: string; // YYYY-MM-DD
   Ledger_MD: '0' | '1'; // '0'=統制, '1'=明細
   OrgList: string[] | null; // 部門 (多選)
+  IsCludeDownOrg: 'Y' | 'N'; // 是否含下層部門
   ProjectNo: string | null; // 活動代碼
   ShowZero: boolean; // 是否顯示餘額為零的科目
   PrintSign: boolean; // 是否列印簽核欄
@@ -65,6 +66,18 @@ export class Fin55090Service {
    */
   exportFIN55090PDF(request: QueryFIN55090Request): Observable<ExportFileResponse> {
     return this.http.post(`${this.apiUrl}/exportFIN55090PDF`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+
+  /**
+   * 匯出部門別損益比較表檔案 (Excel)
+   * @param request 查詢請求參數
+   * @returns 報表檔案的位元組陣列 (透過 HttpResponse<Blob> 接收)
+   */
+  exportFIN55090Excel(request: QueryFIN55090Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportFIN55090Excel`, request, {
       observe: 'response',
       responseType: 'blob'
     });

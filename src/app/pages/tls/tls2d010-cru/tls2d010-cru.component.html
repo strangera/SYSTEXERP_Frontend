@@ -62,9 +62,10 @@
       <!-- table-edit：一般扣款明細（點擊開啟專櫃選擇彈窗） -->
       <app-table-edit #normalTable title="整批新增專櫃" tableKey="talent_id" [data]="data" class="col-12" dataKey="rowId"
         [columns]="columnsNormal" (selectionChange)="normalSelectedItems = $event" [selectedItems]="normalSelectedItems"
-        (dataChange)="onCounterDataChange($event)" (fieldChange)="onFieldChange($event)" [loading]="loading" [tableRequired]="true"
-        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode" [canInsert]="false"
-        [showInsert]="!isDetailMode" [enableTabInsert]="true" (insert)="onOpenTalentDialog()"></app-table-edit>
+        (dataChange)="onCounterDataChange($event)" (fieldChange)="onFieldChange($event)" [loading]="loading"
+        [tableRequired]="true" [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
+        [canInsert]="false" [showInsert]="!isDetailMode" [enableTabInsert]="true"
+        (insert)="onOpenTalentDialog()"></app-table-edit>
 
       <!-- 按鈕 -->
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -75,8 +76,8 @@
     <!-- 新增專櫃扣款 -->
     <form *ngIf="currentCreateType === 'counter'" [formGroup]="dataFormCounter" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer" role="button" tabindex="0"
-          aria-label="專櫃編號/名稱 選擇" (click)="onOpenTalentDialog(); $event.stopPropagation()"
+        <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer" role="button" tabindex="0" aria-label="專櫃編號/名稱 選擇"
+          (click)="onOpenTalentDialog(); $event.stopPropagation()"
           (keydown.enter)="$event.preventDefault(); onOpenTalentDialog()">
           <app-input-text label="專櫃編號/名稱" controlName="tlt_no_display" [control]="counterTltDisplayControl"
             [submitted]="submitted" [readonly]="true" [customPlaceholder]="'點擊選取專櫃編號'"
@@ -149,6 +150,6 @@
     [showCaption]="false" [showFilter]="false" [showReportMode]="false" [showExcel]="false" [showDelete]="false"
     [showManage]="false" [showCheckBox]="currentCreateType !== 'counter'" [totalRecords]="talentTotalRecords"
     [lastQueryBody]="talentLastQueryBody" [queryFunction]="queryTalentDialog" [loading]="talentDialogLoading"
-    (itemClick)="onTalentDialogRowClick($event)">
+    (itemClick)="onTalentDialogRowClick($event)" [ItemSize]="24.34">
   </app-table-report>
 </app-dialog>

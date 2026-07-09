@@ -79,7 +79,8 @@
             </div>
 
             <app-table-report [data]="apData" [columns]="apColumns" [showManage]="false" [footerData]="apFooterData"
-              [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false"></app-table-report>
+              [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false"
+              [lazy]="false"></app-table-report>
           </div>
         </p-tabPanel>
         <!-- 新增：進項發票 Tab 頁籤 (僅在 PT 或 WT 時顯示) -->
@@ -94,7 +95,8 @@
             </div>
             <!-- 使用唯讀報表組件，關閉管理欄位與刪除按鈕 -->
             <app-table-report [data]="invoiceData" [columns]="invoiceColumns" [showManage]="false"
-              [totalRecords]="invoiceTotalRecords" [showDelete]="false" [showCaption]="false"></app-table-report>
+              [footerData]="invoiceFooterData" [totalRecords]="invoiceTotalRecords" [showDelete]="false"
+              [showCaption]="false" [lazy]="false"></app-table-report>
           </div>
         </p-tabPanel>
       </p-tabView>

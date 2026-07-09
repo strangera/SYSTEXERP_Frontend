@@ -41,7 +41,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import {
   Column,
   createPaginationConfig,
@@ -67,7 +67,7 @@ import { formatAmount } from '../../../tls2f010-cru/tls2f010-table-report.model'
     ButtonComponent,
     NgIf,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     TableEditComponent,
     DialogComponent,
     DropdownTableComponent,
@@ -146,6 +146,7 @@ export class TLS56030CRUComponent
   dialogData: IPOS2004DetailData[] = [];
   opLoading = false;
   totalRecords = 0;
+  dialogLastQueryBody: any = null;
 
   dialogQueryForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]],
@@ -642,26 +643,34 @@ export class TLS56030CRUComponent
     this.calculateTotals();
   }
 
-  // -------------------- Dialog 主查詢按鈕 --------------------
-  onQuery(frm: FormGroup) {
-    this.dialogLoading = true;
-
-    const body = {
-      ...frm.getRawValue(),
+  // 把 dialogQueryForm 的原始值補上 RPM_No/LOGO_No/VEN_No，組成 queryPOS2004Detail 需要的請求
+  private buildDialogQueryBody(raw: any): any {
+    return {
+      ...raw,
       RPM_No: this.dataForm.controls.RPM_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
       VEN_No: this.dataForm.controls.VEN_No.value,
     };
+  }
+
+  // -------------------- Dialog 主查詢按鈕 --------------------
+  onQuery(frm: FormGroup) {
+    this.dialogLoading = true;
+    const raw = frm.getRawValue();
 
     this.tls52010Service
-      .queryPOS2004Detail(body)
+      .queryPOS2004Detail(this.buildDialogQueryBody(raw))
       .pipe(finalize(() => (this.dialogLoading = false)), untilDestroyed(this))
       .subscribe((response: any) => {
         const rows = response.Data || [];
         this.dialogData = rows.map((r: any, i: number) => ({ ...r, _TABLE_KEY: `${r.PLU_MagNo ?? ''}_${i}_${Date.now()}` }));
-        this.opTotalRecords = response.TotalCount;
+        this.totalRecords = response.TotalCount;
+        this.dialogLastQueryBody = raw;
       });
   }
+
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁／排序）
+  queryDialogDetail = (body: any) => this.tls52010Service.queryPOS2004Detail(this.buildDialogQueryBody(body));
 
   // -------------------- Table Helpers --------------------
   isRowSelectable(row: IPOS2004DetailData): boolean {

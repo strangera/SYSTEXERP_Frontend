@@ -1,6 +1,6 @@
 <app-progress-bar />
 <div class="layout-wrapper" [ngClass]="containerClass()" *ngIf="user">
-  <app-topbar (topMenuClick)="selectedTopMenuProgNo.set($event)"></app-topbar>
+  <app-topbar (topMenuClick)="onTopMenuClick($event)"></app-topbar>
   <div #sidebarContainer class="px-0 pt-0 layout-sidebar w-full sm:w-24rem border-noround sm:border-round-xl">
     <div #scrollContent class="layout-sidebar-scroll-content flex w-full sticky top-0 z-5 pt-3 px-3 pb-2">
       <div class="flex flex-row justify-content-between align-items-center gap-2 w-full lg:flex-row-reverse">
@@ -20,7 +20,7 @@
     <app-menulist [activeTopMenuProgNo]="selectedTopMenuProgNo()"></app-menulist>
   </div>
 
-  <div #layoutMainContainer class="layout-main-container mt-0">
+  <div #layoutMainContainer class="layout-main-container mt-0 lg:mt-3">
     <div class="layout-main">
       <router-outlet></router-outlet>
     </div>

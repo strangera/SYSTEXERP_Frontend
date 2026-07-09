@@ -7,6 +7,7 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { getSYS1000Options } from '../../system/sys1000.service';
 import { Sysb400Service } from '../sys/sysb400.service';
 
 const apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
@@ -21,7 +22,7 @@ export class TLS21020Service {
   public readonly SYS3100Options = signal<Option[]>([]);
   public readonly GLS1005Options = signal<Option[]>([]);
   public readonly POS2013Options = signal<Option[]>([]);
-  public readonly entryTypeOptions = signal<Option[]>([]);
+  public readonly entryTypeOptions = signal<Option[]>(getSYS1000Options('ENTRY_TYPE_TLS21020'));
 
   public readonly SYS3100Map = computed(() =>
     new Map<string, Option>(this.SYS3100Options().map(item => [item.value, item]))
@@ -38,18 +39,6 @@ export class TLS21020Service {
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
   ];
-
-  public getEntryTypes(): void {
-    this.entryTypeOptions.set([
-      { value: 'SD', label: 'SD銷售日傳票' },
-      { value: 'MR', label: 'MR租金傳票' },
-      { value: 'MD', label: 'MD代扣傳票' },
-      { value: 'PR', label: 'PR抽成傳票' },
-      { value: 'PN', label: 'PN進貨帳款-暫估應付' },
-      { value: 'PN', label: 'PN進貨帳款-成本結轉' },
-      { value: 'PT', label: 'PT進貨請款' },
-    ]);
-  }
 
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
     return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query).pipe(

@@ -58,6 +58,7 @@ export class ButtonComponent implements OnInit, AfterViewInit {
   @Input() outlined: boolean | undefined;
   @Input() form: FormGroup | undefined;
   @Input() styleClass = '';
+  @Input() permissionCode: string | undefined;
 
   // Signal-backed getter/setter so effectiveDisabled() reacts to parent binding changes
   private readonly _disabled = signal<boolean | undefined | string>(undefined);
@@ -107,15 +108,17 @@ export class ButtonComponent implements OnInit, AfterViewInit {
     this.type = config.type as ButtonType;
     this._disabled.set(this._disabled() ?? config.disabled ?? false);
 
+    const permissionCode = this.permissionCode ?? config.permissionCode;
+
     combineLatest([
       this.systemDataService.menuUpdated.pipe(filter(menu => menu && menu.length > 0)),
       this.currentPageService.currentPageProgNo$.pipe(filter(progNo => !!progNo))
     ])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(([, progNo]) => {
-        if (config.permissionCode) {
+        if (permissionCode) {
           const funInfo = this.systemDataService.getUserPermissions(progNo!);
-          const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === config.permissionCode);
+          const hasPermission = funInfo?.PrivilegeBehavior?.some(b => b.function_code === permissionCode);
           this.permissionDisabled.set(!hasPermission);
         }
       });

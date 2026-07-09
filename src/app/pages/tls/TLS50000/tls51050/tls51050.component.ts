@@ -6,8 +6,9 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PluUnit } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -17,7 +18,7 @@ import { AccordionModule } from 'primeng/accordion';
   selector: 'app-tls51050',
   templateUrl: './tls51050.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
 })
 export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   implements OnInit {
@@ -38,6 +39,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  lastQueryBody: any = null;
 
   attributeOptions: option[] = [
     { 'value': "1", 'label': '基本單位' },
@@ -45,7 +47,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   ];
 
   data: PluUnit[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'UNIT_No', header: '單位編碼', visible: true },
     { field: 'UNIT_NAME', header: '單位名稱', visible: true },
     { field: 'UNIT_Attribute_Name', header: '單位屬性名稱', visible: true },
@@ -53,6 +55,8 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   ];
 
   selectedItems: PluUnit[] = [];// 多選項目
+
+  readonly query = (body: any) => this.tls51050Service.queryTLS51050(body);
 
   // ----------------------------------------------------------------
   constructor(
@@ -75,6 +79,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
+            this.lastQueryBody = frm.value;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response.Status, response.Message);

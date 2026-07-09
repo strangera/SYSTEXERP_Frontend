@@ -263,6 +263,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   invoiceData: any[] = [];
   invoiceTotalRecords = 0;
   invoiceLoading = false;
+  invoiceFooterData = { InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 };
   // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
   invoiceColumns: ReportColumn[] = [
     { field: 'VoucherType', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
@@ -272,10 +273,10 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     { field: 'DeclareYM', header: '申報年月', align: 'left' },
     { field: 'VendorTaxID', header: '廠商統一編號', align: 'left' },
     { field: 'InvoiceUsage', header: '發票用途', align: 'left', format: v => getSYS1000('PUR_DirectType', v) },
-    { field: 'InvoiceAmount', header: '發票總金額', align: 'right', format: formatAmount },
+    { field: 'InvoiceAmount', header: '發票總金額', align: 'right', format: formatAmount, isTotal: true },
     { field: 'TaxType', header: '課稅別', format: v => getSYS1000('PUR_TaxType', v), align: 'left' },
-    { field: 'NetAmount', header: '發票未稅金額', align: 'right', format: formatAmount },
-    { field: 'TaxAmount', header: '發票稅額', align: 'right', format: formatAmount },
+    { field: 'NetAmount', header: '發票未稅金額', align: 'right', format: formatAmount, isTotal: true },
+    { field: 'TaxAmount', header: '發票稅額', align: 'right', format: formatAmount, isTotal: true },
     { field: 'DeductionCodeDesc', header: '扣抵代號', format: v => getSYS1000('PUR_DiscNo', v), align: 'left' },
     { field: 'CategoryType', header: '類別區分', format: v => getSYS1000('PUR_Type', v), align: 'left' },
     { field: 'SourceDocNo', header: '憑證單號', align: 'left' },
@@ -297,6 +298,11 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.invoiceData = res.Data || [];
         this.invoiceTotalRecords = res.TotalCount || res.Data.length;
+        this.invoiceFooterData = this.invoiceData.reduce((acc, row) => ({
+          InvoiceAmount: acc.InvoiceAmount + (Number(row.InvoiceAmount) || 0),
+          NetAmount: acc.NetAmount + (Number(row.NetAmount) || 0),
+          TaxAmount: acc.TaxAmount + (Number(row.TaxAmount) || 0),
+        }), { InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
       }
     });
   }

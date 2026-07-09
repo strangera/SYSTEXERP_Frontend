@@ -12,8 +12,9 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -32,7 +33,7 @@ import { finalize } from 'rxjs';
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     ButtonModule
   ]
@@ -51,6 +52,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
   data: TLS53010Data[] = [];
   selectedItems: TLS53010Data[] = [];
   totalRecords = 0;
+  lastQueryBody: any = null;
 
   // 下拉選單
   hosOptions: any[] = [];// 倉別選項
@@ -65,7 +67,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     { value: '9', label: '作廢' }
   ];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'PST_No', header: '盤點單編號', visible: true },
     { field: 'HOS_No', header: '倉別代碼', visible: true },
@@ -87,32 +89,17 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     { field: 'PST_Remark', header: '盤點備註', visible: false },
   ];
 
-  loadingStates = new Map<number, { print: boolean; export: boolean }>();
+  buttonsLoading = false;
   addButton: AddButton[] = [
     {
       label: '列印',
       icon: 'pi pi-print text-cyan-500',
       action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
-      loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'print'),
     },
   ];
 
-  // 取得 loading 狀態
-  getLoadingState(id: number, action: 'print' | 'export'): boolean {
-    return this.loadingStates.get(id)?.[action] || false;
-  }
-
-  // 設定 loading 狀態
-  setLoadingState(id: number, action: 'print' | 'export', loading: boolean): void {
-    if (!this.loadingStates.has(id)) {
-      this.loadingStates.set(id, { print: false, export: false });
-    }
-    const state = this.loadingStates.get(id)!;
-    state[action] = loading;
-  }
-
   constructor(
-    private tls53010Service: TLS53010Service,
+    public readonly tls53010Service: TLS53010Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService
   ) {
@@ -136,6 +123,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = queryRequest;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -194,13 +182,13 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
 
   // 列印
   onPrint(rowData: TLS53010Data) {
-    this.setLoadingState(rowData.id, 'print', true);
+    this.buttonsLoading = true;
 
     this.tls53010Service.printTLS53010(this.createDetailQueryRequest(rowData))
       .pipe(
         untilDestroyed(this),
         finalize(() => {
-          this.setLoadingState(rowData.id, 'print', false);
+          this.buttonsLoading = false;
         })
       )
       .subscribe({

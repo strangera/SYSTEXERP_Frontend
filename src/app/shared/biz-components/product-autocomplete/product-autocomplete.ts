@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { UntilDestroy, untilDestroyed } from "@ngneat/until-destroy";
 import { DropdownTableComponent, FieldsConfig } from "@shared/componentkit/dropdown-table/dropdown-table.component";
@@ -18,7 +18,8 @@ import { ProductAutocompleteService } from "./product-autocomplete.service";
       [optionValue]="optionValue"
       [suggestions]="suggestions"
       [fieldsConfig]="fieldsConfig"
-      (inputValueChanged)="onAutoCompleteInputChange($event)">
+      (inputValueChanged)="onAutoCompleteInputChange($event)"
+      (enterKey)="enterKey.emit($event)">
     </app-dropdown-table>
   `,
   imports: [DropdownTableComponent],
@@ -28,6 +29,8 @@ export class ProductAutocompleteComponent implements OnInit { // 實作 OnInit
   @Input() optionValue = 'PLU_No';
   @Input() submitted = false;
   @Input() extraFilters: any = {};
+  // 選填：條碼槍掃描完按下 Enter 時觸發，讓頁面可以自行接手觸發查詢
+  @Output() enterKey = new EventEmitter<Event>();
   suggestions: any[] = [];
 
   fieldsConfig: FieldsConfig[] = [

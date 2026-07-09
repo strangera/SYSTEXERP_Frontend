@@ -14,8 +14,9 @@ import { FileUploadComponent } from '@shared/componentkit/file-upload/file-uploa
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
@@ -32,7 +33,7 @@ import { finalize } from 'rxjs';
     InputTextComponent,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     RadiobuttonComponent,
     MultiSelectComponent,
@@ -61,6 +62,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> imp
   data: TLS53020Data[] = [];
   totalRecords = 0;
   selectedItems: TLS53020Data[] = [];
+  lastQueryBody: any = null;
 
   // 下拉選單資料
   HOSNoOptions: any[] = []; // 倉別選項
@@ -83,7 +85,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> imp
   // 用於匯入視窗的盤點類型選項（排除尚未盤點）
   PSTTypeOptionsForImport: any[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'PST_No', header: '盤點單編號', visible: true },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
@@ -112,14 +114,13 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> imp
   addButton: AddButton[] = [
     {
       label: '匯入',
-      displayText: '匯入',
       icon: '',
       action: (rowData: TLS53020Data) => { this.onImport(rowData); },
     }
   ];
 
   constructor(
-    private tls53020Service: TLS53020Service,
+    public readonly tls53020Service: TLS53020Service,
     private dropDownListService: DropDownListService,
     private datePipe: DatePipe
   ) {
@@ -145,6 +146,7 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> imp
         .subscribe(res => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;
+          this.lastQueryBody = queryRequest;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });

@@ -64,6 +64,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     DateFrom: [yesterday, Validators.required],
     DateTo: [yesterday, Validators.required],
     OrgIdList: [null],
+    IsCludeDownOrg: ['N'],
     AccNoFrom: [null],
     AccNoTo: [null],
     VendorFrom: [null],
@@ -89,7 +90,12 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   lastQueryConditions: ExportFIN55050Payload | null = null;
   OrgIdListOptions = this.dropdown.querySys3100();
   AccNoListOptions = this.dropdown.queryGls1005();
-  VouStatusListOptions = [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }, { label: '確認', value: '2' }, { label: '過帳', value: '3' },];
+  VouStatusListOptions = [
+    { label: '作廢', value: '0' },
+    { label: '建立', value: '1' },
+    // { label: '確認', value: '2' }, // 需求#566: 傳票狀態的"確認"選項，請移除
+    { label: '過帳', value: '3' },
+  ];
 
   pickerVisible = false;
   pickerTarget: 'From' | 'To' = 'From';
@@ -128,6 +134,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
         DateFrom: from ?? '',
         DateTo: to ?? '',
         OrgIdList: raw?.OrgIdList ?? [],
+        IsCludeDownOrg: raw?.IsCludeDownOrg ?? 'N',
         AccNoFrom: raw?.AccNoFrom ?? '',
         AccNoTo: raw?.AccNoTo ?? '',
         VendorFrom: raw?.VendorFrom ?? '',
