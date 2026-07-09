@@ -266,7 +266,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
   invoiceColumns: ReportColumn[] = [
     { field: 'VoucherType', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
-    { field: 'TrackNo', header: '字軌／發票號碼', align: 'left' },
+    { field: 'TrackNo', header: '字軌', align: 'left' },
     { field: 'InvoiceNo', header: '發票號碼', align: 'left' },
     { field: 'InvoiceDate', header: '發票日期', align: 'left', format: formatDate },
     { field: 'DeclareYM', header: '申報年月', align: 'left' },
