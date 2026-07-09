@@ -1,11 +1,11 @@
 <p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
   [scrollHeight]="autoHeight ? undefined : '700px'" [(selection)]="selectedItems" sortMode="multiple"
-  (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!lazy" [resetPageOnSort]="false"
+  (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!effectiveLazy" [resetPageOnSort]="false"
   [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScroll]="data.length >= 30" [virtualScrollDelay]="0"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="effectiveLazy" [virtualScroll]="data.length >= 30" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,

@@ -78,6 +78,10 @@ export class TableReportComponent implements OnChanges {
     return this.numToleratedItems ?? Math.ceil(700 / this.ItemSize) * 2;
   }
   @Input() lazy = true;
+  /** 有效 lazy 值：未接 queryFunction 時，無論 lazy 是否為預設 true，都視為前端排序/分頁模式 */
+  public get effectiveLazy(): boolean {
+    return this.lazy && !!this.queryFunction;
+  }
   @Input() dataKey: string | undefined;
   selectedColumns: ReportColumn[] = [];
 
@@ -357,7 +361,7 @@ export class TableReportComponent implements OnChanges {
   }
 
   onSort(event: any) {
-    if (!this.lazy) {
+    if (!this.effectiveLazy) {
       this.subtotalService.clearGroupTotals();
       this.subtotalService.updateGroupTotals(this.data, this.columns, this.groupRowsBy);
       this.cdr.detectChanges();
@@ -425,7 +429,7 @@ export class TableReportComponent implements OnChanges {
           this.data = res.Data;
           this._buildSelectableCache();
           this.totalRecords = res.TotalCount || this.data.length;
-          this.dt.virtualScroll = this.lazy && this.data.length >= 30;
+          this.dt.virtualScroll = this.effectiveLazy && this.data.length >= 30;
           this.virtualData = this.data;
           this.selectedItems = [];
           this.dataChange.emit(this.data);
@@ -453,7 +457,7 @@ export class TableReportComponent implements OnChanges {
   }
 
   onScroll(event: any) {
-    if (this._loading || !this.lazy) return;
+    if (this._loading || !this.effectiveLazy) return;
     const target = event.originalEvent?.target;
     if (!target) return;
     const pageSize = this.dataFlowService.normalizeQueryBody(this.lastQueryBody)?.pageSize ?? 30;
