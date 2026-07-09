@@ -182,7 +182,10 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
       });
 
       this.OrganizationCodeOptions = (res.orgs || []).map(mapStandardOption);
-      this.CounterOptions = (res.counters || []).map(mapStandardOption);
+      // 下拉選單API會將已過期專櫃排在後面，此處依櫃號重新排序，確保選單依櫃號順序顯示
+      this.CounterOptions = (res.counters || [])
+        .map(mapStandardOption)
+        .sort((a: { value: any }, b: { value: any }) => String(a.value).localeCompare(String(b.value)));
     });
   }
 
