@@ -12,6 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
 import { createPaginationConfig, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin13080',
@@ -27,6 +28,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     TooltipModule,
     InputTextComponent,
     TableComponent,
+    YearMonthComponent,
     ButtonModule,
   ],
 })

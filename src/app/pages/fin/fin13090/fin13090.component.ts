@@ -53,7 +53,7 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   data: fin13090Item[] = [];
   totalRecords = 0;
   lastQueryBody: any = null;
-
+editDisabled = (row: fin13090Item): boolean => row?.PostFlag === '3';
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },

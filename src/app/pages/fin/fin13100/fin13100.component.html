@@ -62,6 +62,7 @@
       [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
       [totalRecords]="totalRecords"
       [lazy]="true"
+       [editDisabled]="editDisabled"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
