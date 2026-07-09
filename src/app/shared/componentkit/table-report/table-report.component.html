@@ -47,7 +47,9 @@
         </th>
 
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="col.groupField" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" [attr.colspan]="
+              tableUtility.getColumnSpan(columns, col.groupField!)
+            " class="group-header text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
             pResizableColumn [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
             [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
             [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"

@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -84,7 +84,6 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
   constructor(
     public readonly tls57070Service: Tls57070Service,
     private readonly dropdown: DropdownApiService,
-    private readonly cdr: ChangeDetectorRef,
   ) {
     super();
   }
