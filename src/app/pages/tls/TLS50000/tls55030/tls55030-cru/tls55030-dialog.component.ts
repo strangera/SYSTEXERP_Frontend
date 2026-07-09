@@ -148,8 +148,8 @@ export class TLS55030DialogComponent {
     const body: ReturnDetailOptionQueryBody = {
       VEN_No: this.venNo,
       ACP_YYYYMM: this.datePipe.transform(this.acpYyyyMm, 'yyyyMM') as string,
-      PageSize: 30,
-      PageIndex: 1
+      pageSize: 1000,
+      pageIndex: 1
     };
     this.tls55030Service.queryTLS55030ReturnDetailOption(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogData2 = res.Data;
@@ -179,8 +179,8 @@ export class TLS55030DialogComponent {
     this.dialogLoading = true;
     const body: RebateDetailOptionQueryBody = {
       VEN_No: venNo, // 使用傳入的廠商編號
-      PageSize: 30,
-      PageIndex: 1,
+      pageSize: 1000,
+      pageIndex: 1,
       SortBy: [{ field: 'SeqNo', order: 1 }]
     };
 

@@ -168,8 +168,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     const body = {
       VEN_No: this.dataForm.controls.VEN_No.value,
       PUR_GUINo: inputNo, // 帶入發票編號
-      PageIndex: 1,
-      PageSize: 1 // 只需要一筆
+      pageIndex: 1,
+      pageSize: 1 // 只需要一筆
     };
 
     this.tls55030Service.queryTLS55030RebateDetailOption(body)
@@ -605,8 +605,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       ...formValue,
       APRV_Date_Start: this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd'),
       APRV_Date_End: this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd'),
-      PageIndex: 1,
-      PageSize: 30,
+      pageIndex: 1,
+      pageSize: 1000,
       SortBy: [{ field: 'RJM_No', order: 1 }]
     };
     this.tls55030Service.queryTLS55030ReturnNotRebate(paramBody as ReturnNotRebateQueryBody).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe((res) => {
