@@ -16,7 +16,6 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -42,7 +41,6 @@ import { debounceTime, finalize } from 'rxjs';
     InputTextareaComponent,
     TableEditComponent,
     DialogComponent,
-    TableComponent,
     TableReportComponent
   ]
 })
@@ -278,6 +276,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   dialogData: POS2004Info[] = [];
   dialogSelectedItems: POS2004Info[] = [];
   dialogTotalRecords = 0;
+  dialogLastQueryBody: QueryTLS53010POS2004Request | null = null;
 
   dialogColumns: Column[] = [
     { field: 'PLU_No', header: '國際條碼' },
@@ -298,8 +297,12 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.tls53010Service.queryTLS53010POS2004(queryRequest).pipe(untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.dialogTotalRecords = response.TotalCount;
+      this.dialogLastQueryBody = queryRequest;
     });
   }
+
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁／排序）
+  queryDialogDetail = (body: QueryTLS53010POS2004Request) => this.tls53010Service.queryTLS53010POS2004(body);
 
   saveDialog() {
     this.dialogVisible = false;

@@ -240,7 +240,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls57100', loadComponent: () => import('./TLS50000/tls57100/tls57100.component').then(m => m.TLS57100Component), data: { progNo: 'TLS57100' } },
   // 存貨月結庫存表
   { path: 'tls57110', loadComponent: () => import('./TLS50000/tls57110/tls57110.component').then(m => m.TLS57110Component), data: { progNo: 'TLS57110' } },
-  { path: 'tls57110cru', loadComponent: () => import('./TLS50000/tls57110/tls57110-cru/tls57110-cru.component').then(m => m.TLS57110CRUComponent), data: { progNo: 'TLS57110' } },
   // 滯銷商品統計表
   { path: 'tls57120', loadComponent: () => import('./TLS50000/tls57120/tls57120.component').then(m => m.TLS57120Component), data: { progNo: 'TLS57120' } },
   // 銷售排行報表

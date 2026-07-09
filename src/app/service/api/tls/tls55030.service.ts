@@ -15,8 +15,8 @@ import { environment } from 'src/environments/environment';
  * queryTLS55030 請求參數 (更新: 新增 OrderBy, Offset)
  */
 export interface Tls55030QueryBody {
-  PageSize?: number;
-  PageIndex?: number;
+  pageSize?: number;
+  pageIndex?: number;
   SortBy?: { field: string; order: number }[];
   TABTYPE?: string; // 單據別
   PUR_GUINo?: string; // 發票號碼
@@ -60,8 +60,8 @@ export interface Tls55030ListData {
  * queryTLS55030ReturnDetailOption 請求參數 (更新: 新增 OrderBy, Offset)
  */
 export interface ReturnDetailOptionQueryBody {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: { field: string; order: number }[];
   ACP_YYYYMM: string; // 結帳年月
   VEN_No: string; // 廠商編號
@@ -71,8 +71,8 @@ export interface ReturnDetailOptionQueryBody {
  * queryTLS55030ReturnDetail (基於 DIS_No 查詢折讓單退貨明細) 請求參數
  */
 export interface ReturnDetailByDisNoQueryBody {
-  PageSize?: number;
-  PageIndex?: number;
+  pageSize?: number;
+  pageIndex?: number;
   SortBy?: { field: string; order: number }[];
   DIS_No: string; // 折讓單號
 }
@@ -122,8 +122,8 @@ export interface IReturnDetailByDisNoData {
 export interface RebateDetailOptionQueryBody {
   VEN_No: string; // 廠商編號\
   PUR_GUINo?: string; // 發票/收據號碼
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: SortMeta[];
 }
 
@@ -262,8 +262,8 @@ export interface ReturnNotRebateQueryBody {
   APRV_Date_End: string; // 格式: yyyy-MM-dd
   VEN_NO: string; // 廠商編號
   HOS_No: string; // 門市編號
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: SortMeta[];
 }
 

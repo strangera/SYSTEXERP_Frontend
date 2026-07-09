@@ -101,11 +101,10 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
-    [lazy]="true" [loading]="dialogLoading">
-  </app-table>
+  <app-table-report tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false"
+    [data]="dialogData" [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog"
+    [showCaption]="false" (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords"
+    [lastQueryBody]="dialogLastQueryBody" [queryFunction]="queryDialogDetail" [loading]="dialogLoading">
+  </app-table-report>
 </app-dialog>

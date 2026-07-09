@@ -48,8 +48,8 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     DIS_EntryType: [null], // 折讓項目
     // CRT_USR_No: [],
     DIS_No: [null, [Validators.maxLength(16)]], // 折讓單維護編號
-    PageIndex: [1],
-    PageSize: [30]
+    pageIndex: [1],
+    pageSize: [30]
   });
   TABTYPEOptions = getSYS1000Options('TABTYPE');
   DIS_StatusOptions = getSYS1000Options('DIS_Status');

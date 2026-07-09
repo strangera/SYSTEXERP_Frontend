@@ -13,8 +13,9 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -32,7 +33,7 @@ import { finalize } from 'rxjs';
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     RadiobuttonComponent
   ]
@@ -52,6 +53,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
   data: TLS53030Data[] = [];
   selectedItems: TLS53030Data[] = [];
   totalRecords = 0;
+  lastQueryBody: any = null;
 
   //#region 下拉選項
   hosOptions: any[] = [];       // 倉別選項
@@ -81,7 +83,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
   ];
   //#endregion
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'PST_No', header: '盤點單編號', visible: true },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
@@ -108,12 +110,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
     },
   ];
 
-  loadingStates = new Map<number, {
-    print: boolean;
-    conclude: boolean;
-    reverted: boolean;
-    void: boolean
-  }>();
+  buttonsLoading = false;
 
   addButton: AddButton[] = [
     {
@@ -121,46 +118,28 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
       icon: 'pi pi-check text-green-500',
       action: (rowData: TLS53030Data) => { this.concludeTLS53030(rowData); },
       disabled: (rowData: TLS53030Data) => !['1', '2', '3'].includes(rowData.PST_Status),
-      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'conclude'),
     },
     {
       label: '反結案',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: TLS53030Data) => { this.revertedTLS53030(rowData); },
       disabled: (rowData: TLS53030Data) => rowData.PST_Status !== '4', // 只有已結案(4)才可以反結案
-      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'reverted'),
     },
     {
       label: '作廢',
       icon: 'pi pi-times text-red-500',
       action: (rowData: TLS53030Data) => { this.voidTLS53030(rowData); },
       disabled: (rowData: TLS53030Data) => !['0', '1', '2', '3'].includes(rowData.PST_Status), // 只有未結案(0,1,2,3)才可以作廢
-      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'void'),
     },
     {
       label: '列印',
       icon: 'pi pi-print text-cyan-500',
       action: (rowData: TLS53030Data) => { this.onPrint(rowData); },
-      loading: (rowData: TLS53030Data) => this.getLoadingState(rowData.id, 'print'),
     },
   ];
 
-  // 取得 loading 狀態
-  getLoadingState(id: number, action: 'print' | 'conclude' | 'reverted' | 'void'): boolean {
-    return this.loadingStates.get(id)?.[action] || false;
-  }
-
-  // 設定 loading 狀態
-  setLoadingState(id: number, action: 'print' | 'conclude' | 'reverted' | 'void', loading: boolean): void {
-    if (!this.loadingStates.has(id)) {
-      this.loadingStates.set(id, { print: false, conclude: false, reverted: false, void: false });
-    }
-    const state = this.loadingStates.get(id)!;
-    state[action] = loading;
-  }
-
   constructor(
-    private tls53030Service: TLS53030Service,
+    public readonly tls53030Service: TLS53030Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService
   ) {
@@ -185,6 +164,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = queryRequest;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -243,7 +223,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 列印
   onPrint(rowData: TLS53030Data) {
-    this.setLoadingState(rowData.id, 'print', true);
+    this.buttonsLoading = true;
 
     const payload = {
       MID: rowData.MID,
@@ -257,7 +237,7 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
       .pipe(
         untilDestroyed(this),
         finalize(() => {
-          this.setLoadingState(rowData.id, 'print', false);
+          this.buttonsLoading = false;
         })
       )
       .subscribe({
@@ -272,13 +252,13 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 結案盤點單
   concludeTLS53030(rowData: TLS53030Data) {
-    this.setLoadingState(rowData.id, 'conclude', true);
+    this.buttonsLoading = true;
 
     this.tls53030Service.concludeTLS53030(this.createOperationRequest(rowData))
       .pipe(
         untilDestroyed(this),
         finalize(() => {
-          this.setLoadingState(rowData.id, 'conclude', false);
+          this.buttonsLoading = false;
         })
       )
       .subscribe(
@@ -288,13 +268,13 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 反結案盤點單
   revertedTLS53030(rowData: TLS53030Data) {
-    this.setLoadingState(rowData.id, 'reverted', true);
+    this.buttonsLoading = true;
 
     this.tls53030Service.revertedTLS53030(this.createOperationRequest(rowData))
       .pipe(
         untilDestroyed(this),
         finalize(() => {
-          this.setLoadingState(rowData.id, 'reverted', false);
+          this.buttonsLoading = false;
         })
       )
       .subscribe(
@@ -304,13 +284,13 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 作廢盤點單
   voidTLS53030(rowData: TLS53030Data) {
-    this.setLoadingState(rowData.id, 'void', true);
+    this.buttonsLoading = true;
 
     this.tls53030Service.voidTLS53030(this.createOperationRequest(rowData))
       .pipe(
         untilDestroyed(this),
         finalize(() => {
-          this.setLoadingState(rowData.id, 'void', false);
+          this.buttonsLoading = false;
         })
       )
       .subscribe(

@@ -52,7 +52,7 @@
 
           <!-- 商品管理編號/國際條碼/廠商貨號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multiselect-table
+            <app-dropdown-table
               [control]="queryForm.controls.PLU_MagNo"
               templateLabel="label"
               [submitted]="submitted"
@@ -67,6 +67,8 @@
               [dialogColumns]="opColumns"
               [loading]="opLoading"
               [totalRecords]="opTotalRecords"
+              selectionMode="multiple"
+              [showCheckBox]="true"
             >
               <app-input-text
                 class="col-12 md:col-6"
@@ -80,7 +82,7 @@
                 controlName="PLU_Name"
                 [control]="opForm.controls.PLU_Name"
               />
-            </app-multiselect-table>
+            </app-dropdown-table>
           </div>
 
           <!-- 推銷費用率 -->

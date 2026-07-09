@@ -60,7 +60,7 @@
         [showCheckBox]="isFormEditable" [showDelete]="isFormEditable" [loading]="detailLoading"
         [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showReportMode]="false"
         [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [queryFunction]="queryDetailFunction"
-        [showManage]="false" [showFilter]="false" (delete)="onDelete($event)">
+        [showManage]="false" [showFilter]="false" (delete)="onDelete($event)" [ItemSize]="24.44">
         <header><span class="text-xl">目前商品</span></header>
       </app-table-report>
     </div>
@@ -89,10 +89,9 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="TLS53010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+  <app-table-report tableKey="TLS53010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="dialogSelectedItems" [showCaption]="false"
-    (selectionChange)="dialogSelectedItems = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="dialogTotalRecords" (lazyLoadData)="
-      onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)
-    " [lazy]="true" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)"></app-table>
+    (selectionChange)="dialogSelectedItems = $event" [showManage]="false" [showCheckBox]="true"
+    [totalRecords]="dialogTotalRecords" [lastQueryBody]="dialogLastQueryBody" [queryFunction]="queryDialogDetail"
+    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)"></app-table-report>
 </app-dialog>

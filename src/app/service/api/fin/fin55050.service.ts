@@ -80,6 +80,7 @@ export interface ExportFIN55050Payload {
   DateFrom: string;
   DateTo: string;
   OrgIdList: string[];
+  IsCludeDownOrg: string;
   AccNoFrom: string;
   AccNoTo: string;
   VendorFrom: string;
@@ -95,7 +96,7 @@ export interface ExportFIN55050Payload {
   ReportMode: string;
   ACCT_KEY: string;
   AmtFrom?: number | null;
-AmtTo?: number | null;
+  AmtTo?: number | null;
 }
 
 export interface VendorPickerItem {
