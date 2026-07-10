@@ -46,31 +46,33 @@
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '3'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.year"
+                  [endControl]="queryForm.controls.yearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="月份" controlName="month" [options]="monthOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.month" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="月份" [options]="monthOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.month" [endControl]="queryForm.controls.monthTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '4'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.year"
+                  [endControl]="queryForm.controls.yearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="半年別" controlName="halfYear" [options]="halfYearOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.halfYear" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="半年別" [options]="halfYearOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.halfYear" [endControl]="queryForm.controls.halfYearTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '5'">
               <div class="col-12">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.year"
+                  [endControl]="queryForm.controls.yearTo" [submitted]="submitted" />
               </div>
             </div>
           </div>
@@ -106,31 +108,33 @@
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '3'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.CompareYear"
+                  [endControl]="queryForm.controls.CompareYearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="月份" controlName="CompareMonth" [options]="monthOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareMonth" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="月份" [options]="monthOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.CompareMonth" [endControl]="queryForm.controls.CompareMonthTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '4'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.CompareYear"
+                  [endControl]="queryForm.controls.CompareYearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="半年別" controlName="CompareHalfYear" [options]="halfYearOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareHalfYear" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="半年別" [options]="halfYearOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.CompareHalfYear" [endControl]="queryForm.controls.CompareHalfYearTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '5'">
               <div class="col-12">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.CompareYear"
+                  [endControl]="queryForm.controls.CompareYearTo" [submitted]="submitted" />
               </div>
             </div>
           </div>
