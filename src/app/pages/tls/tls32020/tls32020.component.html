@@ -34,13 +34,14 @@
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '2'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.year"
+                  [endControl]="queryForm.controls.yearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="週次" controlName="week" [options]="weekOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.week" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="週次" [options]="weekOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.week" [endControl]="queryForm.controls.weekTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
@@ -93,13 +94,14 @@
             </div>
 
             <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '2'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+              <div class="col-12">
+                <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.CompareYear"
+                  [endControl]="queryForm.controls.CompareYearTo" [submitted]="submitted" />
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="週次" controlName="CompareWeek" [options]="weekOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareWeek" [submitted]="submitted" />
+              <div class="col-12">
+                <app-dropdown-range label="週次" [options]="weekOptions" optionLabel="label" optionValue="value"
+                  [startControl]="queryForm.controls.CompareWeek" [endControl]="queryForm.controls.CompareWeekTo"
+                  [submitted]="submitted" />
               </div>
             </div>
 
