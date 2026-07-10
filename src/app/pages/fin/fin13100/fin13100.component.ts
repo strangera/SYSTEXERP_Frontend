@@ -20,6 +20,7 @@ interface FIN13100Row {
   VouDate: string;
   PostFlag: string;
   PostFlagName: string;
+  INV_DeclareYM?: string | null;
   TaxTotal: number;
 }
 
@@ -57,7 +58,25 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
 
   data: FIN13100Row[] = [];
   totalRecords = 0;
-editDisabled = (row: FIN13100Row): boolean => row?.PostFlag !== '1';
+private getCurrentDeclareYM(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+
+  let month = now.getMonth() + 1;
+
+  // 單數月歸到下一個雙數月
+  if (month % 2 !== 0) {
+    month++;
+  }
+
+  return `${year}${String(month).padStart(2, '0')}`;
+}
+
+editDisabled = (row: FIN13100Row): boolean => {
+  const declareYM = row?.INV_DeclareYM;
+
+  return !declareYM || declareYM < this.getCurrentDeclareYM();
+};
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },

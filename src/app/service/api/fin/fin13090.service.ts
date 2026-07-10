@@ -9,6 +9,7 @@ export interface fin13090Item {
   PostFlag: string, // 傳票狀態代碼 (1=建立 2=確認 3=過帳)
   PostFlagName: string, // 傳票狀態名稱
   TaxTotal: number // 進項稅額貸方 (APS2002.PUR_Tax 合計)
+  PUR_RepYYYYMM?: string | null;
 }
 
 export interface fin13090Detail {

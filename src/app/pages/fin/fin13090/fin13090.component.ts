@@ -53,7 +53,17 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   data: fin13090Item[] = [];
   totalRecords = 0;
   lastQueryBody: any = null;
-editDisabled = (row: fin13090Item): boolean => row?.PostFlag === '3';
+private getCurrentYYYYMM(): string {
+  const now = new Date();
+
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+editDisabled = (row: fin13090Item): boolean => {
+  const repYYYYMM = row?.PUR_RepYYYYMM;
+
+  return !repYYYYMM || repYYYYMM < this.getCurrentYYYYMM();
+};
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
