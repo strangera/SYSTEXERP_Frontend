@@ -52,19 +52,20 @@
 <div class="card">
   <div class="col-12">
     <app-table
-      tableKey="FIN13090"
-      [data]="data"
-      [columns]="columns"
-      [(selectedItems)]="selectedItems"
-      [showCheckBox]="false"
-      [loading]="loading"
-      [showDelete]="false"
-      [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  tableKey="FIN13090"
+  [data]="data"
+  [columns]="columns"
+  [(selectedItems)]="selectedItems"
+  [showCheckBox]="false"
+  [loading]="loading"
+  [showDelete]="false"
+  [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
+  [totalRecords]="totalRecords"
+  [editDisabled]="editDisabled"
+  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  [lazy]="true"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+></app-table>
   </div>
 </div>
