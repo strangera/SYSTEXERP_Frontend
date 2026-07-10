@@ -219,7 +219,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
             }
             return { ...item, ECR_SettleHHNN: dateValue };
           });
-          this.queryStateService.setQueryState(this.ProgNo, this.ProgNo);
+          this.queryStateService.setQueryState(this.ProgNo, raw);
         });
     });
   }

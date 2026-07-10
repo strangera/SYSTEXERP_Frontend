@@ -104,6 +104,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           return;
         }
 
+        // 值沒有改變（使用者只是點了欄位沒有修改），不重新驗證
+        if (value === rowData.ARS_ID) return;
+
         // 打 API 精準搜尋這筆 ARS_ID
         this.fin32030Service.queryFIN32030AR({ ARS_ID: value, PageIndex: 1, PageSize: 10 }).subscribe(res => {
           const matchedItem = res.Data?.find(item => item.ARS_ID === value);
@@ -1650,6 +1653,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         .map((ar: ARWithRCVAmt) => ({
           Id: ar.Id!,
           ARS_Amt: ar.RCV_Amt || 0,
+          ARS_No: ar.ARS_ID || null,
           CHK_No: null
         }));
 

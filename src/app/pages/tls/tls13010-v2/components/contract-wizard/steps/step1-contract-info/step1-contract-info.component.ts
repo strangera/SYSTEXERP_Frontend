@@ -683,7 +683,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const sub = this.form.get('tlt_term_type')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(val => {
-        if (!['4', '5', '6'].includes(val)) {
+        if (!['4', '6'].includes(val)) {
           this.form.get('tlt_ctype_mtotal')?.setValue(null);
         }
       });
@@ -696,7 +696,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   get isMtotalReadonly(): boolean {
-    return !['4', '5', '6'].includes(this.form.get('tlt_term_type')?.value);
+    return !['4', '6'].includes(this.form.get('tlt_term_type')?.value);
   }
 
   /**

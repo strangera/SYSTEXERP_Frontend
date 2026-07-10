@@ -444,8 +444,11 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    */
   private setupDynamicValidators(): void {
     // 設定抽成別變更監聽
-    this.form.get('tlt_term_type')?.valueChanges.subscribe(() => {
+    this.form.get('tlt_term_type')?.valueChanges.subscribe((val) => {
       this.validationService.updateFieldValidators(this.form);
+      if (!['4', '6'].includes(val)) {
+        this.form.get('tlt_ctype_mtotal')?.setValue(null);
+      }
     });
 
     // 設定付款方式變更監聽
@@ -1293,6 +1296,10 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    */
   canCopyAddress(): boolean {
     return !!this.form.get('VEN_Address')?.value?.trim() && !this.isViewMode;
+  }
+
+  get isMtotalReadonly(): boolean {
+    return !['4', '6'].includes(this.form.get('tlt_term_type')?.value);
   }
 
   /**

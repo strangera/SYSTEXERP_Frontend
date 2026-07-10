@@ -32,10 +32,35 @@ export interface APS2001Data {
   UPD_USR_No?: string; // 變更人員 (可為空)
   UPD_USR_Name?: string; // 變更人員姓名 (可為空)
 }
+const formatInvoiceYYYYMM = (
+  value: string | Date | null | undefined
+): string => {
+  if (!value) {
+    return '';
+  }
 
+  if (value instanceof Date) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    return `${year}${month}`;
+  }
+
+  const normalized = String(value).replace(/\D/g, '');
+
+  if (normalized.length >= 6) {
+    return normalized.substring(0, 6);
+  }
+
+  return String(value);
+};
 export const columns: ReportColumn[] = [
   // { field: 'id', header: '序號', visible: true },
-  { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+   {
+    field: 'SAL_GUIYYYYMM',
+    header: '發票年月',
+    visible: true,
+    format: formatInvoiceYYYYMM
+  },
   { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
   { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
   { field: 'SAL_GUITrack', header: '字軌', visible: true },

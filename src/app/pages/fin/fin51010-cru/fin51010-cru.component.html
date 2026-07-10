@@ -66,8 +66,8 @@
             </div>
 
             <app-table-report [data]="arData" [columns]="arColumns" [showManage]="false" [footerData]="arFooterData"
-              [totalRecords]="arTotalRecords" [showDelete]="false" [showCaption]="false"
-              [lazy]="false"></app-table-report>
+              [totalRecords]="arTotalRecords" [showDelete]="false" [showCaption]="false" [lazy]="false"
+              [ItemSize]="24.44"></app-table-report>
           </div>
         </p-tabPanel>
 
@@ -79,8 +79,8 @@
             </div>
 
             <app-table-report [data]="apData" [columns]="apColumns" [showManage]="false" [footerData]="apFooterData"
-              [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false"
-              [lazy]="false"></app-table-report>
+              [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false" [lazy]="false"
+              [ItemSize]="24.44"></app-table-report>
           </div>
         </p-tabPanel>
         <!-- 新增：進項發票 Tab 頁籤 (僅在 PT 或 WT 時顯示) -->
@@ -96,7 +96,7 @@
             <!-- 使用唯讀報表組件，關閉管理欄位與刪除按鈕 -->
             <app-table-report [data]="invoiceData" [columns]="invoiceColumns" [showManage]="false"
               [footerData]="invoiceFooterData" [totalRecords]="invoiceTotalRecords" [showDelete]="false"
-              [showCaption]="false" [lazy]="false"></app-table-report>
+              [showCaption]="false" [lazy]="false" [ItemSize]="24.44"></app-table-report>
           </div>
         </p-tabPanel>
       </p-tabView>

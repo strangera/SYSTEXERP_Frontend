@@ -12,7 +12,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -95,6 +95,51 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
   // 禁止編輯的判斷：當應收帳款餘額 (ARS_BalAmt) 為 0 或已過帳 (PostFlagCode === '3') 時，禁止編輯
   editDisabledByVouNo = (rowData: any): boolean => {
     return rowData?.ARS_BalAmt === 0 || rowData?.PostFlagCode === '3';
+  }
+
+  addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-ban',
+      disabled: (rowData: any) => rowData.ARS_StatusCode !== '2' || (rowData.PTA_Amt ?? 0) !== 0,
+      action: (rowData: any) => this.onVoid(rowData),
+    },
+    {
+      label: '反作廢',
+      icon: 'pi pi-replay',
+      disabled: (rowData: any) => rowData.ARS_StatusCode !== '0',
+      action: (rowData: any) => this.onUnVoid(rowData),
+    },
+  ];
+
+  onVoid(rowData: any) {
+    this.fin32010Service.voidFIN32010({ ARS_No: rowData.ARS_ID }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(res.Message);
+        this.refreshQuery();
+      }
+    });
+  }
+
+  onUnVoid(rowData: any) {
+    this.fin32010Service.unVoidFIN32010({ ARS_No: rowData.ARS_ID }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(res.Message);
+        this.refreshQuery();
+      }
+    });
+  }
+
+  private refreshQuery() {
+    if (!this.lastQueryBody) return;
+    this.loading = true;
+    this.fin32010Service.queryFIN32010(this.lastQueryBody)
+      .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      .subscribe(response => {
+        this.data = response.Data ?? [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
+      });
   }
 
   ngOnInit(): void {

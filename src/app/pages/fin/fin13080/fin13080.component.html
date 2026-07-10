@@ -12,9 +12,9 @@
               [submitted]="submitted"></app-input-text>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar controlName="INV_DeclareYM" calendarType="dateMonthOne" label="申報年月"
-              [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"></app-calendar>
+              <div class="col-12 md:col-6 lg:col-4">
+            <app-year-month label="申報年月" [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"
+              [evenMonth]="true"></app-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar label="退出/折讓日期" controlName="Date" calendarType="dateOne" [control]="queryForm.controls.Date"

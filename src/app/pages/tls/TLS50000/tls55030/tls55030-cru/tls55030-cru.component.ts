@@ -90,6 +90,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
 
   // 修正 validateRow 的型別以使用擴展介面
   validateRow = (rowData: IRebateDetailForCRU): { isValid: boolean, errorMessage: string } => {
+    // 唯讀查看模式（含已結帳單據）不可編輯，不需卡控，避免顯示假性超額紅字
+    if (this.isFormReadable) return { isValid: true, errorMessage: '' };
     if (!rowData.PUR_GUINo) return { isValid: true, errorMessage: '' };
 
     // 1. 找出表格中所有「同一張發票」的資料列
@@ -166,8 +168,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     const body = {
       VEN_No: this.dataForm.controls.VEN_No.value,
       PUR_GUINo: inputNo, // 帶入發票編號
-      PageIndex: 1,
-      PageSize: 1 // 只需要一筆
+      pageIndex: 1,
+      pageSize: 1 // 只需要一筆
     };
 
     this.tls55030Service.queryTLS55030RebateDetailOption(body)
@@ -246,9 +248,12 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     // 1. 查詢發票/收據明細 (Rebate Detail)
     const loadRebate$ = this.tls55030Service.queryTLS55030RebateDetailByDisNo({ DIS_No: disNo }).pipe(map(res => {
       const rebateDetails: IInvoiceDetailByDisNo[] = res.Data || [];
+      // 已結帳的單據，Rebate_Amt_Existed（已折讓金額）已經含本單自己這筆的折讓金額，
+      // 需扣除自己，避免「發票剩餘可折總金額」與卡控上限把自己重複算一次
+      const isReviewed = this.rowdata?.DIS_Status === '2';
       const convertedData: IRebateDetailForCRU[] = rebateDetails.map(item => ({
         ...item,
-        Rebate_Amt: item.Rebate_Amt_Existed, // 將已折讓金額視為本次輸入
+        Rebate_Amt: isReviewed ? Math.max(0, item.Rebate_Amt_Existed - item.Rebate_Amt) : item.Rebate_Amt_Existed,
         Rebate_Amt_New: item.Rebate_Amt, // 先給0
         Rebate_Net: item.Rebate_Net, // 需從 Rebate_Amt 計算或後端提供
         Rebate_Tax: item.Rebate_Tax,  // 需從 Rebate_Amt 計算或後端提供
@@ -600,8 +605,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       ...formValue,
       APRV_Date_Start: this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd'),
       APRV_Date_End: this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd'),
-      PageIndex: 1,
-      PageSize: 30,
+      pageIndex: 1,
+      pageSize: 1000,
       SortBy: [{ field: 'RJM_No', order: 1 }]
     };
     this.tls55030Service.queryTLS55030ReturnNotRebate(paramBody as ReturnNotRebateQueryBody).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe((res) => {

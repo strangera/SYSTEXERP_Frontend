@@ -113,6 +113,10 @@ export interface UpdateFIN24010RemitRequest {
   ACP_No_List: string[]; // 應付帳款編號清單
 }
 
+export interface VoidFIN24010Request {
+  ACP_No: string;
+}
+
 export interface QueryBankAccountRequest {
   BNK_id: string,
   BNK_No: string,
@@ -138,6 +142,14 @@ export class Fin24010Service {
   /** 應付帳款維護-異動檢核-更新匯款檔資料 */
   updateFIN24010Remit(params: UpdateFIN24010RemitRequest): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN24010Remit`, params);
+  }
+  /** 應付帳款維護-作廢 */
+  voidFIN24010(params: VoidFIN24010Request): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/voidFIN24010`, params);
+  }
+  /** 應付帳款維護-反作廢 */
+  unVoidFIN24010(params: VoidFIN24010Request): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/unVoidFIN24010`, params);
   }
 
   // FIN25020

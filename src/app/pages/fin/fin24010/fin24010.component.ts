@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -176,6 +176,50 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     });
     // });
   }
+  addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-ban',
+      disabled: (item: QueryFIN24010Response) => item.ACP_Status !== '2' || (item.PTA_Amt ?? 0) !== 0,
+      action: (item: QueryFIN24010Response) => this.onVoid(item),
+    },
+    {
+      label: '反作廢',
+      icon: 'pi pi-replay',
+      disabled: (item: QueryFIN24010Response) => item.ACP_Status !== '0',
+      action: (item: QueryFIN24010Response) => this.onUnVoid(item),
+    },
+  ];
+
+  onVoid(item: QueryFIN24010Response) {
+    this.fin24010Service.voidFIN24010({ ACP_No: item.ACP_No }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(res.Message);
+        this.refreshQuery();
+      }
+    });
+  }
+
+  onUnVoid(item: QueryFIN24010Response) {
+    this.fin24010Service.unVoidFIN24010({ ACP_No: item.ACP_No }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(res.Message);
+        this.refreshQuery();
+      }
+    });
+  }
+
+  private refreshQuery() {
+    if (!this.lastQueryBody) return;
+    this.loading = true;
+    this.fin24010Service.queryFIN24010(this.lastQueryBody)
+      .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      .subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+      });
+  }
+
   btnLoading = false;
   onUpdateRemit() {
     this.btnLoading = true;

@@ -267,6 +267,8 @@ export interface ARRecvAcctUpdateDetailItem {
   Id: number;
   /** 應收金額 */
   ARS_Amt?: number | null;
+  /** 應收單號 */
+  ARS_No?: string | null;
   /** 票據號碼 */
   CHK_No?: string | null;
 }

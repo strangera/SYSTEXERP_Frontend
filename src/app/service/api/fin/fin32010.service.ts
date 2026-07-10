@@ -27,4 +27,10 @@ export class Fin32010Service {
   updateFIN32010(params: any): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN32010`, params);
   }
+  voidFIN32010(params: { ARS_No: string }): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/voidFIN32010`, params);
+  }
+  unVoidFIN32010(params: { ARS_No: string }): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/unVoidFIN32010`, params);
+  }
 }

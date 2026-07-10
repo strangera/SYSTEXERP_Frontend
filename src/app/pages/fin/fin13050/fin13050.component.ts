@@ -47,7 +47,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any = null;
   isRowSelectable = (row: any): boolean => !!row?.CanDel;
   editDisabled = (row: any): boolean => !row?.CanEdit;
-  detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
+  detailDisabled = (row: any): boolean => false;
   queryForm = this.formBuilder.group({
     ...createPaginationConfig([{ field: 'PUR_GUINo', order: 1 }, { field: 'PUR_GUIDate', order: 1 }]),
     PUR_VoucherType: [[]],

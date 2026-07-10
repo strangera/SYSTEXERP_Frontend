@@ -79,7 +79,10 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   OrganizationCodeOptions = this.dropDown.querySys3100();
   cashierOptions = this.dropDown.queryPos2001();
   ECRNoOptions = this.dropDown.queryPos1002();
-  CounterOptions = this.dropDown.queryTltTalent();
+  // 下拉選單API會將已過期專櫃排在後面，此處依櫃號重新排序，確保選單依櫃號順序顯示
+  CounterOptions = this.dropDown.queryTltTalent().pipe(
+    map(list => (list ? [...list].sort((a, b) => String(a.value).localeCompare(String(b.value))) : list))
+  );
 
   readonly statusFlagOptions = [
     { value: '1', label: '外交官零稅' },
