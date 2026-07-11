@@ -1,11 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS26030
-export interface TLS26030QueryRequest extends BaseQueryRequest {
+export interface TLS26030QueryRequest extends ApiRequest {
   Sale_DateStart?: string;      // 銷售日期(起) - ISO 8601 格式
   Sale_DateEnd?: string;        // 銷售日期(訖) - ISO 8601 格式
   tlt_building?: string[];      // 館別

@@ -1,8 +1,7 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { IDropdownItem } from "@service/utility/dropDownList.service";
-import { ApiError, ApiMeta } from "@shared/models/api/base-api.interface";
-import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
+import { ApiError, ApiMeta, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, take } from "rxjs";
 import { environment } from "src/environments/environment";
 

@@ -1,6 +1,6 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
@@ -17,8 +17,8 @@ export class FIN73030Service {
 
   constructor(private readonly http: HttpClient) {}
 
-  queryFIN73030(body: FIN73030Query): Observable<BaseQueryResponse<QueryFIN73030SPResponse>> {
-    return this.http.post<BaseQueryResponse<QueryFIN73030SPResponse>>(
+  queryFIN73030(body: FIN73030Query): Observable<ApiResponse<QueryFIN73030SPResponse[]>> {
+    return this.http.post<ApiResponse<QueryFIN73030SPResponse[]>>(
       `${this.apiUrl}/queryFIN73030`,
       body,
     );

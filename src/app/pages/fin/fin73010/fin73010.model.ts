@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 export interface FIN73010Data {
   dataKey?: string;
 
@@ -25,7 +24,7 @@ export interface FIN73010Data {
   total: number;                // 總額
 }
 
-export interface FIN73010Query extends BaseQueryRequest {
+export interface FIN73010Query extends ApiRequest {
   pettyCashNo?: string | null;
   applyDateStart?: string | null;
   applyDateEnd?: string | null;

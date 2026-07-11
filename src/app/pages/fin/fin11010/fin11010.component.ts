@@ -8,6 +8,7 @@ import { ExportLabelService } from '@service/utility/exportLabel.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import {
+  BaseDeleteRequest,
   FIN11010Data,
   FIN11010QueryRequest,
   FIN11010Service,
@@ -21,7 +22,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { AddButton, formatYN, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({

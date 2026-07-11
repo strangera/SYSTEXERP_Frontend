@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { ApiError, ApiMeta, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -234,26 +233,15 @@ export interface queryGLS1005_FASExpAccNo_DropDownListResponse {
   AccDisplay?: string;   // 下拉顯示文字
 }
 
-export interface BaseNoArrayQueryResponse<T> {
-  Status: string;
-  Data: T;
-  Error?: ApiError;
-  Meta?: ApiMeta;
-  Message: string;
-  TotalCount: number;
-  TotalPage: number;
-}
-
-
 @Injectable({ providedIn: 'root' })
 export class FIN72010Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/FIN70000';
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN72010(req: QueryFIN72010Request): Observable<BaseQueryResponse<FIN72010Data>> {
-    return this.http.post<BaseQueryResponse<FIN72010Data>>(`${this.apiUrl}/queryFIN72010`, req).pipe(
-      map((res: BaseQueryResponse<FIN72010Data>) => {
+  queryFIN72010(req: QueryFIN72010Request): Observable<ApiResponse<FIN72010Data[]>> {
+    return this.http.post<ApiResponse<FIN72010Data[]>>(`${this.apiUrl}/queryFIN72010`, req).pipe(
+      map((res: ApiResponse<FIN72010Data[]>) => {
         return {
           ...res,
           Data: res.Data.map((item: FIN72010Data) => ({
@@ -271,8 +259,8 @@ export class FIN72010Service {
   }
 
   // 查詢編輯頁面資料
-  queryFIN72010Detail(req: QueryFIN72010DetailRequest): Observable<BaseNoArrayQueryResponse<FIN72010DetailMasterResponse>> {
-    return this.http.post<BaseNoArrayQueryResponse<FIN72010DetailMasterResponse>>(`${this.apiUrl}/queryFIN72010Detail`, req);
+  queryFIN72010Detail(req: QueryFIN72010DetailRequest): Observable<ApiResponse<FIN72010DetailMasterResponse>> {
+    return this.http.post<ApiResponse<FIN72010DetailMasterResponse>>(`${this.apiUrl}/queryFIN72010Detail`, req);
   }
 
   // 新增/修改

@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS13100 資產清點作業 - 查詢 Request（API 規格）
  */
-export interface QueryASS13100Request extends BaseQueryRequest {
+export interface QueryASS13100Request extends ApiRequest {
   /** 清點單號(起) */
   CHK_ID_S?: string | null;
   /** 清點單號(迄) */

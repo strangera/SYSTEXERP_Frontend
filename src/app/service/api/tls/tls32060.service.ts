@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // 主檔 request
-export interface TLS32060Request extends BaseQueryRequest {
+export interface TLS32060Request extends ApiRequest {
   "BaseDateFrom": Date, // 基準日期起
   "BaseDateTo": Date, // 基準日期訖
   "CompareDateFrom": Date, // 比較日期起
@@ -28,7 +27,7 @@ export interface TLS32060Request extends BaseQueryRequest {
 }
 
 // 主檔 response
-export interface TLS32060Response extends BaseQueryRequest {
+export interface TLS32060Response extends ApiRequest {
   "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
   "BuildingName": string, // 館別
   "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
@@ -81,8 +80,8 @@ export class TLS32060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢各櫃業績 總表
-  queryTLS32060(data: TLS32060Request): Observable<BaseQueryResponse<TLS32060Response>> {
-    return this.http.post<BaseQueryResponse<TLS32060Response>>(`${this.apiUrl}/queryTLS32060`, data);
+  queryTLS32060(data: TLS32060Request): Observable<ApiResponse<TLS32060Response[]>> {
+    return this.http.post<ApiResponse<TLS32060Response[]>>(`${this.apiUrl}/queryTLS32060`, data);
   }
 
   // 查詢中分類業績 明細表(本作業無須明細)

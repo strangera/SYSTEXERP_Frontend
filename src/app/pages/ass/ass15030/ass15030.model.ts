@@ -1,6 +1,5 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
-export interface QueryASS15030Request extends BaseQueryRequest {
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+export interface QueryASS15030Request extends ApiRequest {
   /** 基準年月 (格式: YYYYMM) */
   BaseYM?: string;
   /** 試算類型 (1: 折舊前試算, 2: 拋轉後) */

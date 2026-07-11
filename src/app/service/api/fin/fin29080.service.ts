@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface FIN29080QueryRequest extends BaseQueryRequest {
+export interface FIN29080QueryRequest extends ApiRequest {
   ACP_Date_From: string;              // 立帳日期(起) - 必填
   ACP_Date_To: string;                // 立帳日期(迄) - 必填
   ACP_ExpectPayDate_From?: string;    // 預計付款日(起)
@@ -28,8 +28,8 @@ export class FIN29080Service {
   constructor(private http: HttpClient) { }
 
   /** 查詢應付帳款預估表 */
-  queryFIN29080(req: FIN29080QueryRequest): Observable<BaseQueryResponse<FIN29080Data>> {
-    return this.http.post<BaseQueryResponse<FIN29080Data>>(`${this.apiUrl}/queryFIN29080`, req);
+  queryFIN29080(req: FIN29080QueryRequest): Observable<ApiResponse<FIN29080Data[]>> {
+    return this.http.post<ApiResponse<FIN29080Data[]>>(`${this.apiUrl}/queryFIN29080`, req);
   }
 
   /** 匯出應付帳款預估表 Excel */

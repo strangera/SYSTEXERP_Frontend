@@ -11,12 +11,10 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
-import { QueryASS11060Request, QueryASS11060Response } from '../../../service/api/ass/ass11060.model';
-import { ASS11060Service } from '../../../service/api/ass/ass11060.service';
+import { ASS11060Service, QueryASS11060Request, QueryASS11060Response } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
@@ -24,7 +22,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-ass11060',
   templateUrl: './ass11060.component.html',
-  styleUrl: './ass11060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -34,7 +31,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     InputTextComponent,
     InputNumberComponent,
     DropdownComponent,
-    EditorTextComponent,
     ButtonComponent,
     ButtonModule,
     TableReportComponent,

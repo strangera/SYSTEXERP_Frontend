@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // 主檔 request
-export interface TLS32050Request extends BaseQueryRequest {
+export interface TLS32050Request extends ApiRequest {
   "BaseDateFrom": Date, // 基準日期起
   "BaseDateTo": Date, // 基準日期訖
   "CompareDateFrom": Date, // 比較日期起
@@ -27,7 +26,7 @@ export interface TLS32050Request extends BaseQueryRequest {
 }
 
 // 主檔 response
-export interface TLS32050Response extends BaseQueryRequest {
+export interface TLS32050Response extends ApiRequest {
   "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
   "BuildingName": string | null, // 館別
   "TeamId": string | null, // 單位代碼（TEAM / 館別 / 總計用)
@@ -61,7 +60,7 @@ export interface TLS32050Response extends BaseQueryRequest {
 }
 
 // 明細 request
-export interface TLS32050DetailRequest extends BaseQueryRequest {
+export interface TLS32050DetailRequest extends ApiRequest {
   "BaseDateFrom": string, // 基準日期起
   "BaseDateTo": string, // 基準日期訖
   "CompareDateFrom": string, // 比較日期起
@@ -83,7 +82,7 @@ export interface TLS32050DetailRequest extends BaseQueryRequest {
 }
 
 // 明細 response
-export interface TLS32050DetailResponse extends BaseQueryRequest {
+export interface TLS32050DetailResponse extends ApiRequest {
   "tlt_no": string, // 專櫃代號
   "tlt_name": string, // 專櫃名稱
   "floor_desc": string, // 大分類名稱
@@ -120,13 +119,13 @@ export class TLS32050Service {
   constructor(private http: HttpClient) { }
 
   // 查詢中分類業績 總表
-  queryTLS32050(data: TLS32050Request): Observable<BaseQueryResponse<TLS32050Response>> {
-    return this.http.post<BaseQueryResponse<TLS32050Response>>(`${this.apiUrl}/queryTLS32050`, data);
+  queryTLS32050(data: TLS32050Request): Observable<ApiResponse<TLS32050Response[]>> {
+    return this.http.post<ApiResponse<TLS32050Response[]>>(`${this.apiUrl}/queryTLS32050`, data);
   }
 
   // 查詢中分類業績 明細表
-  queryTLS32050Detail(data: TLS32050DetailRequest): Observable<BaseQueryResponse<TLS32050DetailResponse>> {
-    return this.http.post<BaseQueryResponse<TLS32050DetailResponse>>(`${this.apiUrl}/queryTLS32050Detail`, data);
+  queryTLS32050Detail(data: TLS32050DetailRequest): Observable<ApiResponse<TLS32050DetailResponse[]>> {
+    return this.http.post<ApiResponse<TLS32050DetailResponse[]>>(`${this.apiUrl}/queryTLS32050Detail`, data);
   }
 
   // 匯出 中分類業績 報表

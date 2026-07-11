@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢客服設備出借/歸還記錄 Request 介面
-export interface QueryCPM11040Request extends BaseQueryRequest {
+export interface QueryCPM11040Request extends ApiRequest {
   LoanNo?: string;            // 借記/歸還編號
   ServiceId?: string;         // 服務中心位置編號
   LoanDateStart?: string;     // 出借日期 - 起
@@ -71,8 +71,8 @@ export class CPM11040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢客服設備出借/歸還記錄
-  queryCPM11040(req: QueryCPM11040Request): Observable<BaseQueryResponse<CPM11040Data>> {
-    return this.http.post<BaseQueryResponse<CPM11040Data>>(`${this.apiUrl}/queryCPM11040`, req);
+  queryCPM11040(req: QueryCPM11040Request): Observable<ApiResponse<CPM11040Data[]>> {
+    return this.http.post<ApiResponse<CPM11040Data[]>>(`${this.apiUrl}/queryCPM11040`, req);
   }
 
   // 刪除客服設備出借記錄
@@ -81,7 +81,7 @@ export class CPM11040Service {
   }
 
   // 歸還設備
-  returnDevice(req: ReturnDeviceRequest): Observable<BaseQueryResponse<ReturnDeviceResponse>> {
-    return this.http.post<BaseQueryResponse<ReturnDeviceResponse>>(`${this.apiUrl}/returnDevice`, req);
+  returnDevice(req: ReturnDeviceRequest): Observable<ApiResponse<ReturnDeviceResponse[]>> {
+    return this.http.post<ApiResponse<ReturnDeviceResponse[]>>(`${this.apiUrl}/returnDevice`, req);
   }
 }

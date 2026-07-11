@@ -1,11 +1,13 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
+export interface BaseDeleteRequest {
+  idList: number[];                 // 要刪除的資料ID清單
+}
 // --- TDS1003 查詢參數 Model 定義 ---
-export interface FIN11010QueryRequest extends BaseQueryRequest {
+export interface FIN11010QueryRequest extends ApiRequest {
   STO_Uniform?: string;         // 統一編號
   STO_TaxName?: string;         // 稅籍名稱
   STO_Addr?: string;            // 地址
@@ -100,6 +102,10 @@ export interface FIN11010UpdateStatusRequest {
   STO_Status: string;
 }
 
+export interface BaseDeleteRequest {
+  idList: number[];                 // 要刪除的資料ID清單
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -109,8 +115,8 @@ export class FIN11010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 TDS1003 資料表
-  queryFIN11010(data: FIN11010QueryRequest): Observable<BaseQueryResponse<FIN11010Data>> {
-    return this.http.post<BaseQueryResponse<FIN11010Data>>(`${this.apiUrl}/queryFIN11010`, data);
+  queryFIN11010(data: FIN11010QueryRequest): Observable<ApiResponse<FIN11010Data[]>> {
+    return this.http.post<ApiResponse<FIN11010Data[]>>(`${this.apiUrl}/queryFIN11010`, data);
   }
 
   // 取得目前使用中的 TDS1003 資料

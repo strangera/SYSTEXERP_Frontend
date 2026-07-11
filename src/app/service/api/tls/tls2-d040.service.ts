@@ -1,11 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢TLS2D040 Request型別
-export interface QueryTLS2D040Request extends BaseQueryRequest {
+export interface QueryTLS2D040Request extends ApiRequest {
   tlt_no?: string[];           // 專櫃編號 (陣列)
   source_type?: string[];      // 扣款來源 (1-合約扣款, 2-人工扣款, 4-罰款, 5-能源扣款, 8-溢欠款, 13-電子商務) (陣列)
   CAP_Item?: string[];         // 扣款代碼 (陣列)

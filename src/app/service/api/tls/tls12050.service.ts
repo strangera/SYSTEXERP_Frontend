@@ -1,10 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export interface QueryTLS12050Request extends BaseQueryRequest {
+export interface QueryTLS12050Request extends ApiRequest {
   pageSize?: number;
   pageIndex?: number;
   building_no?: string;
@@ -34,7 +34,7 @@ export interface TLS12050Summary {
   Details: TLS12050Detail[];
 }
 
-export type QueryTLS12050DetailsResponse = BaseQueryResponse<TLS12050Detail> & {
+export type QueryTLS12050DetailsResponse = ApiResponse<TLS12050Detail[]> & {
   Summary?: TLS12050Summary;
 };
 
@@ -46,8 +46,8 @@ export class TLS12050Service {
 
   constructor(private http: HttpClient) { }
 
-  queryTLS12050(data: QueryTLS12050Request): Observable<BaseQueryResponse<TLS12050Summary>> {
-    return this.http.post<BaseQueryResponse<TLS12050Summary>>(`${this.apiUrl}/queryTLS12050`, data);
+  queryTLS12050(data: QueryTLS12050Request): Observable<ApiResponse<TLS12050Summary[]>> {
+    return this.http.post<ApiResponse<TLS12050Summary[]>>(`${this.apiUrl}/queryTLS12050`, data);
   }
 
   queryTLS12050Details(data: QueryTLS12050Request): Observable<QueryTLS12050DetailsResponse> {

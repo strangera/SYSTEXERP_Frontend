@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 // ====== 主檔查詢清單每列（queryASS16030M response）======
 export interface ASS16030QueryData {
   MASTER_ID: number;
@@ -71,7 +70,7 @@ export interface ASS16030QueryResultWrapper<T> {
 }
 
 // ====== 查詢 Request ======
-export interface ASS16030QueryRequest extends BaseQueryRequest {
+export interface ASS16030QueryRequest extends ApiRequest {
   MTAPPLY_ID?: string | null;
   EMP_ID?: string | null;
   FASITEM_ID?: number | null;

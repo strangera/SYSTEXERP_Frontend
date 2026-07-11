@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { environment } from '../../../../environments/environment';
 
 // --- FIN11090 查詢參數 Model 定義 ---
-export interface FIN11090QueryRequest extends BaseQueryRequest {
+export interface FIN11090QueryRequest extends ApiRequest {
   TXN_Date?: string;         // 銷售日期
   ECR_No?: string[];           // 收銀機號
   TXN_No?: string;           // 交易序號
@@ -43,8 +43,8 @@ export class Fin11090Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN11090(payload: FIN11090QueryRequest): Observable<BaseQueryResponse<FIN11090Data>> {
-    return this.http.post<BaseQueryResponse<FIN11090Data>>(`${this.apiUrl}/queryFIN11090`, payload);
+  queryFIN11090(payload: FIN11090QueryRequest): Observable<ApiResponse<FIN11090Data[]>> {
+    return this.http.post<ApiResponse<FIN11090Data[]>>(`${this.apiUrl}/queryFIN11090`, payload);
 
     // 回傳模擬資料
     return of({

@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS12020 詢價登錄作業 - 資料模型
  */
@@ -7,7 +6,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 // ==================== 查詢 ====================
 
 /** 詢價登錄查詢條件 (對齊 API) */
-export interface QueryASS12020Request extends BaseQueryRequest {
+export interface QueryASS12020Request extends ApiRequest {
   GOODS_ID?: string | null;
   GOODS_PRICE_S?: number | null;
   GOODS_PRICE_E?: number | null;

@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from 'src/environments/environment';
 
 // 查詢物品類別 Request
-export interface QueryCPM11050Request extends BaseQueryRequest {
+export interface QueryCPM11050Request extends ApiRequest {
   SYS_Code?: string;   // 物品類別代碼
   SYS_Name?: string;   // 物品類別名稱
 }
@@ -49,8 +49,8 @@ export class CPM11050Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM11050(req: QueryCPM11050Request): Observable<BaseQueryResponse<CPM11050Data>> {
-    return this.http.post<BaseQueryResponse<CPM11050Data>>(`${this.apiUrl}/queryCPM11050`, req);
+  queryCPM11050(req: QueryCPM11050Request): Observable<ApiResponse<CPM11050Data[]>> {
+    return this.http.post<ApiResponse<CPM11050Data[]>>(`${this.apiUrl}/queryCPM11050`, req);
   }
 
   // 新增

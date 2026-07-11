@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // 查詢遺失物清單 Request
-export interface QueryCPM11070Request extends BaseQueryRequest {
+export interface QueryCPM11070Request extends ApiRequest {
   OrderBy?: string;
   Offset?: number;
   SeqId?: string;
@@ -114,9 +113,9 @@ export class CPM11070Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM11070(req: QueryCPM11070Request): Observable<BaseQueryResponse<CPM11070Data>> {
+  queryCPM11070(req: QueryCPM11070Request): Observable<ApiResponse<CPM11070Data[]>> {
     const url = `${this.apiUrl}/queryCPM11070`;
-    return this.http.post<BaseQueryResponse<CPM11070Data>>(url, req);
+    return this.http.post<ApiResponse<CPM11070Data[]>>(url, req);
   }
   // 明細查詢（單筆）
   queryCPM11070Detail(req: { SeqId: string }): Observable<ApiResponse<CPM11070DetailData>> {

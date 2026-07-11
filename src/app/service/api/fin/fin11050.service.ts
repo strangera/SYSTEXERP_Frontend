@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 // --- FIN11050 查詢參數 Model 定義 ---
-export interface FIN11050QueryRequest extends BaseQueryRequest {
+export interface FIN11050QueryRequest extends ApiRequest {
   INV_GUIType?: string;      // 發票格式代號
   INV_GUIName?: string;      // 發票格式名稱
 }
@@ -52,8 +52,8 @@ export class Fin11050Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN11050(data: FIN11050QueryRequest): Observable<BaseQueryResponse<FIN11050Data>> {
-    return this.http.post<BaseQueryResponse<FIN11050Data>>(`${this.apiUrl}/queryFIN11050`, data);
+  queryFIN11050(data: FIN11050QueryRequest): Observable<ApiResponse<FIN11050Data[]>> {
+    return this.http.post<ApiResponse<FIN11050Data[]>>(`${this.apiUrl}/queryFIN11050`, data);
   }
 
   // 新增

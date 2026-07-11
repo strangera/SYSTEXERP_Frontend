@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51070Service } from '@service/api/tls/tls51070.service';
+import { POS2004, Tls51070Service } from '@service/api/tls/tls51070.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -18,7 +18,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { POS2004 } from '@shared/models/tls/tls000.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

@@ -3,7 +3,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { POS2034, Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -12,7 +12,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { POS2034 } from '@shared/models/tls/tls000.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 

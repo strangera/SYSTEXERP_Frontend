@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
-export interface QueryFIN29050Request extends BaseQueryRequest {
+export interface QueryFIN29050Request extends ApiRequest {
   VEN_No_From?: string;      // 廠商編號(起)
   VEN_No_To?: string;        // 廠商編號(迄)
   ACP_Date_From: string;     // 立帳日期(起) 必填
@@ -39,8 +39,8 @@ export class FIN29050Service {
 
   constructor(private http: HttpClient) { }
 
-  queryFIN29050(data: QueryFIN29050Request): Observable<BaseQueryResponse<FIN29050Data>> {
-    return this.http.post<BaseQueryResponse<FIN29050Data>>(`${this.apiUrl}/queryFIN29050`, data);
+  queryFIN29050(data: QueryFIN29050Request): Observable<ApiResponse<FIN29050Data[]>> {
+    return this.http.post<ApiResponse<FIN29050Data[]>>(`${this.apiUrl}/queryFIN29050`, data);
 
     // 回傳模擬資料
     return of({

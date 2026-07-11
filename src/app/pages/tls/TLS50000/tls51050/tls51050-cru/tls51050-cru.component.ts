@@ -2,7 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51050Service } from '@service/api/tls/tls51050.service';
+import { PluUnit, Tls51050Service } from '@service/api/tls/tls51050.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -10,7 +10,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { option } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { PluUnit } from '@shared/models/tls/tls000.model';
 import { PanelModule } from 'primeng/panel';
 //
 

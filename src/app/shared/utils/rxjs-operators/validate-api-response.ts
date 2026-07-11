@@ -1,18 +1,31 @@
+import { SortMeta } from 'primeng/api';
 import { map, OperatorFunction, pipe } from 'rxjs';
+
+export interface ApiRequest {
+  PageSize?: number;
+  PageIndex?: number;
+  OrderBy?: string | null;
+  Offset?: number | null;
+  SortBy?: SortMeta[];
+}
+
+export interface ApiError {
+  Code: string;
+  Message: string;
+  Details: string;
+}
+
+export interface ApiMeta {
+  Timestamp: string;
+  RequestId: string;
+}
 
 export interface ApiResponse<T, F = undefined> {
   Status: string;
   Data: T;
   footerData?: F;
-  Error: {
-    Code: string;
-    Detail: string;
-    Message: string;
-  } | null;
-  Meta: {
-    Timestamp: string;
-    RequestId: string;
-  };
+  Error?: ApiError | null;
+  Meta?: ApiMeta;
   Message: string;
   TotalCount: number;
   TotalPage: number;

@@ -1,6 +1,6 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -14,8 +14,8 @@ export class FIN29120Service {
     constructor(private http: HttpClient) { }
 
 
-    queryFIN29120(req: any): Observable<BaseQueryResponse<any>> {
-        return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/queryFIN29120`, req);
+    queryFIN29120(req: any): Observable<ApiResponse<any[]>> {
+        return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryFIN29120`, req);
     }
 
 

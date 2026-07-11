@@ -1,5 +1,4 @@
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * FIN54030 Model
  * @prop TargetYM: 關帳年月 (yyyyMM)
@@ -12,7 +11,7 @@ export interface FIN54030Data {
   CntPostFlag3: number;
 }
 
-export interface FIN54030Response extends Omit<BaseQueryResponse<unknown>, 'Data'> {
+export interface FIN54030Response extends Omit<ApiResponse<unknown[]>, 'Data'> {
   Data: FIN54030Data;
 }
 

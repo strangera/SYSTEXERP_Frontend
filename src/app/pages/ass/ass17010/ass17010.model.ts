@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** queryASS17010 明細列（對齊後端 Details） */
 export interface QueryASS17010Detail {
   GoodsID?: string | null;
@@ -21,7 +20,7 @@ export interface QueryASS17010DataWrapper {
 }
 
 /** queryASS17010 查詢請求 */
-export interface QueryASS17010Request extends BaseQueryRequest {
+export interface QueryASS17010Request extends ApiRequest {
   DisplayType?: string | null;
   StartDate?: string | null;
   EndDate?: string | null;

@@ -1,11 +1,10 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 // 零用金盤點作業 (FIN72050) 資料模型
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /* -------------------------------------------------------------------------- */
 /* 列表查詢                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export interface QueryFIN72050Request extends BaseQueryRequest {
+export interface QueryFIN72050Request extends ApiRequest {
   PCC_No?: string;              // 盤點單號（模糊查詢）
   Keep_UsrNo?: string;          // 保管人代碼
   Keep_OrgID?: string;          // 保管單位

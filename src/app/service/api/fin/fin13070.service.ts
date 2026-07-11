@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 // --- FIN13070 查詢參數 Model 定義 ---
-export interface FIN13070QueryRequest extends BaseQueryRequest {
+export interface FIN13070QueryRequest extends ApiRequest {
   TXN_Date?: string;              // 發票日期
   ECR_NoList?: string[];          // 收銀機號清單
   TXN_GUINo_Start?: string;       // 發票號碼(起)
@@ -39,8 +39,8 @@ export class FIN13070Service {
   constructor(private http: HttpClient) { }
 
   // 查詢作廢發票
-  queryFIN13070(params: FIN13070QueryRequest): Observable<BaseQueryResponse<FIN13070Data>> {
-    return this.http.post<BaseQueryResponse<FIN13070Data>>(`${this.apiUrl}/queryFIN13070`, params);
+  queryFIN13070(params: FIN13070QueryRequest): Observable<ApiResponse<FIN13070Data[]>> {
+    return this.http.post<ApiResponse<FIN13070Data[]>>(`${this.apiUrl}/queryFIN13070`, params);
 
     // 模擬資料
     return of({

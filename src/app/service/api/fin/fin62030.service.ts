@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢銀行調撥 Request
-export interface QueryFIN62030Request extends BaseQueryRequest {
+export interface QueryFIN62030Request extends ApiRequest {
   Tran_NoFrom?: string; // 調撥單號(起)
   Tran_NoTo?: string;   // 調撥單號(迄)
 }
@@ -105,8 +105,8 @@ export class FIN62030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢銀行調撥資料
-  queryFIN62030(req: QueryFIN62030Request): Observable<BaseQueryResponse<FIN62030Data>> {
-    return this.http.post<BaseQueryResponse<FIN62030Data>>(`${this.apiUrl}/queryFIN62030`, req);
+  queryFIN62030(req: QueryFIN62030Request): Observable<ApiResponse<FIN62030Data[]>> {
+    return this.http.post<ApiResponse<FIN62030Data[]>>(`${this.apiUrl}/queryFIN62030`, req);
     // return 假資料
     return of({
       Status: "Success",

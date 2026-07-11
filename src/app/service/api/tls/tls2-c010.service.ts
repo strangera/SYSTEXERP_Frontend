@@ -1,11 +1,10 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
-
 // --- TLS2C010 查詢參數 Model 定義 ---
-export interface TLS2C010QueryRequest extends BaseQueryRequest {
+export interface TLS2C010QueryRequest extends ApiRequest {
   TXN_Date: string;               // 銷售日期
 }
 

@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // 主檔 request
-export interface TLS32040Request extends BaseQueryRequest {
+export interface TLS32040Request extends ApiRequest {
   "ReportType": string, // 日=DAY 周=WEEK 月=MONTH 半年=HALFYEAR 年=YEAR
   "BaseDateFrom": Date, // 基準日期起
   "BaseDateTo": Date, // 基準日期訖
@@ -33,7 +32,7 @@ export interface TLS32040Request extends BaseQueryRequest {
 }
 
 // 主檔 response
-export interface TLS32040Response extends BaseQueryRequest {
+export interface TLS32040Response extends ApiRequest {
   "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
   "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
   "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
@@ -62,7 +61,7 @@ export interface TLS32040Response extends BaseQueryRequest {
 }
 
 // 明細 request
-export interface TLS32040DetailRequest extends BaseQueryRequest {
+export interface TLS32040DetailRequest extends ApiRequest {
   "OrgId": string, // 點擊的樓組 OrgId
 
   "BaseDateFrom": string, // 基準日期起
@@ -92,7 +91,7 @@ export interface TLS32040DetailRequest extends BaseQueryRequest {
 }
 
 // 明細 response
-export interface TLS32040DetailResponse extends BaseQueryRequest {
+export interface TLS32040DetailResponse extends ApiRequest {
   "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
   "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
   "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
@@ -121,7 +120,7 @@ export interface TLS32040DetailResponse extends BaseQueryRequest {
 }
 
 // 折線圖 request
-export interface TLS32040ChartRequest extends BaseQueryRequest {
+export interface TLS32040ChartRequest extends ApiRequest {
   "Year": number, // 年度 (例如 2025) 必填
 
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
@@ -138,7 +137,7 @@ export interface TLS32040ChartRequest extends BaseQueryRequest {
 }
 
 // 折線圖 response
-export interface TLS32040ChartResponse extends BaseQueryRequest {
+export interface TLS32040ChartResponse extends ApiRequest {
   "Building": string, // 館別代碼
   "BuildingName": string, // 館別名稱
   "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
@@ -161,18 +160,18 @@ export class TLS32040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢組織預售業績 總表資料
-  queryTLS32040(data: TLS32040Request): Observable<BaseQueryResponse<TLS32040Response>> {
-    return this.http.post<BaseQueryResponse<TLS32040Response>>(`${this.apiUrl}/queryTLS32040`, data);
+  queryTLS32040(data: TLS32040Request): Observable<ApiResponse<TLS32040Response[]>> {
+    return this.http.post<ApiResponse<TLS32040Response[]>>(`${this.apiUrl}/queryTLS32040`, data);
   }
 
   // 查詢組織預售業績 明細資料
-  queryTLS32040Detail(data: TLS32040DetailRequest): Observable<BaseQueryResponse<TLS32040DetailResponse>> {
-    return this.http.post<BaseQueryResponse<TLS32040DetailResponse>>(`${this.apiUrl}/queryTLS32040Detail`, data);
+  queryTLS32040Detail(data: TLS32040DetailRequest): Observable<ApiResponse<TLS32040DetailResponse[]>> {
+    return this.http.post<ApiResponse<TLS32040DetailResponse[]>>(`${this.apiUrl}/queryTLS32040Detail`, data);
   }
 
   // 查詢組織預售業績 總表折線圖
-  queryTLS32040Chart(data: TLS32040ChartRequest): Observable<BaseQueryResponse<TLS32040ChartResponse>> {
-    return this.http.post<BaseQueryResponse<TLS32040ChartResponse>>(`${this.apiUrl}/queryTLS32040Chart`, data);
+  queryTLS32040Chart(data: TLS32040ChartRequest): Observable<ApiResponse<TLS32040ChartResponse[]>> {
+    return this.http.post<ApiResponse<TLS32040ChartResponse[]>>(`${this.apiUrl}/queryTLS32040Chart`, data);
   }
 
   // 查詢組織預售業績 總表PDF

@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** API 列（明細／小計／總計）；小計與總計列多數欄位可為 null */
 export interface FIN73040Data {
   dataKey?: string;
@@ -19,7 +18,7 @@ export interface FIN73040Data {
   RowType?: number | null;
 }
 
-export interface FIN73040Query extends BaseQueryRequest {
+export interface FIN73040Query extends ApiRequest {
   SYS_StoreNo?: string;
   PCS_RqstNo?: string;
   Keep_UsrNo?: string;

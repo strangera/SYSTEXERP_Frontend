@@ -6,7 +6,6 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
-import { DropdownOption } from '@shared/models/api/base-api.interface';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { messageService, MessageService } from 'primeng/api';

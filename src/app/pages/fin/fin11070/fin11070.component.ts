@@ -1,9 +1,9 @@
+import { SortMeta } from 'primeng/api';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
-import { SortOption } from '@shared/models/api/base-api.interface';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -106,7 +106,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
       GUI_YYMM: raw.GUI_YYMM ?? '',
       PageSize: pageSize,
       PageIndex: pageIndex,
-      SortBy: body['SortBy'] as SortOption[] | undefined
+      SortBy: body['SortBy'] as SortMeta[] | undefined
     };
     return this.fin11070Service.queryFIN11070(payload);
   };

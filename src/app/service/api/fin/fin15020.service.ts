@@ -1,13 +1,12 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
 /**
  * 查詢進貨退出或折讓明細表 Request
  */
-export interface FIN15020QueryRequest extends BaseQueryRequest {
+export interface FIN15020QueryRequest extends ApiRequest {
   MID?: number; // 商場編號
   STO_No?: string; // 分店編號
   TXN_Ret_No_S?: string; // 退出/折讓單號起

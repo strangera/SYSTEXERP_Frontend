@@ -1,10 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export interface QueryTLS13050Request extends BaseQueryRequest {
+export interface QueryTLS13050Request extends ApiRequest {
   tlt_floorList?: string[];
   tlt_bdate_start?: string;
   tlt_bdate_end?: string;
@@ -53,7 +53,7 @@ export class Tls13050Service {
     private http: HttpClient,
   ) { }
 
-  queryTLS13050(data: QueryTLS13050Request): Observable<BaseQueryResponse<TLS13050QueryItem>> {
-    return this.http.post<BaseQueryResponse<TLS13050QueryItem>>(`${this.apiUrl}/queryTLS13050`, data);
+  queryTLS13050(data: QueryTLS13050Request): Observable<ApiResponse<TLS13050QueryItem[]>> {
+    return this.http.post<ApiResponse<TLS13050QueryItem[]>>(`${this.apiUrl}/queryTLS13050`, data);
   }
 }

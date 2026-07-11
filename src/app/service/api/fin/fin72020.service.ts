@@ -1,14 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { ApiError, ApiMeta, BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiError, ApiMeta, ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 
 // 查詢 Request
-export interface QueryFIN72020Request extends BaseQueryRequest {
+export interface QueryFIN72020Request extends ApiRequest {
   PCS_RqstNo?: string;   // 支出請款單號 (TC+YYYYMMDDXXXX)
   PCS_RqstDate?: string;   // 請款產生日期
   PCS_UsrNo?: string;   // 零用金申請人員代碼
@@ -151,9 +150,9 @@ export class FIN72020Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN72020(req: QueryFIN72020Request): Observable<BaseQueryResponse<FIN72020Data>> {
-    return this.http.post<BaseQueryResponse<FIN72020Data>>(`${this.apiUrl}/queryFIN72020`, req).pipe(
-      map((res: BaseQueryResponse<FIN72020Data>) => {
+  queryFIN72020(req: QueryFIN72020Request): Observable<ApiResponse<FIN72020Data[]>> {
+    return this.http.post<ApiResponse<FIN72020Data[]>>(`${this.apiUrl}/queryFIN72020`, req).pipe(
+      map((res: ApiResponse<FIN72020Data[]>) => {
         return {
           ...res,
           Data: res.Data.map((item: FIN72020Data) => ({
@@ -169,8 +168,8 @@ export class FIN72020Service {
   }
 
   // 查詢明細資料
-  claimFIN72020Query(req: ClaimFIN72020QueryRequest): Observable<BaseQueryResponse<ClaimFIN72020QueryResponse>> {
-    return this.http.post<BaseQueryResponse<ClaimFIN72020QueryResponse>>(`${this.apiUrl}/claimFIN72020Query`, req);
+  claimFIN72020Query(req: ClaimFIN72020QueryRequest): Observable<ApiResponse<ClaimFIN72020QueryResponse[]>> {
+    return this.http.post<ApiResponse<ClaimFIN72020QueryResponse[]>>(`${this.apiUrl}/claimFIN72020Query`, req);
   }
 
   // 執行請款

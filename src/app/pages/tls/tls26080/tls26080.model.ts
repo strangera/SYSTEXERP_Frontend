@@ -1,6 +1,5 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
 export interface TLS26080Data {
   id: number;                  // 主鍵，自動編號
   mid: number;                 // 主檔關聯 ID
@@ -110,7 +109,7 @@ export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
   pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
 }
 
-export interface TLS26080Query extends BaseQueryRequest {
+export interface TLS26080Query extends ApiRequest {
   POD_No?: string;            // 活動申請編號
   POD_Desc?: string;          // 活動名稱
   POD_SDate_start?: Date;     // 活動日期 (起)
@@ -120,7 +119,7 @@ export interface TLS26080Query extends BaseQueryRequest {
 }
 
 /** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
-export interface ExportTLS26080PDFRequest extends BaseQueryRequest {
+export interface ExportTLS26080PDFRequest extends ApiRequest {
   POD_No?: string;
   POD_Desc?: string;
   POD_SDate_start?: string;
@@ -138,7 +137,7 @@ export interface TLS26080UploadResult {
   queryTLS26080_DetailResponses: TLS26080DetailResult[];
 }
 
-export type TLS26080UploadResponse = Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: TLS26080UploadResult; };
+export type TLS26080UploadResponse = Omit<ApiResponse<unknown[]>, 'Data'> & { Data: TLS26080UploadResult; };
 
 // 活動資料模型
 export interface ActivityData {

@@ -1,3 +1,4 @@
+import { SortMeta } from 'primeng/api';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -12,7 +13,6 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -267,7 +267,7 @@ export class ASS15080Component
     const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
     const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
     const sortBy = Array.isArray(body?.SortBy)
-      ? (body.SortBy as SortOption[])
+      ? (body.SortBy as SortMeta[])
       : undefined;
 
     const payload: ASS15080QueryRequest = {

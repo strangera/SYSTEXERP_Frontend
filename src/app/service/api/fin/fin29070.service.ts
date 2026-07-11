@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface FIN29070QueryRequest extends BaseQueryRequest {
+export interface FIN29070QueryRequest extends ApiRequest {
   VEN_No_From: string;           // 廠商編號(起)
   VEN_No_To: string;             // 廠商編號(迄)
   ODM_Date_From: string;          // 立帳日期(起) - 必填
@@ -31,8 +31,8 @@ export class FIN29070Service {
   constructor(private http: HttpClient) { }
 
   /** 查詢廠商應付對應科目明細表 */
-  queryFIN29070(req: FIN29070QueryRequest): Observable<BaseQueryResponse<FIN29070Data>> {
-    return this.http.post<BaseQueryResponse<FIN29070Data>>(`${this.apiUrl}/queryFIN29070`, req);
+  queryFIN29070(req: FIN29070QueryRequest): Observable<ApiResponse<FIN29070Data[]>> {
+    return this.http.post<ApiResponse<FIN29070Data[]>>(`${this.apiUrl}/queryFIN29070`, req);
   }
 
   /** 匯出廠商應付對應科目明細表 Excel */

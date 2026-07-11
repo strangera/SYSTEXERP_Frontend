@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS13060 固定資產重估作業 - 資料模型
  */
@@ -7,7 +6,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 /**
  * ASS13060 查詢請求參數
  */
-export interface ASS13060QueryRequest extends BaseQueryRequest {
+export interface ASS13060QueryRequest extends ApiRequest {
   /** 固資重估單編號 */
   ASSET_EVAL_ID?: string | null;
   /** 固資重估單狀態 */
@@ -139,7 +138,7 @@ export interface ASS13060InsertResponseData {
 /**
  * ASS13060 資產查詢請求參數（批次新增彈窗用）
  */
-export interface ASS13060AssetQueryRequest extends BaseQueryRequest {
+export interface ASS13060AssetQueryRequest extends ApiRequest {
   ASSET_ID?: string | null;
   GOODS_NAME?: string | null;
   B_CLASS_ID?: string | null;

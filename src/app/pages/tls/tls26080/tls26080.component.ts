@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -12,7 +12,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';

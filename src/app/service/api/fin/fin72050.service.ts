@@ -1,9 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable, map } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import {
   CloseFIN72050Request,
   CloseVoidFIN72050Result,
@@ -19,6 +15,9 @@ import {
   UpdateFIN72050Result,
   VoidFIN72050Request,
 } from '@shared/models/fin/fin72050.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { Observable, map } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 /**
  * 零用金盤點作業 (FIN72050) API service
@@ -32,7 +31,7 @@ export class FIN72050Service {
   private readonly apiUrl = environment.ApiUrl + '/FIN0000/FIN70000';
 
   /** 列表查詢 */
-  queryFIN72050(req: QueryFIN72050Request): Observable<BaseQueryResponse<FIN72050QueryData>> {
+  queryFIN72050(req: QueryFIN72050Request): Observable<ApiResponse<FIN72050QueryData[]>> {
     // 後端回傳：{ Status, Data: { QueryData: T[], TotalCount, TotalPage }, Message, ... }
     // 為符合前端規範（元件用 res.Data / res.TotalCount），在此 map 拍平。
     interface RawResponse {
@@ -58,7 +57,7 @@ export class FIN72050Service {
           Data: items,
           TotalCount: res.Data?.TotalCount ?? items.length,
           TotalPage: res.Data?.TotalPage ?? 0,
-        } as BaseQueryResponse<FIN72050QueryData>;
+        } as ApiResponse<FIN72050QueryData[]>;
       })
     );
   }

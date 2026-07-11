@@ -1,9 +1,9 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { POS2013, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from '@pages/tls/tls21020/tls21020.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -40,15 +40,15 @@ export class TLS21020Service {
     { value: 'N', label: '否' },
   ];
 
-  public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
-    return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query).pipe(
+  public queryTLS21020(query: TLS21020Query): Observable<ApiResponse<TLS21020Data[]>> {
+    return this.http.post<ApiResponse<TLS21020Data[]>>(`${apiUrl}/queryTLS21020`, query).pipe(
       take(1),
       tap(res => this.logger.debug('query TLS21020:', [res])),
     );
   }
 
-  public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/updateTLS21020`, { GLS1020Datas: query }).pipe(
+  public updateTLS21020(query: TLS21020UpdateQuery[]): Observable<ApiResponse<unknown[]>> {
+    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/updateTLS21020`, { GLS1020Datas: query }).pipe(
       take(1),
       tap(res => this.logger.debug('update tls21020:', [res])),
     );

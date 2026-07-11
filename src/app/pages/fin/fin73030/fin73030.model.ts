@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** queryFIN73030 / 匯出 共用的篩選欄位（不含分頁） */
 export interface FIN73030FilterBody {
   SYS_StoreNo: string | null;
@@ -10,7 +9,7 @@ export interface FIN73030FilterBody {
 }
 
 /** 查詢請求（含 table-report 分頁排序） */
-export interface FIN73030Query extends FIN73030FilterBody, BaseQueryRequest {
+export interface FIN73030Query extends FIN73030FilterBody, ApiRequest {
   pageIndex?: number;
   pageSize?: number;
   SortBy?: Array<{ field: string; order: number }>;

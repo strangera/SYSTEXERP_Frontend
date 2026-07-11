@@ -1,3 +1,4 @@
+import { SortMeta } from 'primeng/api';
 import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -16,7 +17,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -231,7 +231,7 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
     const raw = this.queryForm.getRawValue();
     const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
     const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
-    const sortBy = Array.isArray(body?.SortBy) ? (body?.SortBy as SortOption[]) : undefined;
+    const sortBy = Array.isArray(body?.SortBy) ? (body?.SortBy as SortMeta[]) : undefined;
 
     const payload: QueryASS17010Request = {
       DisplayType: raw.displayType || undefined,

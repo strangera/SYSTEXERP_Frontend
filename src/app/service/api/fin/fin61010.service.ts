@@ -1,11 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-export interface FIN61010QueryRequest extends BaseQueryRequest {
+export interface FIN61010QueryRequest extends ApiRequest {
   BNK_No?: string;
   CHK_StatusList?: string[];
 }
@@ -103,8 +102,8 @@ export class FIN61010Service {
 
   constructor(private http: HttpClient) {}
 
-  queryFIN61010(data: FIN61010QueryRequest): Observable<BaseQueryResponse<FIN61010Data>> {
-    return this.http.post<BaseQueryResponse<FIN61010Data>>(`${this.apiUrl}/queryFIN61010`, data);
+  queryFIN61010(data: FIN61010QueryRequest): Observable<ApiResponse<FIN61010Data[]>> {
+    return this.http.post<ApiResponse<FIN61010Data[]>>(`${this.apiUrl}/queryFIN61010`, data);
   }
 
   queryFIN61010Detail(APS3005_id: number, pageSize = 30, pageIndex = 1): Observable<FIN61010DetailQueryResponse> {

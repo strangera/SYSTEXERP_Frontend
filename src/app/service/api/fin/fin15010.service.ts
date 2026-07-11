@@ -1,11 +1,10 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-
 // --- FIN15010 查詢參數 Model 定義 ---
-export interface FIN15010QueryRequest extends BaseQueryRequest {
+export interface FIN15010QueryRequest extends ApiRequest {
   MID: number;                        // 商場編號
   STO_No: string;                     // 分店編號
   PUR_GUIDate_S?: string;             // 發票日期起

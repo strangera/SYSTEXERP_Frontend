@@ -1,9 +1,8 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import {
   FIN73020Data,
   FIN73020ExportRequest,
@@ -17,8 +16,8 @@ export class FIN73020Service {
 
   constructor(private readonly http: HttpClient) {}
 
-  queryFIN73020(body: FIN73020Query): Observable<BaseQueryResponse<FIN73020Data>> {
-    return this.http.post<BaseQueryResponse<FIN73020Data>>(
+  queryFIN73020(body: FIN73020Query): Observable<ApiResponse<FIN73020Data[]>> {
+    return this.http.post<ApiResponse<FIN73020Data[]>>(
       `${this.baseUrl}/queryFIN73020`,
       body
     );

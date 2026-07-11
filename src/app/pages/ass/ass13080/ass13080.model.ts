@@ -1,6 +1,5 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
-export interface QueryASS13080Request extends BaseQueryRequest {
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+export interface QueryASS13080Request extends ApiRequest {
   /** 商場代碼(0=不限制) */
   MID?: number | null;
   /** 分店編號 */
@@ -156,7 +155,7 @@ export type PrintASS13080Request = Omit<
 
 // ==================== 資產選擇列表（queryFAASSETChooseListASS13060） ====================
 
-export interface QueryFAASSETChooseListASS13060Request extends BaseQueryRequest {
+export interface QueryFAASSETChooseListASS13060Request extends ApiRequest {
   MID?: number | null;
   STO_NO?: string | null;
   ASSET_ID?: string | null;

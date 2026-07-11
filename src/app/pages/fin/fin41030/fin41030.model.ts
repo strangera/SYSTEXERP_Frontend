@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** 查詢年度預算審核 Request */
-export interface QueryFIN41030Request extends BaseQueryRequest {
+export interface QueryFIN41030Request extends ApiRequest {
   /** 預算年度 */
   BudgetYear?: string | null;
   /** 預算版本 */

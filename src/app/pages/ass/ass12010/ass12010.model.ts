@@ -1,4 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS12010 請購申請作業 - 資料模型
  */
@@ -6,7 +6,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 /**
  * ASS12010 查詢請求參數
  */
-export interface ASS12010QueryRequest extends BaseQueryRequest {
+export interface ASS12010QueryRequest extends ApiRequest {
   /** 倉別 */
   WH_ID?: string | null;
   /** 需求單號 */

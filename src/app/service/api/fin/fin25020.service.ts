@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -10,7 +9,7 @@ import { environment } from 'src/environments/environment';
 /**
  * 查詢形成電匯明細資料
  */
-export interface QueryFIN25020Request extends BaseQueryRequest {
+export interface QueryFIN25020Request extends ApiRequest {
   /** 建立日期(起) */
   D_Date_Start?: string | null;
   /** 建立日期(迄) */

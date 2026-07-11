@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51050Service } from '@service/api/tls/tls51050.service';
+import { PluUnit, Tls51050Service } from '@service/api/tls/tls51050.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -10,7 +10,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
-import { PluUnit } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
 
 // 2.5.1.5  商品單位設定

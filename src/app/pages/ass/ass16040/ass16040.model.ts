@@ -1,10 +1,9 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS16040 領用審核作業 — 查詢請求
  * SPEC §7.1/§7.2: queryASS16040M（主檔模式）/ queryASS16040（主檔+明細模式）共用此 Request
  */
-export interface ASS16040QueryRequest extends BaseQueryRequest {
+export interface ASS16040QueryRequest extends ApiRequest {
   MTAPPLY_ID?: string | null;          // 領用單號（長度 15）
   EMP_ID?: string | null;              // 申請人代號
   FASITEM_ID?: number | null;          // 品項編號（FASITEM.ID, int64）

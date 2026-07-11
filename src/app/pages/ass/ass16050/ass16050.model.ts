@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** ASS16050 共用查詢條件 Request（queryASS16050M 與 queryASS16050 共用同一個 DTO） */
-export interface Ass16050QueryRequest extends BaseQueryRequest {
+export interface Ass16050QueryRequest extends ApiRequest {
   MTAPPLY_ID?: string | null;        // 領用單號（長度 15）
   EMP_ID?: string | null;            // 申請人代號
   FASITEM_ID?: number | null;        // 品項 ID (int64)

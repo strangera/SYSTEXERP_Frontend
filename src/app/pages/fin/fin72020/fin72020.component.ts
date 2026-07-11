@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,7 +7,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN72020Data, FIN72020Service, QueryFIN72020Request, voidFIN72020Request } from '@service/api/fin/fin72020.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -180,7 +180,7 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
   // 表格查詢函式，會在分頁、排序、初始查詢時被呼叫
   public queryFunction = (
     body: QueryFIN72020Request & { pageSize?: number; pageIndex?: number }
-  ): Observable<BaseQueryResponse<FIN72020Data>> => {
+  ): Observable<ApiResponse<FIN72020Data[]>> => {
 
     const cleanPayload = removeEmptyValues(body) as QueryFIN72020Request;
     return this.fin72020Service.queryFIN72020(cleanPayload);

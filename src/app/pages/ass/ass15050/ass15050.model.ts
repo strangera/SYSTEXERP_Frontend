@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS15050 折舊攤提表 — API 型別（Swagger QueryASS15050Request / QueryASS15050Response）
  */
-export interface QueryASS15050Request extends BaseQueryRequest {
+export interface QueryASS15050Request extends ApiRequest {
   /** 會計科目(A.STYPE_D)，NULL = 全部 */
   STYPE_D?: string | null;
   /** 折舊年限起，例如 202002 */

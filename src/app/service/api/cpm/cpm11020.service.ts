@@ -1,6 +1,6 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -31,7 +31,7 @@ export interface DeviceListItem {
 }
 
 // 查詢服務台位置檔 Request 介面
-export interface QueryCPM11020Request extends BaseQueryRequest {
+export interface QueryCPM11020Request extends ApiRequest {
   Device_id?: string;    // 設備代號
   Device_Name?: string;    // 設備名稱
 }
@@ -128,8 +128,8 @@ export class CPM11010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM11010(req: QueryCPM11020Request): Observable<BaseQueryResponse<CPM11020Data>> {
-    return this.http.post<BaseQueryResponse<CPM11020Data>>(`${this.apiUrl}/queryCPM11020`, req);
+  queryCPM11010(req: QueryCPM11020Request): Observable<ApiResponse<CPM11020Data[]>> {
+    return this.http.post<ApiResponse<CPM11020Data[]>>(`${this.apiUrl}/queryCPM11020`, req);
   }
 
   // 查詢明細 (注意：Data 是物件而非陣列)
@@ -162,19 +162,19 @@ export class CPM11010Service {
   /**
    *  新增 API 1: 查詢 CSS1001 客戶服務資料 (對應後端 queryCPM10010)
    * POST /queryCPM10010
-   * 注意: BaseQueryResponse<T> 的 Data 已經是 T[]，所以 T 不需要再是陣列
+   * 注意: ApiResponse<T[]> 的 Data 已經是 T[]，所以 T 不需要再是陣列
    */
-  queryCPM10010(): Observable<BaseQueryResponse<CPM10010Data>> {
-    return this.http.post<BaseQueryResponse<CPM10010Data>>(`${this.apiUrl}/queryCPM10010`, {});
+  queryCPM10010(): Observable<ApiResponse<CPM10010Data[]>> {
+    return this.http.post<ApiResponse<CPM10010Data[]>>(`${this.apiUrl}/queryCPM10010`, {});
   }
 
   /**
    *  新增 API 2: 查詢 CSS2001 設備列表 (對應後端 queryDeviceListCPM11020)
    * POST /queryDeviceListCPM11020
-   * 注意: BaseQueryResponse<T> 的 Data 已經是 T[]，所以 T 不需要再是陣列
+   * 注意: ApiResponse<T[]> 的 Data 已經是 T[]，所以 T 不需要再是陣列
    */
-  queryDeviceListCPM11020(): Observable<BaseQueryResponse<DeviceListItem>> {
-    return this.http.post<BaseQueryResponse<DeviceListItem>>(`${this.apiUrl}/queryDeviceListCPM11020`, {});
+  queryDeviceListCPM11020(): Observable<ApiResponse<DeviceListItem[]>> {
+    return this.http.post<ApiResponse<DeviceListItem[]>>(`${this.apiUrl}/queryDeviceListCPM11020`, {});
   }
 
   // 新增

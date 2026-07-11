@@ -1,6 +1,6 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -70,7 +70,7 @@ export class TLS32020Service {
   constructor(private http: HttpClient) { }
 
   queryTLS32020(body: TLS32020QueryRequest) {
-    return this.http.post<BaseQueryResponse<TLS32020Data>>(this.apiUrl + '/queryTLS32020', body);
+    return this.http.post<ApiResponse<TLS32020Data[]>>(this.apiUrl + '/queryTLS32020', body);
   }
   exportTLS32020PDF(
     body: TLS32020QueryRequest

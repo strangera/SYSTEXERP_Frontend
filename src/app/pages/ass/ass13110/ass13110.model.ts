@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS13110 資產差異表 - 查詢 Request
  */
-export interface ASS13110QueryRequest extends BaseQueryRequest {
+export interface ASS13110QueryRequest extends ApiRequest {
   CHK_ID_S?: string;
   CHK_ID_E?: string;
   CHK_DATE_S?: Date | string;

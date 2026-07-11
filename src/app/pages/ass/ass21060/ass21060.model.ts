@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 export interface ASS21060Data {
   dataKey?: string;
   TLT_No: string;
@@ -18,7 +17,7 @@ export interface ASS21060Sort {
   order: number;
 }
 
-export interface ASS21060Query extends BaseQueryRequest {
+export interface ASS21060Query extends ApiRequest {
   ContractYM: string;
   MeterTypes?: string[];
   TLT_NoStart?: string | null;

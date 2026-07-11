@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from 'src/environments/environment';
 
 // 查詢電子發票參數維護 Request
-export interface QueryFIN11210Request extends BaseQueryRequest {
+export interface QueryFIN11210Request extends ApiRequest {
   ECR_No?: string[];    // 收銀機號
   ARG_No?: string[];    // 參數代號
   ARG_Desc?: string;    // 參數說明
@@ -54,8 +54,8 @@ export class FIN11210Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN11210(req: QueryFIN11210Request): Observable<BaseQueryResponse<FIN11210Data>> {
-    return this.http.post<BaseQueryResponse<FIN11210Data>>(`${this.apiUrl}/queryFIN11210`, req);
+  queryFIN11210(req: QueryFIN11210Request): Observable<ApiResponse<FIN11210Data[]>> {
+    return this.http.post<ApiResponse<FIN11210Data[]>>(`${this.apiUrl}/queryFIN11210`, req);
   }
 
   // 新增

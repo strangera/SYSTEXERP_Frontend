@@ -1,10 +1,9 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS15080 資產重估查詢 - 資料模型
  */
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /** 查詢條件 request */
-export interface ASS15080QueryRequest extends BaseQueryRequest {
+export interface ASS15080QueryRequest extends ApiRequest {
   STO_NO?: string | null;
   ACC_NO?: string | null;
   ORG_ID?: string | null;

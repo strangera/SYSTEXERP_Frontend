@@ -1,10 +1,9 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * QueryASS15040Request
  * 查詢財產目錄之會計科目報表 - 查詢條件
  */
-export interface QueryASS15040Request extends BaseQueryRequest {
+export interface QueryASS15040Request extends ApiRequest {
   /** 基準年月 (必填，格式：yyyyMM) */
   BaseYM: string;
   /** 會計科目代碼 */

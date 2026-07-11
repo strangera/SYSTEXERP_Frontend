@@ -1,8 +1,7 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { IDropdownItem } from "@service/utility/dropDownList.service";
-import { BaseQueryResponse } from "@shared/models/api/base-api.interface";
-import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, take } from "rxjs";
 import { environment } from "src/environments/environment";
 
@@ -46,8 +45,8 @@ export class FIN42020Service {
     constructor(private http: HttpClient) { }
 
     // 查詢
-    queryFIN42020(req: QueryFIN42020Request): Observable<BaseQueryResponse<FIN42020Data>> {
-        return this.http.post<BaseQueryResponse<FIN42020Data>>(`${this.apiUrl}/queryFIN42020`, req);
+    queryFIN42020(req: QueryFIN42020Request): Observable<ApiResponse<FIN42020Data[]>> {
+        return this.http.post<ApiResponse<FIN42020Data[]>>(`${this.apiUrl}/queryFIN42020`, req);
     }
 
     // 查詢部門代號下拉選單

@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // --- TLS26040 查詢 Model 定義 ---
-export interface TLS26040QueryRequest extends BaseQueryRequest {
+export interface TLS26040QueryRequest extends ApiRequest {
   sad_date_start?: string;         // 預售日期_起
   sad_date_end?: string;           // 預售日期_迄
   tlt_noList?: string[];           // 專櫃編號清單
@@ -25,7 +24,7 @@ export interface TLS26040QueryInsertRequest {
 }
 
 // --- TLS26040 明細查詢 Model 定義 ---
-export interface TLS26040DetailRequest extends BaseQueryRequest {
+export interface TLS26040DetailRequest extends ApiRequest {
   sad_date?: string;               // 預售日期
   tlt_no?: string;                 // 專櫃編號
 }
@@ -75,18 +74,18 @@ export class TLS26040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢SALCHARGEM資料表
-  queryTLS26040(data: TLS26040QueryRequest): Observable<BaseQueryResponse<TLS26040Data>> {
-    return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040`, data);
+  queryTLS26040(data: TLS26040QueryRequest): Observable<ApiResponse<TLS26040Data[]>> {
+    return this.http.post<ApiResponse<TLS26040Data[]>>(`${this.apiUrl}/queryTLS26040`, data);
   }
 
   // 查詢SALCHARGEM資料表(插入用)
-  queryTLS26040Insert(data: TLS26040QueryInsertRequest): Observable<BaseQueryResponse<TLS26040Data>> {
-    return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
+  queryTLS26040Insert(data: TLS26040QueryInsertRequest): Observable<ApiResponse<TLS26040Data[]>> {
+    return this.http.post<ApiResponse<TLS26040Data[]>>(`${this.apiUrl}/queryTLS26040_insert`, data);
   }
 
   // 查詢預售明細(POS5006)資料
-  queryTLS26040Detail(data: TLS26040DetailRequest): Observable<BaseQueryResponse<TLS26040DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS26040DetailData>>(`${this.apiUrl}/queryTLS26040_Detail`, data);
+  queryTLS26040Detail(data: TLS26040DetailRequest): Observable<ApiResponse<TLS26040DetailData[]>> {
+    return this.http.post<ApiResponse<TLS26040DetailData[]>>(`${this.apiUrl}/queryTLS26040_Detail`, data);
   }
 
   // 新增預售資料

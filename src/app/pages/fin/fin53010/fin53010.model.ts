@@ -1,6 +1,5 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Option } from '@service/utility/dropdown-api.model';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
 interface FIN53010Basic {
   /** 傳票號碼 yyyyMMddssss */
   VouNo: string;
@@ -44,7 +43,7 @@ export interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {
   id: number;
 }
 
-export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'Data'> & { Data: QueryFIN53010Detail; };
+export type FIN53010DataDetail = Omit<ApiResponse<QueryFIN53010Detail[]>, 'Data'> & { Data: QueryFIN53010Detail; };
 
 /**
  * 代表 FIN53010 記錄的明細。
@@ -97,7 +96,7 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   recKey?: string;
 }
 
-export interface FIN53010Payload extends BaseQueryRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
+export interface FIN53010Payload extends ApiRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
   Remark?: string;
   CRT_USR_No?: string;
   UPD_USR_No?: string;
@@ -313,15 +312,15 @@ export type FIN53010InsertPayload = InsertFIN53010Request;
 /** @deprecated 請改用 UpdateFIN53010Request */
 export type FIN53010UpdatePayload = UpdateFIN53010Request;
 
-export type FIN53010InsertResult = Omit<BaseQueryResponse<unknown>, 'Data'> & {
+export type FIN53010InsertResult = Omit<ApiResponse<unknown[]>, 'Data'> & {
   Data: InsertFIN53010ResponseItem[] | null;
 };
 
-export type FIN53010UpdateResult = Omit<BaseQueryResponse<unknown>, 'Data'> & {
+export type FIN53010UpdateResult = Omit<ApiResponse<unknown[]>, 'Data'> & {
   Data: InsertFIN53010ResponseItem[] | null;
 };
 
-export type FIN53010DeleteResult = Omit<BaseQueryResponse<any>, 'Data'> & {
+export type FIN53010DeleteResult = Omit<ApiResponse<any[]>, 'Data'> & {
   Data: Record<string, any>;
 };
 
@@ -353,7 +352,7 @@ export interface NoteDescList {
   AccNoNoteDesc: Record<string, string[]>;
 }
 
-export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {
+export type NoteDescResponse = Omit<ApiResponse<NoteDescList[]>, 'Data'> & {
   Data: NoteDescList;
 };
 
@@ -570,7 +569,7 @@ export interface GetCalculatedPayDateRequest {
 }
 
 /** getCalculatedPayDate Response */
-export type GetCalculatedPayDateResult = Omit<BaseQueryResponse<string | null>, 'Data'> & {
+export type GetCalculatedPayDateResult = Omit<ApiResponse<string | null[]>, 'Data'> & {
   Data: string | null;
 };
 
@@ -956,7 +955,7 @@ export interface QueryFIN53010DetailDataByVouNoResponse {
   _APS4002?: Fin53010Aps4002ByVouNoBucket | null;
 }
 
-export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoResponse>, 'Data'> & {
+export type FIN53010DetailDataByVouNoResult = Omit<ApiResponse<QueryFIN53010DetailDataByVouNoResponse[]>, 'Data'> & {
   /** 單筆物件（非陣列） */
   Data: QueryFIN53010DetailDataByVouNoResponse | null;
 };
@@ -1007,7 +1006,7 @@ export interface QueryFIN53010DetailDataByVouNoForUpdateResponse {
   Total_CAmt?: number;
 }
 
-export type FIN53010DetailDataByVouNoForUpdateResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoForUpdateResponse>, 'Data'> & {
+export type FIN53010DetailDataByVouNoForUpdateResult = Omit<ApiResponse<QueryFIN53010DetailDataByVouNoForUpdateResponse[]>, 'Data'> & {
   Data: QueryFIN53010DetailDataByVouNoForUpdateResponse | null;
 };
 

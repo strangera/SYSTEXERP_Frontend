@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS11090 資材中分類會計科目維護作業 - 資料模型
  * 欄位對應 API 規格
@@ -60,7 +59,7 @@ export interface VouAccDetail {
 /**
  * ASS11090 查詢請求參數
  */
-export interface ASS11090QueryRequest extends BaseQueryRequest {
+export interface ASS11090QueryRequest extends ApiRequest {
   /** 庫別代號 */
   STO_NO?: string;
   /** 大分類代號 */

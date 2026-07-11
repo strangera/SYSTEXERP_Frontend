@@ -1,3 +1,4 @@
+import { SortMeta } from 'primeng/api';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -13,7 +14,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import {
   formatAmount
 } from '@shared/componentkit/table-report/table-report.model';
-import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -309,7 +309,7 @@ export class ASS17040Component
     raw: ReturnType<typeof this.queryForm.getRawValue>,
     pageSize: number,
     pageIndex: number,
-    sortBy: SortOption[] | undefined,
+    sortBy: SortMeta[] | undefined,
   ): QueryASS17040Request {
     return removeEmptyValues({
       StartDate: raw.Sdate ? new Date(raw.Sdate).toISOString() : undefined,
@@ -360,7 +360,7 @@ export class ASS17040Component
       pageIndex?: number;
       PageSize?: number;
       PageIndex?: number;
-      SortBy?: SortOption[];
+      SortBy?: SortMeta[];
     },
   ): Observable<ApiResponse<ASS17040FlatRow[]>> => {
     const rawForm = this.queryForm.getRawValue();

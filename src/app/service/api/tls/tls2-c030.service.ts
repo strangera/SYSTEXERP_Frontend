@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // --- TLS2C030 查詢參數 Model 定義 ---
-export interface TLS2C030QueryRequest extends BaseQueryRequest {
+export interface TLS2C030QueryRequest extends ApiRequest {
   onedatedd: string;               // 結帳日期
 }
 
@@ -29,8 +29,8 @@ export class TLS2C030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢SALCLOSE資料表
-  queryTLS2C030(params: TLS2C030QueryRequest): Observable<BaseQueryResponse<TLS2C030Data>> {
-    return this.http.post<BaseQueryResponse<TLS2C030Data>>(`${this.apiUrl}/queryTLS2C030`, params);
+  queryTLS2C030(params: TLS2C030QueryRequest): Observable<ApiResponse<TLS2C030Data[]>> {
+    return this.http.post<ApiResponse<TLS2C030Data[]>>(`${this.apiUrl}/queryTLS2C030`, params);
   }
 
   // 確定日結

@@ -1,10 +1,10 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse, VendorList } from '@pages/fin/fin52030/fin52030.model';
 import { FavoriteService } from '@service/system/favorite.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -64,8 +64,8 @@ export class FIN52030Service {
     private readonly fav: FavoriteService,
   ) { }
 
-  public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
-    return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
+  public loadFIN52030(payload: FIN52030Payload): Observable<ApiResponse<FIN52030Data[]>> {
+    return this.http.post<ApiResponse<FIN52030Data[]>>(`${apiUrl}/queryFIN52030`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN52030結果:', [res]))
     );
@@ -78,22 +78,22 @@ export class FIN52030Service {
     );
   }
 
-  public updateFIN52030Data(payload: FIN52030UpdatePayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/updateFIN52030`, payload).pipe(
+  public updateFIN52030Data(payload: FIN52030UpdatePayload): Observable<ApiResponse<FIN52030Data[]>> {
+    return this.http.post<ApiResponse<FIN52030Data[]>>(`${apiUrl}/updateFIN52030`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('updateFIN52030Data:', [res])),
     );
   }
 
-  public insertFIN52030Data(payload: FIN52030InsertPayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/insertFIN52030`, payload).pipe(
+  public insertFIN52030Data(payload: FIN52030InsertPayload): Observable<ApiResponse<FIN52030Data[]>> {
+    return this.http.post<ApiResponse<FIN52030Data[]>>(`${apiUrl}/insertFIN52030`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('insertFIN52030Data:', [res])),
     );
   }
 
-  public deleteFIN52030Data(payload: number[]): Observable<BaseQueryResponse<{ ids: number[]; }>> {
-    return this.http.post<BaseQueryResponse<{ ids: number[]; }>>(`${apiUrl}/deleteFIN52030`, { ids: payload }).pipe(
+  public deleteFIN52030Data(payload: number[]): Observable<ApiResponse<{ ids: number[]; }[]>> {
+    return this.http.post<ApiResponse<{ ids: number[]; }[]>>(`${apiUrl}/deleteFIN52030`, { ids: payload }).pipe(
       take(1),
       tap(res => this.logger.debug('deleteFIN52030Data:', [res])),
     );
@@ -101,7 +101,7 @@ export class FIN52030Service {
 
   public getRefNameOptions(): void {
     this.RefNameLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
+    this.http.post<ApiResponse<VendorList[]>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
       tap(res => this.logger.debug('getRefNameOptions:', [res])),
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
@@ -131,7 +131,7 @@ export class FIN52030Service {
 
   public getAccNoOptions(): void {
     this.accLoading.set(!0);
-    this.http.post<BaseQueryResponse<AccNoList>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
+    this.http.post<ApiResponse<AccNoList[]>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
       take(1),
       tap(res => this.logger.debug('getAccNoOptions:', [res])),
       tap(res => this.accNoOptions.set(res.Data.map(item => ({ value: item.AccNo, label: `${item.AccNo} - ${item.AccCName}` } as Option)))),

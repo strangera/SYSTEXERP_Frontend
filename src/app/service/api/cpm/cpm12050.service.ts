@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢客戶意見 Request
-export interface QueryCPM12050Request extends BaseQueryRequest {
+export interface QueryCPM12050Request extends ApiRequest {
   SEQ_ID?: string;           // 客戶意見編號
   ID?: number;               // 主鍵ID（可用於查單筆）
   CUST_NAME?: string;        // 客戶姓名
@@ -231,13 +231,13 @@ export class CPM12050Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM12050(req: QueryCPM12050Request): Observable<BaseQueryResponse<CPM12050Data>> {
-    return this.http.post<BaseQueryResponse<CPM12050Data>>(`${this.apiUrl}/queryCPM12050`, req);
+  queryCPM12050(req: QueryCPM12050Request): Observable<ApiResponse<CPM12050Data[]>> {
+    return this.http.post<ApiResponse<CPM12050Data[]>>(`${this.apiUrl}/queryCPM12050`, req);
   }
 
   // 明細查詢
-  queryCPM12050Detail(req: QueryCPM12050DetailRequest): Observable<BaseQueryResponse<CPM12050DetailData>> {
-    return this.http.post<BaseQueryResponse<CPM12050DetailData>>(`${this.apiUrl}/queryCPM12050Detail`, req);
+  queryCPM12050Detail(req: QueryCPM12050DetailRequest): Observable<ApiResponse<CPM12050DetailData[]>> {
+    return this.http.post<ApiResponse<CPM12050DetailData[]>>(`${this.apiUrl}/queryCPM12050Detail`, req);
   }
 
   // 主檔新增（支援 JSON 或 FormData（含檔案））
@@ -295,7 +295,7 @@ export class CPM12050Service {
   }
 
   // 依意見子類型取得類別資訊細項 (CSS10031)
-  queryCPM12050CSS10031(kindSubId: string): Observable<BaseQueryResponse<CSS10031Item>> {
-    return this.http.post<BaseQueryResponse<CSS10031Item>>(`${this.apiUrl}/queryCPM12050CSS10031`, { KIND_SubID: kindSubId });
+  queryCPM12050CSS10031(kindSubId: string): Observable<ApiResponse<CSS10031Item[]>> {
+    return this.http.post<ApiResponse<CSS10031Item[]>>(`${this.apiUrl}/queryCPM12050CSS10031`, { KIND_SubID: kindSubId });
   }
 }

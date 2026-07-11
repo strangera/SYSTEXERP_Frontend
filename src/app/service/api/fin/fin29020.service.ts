@@ -1,11 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface FIN29020QueryRequest extends BaseQueryRequest {
+export interface FIN29020QueryRequest extends ApiRequest {
   DateFrom: string;              // 匯款日期(起)
   DateTo: string;                // 匯款日期(迄)
   BNK_No?: string;               // 匯款銀行代號

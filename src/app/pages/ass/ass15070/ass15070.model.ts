@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS15070 財產進貨清單 - 查詢 Request
  */
-export interface QueryASS15070Request extends BaseQueryRequest {
+export interface QueryASS15070Request extends ApiRequest {
   STO_NO?: string | null;
   CHECK_DATE_S?: string | null;
   CHECK_DATE_E?: string | null;

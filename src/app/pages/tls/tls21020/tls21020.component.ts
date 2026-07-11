@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -10,7 +11,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { Maps } from '@shared/componentkit/table/table.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { concatMap, filter, finalize, Observable, switchMap, tap } from 'rxjs';
@@ -262,7 +262,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     });
   }
 
-  public queryTLS21020(): Observable<BaseQueryResponse<TLS21020Data>> {
+  public queryTLS21020(): Observable<ApiResponse<TLS21020Data[]>> {
     const payload = { ...this.queryForm.getRawValue(), pageSize: 1e5 } as TLS21020Query;
     this.queryStateService.setQueryState(this.ProgNo, payload);
     this.logger.debug('queryTLS21020:', [payload]);

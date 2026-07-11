@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS12030 採購申請作業 - 資料模型
  */
@@ -7,7 +6,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 // ==================== 查詢 Request ====================
 
 /** 採購申請查詢條件 */
-export interface QueryASS12030Request extends BaseQueryRequest {
+export interface QueryASS12030Request extends ApiRequest {
   OrderBy?: string;
   Offset?: number;
   /** 傳票號碼 */

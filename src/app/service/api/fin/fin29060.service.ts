@@ -1,12 +1,12 @@
+import { ApiError, ApiMeta, ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiError, ApiMeta, BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
-export interface QueryFIN29060Request extends BaseQueryRequest {
+export interface QueryFIN29060Request extends ApiRequest {
   OrderBy?: string;                   // 排序欄位
   Offset?: number;                    // 偏移量
   STO_No?: string;                    // 門市編號

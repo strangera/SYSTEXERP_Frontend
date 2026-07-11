@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢產生電匯付款資料 Request
-export interface QueryFIN25010Request extends BaseQueryRequest {
+export interface QueryFIN25010Request extends ApiRequest {
   PAM_No?: string;           // 匯款來源單號
   D_Date_b?: string;         // 建立日期(起)
   D_Date_e?: string;         // 建立日期(迄)
@@ -28,7 +27,7 @@ export interface FIN25010Data {
 }
 
 // 查詢下拉選單 Request
-export interface QueryDropFIN25010Request extends BaseQueryRequest {
+export interface QueryDropFIN25010Request extends ApiRequest {
   PTA_Date_b?: string;  // 收/付款日(起)
   PTA_Date_e?: string;  // 收/付款日(迄)
   Remit_Status?: string;         // 是否形成電匯(Y/N)
@@ -43,7 +42,7 @@ export interface QueryDropFIN25010Response {
 }
 
 // 查詢產生電匯付款資料 新增查詢Request
-export interface QueryAddFIN25010Request extends BaseQueryRequest {
+export interface QueryAddFIN25010Request extends ApiRequest {
   ACP_ExpectPayDate?: string;  // 收/付款日
   ven_no_b?: string;           // 廠客代號(起)
   ven_no_e?: string;           // 廠客代號(迄)
@@ -106,7 +105,7 @@ export interface APS3009Item {
 }
 
 // 檢視頁面查詢 Request
-export interface QueryDetailFIN25010Request extends BaseQueryRequest {
+export interface QueryDetailFIN25010Request extends ApiRequest {
   PAM_No: string; // 必要條件
 }
 
@@ -119,22 +118,22 @@ export class FIN25010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN25010(req: QueryFIN25010Request): Observable<BaseQueryResponse<FIN25010Data>> {
-    return this.http.post<BaseQueryResponse<FIN25010Data>>(`${this.apiUrl}/queryFIN25010`, req);
+  queryFIN25010(req: QueryFIN25010Request): Observable<ApiResponse<FIN25010Data[]>> {
+    return this.http.post<ApiResponse<FIN25010Data[]>>(`${this.apiUrl}/queryFIN25010`, req);
   }
 
   // 在 FIN25010Service 類別中新增此方法
-  queryDetailFIN25010(req: QueryDetailFIN25010Request): Observable<BaseQueryResponse<QueryAddFIN25010Response>> {
-    return this.http.post<BaseQueryResponse<QueryAddFIN25010Response>>(`${this.apiUrl}/query_detailFIN25010`, req);
+  queryDetailFIN25010(req: QueryDetailFIN25010Request): Observable<ApiResponse<QueryAddFIN25010Response[]>> {
+    return this.http.post<ApiResponse<QueryAddFIN25010Response[]>>(`${this.apiUrl}/query_detailFIN25010`, req);
   }
   // 查詢下拉選單
-  queryDropFIN25010(req: QueryDropFIN25010Request): Observable<BaseQueryResponse<QueryDropFIN25010Response>> {
-    return this.http.post<BaseQueryResponse<QueryDropFIN25010Response>>(`${this.apiUrl}/query_dropFIN25010`, req);
+  queryDropFIN25010(req: QueryDropFIN25010Request): Observable<ApiResponse<QueryDropFIN25010Response[]>> {
+    return this.http.post<ApiResponse<QueryDropFIN25010Response[]>>(`${this.apiUrl}/query_dropFIN25010`, req);
   }
 
   // 新增頁面-查詢產生電匯付款資料
-  queryAddFIN25010(req: QueryAddFIN25010Request): Observable<BaseQueryResponse<QueryAddFIN25010Response>> {
-    return this.http.post<BaseQueryResponse<QueryAddFIN25010Response>>(`${this.apiUrl}/query_addFIN25010`, req)
+  queryAddFIN25010(req: QueryAddFIN25010Request): Observable<ApiResponse<QueryAddFIN25010Response[]>> {
+    return this.http.post<ApiResponse<QueryAddFIN25010Response[]>>(`${this.apiUrl}/query_addFIN25010`, req)
       .pipe(
         map(response => {
           if (response.Data && response.Data.length > 0) {

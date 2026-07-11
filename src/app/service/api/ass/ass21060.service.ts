@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -6,7 +7,6 @@ import {
   ASS21060ExportQuery,
   ASS21060Query
 } from '@pages/ass/ass21060/ass21060.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -16,8 +16,8 @@ const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
 export class ASS21060Service {
   constructor(private http: HttpClient) { }
 
-  public queryASS21060(query: ASS21060Query): Observable<BaseQueryResponse<ASS21060Data>> {
-    return this.http.post<BaseQueryResponse<ASS21060Data>>(`${apiUrl}/queryASS21060`, query).pipe(
+  public queryASS21060(query: ASS21060Query): Observable<ApiResponse<ASS21060Data[]>> {
+    return this.http.post<ApiResponse<ASS21060Data[]>>(`${apiUrl}/queryASS21060`, query).pipe(
       map(res => {
         const enhancedData: ASS21060Data[] = (res.Data ?? []).map(item => ({
           ...item,
@@ -27,7 +27,7 @@ export class ASS21060Service {
         return {
           ...res,
           Data: enhancedData
-        } as BaseQueryResponse<ASS21060Data>;
+        } as ApiResponse<ASS21060Data[]>;
       })
     );
   }
