@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * detailASS13040 Request（對應 API）
  */
@@ -164,9 +163,9 @@ export interface ASS13040UpdateRequest extends ASS13040Header {
 
 /**
  * 資產 popup 查詢參數（對應 QueryFAASSETChooseListASS13040Request）
- * 繼承共用的 BaseQueryRequest
+ * 繼承共用的 ApiRequest
  */
-export interface QueryFAASSETChooseListASS13040Request extends BaseQueryRequest {
+export interface QueryFAASSETChooseListASS13040Request extends ApiRequest {
   MID?: number | null;
   STO_NO?: string | null;
   ASSET_ID?: string | null;      // 資產編號

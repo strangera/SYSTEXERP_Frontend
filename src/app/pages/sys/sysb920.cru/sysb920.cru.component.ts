@@ -36,7 +36,6 @@ interface CategoryItem {
 @Component({
   selector: 'app-sysb920.cru',
   templateUrl: './sysb920.cru.component.html',
-  styleUrl: './sysb920.cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
 })

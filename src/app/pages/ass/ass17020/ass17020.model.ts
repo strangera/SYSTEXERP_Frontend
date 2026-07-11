@@ -1,10 +1,9 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS17020 領用統計表
  */
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /** 查詢 request（欄位名與後端 Swagger 一致） */
-export interface QueryASS17020Request extends BaseQueryRequest {
+export interface QueryASS17020Request extends ApiRequest {
   StartDate?: string | null;
   EndDate?: string | null;
   OrgID?: string | null;

@@ -1,5 +1,5 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Option } from 'src/app/service/utility/dropdown-api.model';
 
 export interface TLS21020Data extends Partial<EditColumnExtend> {
@@ -41,17 +41,17 @@ export interface TLS21020GLS1005Data {
   Voucher_Type: string;
 }
 
-export interface TLS21020Query extends BaseQueryRequest {
+export interface TLS21020Query extends ApiRequest {
   ENTRY_TYPE: string;
   pageSize?: number;
   pageIndex?: number;
 }
 
-export interface TLS21020GLS1005Query extends BaseQueryRequest {
+export interface TLS21020GLS1005Query extends ApiRequest {
   AccDC: string;
 }
 
-export interface TLS21020UpdateQuery extends BaseQueryRequest {
+export interface TLS21020UpdateQuery extends ApiRequest {
   ABAT_YN: 'Y' | 'N';
   AccNo: string;
   AccNotes: string;

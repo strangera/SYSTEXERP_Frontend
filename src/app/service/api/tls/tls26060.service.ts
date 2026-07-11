@@ -1,11 +1,10 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
-
 // 查詢參數 Model
-export interface TLS26060QueryRequest extends BaseQueryRequest {
+export interface TLS26060QueryRequest extends ApiRequest {
   // 報表類型
   reportType?: string; // 報表類型
 

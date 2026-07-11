@@ -4,148 +4,69 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 分析日期（必填） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="分析日期"
-              [control]="queryForm.controls.AnalysisDate"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="分析日期" [control]="queryForm.controls.AnalysisDate"
+              [submitted]="submitted"></app-calendar>
           </div>
 
-          <!-- 分析區間（必填，只能輸入數字） -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-input-text
-              label="分析區間(日)"
-              [control]="queryForm.controls.IntervalDays"
-              [submitted]="submitted"
-              [keyFilter]="keyFilterInt"
-              [customPlaceholder]="'輸入文字'"
-            ></app-input-text>
+            <app-input-text label="分析區間(日)" [control]="queryForm.controls.IntervalDays" [submitted]="submitted"
+              [keyFilter]="keyFilterInt" [customPlaceholder]="'輸入文字'"></app-input-text>
           </div>
 
-          <!-- 分析期數（必填，只能輸入數字） -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-input-text
-              label="分析期數(期)"
-              [control]="queryForm.controls.AnalysisPeriods"
-              [submitted]="submitted"
-              [keyFilter]="keyFilterInt"
-              [customPlaceholder]="'輸入文字'"
-            ></app-input-text>
+            <app-input-text label="分析期數(期)" [control]="queryForm.controls.AnalysisPeriods" [submitted]="submitted"
+              [keyFilter]="keyFilterInt" [customPlaceholder]="'輸入文字'"></app-input-text>
           </div>
 
-          <!-- 分析日期別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="分析日期別"
-              [options]="analysisDateTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AnalysisDateType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="分析日期別" [options]="analysisDateTypeOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.AnalysisDateType" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="廠客代號"
-              controlName="VEN_No_From"
-              [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To"
-              [submitted]="submitted"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>
+            <app-dropdown-range label="廠客代號" controlName="VEN_No_From" [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="vendorOptions | async"
+              optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
 
-          <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="立帳日期"
-              [startControl]="queryForm.controls.ARS_Date_From"
-              [endControl]="queryForm.controls.ARS_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="立帳日期" [startControl]="queryForm.controls.ARS_Date_From"
+              [endControl]="queryForm.controls.ARS_Date_To" [submitted]="submitted"></app-calendar-range>
           </div>
 
-          <!-- 收款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="收款日期"
-              [control]="queryForm.controls.PayDate"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="收款日期" [control]="queryForm.controls.PayDate"
+              [submitted]="submitted"></app-calendar>
           </div>
 
-          <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="科目代號"
-              controlName="AccNo_From"
-              [startControl]="queryForm.controls.AccNo_From"
-              [endControl]="queryForm.controls.AccNo_To"
-              [submitted]="submitted"
-              [options]="accNoOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>
+            <app-dropdown-range label="科目代號" controlName="AccNo_From" [startControl]="queryForm.controls.AccNo_From"
+              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="accNoOptions | async"
+              optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
 
-          <!-- 已到期/未到期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="已到期/未到期"
-              [options]="dueTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.DueType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="已到期/未到期" [options]="dueTypeOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.DueType" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 
         <hr />
 
         <div class="grid p-fluid">
-          <!-- 是否顯示百分比 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否顯示百分比"
-              groupname="ShowPercent"
-              [control]="queryForm.controls.ShowPercent"
-              [options]="showPercentOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="是否顯示百分比" groupname="ShowPercent" [control]="queryForm.controls.ShowPercent"
+              [options]="showPercentOptions" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            btnType="clear"
-            [type]="'button'"
-            (clickEvent)="onClear(queryForm)"
-          ></app-button>
-
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -154,72 +75,25 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    [tableKey]="'fin34040_' + tableVer"
-    [dataKey]="'VEN_No'"
-    [columnGroup]="columnGroup"
-    [columns]="columns"
-    [data]="data"
-    [footerData]="footerData"
-    [totalRecords]="viewTotalRecords"
-    [loading]="loading"
-    [showManage]="false"
-    [showFilter]="true"
-    [showExcel]="false"
-    [queryFunction]="queryFIN34040ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [showCheckBox]="false"
-    [allowMultilineHeader]="true"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (linkClick)="onLinkClick($event)"
-  >
+  <app-table-report [tableKey]="'fin34040'" [dataKey]="'VEN_No'" [columnGroup]="columnGroup" [columns]="columns"
+    [data]="data" [totalRecords]="totalRecords" [loading]="loading" [showManage]="false" [showReportMode]="false"
+    [footerData]="footerData" [queryFunction]="queryFIN34040ForReport" [lastQueryBody]="lastQueryBody"
+    [showDelete]="false" [allowMultilineHeader]="true" (linkClick)="onLinkClick($event)" [ItemSize]="43.59">
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出 Excel"
-          icon="pi pi-file-excel"
-          [loading]="btnExportExcelLoading"
-          (click)="downloadFIN34040Excel()"
-          [disabled]="data.length === 0"
-        ></p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="匯出 PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnExportPdfLoading"
-          (click)="downloadFIN34040PDF()"
-          [disabled]="data.length === 0"
-        ></p-button>
+        <p-button styleClass="p-2" label="帳齡分析表.PDF" icon="pi pi-file-pdf" [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34040PDF()" [disabled]="!data.length"></p-button>
+        <p-button styleClass="p-2" label="帳齡分析表.XLSX" icon="pi pi-file-excel" [loading]="btnExportExcelLoading"
+          (click)="downloadFIN34040Excel()" [disabled]="!data.length"></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
 
 <!-- 應收帳款明細 Dialog -->
-<app-dialog
-  [visible]="dialogVisible"
-  header="應收帳款明細"
-  (visibleChange)="onDialogClose($event)"
-  [showFooter]="false"
-  width="95vw"
->
-  <app-table-report
-    [tableKey]="'fin34040_detail_' + dialogTableVer"
-    [columns]="detailColumns"
-    [data]="dialogData"
-    [footerData]="dialogFooterData"
-    [totalRecords]="dialogTotalRecords"
-    [loading]="dialogLoading"
-    dataKey="_rowKey"
-    [showManage]="false"
-    [showDelete]="false"
-    [showDetail]="false"
-    [showReportMode]="false"
-    [lazy]="false"
-  ></app-table-report>
+<app-dialog [visible]="dialogVisible" header="應收帳款明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
+  width="95vw">
+  <app-table-report [tableKey]="'fin34040_detail'" dataKey="_rowKey" [columns]="detailColumns" [data]="dialogData"
+    [footerData]="dialogFooterData" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"
+    [showDelete]="false" [showDetail]="false" [showReportMode]="false" [lazy]="false"></app-table-report>
 </app-dialog>

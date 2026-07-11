@@ -3,14 +3,14 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN72050Service } from '@service/api/fin/fin72050.service';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import {
   FIN72050QueryData,
+  FIN72050Service,
   FIN72050_STATUS_OPTIONS,
   QueryFIN72050Request,
-} from '@shared/models/fin/fin72050.model';
+} from '@service/api/fin/fin72050.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -32,7 +32,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-fin72050',
   templateUrl: './fin72050.component.html',
-  styleUrl: './fin72050.component.scss',
   standalone: true,
   imports: [
     CommonModule,

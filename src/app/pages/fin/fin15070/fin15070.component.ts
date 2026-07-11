@@ -21,7 +21,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   selector: 'app-fin15070',
   standalone: true,
   templateUrl: './fin15070.component.html',
-  styleUrls: ['./fin15070.component.scss'],
   imports: [
     MenubarComponent,
     AccordionModule,

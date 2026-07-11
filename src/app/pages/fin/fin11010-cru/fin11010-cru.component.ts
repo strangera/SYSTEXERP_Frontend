@@ -5,20 +5,19 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { IDropdownItem } from 'src/app/service/utility/dropdown-api.model';
 import { FIN11010Data, FIN11010InsertRequest, FIN11010Service, FIN11010UpdateRequest } from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin11010-cru',
   templateUrl: './fin11010-cru.component.html',
-  styleUrl: './fin11010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,
@@ -78,20 +77,20 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
   });
 
   // 總繳代號選項
-  repOrgCodeOptions: DropdownOption[] = [
+  repOrgCodeOptions: IDropdownItem[] = [
     { No: '0', Name: '單一機構報繳' },
     { No: '1', Name: '總機構彙總報繳' },
     { No: '2', Name: '各單位(分支機構)分別申報' }
   ];
 
   // 是否採直接扣抵法選項
-  directDeductOptions: DropdownOption[] = [
+  directDeductOptions: IDropdownItem[] = [
     { No: 'Y', Name: '是' },
     { No: 'N', Name: '否' }
   ];
 
   // 自行或委託辦理申報註記選項
-  applyFlagOptions: DropdownOption[] = [
+  applyFlagOptions: IDropdownItem[] = [
     { No: '1', Name: '本事業或關係企業職員申報(自行申報)' },
     { No: '2', Name: '記帳及報稅代理業務人申報(委託申報)' }
   ];

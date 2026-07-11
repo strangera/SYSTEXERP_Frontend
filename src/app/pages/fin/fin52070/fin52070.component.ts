@@ -40,7 +40,6 @@ export interface ClassAttr {
 @Component({
   selector: 'app-fin52070',
   templateUrl: './fin52070.component.html',
-  styleUrl: './fin52070.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

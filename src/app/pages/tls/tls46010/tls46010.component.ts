@@ -4,7 +4,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { Pos10015, Tls46010Service } from '../../../service/api/tls/tls46010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,7 +16,6 @@ import {
   createPaginationConfig,
   formatDateTime,
 } from '../../../shared/componentkit/table/table.model';
-import { Pos10015 } from '../../../shared/models/tls/tls000.model';
 
 @Component({
   selector: 'app-tls46010',

@@ -20,7 +20,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-fin13030-cru',
   templateUrl: './fin13030-cru.component.html',
-  styleUrl: './fin13030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

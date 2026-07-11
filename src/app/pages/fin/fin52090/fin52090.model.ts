@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * 科目代號
  * 科目名稱
@@ -11,7 +10,7 @@ export interface FIN52090Data {
   NoteDesc: string;
 }
 
-export interface FIN52090Query extends BaseQueryRequest {
+export interface FIN52090Query extends ApiRequest {
   AccNo?: string[];
   NoteDesc?: string;
   OrderBy?: string;

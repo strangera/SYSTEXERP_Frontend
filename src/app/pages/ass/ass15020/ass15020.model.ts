@@ -1,10 +1,9 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS15020 財產保管清冊 - 資料模型
  */
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /** 查詢條件 request */
-export interface ASS15020QueryRequest extends BaseQueryRequest {
+export interface ASS15020QueryRequest extends ApiRequest {
   STO_NO?: string | null;
   HOLD_ORG_ID?: string | null;
   USE_ORG_ID?: string | null;

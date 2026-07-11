@@ -17,7 +17,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-ass14030-cru',
   templateUrl: './ass14030-cru.component.html',
-  styleUrl: './ass14030-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })

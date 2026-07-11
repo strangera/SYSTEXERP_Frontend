@@ -14,7 +14,6 @@ import { option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 @Component({
   selector: 'app-sysb400.os',
   templateUrl: './sysb400.os.component.html',
-  styleUrl: './sysb400.os.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgIf, ProgressSpinnerModule, TreeDropdownComponent]
 })

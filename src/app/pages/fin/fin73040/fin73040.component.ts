@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,7 +10,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { SortMeta } from 'primeng/api';
 import { FIN73040Service } from '../../../service/api/fin/fin73040.service';
 import { Option } from '../../../service/utility/dropdown-api.model';
@@ -250,7 +250,7 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
       PageSize: pageSize,
     };
     return this.service.queryFIN73040(payload).pipe(
-      map((res: BaseQueryResponse<FIN73040Data>) => {
+      map((res: ApiResponse<FIN73040Data[]>) => {
         const part = this.partitionFin73040Rows(res.Data ?? []);
         this.syncFin73040SummaryFromPage(part, pageIndex);
         return {

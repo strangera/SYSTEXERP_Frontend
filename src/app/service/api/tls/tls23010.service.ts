@@ -1,12 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
-export interface TLS23010QueryRequest extends BaseQueryRequest {
+export interface TLS23010QueryRequest extends ApiRequest {
   TXN_DateStart?: string;
   TXN_DateEnd?: string;
   ECR_No?: string[];
@@ -117,7 +116,7 @@ export class TLS23010Service {
     TXN_No: number;
   }): Observable<any[]> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`;
-    return this.http.post<BaseQueryResponse<any>>(url, body).pipe(
+    return this.http.post<ApiResponse<any[]>>(url, body).pipe(
       map(r => r?.Data ?? []),
       tap(list => console.log('📦 Detail count:', list?.length ?? 0)),
       catchError(err => this.errorHandler.handleError(err))

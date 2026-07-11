@@ -22,7 +22,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 @Component({
   selector: 'app-fin65010',
   templateUrl: './fin65010.component.html',
-  styleUrl: './fin65010.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextRangeComponent, CalendarRangeComponent, ButtonComponent, TableReportComponent, TranslateModule]
 })

@@ -1,12 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
-
 export type ExportFileResponse = HttpResponse<Blob>;
 
-export interface QueryTLS2F030Request extends BaseQueryRequest {
+export interface QueryTLS2F030Request extends ApiRequest {
   sam_yyymm: string | null;
   money_type: string | null;
   sam_termno: number | null;

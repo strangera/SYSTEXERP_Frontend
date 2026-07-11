@@ -1,10 +1,10 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export interface FIN15030QueryRequest extends BaseQueryRequest {
+export interface FIN15030QueryRequest extends ApiRequest {
   MID?: number;                // 商場編號
   STO_No?: string;             // 分店編號
   INV_Remark_S?: string;       // 退出/折讓單號起

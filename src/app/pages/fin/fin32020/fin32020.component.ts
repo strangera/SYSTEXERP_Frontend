@@ -45,7 +45,6 @@ interface SortItem {
 @Component({
   selector: 'app-fin32020',
   templateUrl: './fin32020.component.html',
-  styleUrl: './fin32020.component.scss',
   standalone: true,
   imports: [
     CommonModule,

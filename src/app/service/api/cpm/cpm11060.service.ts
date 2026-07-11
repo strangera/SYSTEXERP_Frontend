@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from 'src/environments/environment';
 
 // 查詢遺拾物品地點 Request
-export interface QueryCPM11060Request extends BaseQueryRequest {
+export interface QueryCPM11060Request extends ApiRequest {
   SYS_Code?: string;   // 遺拾物品地點代碼
   SYS_Name?: string;   // 遺拾物品地點名稱
 }
@@ -49,8 +49,8 @@ export class CPM11060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM11060(req: QueryCPM11060Request): Observable<BaseQueryResponse<CPM11060Data>> {
-    return this.http.post<BaseQueryResponse<CPM11060Data>>(`${this.apiUrl}/queryCPM11060`, req);
+  queryCPM11060(req: QueryCPM11060Request): Observable<ApiResponse<CPM11060Data[]>> {
+    return this.http.post<ApiResponse<CPM11060Data[]>>(`${this.apiUrl}/queryCPM11060`, req);
   }
 
   // 新增

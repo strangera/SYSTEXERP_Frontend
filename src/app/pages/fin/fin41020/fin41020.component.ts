@@ -17,7 +17,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin41020',
   templateUrl: './fin41020.component.html',
-  styleUrl: './fin41020.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })

@@ -19,7 +19,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 @Component({
   selector: 'app-cpm11010',
   templateUrl: './cpm11010.component.html',
-  styleUrl: './cpm11010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

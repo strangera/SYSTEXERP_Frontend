@@ -1,12 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 // SYS0790 使用者作業按鈕歷程報表 資料模型
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /* -------------------------------------------------------------------------- */
 /* 查詢                                                                        */
 /* -------------------------------------------------------------------------- */
 
 /** SYS0790 查詢條件 */
-export interface QuerySYS0790Request extends BaseQueryRequest {
+export interface QuerySYS0790Request extends ApiRequest {
   /** 使用者帳號 */
   UserNo?: string | null;
   /** LOG時間（起）— 格式 YYYY-MM-DD HH:mm:ss */

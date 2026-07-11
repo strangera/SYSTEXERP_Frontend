@@ -1,12 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
-
-export interface FIN42030QueryRequest extends BaseQueryRequest {
+export interface FIN42030QueryRequest extends ApiRequest {
   YM?: string;
   Org_ID?: string;
   ReportType?: number;

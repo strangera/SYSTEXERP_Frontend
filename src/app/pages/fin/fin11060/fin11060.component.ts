@@ -56,7 +56,6 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-fin11060',
   templateUrl: './fin11060.component.html',
-  styleUrl: './fin11060.component.scss',
   standalone: true,
   imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, TranslateModule, TableComponent]
 })

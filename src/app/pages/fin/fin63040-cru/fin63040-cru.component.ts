@@ -24,7 +24,6 @@ import { Fin63020DetailRow, Fin63020Service, Fin63020UpdateRequest } from '../..
 @Component({
   selector: 'app-fin63040-cru',
   templateUrl: './fin63040-cru.component.html',
-  styleUrls: ['./fin63040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

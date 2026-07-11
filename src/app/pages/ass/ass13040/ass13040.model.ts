@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS13040 批次報廢作業 - 查詢條件
  */
-export interface ASS13040QueryRequest extends BaseQueryRequest {
+export interface ASS13040QueryRequest extends ApiRequest {
   DAMAGEM_ID?: string | null;
   ASSET_ID?: string | null;
   EMP_ID?: string | null;

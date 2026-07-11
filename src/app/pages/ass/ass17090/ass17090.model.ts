@@ -1,6 +1,5 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
-export interface ASS17090QueryRequest extends BaseQueryRequest {
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+export interface ASS17090QueryRequest extends ApiRequest {
   MID?: string | null;
   STO_NO?: string | null;
   QUERY_TYPE?: number | null;

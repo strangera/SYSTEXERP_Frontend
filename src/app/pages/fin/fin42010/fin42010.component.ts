@@ -24,7 +24,6 @@ import { TableSubheaderComponent } from './fin42010-table/fin42010-table.compone
 @Component({
   selector: 'app-fin42010',
   templateUrl: './fin42010.component.html',
-  styleUrl: './fin42010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -21,7 +21,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-ass14030',
   templateUrl: './ass14030.component.html',
-  styleUrl: './ass14030.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, InputNumberComponent, ButtonComponent, TableComponent, TranslateModule]
 })

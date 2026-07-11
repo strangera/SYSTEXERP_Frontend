@@ -265,7 +265,6 @@ export interface TDS1002 {
 @Component({
   selector: 'app-fin14010',
   templateUrl: './fin14010.component.html',
-  styleUrl: './fin14010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

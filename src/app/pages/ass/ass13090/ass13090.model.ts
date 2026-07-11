@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 export enum ResultLayoutMode {
   /** 攤提設定 */
   AmortizationSetting = 'setting',
@@ -8,7 +7,7 @@ export enum ResultLayoutMode {
 }
 
 /** queryASS13090 查詢請求 */
-export interface QueryASS13090Request extends BaseQueryRequest {
+export interface QueryASS13090Request extends ApiRequest {
   /** 分店編號 */
   STO_NO?: string | null;
   /** 攤提代號 */
@@ -71,7 +70,7 @@ export interface PrintASS13090Request {
 }
 
 /** amorASS13090 查詢請求 */
-export interface AmorASS13090Request extends BaseQueryRequest {
+export interface AmorASS13090Request extends ApiRequest {
   /** 分店編號 */
   STO_NO?: string | null;
   /** 攤提代號 */

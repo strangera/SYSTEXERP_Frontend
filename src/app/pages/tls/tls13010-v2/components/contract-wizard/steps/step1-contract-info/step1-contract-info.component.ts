@@ -48,7 +48,6 @@ import { NotificationService } from '@shared/component/notification-message/noti
 @Component({
   selector: 'app-step1-contract-info',
   templateUrl: './step1-contract-info.component.html',
-  styleUrls: ['./step1-contract-info.component.scss'],
   standalone: true,
   imports: [
     NgIf,

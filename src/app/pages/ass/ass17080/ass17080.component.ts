@@ -30,7 +30,6 @@ import { map } from 'rxjs/operators';
 @Component({
   selector: 'app-ass17080',
   templateUrl: './ass17080.component.html',
-  styleUrl: './ass17080.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

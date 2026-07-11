@@ -49,7 +49,6 @@ interface REP_TaxNo_list {
 @Component({
   selector: 'app-fin14040',
   templateUrl: './fin14040.component.html',
-  styleUrl: './fin14040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

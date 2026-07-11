@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS26020
-export interface TLS26020QueryRequest extends BaseQueryRequest {
+export interface TLS26020QueryRequest extends ApiRequest {
   Sale_DateStart?: string;      // 銷售日期(起) - ISO 8601 格式
   Sale_DateEnd?: string;        // 銷售日期(訖) - ISO 8601 格式
   tlt_building?: string[];      // 館別
@@ -57,8 +57,8 @@ export class TLS26020Service {
   }
 
   // 查詢預售總表明細
-  queryTLS26020Detail(data: TLS26020DetailRequest): Observable<BaseQueryResponse<TLS26020DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS26020DetailData>>(`${this.apiUrl}/queryTLS26020_Detail`, data);
+  queryTLS26020Detail(data: TLS26020DetailRequest): Observable<ApiResponse<TLS26020DetailData[]>> {
+    return this.http.post<ApiResponse<TLS26020DetailData[]>>(`${this.apiUrl}/queryTLS26020_Detail`, data);
   }
 
   /** 匯出 Excel */

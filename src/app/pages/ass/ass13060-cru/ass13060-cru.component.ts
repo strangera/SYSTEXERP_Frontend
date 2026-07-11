@@ -36,7 +36,6 @@ import {
 @Component({
   selector: 'app-ass13060-cru',
   templateUrl: './ass13060-cru.component.html',
-  styleUrl: './ass13060-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,

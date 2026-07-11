@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface QueryFIN55010Request extends BaseQueryRequest {
+export interface QueryFIN55010Request extends ApiRequest {
   DateFrom: string;
   DateTo: string;
   VouNoFrom?: string;
@@ -51,8 +51,8 @@ export class FIN55010Service {
   constructor(private http: HttpClient) { }
 
   /** 查詢傳票列印 */
-  queryFIN55010(req: QueryFIN55010Request): Observable<BaseQueryResponse<FIN55010Detail>> {
-    return this.http.post<BaseQueryResponse<FIN55010Detail>>(`${this.apiUrl}/queryFIN55010`, req);
+  queryFIN55010(req: QueryFIN55010Request): Observable<ApiResponse<FIN55010Detail[]>> {
+    return this.http.post<ApiResponse<FIN55010Detail[]>>(`${this.apiUrl}/queryFIN55010`, req);
   }
 
   /** 傳票型態下拉 (VoucherTypeOptions) */

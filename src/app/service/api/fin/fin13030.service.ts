@@ -1,11 +1,13 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
+export interface BaseDeleteRequest {
+  idList: number[];                 // 要刪除的資料ID清單
+}
 // --- FIN13030 查詢參數 Model 定義 ---
-export interface FIN13030QueryRequest extends BaseQueryRequest {
+export interface FIN13030QueryRequest extends ApiRequest {
   INV_GUINo_B?: string;                // 發票號碼_起
   INV_GUINo_E?: string;                // 發票號碼_迄
   INV_GUIDate_B?: string;              // 發票日期_起
@@ -149,16 +151,16 @@ export class FIN13030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN13030(data: FIN13030QueryRequest): Observable<BaseQueryResponse<FIN13030Data>> {
-    return this.http.post<BaseQueryResponse<FIN13030Data>>(`${this.apiUrl}/queryFIN13030`, data);
+  queryFIN13030(data: FIN13030QueryRequest): Observable<ApiResponse<FIN13030Data[]>> {
+    return this.http.post<ApiResponse<FIN13030Data[]>>(`${this.apiUrl}/queryFIN13030`, data);
   }
 
   // 取得零稅率發票
-  queryFIN13030_GetZeroTaxGUI(data: FIN13030GetZeroTaxGUIRequest): Observable<BaseQueryResponse<FIN13030GetZeroTaxGUIResponse>> {
-    return this.http.post<BaseQueryResponse<FIN13030GetZeroTaxGUIResponse>>(`${this.apiUrl}/queryFIN13030_GetZeroTaxGUI`, data);
+  queryFIN13030_GetZeroTaxGUI(data: FIN13030GetZeroTaxGUIRequest): Observable<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>> {
+    return this.http.post<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>>(`${this.apiUrl}/queryFIN13030_GetZeroTaxGUI`, data);
     // 回傳假資料
-    return new Observable<BaseQueryResponse<FIN13030GetZeroTaxGUIResponse>>(observer => {
-      const Data: BaseQueryResponse<FIN13030GetZeroTaxGUIResponse> = {
+    return new Observable<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>>(observer => {
+      const Data: ApiResponse<FIN13030GetZeroTaxGUIResponse[]> = {
         TotalCount: 1,
         Data: [{
           ID: 0,

@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from 'src/environments/environment';
 
 // 查詢服務台位置檔 Request 介面
-export interface QueryCPM11010Request extends BaseQueryRequest {
+export interface QueryCPM11010Request extends ApiRequest {
   building_no?: string[];   // 館別
   FLOOR_NO?: string[];      // 營業樓層
   AREA_NO?: string[];       // 營業區域
@@ -61,8 +61,8 @@ export class CPM11010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryCPM11010(req: QueryCPM11010Request): Observable<BaseQueryResponse<CPM11010Data>> {
-    return this.http.post<BaseQueryResponse<CPM11010Data>>(`${this.apiUrl}/queryCPM11010`, req);
+  queryCPM11010(req: QueryCPM11010Request): Observable<ApiResponse<CPM11010Data[]>> {
+    return this.http.post<ApiResponse<CPM11010Data[]>>(`${this.apiUrl}/queryCPM11010`, req);
   }
 
   // 新增

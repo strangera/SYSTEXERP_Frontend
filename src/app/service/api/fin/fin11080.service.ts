@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
 // --- 查詢參數 Model 定義 ---
-export interface FIN11080QueryRequest extends BaseQueryRequest {
+export interface FIN11080QueryRequest extends ApiRequest {
   MID: number;             // 固定為0
   SYS_StoreNo: string;     // 固定為'10'
   TXN_Date_Start: string;  // 銷售日期_起 (ISO字串)
@@ -13,7 +12,7 @@ export interface FIN11080QueryRequest extends BaseQueryRequest {
 }
 
 // --- 重號明細查詢參數 Model 定義 ---
-export interface FIN11080DetailQueryRequest extends BaseQueryRequest {
+export interface FIN11080DetailQueryRequest extends ApiRequest {
   MID: number;             // 固定為0
   SYS_StoreNo: string;     // 店號
   TXN_Date: string;        // 交易日期 (ISO字串)
@@ -50,12 +49,12 @@ export class FIN11080Service {
   constructor(private http: HttpClient) { }
 
   // 查詢電子發票筆數核對表
-  queryFIN11080(params: FIN11080QueryRequest): Observable<BaseQueryResponse<FIN11080Data>> {
-    return this.http.post<BaseQueryResponse<FIN11080Data>>(`${this.apiUrl}/queryFIN11080`, params);
+  queryFIN11080(params: FIN11080QueryRequest): Observable<ApiResponse<FIN11080Data[]>> {
+    return this.http.post<ApiResponse<FIN11080Data[]>>(`${this.apiUrl}/queryFIN11080`, params);
   }
 
   // 查詢電子發票筆數核對表_顯示重號明細
-  queryFIN11080_Detail(params: FIN11080DetailQueryRequest): Observable<BaseQueryResponse<FIN11080DetailData>> {
-    return this.http.post<BaseQueryResponse<FIN11080DetailData>>(`${this.apiUrl}/queryFIN11080_Detail`, params);
+  queryFIN11080_Detail(params: FIN11080DetailQueryRequest): Observable<ApiResponse<FIN11080DetailData[]>> {
+    return this.http.post<ApiResponse<FIN11080DetailData[]>>(`${this.apiUrl}/queryFIN11080_Detail`, params);
   }
 }

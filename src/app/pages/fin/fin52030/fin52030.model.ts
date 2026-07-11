@@ -1,6 +1,5 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Option } from '@service/utility/dropdown-api.model';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
 export interface FIN52030Data {
   id: number;
   TempNo: string;
@@ -73,7 +72,7 @@ export interface FIN52030DetailData {
   id: number;
 };
 
-export type FIN52030DetailDataResponse = Omit<BaseQueryResponse<FIN52030DetailData>, 'Data'> & { Data: FIN52030DetailData; };
+export type FIN52030DetailDataResponse = Omit<ApiResponse<FIN52030DetailData[]>, 'Data'> & { Data: FIN52030DetailData; };
 
 /**
  * FIN52030 明細檔 (Table 顯示用)
@@ -91,7 +90,7 @@ export interface FIN52030DetailTable extends FIN52030Detail {
   AccAmtC?: number;
 }
 
-export interface FIN52030Payload extends BaseQueryRequest {
+export interface FIN52030Payload extends ApiRequest {
   TempNo?: string;
   VouType?: '1' | '2' | '3';
   TempName?: string;
@@ -129,7 +128,7 @@ export interface NoteDescList {
   AccNoNoteDesc: Record<string, string[]>;
 }
 
-export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {
+export type NoteDescResponse = Omit<ApiResponse<NoteDescList[]>, 'Data'> & {
   Data: NoteDescList;
 };
 

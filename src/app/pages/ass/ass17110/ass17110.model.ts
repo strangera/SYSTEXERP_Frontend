@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * QueryASS17110Request
  * 耗材進耗存之會計科目報表 - 查詢條件
@@ -10,7 +9,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
  *   @GOODS_ID  品項編號        (非必填，下拉 queryFASITEM_DropDownList MATERIAL_TYPE=3)
  *   @ACC_NO    會計科目代碼    (非必填，下拉 queryFASAccNoDropDownList)
  */
-export interface QueryASS17110Request extends BaseQueryRequest {
+export interface QueryASS17110Request extends ApiRequest {
   /** 統計年月 yyyyMM (必填) */
   DATE_YM: string;
   /** 品項編號 (非必填) */

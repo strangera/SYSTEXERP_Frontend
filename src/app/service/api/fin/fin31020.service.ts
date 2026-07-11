@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // 查詢請求介面
-export interface QueryFIN31020Request extends BaseQueryRequest {
+export interface QueryFIN31020Request extends ApiRequest {
   CAR_AccNo?: string;  // 調整科目代號
   CAR_Type?: string;   // 加減項
   Remark?: string;     // 備註
@@ -104,8 +104,8 @@ export class FIN31020Service {
 
   constructor(private http: HttpClient) { }
 
-  queryFIN31020(data: QueryFIN31020Request): Observable<BaseQueryResponse<FIN31020Data>> {
-    return this.http.post<BaseQueryResponse<FIN31020Data>>(`${this.apiUrl}/queryFIN31020`, data);
+  queryFIN31020(data: QueryFIN31020Request): Observable<ApiResponse<FIN31020Data[]>> {
+    return this.http.post<ApiResponse<FIN31020Data[]>>(`${this.apiUrl}/queryFIN31020`, data);
   }
 
   queryFIN31020Detail(data: QueryFIN31020DetailRequest): Observable<QueryFIN31020DetailResponse> {

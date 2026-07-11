@@ -78,7 +78,6 @@ export interface QueryFIN63020Row {
 @Component({
   selector: 'app-fin63020',
   templateUrl: './fin63020.component.html',
-  styleUrls: ['./fin63020.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

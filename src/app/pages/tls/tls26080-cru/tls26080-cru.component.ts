@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, s
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -19,7 +19,6 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';

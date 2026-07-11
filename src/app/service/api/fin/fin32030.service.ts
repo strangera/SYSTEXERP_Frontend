@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -10,7 +9,7 @@ import { environment } from 'src/environments/environment';
 /**
  * 收款沖帳維護查詢
  */
-export interface QueryFIN32030Request extends BaseQueryRequest {
+export interface QueryFIN32030Request extends ApiRequest {
   /** 收款單號 */
   RCV_No?: string | null;
   /** 收款日期起 */
@@ -32,7 +31,7 @@ export interface QueryFIN32030Request extends BaseQueryRequest {
 /**
  * 應收未收查詢
  */
-export interface QueryFIN32030ARRequest extends BaseQueryRequest {
+export interface QueryFIN32030ARRequest extends ApiRequest {
   /** 組織編號 */
   STO_No?: string | null;
   /** 應收ID */
@@ -54,7 +53,7 @@ export interface QueryFIN32030ARRequest extends BaseQueryRequest {
 /**
  * 收款項目查詢 (含收款、票據、應收沖帳資料)
  */
-export interface QueryFIN32030RecvAllRequest extends BaseQueryRequest {
+export interface QueryFIN32030RecvAllRequest extends ApiRequest {
   /** 收款單號 */
   RCV_No?: string | null;
   /** 收款日期起 */

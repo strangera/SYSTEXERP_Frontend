@@ -23,7 +23,6 @@ import {
 @Component({
   selector: 'app-ass11070-cru',
   templateUrl: './ass11070-cru.component.html',
-  styleUrl: './ass11070-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,

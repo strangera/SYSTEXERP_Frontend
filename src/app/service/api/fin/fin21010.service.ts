@@ -1,6 +1,6 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -44,7 +44,7 @@ export interface APS1004 {
   UPD_USR_Name?: string | null;            // 變更人員姓名
 }
 
-export interface FIN21010Request extends BaseQueryRequest {
+export interface FIN21010Request extends ApiRequest {
   BNK_DepositAccNo?: string;        // 公司銀行科目
   AccCName?: string;                // 公司銀行科目名稱
   BNK_No?: string;                  // 全省銀行代碼
@@ -78,8 +78,8 @@ export class Fin21010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 APS1002 資料表
-  queryFIN21010(data: FIN21010Request): Observable<BaseQueryResponse<FIN21010Response>> {
-    return this.http.post<BaseQueryResponse<FIN21010Response>>(`${this.apiUrl}/queryFIN21010`, data);
+  queryFIN21010(data: FIN21010Request): Observable<ApiResponse<FIN21010Response[]>> {
+    return this.http.post<ApiResponse<FIN21010Response[]>>(`${this.apiUrl}/queryFIN21010`, data);
   }
 
   // 新增 APS1002 資料

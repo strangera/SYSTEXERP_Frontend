@@ -17,7 +17,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-fin11050',
   templateUrl: './fin11050.component.html',
-  styleUrl: './fin11050.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

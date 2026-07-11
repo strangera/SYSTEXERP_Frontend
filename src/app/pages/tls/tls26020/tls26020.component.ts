@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,7 +8,6 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -195,7 +195,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     });
   }
 
-  loadDetails = (rowData: TLS26020Data): Observable<BaseQueryResponse<TLS26020DetailData>> => {
+  loadDetails = (rowData: TLS26020Data): Observable<ApiResponse<TLS26020DetailData[]>> => {
     return this.tls26020Service.queryTLS26020Detail({
       tlt_no: rowData.tlt_no,
       Sale_DateStart: this.datePipe.transform(this.queryForm.controls.Sale_DateStart.value, 'yyyy-MM-dd') ?? '',

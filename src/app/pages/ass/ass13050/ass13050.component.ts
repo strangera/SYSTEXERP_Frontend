@@ -27,7 +27,6 @@ import { ASS13050QueryRow, DownloadASS13050Request, QueryASS13050Request } from 
 @Component({
   selector: 'app-ass13050',
   templateUrl: './ass13050.component.html',
-  styleUrl: './ass13050.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

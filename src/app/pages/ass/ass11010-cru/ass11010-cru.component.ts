@@ -16,7 +16,6 @@ import { ASS11010Data, ASS11010InsertRequest, ASS11010UpdateRequest } from '../a
 @Component({
   selector: 'app-ass11010-cru',
   templateUrl: './ass11010-cru.component.html',
-  styleUrl: './ass11010-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,

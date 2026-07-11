@@ -29,7 +29,6 @@ import { ColumnGroup, ReportColumn } from '../ass17020/ass17020-table-report.mod
 @Component({
   selector: 'app-ass17030',
   templateUrl: './ass17030.component.html',
-  styleUrl: './ass17030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

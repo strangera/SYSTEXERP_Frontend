@@ -37,7 +37,6 @@ import { EditColumn } from '../../fin/fin32020-cru/fin32020table-edit/fin32020ta
 @Component({
   selector: 'app-ass16080-cru',
   templateUrl: './ass16080-cru.component.html',
-  styleUrl: './ass16080-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

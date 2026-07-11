@@ -19,7 +19,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin41010',
   templateUrl: './fin41010.component.html',
-  styleUrl: './fin41010.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

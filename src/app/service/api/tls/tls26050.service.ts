@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // 查詢參數 Model
-export interface TLS26050QueryRequest extends BaseQueryRequest {
+export interface TLS26050QueryRequest extends ApiRequest {
   // 報表類型
   reportType?: string; // 報表類型
 
@@ -114,8 +113,8 @@ export class TLS26050Service {
   }
 
   // 查詢週報表起訖日期
-  queryTLS26050Week(data: TLS26050WeekQueryRequest): Observable<BaseQueryResponse<TLS26050WeekResponse>> {
-    return this.http.post<BaseQueryResponse<TLS26050WeekResponse>>(`${this.apiUrl}/queryTLS26050Week`, data);
+  queryTLS26050Week(data: TLS26050WeekQueryRequest): Observable<ApiResponse<TLS26050WeekResponse[]>> {
+    return this.http.post<ApiResponse<TLS26050WeekResponse[]>>(`${this.apiUrl}/queryTLS26050Week`, data);
   }
 
   /** 匯出 Excel */

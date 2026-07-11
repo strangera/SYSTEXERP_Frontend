@@ -1,11 +1,11 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface TLS57170QueryRequest extends BaseQueryRequest {
+export interface TLS57170QueryRequest extends ApiRequest {
   SYS_StoreNo?: string;           // 門市編號
   STK_YM: string;                 // 存貨年月 - 必填
   HOS_No?: string[];                // 倉別

@@ -4,123 +4,61 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 廠客代號：range -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
-              label="廠客代號"
-              controlName="VEN_No_From"
-              [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To"
-              [submitted]="submitted"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>
+            <app-dropdown-range label="廠客代號" controlName="VEN_No_From" [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="venNoOptions | async"
+              optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
 
-          <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="科目代號"
-              controlName="AccNoList"
-              [options]="accNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AccNoList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="科目代號" controlName="AccNoList" [options]="accNoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNoList" [submitted]="submitted"></app-multi-select>
           </div>
 
-          <!-- 月結天數 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="月結天數"
-              controlName="MoneyTypeList"
-              [options]="moneyTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.MoneyTypeList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="月結天數" controlName="MoneyTypeList" [options]="moneyTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.MoneyTypeList"
+              [submitted]="submitted"></app-multi-select>
           </div>
 
-          <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="立帳日期"
-              [startControl]="queryForm.controls.ARS_Date_From"
-              [endControl]="queryForm.controls.ARS_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="立帳日期" [startControl]="queryForm.controls.ARS_Date_From"
+              [endControl]="queryForm.controls.ARS_Date_To" [submitted]="submitted"></app-calendar-range>
           </div>
 
-          <!-- 收款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="收款日期"
-              [startControl]="queryForm.controls.RCV_Date_From"
-              [endControl]="queryForm.controls.RCV_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="收款日期" [startControl]="queryForm.controls.RCV_Date_From"
+              [endControl]="queryForm.controls.RCV_Date_To" [submitted]="submitted"></app-calendar-range>
           </div>
 
-          <!-- 調整日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="調整日期"
-              [startControl]="queryForm.controls.ADJ_Date_From"
-              [endControl]="queryForm.controls.ADJ_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <!-- 是否顯示應收金額 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              [label]="'是否顯示應收金額'"
-              [groupname]="'ShowARSAmount'"
-              [control]="queryForm.controls.ShowARSAmount"
-              [options]="showOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-
-          <!-- 帳款餘額為零是否顯示 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              [label]="'帳款餘額為零是否顯示'"
-              [groupname]="'ShowZeroBalance'"
-              [control]="queryForm.controls.ShowZeroBalance"
-              [options]="showOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-calendar-range label="調整日期" [startControl]="queryForm.controls.ADJ_Date_From"
+              [endControl]="queryForm.controls.ADJ_Date_To" [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            btnType="clear"
-            [type]="'button'"
-            (clickEvent)="onClear(queryForm)"
-          ></app-button>
+        <hr />
 
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="是否顯示應收金額" groupname="ShowARSAmount" [control]="queryForm.controls.ShowARSAmount"
+              [options]="showFlagOptions" [submitted]="submitted"></app-radiobutton>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
+              [control]="queryForm.controls.ShowZeroBalance" [options]="showFlagOptions"
+              [submitted]="submitted"></app-radiobutton>
+          </div>
+
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -129,45 +67,16 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    [tableKey]="'fin34020_' + tableVer"
-    [dataKey]="'_rowKey'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showManage]="false"
-    [showFilter]="true"
-    [showExcel]="false"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [queryFunction]="queryFIN34020ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [footerData]="buildFooterFromTotals()"
-  >
+  <app-table-report [tableKey]="'fin34020'" [dataKey]="'ARS_No'" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" [showManage]="false" [showReportMode]="false"
+    [footerData]="footerData" [queryFunction]="queryFIN34020ForReport" [lastQueryBody]="lastQueryBody" [ItemSize]="22.4"
+    [showDelete]="false">
     <header>
       <div class="flex justify-content-end gap-2">
-              <p-button
-          styleClass="p-2"
-          label="客戶收款明細表.PDF"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportPDF()"
-          [disabled]="btnLoading || data.length === 0"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="客戶收款明細表.XLSX"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportXLSX()"
-          [disabled]="btnLoading || data.length === 0"
-        ></p-button>
-
-  
+        <p-button styleClass="p-2" label="客戶收款明細表.PDF" icon="pi pi-file-pdf" [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34020PDF()" [disabled]="!data.length"></p-button>
+        <p-button styleClass="p-2" label="客戶收款明細表.XLSX" icon="pi pi-file-excel" [loading]="btnExportExcelLoading"
+          (click)="downloadFIN34020Excel()" [disabled]="!data.length"></p-button>
       </div>
     </header>
   </app-table-report>

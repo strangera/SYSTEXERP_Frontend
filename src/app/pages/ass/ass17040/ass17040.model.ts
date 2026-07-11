@@ -1,10 +1,9 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS17040 領用退料統計表 - 資料模型
  */
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /** queryASS17040 請求 */
-export interface QueryASS17040Request extends BaseQueryRequest {
+export interface QueryASS17040Request extends ApiRequest {
   /** 統計日期 起 */
   StartDate?: string | null;
   /** 統計日期 迄 */

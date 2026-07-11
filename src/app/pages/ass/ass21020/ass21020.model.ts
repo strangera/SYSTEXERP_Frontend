@@ -1,5 +1,4 @@
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 export interface ASS21020Data {
   Id?: number; // custom for sort
   ENG_Type: string;
@@ -27,7 +26,7 @@ export interface ASS21020Detail {
   ENG_Remark: string | null;
 }
 
-export interface ASS21020Query extends BaseQueryRequest {
+export interface ASS21020Query extends ApiRequest {
   EngTypes?: string;
   ENG_MeterNo?: string;
   TLT_No?: string;
@@ -62,7 +61,7 @@ export interface ASS21020Delete {
   DeleteKeys: DeleteASS21020Key[];
 }
 
-export interface ASS21020UpdateStatus extends Omit<BaseQueryResponse<unknown>, 'Data'> {
+export interface ASS21020UpdateStatus extends Omit<ApiResponse<unknown[]>, 'Data'> {
   Data: {
     IsUpdateSuccess: boolean;
     ErrorMsg: string;

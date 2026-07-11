@@ -4,7 +4,7 @@ import { Component, OnInit, computed, effect, signal, untracked } from '@angular
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { ApprovalStatus, TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -12,7 +12,6 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { tap } from 'rxjs';
@@ -22,7 +21,6 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
 @Component({
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
-  styleUrls: ['./tls26010.component.scss'],
   standalone: true,
   imports: [
     AccordionModule,

@@ -2,7 +2,34 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+// 保證票
+export interface Garantee_Ticket {
+  "id": number,
+  "talent_id": number,
+  "tlt_no": string,
+  "tlt_name": string,
+  "VEN_No": string,
+  "VEN_Name": string,
+  "ticket_type": string,
+  "ticket_no": string,
+  "ticket_kind": string,
+  "ticket_amount": number,
+  "expiry_date": string,
+  "get_ticket_status": string,
+  "get_date": string,
+  "return_date": string,
+  "close_date": string,
+  "ticket_remarks": string,
+  "remark": string,
+  "CRT_Date": string,
+  "CRT_USR_No": string,
+  "CRT_USR_Name": string,
+  "UPD_Date": string,
+  "UPD_USR_No": string,
+  "UPD_USR_Name": string,
 
+  "CanDel": boolean //能否刪除(僅顯示)
+}
 @Injectable({
   providedIn: 'root'
 })

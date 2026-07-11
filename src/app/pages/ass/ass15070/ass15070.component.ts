@@ -24,7 +24,6 @@ import { QueryASS15070QueryBody, QueryASS15070Request, QueryASS15070Row } from '
 @Component({
   selector: 'app-ass15070',
   templateUrl: './ass15070.component.html',
-  styleUrl: './ass15070.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

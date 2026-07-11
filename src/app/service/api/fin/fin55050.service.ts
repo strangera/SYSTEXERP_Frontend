@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
-export interface QueryFIN55050Request extends BaseQueryRequest {
+export interface QueryFIN55050Request extends ApiRequest {
   SortBy?: { field: string; order: number }[];
   DateFrom: string;
   DateTo: string;
@@ -128,8 +128,8 @@ export class FIN55050Service {
   constructor(private http: HttpClient) { }
 
   /** 查詢分類帳（回傳含 _Details 的巢狀資料） */
-  queryFIN55050(req: QueryFIN55050Request): Observable<BaseQueryResponse<FIN55050Data>> {
-    return this.http.post<BaseQueryResponse<FIN55050Data>>(`${this.apiUrl}/queryFIN55050`, req);
+  queryFIN55050(req: QueryFIN55050Request): Observable<ApiResponse<FIN55050Data[]>> {
+    return this.http.post<ApiResponse<FIN55050Data[]>>(`${this.apiUrl}/queryFIN55050`, req);
   }
 
   /** 匯出 Excel（不分頁） */

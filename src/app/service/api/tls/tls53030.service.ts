@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS53030
-export interface TLS53030QueryRequest extends BaseQueryRequest {
+export interface TLS53030QueryRequest extends ApiRequest {
   PST_No?: string;              // 盤點單編號:C+倉別+YYYYMM+SSSS
   HOS_No?: string[];            // 倉庫代碼 (陣列)
   LOGO_No?: string[];           // 品牌代碼 (陣列)
@@ -103,13 +103,13 @@ export class TLS53030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢盤點資料
-  queryTLS53030(data: TLS53030QueryRequest): Observable<BaseQueryResponse<TLS53030Data>> {
-    return this.http.post<BaseQueryResponse<TLS53030Data>>(`${this.apiUrl}/queryTLS53030`, data);
+  queryTLS53030(data: TLS53030QueryRequest): Observable<ApiResponse<TLS53030Data[]>> {
+    return this.http.post<ApiResponse<TLS53030Data[]>>(`${this.apiUrl}/queryTLS53030`, data);
   }
 
   // 查詢盤點明細資料
-  queryTLS53030Detail(data: TLS53030DetailQueryRequest): Observable<BaseQueryResponse<TLS53030DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS53030DetailData>>(`${this.apiUrl}/queryTLS53030_Detail`, data);
+  queryTLS53030Detail(data: TLS53030DetailQueryRequest): Observable<ApiResponse<TLS53030DetailData[]>> {
+    return this.http.post<ApiResponse<TLS53030DetailData[]>>(`${this.apiUrl}/queryTLS53030_Detail`, data);
   }
 
   // 匯出盤點試算表PDF

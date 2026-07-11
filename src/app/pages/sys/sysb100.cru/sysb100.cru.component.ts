@@ -16,7 +16,6 @@ import { Sysb100Service } from './../../../service/api/sys/sysb100.service';
 @Component({
   selector: 'app-sysb100.cru',
   templateUrl: './sysb100.cru.component.html',
-  styleUrl: './sysb100.cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

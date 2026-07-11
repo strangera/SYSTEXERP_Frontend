@@ -23,7 +23,6 @@ export interface TableExport2 {
 @Component({
   selector: 'app-table-export2',
   templateUrl: './table-export2.component.html',
-  styleUrl: './table-export2.component.scss',
   standalone: true,
   imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
 })

@@ -55,7 +55,6 @@ export interface ContractItem {
 @Component({
   selector: 'app-tls12080-query',
   templateUrl: './query.component.html',
-  styleUrls: ['./query.component.scss'],
   standalone: true,
   imports: [
     FormsModule,

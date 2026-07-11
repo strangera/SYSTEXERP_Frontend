@@ -19,7 +19,6 @@ import { EditColumn } from '../fin13040-cru/fin13040-table-edit/fin13040-table-e
 @Component({
   selector: 'app-fin41020-cru',
   templateUrl: './fin41020-cru.component.html',
-  styleUrls: ['./fin41020-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

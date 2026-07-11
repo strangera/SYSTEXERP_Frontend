@@ -20,7 +20,6 @@ import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subh
 @Component({
   selector: 'app-fin54025',
   templateUrl: './fin54025.component.html',
-  styleUrl: './fin54025.component.scss',
   standalone: true,
   imports: [DropdownComponent, NgStyle,
     ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, Fin29060TableSubheaderComponent, TranslateModule]

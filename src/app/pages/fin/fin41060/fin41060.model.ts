@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** 查詢部門預算審核 Request */
-export interface QueryFIN41060Request extends BaseQueryRequest {
+export interface QueryFIN41060Request extends ApiRequest {
   /** 部門代號 */
   Org_ID?: string | null;
   /** 版本 */

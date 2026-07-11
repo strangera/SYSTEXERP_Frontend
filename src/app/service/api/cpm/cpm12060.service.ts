@@ -1,6 +1,6 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -85,17 +85,17 @@ export class Cpm12060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 CSS3006 資料表
-  queryCPM12060(req: QueryCPM12060Request): Observable<BaseQueryResponse<CPM12060Data>> {
-    return this.http.post<BaseQueryResponse<CPM12060Data>>(`${this.apiUrl}/queryCPM12060`, req);
+  queryCPM12060(req: QueryCPM12060Request): Observable<ApiResponse<CPM12060Data[]>> {
+    return this.http.post<ApiResponse<CPM12060Data[]>>(`${this.apiUrl}/queryCPM12060`, req);
   }
 
   // 查詢 CPS3006 資料表_點開主檔
-  queryCPM12060_Main(req: detailCPM12060MainRequest): Observable<BaseQueryResponse<main12060Data>> {
-    return this.http.post<BaseQueryResponse<main12060Data>>(`${this.apiUrl}/queryCPM12060_Main`, req);
+  queryCPM12060_Main(req: detailCPM12060MainRequest): Observable<ApiResponse<main12060Data[]>> {
+    return this.http.post<ApiResponse<main12060Data[]>>(`${this.apiUrl}/queryCPM12060_Main`, req);
   }
 
   // 查詢 CPS3006 資料表_點開明細檔
-  queryCPM12060_Detail(req: detailCPM12060DetailRequest): Observable<BaseQueryResponse<detail12060Data>> {
-    return this.http.post<BaseQueryResponse<detail12060Data>>(`${this.apiUrl}/queryCPM12060_Detail`, req);
+  queryCPM12060_Detail(req: detailCPM12060DetailRequest): Observable<ApiResponse<detail12060Data[]>> {
+    return this.http.post<ApiResponse<detail12060Data[]>>(`${this.apiUrl}/queryCPM12060_Detail`, req);
   }
 }

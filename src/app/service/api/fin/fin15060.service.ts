@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
 // --- FIN15060 查詢參數 Model 定義 ---
-export interface FIN15060QueryRequest extends BaseQueryRequest {
+export interface FIN15060QueryRequest extends ApiRequest {
   INV_YM: string;                     // 申報年月
   STO_TaxNo: string;                  // 稅籍編號
 }
@@ -44,8 +44,8 @@ export class FIN15060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN15060(data: FIN15060QueryRequest): Observable<BaseQueryResponse<FIN15060Data>> {
-    return this.http.post<BaseQueryResponse<FIN15060Data>>(`${this.apiUrl}/queryFIN15060`, data);
+  queryFIN15060(data: FIN15060QueryRequest): Observable<ApiResponse<FIN15060Data[]>> {
+    return this.http.post<ApiResponse<FIN15060Data[]>>(`${this.apiUrl}/queryFIN15060`, data);
   }
 
   // 產出零稅率銷售額清單

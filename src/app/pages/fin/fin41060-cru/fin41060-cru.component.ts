@@ -15,7 +15,6 @@ import { FIN41060QueryRow, FIN41060UpdateData } from '../fin41060/fin41060.model
 @Component({
   selector: 'app-fin41060-cru',
   templateUrl: './fin41060-cru.component.html',
-  styleUrl: './fin41060-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

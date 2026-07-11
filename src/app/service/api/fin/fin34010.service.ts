@@ -38,7 +38,6 @@ export interface Fin34010Request {
 
 @Injectable({ providedIn: 'root' })
 export class Fin34010Service {
-  // 對應後端 Controller: /FIN0000/ARS1000
   private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
   constructor(

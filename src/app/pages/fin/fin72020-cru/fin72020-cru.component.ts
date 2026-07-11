@@ -20,7 +20,6 @@ import { monthOptions } from '../fin11200/fin11200.model';
 @Component({
     selector: 'app-fin72020-cru',
     templateUrl: './fin72020-cru.component.html',
-    styleUrl: './fin72020-cru.component.scss',
     standalone: true,
     imports: [
         MenubarComponent,

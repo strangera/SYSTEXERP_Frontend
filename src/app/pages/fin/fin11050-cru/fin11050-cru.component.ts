@@ -14,7 +14,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin11050-cru',
   templateUrl: './fin11050-cru.component.html',
-  styleUrl: './fin11050-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,

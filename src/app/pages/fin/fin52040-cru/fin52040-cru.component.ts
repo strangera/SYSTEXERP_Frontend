@@ -28,7 +28,6 @@ export interface GLS1016 {
 @Component({
   selector: 'app-fin52040-cru',
   templateUrl: './fin52040-cru.component.html',
-  styleUrl: './fin52040-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

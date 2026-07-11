@@ -1,11 +1,14 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+export interface BaseDeleteRequest {
+  idList: number[];                 // 要刪除的資料ID清單
+}
 
 // --- TDS52020 查詢參數 Model 定義 ---
-export interface FIN52020QueryRequest extends BaseQueryRequest {
+export interface FIN52020QueryRequest extends ApiRequest {
   VoucherKind?: string;         // 型態代號
   VoucherName?: string;         // 型態名稱
 }
@@ -33,13 +36,13 @@ export interface FIN52020UpdateRequest {
   providedIn: 'root'
 })
 export class Fin52020Service {
-  private apiUrl = environment.ApiUrl + '/FIN50000/FIN52020'; 
+  private apiUrl = environment.ApiUrl + '/FIN50000/FIN52020';
 
   constructor(private http: HttpClient) { }
 
   // 查詢 TDS52020 資料
-  queryFIN52020(data: FIN52020QueryRequest): Observable<BaseQueryResponse<FIN52020Data>> {
-    return this.http.post<BaseQueryResponse<FIN52020Data>>(`${this.apiUrl}/queryFIN52020`, data);
+  queryFIN52020(data: FIN52020QueryRequest): Observable<ApiResponse<FIN52020Data[]>> {
+    return this.http.post<ApiResponse<FIN52020Data[]>>(`${this.apiUrl}/queryFIN52020`, data);
   }
 
   // 新增 TDS52020 資料

@@ -26,7 +26,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-cpm11040-cru',
   templateUrl: './cpm11040-cru.component.html',
-  styleUrls: ['./cpm11040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

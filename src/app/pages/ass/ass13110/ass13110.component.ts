@@ -24,7 +24,6 @@ import { ASS13110QueryRequest, ASS13110Row } from './ass13110.model';
 @Component({
   selector: 'app-ass13110',
   templateUrl: './ass13110.component.html',
-  styleUrl: './ass13110.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -145,7 +144,7 @@ export class ASS13110Component extends BasicQueryPageComponent<ASS13110Row> impl
    * 說明：
    * - table-report 內部分頁參數使用小寫 `pageSize` / `pageIndex`
    * - 後端 API 則使用 `PageSize` / `PageIndex`
-   * - 這裡統一接收大小寫兩種寫法，並轉成 BaseQueryRequest 規範再送出
+   * - 這裡統一接收大小寫兩種寫法，並轉成 ApiRequest 規範再送出
    */
   public queryFunction = (
     body: Partial<ASS13110QueryRequest> & { pageSize?: number; pageIndex?: number },

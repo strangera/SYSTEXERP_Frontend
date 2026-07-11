@@ -1,9 +1,9 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';
@@ -58,7 +58,7 @@ export class ASS21010Service {
 
   public loadEngMeterNo(type?: EngType): void {
     this.engMeterNoLoading.set(!0);
-    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
+    this.http.post<ApiResponse<ASS2100ENGMeterType[]>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
       tap(res => {
         this.engMeterNoOptions.set(res.Data);
@@ -91,8 +91,8 @@ export class ASS21010Service {
     });
   }
 
-  public loadASS21010(payload: ASS21010Payload): Observable<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }> {
-    return this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
+  public loadASS21010(payload: ASS21010Payload): Observable<Omit<ApiResponse<unknown[]>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }> {
+    return this.http.post<Omit<ApiResponse<unknown[]>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
       tap(response => this.logger.debug('查詢ASS21010結果:', [response])),
     );

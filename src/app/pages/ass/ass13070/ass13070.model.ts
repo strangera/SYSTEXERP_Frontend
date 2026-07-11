@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** ASS13070 財產保管單位設定／移轉 - 查詢請求 */
-export interface ASS13070QueryRequest extends BaseQueryRequest {
+export interface ASS13070QueryRequest extends ApiRequest {
   /** 進貨類型（財產類型 1:資產, 2:列管品） */
   DEPRE_YN?: string | null;
   /** 進貨單號 */

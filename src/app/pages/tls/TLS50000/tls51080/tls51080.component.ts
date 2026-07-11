@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { POS2034, Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -13,7 +13,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { POS2034 } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
 
 // 2.5.1.8  分倉資料處理

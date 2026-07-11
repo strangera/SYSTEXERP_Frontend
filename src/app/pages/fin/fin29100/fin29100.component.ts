@@ -96,7 +96,7 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
         // 更新元件內部的總計資料（這部分需要手動更新，因為 map 只負責回傳給 table）
         this.footerData = innerData.Summary;
 
-        // 回傳符合 BaseQueryResponse<FIN29100Data[]> 格式的物件
+        // 回傳符合 ApiResponse<FIN29100Data[]> 格式的物件
         return {
           ...res,
           Data: innerData.Data.map((x: any) => ({

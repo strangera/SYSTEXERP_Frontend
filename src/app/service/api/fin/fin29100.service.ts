@@ -1,12 +1,11 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
-export interface QueryFIN29100Request extends BaseQueryRequest {
+export interface QueryFIN29100Request extends ApiRequest {
   TxnDate_From?: string;     // 匯款/開票/調撥日期起
   TxnDate_To?: string;       // 匯款/開票/調撥日期迄
   BNK_No?: string;           // 銀行代號
@@ -78,8 +77,8 @@ export class FIN29100Service {
 
   constructor(private http: HttpClient) { }
 
-  queryFIN29100(data: QueryFIN29100Request): Observable<BaseQueryResponse<FIN29100Response>> {
-    return this.http.post<BaseQueryResponse<FIN29100Response>>(`${this.apiUrl}/queryFIN29100`, data);
+  queryFIN29100(data: QueryFIN29100Request): Observable<ApiResponse<FIN29100Response[]>> {
+    return this.http.post<ApiResponse<FIN29100Response[]>>(`${this.apiUrl}/queryFIN29100`, data);
   }
 
   exportFIN29100_PDF(data: QueryFIN29100Request): Observable<HttpResponse<Blob>> {

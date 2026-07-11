@@ -32,7 +32,6 @@ import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/mult
 @Component({
   selector: 'app-tls13040',
   templateUrl: './tls13040.component.html',
-  styleUrls: ['./tls13040.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

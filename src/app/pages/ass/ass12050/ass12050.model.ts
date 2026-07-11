@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS12050 採購單驗收作業 - 資料模型
  */
@@ -7,7 +6,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 // ==================== 查詢 Request ====================
 
 /** 採購單驗收查詢條件 */
-export interface QueryASS12050Request extends BaseQueryRequest {
+export interface QueryASS12050Request extends ApiRequest {
   /** 採購單號 */
   SUBPOENA_ID?: string | null;
   /** 品項編號 */

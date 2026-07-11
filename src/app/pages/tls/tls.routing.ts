@@ -234,18 +234,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2j030', loadComponent: () => import('./tls2j030/tls2j030.component').then(m => m.TLS2J030Component), data: { progNo: 'TLS2J030' } },
   // 發票換開作業
   { path: 'tls2j040', loadComponent: () => import('./tls2j040/tls2j040.component').then(m => m.TLS2J040Component), data: { progNo: 'TLS2J040' } },
-  // 餘代卡產卡作業
-  { path: 'tls2k010', loadComponent: () => import('./tls2k010/tls2k010.component').then(m => m.TLS2K010Component), data: { progNo: 'TLS2K010' } },
-  // 餘代卡領卡作業
-  { path: 'tls2k020', loadComponent: () => import('./tls2k020/tls2k020.component').then(m => m.TLS2K020Component), data: { progNo: 'TLS2K020' } },
-  // 餘代卡資料維護作業
-  { path: 'tls2k030', loadComponent: () => import('./tls2k030/tls2k030.component').then(m => m.TLS2K030Component), data: { progNo: 'TLS2K030' } },
-  // 餘代卡交易補登作業
-  { path: 'tls2k040', loadComponent: () => import('./tls2k040/tls2k040.component').then(m => m.TLS2K040Component), data: { progNo: 'TLS2K040' } },
-  // 餘代卡換卡作業
-  { path: 'tls2k050', loadComponent: () => import('./tls2k050/tls2k050.component').then(m => m.TLS2K050Component), data: { progNo: 'TLS2K050' } },
-  // 餘代卡查詢報表
-  { path: 'tls2k060', loadComponent: () => import('./tls2k060/tls2k060.component').then(m => m.TLS2K060Component), data: { progNo: 'TLS2K060' } },
   // 傳票項目之會計科目設定作業_NEW CRU
   { path: 'tls21020cru', loadComponent: () => import('./tls21020-cru/tls21020-cru.component').then(m => m.TLS21020CRUComponent), data: { progNo: 'TLS21020' } },
   // 對帳單備註維護作業 CRU
@@ -290,12 +278,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2j020cru', loadComponent: () => import('./tls2j020-cru/tls2j020-cru.component').then(m => m.TLS2J020CRUComponent), data: { progNo: 'TLS2J020' } },
   // 後台發票換開補登作業 CRU
   { path: 'tls2j030cru', loadComponent: () => import('./tls2j030-cru/tls2j030-cru.component').then(m => m.TLS2J030CRUComponent), data: { progNo: 'TLS2J030' } },
-  // 餘代卡產卡作業 CRU
-  { path: 'tls2k010cru', loadComponent: () => import('./tls2k010-cru/tls2k010-cru.component').then(m => m.TLS2K010CRUComponent), data: { progNo: 'TLS2K010' } },
-  // 餘代卡領卡作業 CRU
-  { path: 'tls2k020cru', loadComponent: () => import('./tls2k020-cru/tls2k020-cru.component').then(m => m.TLS2K020CRUComponent), data: { progNo: 'TLS2K020' } },
-  // 餘代卡換卡作業 CRU
-  { path: 'tls2k050cru', loadComponent: () => import('./tls2k050-cru/tls2k050-cru.component').then(m => m.TLS2K050CRUComponent), data: { progNo: 'TLS2K050' } },
   // 即時業績查詢
   { path: 'tls31010', loadComponent: () => import('./tls31010/tls31010.component').then(m => m.TLS31010Component), data: { progNo: 'TLS31010' } },
   // 各樓層之營業報表

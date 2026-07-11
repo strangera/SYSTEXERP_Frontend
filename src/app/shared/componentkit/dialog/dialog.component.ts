@@ -7,7 +7,6 @@ import { ButtonComponent } from '../button/button.component';
 @Component({
   selector: 'app-dialog',
   templateUrl: './dialog.component.html',
-  styleUrl: './dialog.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DialogModule, PrimeTemplate, ButtonComponent, NgIf]

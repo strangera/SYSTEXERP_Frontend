@@ -1,7 +1,6 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { BaseQueryRequest, BaseQueryResponse } from "@shared/models/api/base-api.interface";
-import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, take } from "rxjs";
 import { environment } from "src/environments/environment";
 
@@ -54,7 +53,7 @@ export interface QueryASS11020Request {
 }
 
 // 查詢 Request
-export interface QueryASS16010Request extends BaseQueryRequest {
+export interface QueryASS16010Request extends ApiRequest {
     INV_ID?: string;   // 盤點單號
 }
 
@@ -84,8 +83,8 @@ export class ASS16010Service {
     constructor(private http: HttpClient) { }
 
     // 查詢
-    queryASS16010(req: QueryASS16010Request): Observable<BaseQueryResponse<ASS16010Data>> {
-        return this.http.post<BaseQueryResponse<ASS16010Data>>(`${this.apiUrl}/queryASS16010`, req);
+    queryASS16010(req: QueryASS16010Request): Observable<ApiResponse<ASS16010Data[]>> {
+        return this.http.post<ApiResponse<ASS16010Data[]>>(`${this.apiUrl}/queryASS16010`, req);
     }
 
     // 新增

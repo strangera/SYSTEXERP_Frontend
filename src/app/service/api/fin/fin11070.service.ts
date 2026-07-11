@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { environment } from '../../../../environments/environment';
 import { Observable, of } from 'rxjs';
 
 // Query request interface for FIN11070
-export interface FIN11070QueryRequest extends BaseQueryRequest {
+export interface FIN11070QueryRequest extends ApiRequest {
   MID: number;                      // 固定為0
   SYS_StoreNo: string;             // 固定為 '10'
   GUI_YYMM: string;                // 申報年月 (YYMM格式)
@@ -52,14 +52,14 @@ export class FIN11070Service {
   constructor(private http: HttpClient) { }
 
   // 查詢空白發票上傳紀錄
-  queryFIN11070(data: FIN11070QueryRequest): Observable<BaseQueryResponse<FIN11070Data>> {
-    return this.http.post<BaseQueryResponse<FIN11070Data>>(`${this.apiUrl}/queryFIN11070`, data);
+  queryFIN11070(data: FIN11070QueryRequest): Observable<ApiResponse<FIN11070Data[]>> {
+    return this.http.post<ApiResponse<FIN11070Data[]>>(`${this.apiUrl}/queryFIN11070`, data);
 
   }
 
   // 寫入產製空白發票
-  insertFIN11070(data: FIN11070InsertRequest): Observable<BaseQueryResponse<FIN11070InsertResponse>> {
-    return this.http.post<BaseQueryResponse<FIN11070InsertResponse>>(`${this.apiUrl}/insertFIN11070`, data);
+  insertFIN11070(data: FIN11070InsertRequest): Observable<ApiResponse<FIN11070InsertResponse[]>> {
+    return this.http.post<ApiResponse<FIN11070InsertResponse[]>>(`${this.apiUrl}/insertFIN11070`, data);
   }
 
   // 下載空白發票檔案

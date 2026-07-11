@@ -17,7 +17,6 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-ass13020',
   templateUrl: './ass13020.component.html',
-  styleUrl: './ass13020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

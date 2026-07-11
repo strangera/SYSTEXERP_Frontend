@@ -1,8 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { IDropdownItem } from "@service/utility/dropDownList.service";
-import { BaseQueryRequest, BaseQueryResponse } from "@shared/models/api/base-api.interface";
-import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
 
@@ -51,7 +50,7 @@ export interface ExecFIN41020Response {
 
 
 // 查詢 Request
-export interface QueryFIN41020Request extends BaseQueryRequest {
+export interface QueryFIN41020Request extends ApiRequest {
     ORG_ID?: string;   // 部門代碼
     AccNo?: string;   // 會計科目
     BudgetYear?: string;   // 年 (YYYY)
@@ -92,8 +91,8 @@ export class FIN41020Service {
     constructor(private http: HttpClient) { }
 
     // 查詢
-    queryFIN41020(req: QueryFIN41020Request): Observable<BaseQueryResponse<FIN41020Data>> {
-        return this.http.post<BaseQueryResponse<FIN41020Data>>(`${this.apiUrl}/queryFIN41020`, req);
+    queryFIN41020(req: QueryFIN41020Request): Observable<ApiResponse<FIN41020Data[]>> {
+        return this.http.post<ApiResponse<FIN41020Data[]>>(`${this.apiUrl}/queryFIN41020`, req);
     }
 
     // 更新

@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS42020
-export interface TLS42020QueryRequest extends BaseQueryRequest {
+export interface TLS42020QueryRequest extends ApiRequest {
   menuType?: string[];             // 菜單類別
   tltNo?: string[];                // 專櫃編號
   tltName?: string[];              // 專櫃名稱
@@ -122,13 +122,13 @@ export class TLS42020Service {
   constructor(private http: HttpClient) { }
 
   // 查詢POS1027M資料表
-  queryTLS42020(data: TLS42020QueryRequest): Observable<BaseQueryResponse<TLS42020Data>> {
-    return this.http.post<BaseQueryResponse<TLS42020Data>>(`${this.apiUrl}/queryTLS42020`, data);
+  queryTLS42020(data: TLS42020QueryRequest): Observable<ApiResponse<TLS42020Data[]>> {
+    return this.http.post<ApiResponse<TLS42020Data[]>>(`${this.apiUrl}/queryTLS42020`, data);
   }
 
   // 查詢POS10271資料表
-  queryTLS42020Detail(data: TLS42020DetailQueryRequest): Observable<BaseQueryResponse<TLS42020DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS42020DetailData>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
+  queryTLS42020Detail(data: TLS42020DetailQueryRequest): Observable<ApiResponse<TLS42020DetailData[]>> {
+    return this.http.post<ApiResponse<TLS42020DetailData[]>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
   }
 
   // 新增POS1027M資料表

@@ -25,7 +25,6 @@ import { ASS11090Data, ASS11090DetailItem, ASS11090DetailRequest, ASS11090Update
 @Component({
   selector: 'app-ass11090-cru',
   templateUrl: './ass11090-cru.component.html',
-  styleUrl: './ass11090-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

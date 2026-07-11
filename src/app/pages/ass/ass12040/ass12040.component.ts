@@ -30,7 +30,6 @@ import {
 @Component({
   selector: 'app-ass12040',
   templateUrl: './ass12040.component.html',
-  styleUrl: './ass12040.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

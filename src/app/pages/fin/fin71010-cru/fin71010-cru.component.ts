@@ -18,7 +18,6 @@ import { FIN71010Data, FIN71010DropdownItem } from '../fin71010/fin71010.model';
 @Component({
   selector: 'app-fin71010-cru',
   templateUrl: './fin71010-cru.component.html',
-  styleUrls: ['./fin71010-cru.component.scss'],
   standalone: true,
   imports: [
     FormsModule,

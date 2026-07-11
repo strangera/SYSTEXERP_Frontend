@@ -47,7 +47,6 @@ interface ResponseData {
 @Component({
   selector: 'app-tls2c020',
   templateUrl: './tls2c020.component.html',
-  styleUrl: './tls2c020.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, CardModule, ScrollPanelModule, TabViewModule,
     TableComponent, ButtonComponent, DropdownComponent, CheckboxModule

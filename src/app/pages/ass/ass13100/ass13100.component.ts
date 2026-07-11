@@ -36,7 +36,6 @@ import {
 @Component({
   selector: 'app-ass13100',
   templateUrl: './ass13100.component.html',
-  styleUrl: './ass13100.component.scss',
   standalone: true,
   imports: [
     CommonModule,

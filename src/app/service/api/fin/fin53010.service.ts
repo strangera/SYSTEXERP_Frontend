@@ -5,7 +5,6 @@ import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInv
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { catchError, defer, finalize, map, Observable, of, take, tap } from 'rxjs';
@@ -141,8 +140,8 @@ export class FIN53010Service {
     private readonly dropDownListService: DropDownListService,
   ) {}
 
-  public loadFIN53010(payload: FIN53010Payload): Observable<BaseQueryResponse<FIN53010Data>> {
-    return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/queryFIN53010`, payload).pipe(
+  public loadFIN53010(payload: FIN53010Payload): Observable<ApiResponse<FIN53010Data[]>> {
+    return this.http.post<ApiResponse<FIN53010Data[]>>(`${apiUrl}/queryFIN53010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN53010結果:', [res])),
     );
@@ -527,9 +526,9 @@ export class FIN53010Service {
     );
   }
 
-  public getFin52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
+  public getFin52030(payload: FIN52030Payload): Observable<ApiResponse<FIN52030Data[]>> {
     this.fin52030Loading.set(!0);
-    return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
+    return this.http.post<ApiResponse<FIN52030Data[]>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
       take(1),
       tap(res => {
         this.voucherTemplateOptions.set(res.Data);

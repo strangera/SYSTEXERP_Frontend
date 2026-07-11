@@ -33,7 +33,6 @@ import {
 @Component({
   selector: 'app-ass16030',
   templateUrl: './ass16030.component.html',
-  styleUrl: './ass16030.component.scss',
   standalone: true,
   imports: [
     NgIf,

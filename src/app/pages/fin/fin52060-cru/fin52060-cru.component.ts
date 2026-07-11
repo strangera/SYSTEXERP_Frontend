@@ -39,7 +39,6 @@ export interface ClassAttr {
 @Component({
   selector: 'app-fin52060-cru',
   templateUrl: './fin52060-cru.component.html',
-  styleUrl: './fin52060-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

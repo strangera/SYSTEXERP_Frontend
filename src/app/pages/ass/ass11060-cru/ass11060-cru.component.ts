@@ -5,8 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { DetailASS11060Response, QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.model';
-import { ASS11060Service } from '../../../service/api/ass/ass11060.service';
+import { ASS11060Service, DetailASS11060Response, QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -18,7 +17,6 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 @Component({
   selector: 'app-ass11060-cru',
   templateUrl: './ass11060-cru.component.html',
-  styleUrl: './ass11060-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

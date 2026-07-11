@@ -1,3 +1,4 @@
+import { SortMeta } from 'primeng/api';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -13,7 +14,6 @@ import {
 import { ASS17020Service } from '@service/api/ass/ass17020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -37,7 +37,6 @@ import {
 @Component({
   selector: 'app-ass17020',
   templateUrl: './ass17020.component.html',
-  styleUrl: './ass17020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -294,7 +293,7 @@ export class ASS17020Component
     const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
     const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
     const sortBy = Array.isArray(body?.SortBy)
-      ? (body?.SortBy as SortOption[])
+      ? (body?.SortBy as SortMeta[])
       : undefined;
 
     const payload: QueryASS17020Request = {

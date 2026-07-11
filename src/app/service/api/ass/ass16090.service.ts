@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 /** 查詢 Request */
-export interface Ass16090QueryRequest extends BaseQueryRequest {
+export interface Ass16090QueryRequest extends ApiRequest {
   MID?: number | null;
   STO_NO?: string | null;
   WH_ID?: string | null;

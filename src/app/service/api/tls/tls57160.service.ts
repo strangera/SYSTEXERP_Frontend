@@ -114,18 +114,10 @@ export class Tls57160Service {
     //  這裡使用 Tls57160QueryResult 介面，它繼承了 ApiResponse 的欄位
     return this.http.post<Tls57160QueryResult>(url, body).pipe(
       map(response => {
-        console.log(response);
-
-        // 將回應格式化為 Tls57160QueryResult 介面
         return {
-          Status: response.Status || '',
-          Error: response.Error || null,
-          Meta: response.Meta || {},
-          Message: response.Message || '',
-          TotalPage: response.TotalPage || 0,
-          TotalCount: response.TotalCount || 0,
-          Data: response.Data || [],   // 確保 Data 至少是空陣列
-          footerData: response.footerData || [], // 確保 footerData 至少是空陣列
+          ...response,
+          Data: response.Data || [],
+          footerData: response.footerData || []
         };
       })
     );

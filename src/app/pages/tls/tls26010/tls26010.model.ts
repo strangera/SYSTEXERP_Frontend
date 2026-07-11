@@ -1,4 +1,4 @@
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 
 /**
@@ -27,7 +27,7 @@ export interface DependentDataQuery {
   ven_no?: string | null; // 廠商編號
 }
 
-export interface TLS26010Query extends BaseQueryRequest {
+export interface TLS26010Query extends ApiRequest {
   building_nos?: string[];
   floor_nos?: string[];
   area_nos?: string[];
@@ -113,7 +113,7 @@ export interface TLS26010Data {
   talent_list: string[];
 }
 
-export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010Detail>, 'Data'> {
+export interface TLS26010DetailResponse extends Omit<ApiResponse<TLS26010Detail[]>, 'Data'> {
   Data: TLS26010Detail;
 }
 

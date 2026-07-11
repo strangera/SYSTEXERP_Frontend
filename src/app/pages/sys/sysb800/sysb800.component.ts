@@ -29,7 +29,6 @@ interface CategoryItem {
 @Component({
     selector: 'app-sysb800',
     templateUrl: './sysb800.component.html',
-    styleUrl: './sysb800.component.scss',
     standalone: true,
     imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })

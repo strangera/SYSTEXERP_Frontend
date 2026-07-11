@@ -33,7 +33,6 @@ interface RuleError {
 @Component({
   selector: 'app-fin13010-cru',
   templateUrl: './fin13010-cru.component.html',
-  styleUrls: ['./fin13010-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

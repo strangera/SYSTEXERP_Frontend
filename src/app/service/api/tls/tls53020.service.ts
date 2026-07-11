@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 
 // 查詢參數介面
-export interface TLS53020QueryParams extends BaseQueryRequest {
+export interface TLS53020QueryParams extends ApiRequest {
   PST_No?: string | null; // 盤點單編號
   HOS_No?: string[] | null; // 倉別代碼
   LOGO_No?: string[] | null; // 品牌代碼
@@ -44,8 +44,8 @@ export class TLS53020Service {
     private http: HttpClient,
   ) { }
 
-  queryTLS53020(data: TLS53020QueryParams): Observable<BaseQueryResponse<TLS53020Data>> {
-    return this.http.post<BaseQueryResponse<TLS53020Data>>(`${this.apiUrl}/TLS0000/TLS5000/queryTLS53020`, data);
+  queryTLS53020(data: TLS53020QueryParams): Observable<ApiResponse<TLS53020Data[]>> {
+    return this.http.post<ApiResponse<TLS53020Data[]>>(`${this.apiUrl}/TLS0000/TLS5000/queryTLS53020`, data);
   }
 
   uploadTLS53020(formData: FormData): Observable<any> {

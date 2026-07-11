@@ -1,9 +1,8 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 // ==================== Request 介面 ====================
 
 /** 移轉交接表查詢 */
-export interface QueryASS13050Request extends BaseQueryRequest {
+export interface QueryASS13050Request extends ApiRequest {
   /** 移轉日期 */
   TRANSFER_DATE?: string | null;
   /** 新保管單位 */

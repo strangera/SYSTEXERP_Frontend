@@ -1,14 +1,13 @@
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS11040 品項資料維護作業 - 資料模型
  */
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
 /** Request 介面 */
 
 /**
  * 品項資料查詢
  */
-export interface QueryASS11040Request extends BaseQueryRequest {
+export interface QueryASS11040Request extends ApiRequest {
   /** 品項代碼(可模糊) */
   GOODS_ID?: string | null;
   /** 品項名稱(關鍵字) */

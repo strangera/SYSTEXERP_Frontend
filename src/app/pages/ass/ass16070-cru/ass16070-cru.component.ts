@@ -51,7 +51,6 @@ import { Column } from '@others/component/table2/table2.model';
 @Component({
   selector: 'app-ass16070-cru',
   templateUrl: './ass16070-cru.component.html',
-  styleUrl: './ass16070-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -51,7 +51,6 @@ interface BankDropdownOption {
 @Component({
   selector: 'app-fin26010',
   templateUrl: './fin26010.component.html',
-  styleUrls: ['./fin26010.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

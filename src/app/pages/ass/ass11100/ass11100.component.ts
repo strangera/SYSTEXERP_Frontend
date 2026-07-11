@@ -20,7 +20,6 @@ import { ASS11100Data, ASS11100QueryRequest } from './ass11100.model';
 @Component({
   selector: 'app-ass11100',
   templateUrl: './ass11100.component.html',
-  styleUrl: './ass11100.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

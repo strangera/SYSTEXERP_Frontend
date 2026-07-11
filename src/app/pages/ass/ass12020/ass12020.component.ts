@@ -31,7 +31,6 @@ import {
 @Component({
   selector: 'app-ass12020',
   templateUrl: './ass12020.component.html',
-  styleUrl: './ass12020.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

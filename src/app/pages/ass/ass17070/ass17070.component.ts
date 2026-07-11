@@ -23,7 +23,6 @@ import { QueryASS17070DataWrapper, QueryASS17070Detail, QueryASS17070Request } f
 @Component({
   selector: 'app-ass17070',
   templateUrl: './ass17070.component.html',
-  styleUrl: './ass17070.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -1,13 +1,13 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // --- Interfaces ---
 
 /** 查詢專櫃暫存傳票查詢作業 Request */
-export interface QueryTLS2C040Request extends BaseQueryRequest {
+export interface QueryTLS2C040Request extends ApiRequest {
   SrcSheetTypeList?: string[];   // 傳票種類
   VouDate_Start?: string;        // 傳票日期(起)
   VouDate_End?: string;          // 傳票日期(迄)
@@ -16,7 +16,7 @@ export interface QueryTLS2C040Request extends BaseQueryRequest {
 }
 
 /** 應收/應付明細查詢 Request */
-export interface QueryTLS2C040_SubDetailRequest extends BaseQueryRequest {
+export interface QueryTLS2C040_SubDetailRequest extends ApiRequest {
   id: number;
 }
 
@@ -44,8 +44,8 @@ export class TLS2C040Service {
    * 1. 查詢主檔與分錄明細 (TLS2C040)
    * 將回傳結構扁平化，並對 GLS6002 分錄進行預設排序
    */
-  queryTLS2C040(req: QueryTLS2C040Request): Observable<BaseQueryResponse<any>> {
-    return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/queryTLS2C040`, req).pipe(
+  queryTLS2C040(req: QueryTLS2C040Request): Observable<ApiResponse<any[]>> {
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryTLS2C040`, req).pipe(
       map(response => {
         if (response.Data && Array.isArray(response.Data)) {
           response.Data = response.Data.map((item: any) => ({

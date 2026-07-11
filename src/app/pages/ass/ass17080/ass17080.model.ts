@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** queryASS17080 Request */
-export interface QueryASS17080Request extends BaseQueryRequest {
+export interface QueryASS17080Request extends ApiRequest {
   /** 商場代碼 */
   MID?: string | null;
   /** 分店代號 */

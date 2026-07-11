@@ -20,7 +20,6 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
 @Component({
   selector: 'app-fin15060',
   templateUrl: './fin15060.component.html',
-  styleUrl: './fin15060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

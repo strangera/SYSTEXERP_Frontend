@@ -1,5 +1,4 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /**
  * ASS11100 倉別設定作業 - 資料模型（對齊 QueryASS11100Response）
  */
@@ -11,9 +10,9 @@ export interface ASS11100Data {
 }
 
 /**
- * ASS11100 查詢請求參數（繼承 BaseQueryRequest，不帶 STO_NO）
+ * ASS11100 查詢請求參數（繼承 ApiRequest，不帶 STO_NO）
  */
-export interface ASS11100QueryRequest extends BaseQueryRequest {
+export interface ASS11100QueryRequest extends ApiRequest {
   WH_ID?: string;       // 倉別代號
   WH_NAME?: string;     // 倉別
   ATT_ORG_ID?: string;  // 所屬部門代號

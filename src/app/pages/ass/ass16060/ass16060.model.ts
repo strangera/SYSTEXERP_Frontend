@@ -1,7 +1,6 @@
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 /** 領用退料作業 共用查詢條件 Request（queryASS16060M 與 queryASS16060 共用） */
-export interface ASS16060QueryRequest extends BaseQueryRequest {
+export interface ASS16060QueryRequest extends ApiRequest {
   WH_ID?: string | null;
   /** 退回單狀態 SYS1000: AM_MTRETURNM_STATUS */
   MTRETURNM_STATUS?: string | null;

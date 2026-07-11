@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from './tls25030.service';
 
 // --- 原有 Interfaces ---
-export interface QueryTLS55060Request extends BaseQueryRequest {
+export interface QueryTLS55060Request extends ApiRequest {
   id?: number;
   SrcSheetTypeList?: string[];
   VouDate_Start?: string;
@@ -116,7 +115,7 @@ export type TLS55060QueryItem = TLS55060GLS6001 & {
 // --- 新增：TLS2000 相關 Interfaces (GLS6004 / GLS6005) ---
 
 /** 專櫃暫存傳票查詢 請求參數 (通用) */
-export interface QueryTLS2C040Request extends BaseQueryRequest {
+export interface QueryTLS2C040Request extends ApiRequest {
   id?: number;
 }
 
@@ -186,8 +185,8 @@ export class TLS55060Service {
   constructor(private http: HttpClient) { }
 
   /** 原有的 TLS55060 查詢 */
-  queryTLS55060(req: QueryTLS55060Request): Observable<BaseQueryResponse<TLS55060QueryItem>> {
-    return this.http.post<BaseQueryResponse<QueryTLS55060RawItem>>(`${this.apiUrl}/queryTLS55060`, req).pipe(
+  queryTLS55060(req: QueryTLS55060Request): Observable<ApiResponse<TLS55060QueryItem[]>> {
+    return this.http.post<ApiResponse<QueryTLS55060RawItem[]>>(`${this.apiUrl}/queryTLS55060`, req).pipe(
       map(response => {
         const data = Array.isArray(response.Data)
           ? response.Data.map(item => ({

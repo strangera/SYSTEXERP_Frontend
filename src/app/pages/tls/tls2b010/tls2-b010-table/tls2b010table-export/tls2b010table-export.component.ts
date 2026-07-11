@@ -23,7 +23,6 @@ export interface TLS2B010TableExport {
 @Component({
     selector: 'app-tls2b010table-export',
     templateUrl: './tls2b010table-export.component.html',
-    styleUrl: './tls2b010table-export.component.scss',
     standalone: true,
     imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
 })

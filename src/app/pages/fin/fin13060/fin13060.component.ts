@@ -46,7 +46,6 @@ interface SortMeta { field: string; order: 1 | -1 | number }
     TableReportComponent,
   ],
   templateUrl: './fin13060.component.html',
-  styleUrls: ['./fin13060.component.scss'],
 })
 export class FIN13060Component extends BasicQueryPageComponent<any> implements OnInit, AfterViewInit {
   totalRecords = 0;

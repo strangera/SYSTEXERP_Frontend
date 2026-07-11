@@ -1,11 +1,11 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 // --- FIN12020 查詢參數 Model 定義 ---
-export interface FIN12020QueryRequest extends BaseQueryRequest {
+export interface FIN12020QueryRequest extends ApiRequest {
   GUI_YYMM_start?: string;        // 發票年月(起)
   GUI_YYMM_end?: string;          // 發票年月(訖)
   GUI_TRACK?: string;             // 字軌
@@ -43,7 +43,7 @@ export class FIN12020Service {
   constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN12020(params: FIN12020QueryRequest): Observable<BaseQueryResponse<FIN12020Data>> {
-    return this.http.post<BaseQueryResponse<FIN12020Data>>(`${this.apiUrl}/queryFIN12020`, params);
+  queryFIN12020(params: FIN12020QueryRequest): Observable<ApiResponse<FIN12020Data[]>> {
+    return this.http.post<ApiResponse<FIN12020Data[]>>(`${this.apiUrl}/queryFIN12020`, params);
   }
 }

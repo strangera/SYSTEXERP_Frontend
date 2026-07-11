@@ -26,7 +26,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 @Component({
   selector: 'app-fin11090',
   templateUrl: './fin11090.component.html',
-  styleUrl: './fin11090.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

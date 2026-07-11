@@ -1,3 +1,4 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,7 +14,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ASS21060Service } from '../../../service/api/ass/ass21060.service';
 
 import { AccordionModule } from 'primeng/accordion';
@@ -177,7 +177,7 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
           untilDestroyed(this),
           finalize(() => this.loading = false)
         )
-        .subscribe((res: BaseQueryResponse<ASS21060Data>) => {
+        .subscribe((res: ApiResponse<ASS21060Data[]>) => {
           this.data = res.Data ?? [];
           this.totalRecords = res.TotalCount ?? 0;
           this.lastQueryBody = body;

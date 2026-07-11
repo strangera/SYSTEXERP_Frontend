@@ -7,7 +7,6 @@ import { MultiLocationFilterService } from './multi-location-filter.service';
 @Component({
   selector: 'app-multi-location-filter',
   templateUrl: './multi-location-filter.component.html',
-  styleUrls: ['./multi-location-filter.component.scss'],
   standalone: true,
   imports: [DropdownComponent, MultiSelectComponent],
 })

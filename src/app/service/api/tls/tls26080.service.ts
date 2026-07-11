@@ -2,15 +2,18 @@ import { formatDate } from '@angular/common';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
+import { IDropdownItem, Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { filter, finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+export const enum ApprovalStatus {
+  未核准 = '0',
+  已核准 = '1',
+  刪除 = '9',
+}
 
 const apiUrl: string = environment.ApiUrl;
 
@@ -82,7 +85,7 @@ export class TLS26080Service {
       return;
     }
     this.capItemsLoading.set(true);
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
+    this.http.post<ApiResponse<IDropdownItem[]>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
       take(1),
       tap(res => {
         this.capItems.set(res.Data?.map(item => ({ value: item.No, label: item.Name })) || []);
@@ -108,29 +111,29 @@ export class TLS26080Service {
   }
 
   /** 查詢資料 */
-  public loadTLS26080(query: TLS26080Query): Observable<BaseQueryResponse<TLS26080Data>> {
-    return this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
+  public loadTLS26080(query: TLS26080Query): Observable<ApiResponse<TLS26080Data[]>> {
+    return this.http.post<ApiResponse<TLS26080Data[]>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
       tap(res => this.logger.debug(`TLS26080查詢結果:`, [res]))
     );
   };
 
-  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
-    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+  public insertTLS26080(data: TLS26080InsertPayload): Observable<ApiResponse<any[]>> {
+    return this.http.post<ApiResponse<any[]>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
       tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
     );
   };
 
-  public updateTLS26080(query: TLS26080UpdatePayload): Observable<BaseQueryResponse<TLS26080Data>> {
-    return this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26080`, query).pipe(
+  public updateTLS26080(query: TLS26080UpdatePayload): Observable<ApiResponse<TLS26080Data[]>> {
+    return this.http.post<ApiResponse<TLS26080Data[]>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26080`, query).pipe(
       take(1),
       tap(res => this.logger.debug(`TLS26080更新結果:`, [res]))
     );
   };
 
-  public deleteTLS26080(podNoList: string[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { podNoList }).pipe(
+  public deleteTLS26080(podNoList: string[]): Observable<ApiResponse<unknown[]>> {
+    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { podNoList }).pipe(
       take(1)
     );
   }
@@ -147,16 +150,16 @@ export class TLS26080Service {
   }
 
   /** 查詢環友資料 */
-  public loadCampaignData(query: QueryCampaignRequest = {}): Observable<BaseQueryResponse<CampaignData>> {
-    return this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
+  public loadCampaignData(query: QueryCampaignRequest = {}): Observable<ApiResponse<CampaignData[]>> {
+    return this.http.post<ApiResponse<CampaignData[]>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
       take(1),
       tap(res => this.logger.debug(`環友資料查詢結果:`, [res]))
     );
   };
 
   /** 專櫃活動 */
-  public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080DetailTable>> {
-    return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query, pageSize: 1 }).pipe(
+  public loadTLS26080Detail(query: string): Observable<ApiResponse<TLS26080DetailTable[]>> {
+    return this.http.post<ApiResponse<TLS26080DetailTable[]>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query, pageSize: 1 }).pipe(
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
     );
@@ -173,7 +176,7 @@ export class TLS26080Service {
   /** 核准或反核准專櫃活動 */
   public loadApproval(data: TLS26080EditTable): Observable<{ newStatus: ApprovalStatus; }> {
     const api = this.approvalCheck(data);
-    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(`${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }).pipe(
+    return this.http.post<ApiResponse<{ Status: ApprovalStatus; }[]>>(`${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }).pipe(
       take(1),
       filter(res => res.Status === '0000'),
       map(() => ({
@@ -293,15 +296,15 @@ export class TLS26080Service {
     );
   }
 
-  public approveApprovalTLS26080(payload: TLS26080EditTable[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/approveTLS26080`, { payload }).pipe(
+  public approveApprovalTLS26080(payload: TLS26080EditTable[]): Observable<ApiResponse<unknown[]>> {
+    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/approveTLS26080`, { payload }).pipe(
       take(1),
       finalize(() => this.logger.debug(`核准:`, [payload]))
     );
   }
 
-  public revokeApprovalTLS26080(payload: TLS26080EditTable[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/revokeApprovalTLS26080`, { payload }).pipe(
+  public revokeApprovalTLS26080(payload: TLS26080EditTable[]): Observable<ApiResponse<unknown[]>> {
+    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/revokeApprovalTLS26080`, { payload }).pipe(
       take(1),
       finalize(() => this.logger.debug(`反核准:`, [payload]))
     );

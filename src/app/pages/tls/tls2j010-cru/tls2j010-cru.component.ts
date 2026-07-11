@@ -14,7 +14,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-tls2j010-cru',
   templateUrl: './tls2j010-cru.component.html',
-  styleUrl: './tls2j010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
 })

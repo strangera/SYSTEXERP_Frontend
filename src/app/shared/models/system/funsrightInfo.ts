@@ -1,13 +1,3 @@
-export enum PermissionsInfo {
-  add = 'ADD',
-  delete = 'DELETE',
-  edit = 'EDIT',
-  export = 'EXPORT',
-  print = 'PRINT',
-  query = 'QUERY',
-  report = 'REPORT',
-}
-
 export interface BehaviorType {
   function_code: string,
   function_desc: string,

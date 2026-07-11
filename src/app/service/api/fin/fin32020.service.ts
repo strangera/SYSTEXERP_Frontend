@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -38,7 +37,7 @@ export interface Fin32020DetailRow {
 }
 
 /** 查詢 Request：對應 queryFIN32020Request */
-export interface Fin32020QueryRequest extends BaseQueryRequest {
+export interface Fin32020QueryRequest extends ApiRequest {
   ADJ_No?: string | null;
   ADJ_Date_From?: string | null;
   ADJ_Date_To?: string | null;
@@ -68,7 +67,7 @@ export interface Fin32020AdjAccRow {
 }
 
 /** ✅ 調整科目查詢 Request（你說的新 body） */
-export interface Fin32020GetAdjAccRequest extends BaseQueryRequest {
+export interface Fin32020GetAdjAccRequest extends ApiRequest {
   CAR_AccNo?: string | null;
   CAR_type?: string | null;
 }
@@ -84,7 +83,7 @@ export interface Fin32020ARSRow {
 }
 
 /** 查詢應收帳款資料 Request：對應 queryFIN32020GetARSRequest */
-export interface Fin32020GetARSRequest extends BaseQueryRequest {
+export interface Fin32020GetARSRequest extends ApiRequest {
   VEN_No?: string | null;
   ARS_Date_From?: string | null;
   ARS_Date_To?: string | null;

@@ -18,7 +18,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 @Component({
   selector: 'app-ass16010',
   templateUrl: './ass16010.component.html',
-  styleUrl: './ass16010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule, ButtonModule, TableReportComponent]
 })

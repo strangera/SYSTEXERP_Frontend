@@ -1,10 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-export interface QueryFIN62040Request extends BaseQueryRequest {
+export interface QueryFIN62040Request extends ApiRequest {
   StartDate?: string;
   EndDate?: string;
 }
@@ -29,8 +29,8 @@ export class FIN62040Service {
 
   constructor(private http: HttpClient) {}
 
-  queryFIN62040(req: QueryFIN62040Request): Observable<BaseQueryResponse<FIN62040Data>> {
-    return this.http.post<BaseQueryResponse<FIN62040Data>>(
+  queryFIN62040(req: QueryFIN62040Request): Observable<ApiResponse<FIN62040Data[]>> {
+    return this.http.post<ApiResponse<FIN62040Data[]>>(
       `${this.apiUrl}/queryFIN62040`,
       req
     );

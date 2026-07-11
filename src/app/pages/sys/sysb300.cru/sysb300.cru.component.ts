@@ -16,7 +16,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-sysb300.cru',
   templateUrl: './sysb300.cru.component.html',
-  styleUrl: './sysb300.cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

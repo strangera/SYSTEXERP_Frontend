@@ -18,7 +18,6 @@ import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.model';
 @Component({
   selector: 'app-sysb300',
   templateUrl: './sysb300.component.html',
-  styleUrl: './sysb300.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

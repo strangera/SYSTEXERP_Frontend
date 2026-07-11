@@ -21,7 +21,6 @@ import { FIN25020Data } from '../fin25020/fin25020.component';
 @Component({
   selector: 'app-fin25020-cru',
   templateUrl: './fin25020-cru.component.html',
-  styleUrl: './fin25020-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

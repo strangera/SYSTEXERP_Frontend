@@ -1,11 +1,10 @@
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-
 // 1. 修正查詢參數 Interface，使其與後端 DTO 結構一致
-export interface TLS32010QueryRequest extends BaseQueryRequest {
+export interface TLS32010QueryRequest extends ApiRequest {
   // 日期條件
   DateFrom: string | null;  // 統一使用 DateFrom
   DateTo: string | null;    // 統一使用 DateTo
@@ -64,8 +63,8 @@ export class TLS32010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢櫃位營業報表資料
-  queryTLS32010(data: TLS32010QueryRequest): Observable<BaseQueryResponse<TLS32010Data>> {
-    return this.http.post<BaseQueryResponse<TLS32010Data>>(this.apiUrl + '/queryTLS32010', data);
+  queryTLS32010(data: TLS32010QueryRequest): Observable<ApiResponse<TLS32010Data[]>> {
+    return this.http.post<ApiResponse<TLS32010Data[]>>(this.apiUrl + '/queryTLS32010', data);
   }
 
   // 匯出 PDF

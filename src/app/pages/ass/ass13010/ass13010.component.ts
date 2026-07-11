@@ -30,7 +30,6 @@ import { DeleteASS13010Request, ExportPDFASS13010Request, QueryASS13010Request, 
 @Component({
   selector: 'app-ass13010',
   templateUrl: './ass13010.component.html',
-  styleUrl: './ass13010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, ButtonModule, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
 })

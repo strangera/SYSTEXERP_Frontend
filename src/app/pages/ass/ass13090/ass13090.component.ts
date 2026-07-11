@@ -76,7 +76,6 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
 @Component({
   selector: 'app-ass13090',
   templateUrl: './ass13090.component.html',
-  styleUrl: './ass13090.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

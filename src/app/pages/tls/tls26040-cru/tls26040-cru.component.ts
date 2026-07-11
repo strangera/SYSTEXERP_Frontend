@@ -25,7 +25,6 @@ import { Column, formatToSixDigits } from '../../../shared/componentkit/table/ta
 @Component({
   selector: 'app-tls26040-cru',
   templateUrl: './tls26040-cru.component.html',
-  styleUrl: './tls26040-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,

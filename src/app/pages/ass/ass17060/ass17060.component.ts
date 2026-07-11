@@ -24,7 +24,6 @@ import { QueryASS17060DetailRow, QueryASS17060Request } from './ass17060.model';
 @Component({
   selector: 'app-ass17060',
   templateUrl: './ass17060.component.html',
-  styleUrl: './ass17060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

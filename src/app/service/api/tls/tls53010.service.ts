@@ -1,12 +1,11 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS53010
-export interface TLS53010QueryRequest extends BaseQueryRequest {
+export interface TLS53010QueryRequest extends ApiRequest {
   PST_No?: string;              // 盤點單編號:C+倉別+YYYYMM+SSSS
   HOS_No?: string[];             // 倉別代碼 (陣列)
   LOGO_No?: string[];           // 品牌代碼 (陣列)
@@ -120,7 +119,7 @@ export interface TLS53010UpdateRequest {
 }
 
 // 查詢POS2004資料表 Request
-export interface QueryTLS53010POS2004Request extends BaseQueryRequest {
+export interface QueryTLS53010POS2004Request extends ApiRequest {
   LOGO_No: string;         // 品牌代碼 (必填)
   HOS_No?: string;         // 倉別代碼
   KeyWord?: string;        // 關鍵字
@@ -159,8 +158,8 @@ export class TLS53010Service {
   constructor(private http: HttpClient) { }
 
   // 查詢盤點單
-  queryTLS53010(data: TLS53010QueryRequest): Observable<BaseQueryResponse<TLS53010Data>> {
-    return this.http.post<BaseQueryResponse<TLS53010Data>>(`${this.apiUrl}/queryTLS53010`, data);
+  queryTLS53010(data: TLS53010QueryRequest): Observable<ApiResponse<TLS53010Data[]>> {
+    return this.http.post<ApiResponse<TLS53010Data[]>>(`${this.apiUrl}/queryTLS53010`, data);
   }
 
   // 新增盤點單 (新增全品項)
@@ -200,8 +199,8 @@ export class TLS53010Service {
   }
 
   // 查詢POS2004資料表
-  queryTLS53010POS2004(data: QueryTLS53010POS2004Request): Observable<BaseQueryResponse<POS2004Info>> {
-    return this.http.post<BaseQueryResponse<POS2004Info>>(`${this.apiUrl}/queryTLS53010_POS2004`, data);
+  queryTLS53010POS2004(data: QueryTLS53010POS2004Request): Observable<ApiResponse<POS2004Info[]>> {
+    return this.http.post<ApiResponse<POS2004Info[]>>(`${this.apiUrl}/queryTLS53010_POS2004`, data);
   }
 
   // 查詢盤點單明細
@@ -218,7 +217,7 @@ export class TLS53010Service {
   }
 
   // 查詢品牌對應倉別
-  queryLOGOaccorHOS(data: QueryLOGOaccorHOSRequest): Observable<BaseQueryResponse<QueryLOGOaccorHOSResponse>> {
-    return this.http.post<BaseQueryResponse<QueryLOGOaccorHOSResponse>>(`${this.apiUrl}/queryLOGOaccorHOS`, data);
+  queryLOGOaccorHOS(data: QueryLOGOaccorHOSRequest): Observable<ApiResponse<QueryLOGOaccorHOSResponse[]>> {
+    return this.http.post<ApiResponse<QueryLOGOaccorHOSResponse[]>>(`${this.apiUrl}/queryLOGOaccorHOS`, data);
   }
 }

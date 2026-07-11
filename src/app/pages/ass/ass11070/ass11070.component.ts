@@ -24,7 +24,6 @@ import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
 @Component({
   selector: 'app-ass11070',
   templateUrl: './ass11070.component.html',
-  styleUrl: './ass11070.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

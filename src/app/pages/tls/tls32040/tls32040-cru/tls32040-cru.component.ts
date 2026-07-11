@@ -1,8 +1,8 @@
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
@@ -100,7 +100,7 @@ export class Tls32040CRUComponent implements OnChanges {
     this.loading = true;
     this.tls32040Service.queryTLS32040Detail(request)
       .pipe(finalize(() => this.loading = false))
-      .subscribe((res: BaseQueryResponse<TLS32040DetailResponse>) => {
+      .subscribe((res: ApiResponse<TLS32040DetailResponse[]>) => {
         this.data = res.Data ?? [];
         this.totalRecords = (res.TotalCount && res.TotalCount > 0) ? res.TotalCount : (this.data?.length ?? 0);
       });
