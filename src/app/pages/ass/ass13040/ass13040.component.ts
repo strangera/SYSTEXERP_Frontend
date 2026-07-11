@@ -27,7 +27,6 @@ import { ASS13040QueryRequest, ASS13040QueryRow } from './ass13040.model';
 @Component({
   selector: 'app-ass13040',
   templateUrl: './ass13040.component.html',
-  styleUrl: './ass13040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -24,7 +24,6 @@ import { ASS13110QueryRequest, ASS13110Row } from './ass13110.model';
 @Component({
   selector: 'app-ass13110',
   templateUrl: './ass13110.component.html',
-  styleUrl: './ass13110.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

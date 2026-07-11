@@ -20,7 +20,6 @@ import { apiOption } from '../../../shared/models/tls/tls000.model';
 @Component({
   selector: 'app-sysb400',
   templateUrl: './sysb400.component.html',
-  styleUrls: ['./sysb400.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

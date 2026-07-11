@@ -36,7 +36,6 @@ interface SortItem {
 @Component({
   selector: 'app-fin34030',
   templateUrl: './fin34030.component.html',
-  styleUrl: './fin34030.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

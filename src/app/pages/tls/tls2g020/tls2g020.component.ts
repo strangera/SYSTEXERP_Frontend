@@ -18,7 +18,6 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 @Component({
   selector: 'app-tls2g020',
   templateUrl: './tls2g020.component.html',
-  styleUrl: './tls2g020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

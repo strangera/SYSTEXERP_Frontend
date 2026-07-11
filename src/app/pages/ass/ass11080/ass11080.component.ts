@@ -18,7 +18,6 @@ import { ASS11080Data, ASS11080QueryDataItem, ASS11080UpdateItem, ASS11080Update
 @Component({
   selector: 'app-ass11080',
   templateUrl: './ass11080.component.html',
-  styleUrl: './ass11080.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

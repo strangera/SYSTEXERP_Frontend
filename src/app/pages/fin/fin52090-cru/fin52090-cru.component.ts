@@ -16,7 +16,6 @@ import { FIN52090Insert, FIN52090UpdateRequest } from '../fin52090/fin52090.mode
 @Component({
   selector: 'app-fin52090-cru',
   templateUrl: './fin52090-cru.component.html',
-  styleUrl: './fin52090-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,

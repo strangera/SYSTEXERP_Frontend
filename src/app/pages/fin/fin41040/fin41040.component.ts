@@ -15,7 +15,6 @@ import { Fin41040Service } from './../../../service/api/fin/fin41040.service';
 @Component({
   selector: 'app-fin41040',
   templateUrl: './fin41040.component.html',
-  styleUrl: './fin41040.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

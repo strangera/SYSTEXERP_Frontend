@@ -41,7 +41,6 @@ interface SortItem { field: string; order: number }
 @Component({
   selector: 'app-fin34010',
   templateUrl: './fin34010.component.html',
-  styleUrl: './fin34010.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

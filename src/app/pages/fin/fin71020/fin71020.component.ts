@@ -18,7 +18,6 @@ import { FIN71020Data } from './fin71020.model';
 @Component({
   selector: 'app-fin71020',
   templateUrl: './fin71020.component.html',
-  styleUrl: './fin71020.component.scss',
   standalone: !0,
   imports: [
     AccordionModule,

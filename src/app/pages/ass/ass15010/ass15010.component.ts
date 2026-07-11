@@ -29,7 +29,6 @@ import { distinctUntilChanged, finalize } from 'rxjs';
 @Component({
   selector: 'app-ass15010',
   templateUrl: './ass15010.component.html',
-  styleUrl: './ass15010.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

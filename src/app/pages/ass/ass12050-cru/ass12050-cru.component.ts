@@ -33,7 +33,6 @@ import { concat, finalize, last, tap } from 'rxjs';
 @Component({
   selector: 'app-ass12050-cru',
   templateUrl: './ass12050-cru.component.html',
-  styleUrl: './ass12050-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

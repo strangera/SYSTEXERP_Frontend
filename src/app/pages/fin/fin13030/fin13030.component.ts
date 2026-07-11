@@ -50,7 +50,6 @@ export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padS
 @Component({
   selector: 'app-fin13030',
   templateUrl: './fin13030.component.html',
-  styleUrl: './fin13030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

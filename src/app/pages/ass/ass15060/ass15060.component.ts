@@ -49,7 +49,6 @@ export interface ass15060 {
 @Component({
   selector: 'app-ass15060',
   templateUrl: './ass15060.component.html',
-  styleUrl: './ass15060.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

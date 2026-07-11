@@ -21,7 +21,6 @@ import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/as
 @Component({
   selector: 'app-ass14010',
   templateUrl: './ass14010.component.html',
-  styleUrl: './ass14010.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

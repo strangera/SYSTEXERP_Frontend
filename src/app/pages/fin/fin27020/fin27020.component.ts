@@ -19,7 +19,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin27020',
   templateUrl: './fin27020.component.html',
-  styleUrl: './fin27020.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })

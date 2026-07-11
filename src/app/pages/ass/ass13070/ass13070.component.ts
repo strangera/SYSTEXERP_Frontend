@@ -25,7 +25,6 @@ import { ASS13070QueryRequest, ASS13070QueryRow } from './ass13070.model';
 @Component({
   selector: 'app-ass13070',
   templateUrl: './ass13070.component.html',
-  styleUrl: './ass13070.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

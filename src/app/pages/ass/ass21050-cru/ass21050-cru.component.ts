@@ -20,7 +20,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-ass21050-cru',
   templateUrl: './ass21050-cru.component.html',
-  styleUrl: './ass21050-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })

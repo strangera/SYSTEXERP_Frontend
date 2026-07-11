@@ -19,7 +19,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-tls2k020-cru',
   templateUrl: './tls2k020-cru.component.html',
-  styleUrl: './tls2k020-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })

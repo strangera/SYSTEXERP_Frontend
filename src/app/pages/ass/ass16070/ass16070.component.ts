@@ -55,7 +55,6 @@ interface SortItem {
 @Component({
   selector: 'app-ass16070',
   templateUrl: './ass16070.component.html',
-  styleUrl: './ass16070.component.scss',
   standalone: true,
   imports: [
     CommonModule,

@@ -32,7 +32,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-tls13030',
   templateUrl: './tls13030.component.html',
-  styleUrls: ['./tls13030.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

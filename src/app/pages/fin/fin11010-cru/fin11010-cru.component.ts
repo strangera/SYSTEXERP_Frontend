@@ -18,7 +18,6 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
 @Component({
   selector: 'app-fin11010-cru',
   templateUrl: './fin11010-cru.component.html',
-  styleUrl: './fin11010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,

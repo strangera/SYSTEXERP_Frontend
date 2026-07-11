@@ -28,7 +28,6 @@ import {
 @Component({
   selector: 'app-ass16050-cru',
   templateUrl: './ass16050-cru.component.html',
-  styleUrls: ['./ass16050-cru.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

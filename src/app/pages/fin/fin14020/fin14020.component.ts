@@ -40,7 +40,6 @@ export interface clearResponse {
 @Component({
   selector: 'app-fin14020',
   templateUrl: './fin14020.component.html',
-  styleUrl: './fin14020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

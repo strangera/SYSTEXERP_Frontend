@@ -20,7 +20,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 @Component({
   selector: 'app-tls2k040',
   templateUrl: './tls2k040.component.html',
-  styleUrl: './tls2k040.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })

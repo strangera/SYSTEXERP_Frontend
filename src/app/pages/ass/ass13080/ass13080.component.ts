@@ -35,7 +35,6 @@ import {
 @Component({
   selector: 'app-ass13080',
   templateUrl: './ass13080.component.html',
-  styleUrl: './ass13080.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

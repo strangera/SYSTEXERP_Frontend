@@ -41,7 +41,6 @@ import { Fin26010Service } from '../../../service/api/fin/fin26010.service';
 @Component({
   selector: 'app-fin64010',
   templateUrl: './fin64010.component.html',
-  styleUrls: ['./fin64010.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

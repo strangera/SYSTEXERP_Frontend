@@ -25,7 +25,6 @@ import {
 @Component({
   selector: 'app-ass13070-cru',
   templateUrl: './ass13070-cru.component.html',
-  styleUrl: './ass13070-cru.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

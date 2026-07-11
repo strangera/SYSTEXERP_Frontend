@@ -44,7 +44,6 @@ const DETAIL_COLUMNS: Column[] = [
 @Component({
   selector: 'app-fin72030',
   templateUrl: './fin72030.component.html',
-  styleUrl: './fin72030.component.scss',
   standalone: true,
   imports: [
     CommonModule,

@@ -15,7 +15,6 @@ import { Sysb500m } from '../../../shared/models/sys/sysb000.model';
 @Component({
   selector: 'app-sysb500',
   templateUrl: './sysb500.component.html',
-  styleUrl: './sysb500.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

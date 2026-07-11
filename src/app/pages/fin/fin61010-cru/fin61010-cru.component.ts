@@ -20,7 +20,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin61010-cru',
   templateUrl: './fin61010-cru.component.html',
-  styleUrl: './fin61010-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule,

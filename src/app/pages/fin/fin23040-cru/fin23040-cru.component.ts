@@ -20,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-fin23040-cru',
   templateUrl: './fin23040-cru.component.html',
-  styleUrl: './fin23040-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, NgFor, DropdownComponent, InputTextComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })

@@ -28,7 +28,6 @@ interface ASS21050Item {
 @Component({
   selector: 'app-ass21050',
   templateUrl: './ass21050.component.html',
-  styleUrls: ['./ass21050.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

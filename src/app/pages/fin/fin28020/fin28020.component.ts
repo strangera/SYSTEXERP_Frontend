@@ -19,7 +19,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
     selector: 'app-fin28020',
     templateUrl: './fin28020.component.html',
-    styleUrl: './fin28020.component.scss',
     standalone: true,
     imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, TranslateModule]
 })

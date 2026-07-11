@@ -22,7 +22,6 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
 @Component({
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
-  styleUrls: ['./tls26010.component.scss'],
   standalone: true,
   imports: [
     AccordionModule,

@@ -33,7 +33,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin72050-cru',
   templateUrl: './fin72050-cru.component.html',
-  styleUrl: './fin72050-cru.component.scss',
   standalone: true,
   imports: [
     CommonModule,

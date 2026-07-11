@@ -21,7 +21,6 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, fo
 @Component({
   selector: 'app-tls26040',
   templateUrl: './tls26040.component.html',
-  styleUrl: './tls26040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

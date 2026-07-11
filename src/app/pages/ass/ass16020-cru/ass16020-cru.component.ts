@@ -26,7 +26,6 @@ import { finalize } from 'rxjs';
 @Component({
     selector: 'app-ass16020-cru',
     templateUrl: './ass16020-cru.component.html',
-    styleUrl: './ass16020-cru.component.scss',
     standalone: true,
     imports: [
         NgIf,

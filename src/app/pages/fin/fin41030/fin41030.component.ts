@@ -17,7 +17,6 @@ import { FIN41030QueryRow, QueryFIN41030Request } from './fin41030.model';
 @Component({
   selector: 'app-fin41030',
   templateUrl: './fin41030.component.html',
-  styleUrl: './fin41030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

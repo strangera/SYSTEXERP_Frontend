@@ -71,7 +71,6 @@ export interface ass17050 {
 @Component({
   selector: 'app-ass17050',
   templateUrl: './ass17050.component.html',
-  styleUrl: './ass17050.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

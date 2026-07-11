@@ -250,7 +250,6 @@ export interface TDS1002 {
 @Component({
     selector: 'app-fin14010-cru',
     templateUrl: './fin14010-cru.component.html',
-    styleUrl: './fin14010-cru.component.scss',
     standalone: true,
     imports: [
         MenubarComponent,

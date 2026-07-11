@@ -21,7 +21,6 @@ import { TableSubheaderComponent } from './fin42020-table/fin42020-table.compone
 @Component({
   selector: 'app-fin42020',
   templateUrl: './fin42020.component.html',
-  styleUrl: './fin42020.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
 })

@@ -11,7 +11,6 @@ import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-r
 @Component({
   selector: 'app-calendar-range',
   templateUrl: './calendar-range.component.html',
-  styleUrl: './calendar-range.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, CalendarComponent, OverlayPanelModule, SelectButtonModule]

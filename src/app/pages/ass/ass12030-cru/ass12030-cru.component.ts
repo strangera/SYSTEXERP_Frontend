@@ -45,7 +45,6 @@ export type CreateMode = 'quoted' | 'unquoted';
 @Component({
   selector: 'app-ass12030-cru',
   templateUrl: './ass12030-cru.component.html',
-  styleUrl: './ass12030-cru.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

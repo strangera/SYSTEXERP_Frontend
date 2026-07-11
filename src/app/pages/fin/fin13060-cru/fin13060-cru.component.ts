@@ -80,7 +80,6 @@ interface Fin13060CruForm {
   selector: 'app-fin13060-cru',
   standalone: true,
   templateUrl: './fin13060-cru.component.html',
-  styleUrls: ['./fin13060-cru.component.scss'],
   imports: [
     MenubarComponent,
     ButtonComponent,

@@ -32,7 +32,6 @@ export interface Option {
 @Component({
   selector: 'app-fin15040',
   templateUrl: './fin15040.component.html',
-  styleUrl: './fin15040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

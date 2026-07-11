@@ -32,7 +32,6 @@ import {
 @Component({
   selector: 'app-sys0790',
   templateUrl: './sys0790.component.html',
-  styleUrl: './sys0790.component.scss',
   standalone: true,
   imports: [
     CommonModule,

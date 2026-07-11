@@ -19,7 +19,6 @@ import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
 @Component({
   selector: 'app-fin72040',
   templateUrl: './fin72040.component.html',
-  styleUrl: './fin72040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

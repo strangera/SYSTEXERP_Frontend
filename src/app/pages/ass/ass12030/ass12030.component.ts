@@ -29,7 +29,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 @Component({
   selector: 'app-ass12030',
   templateUrl: './ass12030.component.html',
-  styleUrl: './ass12030.component.scss',
   standalone: true,
   imports: [
     AsyncPipe,

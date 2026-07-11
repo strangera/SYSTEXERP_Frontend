@@ -20,7 +20,6 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
 @Component({
   selector: 'app-fin29120',
   templateUrl: './fin29120.component.html',
-  styleUrl: './fin29120.component.scss',
   standalone: true,
   imports: [
     CommonModule,

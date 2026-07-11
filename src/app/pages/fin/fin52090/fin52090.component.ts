@@ -21,7 +21,6 @@ import { FIN52090Data, FIN52090DeleteRequest, FIN52090Query } from './fin52090.m
 @Component({
   selector: 'app-fin52090',
   templateUrl: './fin52090.component.html',
-  styleUrl: './fin52090.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

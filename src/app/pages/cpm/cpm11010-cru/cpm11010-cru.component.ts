@@ -18,7 +18,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-cpm11010-cru',
   templateUrl: './cpm11010-cru.component.html',
-  styleUrl: './cpm11010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,

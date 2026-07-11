@@ -17,7 +17,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-ass23020',
   templateUrl: './ass23020.component.html',
-  styleUrl: './ass23020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

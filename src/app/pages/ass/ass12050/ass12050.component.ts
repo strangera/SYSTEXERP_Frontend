@@ -30,7 +30,6 @@ import { finalize, Observable } from 'rxjs';
 @Component({
   selector: 'app-ass12050',
   templateUrl: './ass12050.component.html',
-  styleUrl: './ass12050.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

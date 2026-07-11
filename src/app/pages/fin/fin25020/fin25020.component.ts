@@ -32,7 +32,6 @@ export interface FIN25020Data {
 @Component({
   selector: 'app-fin25020',
   templateUrl: './fin25020.component.html',
-  styleUrl: './fin25020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

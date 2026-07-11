@@ -32,7 +32,6 @@ const MTAPPLY_STATUS_APPLIED = '1';
 @Component({
   selector: 'app-ass16040',
   templateUrl: './ass16040.component.html',
-  styleUrl: './ass16040.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

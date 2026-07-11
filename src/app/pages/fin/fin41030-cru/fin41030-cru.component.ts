@@ -14,7 +14,6 @@ import { FIN41030ApproveData, FIN41030QueryRow } from '../fin41030/fin41030.mode
 @Component({
   selector: 'app-fin41030-cru',
   templateUrl: './fin41030-cru.component.html',
-  styleUrl: './fin41030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

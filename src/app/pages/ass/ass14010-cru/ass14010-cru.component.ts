@@ -24,7 +24,6 @@ import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-ass14010-cru',
   templateUrl: './ass14010-cru.component.html',
-  styleUrl: './ass14010-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

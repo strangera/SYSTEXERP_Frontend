@@ -28,7 +28,6 @@ import { ApiResponse } from '../../../shared/utils/rxjs-operators/validate-api-r
 @Component({
   selector: 'app-ass17090',
   templateUrl: './ass17090.component.html',
-  styleUrl: './ass17090.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

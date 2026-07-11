@@ -22,7 +22,6 @@ import { ASS13060QueryRequest, ASS13060QueryRow } from './ass13060.model';
 @Component({
   selector: 'app-ass13060',
   templateUrl: './ass13060.component.html',
-  styleUrl: './ass13060.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

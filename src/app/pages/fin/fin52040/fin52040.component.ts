@@ -20,7 +20,6 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 @Component({
   selector: 'app-fin52040',
   templateUrl: './fin52040.component.html',
-  styleUrl: './fin52040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

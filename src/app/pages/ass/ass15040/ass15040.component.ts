@@ -24,7 +24,6 @@ import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } fro
 @Component({
   selector: 'app-ass15040',
   templateUrl: './ass15040.component.html',
-  styleUrl: './ass15040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

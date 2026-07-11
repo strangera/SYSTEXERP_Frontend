@@ -16,7 +16,6 @@ import { FIN71010Data } from './fin71010.model';
 @Component({
   selector: 'app-fin71010',
   templateUrl: './fin71010.component.html',
-  styleUrl: './fin71010.component.scss',
   standalone: true,
   imports: [
     FormsModule,

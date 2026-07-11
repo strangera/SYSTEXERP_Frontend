@@ -32,7 +32,6 @@ import { tls2b010tableComponent } from './tls2-b010-table/tls2b010table.componen
 @Component({
   selector: 'app-tls2b010',
   templateUrl: './tls2b010.component.html',
-  styleUrl: './tls2b010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

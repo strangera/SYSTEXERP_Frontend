@@ -17,7 +17,6 @@ import { ASS21010Data, ASS21010Payload, EngType } from '../ass21010/ass21010.mod
 @Component({
   selector: 'app-ass21010-cru',
   templateUrl: './ass21010-cru.component.html',
-  styleUrl: './ass21010-cru.component.scss',
   standalone: !0,
   imports: [
     FormsModule,

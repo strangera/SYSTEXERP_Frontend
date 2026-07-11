@@ -43,7 +43,6 @@ import { ReportColumn } from '../../../shared/componentkit/table-report/table-re
 @Component({
   selector: 'app-fin63040',
   templateUrl: './fin63040.component.html',
-  styleUrls: ['./fin63040.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

@@ -26,7 +26,6 @@ export interface orgOption {
 @Component({
   selector: 'app-sysb400.cru',
   templateUrl: './sysb400.cru.component.html',
-  styleUrl: './sysb400.cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

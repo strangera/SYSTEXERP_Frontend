@@ -20,7 +20,6 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 @Component({
   selector: 'app-ass16020',
   templateUrl: './ass16020.component.html',
-  styleUrl: './ass16020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -29,7 +29,6 @@ import {
 @Component({
   selector: 'app-ass16060',
   templateUrl: './ass16060.component.html',
-  styleUrl: './ass16060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

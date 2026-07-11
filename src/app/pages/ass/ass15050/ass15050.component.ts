@@ -36,7 +36,6 @@ const SUMMARY_ACCNO_EXPANDED = '總合計';
 @Component({
   selector: 'app-ass15050',
   templateUrl: './ass15050.component.html',
-  styleUrl: './ass15050.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

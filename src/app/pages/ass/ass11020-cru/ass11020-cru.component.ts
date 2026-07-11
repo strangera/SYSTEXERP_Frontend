@@ -19,7 +19,6 @@ import { ASS11020Data, ASS11020InsertRequest, ASS11020UpdateRequest } from '../a
 @Component({
   selector: 'app-ass11020-cru',
   templateUrl: './ass11020-cru.component.html',
-  styleUrl: './ass11020-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,

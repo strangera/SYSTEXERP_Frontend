@@ -16,7 +16,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-fin11080',
   templateUrl: './fin11080.component.html',
-  styleUrl: './fin11080.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

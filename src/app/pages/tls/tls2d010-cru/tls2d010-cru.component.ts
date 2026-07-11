@@ -29,7 +29,6 @@ import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from 
 @Component({
   selector: 'app-tls2d010-cru',
   templateUrl: './tls2d010-cru.component.html',
-  styleUrl: './tls2d010-cru.component.scss',
   standalone: true,
   imports: [
     TableEditComponent, CalendarComponent, InputTextComponent, RadiobuttonComponent, MenubarComponent,

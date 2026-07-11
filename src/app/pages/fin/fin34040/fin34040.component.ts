@@ -44,7 +44,6 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 @Component({
   selector: 'app-fin34040',
   templateUrl: './fin34040.component.html',
-  styleUrl: './fin34040.component.scss',
   standalone: true,
   imports: [
     FormsModule,

@@ -26,7 +26,6 @@ import { QueryASS17100Request, QueryASS17100Response } from './ass17100.model';
 @Component({
   selector: 'app-ass17100',
   templateUrl: './ass17100.component.html',
-  styleUrl: './ass17100.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

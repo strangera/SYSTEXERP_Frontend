@@ -26,7 +26,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin63020-cru',
   templateUrl: './fin63020-cru.component.html',
-  styleUrls: ['./fin63020-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

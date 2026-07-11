@@ -23,7 +23,6 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
 @Component({
   selector: 'app-fin32030',
   templateUrl: './fin32030.component.html',
-  styleUrl: './fin32030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

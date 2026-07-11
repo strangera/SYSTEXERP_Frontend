@@ -25,7 +25,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-ass13010-cru',
   templateUrl: './ass13010-cru.component.html',
-  styleUrl: './ass13010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })

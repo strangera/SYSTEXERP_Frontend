@@ -22,7 +22,6 @@ import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subh
 @Component({
   selector: 'app-fin54020',
   templateUrl: './fin54020.component.html',
-  styleUrl: './fin54020.component.scss',
   standalone: true,
   imports: [
     NgStyle,

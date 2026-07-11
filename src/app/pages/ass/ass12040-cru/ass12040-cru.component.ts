@@ -21,7 +21,6 @@ import { ASS12040QueryRow } from '../ass12040/ass12040.model';
 @Component({
   selector: 'app-ass12040-cru',
   templateUrl: './ass12040-cru.component.html',
-  styleUrl: './ass12040-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

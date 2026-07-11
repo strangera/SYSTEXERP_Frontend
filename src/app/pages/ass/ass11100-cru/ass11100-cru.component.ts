@@ -20,7 +20,6 @@ import { ASS11100Data } from '../ass11100/ass11100.model';
 @Component({
   selector: 'app-ass11100-cru',
   templateUrl: './ass11100-cru.component.html',
-  styleUrl: './ass11100-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

@@ -20,7 +20,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 @Component({
   selector: 'app-fin63010',
   templateUrl: './fin63010.component.html',
-  styleUrl: './fin63010.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })

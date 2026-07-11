@@ -17,7 +17,6 @@ import { validateRequired } from '../../../shared/componentkit/table-edit/valida
 @Component({
   selector: 'app-cpm11020-cru',
   templateUrl: './cpm11020-cru.component.html',
-  styleUrl: './cpm11020-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

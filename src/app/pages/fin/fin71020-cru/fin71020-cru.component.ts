@@ -16,7 +16,6 @@ import { FIN71020Data, FIN71020Insert, FIN71020Update } from '../fin71020/fin710
 @Component({
   selector: 'app-fin71020-cru',
   templateUrl: './fin71020-cru.component.html',
-  styleUrls: ['./fin71020-cru.component.scss'],
   standalone: !0,
   imports: [
     FormsModule,

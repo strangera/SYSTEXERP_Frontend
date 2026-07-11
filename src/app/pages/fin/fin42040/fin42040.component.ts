@@ -34,7 +34,6 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 @Component({
   selector: 'app-fin42040',
   templateUrl: './fin42040.component.html',
-  styleUrls: ['./fin42040.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

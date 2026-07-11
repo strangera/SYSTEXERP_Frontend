@@ -46,7 +46,6 @@ export interface ENG2001 {
 @Component({
   selector: 'app-ass21030-cru',
   templateUrl: './ass21030-cru.component.html',
-  styleUrl: './ass21030-cru.component.scss',
   standalone: true,
   imports: [
     NgFor,

@@ -19,7 +19,6 @@ import { Column, createPaginationConfig, formatDateTime } from '../../../shared/
 @Component({
   selector: 'app-cpm11020',
   templateUrl: './cpm11020.component.html',
-  styleUrl: './cpm11020.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule, AsyncPipe]
 })

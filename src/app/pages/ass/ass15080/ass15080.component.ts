@@ -30,7 +30,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 @Component({
   selector: 'app-ass15080',
   templateUrl: './ass15080.component.html',
-  styleUrl: './ass15080.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

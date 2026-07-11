@@ -27,7 +27,6 @@ import { ASS12010Data, ASS12010DetailItem, ASS12010DetailResponse, ASS12010Inser
 @Component({
   selector: 'app-ass12010-cru',
   templateUrl: './ass12010-cru.component.html',
-  styleUrl: './ass12010-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,

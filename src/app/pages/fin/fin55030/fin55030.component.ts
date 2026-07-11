@@ -31,7 +31,6 @@ export interface GroupedFIN55030Detail extends FIN55030Detail {
 @Component({
   selector: 'app-fin55030',
   templateUrl: './fin55030.component.html',
-  styleUrl: './fin55030.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

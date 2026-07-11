@@ -19,7 +19,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-tls2k050',
   templateUrl: './tls2k050.component.html',
-  styleUrl: './tls2k050.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TranslateModule]
 })

@@ -88,7 +88,6 @@ export interface POS2013 {
 @Component({
   selector: 'app-tls12010-cru',
   templateUrl: './tls12010-cru.component.html',
-  styleUrl: './tls12010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule, ButtonModule]
 })

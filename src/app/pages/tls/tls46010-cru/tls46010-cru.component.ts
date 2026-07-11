@@ -43,7 +43,6 @@ export interface Pos10015 {
 @Component({
   selector: 'app-tls46010-cru',
   templateUrl: './tls46010-cru.component.html',
-  styleUrls: ['./tls46010-cru.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, NgIf, TranslateModule]
 })

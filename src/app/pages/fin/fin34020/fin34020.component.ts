@@ -38,7 +38,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-fin34020',
   templateUrl: './fin34020.component.html',
-  styleUrls: ['./fin34020.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

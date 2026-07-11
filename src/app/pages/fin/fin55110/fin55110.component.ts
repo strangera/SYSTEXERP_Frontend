@@ -19,7 +19,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 @Component({
   selector: 'app-fin55110',
   templateUrl: './fin55110.component.html',
-  styleUrl: './fin55110.component.scss',
   standalone: true,
   imports: [
     TableReportComponent,

@@ -24,7 +24,6 @@ import { DetailASS13090DetailItem, DetailASS13090MasterInfo } from '../ass13090/
 @Component({
   selector: 'app-ass13090-cru',
   templateUrl: './ass13090-cru.component.html',
-  styleUrl: './ass13090-cru.component.scss',
   standalone: true,
   providers: [DatePipe],
   imports: [

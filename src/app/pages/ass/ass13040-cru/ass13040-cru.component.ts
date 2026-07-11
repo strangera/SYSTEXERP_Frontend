@@ -45,7 +45,6 @@ interface MediaItem {
 @Component({
   selector: 'app-ass13040-cru',
   templateUrl: './ass13040-cru.component.html',
-  styleUrl: './ass13040-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
