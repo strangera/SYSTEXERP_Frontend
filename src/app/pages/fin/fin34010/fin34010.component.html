@@ -4,44 +4,23 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠客代號"
-              [control]="queryForm.controls.VEN_No"
-              [submitted]="submitted"
-              [options]="venNoOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="廠客代號" [control]="queryForm.controls.VEN_No" [submitted]="submitted"
+              [options]="venNoOptions | async" optionLabel="label" optionValue="value"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="立帳日期"
-              [startControl]="queryForm.controls.ARSDateFrom"
-              [endControl]="queryForm.controls.ARSDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="立帳日期" [startControl]="queryForm.controls.ARSDateFrom"
+              [endControl]="queryForm.controls.ARSDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="科目代號"
-              controlName="AccNo"
-              [options]="AccNo_ParamOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AccNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="科目代號" controlName="AccNo" [options]="AccNo_ParamOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNo" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 
@@ -49,29 +28,19 @@
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="應收金額是否顯示"
-              groupname="ShowArsAmt"
-              [control]="queryForm.controls.ShowArsAmt"
-              [options]="showFlagOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="應收金額是否顯示" groupname="ShowArsAmt" [control]="queryForm.controls.ShowArsAmt"
+              [options]="showFlagOptions" [submitted]="submitted"></app-radiobutton>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="帳款餘額為零是否顯示"
-              groupname="ShowZeroAmt"
-              [control]="queryForm.controls.ShowZeroAmt"
-              [options]="showFlagOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroAmt" [control]="queryForm.controls.ShowZeroAmt"
+              [options]="showFlagOptions" [submitted]="submitted"></app-radiobutton>
           </div>
 
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [type]="'button'" (clickEvent)="onClear(queryForm)"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -80,45 +49,15 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    [tableKey]="'fin34010_' + tableVer"
-    [dataKey]="'_rowKey'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showManage]="false"
-    [showFilter]="true"
-    [showExcel]="false"
-    [footerData]="footerData"
-    [queryFunction]="queryFIN34010ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="true"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-  >
+  <app-table-report [tableKey]="'fin34010'" [dataKey]="'_rowKey'" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" [showManage]="false" [footerData]="footerData"
+    [queryFunction]="queryFIN34010ForReport" [lastQueryBody]="lastQueryBody" [showDelete]="false" [ItemSize]="22.4">
     <header>
       <div class="flex justify-content-end gap-2">
-                <p-button
-          styleClass="p-2"
-          label="應收帳款明細表.PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnExportPdfLoading"
-          (click)="downloadFIN34010PDF()"
-          [disabled]="btnExportPdfLoading || btnExportExcelLoading"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="應收帳款明細表.XLSX"
-          icon="pi pi-file-excel"
-          [loading]="btnExportExcelLoading"
-          (click)="downloadFIN34010Excel()"
-          [disabled]="btnExportExcelLoading || btnExportPdfLoading"
-        ></p-button>
-
-
+        <p-button styleClass="p-2" label="應收帳款明細表.PDF" icon="pi pi-file-pdf" [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34010PDF()" [disabled]="!data.length"></p-button>
+        <p-button styleClass="p-2" label="應收帳款明細表.XLSX" icon="pi pi-file-excel" [loading]="btnExportExcelLoading"
+          (click)="downloadFIN34010Excel()" [disabled]="!data.length"></p-button>
       </div>
     </header>
   </app-table-report>
