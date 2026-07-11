@@ -51,20 +51,20 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
   footerData: any;
   partyNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '1' });
   columns: ReportColumn[] = [
-    { field: 'PartyNo', header: '廠客代號' },
-    { field: 'PartyName', header: '廠客名稱', align: 'left' },
-    { field: 'SystemName', header: '系統別' },
-    { field: 'RP_Flag', header: '收/付' },
-    { field: 'ARAP_DocNo', header: '應收/應付帳款單號', type: 'link', linkDisabled: (row: Fin34030Response) => !row.ARAP_DocNo },
-    { field: 'VoucherNo', header: '立帳傳票號碼', type: 'link', linkDisabled: (row: Fin34030Response) => !row.VoucherNo },
-    { field: 'AccNo', header: '會計科目編號' },
-    { field: 'AccName', header: '會計科目名稱', align: 'left' },
-    { field: 'DocDate', header: '立帳日期', format: formatDate },
-    { field: 'DueDate', header: '到期日', format: formatDate },
-    { field: 'DocAmount', header: '應收(付)立帳金額', format: formatAmount, isSubTotal: true, align: 'right' },
-    { field: 'PayAmount', header: '收(付)款金額', format: formatAmount, isSubTotal: true, align: 'right' },
-    { field: 'AdjAmount', header: '調整金額', format: formatAmount, isSubTotal: true, align: 'right' },
-    { field: 'BalanceAmount', header: '應收(付)帳款餘額', format: formatAmount, isSubTotal: true, align: 'right' },
+    { field: 'PartyNo', header: '廠客代號', width: '90px' },
+    { field: 'PartyName', header: '廠客名稱', width: '170px', align: 'left' },
+    { field: 'SystemName', header: '系統別', width: '80px' },
+    { field: 'RP_Flag', header: '收/付', width: '30px' },
+    { field: 'ARAP_DocNo', header: '應收/應付帳款單號', width: '130px', type: 'link', linkDisabled: (row: Fin34030Response) => !row.ARAP_DocNo },
+    { field: 'VoucherNo', header: '立帳傳票號碼', width: '110px', type: 'link', linkDisabled: (row: Fin34030Response) => !row.VoucherNo },
+    { field: 'AccNo', header: '會計科目編號', width: '50px' },
+    { field: 'AccName', header: '會計科目名稱', width: '120px', align: 'left' },
+    { field: 'DocDate', header: '立帳日期', format: formatDate, width: '80px' },
+    { field: 'DueDate', header: '到期日', format: formatDate, width: '80px' },
+    { field: 'DocAmount', header: '應收(付)立帳金額', format: formatAmount, isSubTotal: true, width: '80px', align: 'right' },
+    { field: 'PayAmount', header: '收(付)款金額', format: formatAmount, isSubTotal: true, width: '80px', align: 'right' },
+    { field: 'AdjAmount', header: '調整金額', format: formatAmount, isSubTotal: true, width: '80px', align: 'right' },
+    { field: 'BalanceAmount', header: '應收(付)帳款餘額', format: formatAmount, isSubTotal: true, width: '80px', align: 'right' },
   ];
   showFlagOptions = [{ value: 'Y', label: '顯示' }, { value: 'N', label: '隱藏' },];
   onlyTLTOptions = [{ value: 'Y', label: '是' }, { value: 'N', label: '否' },];

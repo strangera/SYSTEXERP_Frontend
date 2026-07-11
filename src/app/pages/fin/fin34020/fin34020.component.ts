@@ -57,21 +57,22 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
     { field: 'ARS_No', order: 1 },
   ];
   columns: ReportColumn[] = [
-    { field: 'VEN_No', header: '廠客代號' },
-    { field: 'VEN_Name', header: '客戶名稱', align: 'left' },
-    { field: 'PayType', header: '收/付' },
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'AccCName', header: '科目名稱', align: 'left' },
-    { field: 'ARS_Date', header: '立帳日期', format: formatDate },
-    { field: 'PTA_Date', header: '預計收款日', format: formatDate },
-    { field: 'ARS_Amt', header: '立帳金額', format: formatAmount, align: 'right' },
-    { field: 'NoteDesc', header: '摘要', align: 'left' },
-    { field: 'RefNo', header: '參考單號' },
-    { field: 'RCV_Date', header: '收款日期', format: formatDate },
-    { field: 'VouNo', header: '傳票號碼' },
-    { field: 'RcvOrAdjAmt', header: '收款/調整金額', format: formatAmount, align: 'right' },
-    { field: 'UnpaidBalanceAmt', header: '未沖餘額', format: formatAmount, align: 'right' },
+    { field: 'VEN_No', header: '廠客代號', width: '90px' },
+    { field: 'VEN_Name', header: '客戶名稱', width: '170px', align: 'left' },
+    { field: 'PayType', header: '收/付', width: '30px' },
+    { field: 'ARS_No', header: '應收帳款單號', width: '120px' },
+    { field: 'AccNo', header: '科目代號', width: '50px' },
+    { field: 'AccCName', header: '科目名稱', width: '120px', align: 'left' },
+    { field: 'ARS_Date', header: '立帳日期', format: formatDate, width: '80px' },
+    { field: 'PTA_Date', header: '預計收款日', format: formatDate, width: '80px' },
+    { field: 'ARS_Amt', header: '立帳金額', format: formatAmount, width: '80px', align: 'right' },
+    // NoteDesc 摘要為自由文字備註，長度不固定，維持自動換行不設寬
+    { field: 'NoteDesc', header: '摘要', align: 'left', width: '200px' },
+    { field: 'RefNo', header: '參考單號', width: '120px' },
+    { field: 'RCV_Date', header: '收款日期', format: formatDate, width: '80px' },
+    { field: 'VouNo', header: '傳票號碼', width: '100px' },
+    { field: 'RcvOrAdjAmt', header: '收款/調整金額', format: formatAmount, width: '80px', align: 'right' },
+    { field: 'UnpaidBalanceAmt', header: '未沖餘額', format: formatAmount, width: '80px', align: 'right' },
   ];
   showFlagOptions = [{ value: '1', label: '顯示' }, { value: '0', label: '不顯示' },];
   moneyTypeOptions = [0, 11, 15, 30, 45].map(v => ({ value: v, label: String(v) }));

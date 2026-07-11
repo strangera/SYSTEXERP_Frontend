@@ -126,24 +126,24 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   /** Dialog Footer 資料（總計列） */
   dialogFooterData: Fin34040DetailRow | null = null;
   detailColumns: ReportColumn[] = [
-    { field: 'ARS_No', header: '應收 ID' },
-    { field: 'ORG_ID', header: '組織代號' },
-    { field: 'Org_Name', header: '組織名稱' },
-    { field: 'Sam_yyymm', header: '帳款年月' },
-    { field: 'Sam_Termno', header: '帳款帳次' },
-    { field: 'RCV_ARS_Amt', header: '應收金額', format: formatAmount },
-    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
-    { field: 'Pay_AMT', header: '應收帳款餘額', format: formatAmount },
-    { field: 'ARS_Date', header: '立帳日期', format: formatDate },
-    { field: 'PTA_Date', header: '預計收款日', format: formatDate },
-    { field: 'VEN_No', header: '廠客代號' },
-    { field: 'VEN_Name', header: '廠客名稱' },
-    { field: 'VEN_Uniform', header: '統一編號' },
-    { field: 'AccNo', header: '會計科目代號' },
-    { field: 'AccCName', header: '會計科目名稱' },
-    { field: 'ARS_SourceNo', header: '帳款來源單號' },
-    { field: 'VouNo', header: '傳票號碼' },
-    { field: 'ARS_StatusName', header: '狀態' },
+    { field: 'ARS_No', header: '應收 ID', width: '120px' },
+    { field: 'ORG_ID', header: '組織代號', width: '90px' },
+    { field: 'Org_Name', header: '組織名稱', width: '140px' },
+    { field: 'Sam_yyymm', header: '帳款年月', width: '90px' },
+    { field: 'Sam_Termno', header: '帳款帳次', width: '70px' },
+    { field: 'RCV_ARS_Amt', header: '應收金額', format: formatAmount, width: '80px' },
+    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount, width: '80px' },
+    { field: 'Pay_AMT', header: '應收帳款餘額', format: formatAmount, width: '80px' },
+    { field: 'ARS_Date', header: '立帳日期', format: formatDate, width: '80px' },
+    { field: 'PTA_Date', header: '預計收款日', format: formatDate, width: '80px' },
+    { field: 'VEN_No', header: '廠客代號', width: '100px' },
+    { field: 'VEN_Name', header: '廠客名稱', width: '170px' },
+    { field: 'VEN_Uniform', header: '統一編號', width: '90px' },
+    { field: 'AccNo', header: '會計科目代號', width: '60px' },
+    { field: 'AccCName', header: '會計科目名稱', width: '140px' },
+    { field: 'ARS_SourceNo', header: '帳款來源單號', width: '130px' },
+    { field: 'VouNo', header: '傳票號碼', width: '130px' },
+    { field: 'ARS_StatusName', header: '狀態', width: '80px' },
   ];
 
   public queryFIN34040ForReport = (body: any) =>
@@ -275,14 +275,15 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       format: formatAmount,
       groupField,
       type: 'link',
+      width: '90px',
       linkDisabled: (rowData: any) => Number(rowData?.[fieldName] ?? 0) <= 0,
     };
   }
 
   private generateColumnsFromBuckets(buckets: Fin34040Bucket[]): ReportColumn[] {
     const columns: ReportColumn[] = [
-      { field: 'VEN_No', header: '廠商代號' },
-      { field: 'VEN_Name', header: '廠商名稱' },
+      { field: 'VEN_No', header: '廠商代號', width: '100px' },
+      { field: 'VEN_Name', header: '廠商名稱', width: '170px' },
     ];
     const { expired, unexpired } = this.groupBucketsBySide(buckets);
     // 已到期欄位依 BucketNo 由大到小排序
@@ -290,7 +291,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       .sort((a, b) => b.BucketNo - a.BucketNo)
       .forEach(bucket => columns.push(this.createBucketColumn(bucket, 'Expired', '以前')));
     unexpired.forEach(bucket => columns.push(this.createBucketColumn(bucket, 'Unexpired', '以後')));
-    columns.push({ field: 'TotalAmt', header: '總計', format: formatAmount, isTotal: true });
+    columns.push({ field: 'TotalAmt', header: '總計', format: formatAmount, isTotal: true, width: '90px' });
     return columns;
   }
 
