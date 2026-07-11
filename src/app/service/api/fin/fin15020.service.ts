@@ -1,4 +1,4 @@
-import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';

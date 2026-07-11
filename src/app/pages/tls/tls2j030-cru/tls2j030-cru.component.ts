@@ -92,22 +92,21 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   constructor(
     public readonly tls2j030Service: TLS2j030Service,
     private dropDownListService: DropDownListService,
-    private validationService: ValidationService,
+    private readonly validationService: ValidationService,
   ) {
     super();
   }
   private validateInvoiceDateAfterLockDate(
     value: unknown,
-    rowData: Record<string, unknown>,
-    data: unknown[],
-    field: string,
-    header: string
+    _rowData: Record<string, unknown>,
+    _data: unknown[],
+    _field: string,
+    _header: string
   ): { isValid: boolean; errorMessage: string[] } {
-    void rowData; void data; void field; void header;
     if (!this.invoiceLockDate || value == null) return { isValid: true, errorMessage: [] };
     const dateVal = new Date(value as string | number | Date);
     const lockDateVal = new Date(this.invoiceLockDate);
-    if (isNaN(dateVal.getTime()) || isNaN(lockDateVal.getTime())) return { isValid: true, errorMessage: [] };
+    if (Number.isNaN(dateVal.getTime()) || Number.isNaN(lockDateVal.getTime())) return { isValid: true, errorMessage: [] };
     if (dateVal <= lockDateVal) {
       return { isValid: false, errorMessage: [`發票日期需大於發票鎖定日(${this.invoiceLockDate})`] };
     }
@@ -116,12 +115,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   private validateUniformNumber(
     value: any,
-    rowData: unknown,
-    data: unknown[],
-    field: string,
-    header: string
+    _rowData: unknown,
+    _data: unknown[],
+    _field: string,
+    _header: string
   ): { isValid: boolean; errorMessage: string[] } {
-    void rowData; void data; void field; void header;
     if (value === '' || value === null || value === undefined) {
       return { isValid: true, errorMessage: [] };
     }
@@ -165,7 +163,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
           }
           this.updateColumnsChange();
           if (rowData) {
-            const result = this.validateInvoiceDateAfterLockDate(rowData['TXN_Date'], rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
+            const result = this.validateInvoiceDateAfterLockDate(rowData['TXN_Date'], rowData, [], 'TXN_Date', '發票日期');
             if (!rowData['_validationErrors']) rowData['_validationErrors'] = {};
             if (!result.isValid) {
               (rowData['_validationErrors'] as Record<string, string>)['TXN_Date'] = result.errorMessage[0];

@@ -19,8 +19,8 @@
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th class="w-1rem text-center" pFrozenColumn>序號</th>
-      <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
+      <th scope="col" class="w-1rem text-center" pFrozenColumn>序號</th>
+      <th *ngFor="let col of columns" scope="col" pReorderableColumn pResizableColumn
         [pSortableColumn]="col.sortField ?? col.field" [pSortableColumnDisabled]="col.showSort === false"
         class="text-center wrap-header" style="min-width: 55px">
         {{ col.header }}

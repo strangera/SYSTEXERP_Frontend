@@ -48,7 +48,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   totalRecords = 0;
   btnLoading = false;
-  historyRequestBody: any | null = null;
+  historyRequestBody: any = null;
   footerData: Record<string, number> = {};
   sortMeta: any[] = [];
 
@@ -94,7 +94,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
   dialogData: any[] = [];
   dialogTotalRecords = 0;
   dialogFooterData: Record<string, number> = {};
-  dialogHistoryRequestBody: any | null = null;
+  dialogHistoryRequestBody: any = null;
   selectedMainRow: any | null = null;
 
   private dropdownInit$?: Observable<any>;
@@ -420,8 +420,8 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
   }
 
   // ========= 輔助解包小工具 =========
-  private pickWrapper = (data: any): any => Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
-  private pickDetails = (wrapper: any): any[] => (wrapper?.tLS23060Details ?? wrapper?.TLS23060Details ?? wrapper?.tls23060Details ?? []) as any[];
+  private readonly pickWrapper = (data: any): any => Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+  private readonly pickDetails = (wrapper: any): any[] => (wrapper?.tLS23060Details ?? wrapper?.TLS23060Details ?? wrapper?.tls23060Details ?? []) as any[];
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);

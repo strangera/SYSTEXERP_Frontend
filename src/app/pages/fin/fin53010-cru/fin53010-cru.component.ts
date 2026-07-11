@@ -56,8 +56,6 @@ import {
   FIN53010StepPurchaseInvoiceRow,
   FIN53010StepSalesInvoiceRow,
   FIN53010UpdateResult,
-  QueryAps2002OriginalInvoicesForAllowanceRequest,
-  QueryAps4023OriginalInvoicesForAllowanceRequest,
   QueryFIN53010Detail,
 } from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
@@ -942,8 +940,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
 
-  private validateUniformNumber(value: any, rowData: unknown, data: unknown[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
-    void rowData; void data; void field; void header;
+  private validateUniformNumber(value: any, _rowData: unknown, _data: unknown[], _field: string, _header: string): { isValid: boolean, errorMessage: string[] } {
     if (value === '' || value === null || value === undefined) {
       return { isValid: true, errorMessage: [] };
     }
@@ -1555,7 +1552,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const strict = parseApiDateToLocal(s);
     if (strict) return strict;
     const d = new Date(String(s));
-    return isNaN(d.getTime()) ? null : d;
+    return Number.isNaN(d.getTime()) ? null : d;
   }
 
   private mapPickToSalesRow(item: SalesInvoicePickItem): Partial<FIN53010StepSalesInvoiceRow> {
@@ -1727,7 +1724,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public formatPickerDate(v: string | null | undefined): string {
     if (!v) return '';
     const d = new Date(v);
-    if (isNaN(d.getTime())) return String(v);
+    if (Number.isNaN(d.getTime())) return String(v);
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   }
 
@@ -2233,8 +2230,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
    * 驗證傳票明細行
    * 1. 當會計科目為 '123208' 時，組織代號必須為特定的幾個值
    */
-  public readonly validateRow = (rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string; } => {
-    void rowData;
+  public readonly validateRow = (_rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string; } => {
     // const accNo = String(rowData.AccNo ?? '').trim();
     // const orgId = String(rowData.ORG_ID ?? '').trim();
 
@@ -3077,7 +3073,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const rowIndex = this.currentEditingPtaRowIndex;
     if (rowIndex !== null) {
       this.tableData.update(rows =>
-        rows.map((r, i) => i === rowIndex ? { ...r, PTA: selected!.PTA ?? '' } : r)
+        rows.map((r, i) => i === rowIndex ? { ...r, PTA: selected.PTA ?? '' } : r)
       );
     }
     this.showPtaDialog = false;

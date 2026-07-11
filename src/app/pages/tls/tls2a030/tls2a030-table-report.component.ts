@@ -142,7 +142,7 @@ export class TLS2A030TableReportComponent extends BasicPrintDataComponent implem
   }
   customSort(event: TableQueryPayload) {
     this.data.sort((data1, data2) => {
-      for (const sortMeta of event.multiSortMeta!) {
+      for (const sortMeta of event.multiSortMeta) {
         const value1 = data1[sortMeta.field];
         const value2 = data2[sortMeta.field];
         let result = 0;

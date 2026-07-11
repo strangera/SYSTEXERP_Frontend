@@ -15,7 +15,7 @@ import { environment } from 'src/environments/environment';
 export class GlobalErrorHandler implements ErrorHandler {
   // 注意：在 ErrorHandler 中必須使用 Injector 動態注入 HttpClient
   // 如果直接在 constructor 注入 HttpClient，會引發 Angular 核心啟動時的循環依賴錯誤 (Circular Dependency)
-  constructor(private injector: Injector) { }
+  constructor(private readonly injector: Injector) { }
 
   // 【地雷 2】去重用：記錄「錯誤訊息 → 最後回報時間」，避免 render 迴圈在數秒內把後端洗版
   private readonly recentErrors = new Map<string, number>();

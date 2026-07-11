@@ -1,7 +1,7 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
 import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
-import { formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
+import { formatAmount, formatDateTime, formatYN } from "../../../shared/componentkit/table/table.model";
 
 export interface APS2001Data {
   id?: number;

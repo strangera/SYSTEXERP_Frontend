@@ -1073,7 +1073,7 @@ export class Table2Component
           let filename = `${body.file_name}.pdf`;
           if (contentDisposition) {
             const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.pdf)?$|filename="(.+?)(?:\.pdf)?"$/;
-            const matches = contentDisposition.match(filenameRegex);
+            const matches = filenameRegex.exec(contentDisposition);
             if (matches) {
               filename = matches[1] || matches[2] || filename;
               filename = decodeURIComponent(filename);
@@ -1143,7 +1143,7 @@ export class Table2Component
           let filename = `${body.file_name}.xlsx`;
           if (contentDisposition) {
             const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
-            const matches = contentDisposition.match(filenameRegex);
+            const matches = filenameRegex.exec(contentDisposition);
             if (matches) {
               filename = matches[1] || matches[2] || filename;
               filename = decodeURIComponent(filename);

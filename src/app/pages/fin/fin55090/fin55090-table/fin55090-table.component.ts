@@ -110,7 +110,7 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
 const formatAmount2 = (val: number | string | null | undefined): string => {
   if (val === null || val === undefined || val === '') return '';
   const num = Number(val);
-  if (isNaN(num)) return String(val);
+  if (Number.isNaN(num)) return String(val);
   if (num < 0) return `(${Math.abs(num).toLocaleString()})`;
   return num.toLocaleString();
 };
@@ -118,7 +118,7 @@ const formatAmount2 = (val: number | string | null | undefined): string => {
 const formatPercent2Decimals = (val: number | string | null | undefined): string => {
   if (val === null || val === undefined || val === '') return '';
   const num = Number(val);
-  if (isNaN(num)) return String(val);
+  if (Number.isNaN(num)) return String(val);
   if (num < 0) return `(${Math.abs(num).toFixed(2)})`;
   return num.toFixed(2);
 };

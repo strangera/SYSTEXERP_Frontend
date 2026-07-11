@@ -83,7 +83,7 @@ export class TableExpansionComponent implements OnInit {
   totalRecords = 0;                       // 總記錄數
   first = 0;                              // 當前起始索引
 
-  constructor(private cdr: ChangeDetectorRef) { }
+  constructor(private readonly cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     setTimeout(() => {

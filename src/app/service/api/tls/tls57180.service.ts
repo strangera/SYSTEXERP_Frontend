@@ -50,9 +50,9 @@ export interface IQueryData {
   providedIn: 'root'
 })
 export class TLS57180Service {
-  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS5000';
+  private readonly apiUrl: string = environment.ApiUrl + '/TLS0000/TLS5000';
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   exportTLS57180PDF(data: IExportPDFRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/exportTLS57180PDF`, data, { responseType: 'blob', observe: 'response' });

@@ -62,7 +62,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   private readonly destroyRef = inject(DestroyRef);
   private eosHubConnection?: signalR.HubConnection;
 
-  @ViewChild('vncIframe') private vncIframeRef?: ElementRef<HTMLIFrameElement>;
+  @ViewChild('vncIframe') private readonly vncIframeRef?: ElementRef<HTMLIFrameElement>;
 
   queryForm = this.fb.nonNullable.group({
     ECR_No: [null],
@@ -195,7 +195,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   onVncControlCancel(): void {
     this.vncControlDialogVisible = false;
     this.vncControlPassword = '';
-    this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, '*');
+    this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, window.location.origin);
   }
 
   onVncControlConfirm(): void {
@@ -211,7 +211,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
         next: () => {
           this.vncControlDialogVisible = false;
           this.vncControlPassword = '';
-          this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, '*');
+          this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, window.location.origin);
         },
         error: () => {
           this.notemessage.errorBubble('VNC 密碼錯誤，請重試');

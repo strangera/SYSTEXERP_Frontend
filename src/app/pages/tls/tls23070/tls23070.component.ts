@@ -442,7 +442,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
   }
 
   // ========= 資料清洗與對應映射轉型群 =========
-  private getNumericFields = (): string[] => Object.keys(this.detailTotalFieldMap);
+  private readonly getNumericFields = (): string[] => Object.keys(this.detailTotalFieldMap);
 
   private buildGrandTotalFromSummary(summary: any): Record<string, number> {
     const out: Record<string, number> = {};

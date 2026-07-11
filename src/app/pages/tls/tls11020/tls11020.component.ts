@@ -150,7 +150,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls11020Service: TLS11020Service,
-    private dropdownApiService: DropdownApiService
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }

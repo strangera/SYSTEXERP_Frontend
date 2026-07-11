@@ -65,18 +65,20 @@ interface TableQueryResult {
   GrandTotal: Record<string, number>;
 }
 
+type StringOrArray = string | string[] | null;
+
 interface TLS23090FormValue {
   TXN_DateStart: Date | null;
   TXN_DateEnd: Date | null;
-  ECR_No: string | string[] | null;
-  tlt_no: string | string[] | null;
+  ECR_No: StringOrArray;
+  tlt_no: StringOrArray;
   CRD_Type: string[] | null;
   CRD_No: string | null;
   TXN_PayAmt: number | null;
-  tlt_building: string | string[] | null;
-  tlt_floor: string | string[] | null;
-  org_id: string | string[] | null;
-  TERM_No: string | string[] | null;
+  tlt_building: StringOrArray;
+  tlt_floor: StringOrArray;
+  org_id: StringOrArray;
+  TERM_No: StringOrArray;
   Acquirer: string[] | null;
   ConnStatus: string | null;
   IsHaveTERM_No: string | boolean | null;
@@ -156,7 +158,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
     IsHaveTERM_No: [null as string | null],
     pageSize: [1000],
     pageIndex: [1],
-    SortBy: [this.defaultSortCredit as SortField[]],
+    SortBy: [this.defaultSortCredit],
   });
 
   cardTypeOptions = getSYS1000Options('CREDIT_CRD_Type');
@@ -431,7 +433,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
     const footer: Record<string, string> = {};
     for (const col of this.columns) {
       if (col?.isTotal) {
-        footer[col.field] = ((this.grandTotal[col.field] ?? 0) as number).toLocaleString();
+        footer[col.field] = (this.grandTotal[col.field] ?? 0).toLocaleString();
       }
     }
     if (this.viewMode === 'credit' && this.creditGrandTotalStr) {
@@ -446,8 +448,8 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
 
   private extractCounterItems(res: CounterCardApiResponse): CounterCardItem[] {
     if (!res.Data) return [];
-    if (Array.isArray(res.Data)) return res.Data as CounterCardItem[];
-    return (res.Data as CounterCardApiData).QueryData ?? [];
+    if (Array.isArray(res.Data)) return res.Data;
+    return res.Data.QueryData ?? [];
   }
 
   private mapCreditRows(wrappers: CreditCardWrapper[]): CreditCardRow[] {
@@ -503,7 +505,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
   private summaryToCounterGrandTotal(summary: CounterCardSummary): Record<string, number> {
     const grand: Record<string, number> = {};
     for (const brand of this.counterBrands) {
-      const s = summary[brand as keyof CounterCardSummary] as CardBrandData | undefined;
+      const s = summary[brand as keyof CounterCardSummary];
       grand[`${brand}_Count`] = Number(s?.Count ?? 0);
       grand[`${brand}_Amount`] = Number(s?.Amount ?? 0);
     }
@@ -570,7 +572,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
       const v = out[k];
       if (v === '' || v === null || v === undefined) delete out[k];
       else if (Array.isArray(v) && v.length === 0) delete out[k];
-      else if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v as object).length === 0) delete out[k];
+      else if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) delete out[k];
     }
     return out as Partial<T>;
   }
@@ -578,7 +580,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
   private toDateOnly(x: Date | string | null | undefined): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
@@ -627,5 +629,5 @@ export const formatAmount = (val: number | string | null | undefined): string =>
   if (typeof val === 'string') return val !== '' ? val : '--';
   if (val == null || Number(val) === 0) return '--';
   const num = Number(val);
-  return isNaN(num) ? '--' : num.toLocaleString();
+  return Number.isNaN(num) ? '--' : num.toLocaleString();
 };

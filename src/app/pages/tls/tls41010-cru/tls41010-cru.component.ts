@@ -330,7 +330,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
         // 1. 先用迴圈把所有要更新的欄位值整理到 patchObj 物件中
         for (const key of Object.keys(this.dataForm.controls)) {
-          const value = detail[key as keyof TLS41010Item] as string | number | Date | null | undefined;
+          const value = detail[key as keyof TLS41010Item];
           if (value === undefined) continue;
 
           // 特別處理連接埠欄位為 null 的情況

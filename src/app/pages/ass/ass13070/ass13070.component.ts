@@ -21,6 +21,8 @@ import { combineLatest, distinctUntilChanged, finalize, map, Observable, of, sta
 import { ASS12040QueryRequest } from '../ass12040/ass12040.model';
 import { ASS13070QueryRequest, ASS13070QueryRow } from './ass13070.model';
 
+type ClassOption = { label: string; value: string | number | null | undefined };
+
 /** 3.1.3.7 財產保管單位設定／移轉作業（查詢） */
 @Component({
   selector: 'app-ass13070',
@@ -71,8 +73,8 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
   public readonly subpoenaOptions = signal<{ label: string; value: string }[]>([]);
   public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly midClassOptions = signal<{ label: string; value: string | number | null | undefined }[]>([]);
-  public readonly smallClassOptions = signal<{ label: string; value: string | number | null | undefined }[]>([]);
+  public readonly midClassOptions = signal<ClassOption[]>([]);
+  public readonly smallClassOptions = signal<ClassOption[]>([]);
   readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
   readonly orgOptions$ = this.dropdownApi.querySys3100();
   readonly userOrgidOptions$ = this.dropdownApi.queryTblUserOrgid();

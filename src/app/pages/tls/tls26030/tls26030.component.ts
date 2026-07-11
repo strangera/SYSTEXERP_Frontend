@@ -103,7 +103,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   constructor(
     private tls26030Service: TLS26030Service,
     private tls11010Service: Tls11010Service,
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,

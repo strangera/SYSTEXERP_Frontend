@@ -139,9 +139,9 @@ export class ASS16030Component
   ];
 
   constructor(
-    private ass16030Service: ASS16030Service,
-    private dropDownListService: DropDownListService,
-    private dropdownApiService: DropdownApiService,
+    private readonly ass16030Service: ASS16030Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }

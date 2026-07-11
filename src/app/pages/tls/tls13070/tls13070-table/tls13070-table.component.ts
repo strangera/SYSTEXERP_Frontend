@@ -31,8 +31,8 @@ export interface FlattenedTls13070Row extends Tls13070Response {
 })
 export class Tls13070TableComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') private dt!: Table;
-  @ViewChild('opList') private opList!: OverlayPanel;
-  @ViewChild('opRemark') private opRemark!: OverlayPanel;
+  @ViewChild('opList') private readonly opList!: OverlayPanel;
+  @ViewChild('opRemark') private readonly opRemark!: OverlayPanel;
 
   @Input() lastQueryBody?: any;
   @Input() totalRecords = 0;

@@ -227,10 +227,10 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> implements 
         const detail = res?.Data?.[0];
 
         if (detail) {
-          const apiAmt = (detail as any).Total_Amt ?? null;
+          const apiAmt = detail.Total_Amt ?? null;
           this.originalRemainingAmt = apiAmt != null ? Math.round(Number(apiAmt)) : null;
-          this.originalHistoryAmt = (detail as any).Total_hitory_PUR_Amt != null
-            ? Math.round(Number((detail as any).Total_hitory_PUR_Amt))
+          this.originalHistoryAmt = detail.Total_hitory_PUR_Amt != null
+            ? Math.round(Number(detail.Total_hitory_PUR_Amt))
             : 0;
 
           const currentAmtRaw = this.dataForm.get('PUR_Amt')?.value;
@@ -241,17 +241,17 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> implements 
             ? Math.round(this.originalRemainingAmt - currentTotal) : this.originalRemainingAmt;
 
           this.dataForm.patchValue({
-            Inv_Date: (detail as any).PUR_GUIDate ?? null,
-            Inv_Net: (detail as any).PUR_Net,
-            Inv_Tax: (detail as any).PUR_Tax,
-            PUR_VoucherType: this.normalizeVoucherType((detail as any).PUR_VoucherType) || '',
-            PUR_TaxType: (detail as any).PUR_TaxType,
-            Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt ?? null,
+            Inv_Date: detail.PUR_GUIDate ?? null,
+            Inv_Net: detail.PUR_Net,
+            Inv_Tax: detail.PUR_Tax,
+            PUR_VoucherType: this.normalizeVoucherType(detail.PUR_VoucherType) || '',
+            PUR_TaxType: detail.PUR_TaxType,
+            Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt ?? null,
             Total_Amt: remaining,
 
             // 查完發票後帶入
-            Source_Doc_No: (detail as any).Source_Doc_No ?? '',
-            Voucher_No: (detail as any).Voucher_No ?? '',
+            Source_Doc_No: detail.Source_Doc_No ?? '',
+            Voucher_No: detail.Voucher_No ?? '',
           }, { emitEvent: false });
 
           this.updateCreditTypeByAmount(currentTotal);

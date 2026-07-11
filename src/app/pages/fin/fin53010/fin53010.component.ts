@@ -206,11 +206,11 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     /** 將 Date 或手 key 字串(yyyy/MM/dd、yyyy-MM-dd)正規化為 Date；無法解析回傳 undefined。 */
     const toDate = (v: Date | string | null | undefined | void): Date | undefined => {
       if (!v) return undefined;
-      if (v instanceof Date) return isNaN(v.getTime()) ? undefined : v;
-      const m = String(v).match(/^\s*(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})/);
+      if (v instanceof Date) return Number.isNaN(v.getTime()) ? undefined : v;
+      const m = /^\s*(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})/.exec(String(v));
       if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
       const d = new Date(String(v));
-      return isNaN(d.getTime()) ? undefined : d;
+      return Number.isNaN(d.getTime()) ? undefined : d;
     };
 
     /** 起日補 00:00:00、迄日補 23:59:59，輸出後端可解析的 ISO 字串 (yyyy-MM-ddTHH:mm:ss)。 */

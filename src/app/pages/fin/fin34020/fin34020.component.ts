@@ -98,7 +98,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
   public queryFIN34020ForReport = (body: any) =>
     this.fin34020Service.queryFIN34020(this.buildPayload(body ?? {})).pipe(
       map((res: ApiResponse<any>) => {
-        const dataAny = res?.Data as any;
+        const dataAny = res?.Data;
         this.setFooter(dataAny?.TotalSummary);
         return {
           Data: dataAny?.QueryData ?? [],

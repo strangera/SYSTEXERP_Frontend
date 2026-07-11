@@ -83,9 +83,9 @@ export class ASS16040CRUComponent
   readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
 
   // FASITEM lookup map（SPEC §10.1）
-  private fasItemGoodsIdMap = new Map<number, string>();
-  private fasItemGoodsNameMap = new Map<number, string>();
-  private fasItemUnitMap = new Map<number, string>();
+  private readonly fasItemGoodsIdMap = new Map<number, string>();
+  private readonly fasItemGoodsNameMap = new Map<number, string>();
+  private readonly fasItemUnitMap = new Map<number, string>();
 
   constructor(
     private readonly ass16040Service: ASS16040Service,
@@ -104,7 +104,7 @@ export class ASS16040CRUComponent
    * SPEC §10.1 同步策略：forkJoin([detail$, fasItem$])。
    */
   private loadAll(): void {
-    const mtapplyId = (this.rowdata as ASS16040MasterRow | null)?.MTAPPLY_ID;
+    const mtapplyId = this.rowdata?.MTAPPLY_ID;
     if (!mtapplyId) return;
 
     const detailReq: ASS16040QueryRequest = {
@@ -173,7 +173,7 @@ export class ASS16040CRUComponent
           }));
 
           // 主檔欄位：以第一筆（後端 join 在每筆明細）取，回填到 rowdata（如有）
-          const master = rows[0] ?? (this.rowdata as ASS16040MasterRow | null);
+          const master = rows[0] ?? this.rowdata;
           if (master) this.patchMasterForm(master);
         },
       });

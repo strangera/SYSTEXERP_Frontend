@@ -16,108 +16,108 @@
   <ng-template pTemplate="header">
     <tr>
       <!-- 序號: 數字最多3碼 -->
-      <th class="text-center" [style.min-width]="'42px'" rowspan="3" pFrozenColumn>序號</th>
+      <th scope="col" class="text-center" [style.min-width]="'42px'" rowspan="3" pFrozenColumn>序號</th>
       <!-- 招募編號: "00002925" = 8碼 -->
-      <th class="text-center" [style.min-width]="'82px'" rowspan="3">招募編號</th>
+      <th scope="col" class="text-center" [style.min-width]="'82px'" rowspan="3">招募編號</th>
       <!-- 更新時間: "yyyy/MM/dd" = 10碼, 禁止換行 -->
-      <th class="text-center col-date" rowspan="3">更新時間</th>
+      <th scope="col" class="text-center col-date" rowspan="3">更新時間</th>
       <!-- 位置編號: "B1B20" 短碼，可能多個換行 -->
-      <th class="text-center" [style.min-width]="'68px'" rowspan="3">位置編號</th>
+      <th scope="col" class="text-center" [style.min-width]="'68px'" rowspan="3">位置編號</th>
       <!-- 廠商名稱: 最長"香港商梅光軒有限公司台灣分公司" 15碼 -->
-      <th class="break-word text-center" [style.min-width]="'130px'" rowspan="3">廠商名稱</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'130px'" rowspan="3">廠商名稱</th>
       <!-- 廠商統一編號: 8位數字 -->
-      <th class="text-center" [style.min-width]="'82px'" rowspan="3">廠商統一編號</th>
-      <th class="text-center" colspan="11">店櫃資料</th>
-      <th class="text-center" colspan="18">租賃條件</th>
+      <th scope="col" class="text-center" [style.min-width]="'82px'" rowspan="3">廠商統一編號</th>
+      <th scope="col" class="text-center" colspan="11">店櫃資料</th>
+      <th scope="col" class="text-center" colspan="18">租賃條件</th>
       @if (aOptions.length) {
-      <th class="text-center" [attr.colspan]="aOptions.length">一次扣款</th>
+      <th scope="col" class="text-center" [attr.colspan]="aOptions.length">一次扣款</th>
       }
       @if (bOptions.length) {
-      <th class="text-center" [attr.colspan]="bOptions.length">每月扣款</th>
+      <th scope="col" class="text-center" [attr.colspan]="bOptions.length">每月扣款</th>
       }
       @if (cOptions.length) {
-      <th class="text-center" [attr.colspan]="cOptions.length * 3">平均分攤</th>
+      <th scope="col" class="text-center" [attr.colspan]="cOptions.length * 3">平均分攤</th>
       }
       @if (dOptions.length) {
-      <th class="text-center" [attr.colspan]="dOptions.length">比率分攤</th>
+      <th scope="col" class="text-center" [attr.colspan]="dOptions.length">比率分攤</th>
       }
       <!-- 結帳後幾天匯款: 值只有 "15","30","45" -->
-      <th class="break-word text-center" [style.min-width]="'55px'" rowspan="3">結帳後幾天匯款</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'55px'" rowspan="3">結帳後幾天匯款</th>
       <!-- 備註: 超長文字, word-wrap -->
-      <th class="break-word text-center" [style.min-width]="'200px'" rowspan="3">備註</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'200px'" rowspan="3">備註</th>
     </tr>
     <tr>
       <!-- 店櫃資料 -->
       <!-- 品牌名稱: "湯姆熊歡樂世界" 7碼 -->
-      <th class="break-word text-center" [style.min-width]="'90px'" rowspan="2">品牌名稱</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'90px'" rowspan="2">品牌名稱</th>
       <!-- 專櫃編號: "000008" 6碼 -->
-      <th class="text-center" [style.min-width]="'66px'" rowspan="2">專櫃編號</th>
+      <th scope="col" class="text-center" [style.min-width]="'66px'" rowspan="2">專櫃編號</th>
       <!-- 秤數: "213.000" 7碼 -->
-      <th class="text-center" [style.min-width]="'58px'" rowspan="2">秤數</th>
+      <th scope="col" class="text-center" [style.min-width]="'58px'" rowspan="2">秤數</th>
       <!-- POS機號: 類似位置編號 -->
-      <th class="text-center" [style.min-width]="'66px'" rowspan="2">POS機號</th>
+      <th scope="col" class="text-center" [style.min-width]="'66px'" rowspan="2">POS機號</th>
       <!-- 日期欄: "yyyy/MM/dd" 禁止換行 -->
-      <th class="text-center col-date" rowspan="2">營運期間(起)</th>
-      <th class="text-center col-date" rowspan="2">營運期間(迄)</th>
+      <th scope="col" class="text-center col-date" rowspan="2">營運期間(起)</th>
+      <th scope="col" class="text-center col-date" rowspan="2">營運期間(迄)</th>
       <!-- 簽約年限: "1年11個月" 6碼 -->
-      <th class="break-word text-center" [style.min-width]="'70px'" rowspan="2">簽約年限</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'70px'" rowspan="2">簽約年限</th>
       <!-- 保證金: 最大 "2,044,000" 9碼 -->
-      <th class="text-center" [style.min-width]="'88px'" rowspan="2">準時開業保證金</th>
-      <th class="text-center" [style.min-width]="'78px'" rowspan="2">施工保證金</th>
-      <th class="text-center" [style.min-width]="'88px'" rowspan="2">契約屆滿保證金</th>
+      <th scope="col" class="text-center" [style.min-width]="'88px'" rowspan="2">準時開業保證金</th>
+      <th scope="col" class="text-center" [style.min-width]="'78px'" rowspan="2">施工保證金</th>
+      <th scope="col" class="text-center" [style.min-width]="'88px'" rowspan="2">契約屆滿保證金</th>
       <!-- 抽成別: "包底加階梯" 5碼 -->
-      <th class="break-word text-center" [style.min-width]="'72px'" rowspan="2">抽成別</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'72px'" rowspan="2">抽成別</th>
       <!-- 租賃條件群組 -->
-      <th class="text-center" colspan="4">抽成</th>
-      <th class="text-center" colspan="5">階梯</th>
-      <th class="text-center" colspan="5">包底</th>
-      <th class="text-center" colspan="3">固定租金</th>
+      <th scope="col" class="text-center" colspan="4">抽成</th>
+      <th scope="col" class="text-center" colspan="5">階梯</th>
+      <th scope="col" class="text-center" colspan="5">包底</th>
+      <th scope="col" class="text-center" colspan="3">固定租金</th>
       <!-- 目標營業額: "180,000,000" 11碼 -->
-      <th class="text-center" [style.min-width]="'95px'" rowspan="2">目標營業額</th>
+      <th scope="col" class="text-center" [style.min-width]="'95px'" rowspan="2">目標營業額</th>
       <!-- A 一次扣款: e.g. "A01 開幕贊助費" -->
       @for (item of aOptions; track item['No']) {
-      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th scope="col" class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- B 每月扣款 -->
       @for (item of bOptions; track item['No']) {
-      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th scope="col" class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- C 平均分攤: 每項目3子欄 -->
       @for (item of cOptions; track item['No']) {
-      <th class="break-word text-center" colspan="3" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th scope="col" class="break-word text-center" colspan="3" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
       <!-- D 比率分攤 -->
       @for (item of dOptions; track item['No']) {
-      <th class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
+      <th scope="col" class="break-word text-center" rowspan="2" [style.min-width]="'80px'">{{item['No']}} {{item['Name']}}</th>
       }
     </tr>
     <tr>
       <!-- 抽成 (4欄) -->
-      <th class="break-word text-center" [style.min-width]="'85px'">抽成類別</th>
-      <th class="text-center col-date">帳務起</th>
-      <th class="text-center col-date">帳務迄</th>
-      <th class="text-center" [style.min-width]="'66px'">抽成比率(%)</th>
+      <th scope="col" class="break-word text-center" [style.min-width]="'85px'">抽成類別</th>
+      <th scope="col" class="text-center col-date">帳務起</th>
+      <th scope="col" class="text-center col-date">帳務迄</th>
+      <th scope="col" class="text-center" [style.min-width]="'66px'">抽成比率(%)</th>
       <!-- 階梯 (5欄) -->
-      <th class="text-center col-date">帳務起</th>
-      <th class="text-center col-date">帳務迄</th>
-      <th class="text-center" [style.min-width]="'76px'">起始金額</th>
-      <th class="text-center" [style.min-width]="'76px'">終止金額</th>
-      <th class="text-center" [style.min-width]="'56px'">抽成率</th>
+      <th scope="col" class="text-center col-date">帳務起</th>
+      <th scope="col" class="text-center col-date">帳務迄</th>
+      <th scope="col" class="text-center" [style.min-width]="'76px'">起始金額</th>
+      <th scope="col" class="text-center" [style.min-width]="'76px'">終止金額</th>
+      <th scope="col" class="text-center" [style.min-width]="'56px'">抽成率</th>
       <!-- 包底 (5欄) -->
-      <th class="text-center col-date">帳務起</th>
-      <th class="text-center col-date">帳務迄</th>
-      <th class="text-center" [style.min-width]="'76px'">年包底</th>
-      <th class="text-center" [style.min-width]="'76px'">區間包底</th>
-      <th class="text-center" [style.min-width]="'76px'">月包底</th>
+      <th scope="col" class="text-center col-date">帳務起</th>
+      <th scope="col" class="text-center col-date">帳務迄</th>
+      <th scope="col" class="text-center" [style.min-width]="'76px'">年包底</th>
+      <th scope="col" class="text-center" [style.min-width]="'76px'">區間包底</th>
+      <th scope="col" class="text-center" [style.min-width]="'76px'">月包底</th>
       <!-- 固定租金 (3欄) -->
-      <th class="text-center col-date">帳務起</th>
-      <th class="text-center col-date">帳務迄</th>
-      <th class="text-center" [style.min-width]="'66px'">租金</th>
+      <th scope="col" class="text-center col-date">帳務起</th>
+      <th scope="col" class="text-center col-date">帳務迄</th>
+      <th scope="col" class="text-center" [style.min-width]="'66px'">租金</th>
       <!-- C 平均分攤子欄 -->
       @for (item of cOptions; track item['No']) {
-      <th class="text-center" [style.min-width]="'72px'">總金額</th>
-      <th class="text-center" [style.min-width]="'62px'">每月</th>
-      <th class="text-center" [style.min-width]="'66px'">頭期款</th>
+      <th scope="col" class="text-center" [style.min-width]="'72px'">總金額</th>
+      <th scope="col" class="text-center" [style.min-width]="'62px'">每月</th>
+      <th scope="col" class="text-center" [style.min-width]="'66px'">頭期款</th>
       }
     </tr>
   </ng-template>

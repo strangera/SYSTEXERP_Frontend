@@ -124,7 +124,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     private cdRef: ChangeDetectorRef,
   ) { }
   /** 追蹤每個欄位取得焦點時的值，用於判斷 blur 時是否真的有變更 */
-  private fieldValuesAtFocus = new Map<string, any>();
+  private readonly fieldValuesAtFocus = new Map<string, any>();
 
   captureValueAtFocus(rowData: any, col: EditColumn): void {
     const key = `${rowData[this.dataKey]}_${col.field}`;

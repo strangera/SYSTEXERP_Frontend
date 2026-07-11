@@ -210,7 +210,7 @@ export class FIN72050CRUComponent
       const qtyCtrl = this.dataForm.get(d.qtyControlName);
       qtyCtrl?.valueChanges.pipe(untilDestroyed(this)).subscribe((qty) => {
         const qtyNum = Number(qty ?? 0);
-        const subtotal = isNaN(qtyNum) ? 0 : qtyNum * d.amount;
+        const subtotal = Number.isNaN(qtyNum) ? 0 : qtyNum * d.amount;
         this.dataForm.get(d.controlName)?.setValue(subtotal, { emitEvent: false });
         this.recalcActTotal();
         this.recalcDiff();
@@ -375,7 +375,7 @@ export class FIN72050CRUComponent
   private recalcActTotal(): void {
     const total = this.denominations.reduce((sum, d) => {
       const v = Number(this.dataForm.get(d.controlName)?.value ?? 0);
-      return sum + (isNaN(v) ? 0 : v);
+      return sum + (Number.isNaN(v) ? 0 : v);
     }, 0);
     this.dataForm.controls.ActTotalAmt.setValue(total, { emitEvent: false });
   }

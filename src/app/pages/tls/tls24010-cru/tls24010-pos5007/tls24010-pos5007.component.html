@@ -20,21 +20,21 @@
 
   <ng-template pTemplate="header">
     <tr>
-      <th class="w-1rem">序號</th>
+      <th scope="col" class="w-1rem">序號</th>
       @if (isFormCreateable) {
-        <th class="w-1rem"><p-tableHeaderCheckbox /></th>
+        <th scope="col" class="w-1rem"><p-tableHeaderCheckbox /></th>
       }
-      <th class="text-center">商品編號/專櫃編號</th>
-      <th class="text-center">商品名稱/櫃位名稱</th>
-      <th class="text-center">數量</th>
-      <th class="text-center">單價金額</th>
-      <th class="text-center">單價小計金額</th>
-      <th class="text-center">單價折扣讓金額(負數)</th>
-      <th class="text-center">單價銷售金額</th>
+      <th scope="col" class="text-center">商品編號/專櫃編號</th>
+      <th scope="col" class="text-center">商品名稱/櫃位名稱</th>
+      <th scope="col" class="text-center">數量</th>
+      <th scope="col" class="text-center">單價金額</th>
+      <th scope="col" class="text-center">單價小計金額</th>
+      <th scope="col" class="text-center">單價折扣讓金額(負數)</th>
+      <th scope="col" class="text-center">單價銷售金額</th>
       @if (store_way === '1') {
-        <th class="text-center">類別</th>
-        <th class="text-center">稅別</th>
-        <th class="text-center">折扣別</th>
+        <th scope="col" class="text-center">類別</th>
+        <th scope="col" class="text-center">稅別</th>
+        <th scope="col" class="text-center">折扣別</th>
       }
     </tr>
   </ng-template>

@@ -84,7 +84,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
 
   constructor(
     private tls13050Service: Tls13050Service,
-    private dropDownListService: DropDownListService,
+    private readonly dropDownListService: DropDownListService,
     private readonly dropDown: DropdownApiService
   ) {
     super();

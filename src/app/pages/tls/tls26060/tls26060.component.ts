@@ -159,7 +159,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     private tls26050Service: TLS26050Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }

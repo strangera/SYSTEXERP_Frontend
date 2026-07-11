@@ -25,9 +25,9 @@ export interface FIN62040Data {
   providedIn: 'root'
 })
 export class FIN62040Service {
-  private apiUrl = environment.ApiUrl + '/FIN0000/NTS1000';
+  private readonly apiUrl = environment.ApiUrl + '/FIN0000/NTS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   queryFIN62040(req: QueryFIN62040Request): Observable<ApiResponse<FIN62040Data[]>> {
     return this.http.post<ApiResponse<FIN62040Data[]>>(
@@ -74,6 +74,6 @@ export class FIN62040Service {
       ...rest
     } = input as any;
 
-    return rest as any;
+    return rest;
   }
 }

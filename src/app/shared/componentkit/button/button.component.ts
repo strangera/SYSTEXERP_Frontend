@@ -14,6 +14,7 @@ import { filter } from 'rxjs/operators';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 
 type ButtonType = 'button' | 'submit' | 'reset';
+type DisabledValue = boolean | undefined | string;
 
 interface ButtonConfig {
   label: string;
@@ -61,10 +62,10 @@ export class ButtonComponent implements OnInit, AfterViewInit {
   @Input() permissionCode: string | undefined;
 
   // Signal-backed getter/setter so effectiveDisabled() reacts to parent binding changes
-  private readonly _disabled = signal<boolean | undefined | string>(undefined);
+  private readonly _disabled = signal<DisabledValue>(undefined);
   @Input()
-  set disabled(value: boolean | undefined | string) { this._disabled.set(value); }
-  get disabled(): boolean | undefined | string { return this._disabled(); }
+  set disabled(value: DisabledValue) { this._disabled.set(value); }
+  get disabled(): DisabledValue { return this._disabled(); }
 
   private readonly permissionDisabled = signal(false);
   readonly showButton = signal(false);

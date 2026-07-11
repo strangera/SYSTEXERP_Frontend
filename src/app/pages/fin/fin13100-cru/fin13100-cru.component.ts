@@ -80,7 +80,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     return this.crudstatus === CRUDStatus.Read;
   }
 
-  constructor(private fin13100Service: FIN13100Service) {
+  constructor(private readonly fin13100Service: FIN13100Service) {
     super();
   }
 

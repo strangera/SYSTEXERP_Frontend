@@ -291,8 +291,8 @@ export class TLS23100Component extends BasicQueryPageComponent<any> implements O
   }
 
   // ===== 小工具整理流 =====
-  private ensureArr = (v: any) => Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
-  private padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
+  private readonly ensureArr = (v: any) => Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+  private readonly padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
 
   private prune<T extends Record<string, any>>(obj: T): T {
     const out: any = { ...obj };

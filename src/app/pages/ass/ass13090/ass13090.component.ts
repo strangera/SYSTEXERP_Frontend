@@ -71,6 +71,8 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
   },
 ];
 
+type DateOrString = Date | string | null;
+
 //3.1.3.9 資產攤提作業
 @UntilDestroy()
 @Component({
@@ -108,7 +110,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     inputAmountFrom: [null as number | null], // 購入金額(起)
     inputAmountTo: [null as number | null], // 購入金額(訖)
     purchaseNo: [null as string | null], // 採購單號 → SUBPOENA_ID
-    amortYearMonth: [null as Date | string | null], // 攤提年月
+    amortYearMonth: [null as DateOrString], // 攤提年月
     conditionFilter: [], // 1:已設定攤提 → DEPRE_STATUS Y；0:未設定 → N
     pageSize: [30],
     pageIndex: [1],
@@ -174,9 +176,9 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
               Message: res?.Message,
             };
           }
-          const apiRows = this.unwrapApiRowsByLayout(res.Data as unknown, this.resultLayoutMode);
+          const apiRows = this.unwrapApiRowsByLayout(res.Data, this.resultLayoutMode);
           const rows = apiRows.map(row => this.normalizeApiRow(row));
-          const totalCount = this.pickAss13090TotalCount(res, res.Data as unknown, rows.length);
+          const totalCount = this.pickAss13090TotalCount(res, res.Data, rows.length);
           return {
             Data: rows,
             TotalCount: totalCount,
@@ -234,7 +236,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
         this.selectedRows = [];
         this.queryStateService.setQueryState(this.ProgNo, raw);
         this.tableLoading.set(true);
-        this.queryASS13090ForReport(this.lastQueryBody!)
+        this.queryASS13090ForReport(this.lastQueryBody)
           .pipe(
             untilDestroyed(this),
             finalize(() => {
@@ -390,7 +392,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       ASSET_COST_S: (raw['inputAmountFrom'] as number | null) ?? null,
       ASSET_COST_E: (raw['inputAmountTo'] as number | null) ?? null,
       DEPRE_STATUS: depreStatus ?? null,
-      DEPRE_YM: this.formatDepreYm(raw['amortYearMonth'] as Date | string | null),
+      DEPRE_YM: this.formatDepreYm(raw['amortYearMonth'] as DateOrString),
       STYPE_ID: (raw['accountCode'] as string | null) ?? null,
       PageSize: pageSize,
       PageIndex: pageIndex,
@@ -414,7 +416,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     return x.toISOString();
   }
 
-  private formatDepreYm(v: Date | string | null): string | null {
+  private formatDepreYm(v: DateOrString): string | null {
     if (v == null || v === '') return null;
     if (typeof v === 'string') {
       const s = v.trim();
@@ -519,7 +521,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     if (!this.lastQueryBody) {
       return null;
     }
-    const q = this.lastQueryBody as Record<string, unknown>;
+    const q = this.lastQueryBody;
     const sortBy = Array.isArray(q['SortBy']) ? (q['SortBy'] as Array<Record<string, unknown>>) : [];
     const firstSort = sortBy[0] ?? null;
     const sortField = firstSort?.['field'] != null ? String(firstSort['field']) : null;

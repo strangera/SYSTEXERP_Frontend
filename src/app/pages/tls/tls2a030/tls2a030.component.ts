@@ -103,7 +103,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     public tls2a030Service: TLS2A030Service,
     private tls2c050Service: TLS2C050Service,
     private readonly datePipe: DatePipe

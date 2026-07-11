@@ -176,7 +176,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
   }
 
   private extractFilename(contentDisposition: string, fallback: string): string {
-    const match = contentDisposition.match(/filename\*=UTF-8''(.+?)(;|$)/) || contentDisposition.match(/filename="?([^";]+)"?/);
+    const match = /filename\*=UTF-8''(.+?)(;|$)/.exec(contentDisposition) || /filename="?([^";]+)"?/.exec(contentDisposition);
     return match?.[1] ? decodeURIComponent(match[1]) : fallback;
   }
 

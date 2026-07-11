@@ -511,7 +511,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   onLocationDataChange(data: any[]): void {
     // 保留本次 table-edit 不知道的舊刪除紀錄（例如：前次編輯工作階段已標記 deleted 的行）
     const emittedKeys = new Set(
-      data.map(d => (d as any)._TABLE_KEY ?? (d.id != null ? String(d.id) : '')).filter(Boolean)
+      data.map(d => d._TABLE_KEY ?? (d.id != null ? String(d.id) : '')).filter(Boolean)
     );
     const prevDeleted = this.locationData.filter(
       loc => loc._status === 'deleted' &&
@@ -558,7 +558,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   private formatDateParam(d: string | Date | undefined | null): string | null {
     if (!d) return null;
     if (d instanceof Date) return d.toLocaleDateString('sv-SE');
-    return d as string;
+    return d;
   }
 
   private loadLocationPickerData(row: LocationItem, filters?: { building_code?: string; floor_code?: string; area_code?: string; location_no?: string }): void {

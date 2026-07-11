@@ -301,7 +301,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   constructor(
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
-    private tls51130Service: TLS51130Service, //查詢LOGODISC品牌進貨折數設定檔
+    private readonly tls51130Service: TLS51130Service, //查詢LOGODISC品牌進貨折數設定檔
     private dropDown51070: dropDown51070, //下拉選單 (選項固定)
     private validationService: ValidationService,
     private readonly destroyRef: DestroyRef,

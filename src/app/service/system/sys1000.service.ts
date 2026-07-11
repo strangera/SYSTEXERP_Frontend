@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { filter, map, Observable } from 'rxjs';
 
 interface Sys1000Base {

@@ -156,7 +156,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     };
 
     if (col.cellClass) {
-      const extra = col.cellClass(rowData, col.field as string);
+      const extra = col.cellClass(rowData, col.field);
       if (typeof extra === 'string' && extra.trim()) {
         extra.trim().split(/\s+/).forEach(cls => {
           if (cls) result[cls] = true;

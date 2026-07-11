@@ -76,7 +76,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
   ];
 
   constructor(
-    private sys0230Service: Sys0230Service,
+    private readonly sys0230Service: Sys0230Service,
     private readonly cdr: ChangeDetectorRef
   ) {
     super();

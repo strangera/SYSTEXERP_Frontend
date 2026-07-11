@@ -108,7 +108,7 @@ export class ExportComponent implements OnInit, OnDestroy {
   @Input() pageOrientation: string | null = 'Landscape';  // PDF橫式
   @Input() pageSizeSetting: string | null = 'A4';  // PDF A4
 
-  private destroy$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   form = this.formBuilder.nonNullable.group({
     print_reportTitle: ['Y'], // 報表標題
@@ -124,7 +124,7 @@ export class ExportComponent implements OnInit, OnDestroy {
     page_orientation: ['Landscape'],
     page_size_setting: ['A4']
   });
-  constructor(private formBuilder: FormBuilder) { };
+  constructor(private readonly formBuilder: FormBuilder) { };
   ngOnInit() {
     this.setupValueChangeListeners();
   }

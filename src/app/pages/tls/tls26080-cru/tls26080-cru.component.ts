@@ -228,7 +228,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       const rate_D16 = Number(item.tpy_rate_D16);
       const rate_D17 = Number(item.tpy_rate_D17);
-      if (isNaN(rate_D16) || isNaN(rate_D17)) return true;
+      if (Number.isNaN(rate_D16) || Number.isNaN(rate_D17)) return true;
 
       if (rate_D16 < 0 || rate_D16 > 1 || rate_D17 < 0 || rate_D17 > 1) return true;
 
@@ -247,7 +247,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const sdate = this.selectedCampaign()?.StartTime;
     if (sdate === undefined || sdate === null) return;
     const base = new Date(sdate);
-    if (isNaN(base.getTime())) return;
+    if (Number.isNaN(base.getTime())) return;
 
     const newDate = new Date(base);
     newDate.setDate(newDate.getDate() + 7);
@@ -651,7 +651,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
         const rate_D16 = Number(item.tpy_rate_D16);
         const rate_D17 = Number(item.tpy_rate_D17);
-        if (isNaN(rate_D16) || isNaN(rate_D17)) {
+        if (Number.isNaN(rate_D16) || Number.isNaN(rate_D17)) {
           this.messageService.errorBubble('D16 和 D17 費用比率必須為有效的數字，請確認後再送出');
           this.tableLoading.set(false);
           return;
@@ -1105,7 +1105,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     // 1. 檢查是否為合法數字
     const num = Number(normalized);
-    if (isNaN(num) || !isFinite(num)) return { isValid: false, errorMessage: ['請輸入有效的數字'] };
+    if (Number.isNaN(num) || !Number.isFinite(num)) return { isValid: false, errorMessage: ['請輸入有效的數字'] };
 
     // 2. 商業邏輯檢查：數值必須介於 0 到 1 之間
     if (num < 0 || num > 1) return { isValid: false, errorMessage: ['請輸入 0 到 1 之間的數字'] };
@@ -1209,7 +1209,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (value === undefined || value === null || value === '') return 0;
     const fallback = 0;
     const parsed = Number(value);
-    return isNaN(parsed) ? fallback : parsed;
+    return Number.isNaN(parsed) ? fallback : parsed;
   }
 
   private mapDetailRows(data: TLS26080EditTable[]): TLS26080EditTable[] {

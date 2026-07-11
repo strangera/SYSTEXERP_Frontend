@@ -88,7 +88,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<FlatDataRow> impl
       .subscribe((val) => {
         if (!val) return;
         const selected = val instanceof Date ? val : new Date(val);
-        if (isNaN(selected.getTime())) return;
+        if (Number.isNaN(selected.getTime())) return;
         const year = selected.getFullYear();
         const month = selected.getMonth();
         this.salesMinDate = new Date(year, month, 1);
@@ -178,7 +178,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<FlatDataRow> impl
         const contentDisposition = res.headers.get('content-disposition');
         let filename = 'unknown.xlsx';
         if (contentDisposition) {
-          const matches = contentDisposition.match(/filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/);
+          const matches = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/.exec(contentDisposition);
           if (matches) {
             filename = decodeURIComponent(matches[1] || matches[2] || filename).replace(/["']/g, '');
           }

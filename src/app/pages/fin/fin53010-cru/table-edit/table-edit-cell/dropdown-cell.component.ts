@@ -162,7 +162,7 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
   /** 快取後綁定 p-dropdown，避免每次 CD 重算觸發 PrimeNG disabled setter 內的 detectChanges 連鎖 */
   public dropdownDisabled = false;
 
-  @ViewChild('inputWithDropdownPanel') private inputWithDropdownPanel?: OverlayPanel;
+  @ViewChild('inputWithDropdownPanel') private readonly inputWithDropdownPanel?: OverlayPanel;
   protected pickerFilter = '';
   protected filteredPickerOptions: Record<string, unknown>[] = [];
 

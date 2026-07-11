@@ -12,13 +12,13 @@
 
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th class="w-1rem text-center">序號</th>
-      <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center wrap-header"
+      <th scope="col" class="w-1rem text-center">序號</th>
+      <th *ngFor="let col of columns" scope="col" [pSortableColumn]="col.field" class="text-center wrap-header"
         style="min-width: 55px">
         {{ col.header }}
         <p-sortIcon *ngIf="data.length" [field]="col.field" />
       </th>
-      <th class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">管理</th>
+      <th scope="col" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">管理</th>
     </tr>
   </ng-template>
 

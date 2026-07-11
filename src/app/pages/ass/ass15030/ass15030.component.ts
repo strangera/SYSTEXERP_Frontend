@@ -61,7 +61,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   });
   data: any[] = [];
   totalRecords = 0;
-  footerData: any | null = null;
+  footerData: any = null;
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
   exportExcelLoading = false;
@@ -205,7 +205,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     });
 
     this.lastQueryBody = {
-      ...(request as QueryASS15030Request),
+      ...request,
       pageIndex: apiPageIndex,
       pageSize: apiPageSize,
     };
@@ -337,7 +337,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   private queryByReportStyle(
     request: QueryASS15030Request,
-  ): Observable<{ rows: any[]; totalCount: number; footer: any | null; rawCount: number }> {
+  ): Observable<{ rows: any[]; totalCount: number; footer: any; rawCount: number }> {
     const reportStyle = this.queryForm.controls.reportStyle.value;
     if (reportStyle === '2') {
       return this.ass15030Service.queryASS15030Detail(request).pipe(

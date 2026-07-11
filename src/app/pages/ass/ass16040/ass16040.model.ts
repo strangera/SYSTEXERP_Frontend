@@ -1,4 +1,7 @@
 import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+
+type DateOrString = Date | string | null;
+
 /**
  * ASS16040 領用審核作業 — 查詢請求
  * SPEC §7.1/§7.2: queryASS16040M（主檔模式）/ queryASS16040（主檔+明細模式）共用此 Request
@@ -7,12 +10,12 @@ export interface ASS16040QueryRequest extends ApiRequest {
   MTAPPLY_ID?: string | null;          // 領用單號（長度 15）
   EMP_ID?: string | null;              // 申請人代號
   FASITEM_ID?: number | null;          // 品項編號（FASITEM.ID, int64）
-  APPLY_DATE_S?: Date | string | null; // 申請日期起
-  APPLY_DATE_E?: Date | string | null; // 申請日期迄
-  APRV_DATE_S?: Date | string | null;  // 審核日期起
-  APRV_DATE_E?: Date | string | null;  // 審核日期迄
+  APPLY_DATE_S?: DateOrString;         // 申請日期起
+  APPLY_DATE_E?: DateOrString;         // 申請日期迄
+  APRV_DATE_S?: DateOrString;          // 審核日期起
+  APRV_DATE_E?: DateOrString;          // 審核日期迄
   ORG_ID?: string | null;              // 部門代號
-  CHECK_DATE?: Date | string | null;   // 發料日期
+  CHECK_DATE?: DateOrString;           // 發料日期
   APRV_EMP_ID?: string | null;         // 審核者代號
   WH_ID?: string | null;               // 倉別
   STATUS?: string | null;              // 領用單狀態 (MTAPPLY_STATUS)

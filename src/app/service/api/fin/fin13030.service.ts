@@ -158,30 +158,6 @@ export class FIN13030Service {
   // 取得零稅率發票
   queryFIN13030_GetZeroTaxGUI(data: FIN13030GetZeroTaxGUIRequest): Observable<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>> {
     return this.http.post<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>>(`${this.apiUrl}/queryFIN13030_GetZeroTaxGUI`, data);
-    // 回傳假資料
-    return new Observable<ApiResponse<FIN13030GetZeroTaxGUIResponse[]>>(observer => {
-      const Data: ApiResponse<FIN13030GetZeroTaxGUIResponse[]> = {
-        TotalCount: 1,
-        Data: [{
-          ID: 0,
-          INV_GUITrack: 'A',
-          INV_GUINo: '12345678',
-          INV_GUIDate: '2023-10-01T00:00:00Z',
-          INV_YM: '202310',
-          INV_DeclareYM: '202310',
-          INV_Uniform: '87654321',
-          INV_Amt: 1000,
-          INV_GUIType: '1',
-          INV_ZeroTax: 'Y',
-          INV_SeqNo: 1
-        }],
-        Status: '',
-        Message: '',
-        TotalPage: 0
-      };
-      observer.next(Data);
-      observer.complete();
-    });
   }
 
   // 新增TDS10012資料

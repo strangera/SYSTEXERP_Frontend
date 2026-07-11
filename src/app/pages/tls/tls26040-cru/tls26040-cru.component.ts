@@ -96,7 +96,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     private tls26040Service: TLS26040Service,
     private dropDownListService: DropDownListService,
     private validationService: ValidationService,
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private datePipe: DatePipe
   ) {
     super();

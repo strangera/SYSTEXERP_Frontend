@@ -415,7 +415,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
   }
 
   private computeGrandTotals(rows: any[]): Record<string, number> {
-    const totalFields = this.columns.filter((c) => c.isTotal).map((c) => c.field as string);
+    const totalFields = this.columns.filter((c) => c.isTotal).map((c) => c.field);
     const out: Record<string, number> = {};
     for (const f of totalFields) out[f] = 0;
     for (const r of rows) {
@@ -432,7 +432,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
     if (!totalSummary) return out;
     for (const col of this.columns) {
       if (!col?.isTotal) continue;
-      const field = col.field as string;
+      const field = col.field;
       const underscore = field.indexOf('_');
       if (underscore <= 0) continue;
 

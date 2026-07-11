@@ -44,9 +44,9 @@ export interface QueryFIN65010Response {
   providedIn: 'root'
 })
 export class Fin65010Service {
-  private apiUrl = `${environment.ApiUrl}/FIN0000/NTS1000`;
+  private readonly apiUrl = `${environment.ApiUrl}/FIN0000/NTS1000`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   queryFIN65010(body: QueryFIN65010Request): Observable<ApiResponse<QueryFIN65010Response[]>> {
     return this.http.post<ApiResponse<QueryFIN65010Response[]>>(`${this.apiUrl}/queryFIN65010`, body);

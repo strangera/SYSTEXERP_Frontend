@@ -42,10 +42,10 @@ import { DetailASS13090DetailItem, DetailASS13090MasterInfo } from '../ass13090/
   ],
 })
 export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090MasterInfo> implements OnInit {
-  private validationService = inject(ValidationService);
-  private translate = inject(TranslateService);
-  private ass13090Service = inject(ASS13090Service);
-  private datePipe = inject(DatePipe);
+  private readonly validationService = inject(ValidationService);
+  private readonly translate = inject(TranslateService);
+  private readonly ass13090Service = inject(ASS13090Service);
+  private readonly datePipe = inject(DatePipe);
 
   /** 攤提紀錄（明細列表，API 就緒後改為查詢結果） */
   readonly amortRecordTableLoading = signal(false);
@@ -69,35 +69,35 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
   private formBaseline: Record<string, unknown> | null = null;
 
   dataForm = this.formBuilder.group({
-    assetsCode: [, [Validators.maxLength(20)]],
+    assetsCode: [undefined, [Validators.maxLength(20)]],
     itemCode: [],
-    assetStatus: [, [Validators.maxLength(13)]],
-    assetType: [, [Validators.maxLength(13)]],
+    assetStatus: [undefined, [Validators.maxLength(13)]],
+    assetType: [undefined, [Validators.maxLength(13)]],
     purchaseNumber: [],
     purchaseDate: [],
-    purchaseAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]],
-    alteredAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]],
-    supplierCode: [, [Validators.maxLength(10)]],
-    accounting_Borrow: [, [Validators.maxLength(8)]],
-    accounting_Credit: [, [Validators.maxLength(8)]],
+    purchaseAmount: [undefined, [this.validationService.numberValidator, Validators.maxLength(8)]],
+    alteredAmount: [undefined, [this.validationService.numberValidator, Validators.maxLength(8)]],
+    supplierCode: [undefined, [Validators.maxLength(10)]],
+    accounting_Borrow: [undefined, [Validators.maxLength(8)]],
+    accounting_Credit: [undefined, [Validators.maxLength(8)]],
     entryDate: [],
     amortizedDate: [],
     depreciation: [],
     totalDepreciation: [],
-    depreciationLife: [, [Validators.maxLength(8)]],
-    alteredLife: [, [Validators.maxLength(8)]],
-    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]],
-    residual: [, [Validators.maxLength(8)]],
-    amortizedAmount: [, [Validators.maxLength(8)]],
-    amortizedMonth: [, [Validators.maxLength(8)]],
-    keepingPerson: [, [Validators.required]],
+    depreciationLife: [undefined, [Validators.maxLength(8)]],
+    alteredLife: [undefined, [Validators.maxLength(8)]],
+    depreciationLifeMM: [undefined, [Validators.required, Validators.maxLength(8)]],
+    residual: [undefined, [Validators.maxLength(8)]],
+    amortizedAmount: [undefined, [Validators.maxLength(8)]],
+    amortizedMonth: [undefined, [Validators.maxLength(8)]],
+    keepingPerson: [undefined, [Validators.required]],
     keepingUnit: [],
     user: [],
     userUnit: [],
     locationCode: [],
-    renewalNumber: [, [Validators.maxLength(25)]],
-    renewalAmount: [, [Validators.required, Validators.maxLength(8)]],
-    remark: [,],
+    renewalNumber: [undefined, [Validators.maxLength(25)]],
+    renewalAmount: [undefined, [Validators.required, Validators.maxLength(8)]],
+    remark: [undefined],
   });
 
   constructor() {

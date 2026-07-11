@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+type DateLike = Date | string | null | undefined;
+
 /**
  * 移除物件中的空值（null, undefined, 空字串）
  */
@@ -20,10 +22,10 @@ export function removeEmptyValues<T extends Record<string, any>>(obj: T): Partia
  * 用法限於只關心日期（年月日）的欄位；後端讀為 UTC 後解析出的日期會與使用者
  * 在畫面上看到的一致。
  */
-export function toLocalIsoString(d: Date | string | null | undefined): string | null {
+export function toLocalIsoString(d: DateLike): string | null {
   if (d === null || d === undefined || d === '') return null;
   const date = d instanceof Date ? d : new Date(d);
-  if (isNaN(date.getTime())) return null;
+  if (Number.isNaN(date.getTime())) return null;
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
 }
 
@@ -34,15 +36,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * 避免 toISOString/UTC 偏移造成時間跑掉。
  * endOfDay=true 時時間為 23:59:59，用於查詢結束日。
  */
-export function toLocalDateTimeString(d: Date | string | null | undefined, endOfDay = false): string | null {
+export function toLocalDateTimeString(d: DateLike, endOfDay = false): string | null {
   if (d === null || d === undefined || d === '') return null;
   const date = d instanceof Date ? d : new Date(d);
-  if (isNaN(date.getTime())) return null;
+  if (Number.isNaN(date.getTime())) return null;
   const datePart = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   return endOfDay ? `${datePart}T23:59:59` : `${datePart}T00:00:00`;
 }
 
 /** 同 toLocalDateTimeString，時間固定為 23:59:59，用於日期範圍查詢的結束日 */
-export function toLocalIsoStringEndOfDay(d: Date | string | null | undefined): string | null {
+export function toLocalIsoStringEndOfDay(d: DateLike): string | null {
   return toLocalDateTimeString(d, true);
 }

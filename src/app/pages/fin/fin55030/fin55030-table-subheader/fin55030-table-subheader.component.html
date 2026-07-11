@@ -23,31 +23,31 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && data.length && showReorder" class="w-1rem" rowspan="2"></th>
-        <th class="w-1rem" rowspan="2">序號</th>
+        <th *ngIf="!showSubTotal && data.length && showReorder" scope="col" class="w-1rem" rowspan="2"></th>
+        <th scope="col" class="w-1rem" rowspan="2">序號</th>
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
+            <th scope="col" [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
               class="group-header" pReorderableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
-            <th *ngIf="!col.hidden" rowspan="2" class="text-center">
+            <th *ngIf="!col.hidden" scope="col" rowspan="2" class="text-center">
               {{ col.header }}
             </th>
           </ng-container>
         </ng-container>
-        <th [hidden]="!IsPrint || !showManage" rowspan="2" class="w-1rem text-center group-header">
+        <th [hidden]="!IsPrint || !showManage" scope="col" rowspan="2" class="w-1rem text-center group-header">
           管理
         </th>
       </tr>
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn>
+          <th *ngIf="!col.hidden && col.groupField" scope="col" class="text-center" pReorderableColumn>
             {{ col.header }}
           </th>
         </ng-container>
@@ -56,15 +56,15 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="!showSubTotal && data.length && showReorder" class="w-1rem"></th>
-        <th class="w-1rem">序號</th>
-        <th class="w-1rem" *ngIf="IsPrint && showCheckBox && selectionMode === 'multiple'">
+        <th *ngIf="!showSubTotal && data.length && showReorder" scope="col" class="w-1rem"></th>
+        <th scope="col" class="w-1rem">序號</th>
+        <th scope="col" class="w-1rem" *ngIf="IsPrint && showCheckBox && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox />
         </th>
-        <th *ngFor="let col of columns" pReorderableColumn class="text-center wrap-header">
+        <th *ngFor="let col of columns" pReorderableColumn scope="col" class="text-center wrap-header">
           {{ col.header }}
         </th>
-        <th [hidden]="!IsPrint || !showManage" class="w-1rem text-center">
+        <th [hidden]="!IsPrint || !showManage" scope="col" class="w-1rem text-center">
           管理
         </th>
       </tr>

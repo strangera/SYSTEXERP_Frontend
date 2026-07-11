@@ -20,7 +20,7 @@ import { environment } from 'src/environments/environment';
 export class ASS16030Service {
   private readonly apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   /**
    * 主檔清單查詢（queryASS16030M）— 查詢頁列表用。

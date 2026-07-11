@@ -179,7 +179,7 @@ export class SYS0790Component
   ): string | undefined {
     if (!value) return undefined;
     const d = value instanceof Date ? value : new Date(value);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');

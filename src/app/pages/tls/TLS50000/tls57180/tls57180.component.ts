@@ -16,7 +16,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { saveAs } from 'file-saver';
 import { finalize, map } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../../shared/componentkit/calendar/calendar.component';

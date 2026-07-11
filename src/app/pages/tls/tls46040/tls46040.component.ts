@@ -55,7 +55,7 @@ export class TLS46040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
   ) {
     super();

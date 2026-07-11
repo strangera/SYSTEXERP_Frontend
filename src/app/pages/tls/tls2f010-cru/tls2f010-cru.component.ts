@@ -331,7 +331,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     if (guinetCtrl && guinetCtrl.valueChanges) {
       guinetCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((v: any) => {
         const net = Number(v ?? 0);
-        if (!isNaN(net)) {
+        if (!Number.isNaN(net)) {
           const tax = isCurrentlyTaxable() ? Math.round(net * 0.05) : 0;
           if (taxCtrl) taxCtrl.setValue(tax, { emitEvent: false });
           if (amtCtrl) amtCtrl.setValue(net + tax, { emitEvent: false });
@@ -343,7 +343,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       taxCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((tv: any) => {
         const taxVal = Number(tv ?? 0);
         const netVal = Number(guinetCtrl && guinetCtrl.value ? guinetCtrl.value : 0);
-        if (!isNaN(taxVal) && !isNaN(netVal)) {
+        if (!Number.isNaN(taxVal) && !Number.isNaN(netVal)) {
           if (!isCurrentlyTaxable()) {
             taxCtrl.setValue(0, { emitEvent: false });
             if (amtCtrl) amtCtrl.setValue(netVal, { emitEvent: false });
@@ -730,7 +730,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
         row.GUITax = 0;
         const netVal = Number(row.GUINet ?? 0);
-        row.GUIAmt = (isNaN(netVal) ? 0 : netVal);
+        row.GUIAmt = (Number.isNaN(netVal) ? 0 : netVal);
       }
     }
 
@@ -747,14 +747,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
         row.GUITax = 0;
         const netVal = Number(row.GUINet ?? 0);
-        row.GUIAmt = (isNaN(netVal) ? 0 : netVal);
+        row.GUIAmt = (Number.isNaN(netVal) ? 0 : netVal);
       }
     }
 
     if (ev.field === 'GUINet') {
       const row = ev.rowData ?? {};
       const net = Number(ev.value ?? 0);
-      if (!isNaN(net)) {
+      if (!Number.isNaN(net)) {
         const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
         const isReceipt = (guiLabel ?? '').includes('收據');
         const taxLabel = this.mapValueToLabel(this.taxTypeOptions, row?.TAX_TYPE ?? row?.PUR_TaxType);
@@ -773,7 +773,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       const row = ev.rowData ?? {};
       const net = Number(row.GUINet ?? 0);
       const tax = Number(ev.value ?? 0);
-      if (!isNaN(net) && !isNaN(tax)) {
+      if (!Number.isNaN(net) && !Number.isNaN(tax)) {
         row.GUIAmt = net + tax;
       }
     }

@@ -97,7 +97,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls2b020Service: TLS2B020Service,
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private tls11010Service: Tls11010Service,
     public override messageService: NotificationService,
   ) {

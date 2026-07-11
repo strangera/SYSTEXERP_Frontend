@@ -35,9 +35,9 @@ export class VenUserPickerComponent {
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() selected = new EventEmitter<string>();
 
-  private fin55050 = inject(FIN55050Service);
-  private sys0110 = inject(Sys0110Service);
-  private destroyRef = inject(DestroyRef);
+  private readonly fin55050 = inject(FIN55050Service);
+  private readonly sys0110 = inject(Sys0110Service);
+  private readonly destroyRef = inject(DestroyRef);
 
   mode: 'vendor' | 'user' = 'vendor';
   venNo = '';

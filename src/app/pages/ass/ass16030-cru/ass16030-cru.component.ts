@@ -129,10 +129,10 @@ export class ASS16030CRUComponent
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
 
   constructor(
-    private ass16030Service: ASS16030Service,
-    private dropDownListService: DropDownListService,
-    private dropdownApiService: DropdownApiService,
-    private fileExportService: FileExportService,
+    private readonly ass16030Service: ASS16030Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }

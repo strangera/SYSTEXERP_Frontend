@@ -83,15 +83,17 @@
             <tr>
               <th
                 *ngIf="showCheckBox && selectionMode === 'multiple'"
+                scope="col"
                 class="w-3rem text-center"
               >
                 <p-tableHeaderCheckbox />
               </th>
               <th
                 *ngIf="showCheckBox && selectionMode === 'single'"
+                scope="col"
                 class="w-3rem"
               ></th>
-              <th *ngFor="let col of columns" class="text-center">
+              <th *ngFor="let col of columns" scope="col" class="text-center">
                 {{ col.header }}
               </th>
             </tr>

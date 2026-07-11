@@ -526,7 +526,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
 
   private toYMD(d: any): string | null {
     const date = d instanceof Date ? d : new Date(d);
-    return isNaN(date.getTime()) ? null : `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    return Number.isNaN(date.getTime()) ? null : `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
   }
 
   private toBoolOrNull(v: any): boolean | null {
@@ -540,7 +540,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 

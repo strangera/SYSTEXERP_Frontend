@@ -58,7 +58,7 @@ export class TLS46040CRUComponent extends BasicCruPageComponent<any> implements 
   ECR_TmplNo_Option: IDropdownItem[] = [];
 
   constructor(
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
     private tls11010Service: Tls11010Service,
   ) {

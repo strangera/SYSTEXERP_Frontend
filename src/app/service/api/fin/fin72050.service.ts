@@ -4,6 +4,7 @@ import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-a
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 // 零用金盤點作業 (FIN72050) 資料模型
+type PCCType = '1' | '2' | string; // 1=總額, 2=點鈔
 /* -------------------------------------------------------------------------- */
 /* 列表查詢                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -65,7 +66,7 @@ export interface FIN72050Detail {
   PCS_APRVDate?: string;
   PCS_APRVUsrNo?: string;
   PCS_APRVUsrName?: string;
-  PCC_Type: '1' | '2' | string;     // 1=總額, 2=點鈔
+  PCC_Type: PCCType;
   PCC_ActAmt_1: number;
   PCC_ActAmt_5: number;
   PCC_ActAmt_10: number;
@@ -115,7 +116,7 @@ export interface InsertFIN72050Request {
   Keep_UsrName?: string;
   Keep_OrgID?: string;
   Keep_QuotaAmt: number;
-  PCC_Type: '1' | '2' | string;
+  PCC_Type: PCCType;
   PCC_CountAmt?: number;
   PCC_ActAmt_1?: number;
   PCC_ActAmt_5?: number;
@@ -131,7 +132,7 @@ export interface InsertFIN72050Request {
 
 export interface UpdateFIN72050Request {
   PCS_PST_No: string;
-  PCC_Type: '1' | '2' | string;
+  PCC_Type: PCCType;
   PCC_CountAmt?: number;
   PCC_ActAmt_1?: number;
   PCC_ActAmt_5?: number;

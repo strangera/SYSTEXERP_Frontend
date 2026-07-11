@@ -53,11 +53,11 @@
   <p-table [value]="getSectionA(entry.value)" styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true">
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 100px">日期</th>
-        <th>說明</th>
-        <th style="width: 130px; text-align: right">借方金額</th>
-        <th style="width: 130px; text-align: right">貸方金額</th>
-        <th style="width: 130px; text-align: right">餘額</th>
+        <th scope="col" style="width: 100px">日期</th>
+        <th scope="col">說明</th>
+        <th scope="col" style="width: 130px; text-align: right">借方金額</th>
+        <th scope="col" style="width: 130px; text-align: right">貸方金額</th>
+        <th scope="col" style="width: 130px; text-align: right">餘額</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
@@ -78,12 +78,12 @@
   <p-table [value]="getSectionB(entry.value)" styleClass="p-datatable-sm p-datatable-gridlines" [scrollable]="true">
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 100px">到期日</th>
-        <th style="width: 130px">票據號碼</th>
-        <th style="width: 120px">廠商代號</th>
-        <th>廠商名稱</th>
-        <th style="width: 80px; text-align: center">票據狀態</th>
-        <th style="width: 130px; text-align: right">貸方金額</th>
+        <th scope="col" style="width: 100px">到期日</th>
+        <th scope="col" style="width: 130px">票據號碼</th>
+        <th scope="col" style="width: 120px">廠商代號</th>
+        <th scope="col">廠商名稱</th>
+        <th scope="col" style="width: 80px; text-align: center">票據狀態</th>
+        <th scope="col" style="width: 130px; text-align: right">貸方金額</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>

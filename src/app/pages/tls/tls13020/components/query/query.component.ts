@@ -179,7 +179,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     {
       label: '續約',
       icon: 'pi pi-copy text-blue-500',
-      action: (rowData: ContractItem) => this.onRenewal(rowData),
+      action: (rowData: ContractItem) => { this.onRenewal(rowData); },
       disabled: () => !this.hasPermission(Actions.Create)
     }
   ];

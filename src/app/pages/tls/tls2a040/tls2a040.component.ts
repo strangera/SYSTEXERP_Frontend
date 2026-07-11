@@ -84,7 +84,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   btnLoading = false;
 
   constructor(
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
     private tls2a040Service: Tls2a040Service
   ) {

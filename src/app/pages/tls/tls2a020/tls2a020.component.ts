@@ -58,7 +58,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   BUILDING_NO_Options: any = [];
 
   constructor(
-    private dropdownApiService: DropdownApiService,
+    private readonly dropdownApiService: DropdownApiService,
     public tls2a020Service: TLS2A020Service
   ) {
     super();

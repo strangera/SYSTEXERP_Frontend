@@ -77,7 +77,7 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<QueryTLS51030Res
           tap((response) => {
             // 自動清洗邏輯：如果目前選中的中分類，不在新載入的大分類選項中，自動清空
             const currentCatMNo = this.dataForm.controls.CAT_MNo.value;
-            if (currentCatMNo && !response?.some(opt => opt.No === currentCatMNo || opt.No === currentCatMNo)) {
+            if (currentCatMNo && !response?.some(opt => opt.No === currentCatMNo)) {
               this.dataForm.controls.CAT_MNo.setValue('');
             }
           }),

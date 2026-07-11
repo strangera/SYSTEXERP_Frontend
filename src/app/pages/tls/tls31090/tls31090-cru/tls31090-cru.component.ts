@@ -81,7 +81,7 @@ export class Tls31090CRUComponent implements OnChanges, OnInit {
     const { TimeMode, TimeFromHH, TimeToHH } = this.queryConditions!;
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) return true;
-      const hourNum = parseInt(col.field.substring(1), 10);
+      const hourNum = Number.parseInt(col.field.substring(1), 10);
       if (TimeFromHH <= TimeToHH) return hourNum >= TimeFromHH && hourNum <= TimeToHH;
       return hourNum >= TimeFromHH || hourNum <= TimeToHH;
     });

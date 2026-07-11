@@ -111,7 +111,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> implements O
       };
       this.fin34010Service.queryFIN34010(payload).pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef)).subscribe(response => {
         this.data = (response?.Data as any).List;
-        const dataAny = (response.Data as any).Summary as any;
+        const dataAny = (response.Data as any).Summary;
         this.footerData = {
           ARS_Amt: dataAny.SumARS_Amt ?? 0,
           REC_Amt: dataAny.SumREC_Amt ?? 0,

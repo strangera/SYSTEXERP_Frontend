@@ -22,7 +22,7 @@ export interface FIN42050Data {
 export class FIN42050Service {
     apiUrl: string = environment.ApiUrl + '/FIN0000/FIN4000';
 
-    constructor(private http: HttpClient) { }
+    constructor(private readonly http: HttpClient) { }
 
     queryFIN42050(body: any): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/queryFIN42050`, body);

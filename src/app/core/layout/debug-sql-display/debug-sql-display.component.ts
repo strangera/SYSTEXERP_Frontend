@@ -59,7 +59,7 @@ export class DebugSqlDisplayComponent {
   public isDebugEnabled = this.debugService.isDebugEnabled;
   public dialogVisible = signal(false);
   public filterText = signal('');
-  private expandedKeys = signal(new Set<string>());
+  private readonly expandedKeys = signal(new Set<string>());
 
   public tableData = computed<FlatSqlDetail[]>(() => {
     const history = [...this.allApiHistory()].reverse();

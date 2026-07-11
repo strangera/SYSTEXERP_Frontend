@@ -32,22 +32,22 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="showReorder" class="text-center" rowspan="2" pFrozenColumn [style.min-width]="serialColumnWidth"
+        <th *ngIf="showReorder" scope="col" class="text-center" rowspan="2" pFrozenColumn [style.min-width]="serialColumnWidth"
           [style.width]="serialColumnWidth">
           序號
         </th>
-        <th *ngIf="showCheckBox" class="w-1rem group-header text-center" rowspan="2">
+        <th *ngIf="showCheckBox" scope="col" class="w-1rem group-header text-center" rowspan="2">
           <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
           <span *ngIf="tableHeaderCheckboxLabel">
             {{ tableHeaderCheckboxLabel }}
           </span>
         </th>
-        <th *ngIf="expansionColumns.length" class="w-1rem group-header" rowspan="2">
+        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem group-header" rowspan="2">
           收合/展開
         </th>
 
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" [attr.colspan]="
+          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" scope="col" [attr.colspan]="
               tableUtility.getColumnSpan(columns, col.groupField!)
             " class="group-header text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
             pResizableColumn [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
@@ -56,7 +56,7 @@
             (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
             {{ getGroupHeader(col.groupField!) }}
           </th>
-          <th *ngIf="!col.groupField" rowspan="2" class="text-center"
+          <th *ngIf="!col.groupField" scope="col" rowspan="2" class="text-center"
             [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn [pSortableColumn]="
               showSort ? col.sortField ?? col.field : undefined
             " [pSortableColumnDisabled]="
@@ -69,7 +69,7 @@
               [field]="col.sortField ?? col.field" />
           </th>
         </ng-container>
-        <th [hidden]="!showManage" rowspan="2" class="w-1rem text-center group-header" alignFrozen="right" pFrozenColumn
+        <th [hidden]="!showManage" scope="col" rowspan="2" class="w-1rem text-center group-header" alignFrozen="right" pFrozenColumn
           [frozen]="true">
           管理
         </th>
@@ -77,7 +77,7 @@
 
       <tr>
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="col.groupField" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+          <th *ngIf="col.groupField" scope="col" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
             pResizableColumn [pSortableColumn]="
               showSort ? col.sortField ?? col.field : undefined
             " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px" [attr.draggable]="true"
@@ -92,26 +92,26 @@
 
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="showReorder" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
+        <th *ngIf="showReorder" scope="col" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
           [style.width]="serialColumnWidth">
           序號
         </th>
-        <th *ngIf="showCheckBox" class="w-1rem text-center">
+        <th *ngIf="showCheckBox" scope="col" class="w-1rem text-center">
           <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
           <span *ngIf="tableHeaderCheckboxLabel">
             {{ tableHeaderCheckboxLabel }}
           </span>
         </th>
-        <th *ngIf="expansionColumns.length" class="w-1rem">收合/展開</th>
+        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem">收合/展開</th>
 
-        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
+        <th *ngFor="let col of columns" scope="col" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
           [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
           [ngClass]="{ 'multiline-header': allowMultilineHeader }" [style.min-width]="col.width || '55px'">
           {{ col.header }}
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
-        <th [hidden]="!showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
+        <th [hidden]="!showManage" scope="col" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
           管理
         </th>
       </tr>

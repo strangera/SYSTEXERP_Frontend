@@ -46,7 +46,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   summaryData: any[] = [];
   totalRecords = 0;
   btnLoading = false;
-  historyRequestBody: any | null = null;
+  historyRequestBody: any = null;
   summaryFooter: any;
 
   readonly groupByField = 'groupKey';
@@ -156,7 +156,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     this.queryForm.controls.TXN_Month.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((d: Date | null) => {
-        if (!d || isNaN(new Date(d).getTime())) return;
+        if (!d || Number.isNaN(new Date(d).getTime())) return;
         const { start, end } = this.getMonthRange(d);
         this.queryForm.patchValue({ TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 }, { emitEvent: false });
       });
@@ -451,7 +451,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   // ========= 資料清洗與小工具群 =========
   private buildPayload(val: any) {
     const asStrArr = (x: any) => Array.isArray(x) ? x.map(String) : x == null || x === '' ? undefined : [String(x)];
-    const asNum = (x: any) => x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x);
+    const asNum = (x: any) => x == null || x === '' || Number.isNaN(Number(x)) ? undefined : Number(x);
 
     const o: any = {
       TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
@@ -529,11 +529,11 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
-  private padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
+  private readonly padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 

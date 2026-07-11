@@ -102,7 +102,7 @@
         [lazy]="true">
         <ng-template pTemplate="header" let-columns>
           <tr>
-            <th *ngFor="let col of columns" [pSortableColumn]="col.field" [style.width.px]="col.width || 'auto'">
+            <th *ngFor="let col of columns" scope="col" [pSortableColumn]="col.field" [style.width.px]="col.width || 'auto'">
               {{ col.header }}
               <p-sortIcon [field]="col.field"></p-sortIcon>
             </th>

@@ -76,7 +76,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     private translate: TranslateService,
     private validationService: ValidationService,
     private tls11020Service: TLS11020Service,
-    private dropdownApiService: DropdownApiService
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }

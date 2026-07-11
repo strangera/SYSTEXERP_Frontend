@@ -478,10 +478,10 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
   }
 
   // ========= 工具群與小清洗機制 =========
-  private ensureArr = (v: any) => Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
-  private toNumOrUndef = (v: any) => v == null || v === '' || isNaN(Number(v)) ? undefined : Number(v);
-  private padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
-  private sanitizeSortBy = (sortBy: any[] | undefined) => Array.isArray(sortBy) ? sortBy.filter(s => s && typeof s.field === 'string' && !s.field.startsWith('_')) : [];
+  private readonly ensureArr = (v: any) => Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
+  private readonly toNumOrUndef = (v: any) => v == null || v === '' || Number.isNaN(Number(v)) ? undefined : Number(v);
+  private readonly padTxnNo = (v: any): string => String(v ?? '').trim().padStart(6, '0');
+  private readonly sanitizeSortBy = (sortBy: any[] | undefined) => Array.isArray(sortBy) ? sortBy.filter(s => s && typeof s.field === 'string' && !s.field.startsWith('_')) : [];
 
   private getDefaultSortBy(mode: 'invoice' | 'payment' | 'discount') {
     const base = [
@@ -495,11 +495,11 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  private getLabelFromOptions = (value: any, options: any[]): string => options?.find((opt) => String(opt.value) === String(value))?.label ?? value;
+  private readonly getLabelFromOptions = (value: any, options: any[]): string => options?.find((opt) => String(opt.value) === String(value))?.label ?? value;
 
   // ===== 報表欄位結構定義 (採用共通 ReportColumn 規範且修正對齊樣式) =====
   invoiceColumns: ReportColumn[] = [
