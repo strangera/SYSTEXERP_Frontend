@@ -1,23 +1,19 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { apiOption } from '@shared/models/tls/tls000.model';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { option } from '../../../shared/models/sys/sysb000.model';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -48,7 +44,6 @@ export interface ENG2001 {
   templateUrl: './ass21030-cru.component.html',
   standalone: true,
   imports: [
-    NgFor,
     NgIf,
     CalendarComponent,
     FormsModule,
@@ -60,7 +55,6 @@ export interface ENG2001 {
     InputTextComponent,
     InputNumberComponent,
     MenubarComponent,
-    MultiSelectComponent
   ]
 })
 

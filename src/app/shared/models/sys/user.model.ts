@@ -22,21 +22,3 @@ export interface UserData {
   USER_PwdExpireDate: string;
   last_Login: string;
 }
-
-export interface TreeNode {
-  id: string;
-  label: string;
-  IsEnable: boolean;
-  partialSelected: boolean;
-  actions: TreeNode[]; // 可選的操作列表
-  children: TreeNode[];
-}
-export interface PrimeTreeNode {
-  key: string; // PrimeNG 建議有 key 屬性
-  data?: any; // 實際的節點資料 (這裡可以放您的 id, label, IsEnable, actions 等)
-  children?: PrimeTreeNode[]; // 子節點
-  actions?: TreeNode[];
-  // 這兩個是 PrimeNG TreeTable 判斷勾選狀態的關鍵屬性！
-  selected?: boolean; // 表示該節點是否被完全選中
-  partialSelected?: boolean; // 表示該節點是否被部分選中
-}

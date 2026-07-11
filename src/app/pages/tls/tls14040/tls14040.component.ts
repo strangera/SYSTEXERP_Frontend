@@ -12,8 +12,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);

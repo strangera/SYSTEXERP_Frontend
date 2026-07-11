@@ -15,8 +15,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
 interface TLTTALENTOption {
   No: string;

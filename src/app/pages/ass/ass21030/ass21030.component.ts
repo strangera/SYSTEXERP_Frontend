@@ -4,7 +4,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { apiOption } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -19,7 +18,7 @@ import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../shared/componentkit/table/table.model';
-import { option } from '../../../shared/models/sys/sysb000.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 // 分攤設定介面
 export interface ApportionmentSetting {

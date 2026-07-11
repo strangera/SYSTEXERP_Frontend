@@ -5,7 +5,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin72030Service } from '@service/api/fin/fin72030.service';
+import {
+  FIN72030DetailResult,
+  FIN72030QueryResult,
+  Fin72030Service,
+  PCS_RqstNoDropdownItem,
+} from '@service/api/fin/fin72030.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { catchError, distinctUntilChanged, finalize, of } from 'rxjs';
@@ -18,11 +23,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountNo0 } from '../../../shared/componentkit/table/table.model';
-import {
-  FIN72030DetailResult,
-  FIN72030QueryResult,
-  PCS_RqstNoDropdownItem,
-} from '../../../shared/models/fin/fin72030.model';
 
 const DETAIL_COLUMNS: Column[] = [
   { field: 'SeqNo', header: '序號', visible: true, align: 'center' },

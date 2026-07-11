@@ -12,8 +12,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
-import { apiOption } from '../../../shared/models/tls/tls000.model';
+import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 
 
 // 組織碼設定作業

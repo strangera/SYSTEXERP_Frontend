@@ -3,12 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN72050Service } from '@service/api/fin/fin72050.service';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import {
   CloseFIN72050Request,
   FIN72050Detail,
+  FIN72050Service,
   FIN72050_DENOMINATIONS,
   GetPCCNoFIN72050Request,
   InsertFIN72050Request,
@@ -16,7 +14,9 @@ import {
   UpdateFIN72050Request,
   VoidFIN72050Request,
   getFIN72050StatusName,
-} from '@shared/models/fin/fin72050.model';
+} from '@service/api/fin/fin72050.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { EMPTY, finalize, switchMap } from 'rxjs';
@@ -51,8 +51,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 })
 export class FIN72050CRUComponent
   extends BasicCruPageComponent<FIN72050Detail>
-  implements OnInit
-{
+  implements OnInit {
   // ── 常數（給 template 使用） ─────────────────────────
   readonly denominations = FIN72050_DENOMINATIONS;
 
