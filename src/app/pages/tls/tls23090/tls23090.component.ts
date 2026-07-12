@@ -14,7 +14,7 @@ import { catchError, finalize, map, shareReplay } from 'rxjs/operators';
 import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
-  CardBrandData, CounterCardApiData, CounterCardApiResponse, CounterCardItem, CounterCardSummary,
+  CounterCardApiData, CounterCardApiResponse, CounterCardItem, CounterCardSummary,
   CreditCardApiResponse, CreditCardDetail, CreditCardWrapper,
   InstallmentSummaryItem, QueryTLS23090Request, SortField, TLS23090Service,
 } from '../../../service/api/tls/tls23090.service';
@@ -546,7 +546,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
     }
     const match = /filename="([^"]+)"/i.exec(contentDisposition);
     if (match?.[1]) {
-      return decodeURIComponent(match[1].replace(/\+/g, ' '));
+      return decodeURIComponent(match[1].replaceAll(/\+/g, ' '));
     }
     return `download${defaultExtension}`;
   }
@@ -571,8 +571,7 @@ export class TLS23090Component extends BasicQueryPageComponent<CreditCardRow | C
     for (const k of Object.keys(out)) {
       const v = out[k];
       if (v === '' || v === null || v === undefined) delete out[k];
-      else if (Array.isArray(v) && v.length === 0) delete out[k];
-      else if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) delete out[k];
+      else if ((Array.isArray(v) && v.length === 0) || (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0)) delete out[k];
     }
     return out as Partial<T>;
   }

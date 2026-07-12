@@ -197,15 +197,13 @@ export class FIN13040CRUComponent
             emitEvent: false,
           });
           this.dataForm.controls.INV_GUINumber.disable({ emitEvent: false });
-        } else {
           // 若不是新增模式或不是 35，確保欄位可用（非 Read/Edit 模式）
-          if (
-            !this.isFormReadable &&
-            !this.isEditMode &&
-            this.dataForm.controls.INV_GUINumber.disabled
-          ) {
-            this.dataForm.controls.INV_GUINumber.enable({ emitEvent: false });
-          }
+        } else if (
+          !this.isFormReadable &&
+          !this.isEditMode &&
+          this.dataForm.controls.INV_GUINumber.disabled
+        ) {
+          this.dataForm.controls.INV_GUINumber.enable({ emitEvent: false });
         }
       });
 
@@ -433,7 +431,7 @@ private lockEditModeFields(): void {
     if (this.INV_ItemName_Options && this.INV_ItemName_Options.length > 0) {
       const normalize = (s: any) => (s ?? '').toString().trim();
       const stripCommon = (s: string) =>
-        s.replace(/收入|費用|費用|費|入/gi, '').trim();
+        s.replaceAll(/收入|費用|費用|費|入/gi, '').trim();
       this.data = this.data.map((row) => {
         if ((!row.PLU_No || row.PLU_No === '') && row.PLU_Name) {
           const rawName = normalize(row.PLU_Name);

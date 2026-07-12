@@ -72,7 +72,7 @@ function parseApiDateToLocal(s: string | null | undefined): Date | null {
     return new Date(y, m - 1, d);
   }
   // YYYY-MM-DD or YYYY/MM/DD (optionally followed by time)
-  const match = str.match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})/);
+  const match = /^(\d{4})[-/](\d{2})[-/](\d{2})/.exec(str);
   if (match) {
     const y = Number(match[1]), m = Number(match[2]), d = Number(match[3]);
     if (m < 1 || m > 12 || d < 1 || d > 31) return null;
@@ -774,8 +774,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           // 同方向（自動編碼）禁用
           if (this.isAutoCodeRow(rowData)) return true;
           // 反方向有金額才開放，否則禁用（還沒輸金額時不可點）
-          if (AccDC === 'D') return !((rowData.AccAmtC ?? 0) > 0);
-          if (AccDC === 'C') return !((rowData.AccAmtD ?? 0) > 0);
+          if (AccDC === 'D') return (rowData.AccAmtC ?? 0) <= 0;
+          if (AccDC === 'C') return (rowData.AccAmtD ?? 0) <= 0;
           return true;
         },
       },
@@ -848,9 +848,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 21 && +o.value <= 25), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validatePurchaseTrackNo.bind(this)] },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validatePurchaseInvoiceNo.bind(this)] },
-    { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateRequired.bind(this)] },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
-    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, validate: [this.validateBankRequired.bind(this), this.validateUniformNumber.bind(this)] },
+    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, validate: [this.validateRequired.bind(this), this.validateUniformNumber.bind(this)] },
     { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -878,13 +878,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const hasWithdraw = withdraw !== null && withdraw !== undefined;
     if (!hasDeposit && !hasWithdraw) {
       return { isValid: false, errorMessage: ['存款或提款至少須填一項'] };
-    }
-    return { isValid: true, errorMessage: [] };
-  }
-
-  private validateBankRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
-    if (value === '' || value === null || value === undefined) {
-      return { isValid: false, errorMessage: [`${header}不可為空`] };
     }
     return { isValid: true, errorMessage: [] };
   }
@@ -1783,7 +1776,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!rowData) return;
     const fullNo = String(item.InvoiceNumber ?? '').trim();
     const prefix = fullNo.length === 10 ? fullNo.slice(0, 2) : '';
-    const no = fullNo.length === 10 ? fullNo.slice(2) : fullNo;
     const srcType = String(item.InvoiceType ?? '').trim();
     const allowanceType = srcType === '31' ? '33' : srcType === '32' ? '34' : srcType || undefined;
 
@@ -2698,7 +2690,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           event.rowData.net_amount = amount;
         }
       }
-      return;
     }
 
   }
@@ -2707,7 +2698,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onStepPurchaseAllowanceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
-    const idx = event.index;
     const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
 
     if (f === 'invoice_amount' || f === 'tax_type') {
@@ -2723,7 +2713,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           event.rowData.net_amount = amount;
         }
       }
-      return;
     }
 
   }

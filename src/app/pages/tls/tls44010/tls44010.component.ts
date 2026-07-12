@@ -105,7 +105,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
     this.onSubmit(this.queryForm);
 
-    fromEvent<MessageEvent>(window, 'message')
+    fromEvent<MessageEvent>(globalThis, 'message')
       .pipe(
         filter(e => e.data?.type === 'REQUEST_CONTROL'),
         takeUntilDestroyed(this.destroyRef)
@@ -195,7 +195,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   onVncControlCancel(): void {
     this.vncControlDialogVisible = false;
     this.vncControlPassword = '';
-    this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, window.location.origin);
+    this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, globalThis.location.origin);
   }
 
   onVncControlConfirm(): void {
@@ -211,7 +211,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
         next: () => {
           this.vncControlDialogVisible = false;
           this.vncControlPassword = '';
-          this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, window.location.origin);
+          this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, globalThis.location.origin);
         },
         error: () => {
           this.notemessage.errorBubble('VNC 密碼錯誤，請重試');

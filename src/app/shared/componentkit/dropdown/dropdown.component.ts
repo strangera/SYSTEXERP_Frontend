@@ -256,13 +256,11 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
         // 如果目前是 -1 (沒聚焦)，按下鍵時直接抓第一個有效選項
         if (currentIndex === -1) {
           currentIndex = this.dropdownComponent.findFirstFocusedOptionIndex();
-        } else {
           // 根據按鍵計算下一個或上一個索引
-          if (keyboardEvent.key === 'ArrowDown') {
-            currentIndex = this.dropdownComponent.findNextOptionIndex(currentIndex);
-          } else {
-            currentIndex = this.dropdownComponent.findPrevOptionIndex(currentIndex);
-          }
+        } else if (keyboardEvent.key === 'ArrowDown') {
+          currentIndex = this.dropdownComponent.findNextOptionIndex(currentIndex);
+        } else {
+          currentIndex = this.dropdownComponent.findPrevOptionIndex(currentIndex);
         }
 
         // 強制讓 PrimeNG 更新高亮狀態並把滾動條捲到該位置

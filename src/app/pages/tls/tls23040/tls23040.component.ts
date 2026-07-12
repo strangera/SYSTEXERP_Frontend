@@ -461,7 +461,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
     }
     const m = /filename="([^"]+)"/.exec(cd);
     if (m?.[1]) {
-      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { }
+      try { return decodeURIComponent(m[1].replaceAll(/\+/g, ' ')); } catch { }
     }
     return `download${def}`;
   }

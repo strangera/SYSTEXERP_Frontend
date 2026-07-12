@@ -49,7 +49,7 @@ export class TableReportWidthService {
         let displayValue = col.format ? String(col.format(rawValue, 0, row) ?? '') : String(rawValue ?? '');
 
         if (col.type === 'html') {
-          displayValue = displayValue.replace(/<[^>]*>/g, '');
+          displayValue = displayValue.replaceAll(/<[^>]*>/g, '');
         }
 
         const textWidth = this.estimateTextWidth(displayValue, CHINESE_CHAR_WIDTH, ANY_CHAR_WIDTH);

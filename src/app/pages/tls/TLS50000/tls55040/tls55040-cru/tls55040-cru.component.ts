@@ -361,6 +361,6 @@ export function AA00000000(value: string): { isValid: boolean; errorMessage: str
   const cleanedValue = value ? value.trim() : '';
   if (cleanedValue.length !== 10) return { isValid: false, errorMessage: ['發票號碼必須為 10 個字元。'] };
   if (!/^[A-Z]{2}$/i.test(cleanedValue.substring(0, 2))) return { isValid: false, errorMessage: ['發票號碼前 2 碼請輸入英文字母。'] };
-  if (!/^[0-9]{8}$/.test(cleanedValue.substring(2))) return { isValid: false, errorMessage: ['發票號碼後 8 碼必須為數字。'] };
+  if (!/^\d{8}$/.test(cleanedValue.substring(2))) return { isValid: false, errorMessage: ['發票號碼後 8 碼必須為數字。'] };
   return { isValid: true, errorMessage: [] };
 }

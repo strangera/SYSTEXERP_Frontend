@@ -86,11 +86,11 @@ export abstract class BasicPrintDataComponent {
   ): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo);
-    const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
+    const queryState = this.queryState.getQueryState(`${apiUrl || `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');
 
-    const printColumns = PrintColumn ? PrintColumn : columns;
+    const printColumns = PrintColumn || columns;
 
     const pdfColumns = printColumns.map(col => this.mapColumnField(col));
     const pdfExpansionColumns = expansionColumns && expansionColumns.length > 0 ? expansionColumns.map(col => this.mapColumnField(col)) : null;
@@ -131,11 +131,11 @@ export abstract class BasicPrintDataComponent {
   ): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo);
-    const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
+    const queryState = this.queryState.getQueryState(`${apiUrl || `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');
 
-    const printColumns = PrintColumn ? PrintColumn : columns;
+    const printColumns = PrintColumn || columns;
 
     // 💡 主表欄位維持純淨
     const excelColumns = printColumns.map(col => this.mapColumnField(col));

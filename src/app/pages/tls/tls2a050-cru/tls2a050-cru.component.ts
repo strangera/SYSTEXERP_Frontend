@@ -56,7 +56,7 @@ export class TLS2A050CRUComponent extends BasicCruPageComponent<ParentQueryRow> 
 
   private fetchDetails(txnDate: string): void {
     // Backend SQL uses Convert(varchar,date,120) = @TXN_Date → yyyy-MM-dd format
-    const dateParam = txnDate.replace(/\//g, '-');
+    const dateParam = txnDate.replaceAll(/\//g, '-');
     this.loading = true;
     this.tls22050Service.queryTLS22050({
       TXN_Date: dateParam,

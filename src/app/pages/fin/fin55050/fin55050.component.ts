@@ -278,7 +278,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     // 轉成字串
     const str = String(value)
       .trim()            // 去除前後空白
-      .replace(/,/g, ''); // 去除千分位逗號
+      .replaceAll(/,/g, ''); // 去除千分位逗號
 
     if (str === '') {
       return null;

@@ -324,7 +324,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
       ctrl.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
         if (val === null || val === undefined) return;
 
-        const s = String(val).replace(/\D/g, '');
+        const s = String(val).replaceAll(/\D/g, '');
         if (s.length <= 10) return;
 
         const limited = s.slice(0, 10);

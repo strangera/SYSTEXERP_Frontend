@@ -1078,7 +1078,7 @@ export class Table2Component
               filename = matches[1] || matches[2] || filename;
               filename = decodeURIComponent(filename);
             }
-            filename = filename.replace(/["']/g, '');
+            filename = filename.replaceAll(/["']/g, '');
           }
           const blob = new Blob([response.body], { type: 'application/pdf' });
           saveAs(blob, filename);
@@ -1148,7 +1148,7 @@ export class Table2Component
               filename = matches[1] || matches[2] || filename;
               filename = decodeURIComponent(filename);
             }
-            filename = filename.replace(/["']/g, '');
+            filename = filename.replaceAll(/["']/g, '');
           }
           const blob = new Blob(
             [response.body],

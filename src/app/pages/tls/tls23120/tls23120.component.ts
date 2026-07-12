@@ -381,7 +381,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
         TLT_No: item.tlt_no,
       }))
     };
-    const firstDate = this.selectedItems[0]?.sad_date ? String(this.selectedItems[0].sad_date).replace(/-/g, '') : '';
+    const firstDate = this.selectedItems[0]?.sad_date ? String(this.selectedItems[0].sad_date).replaceAll(/-/g, '') : '';
     const customFileName = `專櫃日對帳單${firstDate}.pdf`;
 
     this.loading = true;

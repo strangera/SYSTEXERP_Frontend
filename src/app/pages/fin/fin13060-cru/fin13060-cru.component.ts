@@ -378,11 +378,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
 
-      let txnUniform: string | null = null;
-      if (raw.Ven_No) {
-        const selectedVendor = this.venNoOptions.find(o => o.value === raw.Ven_No);
-        txnUniform = selectedVendor ? this.normalize(selectedVendor.No) : null;
-      }
       const payload = {
         ID: raw.ID != null ? Number(raw.ID) : 0,
         mid: Number(raw.mid ?? 0),

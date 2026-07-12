@@ -173,7 +173,7 @@ export class ErrorHandlerService {
       const payload = {
         Status: error.status,
         ApiUrl: apiUrl,
-        PageUrl: window.location.href,
+        PageUrl: globalThis.location.href,
         User: `${userNo}(${userName})`,
         Message: userFriendlyMessage,
       };

@@ -128,7 +128,7 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   }
 
   splitWithLineBreaks(text: string | null | undefined): string {
-    return text ? text.replace(/,/g, '<br />') : '';
+    return text ? text.replaceAll(/,/g, '<br />') : '';
   }
 
   onExportXLSX(): void {

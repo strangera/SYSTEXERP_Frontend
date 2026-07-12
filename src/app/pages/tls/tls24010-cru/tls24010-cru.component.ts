@@ -634,12 +634,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               }
             }
           }
-          else {
-            // 銷售額 <= 0 (例如負項交易) 時，必須完全平帳，不可溢收
-            if (Math.abs(diff) > 0.001) {
-              this.loading = false;
-              return this.messageService.errorBubble(`負項交易支付總額 (${totalPayAmt}) 必須等於 銷售總額 (${totalSaleAmt})。`, '金額檢核失敗');
-            }
+          // 銷售額 <= 0 (例如負項交易) 時，必須完全平帳，不可溢收
+          else if (Math.abs(diff) > 0.001) {
+            this.loading = false;
+            return this.messageService.errorBubble(`負項交易支付總額 (${totalPayAmt}) 必須等於 銷售總額 (${totalSaleAmt})。`, '金額檢核失敗');
           }
           // 4. 發票金額與支付工具(未開=稅別0)檢核
           const guiBegNo = this.dataForm.getRawValue().TXN_GUIBegNo;

@@ -1,6 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 // PrimeNG
 import { AccordionModule } from 'primeng/accordion';
@@ -407,7 +408,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     if (!this.hasPermission(Actions.Create)) return;
 
     try {
-      const hasUnapproved = await this.apiService.checkUnapprovedVersion(rowData.tlt_no).toPromise();
+      const hasUnapproved = await firstValueFrom(this.apiService.checkUnapprovedVersion(rowData.tlt_no));
       if (hasUnapproved) {
         this.messageService.warnBubble(`此櫃號:${rowData.tlt_no} 尚有未審核合約版本，請先檢視未審核版本合約!!`);
         return;

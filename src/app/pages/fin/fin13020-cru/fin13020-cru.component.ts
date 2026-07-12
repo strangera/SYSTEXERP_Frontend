@@ -228,7 +228,7 @@ private setupVoucherNoWatcher(): void {
       const ctrl = this.dataForm.get('Voucher_No');
 
       if (!vouNo) {
-        const errors = { ...(ctrl?.errors || {}) };
+        const errors = { ...ctrl?.errors };
         delete errors['voucherNotFound'];
         ctrl?.setErrors(Object.keys(errors).length ? errors : null);
         return;
@@ -241,11 +241,11 @@ private setupVoucherNoWatcher(): void {
             res.Data.some((x: any) => String(x.VouNo ?? '').trim() === vouNo);
 
           if (!exists) {
-            ctrl?.setErrors({ ...(ctrl.errors || {}), voucherNotFound: true });
+            ctrl?.setErrors({ ...ctrl.errors, voucherNotFound: true });
             ctrl?.markAsTouched();
             this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
           } else {
-            const errors = { ...(ctrl?.errors || {}) };
+            const errors = { ...ctrl?.errors };
             delete errors['voucherNotFound'];
             ctrl?.setErrors(Object.keys(errors).length ? errors : null);
           }

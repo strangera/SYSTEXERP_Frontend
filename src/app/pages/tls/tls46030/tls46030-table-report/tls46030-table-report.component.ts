@@ -120,7 +120,7 @@ export class TLS46030TableReportComponent extends BasicPrintDataComponent implem
     if (this.isSyncingSort || this._loading || !this.queryFunction || !this.lastQueryBody) return;
 
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
-      this.dt.multiSortMeta = [event.multiSortMeta[event.multiSortMeta.length - 1]];
+      this.dt.multiSortMeta = [event.multiSortMeta.at(-1)];
     }
 
     this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);

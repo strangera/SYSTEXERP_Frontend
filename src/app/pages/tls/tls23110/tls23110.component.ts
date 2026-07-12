@@ -301,7 +301,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> implements O
   // ========= <app-table-report> 查詢封裝調用（支援 1000 規格滾動） =========
   public queryTLS23110ForReport = (body: any) => {
     return this.tls23110Service.queryTLS23110({
-      ...(body || {}),
+      ...body,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
       TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
       tlt_term_type: this.toStringOrUndef(body?.tlt_term_type ?? this.queryForm.value?.tlt_term_type),

@@ -291,7 +291,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         this.data = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          const CRD_No = String(item?.CRD_No ?? '').replace(/;/g, '<br>');
+          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '<br>');
           return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
@@ -330,7 +330,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         const rows = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          const CRD_No = String(item?.CRD_No ?? '').replace(/;/g, '<br>');
+          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '<br>');
           return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
@@ -480,7 +480,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     }
     const m = /filename="([^"]+)"/.exec(cd);
     if (m?.[1]) {
-      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { }
+      try { return decodeURIComponent(m[1].replaceAll(/\+/g, ' ')); } catch { }
     }
     return `download${def}`;
   }

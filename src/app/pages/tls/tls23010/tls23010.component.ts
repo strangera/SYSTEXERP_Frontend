@@ -141,8 +141,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
         ...val,
         TXN_DateStart: this.datePipe.transform(val.TXN_DateStart, 'yyyy-MM-dd') || undefined,
         TXN_DateEnd: this.datePipe.transform(val.TXN_DateEnd, 'yyyy-MM-dd') || undefined,
-        TXN_No_Start: String(val.TXN_No_Start ?? '').trim().replace(/\D+/g, '').padStart(6, '0') || undefined,
-        TXN_No_End: String(val.TXN_No_End ?? '').trim().replace(/\D+/g, '').padStart(6, '0') || undefined,
+        TXN_No_Start: String(val.TXN_No_Start ?? '').trim().replaceAll(/\D+/g, '').padStart(6, '0') || undefined,
+        TXN_No_End: String(val.TXN_No_End ?? '').trim().replaceAll(/\D+/g, '').padStart(6, '0') || undefined,
       };
       const request$ = this.isSummaryMode ? this.tls23010Service.queryTLS23010Summary(payload) : this.tls23010Service.queryTLS23010(payload);
       request$.pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((resp) => {
@@ -323,7 +323,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號', align: 'right', format: (v) => String(v ?? '').trim().replace(/\D+/g, '').padStart(6, '0') },
+    { field: 'TXN_No', header: '交易序號', align: 'right', format: (v) => String(v ?? '').trim().replaceAll(/\D+/g, '').padStart(6, '0') },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱', align: 'left' },
     { field: 'TXN_Uniform', header: '統一編號' },
@@ -363,7 +363,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   detailcolumns: ReportColumn[] = [
     { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號', align: 'right', format: (v) => String(v ?? '').trim().replace(/\D+/g, '').padStart(6, '0') },
+    { field: 'TXN_No', header: '交易序號', align: 'right', format: (v) => String(v ?? '').trim().replaceAll(/\D+/g, '').padStart(6, '0') },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'PAY_NAME', header: '付款別' },

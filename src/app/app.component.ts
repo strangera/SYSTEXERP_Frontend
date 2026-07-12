@@ -71,7 +71,7 @@ export class AppComponent implements OnInit {
       el.getAttribute('title') ||
       el.textContent ||
       ''
-    ).replace(/\s+/g, ' ').trim();
+    ).replaceAll(/\s+/g, ' ').trim();
     if (!label) return;
 
     this.operationLogService.logButtonClick(label);

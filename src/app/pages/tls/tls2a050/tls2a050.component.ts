@@ -180,7 +180,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<FlatDataRow> impl
         if (contentDisposition) {
           const matches = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/.exec(contentDisposition);
           if (matches) {
-            filename = decodeURIComponent(matches[1] || matches[2] || filename).replace(/["']/g, '');
+            filename = decodeURIComponent(matches[1] || matches[2] || filename).replaceAll(/["']/g, '');
           }
         }
         saveAs(new Blob([res.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);

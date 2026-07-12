@@ -118,7 +118,11 @@ export class TLS57180Component extends BasicQueryPageComponent<IQueryData> imple
         }))
       };
       this.dialogLoading = true;
-      this.tls57180Service.autoMailTLS57180(body).pipe(untilDestroyed(this), finalize(() => [this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
+      this.tls57180Service.autoMailTLS57180(body).pipe(untilDestroyed(this), finalize(() => {
+        this.loading = false;
+        this.dialogLoading = false;
+        this.dialogVisible = false;
+      })).subscribe(res => {
         this.messageService.successBubble(res.Message);
       });
     });

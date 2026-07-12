@@ -516,7 +516,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
       return `${y}${m}`;
     }
     if (typeof value === 'string') {
-      const nums = value.replace(/\D/g, '');
+      const nums = value.replaceAll(/\D/g, '');
       if (nums.length >= 6) return nums.substring(0, 6);
     }
     return undefined;

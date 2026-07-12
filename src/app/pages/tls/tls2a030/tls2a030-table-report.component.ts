@@ -34,7 +34,7 @@ export class TLS2A030TableReportComponent extends BasicPrintDataComponent implem
   lazy = true;
   @Input() dataKey: string | undefined;
   selectedColumns: ReportColumn[] = [];
-  @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
+  @Input() tableKey = this.route.snapshot.url.at(-1)!.path;
   @Input() loading = false;
   public _loading = false;
   @Input() showReportMode = true;
@@ -103,7 +103,7 @@ export class TLS2A030TableReportComponent extends BasicPrintDataComponent implem
   onSort(event: any) {
     if (this._loading) return;
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
-      const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
+      const lastSort = event.multiSortMeta.at(-1);
       this.dt.multiSortMeta = [lastSort];
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
@@ -148,7 +148,7 @@ export class TLS2A030TableReportComponent extends BasicPrintDataComponent implem
         let result = 0;
         if (value1 == null && value2 != null) result = -1;
         else if (value1 != null && value2 == null) result = 1;
-        else if (value1 == null && value2 == null) result = 0;
+        else if (value1 == null && value2 == null) { /* 兩者皆為 null，result 維持初始值 0 */ }
         else if (typeof value1 === 'string' && typeof value2 === 'string')
           result = value1.localeCompare(value2, undefined, { numeric: true, sensitivity: 'base' });
         else

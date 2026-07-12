@@ -463,7 +463,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
   private toDateStr(val: Date | string | null | undefined): string | undefined {
     if (!val) return undefined;
-    const d = val instanceof Date ? val : new Date(String(val).replace(/\//g, '-'));
+    const d = val instanceof Date ? val : new Date(String(val).replaceAll(/\//g, '-'));
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 

@@ -57,7 +57,7 @@ export class ReportExportService {
 
     const finalApiUrl = context.apiUrl;
     const serviceName = finalApiUrl ? `${finalApiUrl}` : `query${progNo}`;
-    const stateCache = this.queryState.getQueryState(`${finalApiUrl ? finalApiUrl : `query${progNo}`}`);
+    const stateCache = this.queryState.getQueryState(`${finalApiUrl || `query${progNo}`}`);
     const finalConditions = context.conditions || stateCache?.value || [];
     const fallbackTitleKey = finalApiUrl ? `${finalApiUrl}` : `query${progNo}`;
     const finalReportTitle = context.reportTitle || REPORT_TITLES[fallbackTitleKey] || funInfo?.prog_name;
@@ -108,7 +108,7 @@ export class ReportExportService {
 
     const finalApiUrl = context.apiUrl;
     const serviceName = finalApiUrl ? `${finalApiUrl}` : `query${progNo}`;
-    const stateCache = this.queryState.getQueryState(`${finalApiUrl ? finalApiUrl : `query${progNo}`}`);
+    const stateCache = this.queryState.getQueryState(`${finalApiUrl || `query${progNo}`}`);
     const finalConditions = context.conditions || stateCache?.value || [];
     const fallbackTitleKey = finalApiUrl ? `${finalApiUrl}` : `query${progNo}`;
     const finalReportTitle = context.reportTitle || REPORT_TITLES[fallbackTitleKey] || funInfo?.prog_name;
@@ -153,7 +153,8 @@ export class ReportExportService {
       exportFormat = this.transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
     } else if (this.isYNField(col.field)) {
       exportFormat = [{ 'Y': '是' }, { 'N': '否' }];
-    } return {
+    }
+    return {
       field: col.field,
       header: col.header,
       align: col.align || 'center',

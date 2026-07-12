@@ -45,7 +45,7 @@ const formatInvoiceYYYYMM = (
     return `${year}${month}`;
   }
 
-  const normalized = String(value).replace(/\D/g, '');
+  const normalized = String(value).replaceAll(/\D/g, '');
 
   if (normalized.length >= 6) {
     return normalized.substring(0, 6);

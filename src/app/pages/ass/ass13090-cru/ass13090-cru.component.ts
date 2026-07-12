@@ -210,7 +210,7 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
     if (!Number.isNaN(d.getTime())) {
       return this.datePipe.transform(d, 'yyyyMM') ?? '';
     }
-    return v.replace(/[^0-9]/g, '');
+    return v.replaceAll(/\D/g, '');
   }
 
   private applyMasterInfo(master: DetailASS13090MasterInfo | null): void {

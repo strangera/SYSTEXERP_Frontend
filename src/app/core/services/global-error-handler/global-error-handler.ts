@@ -64,7 +64,7 @@ export class GlobalErrorHandler implements ErrorHandler {
       // 2. 擷取錯誤資訊
       const message = error.message ? error.message : error.toString();
       const stackTrace = error.stack ? error.stack : '';
-      const currentUrl = window.location.href;
+      const currentUrl = globalThis.location.href;
 
       // 3. 嘗試從權限服務中拿目前登入的人員編號 (若拿不到則寫 'Unknown')
       const userNo = authService.currentUserValue?.user_No || 'Unknown';

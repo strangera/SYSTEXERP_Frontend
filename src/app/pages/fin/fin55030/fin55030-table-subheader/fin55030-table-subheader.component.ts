@@ -430,11 +430,9 @@ export class Fin55030TableSubheaderComponent extends BasicPrintDataComponent imp
       if (this.data.length >= this.totalRecords) return;
     }
     // 一頁式模式（fullData 模式）
-    else {
-      if (this.data.length >= this.fullData.length) {
-        console.log('[onScroll] 已載入所有資料，不再載入');
-        return;
-      }
+    else if (this.data.length >= this.fullData.length) {
+      console.log('[onScroll] 已載入所有資料，不再載入');
+      return;
     }
 
     if (event?.originalEvent?.target) {
