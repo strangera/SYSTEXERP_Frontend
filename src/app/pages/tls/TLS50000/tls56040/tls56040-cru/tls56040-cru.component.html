@@ -63,7 +63,7 @@
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
-        [extraFilters]="{ VEN_No: dataForm.controls.OUT_HOS_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
+        [extraFilters]="{ HOS_No: dataForm.controls.OUT_HOS_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
       <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
