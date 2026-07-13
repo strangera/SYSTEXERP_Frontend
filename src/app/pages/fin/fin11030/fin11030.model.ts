@@ -39,19 +39,39 @@ const formatInvoiceYYYYMM = (
     return '';
   }
 
+  let yyyymm = '';
+
   if (value instanceof Date) {
     const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, '0');
-    return `${year}${month}`;
+    const month = value.getMonth() + 1;
+    yyyymm = `${year}${month.toString().padStart(2, '0')}`;
+  } else {
+    yyyymm = String(value).replace(/\D/g, '').substring(0, 6);
   }
 
-  const normalized = String(value).replaceAll(/\D/g, '');
-
-  if (normalized.length >= 6) {
-    return normalized.substring(0, 6);
+  if (yyyymm.length !== 6) {
+    return yyyymm;
   }
 
-  return String(value);
+  const year = yyyymm.substring(0, 4);
+  let month = Number(yyyymm.substring(4, 6));
+
+  let startMonth: number;
+  let endMonth: number;
+
+  if (month % 2 === 1) {
+    // 奇數月
+    startMonth = month;
+    endMonth = month + 1;
+  } else {
+    // 偶數月
+    startMonth = month - 1;
+    endMonth = month;
+  }
+
+  return `${year}${startMonth.toString().padStart(2, '0')}${endMonth
+    .toString()
+    .padStart(2, '0')}`;
 };
 export const columns: ReportColumn[] = [
   // { field: 'id', header: '序號', visible: true },
