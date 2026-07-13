@@ -340,7 +340,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   private buildDetailPayload(venNo: string, bucket: Fin34040Bucket): Fin34040DetailRequest {
     const payload: Fin34040DetailRequest = {
       VenNo: venNo,
-      BaseDate: this.datePipe.transform(this.queryForm.controls.AnalysisDate.value, 'yyyy-MM-dd') || '',
+      BaseDate: this.datePipe.transform(this.queryForm.controls.PayDate.value, 'yyyy-MM-dd') || '',
     };
     if (bucket.DateFrom) payload.ARS_DateFrom = bucket.DateFrom;
     if (bucket.DateTo) payload.ARS_DateTo = bucket.DateTo;
