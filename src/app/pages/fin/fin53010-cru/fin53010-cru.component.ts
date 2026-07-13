@@ -353,6 +353,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   );
 
   /** 科目代號下拉搜尋字串：數字開頭用 startsWith，中文用 contains */
+  // 注意：此 signal 需搭配 accNoFilterRowKey 一起使用，避免單一共用的搜尋字串
+  // 同時套用到「所有列」的下拉選項，導致正在輸入篩選文字的那一列以外的列，
+  // 因目前已選值不在被窄化後的選項清單中而暫時顯示空白（見 columns() 內 AccNo 的 options/onFilter）。
+  private readonly accNoFilterRowKey = signal<string | null>(null); // 目前正在輸入篩選文字的那一列 (_TABLE_KEY)
   private readonly accNoFilterQuery = signal<string>('');
   private readonly accNoFilteredOptions = computed(() => {
     const q = this.accNoFilterQuery();
@@ -694,7 +698,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         width: '280px',
         required: !0,
         showClear: !1,
-        options: () => this.accNoFilteredOptions(),
+        // 只有「正在輸入篩選文字的那一列」才套用窄化後的選項；其餘列一律用完整清單，
+        // 避免其他列已選的科目代號因不在窄化清單中而暫時顯示空白 (#598)
+        options: (rowData: FIN53010DetailTable & { _TABLE_KEY?: string }) => (rowData?._TABLE_KEY !== undefined && rowData._TABLE_KEY === this.accNoFilterRowKey())
+          ? this.accNoFilteredOptions()
+          : this.service.accNoOptions(),
         optionLabel: 'label',
         optionValue: 'value',
         templateLabel: 'label',
@@ -704,7 +712,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const accItem = accMap.get(String(r.AccNo));
           return accItem?.label ?? '';
         },
-        onFilter: (q) => this.accNoFilterQuery.set(q ?? ''),
+        onFilter: (q, rowData) => {
+          this.accNoFilterRowKey.set(rowData?._TABLE_KEY ?? null);
+          this.accNoFilterQuery.set(q ?? '');
+        },
       },
       {
         field: 'DetailNo',
