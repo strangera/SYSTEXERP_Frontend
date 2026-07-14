@@ -17,6 +17,8 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
@@ -29,8 +31,16 @@ import { formatAmount, formatYYYYMM, ReportColumn } from './tls2f010-table-repor
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
+  styles: [`
+    /* PrimeNG editable dropdown 找不到 mapping 的選項時，label() 會 fallback 回傳 placeholder 字串，
+       導致套用 p-placeholder 灰色樣式，但實際顯示的是使用者手打的文字，這裡強制蓋回正常文字色 */
+    :host ::ng-deep .ven-uniform-dropdown .p-dropdown-label.p-placeholder {
+      color: var(--text-color) !important;
+      opacity: 1 !important;
+    }
+  `],
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, InputNumberComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule],
+  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, InputNumberComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, DropdownModule, InputTextModule, CheckboxModule, TranslateModule],
   providers: [DatePipe] // 2. 注入 DatePipe 服務
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -76,6 +86,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   ven_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
     map(list => (list ?? []).map(item => ({ label: `${item['No']} - ${item['Name']}`, value: item['No'] })))
   ).pipe(shareReplay(1));
+  venNoOptionsList: { label: string; value: string }[] = [];
   vendorTLS2F010Options: { label: string; value: string }[] = [];
   tltOptionsList: { label: string; value: string }[] = [];
   private readonly SAM_TERMNO_MAP = { '10': [1, 2, 3], '15': [1, 2], '30': [1] };
@@ -234,6 +245,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('TLS2F010', this.dataForm);
+    this.ven_noOptions.subscribe(list => this.venNoOptionsList = list ?? []);
     const commCtrlInit = this.dataForm.controls.COMM_MONEY_TYPE;
     if (!commCtrlInit.value && this.money_typeOptions && this.money_typeOptions[2]) {
       commCtrlInit.setValue(this.money_typeOptions[2].value);
@@ -784,6 +796,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     const list = Array.isArray(options) ? options : (typeof options === 'function' ? options(null) : []);
     const hit = (list ?? []).find((o: any) => o?.value === raw || o?.label === raw);
     return hit?.label;
+  }
+
+  get venUniformDisplayLabel(): string {
+    const val = this.dataForm.controls.ven_uniform.value;
+    if (!val) return '';
+    const hit = this.venNoOptionsList.find(o => o.value === val);
+    return hit ? hit.label : String(val);
   }
 
   getTltLabel(value: any): string {
