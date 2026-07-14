@@ -70,9 +70,16 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商統一編號/名稱" controlName="ven_uniform" [options]="ven_noOptions | async"
-              optionLabel="label" optionValue="value" [control]="dataForm.controls.ven_uniform"
-              [submitted]="submitted"></app-dropdown>
+            <label for="ven_uniform">廠商統一編號/名稱</label>
+            @if (dataForm.controls.ven_uniform.disabled) {
+              <input pInputText type="text" id="ven_uniform" class="w-full" [value]="venUniformDisplayLabel" disabled />
+            } @else {
+              <p-dropdown inputId="ven_uniform" [options]="(ven_noOptions | async) ?? []" optionLabel="label"
+                optionValue="value" [editable]="true" [formControl]="dataForm.controls.ven_uniform" [filter]="true"
+                filterBy="label" [virtualScroll]="true" [virtualScrollItemSize]="38" [scrollHeight]="'250px'"
+                styleClass="w-full ven-uniform-dropdown" placeholder="請選擇或輸入">
+              </p-dropdown>
+            }
           </div>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
             [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
