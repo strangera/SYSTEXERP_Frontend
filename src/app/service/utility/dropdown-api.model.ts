@@ -306,6 +306,27 @@ export interface Aps1003Query {
 }
 
 /**
+ * TLS2D010 專用：查詢扣款代碼檔(APS1003) 時的請求 body（/TLS0000/TLS2000/queryAPS1003DropDownList）
+ */
+export interface Aps1003Tls2d010Query {
+  CAP_ItemList?: string[];
+}
+
+/**
+ * TLS2D010 專用：查詢扣款代碼檔(APS1003) 回傳的原始項目（含 CAP_Type 等欄位，供頁面自行分類/篩選，不做 value/label 轉換）
+ */
+export interface Aps1003Tls2d010Item {
+  CAP_Item: string;
+  CAP_Name: string;
+  AccNo?: string;
+  AccCName?: string;
+  GUI_FLAG: string;
+  CAP_TaxType?: string;
+  CAP_Type: string;
+  org_id?: string;
+}
+
+/**
  * 查詢 POS20031_DropDownList 時的請求 body
  */
 export interface Pos20031Query {

@@ -3,6 +3,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
@@ -21,7 +22,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../service/utility/dropDownList.service';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -87,11 +87,11 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   selectedFile?: File;
-  AccNoOptions: IDropdownItem[] = [];
-  tlt_noOptions: IDropdownItem[] = [];
-  org_idOptions: IDropdownItem[] = [];
-  CAP_ItemOptions: IAPS1003Item[] = [];
-  CRT_USR_NoOptions: IDropdownItem[] = [];
+  AccNoOptions: Option[] = [];
+  tlt_noOptions: Option[] = [];
+  org_idOptions: Option[] = [];
+  CAP_ItemOptions: Option[] = [];
+  CRT_USR_NoOptions: Option[] = [];
   tlt_floorListOption = this.dropdown.querySys3900();
   pod_noOptions: any[] = [];
   dialogVisible = false;
@@ -103,7 +103,6 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls2d010Service: Tls2d010Service,
-    private dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService,
     public readonly dropdown: DropdownApiService,
   ) {
@@ -113,8 +112,8 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
     // 查專櫃下拉
-    this.dropDownListService.queryTLTTALENTDropDownList().subscribe((res) => {
-      this.tlt_noOptions = (res?.Data || []).map((item: any) => ({
+    this.dropdown.queryTLTTALENTDropDownList().subscribe((res) => {
+      this.tlt_noOptions = (res || []).map((item: any) => ({
         value: item.talent_id,
         label: `${item.tlt_no}-${item.tlt_name}`,
         No: item.tlt_no,
@@ -122,9 +121,9 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }).subscribe((res) => {
-      this.CAP_ItemOptions = (res?.Data || [])
-        .filter((item: any) => item.CAP_Type !== '0')
+    this.dropdown.queryAps1003ForTls2d010({ CAP_ItemList: [] }).subscribe((res) => {
+      this.CAP_ItemOptions = (res || [])
+        .filter((item) => item.CAP_Type !== '0')
         .map(({ CAP_Item, CAP_Name, ...rest }) => ({
           ...rest,
           CAP_Item,
@@ -136,17 +135,17 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         }));
     });
 
-    this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
-      this.AccNoOptions = (res?.Data || []).map((item: any) => ({
+    this.dropdown.queryGls1005().subscribe((res) => {
+      this.AccNoOptions = (res || []).map((item: any) => ({
         value: item.No,
         label: `${item.No}-${item.Name}`,
         No: item.No,
         Name: item.Name
       }));
     });
-    this.dropDownListService.querySYS3100_DropDownList().subscribe(
+    this.dropdown.querySys3100().subscribe(
       (res) => {
-        this.org_idOptions = (res?.Data || []).map((item: any) => ({
+        this.org_idOptions = (res || []).map((item: any) => ({
           value: item.No,                // 綁定值
           label: `${item.No}-${item.Name}`, // 顯示文字
           No: item.No,
@@ -154,16 +153,16 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         }));
       },
     );
-    this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
-      this.CRT_USR_NoOptions = (res?.Data || []).map((item: any) => ({
+    this.dropdown.queryTblUser().subscribe((res) => {
+      this.CRT_USR_NoOptions = (res || []).map((item: any) => ({
         value: item.No,               // 綁定值
         label: `${item.No}-${item.Name}`, // 顯示文字
         No: item.No,
         Name: item.Name
       }));
     });
-    this.dropDownListService.queryTALPORDERM_DropDownList().subscribe((res) => {
-      this.pod_noOptions = (res?.Data || []).map((item: any) => ({
+    this.dropdown.queryTALPORDERM_DropDownList().subscribe((res) => {
+      this.pod_noOptions = (res || []).map((item: any) => ({
         value: item.No,
         label: `${item.No}-${item.Name}`
       }));
@@ -180,9 +179,9 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       payload.tlt_noList = payload.tlt_noList
         .map((val: any) => {
           const match = this.tlt_noOptions.find(opt =>
-            opt?.value === val || opt?.No === val || (opt as any)?.tlt_no === val
+            opt?.value === val || opt?.['No'] === val || opt?.['tlt_no'] === val
           );
-          return match?.No ?? val;
+          return match?.['No'] ?? val;
         })
         .filter((val: any) => val !== null && val !== undefined && val !== '');
     }
