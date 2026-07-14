@@ -139,7 +139,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
       const body = {
         ...frm.value,
         pageIndex: 1, // 第一次查詢預設從第一頁開始
-        pageSize: 30, // 第一次查詢預設30筆
+        pageSize: 1000, // 第一次查詢預設1000筆
         ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
         ExpectPayDate_From: this.datePipe.transform(frm.value.ExpectPayDate_From, 'yyyy-MM-dd'),
         ExpectPayDate_To: this.datePipe.transform(frm.value.ExpectPayDate_To, 'yyyy-MM-dd'),
@@ -161,7 +161,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     const body = {
       ...frm.value,
       pageIndex: 1, // 第一次查詢預設從第一頁開始
-      pageSize: 30, // 第一次查詢預設30筆
+      pageSize: 1000, // 第一次查詢預設1000筆
       ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
       ExpectPayDate_From: this.datePipe.transform(frm.value.ExpectPayDate_From, 'yyyy-MM-dd'),
       ExpectPayDate_To: this.datePipe.transform(frm.value.ExpectPayDate_To, 'yyyy-MM-dd'),
