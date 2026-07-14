@@ -238,6 +238,8 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() lazyBatchSize = 30;
   /** 後端回傳的群組/總計資料 (例如 totalData) */
   @Input() totalData: any[] = [];
+  /** totalData 內用來比對 groupRowsBy 值的欄位名稱 @default 'VendorNo' */
+  @Input() totalDataKeyField = 'VendorNo';
   /** 若為 true，會在每次從後端載入分頁時，過濾掉可能為「頁尾總計」之列（例如 VendorNo === 'TOTAL' 或 VendorName === '總計'） */
   @Input() skipPageTotalRows = false;
 
@@ -664,10 +666,13 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
           `${field}_Subtotal`,
           `${field}Subtotal`,
           `${field.replace(/Amt$/, 'Amy')}_Subtotal`,
-          `${field.replace(/Amt$/, 'Amy')}Subtotal`
+          `${field.replace(/Amt$/, 'Amy')}Subtotal`,
+          // 部分消費者（如 FIN55040）沒有獨立的「小計」欄位，直接沿用後端算好的群組總計（例如 PTA3_Total 是該科目最後一筆的累計餘額，不能逐筆加總）
+          `${field}_Total`,
+          `${field}Total`
         ];
 
-        const entry = this.totalData.find(td => String(td?.VendorNo ?? '') === String(groupValue ?? ''));
+        const entry = this.totalData.find(td => String(td?.[this.totalDataKeyField] ?? '') === String(groupValue ?? ''));
         if (entry) {
           for (const k of keyCandidates) {
             if (k in entry) {
@@ -713,22 +718,40 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   // 全表總計
   getTotal(field: string): number {
-    // 優先使用後端傳來的總計（VendorNo === '' 為全表總計）
+    // 優先使用後端傳來的總計（key 欄位為空字串 '' 代表全表總計列）
     try {
       if (this.totalData && this.totalData.length) {
-        const totalEntry = this.totalData.find(td => (td?.VendorNo ?? '') === '');
+        const keyCandidates = [
+          `${field}_Total`,
+          `${field}Total`,
+          `${field.replace(/Amt$/, 'Amy')}_Total`,
+          `${field.replace(/Amt$/, 'Amy')}Total`
+        ];
+
+        const totalEntry = this.totalData.find(td => (td?.[this.totalDataKeyField] ?? '') === '');
         if (totalEntry) {
-          const keyCandidates = [
-            `${field}_Total`,
-            `${field}Total`,
-            `${field.replace(/Amt$/, 'Amy')}_Total`,
-            `${field.replace(/Amt$/, 'Amy')}Total`
-          ];
           for (const k of keyCandidates) {
             if (k in totalEntry) {
               return Number(totalEntry[k]) || 0;
             }
           }
+        }
+
+        // 沒有明確的全表總計列（例如 FIN55040 的 totalData 每筆都是「單一科目」的彙總，沒有空 key 的整表列）：
+        // 逐科目加總後端已算好的群組總計（例如每科目最後一筆的累計餘額），而不是回退去逐筆加總原始明細（那樣會把累計餘額快照重複相加）
+        let sum = 0;
+        let matched = false;
+        for (const entry of this.totalData) {
+          for (const k of keyCandidates) {
+            if (k in entry) {
+              sum += Number(entry[k]) || 0;
+              matched = true;
+              break;
+            }
+          }
+        }
+        if (matched) {
+          return sum;
         }
       }
     } catch (e) {

@@ -19,10 +19,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Fin29060TableSubheaderComponent } from './fin29060-table-subheader/fin29060-table-subheader.component';
 
 export interface GroupedFIN55040Detail extends FIN55040Detail {
@@ -46,11 +44,9 @@ export interface GroupedFIN55040Detail extends FIN55040Detail {
     CalendarRangeComponent,
     DropdownComponent,
     DropdownRangeComponent,
-    InputNumberRangeComponent,
     InputTextComponent,
     InputTextRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     MultiSelectComponent,
   ]
@@ -71,14 +67,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     PostFlag: [[] as string[]], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
     IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
     ACCT_KEY: [''], // 帳鍵 GLS3002.ACCT_KEY
-
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   columns: Column[] = [
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'PTA', header: '立沖編號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
@@ -94,7 +88,6 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
   PostFlagOptions = [
     { label: '作廢', value: '0' },
     { label: '建立', value: '1' },
-    // { label: '確認', value: '2' }, // 需求#566: 傳票狀態的"確認"選項，請移除
     { label: '過帳', value: '3' }
   ];
   ifOptions = [
@@ -114,12 +107,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
   lazyBatchSize = 30;
 
   constructor(
-    private dropdown: DropdownApiService,
+    private readonly dropdown: DropdownApiService,
     public readonly fin55070Service: Fin55070Service,
-    private dropDownListService: DropDownListService,
-    private fin55050Service: FIN55050Service,
-    public fin55040Service: Fin55040Service,
-    private location: Location
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin55050Service: FIN55050Service,
+    public readonly fin55040Service: Fin55040Service,
+    private readonly location: Location
   ) {
     super(); // 呼叫父類建構子
   }
@@ -169,20 +162,15 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
         VouDate_Start: formatDate(rawValue.VouDate_Start, 'yyyy-MM-dd', 'en-US'),
         VouDate_End: formatDate(rawValue.VouDate_End, 'yyyy-MM-dd', 'en-US')
       } as fin55040request;
-      console.log('立沖科目明細表查詢請求', formValue);
       this.lastQueryBody = formValue;
-
       this.fin55040Service.queryFIN55040(formValue)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe(res => {
           // 讀取巢狀資料
           const nestedData = res.Data ?? [];
-
           // 進行資料攤平處理
           const flattenedList: FIN55040Detail[] = [];
-          nestedData.forEach((group, index) => {
-            // 檢查每個科目下的明細筆數
-            console.log(`科目[${index}] ${group.AccNo} 的明細筆數:`, group.data?.length);
+          nestedData.forEach((group) => {
             if (group.data && group.data.length > 0) {
               group.data.forEach(detail => {
                 flattenedList.push({
@@ -193,17 +181,18 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
               });
             }
           });
-
           // 後端 groupData 已按 raw PTA ASC + Status DESC 排序，攤平後順序不變，無需前端再排
-
           this.fullData = flattenedList;
           // 改為直接賦值：
           this.data = [...this.fullData];
           this.totalRecords = this.fullData.length;
-
-          console.log('API回應', res);
-          console.log('巢狀資料', nestedData);
-          console.log('2. 攤平後總明細筆數:', flattenedList.length);
+          // 帶入後端算好的各科目彙總（PTA3 是累計餘額，需用後端算好的「最後一筆」值，不可逐筆加總）
+          this.totalData = nestedData.map(group => ({
+            AccNo: group.AccNo,
+            PTA1_Total: group.summary?.PTA1_Total ?? 0,
+            PTA2_Total: group.summary?.PTA2_Total ?? 0,
+            PTA3_Total: group.summary?.PTA3_Total ?? 0,
+          }));
         });
     });
   }
@@ -225,9 +214,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); // ✅ 存 ProgNo
-      console.log('[FIN55050] 已儲存 handoff:', handoff);
-    } catch (err) {
-      console.error('[FIN55050] handoff save failed:', err);
+    } catch {
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
