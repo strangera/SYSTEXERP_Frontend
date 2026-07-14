@@ -108,7 +108,10 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
         ECR_No: item.ECR_No ?? '',
         TXN_Date: item.TXN_Date ? item.TXN_Date.replace(/-/g, '/') : '',
         TXN_No: item.TXN_No ?? '',
-        MIG_Type: item.MIG_Type ?? ''
+        MIG_Type: item.MIG_Type ?? '',
+        _TableName: item._TableName ?? '',
+        TXN_GUINo: item.TXN_GUINo ?? '',
+        TXN_Ret_No: item.TXN_Ret_No ?? ''
       }))
     }
     this.tls22040Service.callSpCrtMig(payload).subscribe({
