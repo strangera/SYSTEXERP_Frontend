@@ -38,6 +38,16 @@ const TOTAL_FIELD_MAP = {
   selector: 'app-tls23030',
   standalone: true,
   templateUrl: './tls23030.component.html',
+  // CRD_No 欄位需要把多組卡號（; 分隔轉出的 \n）呈現成各自一行；
+  // 純文字 + white-space: pre-line，不走 [innerHTML]/webkit-line-clamp，避免複製異常。
+  // 只在本頁面 scope，不動共通元件 table-report.component.scss。
+  styles: [`
+    /* table-report 共用 .p-datatable-tbody > tr > td 有 white-space: normal !important，
+       specificity 需 >= 該規則（class+type+type）才蓋得過，故加上同層 class 疊加。 */
+    :host ::ng-deep .p-datatable-tbody > tr > td.crd-no-multiline {
+      white-space: pre-line !important;
+    }
+  `],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, TranslateModule,
     AccordionModule, CheckboxModule, ButtonModule, DialogModule, RadioButtonModule,
@@ -291,7 +301,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         this.data = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
+          // 多組卡號以 ; 分隔：轉純文字換行字元（非 <br>），避免走 [innerHTML] 造成無法正常複製
+          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '\n');
+          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const totalCount = Number(res?.TotalCount ?? 0);
@@ -329,7 +341,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         const rows = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
+          // 多組卡號以 ; 分隔：轉純文字換行字元（非 <br>），避免走 [innerHTML] 造成無法正常複製
+          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '\n');
+          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const grand = wrappers.reduce((agg: Record<string, number>, w: any) => {
@@ -592,7 +606,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: formatTime },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right' },
+    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right', cellClass: () => 'crd-no-multiline' },
     { field: 'TERM_No', header: '是否分期', visible: true, format: (v: any) => v == null ? '' : Number(v ?? 0) > 1 ? '是' : '否' },
     { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
