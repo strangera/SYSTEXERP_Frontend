@@ -291,8 +291,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         this.data = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '<br>');
-          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
+          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const totalCount = Number(res?.TotalCount ?? 0);
@@ -330,8 +329,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         const rows = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '<br>');
-          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
+          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const grand = wrappers.reduce((agg: Record<string, number>, w: any) => {
@@ -594,7 +592,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: formatTime },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right', type: 'html', cellClass: () => 'html-cell-multiline' },
+    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right' },
     { field: 'TERM_No', header: '是否分期', visible: true, format: (v: any) => v == null ? '' : Number(v ?? 0) > 1 ? '是' : '否' },
     { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
