@@ -27,8 +27,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               label="繳袋日期"
-              [startControl]="queryForm.controls.MOD_Date_S"
-              [endControl]="queryForm.controls.MOD_Date_E"
+              [startControl]="queryForm.controls.Bak_Date_S"
+              [endControl]="queryForm.controls.Bak_Date_E"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -81,12 +81,21 @@
           ></app-dropdown>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
+            label="表別"
+            [options]="bagTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            controlName="BAG_Type"
+            [control]="queryForm.controls.BAG_Type"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
             label="狀態"
             [options]="statusOptions"
             optionLabel="label"
             optionValue="value"
-            controlName="Check_Status"
-            [control]="queryForm.controls.Check_Status"
+            controlName="Status"
+            [control]="queryForm.controls.Status"
           ></app-dropdown>
 
           <div class="col-12 md:col-6 lg:col-4 flex align-items-center gap-2">

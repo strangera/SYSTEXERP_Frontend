@@ -77,7 +77,7 @@ export class FIN55080ReportComponent implements OnInit {
           this.isLoading.set(true);
         }
       }),
-      switchMap(request => request ? this.fin55050Service.queryFIN55050(request) : []),
+      switchMap(request => request ? this.fin55050Service.queryFIN55050({ ...request, VouStatusList: ['3'] }) : []),
       finalize(() => this.isLoading.set(false))
     ).subscribe(response => {
       this.data = this.restructureData(response.Data);

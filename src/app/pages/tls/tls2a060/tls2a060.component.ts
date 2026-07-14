@@ -1,4 +1,3 @@
-import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,16 +6,13 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { formatTxnNo } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
-import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
 import { TLS2A060Service } from 'src/app/service/api/tls/tls2a060.service';
@@ -39,14 +35,9 @@ yesterday.setDate(yesterday.getDate() - 1);
     ReactiveFormsModule,
     DropdownComponent,
     CalendarComponent,
-    Button,
-    NgIf,
     TooltipModule,
     DropdownRangeComponent,
-    DatePipe,
-    TableReportComponent,
     TableEditComponent,
-    DialogComponent
   ],
 })
 export class TLS2A060Component extends BasicQueryPageComponent<any> implements OnInit {

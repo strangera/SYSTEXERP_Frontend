@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -23,7 +24,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { formatDate as columnDateFormat, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from './../../../service/utility/dropDownList.service';
+import { IAPS1003Item, IDropdownItem, ITalentOption } from './../../../service/utility/dropDownList.service';
 
 @UntilDestroy()
 @Component({
@@ -164,7 +165,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   constructor(
-    private dropDownListService: DropDownListService,
+    private readonly dropdown: DropdownApiService,
     private tls2d010Service: Tls2d010Service
   ) {
     super();
@@ -485,34 +486,34 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadTltAndPodOptions(): void {
     forkJoin({
       tlt: this.currentCreateType === 'counter' ? this.tls2d010Service.queryTLS2D010TLTTALENTList() : of(null),
-      pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
-      acc: this.dropDownListService.queryGLS1005_DropDownList(),
-      org: this.dropDownListService.querySYS3100_DropDownList(),
-      capItem: this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] })
+      pod: this.dropdown.queryTALPORDERM_DropDownList(),
+      acc: this.dropdown.queryGls1005(),
+      org: this.dropdown.querySys3100(),
+      capItem: this.dropdown.queryAps1003ForTls2d010({ CAP_ItemList: [] })
     })
       .pipe(untilDestroyed(this))
       .subscribe(({ tlt, pod, acc, org, capItem }) => {
         this.tlt_noOptions = (tlt?.Data || []).map((item: ITalentOption) => this.mapTalentItemToOption(item));
 
-        this.pod_noOptions = (pod?.Data || []).map((item: any) => ({
+        this.pod_noOptions = (pod || []).map((item: any) => ({
           value: item.No,
           label: `${item.No}-${item.Name}`
         }));
 
-        this.AccNoOptions = (acc?.Data || []).map((item: any) => ({
+        this.AccNoOptions = (acc || []).map((item: any) => ({
           No: item.No,
           Name: item.Name,
           value: item.No,
           label: `${item.No}-${item.Name}`,
         }));
-        this.org_idOptions = (org?.Data || []).map((item: any) => ({
+        this.org_idOptions = (org || []).map((item: any) => ({
           No: item.No,
           Name: item.Name,
           value: item.No,
           label: `${item.No}-${item.Name}`,
         }));
 
-        this.CAP_ItemOptions = (capItem?.Data || []).filter(item => item.CAP_Type !== '0');
+        this.CAP_ItemOptions = (capItem || []).filter(item => item.CAP_Type !== '0');
         this.FilterCAP_ItemOptions = this.CAP_ItemOptions.map(item => ({
           value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item
         }));

@@ -203,7 +203,7 @@
       <td class="text-right font-bold">{{ totalLabelColumn ? '' : '總計' }}</td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">
         <ng-container *ngIf="totalLabelColumn && col.field === totalLabelColumn">
-          總計
+          科目餘額
         </ng-container>
         <ng-container *ngIf="col.isTotal">
           {{

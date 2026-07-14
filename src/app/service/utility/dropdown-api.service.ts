@@ -13,6 +13,8 @@ import {
   Aps1001Query,
   Aps1002Item,
   Aps1003Query,
+  Aps1003Tls2d010Item,
+  Aps1003Tls2d010Query,
   Ass13010PurchaseNumberDropDownItem,
   BatchTalentChargeQuery,
   BusClassItem,
@@ -558,6 +560,19 @@ export class DropdownApiService {
       'Name'
     ).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢
+    );
+  }
+
+  /**
+   * TLS2D010 專用：查詢扣款代碼檔(APS1003)（/TLS0000/TLS2000/queryAPS1003DropDownList）
+   * 回傳原始欄位（CAP_Type/AccNo/GUI_FLAG/CAP_TaxType 等），不做 value/label 轉換，供頁面自行分類/篩選
+   */
+  queryAps1003ForTls2d010(body: Aps1003Tls2d010Query = { CAP_ItemList: [] }): Observable<Aps1003Tls2d010Item[] | null> {
+    return this.queryDropdownWithParams<Aps1003Tls2d010Item, Aps1003Tls2d010Query>(
+      '/TLS0000/TLS2000/queryAPS1003DropDownList',
+      body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
