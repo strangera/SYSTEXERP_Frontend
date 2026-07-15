@@ -142,6 +142,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls27040', loadComponent: () => import('./tls27040/tls27040.component').then(m => m.TLS27040Component), data: { progNo: 'TLS27040' } },
   // 查詢無系統帳資料報表
   { path: 'tls27050', loadComponent: () => import('./tls27050/tls27050.component').then(m => m.TLS27050Component), data: { progNo: 'TLS27050' } },
+  // 環友系統日結檔轉入
+  { path: 'tls27060', loadComponent: () => import('./tls27060/tls27060.component').then(m => m.TLS27060Component), data: { progNo: 'TLS27060' } },
   // 總袋作業
   { path: 'tls28020', loadComponent: () => import('./tls28020/tls28020.component').then(m => m.TLS28020Component), data: { progNo: 'TLS28020' } },
   // 總袋狀況表
