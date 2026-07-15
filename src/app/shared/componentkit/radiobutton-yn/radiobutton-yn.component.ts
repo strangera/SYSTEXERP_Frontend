@@ -1,13 +1,36 @@
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgFor, NgClass } from '@angular/common';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-radiobutton-yn',
-  templateUrl: './radiobutton-yn.component.html',
+  template: `
+    <label [for]="controlName" class="flex gap-1">
+  {{ label }}
+  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <ng-content select="header"></ng-content>
+</label>
+
+<div class="input-group">
+  <div class="flex flex-wrap gap-3 p-2">
+    <div *ngFor="let option of ynOptions" class="flex align-items-center">
+      <p-radioButton [inputId]="controlName + option.value" [name]="controlName" [value]="option.value"
+        [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+        (keydown.enter)="handleEnterKey($event)" [attr.aria-label]="label + ' ' + option.label"
+        [title]="label + ' ' + option.label"></p-radioButton>
+      <label [for]="controlName + option.value" class="ml-2">
+        {{ option.label }}
+      </label>
+    </div>
+  </div>
+</div>
+
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

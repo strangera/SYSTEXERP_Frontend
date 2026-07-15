@@ -6,7 +6,33 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 
 @Component({
   selector: 'app-radiobutton',
-  templateUrl: './radiobutton.component.html',
+  template: `
+  @if (_label() !== "") {
+<label [for]="groupname() + '_' + options()[0].value" class="block mb-2 font-bold">
+  {{ _label() }}
+  @if (isRequired) {
+  <span class="text-red-500">*</span>
+  }
+</label>
+}
+
+<div class="flex flex-wrap gap-3 py-2">
+  @for (option of options(); track option.value) {
+  <div class="flex items-center" [class.pointer-events-none]="disabled() || option.disabled"
+    [class.opacity-60]="disabled() || option.disabled">
+    <p-radioButton [inputId]="groupname() + '_' + option.value" [name]="groupname()" [value]="option.value"
+      [formControl]="control()" (onClick)="onSelectionChange(option.value, option.label)"
+      [disabled]="disabled() || (option.disabled ?? false)" (keydown.enter)="handleEnterKey($event)"></p-radioButton>
+
+    <label [for]="groupname() + '_' + option.value" class="ml-2 cursor-pointer"
+      [class.text-gray-400]="disabled() || option.disabled">
+      {{ option.label }}
+    </label>
+  </div>
+  }
+</div>
+<app-control-messages [onerror]="submitted()" [control]="control()"></app-control-messages>
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

@@ -1,9 +1,9 @@
-import { Component, Input, OnInit, forwardRef } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
 import { NgIf } from '@angular/common';
+import { Component, Input, OnInit } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputTextModule } from 'primeng/inputtext';
+import { BasicKitComponent } from '../../../../shared/componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-query-year-month',
