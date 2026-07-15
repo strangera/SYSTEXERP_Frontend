@@ -1,53 +1,59 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { Injectable, inject } from '@angular/core';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-/** 查詢在線人員 Request */
-export interface IQueryRequest {
-  user_No?: string;
-  user_Name?: string;
+
+export interface QuerySYS0791Request extends ApiRequest {
+  DateS?: string | null;
+  DateE?: string | null;
+  Type?: number | null;
+  UserNo?: string | null;
+  RoleNo?: string | null;
+  OrgId?: string | null;
+  Prog1?: string | null;
+  Prog2?: string | null;
+  Prog3?: string | null;
 }
 
-/** 查詢在線人員 Response */
-export interface IQueryResponse {
-  User_No: string;
-  User_Name: string;
-  From_IP: string;
-  Login_time: string; // 後端 DateTime 對應 TS string
-  GUID: string;
+// 欄位完全對齊後端原始欄位名稱
+export interface SYS0791QueryData {
+  ID?: number;
+  UserNo?: string;
+  UserName?: string;
+  org_id?: string;
+  Org_Name?: string;
+  prog_no1?: string;
+  prog_name1?: string;
+  prog_no2?: string;
+  prog_name2?: string;
+  prog_no3?: string;
+  prog_name3?: string;
+  usetimes?: number;
+  userate?: string;
+  orgtimes?: number;
+  orgrate?: string;
 }
-@Injectable({
-  providedIn: 'root'
-})
+export interface ProgItem {
+  prog_no: string;
+  prog_name: string;
+}
+
+export interface GetProgRequest {
+  Type: number;
+  ProgNo?: string | null;
+}
+
+@Injectable({ providedIn: 'root' })
 export class Sys0791Service {
-  // 對應後端 [Tags("SYS0791 在線人員查詢作業")] 的路由
-  private readonly apiUrl: string = `${environment.ApiUrl}/SYS0000/BAS2000`;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.ApiUrl}/SYS0000/BAS1000`;
 
-  constructor(private http: HttpClient) { }
-
-  /**
-   * SYS0791: 查詢在線人員
-   * @param body 包含 User_No, User_Name 與分頁條件
-   */
-  querySYS0791(body: IQueryRequest): Observable<ApiResponse<IQueryResponse[]>> {
-    return this.http.post<ApiResponse<IQueryResponse[]>>(
-      `${this.apiUrl}/querySYS0791`,
-      body
-    );
+  querySYS0791(body: QuerySYS0791Request): Observable<ApiResponse<SYS0791QueryData[]>> {
+    return this.http.post<ApiResponse<SYS0791QueryData[]>>(`${this.apiUrl}/querySYS0791`, body);
   }
 
-  kickUser(guid: string): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(
-      `${this.apiUrl}/kickUser`,
-      { guid }
-    );
-  }
-
-  // --- 以下保留你原本的 User 相關方法，但建議路徑確認是否要改回 /User ---
-
-  /** 查詢所有使用者 (原本的方法) */
-  queryAllUsers(): Observable<ApiResponse<any[]>> {
-    return this.http.post<ApiResponse<any[]>>(`${environment.ApiUrl}/User/queryAllUsers`, {});
+  getProgList(body: GetProgRequest): Observable<ApiResponse<ProgItem[]>> {
+    return this.http.post<ApiResponse<ProgItem[]>>(`${this.apiUrl}/getProgListSYS0791`, body);
   }
 }

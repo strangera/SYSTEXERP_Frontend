@@ -8,7 +8,7 @@ export const sysRoutes: Routes = [
   { path: 'sys0240', loadComponent: () => import('./sys0240/sys0240.component').then(m => m.SYS0240Component), data: { progNo: 'SYS0240' } }, // 使用者之角色設定維護
   { path: 'sys0310', loadComponent: () => import('./sys0310/sys0310.component').then(m => m.SYS0310Component), data: { progNo: 'SYS0310' } }, // 角色系統權限設定
   { path: 'sys0320', loadComponent: () => import('./sys0320/sys0320.component').then(m => m.SYS0320Component), data: { progNo: 'SYS0320' } }, // 使用者系統權限設定
-  // { path: 'sys0620', loadComponent: () => import('./sys0620/sys0620.component').then(m => m.SYS0620Component),data: { progNo:'SYS0620'} }, // 角色基本資料異動查詢
+  { path: 'sys0620', loadComponent: () => import('./sys0620/sys0620.component').then(m => m.SYS0620Component), data: { progNo: 'SYS0620' } }, // 角色基本資料異動查詢
   { path: 'sys0710', loadComponent: () => import('./sys0710/sys0710.component').then(m => m.SYS0710Component), data: { progNo: 'SYS0710' } }, // 使用者系統權限列表
   { path: 'sys0730', loadComponent: () => import('./sys0730/sys0730.component').then(m => m.SYS0730Component), data: { progNo: 'SYS0730' } }, // 角色系統權限列表
   { path: 'sys0740', loadComponent: () => import('./sys0740/sys0740.component').then(m => m.SYS0740Component), data: { progNo: 'SYS0740' } }, // 作業權限之角色列表
@@ -26,7 +26,6 @@ export const sysRoutes: Routes = [
   { path: 'sys0240cru', loadComponent: () => import('./sys0240.cru/sys0240.cru.component').then(m => m.SYS0240CRUComponent), data: { progNo: 'SYS0240' } }, // 使用者之角色設定維護 CRU
   { path: 'sys0310cru', loadComponent: () => import('./sys0310.cru/sys0310.cru.component').then(m => m.SYS0310CRUComponent), data: { progNo: 'SYS0310' } }, // 角色系統權限設定 CRU
   { path: 'sys0320cru', loadComponent: () => import('./sys0320.cru/sys0320.cru.component').then(m => m.SYS0320CRUComponent), data: { progNo: 'SYS0320' } }, // 使用者系統權限設定 CRU
-  // { path: 'sys0620cru', loadComponent: () => import('./sys0620.cru/sys0620.cru.component').then(m => m.SYS0620CRUComponent), data: { progNo: 'SYS0620' } }, // 角色基本資料異動查詢 CRU
   { path: 'sysb100', loadComponent: () => import('./sysb100/sysb100.component').then(m => m.SYSB100Component), data: { progNo: 'SYSB100' } }, // 公司基本資料維護作業
   { path: 'sysb200', loadComponent: () => import('./sysb200/sysb200.component').then(m => m.SYSB200Component), data: { progNo: 'SYSB200' } }, // 廠商基本資料維護作業
   { path: 'sysb300', loadComponent: () => import('./sysb300/sysb300.component').then(m => m.SYSB300Component), data: { progNo: 'SYSB300' } }, // 組織階層設定作業
