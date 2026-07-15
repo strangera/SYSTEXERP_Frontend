@@ -30,12 +30,10 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS2g020" [loading]="loading" [showEdit]="true" [showManage]="true" [showDelete]="false"
-      [showDetail]="false" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" dataKey="talent_id"
-      [data]="data" [columns]="columns" (rowExpand)="onRowExpand($event)" (edit)="onEdit($event)"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-      [rows]="30" (detail)="onDetail($event)" expansionDataKey="Mdeatil" [expansionColumns]="expansionColumns"
-      DataKeyName="Mdeatil"></app-table>
+    <app-table-report tableKey="TLS2g020" [loading]="loading" [showEdit]="true" [showManage]="true"
+      [showDelete]="false" [showDetail]="false" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFn" dataKey="talent_id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)" expansionDataKey="Mdeatil" [expansionColumns]="expansionColumns"
+      [exportContext]="{ dataKeyName: 'Mdeatil' }"></app-table-report>
   </div>
 </div>

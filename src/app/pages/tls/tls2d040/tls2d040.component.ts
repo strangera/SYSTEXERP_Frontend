@@ -410,8 +410,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       Array.isArray(val) ? val.filter(v => v !== '') : [];
 
     return {
-      PageSize: 999999,
-      PageIndex: 0,
+      pageSize: 999999,
+      pageIndex: 0,
       OrderBy: '',
       Offset: 0,
       SortBy: raw.SortBy ?? [],

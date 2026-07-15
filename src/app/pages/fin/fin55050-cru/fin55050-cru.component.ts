@@ -8,8 +8,9 @@ import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
@@ -40,7 +41,7 @@ interface VoucherMeta {
   standalone: true,
   imports: [
     MenubarComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     NgIf,
     ButtonComponent
@@ -60,9 +61,9 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   meta: VoucherMeta | null = null;
   rows: (DetailRow & { __rowid: number; AccSubject: string })[] = [];
   // 後端提供的總計（對應欄位名稱）
-  sumData: Record<string, number> | null = null;
+  footerData: Record<string, number>[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'AccSubject', header: '會計科目', align: 'left' },
     { field: 'Ven_Name', header: '廠商編號/簡稱', align: 'left' },
     { field: 'Org_Name', header: '部門名稱', align: 'left' },
@@ -127,6 +128,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
           if (!list.length) {
             this.rows = [];
             this.meta = null;
+            this.footerData = [];
             this.messageService?.warnBubble?.('查無資料或傳票號碼不正確。');
             return;
           }
@@ -142,15 +144,18 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
             __rowid: i + 1,
             AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
-          // 後端總計欄位 -> 放到 sumData，table 會優先使用 sumData 顯示 footer
-          this.sumData = {
+          // 後端總計欄位 -> 放到 footerData，table-report 顯示總計列
+          this.footerData = [{
             AccAmt_D: Number(resp?.Data?.SUM_AccAmt_D) || 0,
             AccAmt_C: Number(resp?.Data?.SUM_AccAmt_C) || 0
-          };
+          }];
           // 清除 handoff（避免舊資料干擾）
           localStorage.removeItem('FIN55050_CRU_HANDOFF');
         },
-        error: () => this.messageService?.errorBubble?.('載入傳票明細失敗。'),
+        error: () => {
+          this.footerData = [];
+          this.messageService?.errorBubble?.('載入傳票明細失敗。');
+        },
       });
   }
 

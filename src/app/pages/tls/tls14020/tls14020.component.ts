@@ -3,6 +3,9 @@ import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '@pages/tls/shared/constants/tls13010.constants';
 import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ContractItem } from '@service/api/tls/tls14020.service';
@@ -22,12 +25,10 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { AddButton, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
-import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
-import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 
 //專櫃契約書列印
 @Component({
@@ -35,14 +36,14 @@ import { VendorCategoryOptionsService } from '@others/services/dropdownservice/v
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, AsyncPipe, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule, MultiSelectComponent]
+  imports: [MenubarComponent, AccordionModule, AsyncPipe, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableReportComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule, MultiSelectComponent]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
 
   constructor(
     private vendorCategoryService: VendorCategoryOptionsService,
     private sysb800Service: Sysb800DropdownService,
-    private tls14020Service: TLS14020Service,
+    public readonly tls14020Service: TLS14020Service,
     private locationService: LocationOptionsService,
     private negotiatorService: NegotiatorOptionsService,
     private apiService: TLS13010Service,
@@ -53,6 +54,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
 
   // 查詢的table參數
   data: ContractItem[] = [];
+  lastQueryBody: any;
   selectedItems: ContractItem[] = [];// 多選項目
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
@@ -64,13 +66,13 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   dialogVisible_print = false; // 列印開窗顯示
 
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'contract_no', header: '合約編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, width: '70px' },
     { field: 'ven_no', header: '廠商編號', visible: true },
     { field: 'ven_uniform', header: '廠商統編', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, width: '70px' },
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'tlt_bdate', header: '契約起始日', visible: true, format: formatDate },
     { field: 'tlt_edate', header: '契約截止日', visible: true, format: formatDate },
@@ -80,7 +82,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
     { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
-    { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType },
+    { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType, width: '70px' },
     { field: 'tlt_term_type', header: '抽成別', visible: true, format: formatTltTermType },
     { field: 'store_way', header: '配合方式', visible: true, format: formatStoreWay },
     { field: 'rece_yn', header: '開立業主發票', visible: true, format: formatYN },
@@ -89,15 +91,15 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'contract_type', header: '合約種類', visible: true },
     { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
     { field: 'tlt_openflag', header: '營運狀態', visible: true, format: formatOpenflagStatus },
-    { field: 'template_name', header: '合約書版號', visible: true },
+    { field: 'template_name', header: '合約書版號', visible: true, width: '70px' },
   ];
-  dialogColumns: Column[] = [
+  dialogColumns: ReportColumn[] = [
     { field: 'contract_no', header: '合約編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, width: '70px' },
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'contract_version', header: '合約書版號', visible: true },
-    { field: 'contract_filename', header: '列印合約檔名', visible: true },
+    { field: 'contract_filename', header: '列印合約檔名', visible: true, width: '70px' },
   ];
   // 下拉選單選項
   tlt_noListOptions = this.dropdown.queryTltTalent();
@@ -185,7 +187,9 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     rece_yn: [],
     pos_yn: [],
     cash_yn: [],
-    ...createPaginationConfig([{ field: 'contract_no', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'contract_no', order: 1 }]],
   });
 
   dialogQueryForm = this.formBuilder.group({
@@ -274,6 +278,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       this.tls14020Service.queryTLS14020(frm.value).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）

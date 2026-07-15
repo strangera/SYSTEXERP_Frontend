@@ -16,8 +16,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls12020',
@@ -32,7 +32,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
     DropdownComponent,
     InputTextComponent,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -48,8 +48,9 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     contact_USR_No: [null],
     contact_USR_Name: [null], // 訪談人員
     willing_level: [null], // 後端要 string，不要 null
-    ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
-    pageSize: [30], // 本頁預設送後端每頁 30 筆
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'location_no', order: 1 }]], // 原本是 ECR_LocNo
   });
 
   // expansion 明細分頁選項（只在本頁使用）
@@ -58,7 +59,8 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
 
   data: any[] = [];
-  columns: Column[] = [
+  lastQueryBody: any;
+  columns: ReportColumn[] = [
     { header: '位置編號', field: 'LOCATION_No' },
     { header: '廠商統一編號', field: 'ven_uniform' },
     { header: '廠商名稱(中文)', field: 'VEN_Name' },
@@ -84,7 +86,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   locationOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
   constructor(
-    private tls12020Service: TLS12020Service,
+    public readonly tls12020Service: TLS12020Service,
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -208,6 +210,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         .subscribe({
           next: (res) => {
             const data = res.Data;
+            this.lastQueryBody = params;
             this.data = data;
             this.totalRecords = res.TotalCount ?? 0;
             this.queryStateService.setQueryState(this.ProgNo, params);

@@ -6,8 +6,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN29080Data, FIN29080Service } from '@service/api/fin/fin29080.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -25,12 +26,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     ReactiveFormsModule,
     TranslateModule,
     CalendarRangeComponent,
-    TableComponent
+    TableReportComponent
   ]
 })
 export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> implements OnInit {
   constructor(
-    private fin29080Service: FIN29080Service
+    public readonly fin29080Service: FIN29080Service
   ) {
     super();
   }
@@ -40,26 +41,26 @@ export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> imp
     ACP_Date_To: [null, Validators.required],                    // 立帳日期(迄) - 必填
     ACP_ExpectPayDate_From: [null],         // 預計付款日(起)
     ACP_ExpectPayDate_To: [null],           // 預計付款日(迄)
-    ...createPaginationConfig([])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[]],
   });
 
   data: FIN29080Data[] = [];
+  lastQueryBody: any;
   selectedItems: FIN29080Data[] = [];
   totalRecords = 0;
   exportPDFbtnLoading = false;
   exportExcelbtnLoading = false;
+  footerData: Record<string, number> = {};
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'ExpectedPayDate', header: '預計付款日', visible: true, format: formatDate },
     { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'WithholdAmount', header: '代扣款項', visible: true, format: formatAmount, isTotal: true },
     { field: 'DiscountInterest', header: '貼現利息', visible: true, format: formatAmount, isTotal: true },
     { field: 'EstimatedPayable', header: '預估應付款', visible: true, format: formatAmount, isTotal: true },
   ];
-
-  showSubTotal = true;
-  groupRowsBy = 'ExpectedPayDate';
-  showTotal = true;
 
   ngOnInit(): void {
     this.initializePage('FIN29080', 'account/fin/fin29080cru', this.queryForm, (form) => this.onSubmit(form));
@@ -71,11 +72,26 @@ export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> imp
       this.fin29080Service.queryFIN29080(this.buildQueryPayload(formValue))
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
+          this.lastQueryBody = formValue;
           this.data = response.Data ?? [];
           this.totalRecords = response.TotalCount ?? this.data.length;
+          this.footerData = this.computeFooterData();
           this.queryStateService.setQueryState(this.ProgNo, formValue);
         });
     });
+  }
+
+  // table-report 內部捲動載入/排序會直接呼叫這支，需重現 onSubmit 的日期格式化
+  queryFn = (body: any) => this.fin29080Service.queryFIN29080(this.buildQueryPayload(body));
+
+  // 計算 isTotal 欄位的總計列 (取代 app-table 原本的 [showTotal] 自動加總)
+  private computeFooterData(): Record<string, number> {
+    const totals: Record<string, number> = {};
+    for (const col of this.columns) {
+      if (!col.isTotal) continue;
+      totals[col.field] = this.data.reduce((sum, row) => sum + (Number((row as any)[col.field]) || 0), 0);
+    }
+    return totals;
   }
 
   // ========= 匯出 =========

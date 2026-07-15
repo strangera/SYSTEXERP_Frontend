@@ -9,9 +9,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -33,10 +31,10 @@ interface CategoryItem {
 
 
 @Component({
-    selector: 'app-sysb900',
-    templateUrl: './sysb900.component.html',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-sysb900',
+  templateUrl: './sysb900.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableReportComponent, TranslateModule]
 })
 // 中分類維護作業
 export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
@@ -46,7 +44,9 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_class_name: ['', [Validators.maxLength(40)]], // 中分類名稱
     bus_type: [[] as string[]], // 所屬大分類
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    ...createPaginationConfig([{ field: 'bus_class', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'bus_class', order: 1 }]],
 
   });
 
@@ -61,14 +61,14 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
 
     // 其他欄位
   ];
+  lastQueryBody: any;
   totalRecords = 0;
   selectedItems: CategoryItem[] = [];
   option: any[] = [];
 
   constructor(
-    private Sysb800DropdownService: Sysb800DropdownService,
-    private validationService: ValidationService,
-    private apiService: Bas1000Service,
+    private readonly Sysb800DropdownService: Sysb800DropdownService,
+    public readonly apiService: Bas1000Service,
   ) {
     super();
   }
@@ -92,6 +92,7 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
       this.apiService.querySYSB900(frm.value).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;

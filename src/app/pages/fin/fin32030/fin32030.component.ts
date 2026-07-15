@@ -16,8 +16,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
 
 //1.3.2.3 收款沖帳維護
 @Component({
@@ -37,7 +38,7 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
     InputNumberComponent,
     InputNumberRangeComponent,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule
   ]
 })
@@ -51,12 +52,13 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     VouFrom: ['', [Validators.maxLength(20)]], // 傳票單號起
     VouTo: ['', [Validators.maxLength(20)]], // 傳票單號迄
     Remark: ['', [Validators.maxLength(100)]], // 備註
-    pageSize: [30], // 每頁筆數 (小寫,配合 onLazyLoadData)
+    pageSize: [1000], // 每頁筆數 (小寫,配合 onLazyLoadData)
     pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
     SortBy: [[{ field: 'RCV_No', order: 1 }]], // 排序參數
   });
 
   totalRecords = 0;
+  lastQueryBody: any;
   data: QueryFIN32030Response[] = [];
   selectedItems: QueryFIN32030Response[] = [];
 
@@ -65,6 +67,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   arDialogLoading = false;
   arDialogData: QueryFIN32030ARResponse[] = [];
   arDialogTotalRecords = 0;
+  arDialogLastQueryBody: any;
   arSelectedItems: QueryFIN32030ARResponse[] = [];
 
   // AR Dialog 查詢表單
@@ -81,7 +84,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   });
 
   // AR Dialog 欄位定義
-  arDialogColumns: Column[] = [
+  arDialogColumns: ReportColumn[] = [
     { field: 'ARS_ID', header: '應收ID', visible: true },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
@@ -93,7 +96,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     { field: 'NoteDesc', header: '摘要', visible: true },
   ];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'RCV_No', header: '收款單號', visible: true },
     { field: 'RCV_Date', header: '收款日期', visible: true, format: formatDate },
     // { field: 'Sales_Id', header: '業務員代號', visible: true },
@@ -106,7 +109,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   vendorOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private readonly fin32030Service: FIN32030Service,
+    public readonly fin32030Service: FIN32030Service,
     private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -147,8 +150,8 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
         VouTo: formValue.VouTo || null,
         Remark: formValue.Remark || null,
         // 分頁和排序參數 (轉換為大寫給後端)
-        PageIndex: formValue.pageIndex,
-        PageSize: formValue.pageSize,
+        pageIndex: formValue.pageIndex,
+        pageSize: formValue.pageSize,
         SortBy: formValue.SortBy,
       };
 
@@ -158,12 +161,28 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
           untilDestroyed(this)
         )
         .subscribe(response => {
+          this.lastQueryBody = formValue;
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, formValue);
         });
     });
   }
+
+  // table-report 內部捲動載入/排序會直接呼叫這支，需重現 onSubmit 的小寫轉大寫分頁欄位對應
+  queryFn = (body: any) => this.fin32030Service.queryFIN32030({
+    RCV_No: body.RCV_No || null,
+    DateFrom: body.DateFrom || null,
+    DateTo: body.DateTo || null,
+    AmtFrom: body.AmtFrom || null,
+    AmtTo: body.AmtTo || null,
+    VouFrom: body.VouFrom || null,
+    VouTo: body.VouTo || null,
+    Remark: body.Remark || null,
+    pageIndex: body.pageIndex,
+    PageSize: body.pageSize,
+    SortBy: body.SortBy,
+  });
 
   /** 刪除選取的收款沖帳資料 */
   onDelete(rows: QueryFIN32030Response[]): void {
@@ -225,6 +244,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
           untilDestroyed(this)
         )
         .subscribe(response => {
+          this.arDialogLastQueryBody = queryParams;
           this.arDialogData = response.Data;
           this.arDialogTotalRecords = response.TotalCount;
           this.queryStateService.setQueryState('queryFIN32030AR', queryParams);

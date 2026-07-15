@@ -9,10 +9,16 @@
         <!-- 發票年月 -->
         <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月" controlName="GUI_YYMM"
           [control]="dataForm.controls.GUI_YYMM" [submitted]="submitted" [minDate]="minDate"></app-year-month>
-        <app-table tableKey="fin11200DetailTable" dataKey="ECR_No" title="加入收銀機" class="col-12" [data]="data"
+        <p-divider align="left" type="solid" styleClass="p-4 m-0" class="col-12">
+          <span class="text-center text-xl font-bold text-primary">
+            加入收銀機
+          </span>
+        </p-divider>
+        <app-table-report tableKey="fin11200DetailTable" dataKey="ECR_No" title="加入收銀機" class="col-12" [data]="data"
           [columns]="columns" [showManage]="false" [showCheckBox]="true" [showInsert]="true"
           (insert)="dialogVisible = true;this.selectedItemsDialog = []" (delete)="onDelete($event)"
-          [selectedItems]="selectedData" (selectionChange)="selectedData = $event" [showReportMode]="false"></app-table>
+          [selectedItems]="selectedData" (selectionChange)="selectedData = $event" [showReportMode]="false"
+          [totalRecords]="data.length" [ItemSize]="28.59"></app-table-report>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
@@ -30,9 +36,9 @@
     <app-input-text class="flex-grow-1" label="收銀機名稱" controlName="ECR_Name"
       [control]="dialogQueryForm.controls.ECR_Name" (input)="inputEnter()" />
   </form>
-  <app-table tableKey="fin11200DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="columns"
-    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showHeader]="false"
-    [showManage]="false" [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'"
-    [isRowSelectable]="isRowSelectable.bind(this)" scrollHeight="350px" [showCaption]="false">
-  </app-table>
+  <app-table-report tableKey="fin11200DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="columns"
+    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showManage]="false"
+    [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'" [isRowSelectable]="isRowSelectable.bind(this)"
+    [showCaption]="false" [totalRecords]="dialogData.length" [ItemSize]="28.59">
+  </app-table-report>
 </app-dialog>

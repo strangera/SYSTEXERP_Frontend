@@ -181,22 +181,6 @@ export const formatTimeHHMM = (value: string | number | Date): string => {
   return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
 };
 
-// HH:MM:SS
-export const formatTimeHHMMSS = (value: string | number | Date): string => {
-  if (!value) return '';
-
-  if (value instanceof Date) {
-    const hh = String(value.getHours()).padStart(2, '0');
-    const mm = String(value.getMinutes()).padStart(2, '0');
-    const ss = String(value.getSeconds()).padStart(2, '0');
-    return `${hh}:${mm}:${ss}`;
-  }
-
-  const strValue = String(value).padStart(6, '0'); // 確保是6位數，不足補0
-  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}:${strValue.substring(4, 6)}`;
-};
-
-
 // 000,000,000
 export const formatAmount = (val: number | string): string => {
   const num = Number(val);
@@ -252,32 +236,6 @@ export const formatDateToYYYYMMDD = (value: string | Date): string => {
   return `${year}${month}${day}`;
 };
 
-// formatDateTimeToHHMMSS：將完整日期時間字串轉為 HH:MM:SS
-export const formatDateTimeToHHMMSS = (dateStr: string): string => {
-  if (!dateStr) {
-    return '';
-  }
-  const date = new Date(dateStr);
-  // 檢查是否為有效的日期
-  if (isNaN(date.getTime())) {
-    return '';
-  }
-
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${hours}:${minutes}:${seconds}`;
-};
-
-// 輸出YYYYMM格式的日期
-export const formatYYYYMMToDate = (value: string): Date | null => {
-  if (!value || !/^\d{6}$/.test(value)) return null;
-  const year = Number(value.substring(0, 4));
-  const month = Number(value.substring(4, 6)) - 1; // JS 月份從 0 開始
-  return new Date(year, month, 1);
-};
-
 // 將 "YYYYMM" 轉為 Date 物件
 export function convertYYYYMMToDate(yyyymm: string): Date | null {
   if (!/^\d{6}$/.test(yyyymm)) return null;
@@ -320,19 +278,6 @@ export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
 
   return `${year}-${month}-${day}`;
 };
-// formatDateToHH_MM_SS：輸出為 HH:MM:SS（避免 toISOString 造成減一天）
-export const formatDateToHH_MM_SS = (value: string | Date): string | null => {
-  if (!value) return null;
-
-  const date = value instanceof Date ? value : new Date(value);
-  if (isNaN(date.getTime())) return '';
-
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${hours}:${minutes}:${seconds}`;
-}
 // addDaysToDate：增加天數後的日期
 export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -347,14 +292,6 @@ export const formatPercentage = (value: number | string | null | undefined, frac
   return `${roundedNum}%`;
 };
 
-// formatDivideBy100: 將數字除以 100
-export const formatDivideBy100 = (value: number | string | null | undefined): number | null => {
-  if (value === null || value === undefined || isNaN(Number(value))) {
-    return null;
-  }
-  const num = Number(value);
-  return num / 100;
-};
 // 金額格式化999,999,999，只取整數
 export const formatAmountWithFraction = (val: number | string): string => {
   const num = Number(val);

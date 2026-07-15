@@ -14,8 +14,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -30,7 +31,7 @@ import { Column, formatAmount } from '../../../shared/componentkit/table/table.m
     MultiSelectComponent,
     InputNumberRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -50,19 +51,17 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     Building_No: [[]],
     org_idList: [[]],
     perf_edate: [null as Date | null],
-    pageIndex: [0],
-    pageSize: [0],
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'check_day', order: 0 }]]
   });
-  // expansion 明細分頁選項（只在本頁使用）
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   floorOptions: any = [];
   data: TLS13050QueryItem[] = [];
   selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
   organizationCodeOptions: any = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value) },
@@ -83,7 +82,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   buildingNoOptions: IDropdownItem[] = [];
 
   constructor(
-    private tls13050Service: Tls13050Service,
+    public readonly tls13050Service: Tls13050Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropDown: DropdownApiService
   ) {
@@ -154,8 +153,8 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
 
   private buildQueryBody(formValue: any): QueryTLS13050Request {
     return {
-      PageSize: 0,
-      PageIndex: 0,
+      pageSize: 0,
+      pageIndex: 0,
       OrderBy: formValue.OrderBy ?? '',
       Offset: 0,
       SortBy: Array.isArray(formValue.SortBy) && formValue.SortBy.length > 0

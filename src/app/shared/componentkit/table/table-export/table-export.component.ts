@@ -87,7 +87,7 @@ export interface TableExport {
         </div>
         <div class="flex justify-content-end gap-2 w-full mb-3">
           <p-button label="取消" [outlined]="true" severity="secondary" (click)="visibleChange.emit(false)" />
-          <p-button label="確定" type="submit" (onClick)="visible = false" [disabled]="disable" />
+          <p-button label="確定" type="submit" (onClick)="visible = false" />
         </div>
       </div>
     </form>
@@ -100,7 +100,6 @@ export interface TableExport {
 export class TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;
   @Input() header = 'header';
-  @Input() disable = false;
   @Input() exportStatus: 'PDF' | 'Excel' = 'PDF';
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<TableExport>();
@@ -193,9 +192,6 @@ export class TableExportComponent implements OnInit, OnDestroy {
   }
 
   saveDialog() {
-    if (this.disable) {
-      return;
-    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

@@ -10,7 +10,6 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
@@ -25,7 +24,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     DropdownComponent,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })

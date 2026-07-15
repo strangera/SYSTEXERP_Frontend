@@ -12,8 +12,9 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
 
@@ -54,7 +55,7 @@ interface POS2001 {
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     ButtonModule,
     DropdownComponent,
@@ -80,14 +81,16 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     // USR_OnJobDate: [''], // 到職日（可選）
     // USR_QuitDate: [''], // 離職日（可選
 
-    ...createPaginationConfig([{ field: 'USR_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'USR_No', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
   data: POS2001[] = [];
   filteredData: POS2001[] = [...this.data];
   //篩選表格的欄位
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'USR_No', header: '收銀員編號', visible: true },
     { field: 'USR_Name', header: '收銀員姓名', visible: true },
     { field: 'USR_Passwd', header: '密碼', visible: true },
@@ -118,6 +121,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
 
+  lastQueryBody: any;
   totalRecords = 0;
 
   // 多選項目
@@ -142,7 +146,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
   TLTOption: apiOption[] = [];
 
   constructor(
-    private tls41030Service: Tls41030Service,
+    public readonly tls41030Service: Tls41030Service,
   ) {
     super();
   }
@@ -159,6 +163,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;

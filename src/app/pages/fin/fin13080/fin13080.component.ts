@@ -5,12 +5,14 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { map } from 'rxjs';
 import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
-import { createPaginationConfig, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
+import { formatAmount, formatDate as formatDateDisplay } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
@@ -27,7 +29,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     CalendarComponent,
     TooltipModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     YearMonthComponent,
     ButtonModule,
   ],
@@ -46,17 +48,20 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     INV_DeclareYM: [null],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],
-    ...createPaginationConfig([{ field: 'No', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'No', order: 1 }]],
   });
 
   selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any;
   Date: Date | null = null;
   minDate?: Date;
-  columns: any[] = [
+  columns: ReportColumn[] = [
     { field: 'No', header: '退回/折讓單號', visible: true },
-    { field: 'Date', header: '退回/折讓日期', visible: true, format: (v: string) => formatDate(v) },
+    { field: 'Date', header: '退回/折讓日期', visible: true, format: (v: string) => formatDateDisplay(v) },
     { field: 'INV_DeclareYM', header: '發票年月', visible: true },
     { field: 'Invoice_No', header: '發票號碼', visible: true },
     { field: 'SaleAmt', header: '折讓金額', visible: true, align: 'right', format: (v: number | string) => formatAmount(v) },
@@ -64,7 +69,7 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private fin13080Service: Fin13080Service,
+    public readonly fin13080Service: Fin13080Service,
   ) {
     super();
   }
@@ -80,13 +85,9 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) return;
-    this.loading = true;
-
-    const raw = form.value;
-    const payload = {
+  // 表單小寫欄位 -> 後端要的大寫分頁欄位 + 日期格式化
+  private buildPayload(raw: any) {
+    return {
       PageSize: raw.pageSize ?? 20,
       PageIndex: raw.pageIndex ?? 1,
       OrderBy: '',
@@ -100,20 +101,38 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
       Invoice_No_Start: raw.Invoice_No_Start !== '' ? raw.Invoice_No_Start : null,
       Invoice_No_End: raw.Invoice_No_End !== '' ? raw.Invoice_No_End : null,
     };
+  }
 
+  private mapResponseData(data: { Date?: string }[]) {
+    return (data ?? []).map(item => ({
+      ...item,
+      Date: item.Date ? this.formatDate(new Date(item.Date)) : ''
+    }));
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
+    if (form.invalid) return;
+    this.loading = true;
+
+    const raw = form.value;
+    const payload = this.buildPayload(raw);
 
     this.fin13080Service.queryFIN13080(payload).subscribe({
       next: (res) => {
-        this.data = (res?.Data ?? []).map((item: { Date?: string }) => ({
-          ...item,
-          Date: item.Date ? this.formatDate(new Date(item.Date)) : ''
-        }));
+        this.lastQueryBody = raw;
+        this.data = this.mapResponseData(res?.Data ?? []);
         this.totalRecords = res?.TotalCount ?? this.data.length;
         this.loading = false;
       },
 
     });
   }
+
+  // table-report 內部捲動載入/排序會直接呼叫這支，需重現 onSubmit 的大寫欄位轉換與回應格式化
+  queryFn = (body: any) => this.fin13080Service.queryFIN13080(this.buildPayload(body)).pipe(
+    map(res => ({ ...res, Data: this.mapResponseData(res?.Data ?? []) }))
+  );
 
   isRowSelectable = (row: any): boolean => !!row?.CanDel;
 

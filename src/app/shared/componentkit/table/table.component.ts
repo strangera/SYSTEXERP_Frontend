@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { SortMeta } from 'primeng/api';
-import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowReorderEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
@@ -232,8 +231,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>();
   /** 選擇 按鈕事件 */
   @Output() selectButton = new EventEmitter<any>();
-  /** autoComplete 過濾事件 */
-  @Output() filterChange = new EventEmitter<{ rowData: any, value: string; }>();
 
   // Footer
   /** 是否顯示 Footer @default false */
@@ -428,10 +425,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
-  // autoComplete觸發事件
-  filterOptions(event: AutoCompleteCompleteEvent) {
-    this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
-  }
   // 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any, index?: number) {
     this.fieldChange.emit({ rowData, field, value, index });
@@ -479,10 +472,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
     return this.tableUtilityService.getColumnSpan(columns, groupField);
-  }
-  // 取得沒有分組的欄位
-  getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
-    return this.tableUtilityService.getUngroupedColumns(columns, columnGroup);
   }
   // 判斷是否應該渲染分組標題
   shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {

@@ -33,8 +33,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="tls2c020" [dataKey]="'checkOrder'" [data]="data" [columns]="columns" [loading]="loading"
-    [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showFilter]="false"
-    [showCaption]="false" [expansionColumns]="expansionColumns" [expansionDataKey]="'details'">
-  </app-table>
+  <app-table-report tableKey="tls2c020" [dataKey]="'checkOrder'" [data]="data" [columns]="columns" [loading]="loading"
+    [showDelete]="false" [showManage]="false" [showReportMode]="false" [showFilter]="false" [totalRecords]="data.length"
+    [showCaption]="false" [expansionColumns]="expansionColumns" [expansionDataKey]="'details'" [showSummary]="false">
+  </app-table-report>
 </div>

@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -27,10 +27,10 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-sysb800',
-    templateUrl: './sysb800.component.html',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-sysb800',
+  templateUrl: './sysb800.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
 })
 // 大分類基本資料維護作業
 export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
@@ -39,25 +39,24 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_type_name: ['', [Validators.maxLength(40)]], // 大分類名稱
     bus_type_desc: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    ...createPaginationConfig([{ field: 'bus_type', order: 1 }]), // 分頁和排序參數
-
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'bus_type', order: 1 }]],
   });
 
   data: CategoryItem[] = [];
-  filteredData: CategoryItem[] = [...this.data];
   columns: Column[] = [
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_type_desc', header: '備註', visible: true },
     // 其他欄位
   ];
-
+  lastQueryBody: any;
   totalRecords = 0;
   selectedItems: CategoryItem[] = [];
 
   constructor(
-    private validationService: ValidationService,
-    private apiService: Bas1000Service
+    public readonly apiService: Bas1000Service
   ) {
     super();
   }
@@ -68,28 +67,11 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.apiService.querySYSB800(frm.value).subscribe({
-        next: (response: any) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.filteredData = [...this.data];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            // 儲存查詢條件（成功查詢後）
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            if (this.data.length === 0) {
-              console.log('查詢結果為空');
-            }
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
+      this.apiService.querySYSB800(frm.value).pipe(finalize(() => this.loading = false)).subscribe((response: any) => {
+        this.lastQueryBody = frm.value;
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount || response.Data.length;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
@@ -112,21 +94,10 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
       header: '刪除確認',
       message: `是否確定刪除所選的 ${idList.length} 筆項目?`,
       accept: () => {
-        this.apiService.deleteSYSB800({ idList }).subscribe({
-          next: (response) => {
-            if (response.Status === '0000') {
-              this.messageService.successBubble('選中項目刪除成功');
-              this.selectedItems = [];
-              this.onSubmit(this.queryForm); // 刷新資料
-            } else {
-              console.error('API error:', response.Status, response.Message);
-              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-            }
-          },
-          error: (err: string) => {
-            console.error('API error:', err);
-            this.messageService.errorBubble('刪除失敗');
-          },
+        this.apiService.deleteSYSB800({ idList }).subscribe((response) => {
+          this.messageService.successBubble(response.Message || '選中項目刪除成功');
+          this.selectedItems = [];
+          this.onSubmit(this.queryForm); // 刷新資料
         });
       }
     });

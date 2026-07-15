@@ -12,8 +12,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 //建立查詢項目的interface
@@ -39,7 +40,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls14010',
   templateUrl: './tls14010.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableReportComponent, TranslateModule]
 })
 
 // 合約狀態清單
@@ -65,10 +66,13 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_edate: [null], // 營運終止日
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 0 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   tlt_openOptions: option[] = [ //營運狀況選單
@@ -91,7 +95,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   ven_uniform_Options: apiOption[] = []; // 統編代碼的下拉選單 1106新增
 
   data: TLTContract[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true },
     { field: 'ven_uniform', header: '廠商統編', visible: true },
@@ -118,7 +122,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
   // ----------------------------------------------------------------
   constructor(
-    private tls14010Service: Tls14010Service,
+    public readonly tls14010Service: Tls14010Service,
     private readonly dropDownListService: DropDownListService,
   ) {
     super();
@@ -137,6 +141,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;

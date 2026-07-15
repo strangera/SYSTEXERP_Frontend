@@ -7,7 +7,8 @@ import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { TLS2C020Data, TLS2C020Service } from '@service/api/tls/tls2-c020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -18,7 +19,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { formatDate } from '../../../shared/componentkit/table/table.model';
 
 export interface CheckData {
   checkOrder: string;
@@ -49,7 +50,7 @@ interface ResponseData {
   templateUrl: './tls2c020.component.html',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, CardModule, ScrollPanelModule, TabViewModule,
-    TableComponent, ButtonComponent, DropdownComponent, CheckboxModule
+    TableReportComponent, ButtonComponent, DropdownComponent, CheckboxModule
   ]
 })
 export class TLS2C020Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -57,7 +58,6 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
     cls_date: ['2025/08/27'], // 日期
     ECR_No: [''], // 收銀機代碼
     checkDuplicateInvoice: [true], // 是否檢核發票重複 - changed from ["Y"] to [true]
-    ...createPaginationConfig([]) // 分頁和排序參數
   });
 
   closeDate = ''; // 最近關帳日期
@@ -82,13 +82,13 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
   // 顯示用的資料（會被更新）
   data: CheckData[] = [];
 
-  columns: Column[] = [
-    { field: 'checkOrder', header: '檢查順序', hidden: true },
+  columns: ReportColumn[] = [
+    { field: 'checkOrder', header: '檢查順序', visible: false },
     { field: 'checkContent', header: '檢查內容', visible: true },
     { field: 'isPassed', header: '是否通過', visible: true },
   ];
 
-  expansionColumns: Column[] = [
+  expansionColumns: ReportColumn[] = [
     { field: 'cls_date', header: '交易日期', visible: true, format: formatDate },
     { field: 'check_result', header: '結果說明', visible: true }
   ]

@@ -1,4 +1,4 @@
-import { AsyncPipe, Location } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -77,7 +77,6 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     public readonly fin29060Service: FIN29060Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
-    private readonly location: Location,
   ) { super(); }
   private readonly navHelper = inject(NavigationHelperService); // 注入導覽小幫手
   ngOnInit(): void {

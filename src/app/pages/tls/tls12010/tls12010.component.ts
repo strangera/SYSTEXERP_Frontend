@@ -14,8 +14,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { AddButton, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface Potential_Customer {
@@ -68,7 +69,7 @@ export interface POS2013 {
   selector: 'app-tls12010',
   templateUrl: './tls12010.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableReportComponent, TranslateModule]
 })
 export class TLS12010Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit {
   // 查詢
@@ -91,10 +92,13 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007 修改: 品牌名稱(中文)應為文字輸入欄位
     tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
     //分頁查詢
-    ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'contact_USR_No', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工ID）
@@ -110,28 +114,28 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
   contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
 
   data: Potential_Customer[] = [];
-  columns: Column[] = [
-    { field: 'contact_USR_No', header: '接洽人員代碼', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'contact_USR_No', header: '接洽人員代碼', visible: true, width: '70px' },
     { field: 'contact_USR_Name', header: '接洽人員姓名', visible: true },
     {
       field: 'cus_type', header: '廠商類型', visible: true, format: (value: string) =>
         this.cus_type_Option.find((option) => option.value === value)?.label || value
     },
     { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱(中文)', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱(中文)', visible: true, width: '100px' },
     { field: 'VEN_EngName', header: '廠商名稱(英文)', visible: true },
     { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'tlt_name', header: '品牌名稱(中文)', visible: true },
+    { field: 'tlt_name', header: '品牌名稱(中文)', visible: true, width: '100px' },
     { field: 'tlt_EngName', header: '品牌名稱(英文)', visible: true },
     { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
-    { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
+    { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true, width: '70px' },
     { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
     { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
-    { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-    { field: 'VEN_Addr', header: '郵寄地址', visible: true },
-    { field: 'VEN_Address', header: '公司營登地址', visible: true },
+    { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true, width: '70px' },
+    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true, width: '100px' },
+    { field: 'VEN_Addr', header: '郵寄地址', visible: true, width: '200px' },
+    { field: 'VEN_Address', header: '公司營登地址', visible: true, width: '100px' },
     { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
     {
       field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
@@ -139,12 +143,12 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     },
     { field: 'demanded_area', header: '需求面積', visible: true },
     { field: 'country_of_origin', header: '商品出產地', visible: true },
-    { field: 'remarks', header: '備註', visible: true },
+    { field: 'remarks', header: '備註', visible: true, width: '200px' },
 
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate, width: '70px' },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate, width: '70px' },
     { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
@@ -167,7 +171,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
   selectedItems: Potential_Customer[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private tls12010Service: Tls12010Service) {
+  constructor(public readonly tls12010Service: Tls12010Service) {
     super();
   }
 
@@ -182,6 +186,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       this.tls12010Service.queryTLS12010(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;

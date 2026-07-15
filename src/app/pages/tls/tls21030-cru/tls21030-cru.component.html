@@ -32,11 +32,11 @@
       <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3" *ngIf="!isFormReadable">
         <app-button label="查詢專櫃" (click)="onQuery(dataForm)" [loading]="loading" icon='pi pi-search'></app-button>
       </div>
-      <app-table tableKey="TLS21030CRU" title="專櫃清單" dataKey="talent_id" [data]="data" [columns]="columns"
-        (selectionChange)="selectedRows = $event" (unSelect)="onUnSelect($event)" [selectedItems]="selectedRows"
-        [showManage]="false" [disabled]="isFormReadable" [loading]="loading" [showCheckBox]="true"
-        [multiSortMeta]="dataForm.controls.SortBy.value" [totalRecords]="totalRecords"
-        (lazyLoadData)="onLazyLoadData($event, dataForm); onQuery(dataForm)" [lazy]="true" [showCaption]="false" />
+      <app-table-report tableKey="TLS21030CRU" dataKey="talent_id" [data]="data" [columns]="columns"
+        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"
+        [isRowSelectable]="isRowSelectable" [loading]="loading" [showCheckBox]="true" [totalRecords]="totalRecords"
+        [lastQueryBody]="lastQueryBody" [queryFunction]="tls21030Service.queryTLTTALENT_By_money_type.bind(tls21030Service)"
+        [showCaption]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>

@@ -30,10 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" [showCheckBox]="true" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [rows]="30" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+  <app-table-report tableKey="TLS46010" [data]="data" [columns]="columns" [showCheckBox]="true"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" dataKey="id" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls46010Service.queryTLS0000.bind(tls46010Service)"
     (delete)="onDelete($event)" [loading]="loading" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems=$event"></app-table>
+    (selectionChange)="selectedItems=$event"></app-table-report>
 </div>

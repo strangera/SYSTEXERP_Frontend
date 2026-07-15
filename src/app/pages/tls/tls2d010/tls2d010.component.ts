@@ -20,8 +20,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -37,7 +36,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     MultiSelectComponent,
     CalendarComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     FileUploadModule,
     DialogComponent
@@ -56,7 +55,9 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     pod_noList: [[]], // 維護日
     CRT_USR_No: [''],
     GUI_FLAG: [''],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
   deleteForm = this.formBuilder.group({
     tpy_YYYYMM: [null, Validators.required],    // 扣款年月
@@ -186,11 +187,11 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         .filter((val: any) => val !== null && val !== undefined && val !== '');
     }
 
-    // 分頁欄位：後端使用 PageSize/PageIndex/Offset
+    // 分頁欄位：後端使用 pageSize/pageIndex/Offset
     const pageSize = Number(formValue.pageSize ?? 20);
     const pageIndex = Number(formValue.pageIndex ?? 1);
-    payload.PageSize = pageSize;
-    payload.PageIndex = pageIndex;
+    payload.pageSize = pageSize;
+    payload.pageIndex = pageIndex;
     payload.Offset = (pageIndex - 1) * pageSize;
 
     if (!Array.isArray(payload.SortBy) || !payload.SortBy.length) {

@@ -9,11 +9,11 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -30,7 +30,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
     InputTextareaComponent,
     MenubarComponent,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
 
@@ -41,7 +41,9 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     ENG_MeterNo: new FormControl<string | void>(void 0),
     Location_No: new FormControl<string | void>(void 0),
     ENG_Remark: new FormControl<string | void>(void 0),
-    ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]],
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
@@ -50,6 +52,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
 
   public readonly tableData = signal<ASS21010Data[]>([]);
   public readonly totalRecords = signal<number>(0);
+  public lastQueryBody: any;
 
   public readonly tableLoading = signal<boolean>(!1);
 
@@ -83,7 +86,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     this.loading = this.tableLoading() || this.service.exportLoading();
   }, { allowSignalWrites: true });
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
+  public readonly columns: (Omit<ReportColumn, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {
       field: 'ENG_Type',
       header: '能源類型',
@@ -131,6 +134,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
+          this.lastQueryBody = payload;
           this.tableData.set(res.Data.Data);
           this.totalRecords.set(res.Data.TotalCount || 0);
         },
@@ -193,4 +197,9 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
 
     this.service.export(type as 'PDF' | 'Excel', payload);
   }
+
+  // table-report 需要 res.Data 直接是陣列，這支 API 回傳的資料多包一層在 Data.Data 底下
+  queryFn = (body: any) => this.service.loadASS21010(body).pipe(
+    map((res: any) => ({ ...res, Data: res?.Data?.Data ?? [], TotalCount: res?.Data?.TotalCount ?? 0 }))
+  );
 }

@@ -1,5 +1,4 @@
 
-import { NgIf, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,7 +6,7 @@ import { CPM11080Service } from '@service/api/cpm/cpm11080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AddButton, createPaginationConfig, formatDate, formatYN } from '@shared/componentkit/table/table.model';
+import { AddButton, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -15,7 +14,7 @@ import { DropDownListService } from 'src/app/service/utility/dropDownList.servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 
 const formatSubKind = (value: string | null | undefined, fallbackName?: string): string => {
   if (!value && !fallbackName) { return ''; }
@@ -29,8 +28,7 @@ const formatSubKind = (value: string | null | undefined, fallbackName?: string):
   selector: 'app-cpm11080',
   templateUrl: './cpm11080.component.html',
   standalone: true,
-  imports: [DropdownComponent, NgStyle,
-    NgIf, ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [DropdownComponent, ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableReportComponent, TranslateModule]
 })
 
 export class CPM11080Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -38,7 +36,9 @@ export class CPM11080Component extends BasicQueryPageComponent<any> implements O
     REC_DATE_FROM: [new Date(), [Validators.required]],
     REC_DATE_TO: [new Date(), [Validators.required]],
     KIND: [''],
-    ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'VouNo', order: 1 }]],
   });
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -116,7 +116,7 @@ export class CPM11080Component extends BasicQueryPageComponent<any> implements O
 
       const payload = {
         PageSize: raw.pageSize ?? 20,
-        PageIndex: raw.pageIndex ?? 1,
+        pageIndex: raw.pageIndex ?? 1,
         OrderBy: '',
         Offset: 0,
         SortBy: raw.SortBy ?? [{ field: 'SEQ_ID', order: 1 }],

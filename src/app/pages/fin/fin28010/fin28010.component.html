@@ -7,7 +7,8 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer" (click)="openWslipDialog(); $event.stopPropagation()">
+          <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer"
+            (click)="openWslipDialog(); $event.stopPropagation()">
             <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="queryForm.controls.WSLIP_NO"
               [submitted]="submitted" [readonly]="true" [customPlaceholder]="'點擊選取匯款單號'"
               [alwaysShowPlaceholder]="true"></app-input-text>
@@ -33,14 +34,3 @@
     dataKey="WSLIP_NO" (selectionChange)="onWslipSelect($event)">
   </app-table>
 </app-dialog>
-
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showReportMode]="false" dataKey="SeqNo"
-      [multiSortMeta]="[]" [showDelete]="false" [totalRecords]="totalRecords" [showCheckBox]="false"
-      (detail)="onEdit($event)" [showEdit]="false" [showManage]="true"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false">
-    </app-table>
-  </div>
-</div> -->

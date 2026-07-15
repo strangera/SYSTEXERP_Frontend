@@ -19,9 +19,15 @@
           <app-button btnType="submit"></app-button>
         </div>
       </div>
-      <div *ngIf="dataForm.controls.IsAllCopy.value" @expandCollapse>
-        <app-table title="來源角色之使用者權限" [tableKey]="'roleUserAssignment-duplication'" dataKey="Code" [data]="roleUserData"
-          [columns]="roleUserColumns" [showManage]="false" [showCaption]="false" />
+      <div *ngIf="dataForm.controls.IsAllCopy.value">
+        <p-divider align="left" type="solid" styleClass="p-4 m-0">
+          <span class="text-center text-xl font-bold text-primary">
+            來源角色之使用者權限
+          </span>
+        </p-divider>
+        <app-table-report [tableKey]="'roleUserAssignment-duplication'" dataKey="Code" [data]="roleUserData"
+          [ItemSize]="24.59" [columns]="roleUserColumns" [showManage]="false" [showCaption]="false"
+          [totalRecords]="roleUserData.length" />
       </div>
       <div class="mt-4">
         <p-divider align="left" type="solid" styleClass="m-0">

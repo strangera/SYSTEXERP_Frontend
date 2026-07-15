@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, inject, Input, NgZone, OnChanges, OnDestroy, Output, PLATFORM_ID, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -46,7 +46,7 @@ import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table
     TableReportDataFlowService,
   ]
 })
-export class TableReportComponent implements OnChanges {
+export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('dt') public readonly dt!: Table;
 
   public readonly tableUtility = inject(TableReportUtilityService);
@@ -60,6 +60,14 @@ export class TableReportComponent implements OnChanges {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly queryState = inject(QueryStateService);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly ngZone = inject(NgZone);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  /** 是否啟用虛擬捲動；改用欄位而非 template 內直接算 data.length>=30，讓 refreshVirtualScroll() 能真正關/開它 */
+  virtualScrollEnabled = false;
+  private intersectionObserver?: IntersectionObserver;
+  private hasSelfHealedVirtualScroll = false;
 
   // Inputs & Outputs 宣告
   @Input() exportContext?: ExportContext;
@@ -241,12 +249,50 @@ export class TableReportComponent implements OnChanges {
   }
 
   /**
+   * PrimeNG p-table 虛擬捲動的 Scroller 只在第一次掛載時量測容器尺寸一次；若表格是在 app-dialog 這類「先建立、動畫結束才真正可視」
+   * 的容器裡首次渲染，量到的尺寸常常不準，導致畫面完全沒有 <tr>，且不會自己恢復，只有使用者剛好觸發某次全域變更偵測(如拉視窗、點別處)
+   * 讓 PrimeNG 內部重試邏輯剛好撞上瀏覽器已定案的版面時才會「巧合」補上。這裡改用 IntersectionObserver 偵測「真的變成可視」的那一刻，
+   * 強制把虛擬捲動關掉再開啟一次，讓 PrimeNG 整個 Scroller 重新建立、重新量測，不必依賴上述時序巧合。
+   */
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId) || typeof IntersectionObserver === 'undefined') return;
+    this.ngZone.runOutsideAngular(() => {
+      this.intersectionObserver = new IntersectionObserver((entries) => {
+        if (this.hasSelfHealedVirtualScroll || !entries[0]?.isIntersecting) return;
+        this.hasSelfHealedVirtualScroll = true;
+        this.intersectionObserver?.disconnect();
+        if (this.virtualScrollEnabled) {
+          this.ngZone.run(() => this.refreshVirtualScroll());
+        }
+      });
+      this.intersectionObserver.observe(this.host.nativeElement);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.intersectionObserver?.disconnect();
+  }
+
+  /** 強制重建虛擬捲動的 Scroller，讓它用當下容器的真實尺寸重新量測、補渲染資料列 */
+  public refreshVirtualScroll(): void {
+    if (!this.virtualScrollEnabled) return;
+    this.virtualScrollEnabled = false;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.virtualScrollEnabled = this.data.length >= 30;
+      this.cdr.detectChanges();
+    });
+  }
+
+  /**
    * 核心視圖資料配給大腦
    */
   private handleDataChange(changes: SimpleChanges) {
     if (this.lastQueryBody) {
       this.hasSearched = true;
     }
+
+    this.virtualScrollEnabled = this.data.length >= 30;
 
     if (changes['data']) {
       this.selectionService.reset();
@@ -377,7 +423,7 @@ export class TableReportComponent implements OnChanges {
     const incomingSorts: any[] = event.multisortmeta || [];
 
     if (this.groupRowsBy) {
-      // 🟢 1. 動態偵測或繼承小計欄位的排序方向 (order)
+      // 1. 動態偵測或繼承小計欄位的排序方向 (order)
       // 先看這次傳進來的事件有沒有包含小計欄位的排序
       const incomingGroupSort = incomingSorts.find(s => s.field === this.groupRowsBy);
       // 再看上一次表格留存的狀態有沒有小計欄位的排序
@@ -388,10 +434,10 @@ export class TableReportComponent implements OnChanges {
 
       const groupSortMeta = { field: this.groupRowsBy, order: currentGroupOrder };
 
-      // 🟢 2. 清洗其餘欄位的排序條件：排除掉重複的小計欄位
+      // 2. 清洗其餘欄位的排序條件：排除掉重複的小計欄位
       const cleanUserSorts = incomingSorts.filter(s => s.field !== this.groupRowsBy);
 
-      // 🟢 3. 完美組裝：[ 動態小計分組固定第一, ...其餘無限個使用者多重排序 ]
+      // 3. 完美組裝：[ 動態小計分組固定第一, ...其餘無限個使用者多重排序 ]
       this.dt.multiSortMeta = [groupSortMeta, ...cleanUserSorts];
 
       // 4. 灌回 PrimeNG 控制核心，讓畫面的箭頭方向跟資料狀態完全對齊
@@ -429,7 +475,7 @@ export class TableReportComponent implements OnChanges {
           this.data = res.Data;
           this._buildSelectableCache();
           this.totalRecords = res.TotalCount || this.data.length;
-          this.dt.virtualScroll = this.effectiveLazy && this.data.length >= 30;
+          this.virtualScrollEnabled = this.effectiveLazy && this.data.length >= 30;
           this.virtualData = this.data;
           this.selectedItems = [];
           this.dataChange.emit(this.data);

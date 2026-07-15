@@ -8,8 +8,8 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -29,7 +29,7 @@ import { FIN52030Data, FIN52030Payload } from './fin52030.model';
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
 export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> implements OnInit {
@@ -39,16 +39,19 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     TempName: new FormControl<string | void>(void 0),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
-    ...createPaginationConfig([{ field: 'id', order: 1 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'id', order: 1 }]],
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly tableData = signal<FIN52030Data[]>([]);
   public readonly totalRecords = signal<number>(0);
+  public lastQueryBody: any;
 
   public tblUserOptions: apiOption[] = []; // 人員 下拉選單
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
+  public readonly columns: (Omit<ReportColumn, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '常用傳票代碼' },
     { field: 'TempName', header: '常用傳票名稱' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
@@ -94,6 +97,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
+          this.lastQueryBody = payload;
           this.tableData.set(res.Data);
           this.totalRecords.set(res.TotalCount || 0);
         },

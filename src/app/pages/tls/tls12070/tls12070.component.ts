@@ -12,8 +12,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 export interface Customer_interview {
   contact_Date_Start: string; // 接洽日期_起始日
@@ -46,7 +46,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls12070',
   templateUrl: './tls12070.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, CommonModule, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, MultiSelectComponent, TableReportComponent, TranslateModule]
 })
 export class TLS12070Component extends BasicQueryPageComponent<Customer_interview> implements OnInit {
   activeReport: 'query' | 'willing' = 'query';
@@ -61,16 +61,20 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     contact_USR_No: [[], [Validators.maxLength(20)]], // contact_USR_No (drop，應該就是接洽人員)
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'contact_USR_No', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  interviewLastQueryBody: any;
+  willingLastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_USR_Option: apiOption[] = []; // 訪談人員
 
   interview_data: Customer_interview[] = []; //意願報表
-  intervew_columns: Column[] = [
+  intervew_columns: ReportColumn[] = [
     { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
     { field: 'ven_uniform', header: '廠商統一編號', visible: false },
     { field: 'ven_uniform_Count', header: '潛在客戶總數', visible: true },
@@ -78,7 +82,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   ];
 
   willing_data: Willing_data[] = [];
-  willing_columns: Column[] = [ //意願報表欄位
+  willing_columns: ReportColumn[] = [ //意願報表欄位
     { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
     { field: 'contact_USR_Name', header: '訪談人員', visible: true },
     { field: 'willing_level_N', header: '?/未確認', visible: true },
@@ -93,7 +97,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   selectedItems: Customer_interview[] = [];// 多選項目
   // ----------------------------------------------------------------
   constructor(
-    private tls12070Service: Tls12070Service,
+    public readonly tls12070Service: Tls12070Service,
     private dropDownListService: DropDownListService,
   ) {
     super();
@@ -119,6 +123,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       this.tls12070Service.queryTLS12070_Count(request).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.interviewLastQueryBody = request;
             this.interview_data = response.Data || [];
             console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;
@@ -151,6 +156,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       this.tls12070Service.queryTLS12070_Summary(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.willingLastQueryBody = frm.value;
             this.willing_data = response.Data || [];
             console.log('意願Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;

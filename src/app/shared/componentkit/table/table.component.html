@@ -231,8 +231,7 @@
                   disabled
                     ? true
                     : (col.disabled && col.disabled(rowData)) || false
-                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
-                (filterChange)="filterOptions($event)"></app-table-input>
+                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"></app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
@@ -247,8 +246,7 @@
                   disabled
                     ? true
                     : (col.disabled && col.disabled(rowData)) || !alwaysEdit
-                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"
-                (filterChange)="filterOptions($event)"></app-table-input>
+                " (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)"></app-table-input>
             </ng-template>
           </p-cellEditor>
           <ng-container *ngIf="col.type === 'button'">

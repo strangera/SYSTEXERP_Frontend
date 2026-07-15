@@ -127,10 +127,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS14030" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [isRowSelectable]="isRowSelectable" [loading]="loading"></app-table>
+  <app-table-report tableKey="TLS14030" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls14030Service.queryTLS14030.bind(tls14030Service)"
+    [isRowSelectable]="isRowSelectable" [loading]="loading"></app-table-report>
 </div>

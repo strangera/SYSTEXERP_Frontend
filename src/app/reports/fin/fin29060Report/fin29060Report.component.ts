@@ -5,8 +5,9 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 
@@ -36,7 +37,7 @@ interface VoucherMeta {
 @Component({
   selector: 'app-fin29050-report',
   standalone: true,
-  imports: [TableComponent, TranslateModule, NgIf, ButtonComponent],
+  imports: [TableReportComponent, TranslateModule, NgIf, ButtonComponent],
   templateUrl: './fin29060Report.component.html'
 })
 export class FIN29060ReportComponent implements OnInit {
@@ -44,9 +45,9 @@ export class FIN29060ReportComponent implements OnInit {
   initialized = false;
   meta: VoucherMeta | null = null;
   rows: (DetailRow & { __rowid: number; AccSubject: string })[] = [];
-  sumData: Record<string, number> | null = null;
+  footerData: Record<string, number>[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'AccSubject', header: '會計科目', visible: true },
     { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
@@ -95,19 +96,21 @@ export class FIN29060ReportComponent implements OnInit {
             AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
 
-          this.sumData = {
+          this.footerData = [{
             AccAmt_D: Number(response?.Data?.SUM_AccAmt_D) || 0,
             AccAmt_C: Number(response?.Data?.SUM_AccAmt_C) || 0
-          };
+          }];
         } else {
           this.rows = [];
           this.meta = null;
+          this.footerData = [];
         }
         this.initialized = true; // 這裡一定要設為 true，HTML 抬頭才會出現
       },
       error: (err) => {
         console.error('API Error:', err);
         this.messageService.warnBubble('載入傳票明細發生錯誤');
+        this.footerData = [];
         this.initialized = true;
         this.isLoading.set(false);
       }

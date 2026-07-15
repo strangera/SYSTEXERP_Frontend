@@ -10,11 +10,12 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/ass14010.service';
 
 //3.1.4.1  進貨發票建檔作業
@@ -32,7 +33,7 @@ import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/as
     InputTextComponent,
     MenubarComponent,
     ReactiveFormsModule,
-    TableComponent,
+    TableReportComponent,
     TranslateModule
   ]
 })
@@ -56,10 +57,13 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
     RECEIPT_DATE_E: [null], // 發票日期(迄)
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'RECEIPT_NO', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'RECEIPT_NO', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
@@ -76,7 +80,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
   REDU_CODE_Options: { value: string; label: string }[] = []; // 扣抵別 下拉選項 (querySys1000({ SYS_Type: 'PUR_DiscNo' }))
 
   data: ass14010mainData[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'RECEIPT_NO', header: '發票/收據號碼', visible: true },
     { field: 'TOKEN_NO', header: '進貨單號', visible: true },
     { field: 'RECEIPT_INS_ID', header: '發票維護單號', visible: true },
@@ -108,7 +112,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
 
   // ----------------------------------------------------------------
   constructor(
-    private ass14010Service: Ass14010Service,
+    public readonly ass14010Service: Ass14010Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
   ) {
@@ -132,6 +136,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
       this.ass14010Service.queryASS14010(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data.QueryData || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || this.data.length;
@@ -255,6 +260,11 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
   isRowSelectable(rowData: ass14010mainData): boolean {
     return rowData.RECEIPT_STATUS === '1';
   }
+
+  // table-report 需要 res.Data 直接是陣列，這支 API 回傳的資料多包一層在 QueryData 底下
+  queryFn = (body: any) => this.ass14010Service.queryASS14010(body).pipe(
+    map((res: any) => ({ ...res, Data: res?.Data?.QueryData ?? [] }))
+  );
 
   btnInvoiceLoading = false;
   //匯出報表

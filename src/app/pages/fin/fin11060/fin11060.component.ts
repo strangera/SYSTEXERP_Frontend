@@ -7,8 +7,9 @@ import { Fin11060Service } from '@service/api/fin/fin11060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -16,7 +17,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
 
 export interface InvoiceBase {
@@ -57,7 +57,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-fin11060',
   templateUrl: './fin11060.component.html',
   standalone: true,
-  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, TranslateModule, TableComponent]
+  imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextRangeComponent, RadiobuttonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, TranslateModule, TableReportComponent]
 })
 
 // 電子發票上送狀況表
@@ -79,10 +79,13 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     Is_ShowErr: ['N', [Validators.required]], //  是否只顯示異常
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'TXN_Time', order: 1 }, { field: 'MIG_Time', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'TXN_Time', order: 1 }, { field: 'MIG_Time', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_type_Option: option[] = [
@@ -100,9 +103,9 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   data: InvoiceRecord[] = [];
   key = 'TXN_GUINo';
-  showSort = [{ field: 'TXN_Time', order: 1 }, { field: 'MIG_Time', order: 1 }]
-  columns: Column[] = []; //顯示的column
-  columnsType1: Column[] = [
+  footerData: Record<string, number> = {};
+  columns: ReportColumn[] = []; //顯示的column
+  columnsType1: ReportColumn[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
     { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
@@ -121,7 +124,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     // { field: 'ECR_No', header: '收銀機號', visible: true },
   ];
 
-  columnsType2: Column[] = [
+  columnsType2: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
     { field: 'MIG_Time', header: '上傳日期', visible: true, format: formatDate },
@@ -138,7 +141,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     // { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
   ];
 
-  columnsType3: Column[] = [
+  columnsType3: ReportColumn[] = [
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '發票日期', visible: true, format: formatDate },
@@ -161,7 +164,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   // ----------------------------------------------------------------
   constructor(
-    private fin11060Service: Fin11060Service,
+    public readonly fin11060Service: Fin11060Service,
     private readonly dropdownApiService: DropdownApiService,
     private cdr: ChangeDetectorRef
   ) {
@@ -232,8 +235,10 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
       .subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data ?? [];
             this.totalRecords = response.TotalCount ?? this.data.length;
+            this.footerData = this.computeFooterData();
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
             console.log('Result', this.data);
           } else {
@@ -270,6 +275,16 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
       default:
         this.columns = [];
     }
+  }
+
+  // 計算 isTotal 欄位的總計列 (取代 app-table 原本的 [showTotal] 自動加總)
+  private computeFooterData(): Record<string, number> {
+    const totals: Record<string, number> = {};
+    for (const col of this.columns) {
+      if (!col.isTotal) continue;
+      totals[col.field] = this.data.reduce((sum, row) => sum + (Number((row as any)[col.field]) || 0), 0);
+    }
+    return totals;
   }
 
   loadOptions() {

@@ -80,13 +80,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="exportTLS14030" tableKey="TLS14040" dataKey="field" [data]="data" [columns]="columns"
-    [showManage]="false" [showCheckBox]="false" [showDelete]="false"
-    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    [multiSortMeta]="[
-      { field: 'open_fees', order: 1 },
-      { field: 'construct_fees', order: 1 },
-      { field: 'expiration_fees', order: 1 },
-    ]" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true" [loading]="loading"></app-table>
+  <app-table-report tableKey="TLS14040" dataKey="field" [data]="data" [columns]="columns" [showManage]="false"
+    [showCheckBox]="false" [showDelete]="false" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls14030Service.exportTLS14030.bind(tls14030Service)" [loading]="loading"
+    [exportContext]="{ apiUrl: 'exportTLS14030' }"></app-table-report>
 </div>

@@ -2,6 +2,8 @@ import { SortMeta } from 'primeng/api';
 import { map, OperatorFunction, pipe } from 'rxjs';
 
 export interface ApiRequest {
+  pageSize?: number;
+  pageIndex?: number;
   PageSize?: number;
   PageIndex?: number;
   OrderBy?: string | null;

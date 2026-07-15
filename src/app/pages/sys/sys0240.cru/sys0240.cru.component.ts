@@ -1,4 +1,3 @@
-import { animate, style, transition, trigger } from '@angular/animations';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'; // 引入 ChangeDetectorRef
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,13 +9,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
 import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';
@@ -34,17 +34,6 @@ export interface UserOption {
 @Component({
   selector: 'app-sys0240.cru',
   templateUrl: './sys0240.cru.component.html',
-  animations: [
-    trigger('expandCollapse', [
-      transition(':enter', [
-        style({ height: '0', opacity: 0 }),
-        animate('300ms ease-out', style({ height: '*', opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ height: '0', opacity: 0 }))
-      ])
-    ])
-  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -57,7 +46,7 @@ export interface UserOption {
     InputGroupComponent,
     CheckboxModule,
     NgIf,
-    TableComponent,
+    TableReportComponent,
     DividerModule,
     TabViewModule,
     PrimeTemplate,
@@ -65,9 +54,9 @@ export interface UserOption {
     NgFor,
     AccordionModule,
     TranslateModule,
+    DividerModule
   ],
 })
-
 export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -79,7 +68,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implemen
     IsAllCopy: [false],
   });
   targetOptions: apiOption[] = []; //目標options
-  roleColumns: Column[] = [
+  roleColumns: ReportColumn[] = [
     { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true }
   ];

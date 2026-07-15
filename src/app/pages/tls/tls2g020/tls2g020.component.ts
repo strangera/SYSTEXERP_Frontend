@@ -6,14 +6,14 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls2g020',
@@ -28,22 +28,23 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
     CalendarComponent,
     MultiSelectComponent,
     TranslateModule,
-    TableComponent
+    TableReportComponent
   ]
 })
 export class TLS2G020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     TLT_NoList: [[]],
     budget_yy: [new Date()],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
-    pageSize: [30],
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   data: any[] = [];
+  lastQueryBody: any;
   totalRecords = 0;
   tltNoOptions: IDropdownItem[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'budget_yy', header: '年度', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
@@ -51,9 +52,9 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     { field: 'Contract_subno', header: '合約版次', visible: true },
     { field: 'Contract_bdate', header: '合約起始日', visible: true, format: formatDate },
     { field: 'Contract_edate', header: '合約結束日', visible: true, format: formatDate },
-    { field: 'Mdeatil', header: '月預算明細', hidden: true }
+    { field: 'Mdeatil', header: '月預算明細', visible: false }
   ];
-  expansionColumns: Column[] = [
+  expansionColumns: ReportColumn[] = [
     {
       field: 'Month',
       header: '月',
@@ -66,7 +67,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private tls2g020Service: Tls2g020Service
+    public readonly tls2g020Service: Tls2g020Service
   ) {
     super();
   }
@@ -87,6 +88,43 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         }
       });
   }
+  // 將日期字串或 Date 物件轉 yyyy-mm-dd
+  private formatDateString(date: string | Date): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private buildPayload(raw: any) {
+    return {
+      budget_yy: raw.budget_yy
+        ? new Date(raw.budget_yy).getFullYear().toString()
+        : '',
+      tlt_no: raw.TLT_NoList || [],
+      pageIndex: Number(raw.pageIndex) || 1,
+      pageSize: Number(raw.pageSize) || 30,
+      SortBy: raw.SortBy && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
+    };
+  }
+
+  private mapResponseData(data: any[]) {
+    return (data || []).map((item: any) => ({
+      ...item,
+      Contract_bdate: item.Contract_bdate ? this.formatDateString(item.Contract_bdate) : '',
+      Contract_edate: item.Contract_edate ? this.formatDateString(item.Contract_edate) : '',
+      avg_cag_charge_rate: item.avg_cag_charge_rate,
+      Mdeatil: (item.Mdeatil || []).map((m: any) => ({
+        ...m,
+        talent_id: item.talent_id,
+        budget_yy: item.budget_yy,
+        avg_cag_charge_nurate: m.budget * m.avg_cag_charge_rate // 新增抽成額
+      }))
+    }));
+  }
+
   onSubmit(frm: FormGroup) {
     this.submitted = true;
     this.loading = true;
@@ -100,15 +138,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     }
 
     const raw = frm.getRawValue();
-    const payload = {
-      budget_yy: raw.budget_yy
-        ? new Date(raw.budget_yy).getFullYear().toString()
-        : '',
-      tlt_no: raw.TLT_NoList || [],
-      pageIndex: Number(raw.pageIndex) || 1,
-      pageSize: Number(raw.pageSize) || 30,
-      SortBy: raw.SortBy && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
-    };
+    const payload = this.buildPayload(raw);
 
     this.tls2g020Service.queryTLS2G020(payload)
       .pipe(untilDestroyed(this), finalize(() => {
@@ -116,31 +146,16 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         this.messageService.unblockUi();
       }))
       .subscribe((res) => {
-        this.data = (res?.Data || []).map((item: any) => ({
-          ...item,
-          Contract_bdate: item.Contract_bdate ? formatDateString(item.Contract_bdate) : '',
-          Contract_edate: item.Contract_edate ? formatDateString(item.Contract_edate) : '',
-          avg_cag_charge_rate: item.avg_cag_charge_rate,
-          Mdeatil: (item.Mdeatil || []).map((m: any) => ({
-            ...m,
-            talent_id: item.talent_id,
-            budget_yy: item.budget_yy,
-            avg_cag_charge_nurate: m.budget * m.avg_cag_charge_rate // 新增抽成額
-          }))
-        }));
+        this.lastQueryBody = raw;
+        this.data = this.mapResponseData(res?.Data || []);
         this.totalRecords = res?.TotalCount || 0;
       });
-
-    // 工具函式：將日期字串或 Date 物件轉 yyyy-mm-dd
-    function formatDateString(date: string | Date): string {
-      const d = typeof date === 'string' ? new Date(date) : date;
-      if (isNaN(d.getTime())) return '';
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    }
   }
+
+  // table-report 內部捲動載入/排序會直接呼叫這支，需重現 onSubmit 的 payload 組裝與回應資料轉換
+  queryFn = (body: any) => this.tls2g020Service.queryTLS2G020(this.buildPayload(body)).pipe(
+    map(res => ({ ...res, Data: this.mapResponseData(res?.Data || []) }))
+  );
 
 
 

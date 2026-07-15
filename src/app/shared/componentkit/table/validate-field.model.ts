@@ -1,32 +1,3 @@
-// ['只能輸入英文與數字', '格式錯誤']
-export function validateAlphanumeric(value: string): { isValid: boolean; errorMessage: string[] } {
-  const regex = /^[a-zA-Z0-9]+$/;
-  if (regex.test(value)) {
-    return { isValid: true, errorMessage: [] };
-  } else {
-    return { isValid: false, errorMessage: ['只能輸入英文與數字', '格式錯誤'] };
-  }
-}
-
-// ['只能輸入英文、數字與特殊符號', '格式錯誤']
-export function validateAlphanumericSpecial(value: string): { isValid: boolean; errorMessage: string[] } {
-  const regex = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
-  if (regex.test(value)) {
-    return { isValid: true, errorMessage: [] };
-  } else {
-    return { isValid: false, errorMessage: ['只能輸入英文、數字與特殊符號', '格式錯誤'] };
-  }
-}
-
-// ['只能輸入數字', '格式錯誤']
-export function validateNumber(value: string): { isValid: boolean; errorMessage: string[] } {
-  const regex = /^[0-9]+$/;
-  if (value && regex.test(value)) {
-    return { isValid: true, errorMessage: [] };
-  }
-  return { isValid: false, errorMessage: ['只能輸入數字', '格式錯誤'] };
-}
-
 // [`${header}不能小於 ${min}`, '格式錯誤']
 export function validateMinNumber(min: number): (value: string | number, rowData: any, data: any[], field: string, header: string) => {
   isValid: boolean;
@@ -84,26 +55,11 @@ export function validateMaxLength(maxLength: number): (value: string, rowData: a
     };
   };
 }
-// [`${header}不能超過 ${max}`, '格式錯誤']
-export function validateMaxNumber(max: number): (value: string, rowData: any, data: any[], field: string, header: string) => {
-  isValid: boolean;
-  errorMessage: string[];
-} {
-  return (value: string, rowData: any, data: any[], field: string, header: string): { isValid: boolean; errorMessage: string[] } => {
-    const numericValue = Number(value);
-    const isValid = !isNaN(numericValue) && numericValue <= max;
-
-    return {
-      isValid,
-      errorMessage: isValid ? [] : [`不能超過 ${max}`, '格式錯誤'],
-    };
-  };
-}
 
 //欄位禁止輸入中文
 export function validateNoChinese(): (value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean; errorMessage: string[] } {
   return (value: string) => {
-    const hasChinese = /[\u4e00-\u9fa5]/.test(value ?? '');
+    const hasChinese = /[一-龥]/.test(value ?? '');
     return {
       isValid: !hasChinese,
       errorMessage: [`${value} 含有中文，不可輸入中文`, '格式錯誤']

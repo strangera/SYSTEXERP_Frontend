@@ -6,8 +6,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -25,7 +24,7 @@ import { columns, TDS52020Data } from './fin52020.model';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -33,16 +32,19 @@ export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     VoucherKind: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]],
     VoucherName: ['', [Validators.maxLength(30)]],
-    ...createPaginationConfig([{ field: 'VoucherName', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'VoucherName', order: 1 }]],
   });
 
   totalRecords = 0;
+  lastQueryBody: any;
   data: TDS52020Data[] = [];
   selectedRows: TDS52020Data[] = [];
   columns = columns;
 
   constructor(
-    private fin52020Service: Fin52020Service,
+    public readonly fin52020Service: Fin52020Service,
     private validationService: ValidationService
   ) {
     super();
@@ -59,6 +61,7 @@ export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> imp
       this.fin52020Service.queryFIN52020(form.value)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe(res => {
+          this.lastQueryBody = form.value;
           this.data = res.Data;
           console.log(this.data)
           this.totalRecords = res.TotalCount;

@@ -4,8 +4,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { DividerModule } from "primeng/divider";
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -13,8 +16,6 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 
@@ -28,12 +29,13 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    TableComponent,
+    TableReportComponent,
     NgIf,
     DialogComponent,
     InputTextComponent,
     TranslateModule,
-    YearMonthComponent
+    YearMonthComponent,
+    DividerModule
   ],
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
@@ -46,7 +48,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
   data: POS1002[] = [];
   selectedData: POS1002[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
   ]
@@ -54,8 +56,8 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   constructor(
     private readonly dropdownApiService: DropdownApiService,
     private readonly datePipe: DatePipe,
-    private fin11200Service: Fin11200Service,
-    private validationService: ValidationService
+    private readonly fin11200Service: Fin11200Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }

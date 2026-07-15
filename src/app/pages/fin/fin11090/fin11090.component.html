@@ -42,12 +42,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="FIN11090" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [showDelete]="false" dataKey="id"
-      [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [isRowSelectable]="isRowSelectable" [showManage]="false" [showCheckBox]="true" [showPaginator]="false">
-    </app-table>
+    <app-table-report tableKey="FIN11090" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showDelete]="false" dataKey="id" [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="fin11090Service.queryFIN11090.bind(fin11090Service)"
+      [loading]="loading" [isRowSelectable]="isRowSelectable" [showManage]="false" [showCheckBox]="true">
+    </app-table-report>
     <div class="grid justify-content-end gap-2 m-0 mt-2">
       <app-button btnType="submit" (click)="onConfirm(selectedItems)" [disabled]="selectedItems.length === 0"
         [loading]="confirmBtnLoading">確認</app-button>
