@@ -10,7 +10,7 @@ import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
-import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-customFooter-table',
