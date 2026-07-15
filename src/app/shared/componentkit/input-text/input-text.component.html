@@ -1,6 +1,6 @@
 <label [hidden]="!showLabel || !label" [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
 
@@ -16,12 +16,12 @@
       [readonly]="readonly"
       [placeholder]="
         alwaysShowPlaceholder || !control.disabled
-          ? customPlaceholder || placeholder
+          ? customPlaceholder || fieldState.placeholder
           : ''
       "
-      [attr.minlength]="minLength ?? null"
+      [attr.minlength]="fieldState.minLength ?? null"
       [attr.maxlength]="
-        autoPadZero ? padLength : weightedMax ? null : maxLength
+        autoPadZero ? padLength : weightedMax ? null : fieldState.maxLength
       "
       [attr.inputmode]="autoPadZero ? 'numeric' : null"
       [attr.pattern]="autoPadZero ? '[0-9]*' : null"
@@ -31,8 +31,8 @@
           (errorForGroup && control.parent?.errors),
       }"
       pInputText
-      [attr.aria-label]="label || placeholder"
-      [title]="label || placeholder"
+      [attr.aria-label]="label || fieldState.placeholder"
+      [title]="label || fieldState.placeholder"
       (compositionstart)="onCompositionStart()"
       (compositionend)="onCompositionEnd($event)"
       (input)="onInput($event)"

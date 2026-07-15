@@ -1,8 +1,7 @@
-import { ChangeDetectorRef, DestroyRef, Directive, inject, Input } from '@angular/core';
+import { ChangeDetectorRef, DestroyRef, Directive, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
 import { FormLabelService } from '@shared/service/form-label.service';
-
 /**
  * 明確宣告欄位規則，取代對 FormControl 驗證器的探測反推。
  * 未提供的屬性會 fallback 用原本的驗證器探測（過渡期相容，行為不變）。
@@ -15,9 +14,17 @@ export interface FieldMeta {
   max?: number;
   numberOnly?: boolean;
 }
-
-@Directive()
-export class BasicKitComponent {
+/**
+ * hostDirectives 示範版：與 BasicKitComponent 相同的欄位狀態推導邏輯，
+ * 改用組合（hostDirectives）而非繼承提供給元件使用。
+ * controlName/label 刻意不放進這裡，由 host 元件自己持有，
+ * 呼叫 initControl 時傳入即可，減少 template 需要跟著改的範圍。
+ */
+@Directive({
+  selector: '[appFieldState]',
+  standalone: true,
+})
+export class FieldStateDirective {
   placeholder: string | undefined;
   placeholder2: string | undefined;
   isRequired = false;
@@ -27,15 +34,14 @@ export class BasicKitComponent {
   maxValue: number | null = null;
   minValue: number | null = null;
   isNumberOnly = false;
-  @Input() controlName = '';
-  @Input() label = '';
-  protected formLabelService = inject(FormLabelService);
-  cdr = inject(ChangeDetectorRef)
-  public readonly destroyRef = inject(DestroyRef);
 
-  initControl(control: FormControl, meta?: FieldMeta): void {
-    if (this.controlName && this.label) {
-      this.formLabelService.registerLabel(this.controlName, this.label);
+  private readonly formLabelService = inject(FormLabelService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
+
+  initControl(control: FormControl, controlName?: string, label?: string, meta?: FieldMeta): void {
+    if (controlName && label) {
+      this.formLabelService.registerLabel(controlName, label);
     }
     // 訂閱 control 的狀態變化
     control.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -105,7 +111,6 @@ export class BasicKitComponent {
     this.minValue = minTest?.['min']?.min ?? null;
   }
 
-
   checkNumberValidator(control: AbstractControl, meta?: FieldMeta): void {
     if (meta?.numberOnly !== undefined) {
       this.isNumberOnly = meta.numberOnly;
@@ -158,5 +163,4 @@ export class BasicKitComponent {
     if (index === 0) this.placeholder = finalPlaceholder;
     if (index === 1) this.placeholder2 = finalPlaceholder;
   }
-
 }

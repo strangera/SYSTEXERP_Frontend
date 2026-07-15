@@ -1,6 +1,6 @@
 <label [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
 </label>
 <ng-container *ngIf="!readonly; else readonlyMode">
   <p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"

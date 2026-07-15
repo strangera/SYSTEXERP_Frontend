@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 
@@ -19,8 +19,11 @@ import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
     ControlMessagesComponent,
     EnterToTabDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class CheckboxComponent extends BasicKitComponent implements OnInit {
+export class CheckboxComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   /** 標題 */
   public _title = input<string>('', { alias: 'title' });
   /** 標籤 */
@@ -47,7 +50,7 @@ export class CheckboxComponent extends BasicKitComponent implements OnInit {
   );
 
   public ngOnInit(): void {
-    this.updateControlState(this.control());
+    this.fieldState.updateControlState(this.control());
     this.initializeValue();
   }
 

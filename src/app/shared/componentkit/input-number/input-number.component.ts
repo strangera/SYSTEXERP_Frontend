@@ -1,9 +1,9 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
@@ -27,12 +27,15 @@ import { TooltipModule } from 'primeng/tooltip';
     ControlMessagesComponent,
     EnterToTabDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputNumberComponent extends BasicKitComponent implements OnInit {
+export class InputNumberComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 必填
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() readonly = false; // 新增：唯讀模式
@@ -58,7 +61,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Output() blurEvent = new EventEmitter<Event>();
 
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
     if (this.disabled) {
       this.control.disable();
     }

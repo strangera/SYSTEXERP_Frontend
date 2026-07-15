@@ -4,14 +4,14 @@
       <ng-container *ngIf="fieldConfig.isPrimaryField; else otherFieldsTemplate">
         <label [for]="fieldConfig.fieldName">
           {{ fieldConfig.displayLabel }}
-          <span *ngIf="isRequired" class="text-red-500">*</span>
+          <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
         </label>
 
         <!-- 主要輸入欄位 - 點擊時打開面板 -->
         <div class="selector-input-wrapper">
           <p-autoComplete [formControl]="valueControl" [id]="fieldConfig.fieldName" [optionLabel]="labelPropertyName"
             [suggestions]="autoCompleteItems" [optionValue]="valuePropertyName"
-            [placeholder]="valueControl.disabled ? '' : placeholder" [readonly]="true"
+            [placeholder]="valueControl.disabled ? '' : fieldState.placeholder" [readonly]="true"
             (onFocus)="openSelectorPanel($event)" (click)="openSelectorPanel($event)" class="clickable-autocomplete"
             appEnterToTab></p-autoComplete>
 

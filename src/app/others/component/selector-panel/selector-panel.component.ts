@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
@@ -26,9 +26,12 @@ export interface DisplayFieldConfig {
   styleUrl: './selector-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, EnterToTabDirective]
+  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, EnterToTabDirective],
+  hostDirectives: [FieldStateDirective],
 })
-export class SelectorPanelComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class SelectorPanelComponent implements OnInit, OnDestroy {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 表單控制相關
   @Input() valueControl = new FormControl();           // 主要值控制器
   @Input() isSubmitted = false;                        // 表單提交狀態
@@ -57,7 +60,7 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
   multiSortMeta: SortMeta[] = [];                     // 動態排序設定
 
   ngOnInit(): void {
-    this.updateControlState(this.valueControl);
+    this.fieldState.updateControlState(this.valueControl);
 
     // 初始化排序設定
     this.multiSortMeta = [{ field: this.valuePropertyName, order: 1 }];

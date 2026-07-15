@@ -1,10 +1,10 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Dropdown, DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 @Component({
   selector: 'app-dropdown',
   templateUrl: './dropdown.component.html',
@@ -19,16 +19,20 @@ import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
     NgClass,
     ControlMessagesComponent,
     EnterToTabDirective
-  ]
+  ],
+  hostDirectives: [FieldStateDirective],
 })
-export class DropdownComponent extends BasicKitComponent implements OnInit {
+export class DropdownComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+  private readonly cdr = inject(ChangeDetectorRef);
+
   readonly Validators = Validators;
   @ViewChild('dd') dropdownComponent!: Dropdown;
   @Input() readonly = false; // 新增：唯讀模式
   // 必填
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() set options(value: any[] | null) {
     if (value === null) {
       this.loading = true;
@@ -65,7 +69,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() set control(value: FormControl) {
     if (value) {
       this._control = value;
-      this.initControl(this._control);
+      this.fieldState.initControl(this._control, this.controlName, this.label);
 
       // 新增：監聽值變化，不論是自動帶入還是外部重置，只要值變了，就把手打暫存字串清空
       // 這樣 selectedOptionLabel 就會乖乖走清單比對回填邏輯，不會出現錯亂
@@ -85,7 +89,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
   }
   onDropdownChange(event: DropdownChangeEvent) {
     if (this.readonly) return;

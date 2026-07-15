@@ -1,5 +1,5 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Column, LazyLoadEvent } from '@others/component/table/table.model';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
@@ -9,7 +9,7 @@ import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table'; // 引入原生的 TableModule
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { focusNextFocusable } from '@shared/directive/enter-to-tab.util';
 
 export interface FieldsConfig {
@@ -29,9 +29,12 @@ export interface FieldsConfig {
     AutoCompleteModule, InputTextModule, OverlayPanelModule, ButtonModule,
     TableModule, // 替換為原生的 TableModule
     ControlMessagesComponent
-  ]
+  ],
+  hostDirectives: [FieldStateDirective],
 })
-export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class DropdownTableComponent implements OnInit, OnDestroy {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @Input() control = new FormControl();
   @Input() submitted = false;
 
@@ -74,7 +77,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   protected readonly focusNextFocusable = focusNextFocusable;
 
   ngOnInit(): void {
-    this.updateControlState(this.control);
+    this.fieldState.updateControlState(this.control);
 
     // 處理 AutoComplete 鍵盤打字防抖
     this.filterSubject$.pipe(

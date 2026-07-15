@@ -1,10 +1,10 @@
 import { NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberInputEvent } from 'primeng/inputnumber';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputNumberComponent } from '../input-number/input-number.component';
 
 @Component({
@@ -20,11 +20,14 @@ import { InputNumberComponent } from '../input-number/input-number.component';
     InputNumberComponent,
     InputGroupModule,
     InputGroupAddonModule,
-  ]
+  ],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
+export class InputNumberRangeComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 必填欄位
-  @Input() override label = '';
+  @Input() label = '';
   @Input() startLabel!: string;
   @Input() endLabel!: string;
   @Input() startControlName = '';
@@ -49,8 +52,8 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   @Output() endBlurEvent = new EventEmitter<Event>();
 
   ngOnInit(): void {
-    this.checkRequiredValidator(this.startControl, 0);
-    this.checkRequiredValidator(this.endControl, 1);
+    this.fieldState.checkRequiredValidator(this.startControl, 0);
+    this.fieldState.checkRequiredValidator(this.endControl, 1);
   }
 
   onStartInputChange(event: InputNumberInputEvent) {

@@ -1,10 +1,10 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, inject, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-multi-select',
@@ -21,13 +21,16 @@ import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
     ControlMessagesComponent,
     EnterToTabDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class MultiSelectComponent extends BasicKitComponent implements OnInit {
+export class MultiSelectComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
   // 新增：唯讀模式
   @Input() readonly = false;
-  @Input() override label = '';
-  @Input() override controlName = '';
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() set options(value: any[] | null) {
     if (value === null) {
       this.loading = true;
@@ -65,7 +68,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
     if (this.readonly) {
       this.control.disable();
     } else if (!this.control.disabled) {
-      this.updateControlState(this.control);
+      this.fieldState.updateControlState(this.control);
     }
   }
   private ensureControl() {

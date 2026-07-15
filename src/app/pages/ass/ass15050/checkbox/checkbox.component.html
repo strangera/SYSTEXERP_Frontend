@@ -1,7 +1,7 @@
 <label>
   @if (_title() !== '') {
   {{ _title() }}
-  @if (isRequired) { <span class="text-red-500">*</span> }
+  @if (fieldState.isRequired) { <span class="text-red-500">*</span> }
   } @else {
   &nbsp;
   }

@@ -4,7 +4,7 @@
       <ng-container *ngIf="field.mainDataField">
         <label [for]="field.field">
           {{ field.header }}
-          <span *ngIf="isRequired" class="text-red-500">*</span>
+          <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
         </label>
         <p-autoComplete
           [formControl]="control"
@@ -13,7 +13,7 @@
           (click)="onFocusAndInitialLoad($event)"
           [suggestions]="suggestions"
           [optionValue]="optionValue"
-          [placeholder]="control.disabled ? '' : placeholder"
+          [placeholder]="control.disabled ? '' : fieldState.placeholder"
           (keydown.enter)="focusNextFocusable($event); enterKey.emit($event)"
           (completeMethod)="onCompleteMethod($event)"
           (onSelect)="onAutoCompleteSelect($event)"

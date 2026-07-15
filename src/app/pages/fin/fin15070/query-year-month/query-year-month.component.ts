@@ -1,23 +1,26 @@
 import { NgIf } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
-import { BasicKitComponent } from '../../../../shared/componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-query-year-month',
   templateUrl: './query-year-month.component.html',
   styleUrls: ['./query-year-month.component.scss'],
   standalone: true,
-  imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule, NgIf, EnterToTabDirective]
+  imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule, NgIf, EnterToTabDirective],
+  hostDirectives: [FieldStateDirective],
 })
-export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
+export class QueryYearMonthComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   get isControlRequired(): boolean {
     return this.control?.hasValidator?.(Validators.required) ?? false;
   }
-  @Input() override  label = '交易年月';
+  @Input() label = '交易年月';
   @Input() submitted = false;
   @Input() control!: FormControl;
 
