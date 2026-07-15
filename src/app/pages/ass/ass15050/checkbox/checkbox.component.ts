@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, OnInit, output, si
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 
@@ -16,6 +17,7 @@ import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
     ReactiveFormsModule,
     TriStateCheckboxModule,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
 })
 export class CheckboxComponent extends BasicKitComponent implements OnInit {

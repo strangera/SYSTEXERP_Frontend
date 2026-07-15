@@ -6,12 +6,12 @@
   <div class="year-month-group">
     <!-- 年份 -->
     <input pInputText type="text" [formControl]="yearControl" [class.ng-invalid]="submitted && yearControl.invalid"
-      placeholder="請輸入年份" id="yearMonth" (change)="onChange()" (keydown.enter)="handleEnterKey($event)" />
+      placeholder="請輸入年份" id="yearMonth" (change)="onChange()" appEnterToTab />
 
     <!-- 月份 -->
     <p-dropdown [formControl]="monthControl" [options]="months" placeholder="請選擇月份" optionLabel="label"
       optionValue="value" [class.ng-invalid]="submitted && monthControl.invalid" (onChange)="onChange()"
-      (keydown.enter)="handleEnterKey($event)">
+      appEnterToTab>
     </p-dropdown>
   </div>
 </div>

@@ -4,6 +4,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-radiobutton-yn',
@@ -19,7 +20,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     <div *ngFor="let option of ynOptions" class="flex align-items-center">
       <p-radioButton [inputId]="controlName + option.value" [name]="controlName" [value]="option.value"
         [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-        (keydown.enter)="handleEnterKey($event)" [attr.aria-label]="label + ' ' + option.label"
+        appEnterToTab [attr.aria-label]="label + ' ' + option.label"
         [title]="label + ' ' + option.label"></p-radioButton>
       <label [for]="controlName + option.value" class="ml-2">
         {{ option.label }}
@@ -41,6 +42,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     ReactiveFormsModule,
     NgClass,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
 })
 export class RadiobuttonYNComponent extends BasicKitComponent implements OnInit {

@@ -1,11 +1,12 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ImageService, ImageUploadRequest } from '@service/utility/image.service';
 import { EditorInitEvent, EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { environment } from 'src/environments/environment';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { editorModules } from './editor.model';
 @Component({
   selector: 'app-editor-text',
@@ -17,7 +18,7 @@ import { editorModules } from './editor.model';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
+  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, EnterToTabDirective]
 })
 export class EditorTextComponent extends BasicKitComponent implements OnInit {
   @Input() override label = '';
@@ -29,7 +30,6 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
   @Output() textChange = new EventEmitter<EditorTextChangeEvent>();
   @Output() init = new EventEmitter<EditorInitEvent>();
   modules = editorModules;
-  private readonly destroyRef = inject(DestroyRef);
   private readonly imageService = inject(ImageService);
 
   constructor() {

@@ -3,6 +3,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-radiobutton',
@@ -22,7 +23,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     [class.opacity-60]="disabled() || option.disabled">
     <p-radioButton [inputId]="groupname() + '_' + option.value" [name]="groupname()" [value]="option.value"
       [formControl]="control()" (onClick)="onSelectionChange(option.value, option.label)"
-      [disabled]="disabled() || (option.disabled ?? false)" (keydown.enter)="handleEnterKey($event)"></p-radioButton>
+      [disabled]="disabled() || (option.disabled ?? false)" appEnterToTab></p-radioButton>
 
     <label [for]="groupname() + '_' + option.value" class="ml-2 cursor-pointer"
       [class.text-gray-400]="disabled() || option.disabled">
@@ -40,6 +41,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     FormsModule,
     ReactiveFormsModule,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
 })
 export class RadiobuttonComponent extends BasicKitComponent implements OnInit {

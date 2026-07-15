@@ -4,13 +4,14 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { BasicKitComponent } from '../../../../shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-query-year-month',
   templateUrl: './query-year-month.component.html',
   styleUrls: ['./query-year-month.component.scss'],
   standalone: true,
-  imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule, NgIf]
+  imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule, NgIf, EnterToTabDirective]
 })
 export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
   get isControlRequired(): boolean {

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
@@ -24,6 +25,7 @@ import { TooltipModule } from 'primeng/tooltip';
     ReactiveFormsModule,
     TooltipModule,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
 })
 export class InputNumberComponent extends BasicKitComponent implements OnInit {

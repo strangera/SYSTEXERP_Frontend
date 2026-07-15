@@ -5,7 +5,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { BasicKitComponent, FieldMeta } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { CopyControlDirective } from '@shared/directive/copy-control.directive';
 import { ButtonComponent } from '../button/button.component';
 import { InputTextService } from './input-text.service';
 
@@ -25,6 +27,8 @@ import { InputTextService } from './input-text.service';
     TooltipModule,
     ButtonComponent,
     ControlMessagesComponent,
+    EnterToTabDirective,
+    CopyControlDirective,
   ],
 })
 export class InputTextComponent extends BasicKitComponent implements OnInit {
@@ -34,6 +38,8 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
+  /** 明確宣告欄位規則（required/minLength/maxLength/min/max/numberOnly），取代對驗證器的探測。不傳則沿用原本探測行為。 */
+  @Input() fieldMeta?: FieldMeta;
   @Input() showCopyButton = false;
   @Input() customPlaceholder?: string;
 
@@ -71,7 +77,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.initControl(this.control, this.fieldMeta);
     if (this.disabled) {
       this.control.disable();
     }

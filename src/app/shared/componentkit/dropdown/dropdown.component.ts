@@ -4,6 +4,7 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { Dropdown, DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 @Component({
   selector: 'app-dropdown',
   templateUrl: './dropdown.component.html',
@@ -16,7 +17,8 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     FormsModule,
     ReactiveFormsModule,
     NgClass,
-    ControlMessagesComponent
+    ControlMessagesComponent,
+    EnterToTabDirective
   ]
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit {

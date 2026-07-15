@@ -14,6 +14,6 @@
   [virtualScrollItemSize]="38" [scrollHeight]="'200px'" (completeMethod)="filterOptions($event)" [dropdown]="true"
   [forceSelection]="forceSelection()" [ariaLabel]="'請輸入' + label" [dropdownAriaLabel]="'請選擇' + label"
   [ariaLabelledBy]="controlName" [autofocus]="autofocus()" (onSelect)="handleOptionSelected($event)"
-  (keydown.enter)="handleEnterKey($event)" />
+  appEnterToTab />
 <app-control-messages [onerror]="submitted() || (control().touched && control().invalid)" [control]="control()">
 </app-control-messages>

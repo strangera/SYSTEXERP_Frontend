@@ -12,7 +12,7 @@
       [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
       [ngClass]="inputNumberClasses" [mode]="mode" [attr.maxlength]="allowUnlimited ? null : maxLength"
       (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" [pTooltip]="customPlaceholder || placeholder"
-      tooltipPosition="bottom" [pKeyFilter]="keyFilter" (keydown.enter)="handleEnterKey($event)" />
+      tooltipPosition="bottom" [pKeyFilter]="keyFilter" appEnterToTab />
   </ng-container>
   <ng-template #inputNumber>
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control" [readonly]="readonly"
@@ -23,7 +23,7 @@
       [maxFractionDigits]="maxFractionDigits" [ngClass]="inputNumberClasses" [mode]="mode"
       [attr.maxlength]="allowUnlimited ? null : maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
       [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom" [pKeyFilter]="keyFilter"
-      (keydown.enter)="handleEnterKey($event)" />
+      appEnterToTab />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>

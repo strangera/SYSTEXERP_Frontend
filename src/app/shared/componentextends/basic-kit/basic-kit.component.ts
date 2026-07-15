@@ -1,9 +1,22 @@
-import { ChangeDetectorRef, inject, Input } from '@angular/core';
+import { ChangeDetectorRef, DestroyRef, Directive, inject, Input } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FormLabelService } from '@shared/service/form-label.service';
 
-@UntilDestroy()
+/**
+ * 明確宣告欄位規則，取代對 FormControl 驗證器的探測反推。
+ * 未提供的屬性會 fallback 用原本的驗證器探測（過渡期相容，行為不變）。
+ */
+export interface FieldMeta {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  numberOnly?: boolean;
+}
+
+@Directive()
 export class BasicKitComponent {
   placeholder: string | undefined;
   placeholder2: string | undefined;
@@ -18,37 +31,42 @@ export class BasicKitComponent {
   @Input() label = '';
   protected formLabelService = inject(FormLabelService);
   cdr = inject(ChangeDetectorRef)
+  public readonly destroyRef = inject(DestroyRef);
 
-  initControl(control: FormControl): void {
+  initControl(control: FormControl, meta?: FieldMeta): void {
     if (this.controlName && this.label) {
       this.formLabelService.registerLabel(this.controlName, this.label);
     }
     // 訂閱 control 的狀態變化
-    control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.updateControlState(control);
+    control.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.updateControlState(control, 0, meta);
       this.cdr.markForCheck();
     });
-    this.updateControlState(control);
+    this.updateControlState(control, 0, meta);
     this.cdr.markForCheck();
   }
 
-  updateControlState(...controls: FormControl[]) {
-    for (const [index, control] of controls.entries()) {
-      this.checkRequiredValidator(control, index);
-      this.checkIntLengthValidator(control);
-      this.checkMinMaxValidator(control);
-      this.checkNumberValidator(control);
-      this.setPlaceholder(control, index);
-    }
+  updateControlState(control: FormControl, index = 0, meta?: FieldMeta): void {
+    this.checkRequiredValidator(control, index, meta);
+    this.checkIntLengthValidator(control, meta);
+    this.checkMinMaxValidator(control, meta);
+    this.checkNumberValidator(control, meta);
+    this.setPlaceholder(control, index);
   }
 
-  checkRequiredValidator(control: FormControl, index = 0): void {
-    const isRequired = control?.hasValidator(Validators.required) ?? false;
+  checkRequiredValidator(control: FormControl, index = 0, meta?: FieldMeta): void {
+    const isRequired = meta?.required ?? control?.hasValidator(Validators.required) ?? false;
     if (index === 0) this.isRequired = isRequired;
     if (index === 1) this.isRequired2 = isRequired;
   }
 
-  checkIntLengthValidator(control: AbstractControl): void {
+  checkIntLengthValidator(control: AbstractControl, meta?: FieldMeta): void {
+    if (meta?.minLength !== undefined || meta?.maxLength !== undefined) {
+      this.maxLength = meta.maxLength ?? null;
+      this.minLength = meta.minLength ?? null;
+      return;
+    }
+
     const validator = control.validator;
     if (!validator) return;
 
@@ -59,7 +77,16 @@ export class BasicKitComponent {
     this.minLength = "minlength" in minLengthErrors ? minLengthErrors['minlength'].requiredLength : null;
   }
 
-  checkMinMaxValidator(control: AbstractControl): void {
+  checkMinMaxValidator(control: AbstractControl, meta?: FieldMeta): void {
+    if (meta?.min !== undefined || meta?.max !== undefined) {
+      this.maxValue = meta.max ?? null;
+      this.minValue = meta.min ?? null;
+      if (this.maxValue !== null && !Number.isNaN(this.maxValue)) {
+        this.maxLength = this.maxValue.toString().length;
+      }
+      return;
+    }
+
     const validator = control.validator;
     if (!validator) {
       this.maxValue = null;
@@ -79,7 +106,12 @@ export class BasicKitComponent {
   }
 
 
-  checkNumberValidator(control: AbstractControl): void {
+  checkNumberValidator(control: AbstractControl, meta?: FieldMeta): void {
+    if (meta?.numberOnly !== undefined) {
+      this.isNumberOnly = meta.numberOnly;
+      return;
+    }
+
     const validator = control.validator;
     if (!validator) {
       this.isNumberOnly = false;
@@ -127,44 +159,4 @@ export class BasicKitComponent {
     if (index === 1) this.placeholder2 = finalPlaceholder;
   }
 
-  copyText(control: FormControl): void {
-    const textToCopy = control.value;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      console.log('Text copied to clipboard');
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-    });
-  }
-
-  handleEnterKey(event: Event): void {
-    // 將 event 轉型為 KeyboardEvent
-    const keyboardEvent = event as KeyboardEvent;
-    const target = keyboardEvent.target as HTMLElement;
-
-    // 之後的邏輯使用 keyboardEvent 或 target 即可
-    if (target.tagName === 'BUTTON' || target.tagName === 'TEXTAREA') {
-      return;
-    }
-
-    keyboardEvent.preventDefault();
-    keyboardEvent.stopImmediatePropagation();
-    keyboardEvent.stopPropagation();
-
-    // 定義所有可被跳轉到的選擇器
-    const focusableSelector = 'input:not([disabled]):not([type="hidden"]), textarea:not([disabled])';
-    const focusableElements = Array.from(document.querySelectorAll(focusableSelector)) as HTMLElement[];
-    const index = focusableElements.indexOf(target);
-
-    if (index > -1 && focusableElements[index + 1]) {
-      const nextElement = focusableElements[index + 1];
-
-      // 針對 PrimeNG 這類包裝元件，嘗試找到內部的 input
-      const pInput = nextElement.querySelector('input');
-      if (pInput) {
-        pInput.focus();
-      } else {
-        nextElement.focus();
-      }
-    }
-  }
 }

@@ -4,6 +4,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-input-textarea',
@@ -11,7 +12,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   styleUrl: './input-textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent, EnterToTabDirective]
 })
 export class InputTextareaComponent extends BasicKitComponent implements OnInit {
   @Input() override label = '';

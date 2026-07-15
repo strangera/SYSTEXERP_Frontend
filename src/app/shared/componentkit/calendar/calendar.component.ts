@@ -7,6 +7,7 @@ import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } fro
 import { Subscription } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { ReadonlyCalendarDisplayComponent } from './readonly-calendar-display/readonly-calendar-display.component';
 
 export type CalendarType = 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
@@ -24,7 +25,7 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
+  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
   private valueChangeSubscription?: Subscription;

@@ -2,13 +2,11 @@ import { NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   Input,
   OnChanges,
   OnInit,
   SimpleChanges,
   computed,
-  inject,
   input,
   output,
 } from '@angular/core';
@@ -123,9 +121,6 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
 
   // --- Outputs ---
   readonly valueChanges = output<any>();
-
-  // --- Internal State ---
-  private readonly destroyRef = inject(DestroyRef);
 
   yearControl = new FormControl<Date | string | null>(null);
   monthControl = new FormControl<string | null>(null);

@@ -4,27 +4,28 @@ import { ControlValueAccessor, FormControl, FormGroup, FormsModule, NG_VALUE_ACC
 import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { Subject, debounceTime, of, switchMap, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-category-select',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MultiSelectComponent, AsyncPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MultiSelectComponent, AsyncPipe, EnterToTabDirective],
   template: `
     <div [formGroup]="innerForm" class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="大分類代碼/名稱" [options]="bus_type_Option | async"(keydown.enter)="handleEnterKey($event)"
+        <app-multi-select label="大分類代碼/名稱" [options]="bus_type_Option | async" appEnterToTab
           optionLabel="label" optionValue="No" [control]="innerForm.controls.bus_type">
         </app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="中分類代碼/名稱" [options]="bus_class_Option" optionLabel="label"
-          [control]="innerForm.controls.bus_class" [group]="true" optionGroupLabel="label"(keydown.enter)="handleEnterKey($event)"
+          [control]="innerForm.controls.bus_class" [group]="true" optionGroupLabel="label" appEnterToTab
           optionGroupChildren="items" [loading]="loadingClass"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="小分類代碼/名稱" [options]="bus_sclass_Option" optionLabel="label"
-          [control]="innerForm.controls.bus_sclass" [group]="true" optionGroupLabel="label"(keydown.enter)="handleEnterKey($event)"
+          [control]="innerForm.controls.bus_sclass" [group]="true" optionGroupLabel="label" appEnterToTab
           optionGroupChildren="items" [loading]="loadingSClass"></app-multi-select>
       </div>
     </div>
@@ -144,36 +145,5 @@ export class CategorySelectComponent implements ControlValueAccessor, OnInit, On
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  handleEnterKey(event: Event): void {
-    // 將 event 轉型為 KeyboardEvent
-    const keyboardEvent = event as KeyboardEvent;
-    const target = keyboardEvent.target as HTMLElement;
-
-    // 之後的邏輯使用 keyboardEvent 或 target 即可
-    if (target.tagName === 'BUTTON' || target.tagName === 'TEXTAREA') {
-      return;
-    }
-
-    keyboardEvent.preventDefault();
-
-    // 定義所有可被跳轉到的選擇器
-    const focusableSelector = 'input:not([disabled]), select:not([disabled]), p-dropdown, p-calendar, [tabindex]:not([tabindex="-1"])';
-    const focusableElements = Array.from(document.querySelectorAll(focusableSelector)) as HTMLElement[];
-
-    const index = focusableElements.indexOf(target);
-
-    if (index > -1 && focusableElements[index + 1]) {
-      const nextElement = focusableElements[index + 1];
-
-      // 針對 PrimeNG 這類包裝元件，嘗試找到內部的 input
-      const pInput = nextElement.querySelector('input');
-      if (pInput) {
-        pInput.focus();
-      } else {
-        nextElement.focus();
-      }
-    }
   }
 }

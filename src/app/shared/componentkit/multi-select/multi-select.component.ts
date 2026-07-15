@@ -4,6 +4,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-multi-select',
@@ -18,6 +19,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
     ReactiveFormsModule,
     NgClass,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit {

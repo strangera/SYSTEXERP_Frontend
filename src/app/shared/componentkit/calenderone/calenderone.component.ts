@@ -5,12 +5,13 @@ import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } fro
 import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 
 @Component({
   selector: 'app-calenderone',
   standalone: true,
   styleUrls: ['./calendarone.component.scss'],
-  imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent],
+  imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective],
   templateUrl: './calenderone.component.html'
 })
 export class CalenderoneComponent extends BasicKitComponent implements OnInit {

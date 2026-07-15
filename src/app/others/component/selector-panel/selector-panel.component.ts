@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
@@ -25,7 +26,7 @@ export interface DisplayFieldConfig {
   styleUrl: './selector-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent]
+  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, EnterToTabDirective]
 })
 export class SelectorPanelComponent extends BasicKitComponent implements OnInit, OnDestroy {
   // 表單控制相關

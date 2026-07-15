@@ -10,6 +10,7 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table'; // 引入原生
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { focusNextFocusable } from '@shared/directive/enter-to-tab.util';
 
 export interface FieldsConfig {
   field: string;
@@ -41,7 +42,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() templateLabel = '';
   @Input() fieldsConfig: FieldsConfig[] = [];
   @Output() inputValueChanged = new EventEmitter<Record<string, string>>();
-  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 handleEnterKey 跳到下一欄位
+  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 focusNextFocusable 跳到下一欄位
   @Output() enterKey = new EventEmitter<Event>();
 
   // OverlayPanel 與 Table 基礎屬性
@@ -70,6 +71,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private readonly filterSubject$ = new Subject<string>();
   private initialLoadDone = false;
   private suppressNextFocus = false;
+  protected readonly focusNextFocusable = focusNextFocusable;
 
   ngOnInit(): void {
     this.updateControlState(this.control);

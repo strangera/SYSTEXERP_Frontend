@@ -16,7 +16,7 @@
       [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
       [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="options.length > 10"
       [virtualScrollItemSize]="40" [scrollHeight]="'250px'" [editable]="false" [loading]="loading" [filter]="filter"
-      (keydown.enter)="handleEnterKey($event)" (keydown.enter.capture)="handleEnterKey($event)" [group]="group">
+      appEnterToTab [group]="group">
 
       <ng-template let-options pTemplate="item">
         <div class="flex align-items-center gap-2">
@@ -36,8 +36,7 @@
       style="outline: none;border-radius: 6px;" [value]="selectedOptionLabel"
       [placeholder]="customPlaceholder || placeholder" (input)="onNativeInput($event)"
       (focus)="onNativeInputFocus($event)" (click)="$event.stopPropagation(); !control.disabled && dd.show()"
-      (keydown)="onInputKeyDown($event)" (keydown.enter)="handleEnterKey($event)"
-      (keydown.enter.capture)="handleEnterKey($event)" />
+      (keydown)="onInputKeyDown($event)" appEnterToTab />
   </div>
 </ng-container>
 

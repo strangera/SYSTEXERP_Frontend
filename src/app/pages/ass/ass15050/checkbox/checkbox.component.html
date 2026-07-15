@@ -9,11 +9,11 @@
 <div class="flex items-center gap-1 py-2 align-items-center">
   @if (!tri()) {
   <p-checkbox [inputId]="_label()" [binary]="!0" [formControl]="control()" (onChange)="onBinaryChange()"
-    [disabled]="disabled()" (keydown.enter)="handleEnterKey($event)">
+    [disabled]="disabled()" appEnterToTab>
   </p-checkbox>
   } @else {
   <p-triStateCheckbox [inputId]="_label()" [ngModel]="triViewValue()" (ngModelChange)="onTriChange($event)"
-    [disabled]="disabled()" (keydown.enter)="handleEnterKey($event)">
+    [disabled]="disabled()" appEnterToTab>
   </p-triStateCheckbox>
   }
   <label class="ml-2" [for]="_label()">{{ _label() }}</label>

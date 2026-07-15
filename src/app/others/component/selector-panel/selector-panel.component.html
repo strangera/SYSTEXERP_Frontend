@@ -13,7 +13,7 @@
             [suggestions]="autoCompleteItems" [optionValue]="valuePropertyName"
             [placeholder]="valueControl.disabled ? '' : placeholder" [readonly]="true"
             (onFocus)="openSelectorPanel($event)" (click)="openSelectorPanel($event)" class="clickable-autocomplete"
-            (keydown.enter)="handleEnterKey($event)"></p-autoComplete>
+            appEnterToTab></p-autoComplete>
 
           <!-- 選擇器按鈕 -->
           <button type="button" pButton pRipple icon="pi pi-search" class="p-button-outlined selector-button"

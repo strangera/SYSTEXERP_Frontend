@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, effect, input, Input, OnInit, outpu
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 @Component({
   selector: 'app-auto-complete',
@@ -13,6 +14,7 @@ import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoComple
     FormsModule,
     ReactiveFormsModule,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
   templateUrl: './auto-complete.component.html',
   styleUrls: ['./auto-complete.component.scss'],
