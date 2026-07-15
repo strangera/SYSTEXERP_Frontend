@@ -6,13 +6,14 @@ import {
   Input,
   OnInit,
   Output,
+  inject,
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 
-import { BasicKitComponent } from '../../../../shared/componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputTextService } from '../../../../shared/componentkit/input-text/input-text.service';
 
 @Component({
@@ -31,16 +32,19 @@ import { InputTextService } from '../../../../shared/componentkit/input-text/inp
     InputTextModule,
     KeyFilterModule,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputTextRange2Component extends BasicKitComponent implements OnInit {
+export class InputTextRange2Component implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // ===== 標籤/基本 =====
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
 
   @Input() startLabel: string = '起';
   @Input() endLabel: string = '迄';
 
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() startControlName = '';
   @Input() endControlName = '';
 
@@ -109,12 +113,11 @@ export class InputTextRange2Component extends BasicKitComponent implements OnIni
   atMaxLengthEnd = false;
 
   constructor(private inputTextService: InputTextService) {
-    super();
   }
 
   ngOnInit(): void {
-    this.checkRequiredValidator(this.startControl, 0);
-    this.checkRequiredValidator(this.endControl, 1);
+    this.fieldState.checkRequiredValidator(this.startControl, 0);
+    this.fieldState.checkRequiredValidator(this.endControl, 1);
 
     if (this.disabled) {
       this.startControl.disable({ emitEvent: false });

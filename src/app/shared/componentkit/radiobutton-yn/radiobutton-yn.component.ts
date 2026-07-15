@@ -1,17 +1,17 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-radiobutton-yn',
   template: `
     <label [for]="controlName" class="flex gap-1">
   {{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
 
@@ -44,10 +44,13 @@ import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
     ControlMessagesComponent,
     EnterToTabDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class RadiobuttonYNComponent extends BasicKitComponent implements OnInit {
-  @Input() override label = '';
-  @Input() override controlName = '';
+export class RadiobuttonYNComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() control = new FormControl(); // 初始化為新 FormControl
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() errorForGroup = false; // 用於 FormGroup 錯誤顯示
@@ -56,7 +59,7 @@ export class RadiobuttonYNComponent extends BasicKitComponent implements OnInit 
   ynOptions: { label: string; value: string | null }[] = [];
 
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
     this.ynOptions = this.showAll
       ? [
         { label: '全部', value: null },

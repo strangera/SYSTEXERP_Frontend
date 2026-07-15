@@ -1,7 +1,7 @@
 import { NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { DropdownComponent } from '../dropdown/dropdown.component';
@@ -19,14 +19,17 @@ import { DropdownComponent } from '../dropdown/dropdown.component';
   ],
   templateUrl: './dropdown-range.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [FieldStateDirective],
 })
-export class DropdownRangeComponent extends BasicKitComponent implements OnInit {
+export class DropdownRangeComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 必填欄位
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() startControlName = '';
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl
@@ -60,8 +63,8 @@ export class DropdownRangeComponent extends BasicKitComponent implements OnInit 
   @Output() endChangeEvent = new EventEmitter<DropdownChangeEvent>();
 
   ngOnInit(): void {
-    this.checkRequiredValidator(this.startControl, 0);
-    this.checkRequiredValidator(this.endControl, 1);
+    this.fieldState.checkRequiredValidator(this.startControl, 0);
+    this.fieldState.checkRequiredValidator(this.endControl, 1);
     // 監聽開始值變化
     this.startControl.valueChanges.subscribe(() => {
       this.validateRange();

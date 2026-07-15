@@ -9,7 +9,7 @@
 
     <p-dropdown #dd styleClass="w-full" [styleClass]="editable ? 'w-full editable-dropdown-hide-label' : 'w-full'"
       [id]="controlName" [formControl]="control" [attr.aria-describedby]="controlName"
-      panelStyleClass="editable-dropdown-panel" [placeholder]="editable ? '' : (customPlaceholder || placeholder)"
+      panelStyleClass="editable-dropdown-panel" [placeholder]="editable ? '' : (customPlaceholder || fieldState.placeholder)"
       [options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue" [showClear]="showClear"
       [filterBy]="filterBy || optionLabel" [autofocusFilter]="false"
       [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
@@ -34,7 +34,7 @@
       class="absolute top-0 left-0 h-full border-none bg-transparent pl-3 disabled-input-style"
       [style.width]="control.disabled ? '100%' : 'calc(100% - 4.5rem)'" [style.z-index]="control.disabled ? '10' : '1'"
       style="outline: none;border-radius: 6px;" [value]="selectedOptionLabel"
-      [placeholder]="customPlaceholder || placeholder" (input)="onNativeInput($event)"
+      [placeholder]="customPlaceholder || fieldState.placeholder" (input)="onNativeInput($event)"
       (focus)="onNativeInputFocus($event)" (click)="$event.stopPropagation(); !control.disabled && dd.show()"
       (keydown)="onInputKeyDown($event)" appEnterToTab />
   </div>
@@ -42,7 +42,7 @@
 
 <ng-template #readonlyMode>
   <div class="readonly-dropdown">
-    <input type="text" [id]="controlName" [value]="selectedOptionLabel" [placeholder]="customPlaceholder || placeholder"
+    <input type="text" [id]="controlName" [value]="selectedOptionLabel" [placeholder]="customPlaceholder || fieldState.placeholder"
       [class]="dropdownClasses" [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" pInputText
       readonly />
   </div>

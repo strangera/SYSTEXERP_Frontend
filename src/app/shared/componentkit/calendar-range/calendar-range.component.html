@@ -1,7 +1,7 @@
 <div *ngIf="label; else dualLabel" class="flex align-items-center" style="height: 18px;">
   <label class="col p-0 m-0 pr-2" [for]="startControlName">
     {{ label + descLabel }}
-    <span *ngIf="isRequired || isRequired2" class="text-red-500">*</span>
+    <span *ngIf="fieldState.isRequired || fieldState.isRequired2" class="text-red-500">*</span>
     <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0 ml-1"
       [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
       [disabled]="isStartDisabled || isEndDisabled" />
@@ -12,7 +12,7 @@
     <div class="col pb-0 flex align-items-center">
       <label class="m-0" [for]="startControlName">
         {{ startLabel }}
-        <span *ngIf="isRequired" class="text-red-500">*</span>
+        <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
         <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0 ml-1"
           [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
           [disabled]="isStartDisabled || isEndDisabled" />
@@ -22,7 +22,7 @@
     <div class="col pb-0">
       <label class="m-0" [for]="endControlName">
         {{ endLabel }}
-        <span *ngIf="isRequired2" class="text-red-500">*</span>
+        <span *ngIf="fieldState.isRequired2" class="text-red-500">*</span>
       </label>
     </div>
   </div>

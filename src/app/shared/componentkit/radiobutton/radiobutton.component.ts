@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, OnInit, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnInit, output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-radiobutton',
@@ -11,7 +11,7 @@ import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
   @if (_label() !== "") {
 <label [for]="groupname() + '_' + options()[0].value" class="block mb-2 font-bold">
   {{ _label() }}
-  @if (isRequired) {
+  @if (fieldState.isRequired) {
   <span class="text-red-500">*</span>
   }
 </label>
@@ -43,8 +43,11 @@ import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
     ControlMessagesComponent,
     EnterToTabDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
+export class RadiobuttonComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   public _label = input<string>('', { alias: 'label' });
   public groupname = input<string>('');
   public control = input<FormControl>(new FormControl());
@@ -55,7 +58,7 @@ export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
   public labelChange = output<string>(); // 用於發送選擇事件
 
   ngOnInit(): void {
-    this.initControl(this.control());
+    this.fieldState.initControl(this.control());
   }
 
   onSelectionChange(value: any, label: string): void {

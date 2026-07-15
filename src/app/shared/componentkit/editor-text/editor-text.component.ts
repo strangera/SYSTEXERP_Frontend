@@ -5,8 +5,8 @@ import { ImageService, ImageUploadRequest } from '@service/utility/image.service
 import { EditorInitEvent, EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { environment } from 'src/environments/environment';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { editorModules } from './editor.model';
 @Component({
   selector: 'app-editor-text',
@@ -18,11 +18,14 @@ import { editorModules } from './editor.model';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, EnterToTabDirective]
+  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, EnterToTabDirective],
+  hostDirectives: [FieldStateDirective],
 })
-export class EditorTextComponent extends BasicKitComponent implements OnInit {
-  @Input() override label = '';
-  @Input() override controlName = '';
+export class EditorTextComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() control = new FormControl(); // 給使用者看的
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() textLength = 0;
@@ -32,11 +35,8 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
   modules = editorModules;
   private readonly imageService = inject(ImageService);
 
-  constructor() {
-    super();
-  }
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
     // validateHtmlContent(this.control.value, this.control);
     // 因為輸入後再全空會有剩下html標籤，所以把他刪掉
     this.control.valueChanges.subscribe((value) => {

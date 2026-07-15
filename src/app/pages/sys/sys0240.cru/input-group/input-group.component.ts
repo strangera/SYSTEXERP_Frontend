@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { TableComponent } from '@others/component/table/table.component';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
@@ -28,12 +28,15 @@ export interface InputGroupColumn {
   styleUrl: './input-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent]
+  imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputGroupComponent extends BasicKitComponent implements OnInit, OnChanges {
+export class InputGroupComponent implements OnInit, OnChanges {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 基本設定
-  @Input() override label = '';
-  @Input() override controlName = '';
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() control = new FormControl;
   @Input() customPlaceholder = '請選擇';
   @Input() submitted = false;
@@ -56,10 +59,9 @@ export class InputGroupComponent extends BasicKitComponent implements OnInit, On
   // 右邊文字顯示
   @Input() value: any = '';
 
-  constructor() { super(); }
   ngOnInit(): void {
     this.initDialog();
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
   }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['options'] && this.options) {

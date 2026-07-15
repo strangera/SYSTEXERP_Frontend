@@ -1,24 +1,27 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } from 'primeng/calendar';
 import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-calenderone',
   standalone: true,
   styleUrls: ['./calendarone.component.scss'],
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective],
-  templateUrl: './calenderone.component.html'
+  templateUrl: './calenderone.component.html',
+  hostDirectives: [FieldStateDirective],
 })
-export class CalenderoneComponent extends BasicKitComponent implements OnInit {
+export class CalenderoneComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @Input() readonly = false;
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
 
@@ -57,7 +60,7 @@ export class CalenderoneComponent extends BasicKitComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
     if (this.disabled || this.readonly) this.control.disable();
 
     const config = this.calendarConfig[this.calendarType];
@@ -66,7 +69,7 @@ export class CalenderoneComponent extends BasicKitComponent implements OnInit {
       this.showTime = config.showTime;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
-      this.placeholder = config.placeholder;
+      this.fieldState.placeholder = config.placeholder;
     }
 
     // 統一把初始值轉成 Date（支援 YYYYMM / YYYY/MM）
