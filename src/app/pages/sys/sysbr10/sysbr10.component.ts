@@ -9,7 +9,7 @@ import { transformOptionsForExport } from '@shared/componentextends/basic-print/
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDateTime, formatYN, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
 import { QuerySYSBR10Request, QuerySYSBR10Response, SYSBR10Service } from '../../../service/api/sys/sysbr10.service';

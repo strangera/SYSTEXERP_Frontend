@@ -9,7 +9,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { TLS2C040Service, UpdateTLS2C040Request } from '../../../service/api/tls/tls2c040.service';

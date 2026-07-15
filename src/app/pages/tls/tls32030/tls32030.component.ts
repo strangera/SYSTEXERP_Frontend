@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatPercentage } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -24,7 +24,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 
 @Component({

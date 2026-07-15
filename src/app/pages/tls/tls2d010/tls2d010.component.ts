@@ -7,7 +7,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';

@@ -8,8 +8,8 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
-import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { formatAmount } from '@others/component/table/table.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

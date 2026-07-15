@@ -17,7 +17,7 @@ import { TLS41040Data, TLS41040QueryReq, Tls41040Service } from '../../../servic
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls41040',

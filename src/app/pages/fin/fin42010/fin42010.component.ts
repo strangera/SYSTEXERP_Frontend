@@ -18,7 +18,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
 
 @Component({

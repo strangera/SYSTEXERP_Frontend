@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 
 // Service imports
-import { formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatYYYYMM } from '@others/component/table/table.model';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
 import { FIN13050Service } from '../../../service/api/fin/fin13050.service';
 import { ValidationService } from '../../../shared/service/validation.service';

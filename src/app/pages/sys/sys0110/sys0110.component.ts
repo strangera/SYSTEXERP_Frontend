@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDate, formatDateTime } from '../../../others/component/table/table.model';
 import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.model';
 import { UserData } from '../../../shared/models/sys/user.model';
 import { Sys0110Service } from './../../../service/api/sys/sys0110.service';

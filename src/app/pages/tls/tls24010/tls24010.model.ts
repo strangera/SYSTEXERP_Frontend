@@ -1,5 +1,5 @@
 import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
-import { formatDate, formatDateTime } from "@shared/componentkit/table/table.model";
+import { formatDate, formatDateTime } from "@others/component/table/table.model";
 
 export enum TXN_GUIPAPER {
   補原機台 = 'E',

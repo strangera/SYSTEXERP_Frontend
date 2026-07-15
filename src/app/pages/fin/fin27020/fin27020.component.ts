@@ -11,7 +11,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 

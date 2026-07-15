@@ -17,7 +17,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { formatDateToYYYYMMDD } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import saveAs from 'file-saver';
 import JSZip from 'jszip';

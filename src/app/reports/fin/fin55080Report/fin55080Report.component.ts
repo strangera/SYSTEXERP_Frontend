@@ -5,7 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55050Data, FIN55050Service, GroupedFIN55050Detail, QueryFIN55050Request } from '@service/api/fin/fin55050.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, switchMap, tap } from 'rxjs';

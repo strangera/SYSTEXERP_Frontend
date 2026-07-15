@@ -24,7 +24,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 import { Aps1002BankDropDownRow, Fin26010Service } from '../../../service/api/fin/fin26010.service';
 import {

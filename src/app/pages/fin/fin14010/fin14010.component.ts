@@ -8,8 +8,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertYYYYMMToDate, createPaginationConfig, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, convertYYYYMMToDate, createPaginationConfig, formatYYYYMM } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 // 本期發票月

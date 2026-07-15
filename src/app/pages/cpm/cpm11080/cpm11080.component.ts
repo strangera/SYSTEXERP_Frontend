@@ -6,7 +6,7 @@ import { CPM11080Service } from '@service/api/cpm/cpm11080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AddButton, formatDate, formatYN } from '@shared/componentkit/table/table.model';
+import { AddButton, formatDate, formatYN } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

@@ -13,8 +13,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, formatDate } from '../../../others/component/table/table.model';
 import { monthOptions } from '../fin11200/fin11200.model';
 
 @Component({

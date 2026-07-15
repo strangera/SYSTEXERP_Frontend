@@ -16,7 +16,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { AddButton, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface Potential_Customer {

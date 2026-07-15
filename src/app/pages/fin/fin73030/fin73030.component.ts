@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN73030Service } from '@service/api/fin/fin73030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatDate } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

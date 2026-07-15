@@ -9,7 +9,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';

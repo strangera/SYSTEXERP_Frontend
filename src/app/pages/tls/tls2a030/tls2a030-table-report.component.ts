@@ -6,7 +6,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';

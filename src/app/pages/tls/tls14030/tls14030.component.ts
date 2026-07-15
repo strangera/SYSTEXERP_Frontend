@@ -13,7 +13,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls14030.service';
 

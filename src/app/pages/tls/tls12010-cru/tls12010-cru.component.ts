@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../others/component/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';

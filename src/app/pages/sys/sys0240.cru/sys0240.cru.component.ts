@@ -17,7 +17,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../others/component/table/table.model';
 import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
 import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';
 import { InputGroupComponent } from './input-group/input-group.component';

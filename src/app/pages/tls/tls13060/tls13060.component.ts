@@ -17,7 +17,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../others/component/table/table.model';
 import { TLTTALENT_columns } from './tls13060.model';
 
 @Component({

@@ -10,7 +10,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 

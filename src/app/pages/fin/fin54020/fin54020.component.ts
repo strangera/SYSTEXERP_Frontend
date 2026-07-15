@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -16,7 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 
 @Component({

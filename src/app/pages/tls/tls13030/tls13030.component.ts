@@ -10,7 +10,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { LazyLoadEvent } from '../../../others/component/table/table.model';
 
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
@@ -26,7 +26,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 @UntilDestroy()
 @Component({

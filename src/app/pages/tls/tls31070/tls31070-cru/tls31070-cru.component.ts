@@ -2,7 +2,7 @@ import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChange
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31070DetailItem, TLS31070DetailRequest, TLS31070Item, TLS31070PrintDetailRequest, TLS31070Request, Tls31070Service } from '@service/api/tls/tls31070.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';

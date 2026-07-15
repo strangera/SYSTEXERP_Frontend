@@ -7,7 +7,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

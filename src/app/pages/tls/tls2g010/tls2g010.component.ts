@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { AccordionModule } from 'primeng/accordion';
 import { DividerModule } from 'primeng/divider';

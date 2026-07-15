@@ -14,7 +14,7 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import {
   formatDateTime,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls46010',

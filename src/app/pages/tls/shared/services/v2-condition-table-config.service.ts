@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { getContractInfoColumns as getSharedContractInfoColumns } from '../../tls13010-v2/core/constants/commission-columns';
 
 /**

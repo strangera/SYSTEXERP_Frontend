@@ -17,7 +17,7 @@ import {
   AddButton,
   createPaginationConfig,
   formatAmount,
-} from '@shared/componentkit/table/table.model';
+} from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';

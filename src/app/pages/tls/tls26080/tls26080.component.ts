@@ -11,7 +11,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';

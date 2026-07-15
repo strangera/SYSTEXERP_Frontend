@@ -7,7 +7,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';

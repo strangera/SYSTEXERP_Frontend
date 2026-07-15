@@ -10,7 +10,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
+import { FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';

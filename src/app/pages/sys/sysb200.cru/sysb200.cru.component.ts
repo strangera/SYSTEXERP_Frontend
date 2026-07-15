@@ -12,12 +12,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column } from '../../../others/component/table/table.model';
 import {
   validateMaxLength,
   validateNoChinese,
-} from '../../../shared/componentkit/table/validate-field.model';
+} from '../../../others/component/table/validate-field.model';
 import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }

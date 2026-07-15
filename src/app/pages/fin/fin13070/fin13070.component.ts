@@ -14,7 +14,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatToSixDigits } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-fin13070',

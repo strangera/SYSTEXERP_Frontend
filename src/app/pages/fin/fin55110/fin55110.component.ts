@@ -7,7 +7,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';

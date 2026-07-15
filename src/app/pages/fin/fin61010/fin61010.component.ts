@@ -17,7 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 @UntilDestroy()
 @Component({

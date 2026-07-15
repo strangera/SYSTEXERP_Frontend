@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // UI Imports
 import { DatePipe, NgFor /* 或改用 CommonModule */, NgIf } from '@angular/common';
@@ -26,7 +26,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { tls2b010tableComponent } from './tls2-b010-table/tls2b010table.component';
 
 @Component({

@@ -10,7 +10,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, ColumnGroup, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

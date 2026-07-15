@@ -10,7 +10,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 // Permissions

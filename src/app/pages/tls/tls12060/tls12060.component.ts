@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -16,7 +16,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatDate } from '../../../shared/componentkit/table/table.model';
+import { formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface response10260 {

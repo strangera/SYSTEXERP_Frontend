@@ -23,7 +23,7 @@ import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../se
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatAmount, formatAmountCN } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatAmountCN } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls32010',

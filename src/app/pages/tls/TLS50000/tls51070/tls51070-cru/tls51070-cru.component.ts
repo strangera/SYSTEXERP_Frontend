@@ -15,7 +15,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';

@@ -9,7 +9,7 @@ import {
 import { catchError, distinctUntilChanged, finalize, map, startWith } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';

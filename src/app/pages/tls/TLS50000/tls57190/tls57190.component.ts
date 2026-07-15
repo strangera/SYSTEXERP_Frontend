@@ -14,7 +14,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmountCN } from '@shared/componentkit/table/table.model';
+import { Column, formatAmountCN } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

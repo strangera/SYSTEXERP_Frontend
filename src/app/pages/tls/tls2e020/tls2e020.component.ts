@@ -10,7 +10,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM, formatDate, formatYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

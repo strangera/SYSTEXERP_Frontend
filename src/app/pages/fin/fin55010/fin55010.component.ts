@@ -8,8 +8,8 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableSubheaderComponent } from '@others/component/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';

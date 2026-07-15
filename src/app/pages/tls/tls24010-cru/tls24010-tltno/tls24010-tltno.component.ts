@@ -6,7 +6,7 @@ import { getSYS1000 } from '@service/system/sys1000.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { map, of } from 'rxjs';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
 import { STORE_WAY } from '../tls24010-cru.model';

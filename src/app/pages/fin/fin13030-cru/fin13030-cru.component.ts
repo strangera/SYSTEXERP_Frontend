@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatYYYYMM } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030GetZeroTaxGUIResponse, FIN13030InsertRequest, FIN13030Service, FIN13030UpdateRequest } from '../../../service/api/fin/fin13030.service';

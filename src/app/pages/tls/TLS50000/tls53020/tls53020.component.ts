@@ -16,7 +16,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';

@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';

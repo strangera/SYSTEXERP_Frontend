@@ -14,8 +14,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 

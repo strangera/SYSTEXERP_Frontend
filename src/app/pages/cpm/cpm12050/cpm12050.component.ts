@@ -10,7 +10,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { AddButton, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';

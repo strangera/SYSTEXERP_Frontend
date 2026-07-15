@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { formatTimeToHHMMSS } from '@others/component/table/table.model';
 import { BlockUIModule } from 'primeng/blockui';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';

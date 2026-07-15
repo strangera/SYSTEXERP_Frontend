@@ -19,7 +19,7 @@ import {
   createPaginationConfig,
   formatDate,
   formatYN
-} from '@shared/componentkit/table/table.model';
+} from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
 
@@ -39,7 +39,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 
 // V2 服務與類型
 import { CommissionType, CommissionTypeLabels } from '../../core/constants';

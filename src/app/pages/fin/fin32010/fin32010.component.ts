@@ -13,7 +13,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

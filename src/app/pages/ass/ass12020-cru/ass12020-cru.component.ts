@@ -29,8 +29,8 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, LazyLoadEvent, formatDate, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, LazyLoadEvent, formatDate, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatDate } from '../../../shared/componentkit/table/table.model';
+import { formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
 

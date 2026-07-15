@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

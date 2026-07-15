@@ -27,7 +27,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { AddButton, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { AddButton, formatDate, formatYN } from '../../../others/component/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 //專櫃契約書列印

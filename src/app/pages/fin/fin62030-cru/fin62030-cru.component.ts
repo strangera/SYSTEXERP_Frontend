@@ -13,7 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 

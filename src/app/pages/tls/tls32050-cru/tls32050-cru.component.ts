@@ -7,7 +7,7 @@ import { TLS32050DetailRequest, TLS32050DetailResponse, TLS32050Request, TLS3205
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';

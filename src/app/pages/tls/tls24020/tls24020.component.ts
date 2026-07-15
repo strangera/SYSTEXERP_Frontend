@@ -16,7 +16,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24020.model';
 
 @Component({

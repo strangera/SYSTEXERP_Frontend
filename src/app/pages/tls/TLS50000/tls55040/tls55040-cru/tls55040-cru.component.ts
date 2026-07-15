@@ -16,7 +16,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDuplicate, validateMaxLength, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Tls55040GoodDataDialogComponent } from './tls55040-good-data-dialog/tls55040-good-data-dialog.component';

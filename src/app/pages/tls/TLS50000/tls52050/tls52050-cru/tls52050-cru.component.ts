@@ -24,7 +24,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { tomorrow } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { CheckboxModule } from 'primeng/checkbox';

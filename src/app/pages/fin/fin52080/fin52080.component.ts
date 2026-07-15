@@ -9,13 +9,13 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize, map } from 'rxjs';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
 
 

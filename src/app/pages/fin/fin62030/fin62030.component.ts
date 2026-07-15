@@ -6,7 +6,7 @@ import { FIN62030Data, FIN62030Service, QueryFIN62030Request } from '@service/ap
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

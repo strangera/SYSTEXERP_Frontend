@@ -15,7 +15,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize } from 'rxjs';
 @Component({

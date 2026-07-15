@@ -16,7 +16,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
+import { formatDateTime, formatYN } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls21030',

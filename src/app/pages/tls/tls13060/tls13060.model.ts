@@ -1,5 +1,5 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
-import { Column, formatDate, formatYN } from "../../../shared/componentkit/table/table.model";
+import { Column, formatDate, formatYN } from "../../../others/component/table/table.model";
 
 export const TLTTALENT_columns: Column[] = [
   // { field: 'talent_id', header: '合約編號系統 id', visible: true },

@@ -4,7 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';

@@ -2,7 +2,7 @@ import { getSYS1000 } from "@service/system/sys1000.service";
 import { EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
 import { validateDuplicate, validateMaxLength, validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
 import { formatDate } from "@shared/componentkit/table-report/table-report.model";
-import { formatAmount } from "@shared/componentkit/table/table.model";
+import { formatAmount } from "@others/component/table/table.model";
 import { AA00000000 } from "../../tls55040/tls55040-cru/tls55040-cru.component";
 import { IRebateDetailForCRU } from "./tls55030-cru.component";
 export function toUpperCase(rowData: IRebateDetailForCRU): void {

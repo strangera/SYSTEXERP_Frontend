@@ -12,7 +12,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { map } from 'rxjs';
 import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
-import { formatAmount, formatDate as formatDateDisplay } from 'src/app/shared/componentkit/table/table.model';
+import { formatAmount, formatDate as formatDateDisplay } from 'src/app/others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 

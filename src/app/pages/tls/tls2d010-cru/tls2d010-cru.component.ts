@@ -23,7 +23,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatDate as columnDateFormat, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { formatDate as columnDateFormat, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { IAPS1003Item, IDropdownItem, ITalentOption } from './../../../service/utility/dropDownList.service';
 
 @UntilDestroy()

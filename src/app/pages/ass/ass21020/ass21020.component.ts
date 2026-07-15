@@ -16,7 +16,7 @@ import { InputNumberComponent } from "@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';

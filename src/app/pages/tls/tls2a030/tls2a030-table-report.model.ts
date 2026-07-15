@@ -1,4 +1,4 @@
-import { TableTypes } from '@shared/componentkit/table/table.model';
+import { TableTypes } from '@others/component/table/table.model';
 import { SortMeta } from 'primeng/api';
 
 export interface ReportColumn {

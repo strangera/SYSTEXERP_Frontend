@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';

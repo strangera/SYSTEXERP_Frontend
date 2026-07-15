@@ -11,7 +11,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, Maps } from '@others/component/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { concatMap, finalize, Observable } from 'rxjs';

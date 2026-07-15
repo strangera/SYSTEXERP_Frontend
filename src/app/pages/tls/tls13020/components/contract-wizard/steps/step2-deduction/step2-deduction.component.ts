@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
 

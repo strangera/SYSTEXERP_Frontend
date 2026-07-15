@@ -1,6 +1,7 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Column, LazyLoadEvent } from '@others/component/table/table.model';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -9,7 +10,6 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table'; // 引入原生
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { Column, LazyLoadEvent } from '../table/table.model';
 
 export interface FieldsConfig {
   field: string;

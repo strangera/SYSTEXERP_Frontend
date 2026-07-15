@@ -5,7 +5,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { ButtonDirective } from 'primeng/button';

@@ -22,8 +22,8 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatDate } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { concat, finalize, last, tap } from 'rxjs';

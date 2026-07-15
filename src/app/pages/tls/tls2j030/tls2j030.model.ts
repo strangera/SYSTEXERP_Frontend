@@ -1,7 +1,7 @@
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 
 // 換開狀態選項
 export const GUI_STATUS_OPTIONS = [

@@ -12,7 +12,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

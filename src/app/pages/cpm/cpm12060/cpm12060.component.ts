@@ -11,8 +11,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../others/component/table/table.model';
 //
 
 //5.1.2.6  顧客意見處理狀況表

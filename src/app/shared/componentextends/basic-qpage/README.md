@@ -132,7 +132,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, take } from 'rxjs';

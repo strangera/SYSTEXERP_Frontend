@@ -11,13 +11,13 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';
 
 // 2.2.18.3 後台發票換開補登作業

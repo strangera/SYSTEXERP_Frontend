@@ -10,7 +10,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';

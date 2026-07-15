@@ -10,7 +10,7 @@ import { DropDownListService, IDropdownItem } from '../../../../service/utility/
 import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
-import { Column } from '../../../../shared/componentkit/table/table.model';
+import { Column } from '../../../../others/component/table/table.model';
 import { POS5008Columns } from '../tls24010-cru.model';
 
 @UntilDestroy()

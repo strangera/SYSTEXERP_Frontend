@@ -5,14 +5,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, formatDate as tableFormatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate as tableFormatDate } from '../../../others/component/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Customer_interview } from '../tls12070/tls12070.component';
 

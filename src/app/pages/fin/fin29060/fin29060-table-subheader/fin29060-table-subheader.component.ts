@@ -2,8 +2,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/import-table';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableCaptionComponent } from '@others/component/table/import-table';
+import { Column } from '@others/component/table/table.model';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule } from 'primeng/table';
 

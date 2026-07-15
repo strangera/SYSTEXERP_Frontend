@@ -2,9 +2,9 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { COMMON_IMPORTS } from '@shared/componentkit/table/import-table';
-import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { COMMON_IMPORTS } from '@others/component/table/import-table';
+import { TableUtilityService } from '@others/component/table/table-utility.service';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent } from '@others/component/table/table.model';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';

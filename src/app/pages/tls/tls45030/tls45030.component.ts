@@ -10,7 +10,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDate, formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 加入 finalize
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

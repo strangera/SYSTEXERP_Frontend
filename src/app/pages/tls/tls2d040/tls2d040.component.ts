@@ -10,7 +10,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { SortMeta } from 'primeng/api';

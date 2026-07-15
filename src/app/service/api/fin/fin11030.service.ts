@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
+import { convertYYYYMMToDate } from '@others/component/table/table.model';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 

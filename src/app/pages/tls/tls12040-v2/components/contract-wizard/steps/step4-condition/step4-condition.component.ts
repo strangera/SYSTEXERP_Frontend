@@ -8,7 +8,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 使用 TLS13010-V2 的常數、模型、服務

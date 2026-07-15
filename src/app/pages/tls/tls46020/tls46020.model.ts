@@ -1,6 +1,6 @@
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../others/component/table/table.model';
 
 export const ECR_SernoType_Option = [
   { value: '1', label: '循環使用' },

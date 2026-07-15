@@ -6,8 +6,8 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { AddButton, Column } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Fin41040Service } from './../../../service/api/fin/fin41040.service';
 

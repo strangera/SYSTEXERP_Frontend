@@ -11,7 +11,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({

@@ -1,7 +1,7 @@
-// import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
+// import { formatDate, formatDateTime } from "../../../others/component/table/table.model";
 import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { getSYS1000, SystemOptionsService } from '../../../service/system/sys1000.service';
-import { formatDate, formatDateTime, formatTimeHHMM, formatYN } from "../../../shared/componentkit/table/table.model";
+import { formatDate, formatDateTime, formatTimeHHMM, formatYN } from "../../../others/component/table/table.model";
 
 export interface TLS41010QueryParams {
   id: number;

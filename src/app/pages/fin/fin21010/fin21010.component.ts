@@ -6,7 +6,7 @@ import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -14,7 +14,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 
 //1.2.1.1 公司銀行資料維護
 @Component({

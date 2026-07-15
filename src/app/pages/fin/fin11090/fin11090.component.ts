@@ -12,7 +12,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import {
   formatAmount,
   formatDate
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

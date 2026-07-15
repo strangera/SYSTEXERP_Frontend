@@ -1,5 +1,5 @@
 import { AbstractControl, ValidationErrors } from "@angular/forms";
-import { Column } from "../../../shared/componentkit/table/table.model";
+import { Column } from "../../../others/component/table/table.model";
 
 export const txnStatusOptions = [
   { label: '一般交易', value: 'N' },

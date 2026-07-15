@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
@@ -8,7 +8,7 @@ import { SortMeta } from 'primeng/api';
 import { Column, LazyLoadEvent } from '../table/table.model';
 import { NgFor, NgIf } from '@angular/common';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableComponent } from '../table/table.component';
 

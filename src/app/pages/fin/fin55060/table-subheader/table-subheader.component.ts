@@ -2,9 +2,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { COMMON_IMPORTS } from '@shared/componentkit/table/import-table';
-import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { COMMON_IMPORTS } from '@others/component/table/import-table';
+import { TableUtilityService } from '@others/component/table/table-utility.service';
+import { Column, formatAmount } from '@others/component/table/table.model';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table } from 'primeng/table';
 

@@ -10,8 +10,8 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { AddButton, Column, createPaginationConfig } from '@others/component/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { tap } from 'rxjs';

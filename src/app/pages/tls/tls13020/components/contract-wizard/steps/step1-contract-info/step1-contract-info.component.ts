@@ -18,8 +18,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column } from '@others/component/table/table.model';
 
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse } from '@service/api/tls/tls12040.service';

@@ -38,7 +38,7 @@ import {
 // ✅ 使用 app-table-report
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 export interface QueryFIN63020Row {
   CanPickupYn?: string;

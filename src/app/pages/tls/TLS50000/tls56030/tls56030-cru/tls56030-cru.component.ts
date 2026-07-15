@@ -46,7 +46,7 @@ import {
   Column,
   createPaginationConfig,
   RowEditSaveEvent,
-} from '@shared/componentkit/table/table.model';
+} from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { formatAmount } from '../../../tls2f010-cru/tls2f010-table-report.model';

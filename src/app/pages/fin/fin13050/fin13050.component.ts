@@ -8,7 +8,7 @@ import { finalize, forkJoin } from 'rxjs';
 // API & Base
 import { FIN13050Service } from '../../../service/api/fin/fin13050.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // UI Components
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';

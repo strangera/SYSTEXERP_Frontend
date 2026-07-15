@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Cpm12010Data, Cpm12010Service, DropdownCpm12010Data, QueryCpm12010Request } from '@service/api/cpm/cpm12010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Column, formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 引入 finalize
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

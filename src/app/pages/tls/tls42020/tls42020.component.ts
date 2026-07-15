@@ -11,7 +11,7 @@ import { FileUploadComponent } from '@shared/componentkit/file-upload/file-uploa
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service'; // 匯入 ErrorReportService
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';

@@ -14,7 +14,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

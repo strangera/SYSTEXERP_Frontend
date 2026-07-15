@@ -19,7 +19,7 @@ import {
   createPaginationConfig,
   formatAmount,
   formatDate,
-} from '@shared/componentkit/table/table.model';
+} from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';

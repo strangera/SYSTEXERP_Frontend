@@ -22,7 +22,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
 @Component({

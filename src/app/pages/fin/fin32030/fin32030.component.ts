@@ -18,7 +18,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
+import { formatAmountWithFraction, formatDate } from '../../../others/component/table/table.model';
 
 //1.3.2.3 收款沖帳維護
 @Component({

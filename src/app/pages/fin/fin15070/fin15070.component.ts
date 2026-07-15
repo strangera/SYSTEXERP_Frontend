@@ -9,13 +9,13 @@ import { AccordionModule } from 'primeng/accordion';
 import { FIN15070Service } from '../../../service/api/fin/fin15070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { QueryYearMonthComponent } from '@shared/componentkit/query-year-month/query-year-month.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 
 @Component({
   selector: 'app-fin15070',

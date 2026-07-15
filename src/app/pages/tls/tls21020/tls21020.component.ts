@@ -10,7 +10,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Maps } from '@shared/componentkit/table/table.model';
+import { Maps } from '@others/component/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { concatMap, filter, finalize, Observable, switchMap, tap } from 'rxjs';

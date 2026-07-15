@@ -11,7 +11,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDateTime } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-sysbq00',

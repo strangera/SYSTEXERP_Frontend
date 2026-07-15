@@ -6,7 +6,7 @@ import { ASS21040Service } from '@service/api/ass/ass21040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';

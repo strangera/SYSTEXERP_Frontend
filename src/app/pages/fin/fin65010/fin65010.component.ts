@@ -12,7 +12,7 @@ import { APS3006Response, Fin65010Service, QueryFIN65010Response } from 'src/app
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextRangeComponent } from 'src/app/shared/componentkit/input-text-range/input-text-range.component';
-import { Column, createPaginationConfig, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from 'src/app/others/component/table/table.model';
 import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';

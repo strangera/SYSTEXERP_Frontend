@@ -13,7 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';

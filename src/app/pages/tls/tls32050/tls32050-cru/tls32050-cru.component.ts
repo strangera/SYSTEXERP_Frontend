@@ -2,7 +2,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';

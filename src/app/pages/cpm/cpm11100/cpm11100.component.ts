@@ -7,7 +7,7 @@ import { TLS12050Service } from '@service/api/tls/tls12050.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton } from '@shared/componentkit/table-report/table-report.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
@@ -18,7 +18,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { Cpm11100Request, Cpm11100Service } from './../../../service/api/cpm/cpm11100.service';
 
 // 財產變更記錄查詢

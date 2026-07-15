@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls2j040',

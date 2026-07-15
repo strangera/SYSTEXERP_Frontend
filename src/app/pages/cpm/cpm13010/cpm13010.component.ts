@@ -13,7 +13,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDateTime } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-cpm13010',

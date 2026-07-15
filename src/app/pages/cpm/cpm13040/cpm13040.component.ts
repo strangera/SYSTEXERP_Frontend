@@ -11,7 +11,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

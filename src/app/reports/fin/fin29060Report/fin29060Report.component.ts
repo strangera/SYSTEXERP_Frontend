@@ -7,7 +7,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 

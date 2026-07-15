@@ -7,7 +7,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';

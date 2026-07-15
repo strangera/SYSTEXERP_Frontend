@@ -8,7 +8,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { formatDateToYYYYMMDD } from '@others/component/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, switchMap, tap } from 'rxjs';

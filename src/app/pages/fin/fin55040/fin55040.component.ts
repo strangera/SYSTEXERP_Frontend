@@ -10,7 +10,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

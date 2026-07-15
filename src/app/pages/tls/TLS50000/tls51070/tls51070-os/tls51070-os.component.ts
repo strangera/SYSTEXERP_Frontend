@@ -15,7 +15,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
 import { ProductAutocompleteComponent } from "src/app/shared/biz-components/product-autocomplete/product-autocomplete";

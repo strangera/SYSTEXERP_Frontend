@@ -1,5 +1,5 @@
 import { getSYS1000 } from '@service/system/sys1000.service';
-import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDateTime, formatYYYYMM } from '../../../others/component/table/table.model';
 
 export interface Pos1018 {
   ID: number; // 唯一識別碼

@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { finalize, map } from 'rxjs/operators';
 
 import { AccordionModule } from 'primeng/accordion';
@@ -22,7 +22,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../others/component/table/table.model';
 import { FileExportService } from '../../../shared/service/file-export.service';
 import { FIN73040Data, FIN73040Option, FIN73040Query } from './fin73040.model';
 

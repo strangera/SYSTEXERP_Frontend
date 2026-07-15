@@ -1,7 +1,7 @@
 /**
  * 折扣設定欄位定義
  */
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { DropdownOption } from '../../models/common.interface';
 
 export function getDiscountColumns(discountOptions: DropdownOption[] = []): ColumnDef[] {

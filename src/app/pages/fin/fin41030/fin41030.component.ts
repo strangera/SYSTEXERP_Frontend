@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN41030Service } from '@service/api/fin/fin41030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

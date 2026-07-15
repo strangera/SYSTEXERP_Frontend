@@ -10,8 +10,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 
 

@@ -13,7 +13,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { ASS21060Service } from '../../../service/api/ass/ass21060.service';
 
 import { AccordionModule } from 'primeng/accordion';

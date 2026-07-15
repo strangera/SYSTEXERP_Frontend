@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';

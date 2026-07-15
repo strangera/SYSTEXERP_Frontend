@@ -15,7 +15,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

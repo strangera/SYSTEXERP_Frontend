@@ -16,7 +16,7 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '../../../shared/componentkit/table/table.model';
+import { formatAmount } from '../../../others/component/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',

@@ -4,9 +4,9 @@ import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, E
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
-import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
-import { AddButton, Column, ColumnGroup, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
+import { TableUtilityService } from '@others/component/table/table-utility.service';
+import { AddButton, Column, ColumnGroup, LazyLoadEvent } from '@others/component/table/table.model';
 import { PrimeTemplate } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { Button } from 'primeng/button';

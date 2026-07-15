@@ -1,5 +1,5 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
-import { Column, formatAmount, formatDate, formatYN } from "@shared/componentkit/table/table.model";
+import { Column, formatAmount, formatDate, formatYN } from "@others/component/table/table.model";
 
 // 專櫃編號修正
 export const TLTNoEditColumn: Column[] = [

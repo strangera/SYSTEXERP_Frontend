@@ -12,7 +12,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 //

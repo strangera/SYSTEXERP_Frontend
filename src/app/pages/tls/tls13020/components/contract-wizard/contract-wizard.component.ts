@@ -24,8 +24,8 @@ import { StepsModule } from 'primeng/steps';
 // Shared table / multiselect
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column } from '@others/component/table/table.model';
 
 // 基礎組件
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';

@@ -17,7 +17,7 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { columns, ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
 
 // 2.4.6.2  POS環境變數維護作業

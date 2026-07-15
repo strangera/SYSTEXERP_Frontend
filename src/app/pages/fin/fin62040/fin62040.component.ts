@@ -10,7 +10,7 @@ import {
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

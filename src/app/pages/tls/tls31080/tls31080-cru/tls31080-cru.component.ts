@@ -2,7 +2,7 @@ import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, Simp
 import { TLS31080DetailResponse, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin54025Service } from '@service/api/fin/fin54025.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

@@ -2,7 +2,7 @@ import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { validateDuplicate, validateMaxLength, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { validateDuplicate, validateMaxLength, validateRequired } from '@others/component/table/validate-field.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { ButtonDirective } from 'primeng/button';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -15,7 +15,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 
 @Component({
   selector: 'app-sysbr00-cru',

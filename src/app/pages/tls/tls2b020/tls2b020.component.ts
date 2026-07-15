@@ -8,7 +8,7 @@ import {
 
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // Service
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';

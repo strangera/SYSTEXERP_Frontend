@@ -19,7 +19,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate } from '../../../others/component/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 export interface POS1002 {
   ID: number; // decimal(19,0)

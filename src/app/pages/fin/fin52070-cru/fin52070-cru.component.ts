@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin52070Service } from '@service/api/fin/fin52070.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
