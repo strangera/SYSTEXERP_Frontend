@@ -85,6 +85,8 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
     ars_date: parseYmdToDate(ars),
     acc_no: acc || undefined,
     note_desc: note || undefined,
+    ACCT_KEY: row.ACCT_KEY ?? null,
+    PTA: row.PTA ?? null,
   };
 }
 
