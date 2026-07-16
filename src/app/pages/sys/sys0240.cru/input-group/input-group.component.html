@@ -23,7 +23,9 @@
     </button>
   </div>
 </div>
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+@if (submitted && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}
 <p-dialog [header]="label" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body"
   [(visible)]="dialogVisible" [breakpoints]="{ '1199px': '100vw', '575px': '100vw' }">
   <ng-template pTemplate="content">

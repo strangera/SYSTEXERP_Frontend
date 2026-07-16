@@ -15,5 +15,6 @@
   [forceSelection]="forceSelection()" [ariaLabel]="'請輸入' + label" [dropdownAriaLabel]="'請選擇' + label"
   [ariaLabelledBy]="controlName" [autofocus]="autofocus()" (onSelect)="handleOptionSelected($event)"
   appEnterToTab />
-<app-control-messages [onerror]="submitted() || (control().touched && control().invalid)" [control]="control()">
-</app-control-messages>
+@if ((submitted() || (control().touched && control().invalid)) && fieldState.getErrorMessage(control()); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

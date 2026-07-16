@@ -7,5 +7,6 @@
   [rows]="rows" cols="30" [autoResize]="true" [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
   pInputTextarea [attr.aria-label]="label || fieldState.placeholder" title="{{ label || fieldState.placeholder }}" [class]="textareaClasses"
   appEnterToTab></textarea>
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+@if ((submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

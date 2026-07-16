@@ -105,9 +105,9 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
     const payload = {
       crtMigs: rows.map(item => ({
         STO_No: this.authService.currentUserValue?.SYS_StoreNo ?? '',
-        ECR_No: item.ECR_No ?? '',
+        ECR_No: this.resolveEcrNo(item),
         TXN_Date: this.resolveTxnDate(item),
-        TXN_No: item.TXN_No ?? '',
+        TXN_No: this.resolveTxnNo(item),
         MIG_Type: item.MIG_Type ?? '',
         _TableName: item._TableName ?? '',
         TXN_GUINo: item.TXN_GUINo ?? '',
@@ -132,6 +132,16 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
       ? (item.ORI_TXN_Date ?? item.TXN_Date)
       : item.TXN_Date;
     return rawDate ? String(rawDate).replace(/-/g, '/') : '';
+  }
+
+  // APS4023 來源無實際機台編號，重送固定帶入 'ZZZ'
+  private resolveEcrNo(item: any): string {
+    return item._TableName === 'APS4023' ? 'ZZZ' : (item.ECR_No ?? '');
+  }
+
+  // APS4023 來源無實際交易序號，重送固定帶入 0
+  private resolveTxnNo(item: any): string | number {
+    return item._TableName === 'APS4023' ? 0 : (item.TXN_No ?? '');
   }
 
 

@@ -4,7 +4,6 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ImageService, ImageUploadRequest } from '@service/utility/image.service';
 import { EditorInitEvent, EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { environment } from 'src/environments/environment';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { editorModules } from './editor.model';
@@ -18,7 +17,7 @@ import { editorModules } from './editor.model';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, EnterToTabDirective],
+  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, EnterToTabDirective],
   hostDirectives: [FieldStateDirective],
 })
 export class EditorTextComponent implements OnInit {

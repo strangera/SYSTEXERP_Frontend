@@ -1,7 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -24,7 +23,6 @@ import { TooltipModule } from 'primeng/tooltip';
     KeyFilterModule,
     ReactiveFormsModule,
     TooltipModule,
-    ControlMessagesComponent,
     EnterToTabDirective,
   ],
   hostDirectives: [FieldStateDirective],

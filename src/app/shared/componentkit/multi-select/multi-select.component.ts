@@ -2,7 +2,6 @@ import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, inject, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
@@ -18,7 +17,6 @@ import { FieldStateDirective } from '@shared/directive/field-state.directive';
     FormsModule,
     ReactiveFormsModule,
     NgClass,
-    ControlMessagesComponent,
     EnterToTabDirective,
   ],
   hostDirectives: [FieldStateDirective],

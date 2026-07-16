@@ -9,5 +9,6 @@
   [readonly]="control.disabled" [placeholder]="control.disabled ? '' : fieldState.placeholder" [modules]="{}" appEnterToTab>
 </p-editor>
 
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+@if ((submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

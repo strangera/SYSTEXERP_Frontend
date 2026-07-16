@@ -7,7 +7,6 @@ import { FieldMeta, FieldStateDirective } from '@shared/directive/field-state.di
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { ButtonComponent } from '../button/button.component';
 import { InputTextService } from './input-text.service';
 
@@ -26,7 +25,6 @@ import { InputTextService } from './input-text.service';
     ReactiveFormsModule,
     TooltipModule,
     ButtonComponent,
-    ControlMessagesComponent,
     EnterToTabDirective,
     CopyControlDirective,
   ],

@@ -2,7 +2,6 @@ import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputTextareaModule } from 'primeng/inputtextarea';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
@@ -12,7 +11,7 @@ import { FieldStateDirective } from '@shared/directive/field-state.directive';
   styleUrl: './input-textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent, EnterToTabDirective],
+  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, EnterToTabDirective],
   hostDirectives: [FieldStateDirective],
 })
 export class InputTextareaComponent implements OnInit {
