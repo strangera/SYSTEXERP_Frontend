@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31070Item, TLS31070PrintRequest, TLS31070Request, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
@@ -17,7 +18,6 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonYNComponent } from '@shared/components/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -25,8 +25,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31070CRUComponent } from './tls31070-cru/tls31070-cru.component';
 
