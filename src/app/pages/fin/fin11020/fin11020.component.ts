@@ -6,9 +6,9 @@ import { finalize } from 'rxjs';
 
 // Services & Components
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { Fin11020Service, MainInvoiceData } from '../../../service/api/fin/fin11020.service';
 
 // PrimeNG

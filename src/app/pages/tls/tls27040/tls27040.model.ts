@@ -1,8 +1,8 @@
-import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
-import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
-import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatAmount, formatDate, formatDateTime } from "@others/component/table/table.model";
+import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatTxnNo } from "@shared/models/system/query-form.model";
+import { transformOptionsForExport } from "src/app/others/componentextends/basic-print/basic-print-data.component";
 // --- POS6118 聯信特店MIS LOG檔案 ---
 export const columns: ReportColumn[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 ECR_No

@@ -3,12 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
+import { formatAmount, formatDateTime, formatYYYYMM } from '../../../others/component/table/table.model';
 import { Fin12010Service, IFin12010Data, IQueryFin12010Request } from '../../../service/api/fin/fin12010.service';
 import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -17,7 +18,6 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
-import { formatAmount, formatDateTime, formatYYYYMM } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({

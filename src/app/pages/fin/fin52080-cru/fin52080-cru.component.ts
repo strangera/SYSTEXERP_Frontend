@@ -9,12 +9,12 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
-import { TreeDropdownComponent } from '@shared/components/tree-dropdown/tree-dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize } from 'rxjs';
+import { TreeDropdownComponent } from 'src/app/others/component/tree-dropdown/tree-dropdown.component';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, UpdateFIN52080Request, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({

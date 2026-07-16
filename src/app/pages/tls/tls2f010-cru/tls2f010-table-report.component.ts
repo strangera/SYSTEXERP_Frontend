@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { expandAnimation, formatAmount2, ReportColumn, TableQueryPayload } from './tls2f010-table-report.model';
 
 @Component({

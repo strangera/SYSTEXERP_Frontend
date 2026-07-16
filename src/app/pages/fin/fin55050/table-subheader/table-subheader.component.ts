@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from '@others/component/table/import-table';
 import { TableUtilityService } from '@others/component/table/table-utility.service';
 import { Column, ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-table-subheader',
