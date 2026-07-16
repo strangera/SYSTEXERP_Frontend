@@ -5,7 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy'; // 確保�
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55050Detail } from '@service/api/fin/fin55050.service';
 import { FIN55050Item, Fin55120Service, QueryFIN55050Request } from '@service/api/fin/fin55120.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';

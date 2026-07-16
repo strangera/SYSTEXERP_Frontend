@@ -12,7 +12,7 @@ import { TableComponent } from '@others/component/table/table.component';
 import { createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 @Component({
   selector: 'app-fin28010',

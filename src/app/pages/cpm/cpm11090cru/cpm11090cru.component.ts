@@ -10,7 +10,7 @@ import { CalendarComponent } from '@shared/components/calendar/calendar.componen
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

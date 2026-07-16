@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { TLS57170Data, TLS57170QueryRequest, TLS57170Service } from '@service/api/tls/tls57170.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

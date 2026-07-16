@@ -9,7 +9,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';

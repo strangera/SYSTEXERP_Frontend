@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableComponent } from '../../../others/component/table/table.component';

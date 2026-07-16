@@ -19,7 +19,7 @@ import { formatAmount, formatDate, ReportColumn } from 'src/app/shared/component
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

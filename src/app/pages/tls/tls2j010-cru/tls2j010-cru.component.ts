@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS2J010Service } from '@service/api/tls/tls2j010.service';

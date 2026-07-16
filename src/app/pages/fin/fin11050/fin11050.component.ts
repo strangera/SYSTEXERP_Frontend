@@ -6,7 +6,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN11050Data, FIN11050QueryRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

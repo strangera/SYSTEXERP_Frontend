@@ -12,7 +12,7 @@ import { formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 

@@ -22,7 +22,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { distinctUntilChanged, finalize, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 /** 3.1.7.1 領用明細表 */
 @UntilDestroy()

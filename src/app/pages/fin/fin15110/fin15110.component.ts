@@ -30,7 +30,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

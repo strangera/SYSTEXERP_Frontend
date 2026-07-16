@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';

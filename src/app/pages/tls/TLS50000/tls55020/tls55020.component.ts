@@ -7,7 +7,7 @@ import { Tls55020MasterData, Tls55020QueryRequest, Tls55020Service } from '@serv
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AutoCompleteComponent } from '@shared/components/auto-complete/auto-complete.component';
 import { ButtonComponent } from '@shared/components/button/button.component';

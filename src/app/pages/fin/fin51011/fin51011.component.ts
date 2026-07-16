@@ -22,7 +22,7 @@ import { FileUploadComponent } from '@shared/components/file-upload/file-upload.
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @UntilDestroy()
 @Component({

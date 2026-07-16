@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52080Service } from '@service/api/fin/fin52080.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';

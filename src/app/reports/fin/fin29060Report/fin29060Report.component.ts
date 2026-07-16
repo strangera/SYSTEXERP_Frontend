@@ -3,7 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';

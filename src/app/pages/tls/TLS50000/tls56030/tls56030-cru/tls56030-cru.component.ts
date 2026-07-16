@@ -24,8 +24,8 @@ import {
 } from '@service/api/tls/tls52010.service';
 import { Tls56030Service } from '@service/api/tls/TLS56030.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

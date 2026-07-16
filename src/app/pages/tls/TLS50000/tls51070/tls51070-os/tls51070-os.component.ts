@@ -7,7 +7,7 @@ import { IPOS2004DetailData } from '@service/api/tls/tls52010.service';
 import { Pos2004SearchKey } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';

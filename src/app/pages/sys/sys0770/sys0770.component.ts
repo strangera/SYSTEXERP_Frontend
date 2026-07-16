@@ -16,7 +16,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 // 定義授權型態的列舉

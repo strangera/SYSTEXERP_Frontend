@@ -15,7 +15,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
 import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../service/api/fin/fin29050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';

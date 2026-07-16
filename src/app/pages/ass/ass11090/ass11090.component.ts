@@ -7,7 +7,7 @@ import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11090Service } from '@service/api/ass/ass11090.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';

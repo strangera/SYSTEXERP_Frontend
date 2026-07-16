@@ -16,7 +16,7 @@ import {
 import {
   CPM11030DetailItem, Cpm11030Service, QueryCPM11030Row
 } from '../../../service/api/cpm/cpm11030.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

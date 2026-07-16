@@ -13,7 +13,7 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 // 2.2.18.2 大分類換開品項維護作業

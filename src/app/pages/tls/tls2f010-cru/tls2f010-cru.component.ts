@@ -22,7 +22,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';

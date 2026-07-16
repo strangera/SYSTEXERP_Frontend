@@ -30,7 +30,7 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { BlockUIModule } from 'primeng/blockui';
 import { ButtonModule } from 'primeng/button';

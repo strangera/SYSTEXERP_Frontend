@@ -13,7 +13,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin, map, of } from 'rxjs';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';

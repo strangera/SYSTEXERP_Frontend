@@ -7,7 +7,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 
 import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';

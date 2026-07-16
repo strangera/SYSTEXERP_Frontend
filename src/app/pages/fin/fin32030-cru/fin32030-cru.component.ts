@@ -19,7 +19,7 @@ import {
   QueryFIN32030Response
 } from '../../../service/api/fin/fin32030.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

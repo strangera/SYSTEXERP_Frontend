@@ -17,7 +17,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { CPM12050Data, CPM12050Service, QueryCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

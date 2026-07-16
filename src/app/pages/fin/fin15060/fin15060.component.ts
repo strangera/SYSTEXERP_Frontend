@@ -10,7 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { FIN15060Data, FIN15060PrintRequest, FIN15060QueryRequest, FIN15060Service } from '../../../service/api/fin/fin15060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableComponent } from '../../../others/component/table/table.component';

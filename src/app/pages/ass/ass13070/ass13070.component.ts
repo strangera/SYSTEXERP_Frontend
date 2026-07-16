@@ -6,7 +6,7 @@ import { ASS12040Service } from '@service/api/ass/ass12040.service';
 import { ASS13070Service } from '@service/api/ass/ass13070.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';

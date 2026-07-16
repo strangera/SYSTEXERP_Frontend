@@ -26,7 +26,7 @@ import {
   switchMap,
   throwError,
 } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { DetailASS13010Response } from '../ass13010/ass13010.model';
 import {
   ASS13080Detail,

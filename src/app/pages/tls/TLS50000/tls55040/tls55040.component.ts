@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls55040Data, Tls55040QueryBody, Tls55040Service } from '@service/api/tls/tls55040.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

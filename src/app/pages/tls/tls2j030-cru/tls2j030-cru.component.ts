@@ -15,7 +15,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs'; // 引入 of
 import { ValidationService } from 'src/app/shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import {
   COLUMNS_CHANGE_EDIT,

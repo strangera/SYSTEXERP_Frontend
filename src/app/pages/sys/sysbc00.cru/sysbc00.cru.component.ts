@@ -12,7 +12,7 @@ import { PanelModule } from 'primeng/panel';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

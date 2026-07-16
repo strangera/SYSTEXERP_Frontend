@@ -12,7 +12,7 @@ import { finalize, map } from 'rxjs/operators';
 import { formatDate, } from 'src/app/shared/components/table-edit/table-edit-format';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { Fin34010Row, Fin34010Service, } from '../../../service/api/fin/fin34010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { CanActivate } from '@angular/router';
 import { SystemDataService } from '@service/system/system-data.service';
 import { SystemOptionsService } from '@service/system/sys1000.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { catchError, map, Observable, of } from 'rxjs';
 
 @Injectable({

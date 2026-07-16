@@ -12,7 +12,7 @@ import { ColumnGroup, formatAmount, formatPercentage, ReportColumn } from '@shar
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { TLS2G030DataResponse, Tls2g030Service } from './../../../service/api/tls/tls2g030.service';

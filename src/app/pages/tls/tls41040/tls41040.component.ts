@@ -14,7 +14,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { TLS41040Data, TLS41040QueryReq, Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { Column } from '../../../others/component/table/table.model';

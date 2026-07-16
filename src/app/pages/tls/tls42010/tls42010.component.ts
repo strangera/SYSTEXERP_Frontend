@@ -13,7 +13,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { POS1004Master, Tls42010MQuery, Tls42010Service, USRLevelOption } from '../../../service/api/tls/tls42010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 

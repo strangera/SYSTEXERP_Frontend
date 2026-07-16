@@ -18,7 +18,7 @@ import {
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { InactivityService } from '../../core/services/inactivity.service';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../shared/components/notification-message/notification.service';
 import { UserInfo, userLogin } from '../../shared/models/system/userInfo';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { QueryStateService } from '../../shared/service/query-state.service';

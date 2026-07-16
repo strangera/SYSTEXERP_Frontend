@@ -3,7 +3,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { fin13090Item, Fin13090Service } from '@service/api/fin/fin13090.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';

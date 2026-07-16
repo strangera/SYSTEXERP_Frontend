@@ -12,7 +12,7 @@ import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';

@@ -22,7 +22,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Cpm11030Service, DailyEquipAvailabilityRow, QueryCPM11030Request, QueryCPM11030Row } from '../../../service/api/cpm/cpm11030.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';

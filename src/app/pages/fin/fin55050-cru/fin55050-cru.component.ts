@@ -12,7 +12,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 interface DetailRow {
   VouDate?: string | null;

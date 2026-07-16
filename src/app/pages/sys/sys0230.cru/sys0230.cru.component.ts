@@ -7,7 +7,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

@@ -10,7 +10,7 @@ import { FIN13050Service } from '../../../service/api/fin/fin13050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // Component imports
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

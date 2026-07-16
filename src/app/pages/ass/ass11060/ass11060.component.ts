@@ -12,7 +12,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
 import { ASS11060Service, QueryASS11060Request, QueryASS11060Response } from '../../../service/api/ass/ass11060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';

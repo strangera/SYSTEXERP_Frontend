@@ -13,7 +13,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
 import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { QuerySYSBR10Request, QuerySYSBR10Response, SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

@@ -15,7 +15,7 @@ import { DividerModule } from 'primeng/divider';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

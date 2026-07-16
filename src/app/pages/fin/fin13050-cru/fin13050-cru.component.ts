@@ -20,7 +20,7 @@ import {
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

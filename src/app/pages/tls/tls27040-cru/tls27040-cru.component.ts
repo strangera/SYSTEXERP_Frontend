@@ -10,7 +10,7 @@ import { formatTxnNo } from '@shared/models/system/query-form.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 確保 AuthService 被導入
 import { PanelModule } from 'primeng/panel';
 import { finalize, Observable, take } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

@@ -9,7 +9,7 @@ import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';

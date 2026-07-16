@@ -11,7 +11,7 @@ import { TableReportComponent } from 'src/app/shared/components/table-report/tab
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';

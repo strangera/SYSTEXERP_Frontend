@@ -20,7 +20,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, map } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../service/api/tls/tls32010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { formatAmount, formatAmountCN } from '../../../others/component/table/table.model';

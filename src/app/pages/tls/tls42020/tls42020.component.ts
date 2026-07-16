@@ -20,7 +20,7 @@ import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { TLS42020Data, TLS42020DetailQueryRequest, TLS42020Service } from '../../../service/api/tls/tls42020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';

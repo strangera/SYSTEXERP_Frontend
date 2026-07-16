@@ -10,7 +10,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';

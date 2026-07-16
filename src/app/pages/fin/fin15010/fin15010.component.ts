@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { FIN15010Data, FIN15010PrintRequest, FIN15010QueryRequest, FIN15010Service } from '../../../service/api/fin/fin15010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

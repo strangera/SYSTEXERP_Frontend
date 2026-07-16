@@ -18,7 +18,7 @@ import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

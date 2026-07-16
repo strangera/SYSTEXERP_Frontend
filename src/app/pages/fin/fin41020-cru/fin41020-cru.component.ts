@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';

@@ -19,7 +19,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { ExportFIN55050Payload, FIN55050Data, FIN55050Detail, FIN55050Service, GroupedFIN55050Detail } from '../../../service/api/fin/fin55050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TableSubheaderComponent } from './table-subheader/table-subheader.component';

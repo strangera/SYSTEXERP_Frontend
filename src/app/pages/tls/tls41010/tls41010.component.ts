@@ -11,7 +11,7 @@ import { finalize } from 'rxjs';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

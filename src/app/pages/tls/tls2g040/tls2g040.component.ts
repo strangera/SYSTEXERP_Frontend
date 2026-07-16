@@ -16,7 +16,7 @@ import { ReportColumn, formatAmount } from '@shared/components/table-report/tabl
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { debounceTime, finalize, skip } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';

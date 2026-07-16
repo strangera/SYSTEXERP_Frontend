@@ -12,7 +12,7 @@ import { finalize } from 'rxjs';
 import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import { FIN55050Detail } from '../../../service/api/fin/fin55050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

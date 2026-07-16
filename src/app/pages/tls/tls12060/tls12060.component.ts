@@ -7,7 +7,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

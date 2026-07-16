@@ -4,7 +4,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, POS1006Item } from '@service/utility/dropDownList.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { forkJoin } from 'rxjs';

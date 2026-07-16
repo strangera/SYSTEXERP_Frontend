@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({

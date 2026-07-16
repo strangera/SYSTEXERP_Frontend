@@ -20,7 +20,7 @@ import { ChartModule } from 'primeng/chart';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';

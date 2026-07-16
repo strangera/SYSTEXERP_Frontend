@@ -24,7 +24,7 @@ import { Column } from '@others/component/table/table.model';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { SharedDropdownService } from '@others/services/shared-dropdown.service';
 import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';
 import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';

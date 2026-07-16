@@ -32,7 +32,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 共用組件
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
 

@@ -12,7 +12,7 @@ import { formatDateTime } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { CPM11020Data } from '../../../service/api/cpm/cpm11020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

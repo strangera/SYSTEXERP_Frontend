@@ -9,7 +9,7 @@ import { TableComponent } from '@others/component/table/table.component';
 import { Column, formatAmount } from '@others/component/table/table.model';
 import { MenuItem } from 'primeng/api';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 interface DetailRow {
   VouDate?: string | null;

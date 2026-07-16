@@ -9,7 +9,7 @@ import { DropdownTableComponent } from '@shared/components/dropdown-table/dropdo
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

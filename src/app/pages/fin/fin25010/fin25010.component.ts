@@ -12,7 +12,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN25010Data, FIN25010Service, QueryDropFIN25010Response, QueryFIN25010Request } from '../../../service/api/fin/fin25010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

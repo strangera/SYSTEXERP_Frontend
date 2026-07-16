@@ -8,7 +8,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { formatDateTime, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 

@@ -13,7 +13,7 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonYNComponent } from "@shared/components/radiobutton-yn/radiobutton-yn.component";
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

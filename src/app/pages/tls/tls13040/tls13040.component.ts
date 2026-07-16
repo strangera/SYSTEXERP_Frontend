@@ -18,7 +18,7 @@ import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';

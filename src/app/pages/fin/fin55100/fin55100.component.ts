@@ -12,7 +12,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component'; // 假設路徑
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component'; // 假設路徑
 import { ButtonComponent } from '../../../shared/components/button/button.component'; // 假設路徑
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component'; // 假設路徑
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component'; // 假設路徑

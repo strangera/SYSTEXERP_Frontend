@@ -13,7 +13,7 @@ import { PanelModule } from 'primeng/panel';
 
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

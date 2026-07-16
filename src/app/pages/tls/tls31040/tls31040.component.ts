@@ -25,7 +25,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31040CRUComponent } from './tls31040-cru/tls31040-cru.component';

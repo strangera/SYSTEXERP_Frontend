@@ -10,7 +10,7 @@ import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import * as XLSX from 'xlsx-js-style';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

@@ -8,7 +8,7 @@ import { CurrentPageService } from './core/layout/app.menulist/current-page.serv
 import { DebugSqlDisplayComponent } from './core/layout/debug-sql-display/debug-sql-display.component';
 import { AppInitializationService } from './core/services/app.initialization.service';
 import { SystemDataService } from './service/system/system-data.service';
-import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
+import { NotificationMessageComponent } from './shared/components/notification-message/notification-message.component';
 import { OperationLogService } from './shared/service/operation-log.service';
 
 const NON_BUSINESS_CLICK_EXCLUDE_SELECTOR = [

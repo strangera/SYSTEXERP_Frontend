@@ -10,7 +10,7 @@ import { CalendarComponent } from '@shared/components/calendar/calendar.componen
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

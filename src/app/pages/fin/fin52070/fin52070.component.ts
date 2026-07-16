@@ -7,7 +7,7 @@ import { CalendarComponent } from '@shared/components/calendar/calendar.componen
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';

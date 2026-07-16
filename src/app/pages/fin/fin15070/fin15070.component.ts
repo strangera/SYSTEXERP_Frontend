@@ -8,7 +8,7 @@ import {
 import { AccordionModule } from 'primeng/accordion';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { FIN15070Service } from '../../../service/api/fin/fin15070.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { TranslateModule } from '@ngx-translate/core';

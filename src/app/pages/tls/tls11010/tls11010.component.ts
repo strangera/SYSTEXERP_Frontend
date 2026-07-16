@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';

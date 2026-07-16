@@ -7,7 +7,7 @@ import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month.compone
 import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

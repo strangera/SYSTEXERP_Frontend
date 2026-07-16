@@ -9,7 +9,7 @@ import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS13060Service } from '@service/api/ass/ass13060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

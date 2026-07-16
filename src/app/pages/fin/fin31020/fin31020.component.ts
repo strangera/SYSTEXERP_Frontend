@@ -10,7 +10,7 @@ import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { SortMeta } from 'primeng/api';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';

@@ -12,7 +12,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { QueryTLS41020Request, TLS41020Data, TLS41020Service } from '../../../service/api/tls/tls41020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

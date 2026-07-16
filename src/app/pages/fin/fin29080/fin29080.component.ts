@@ -11,7 +11,7 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({

@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS55060Request, TLS55060QueryItem, TLS55060Service } from '@service/api/tls/tls55060.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';

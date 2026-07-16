@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls51140.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, POS1002Item } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';

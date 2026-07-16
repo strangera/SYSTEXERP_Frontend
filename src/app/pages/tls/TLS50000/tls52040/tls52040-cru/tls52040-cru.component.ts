@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IGetPOS2031PRequest, ITLS52040Data, ITLS52040Detail, TLS52040Request, Tls52040Service } from '@service/api/tls/tls52040.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

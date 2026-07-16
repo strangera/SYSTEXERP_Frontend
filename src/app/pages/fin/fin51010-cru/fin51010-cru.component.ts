@@ -18,7 +18,7 @@ import { formatAmount, formatDate, ReportColumn } from '@shared/components/table
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
 import { finalize, forkJoin, shareReplay } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({

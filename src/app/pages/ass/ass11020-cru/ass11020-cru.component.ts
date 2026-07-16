@@ -3,8 +3,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';

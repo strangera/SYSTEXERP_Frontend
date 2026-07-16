@@ -7,7 +7,7 @@ import { PaymentDetail, ProductDetail, Tls55020MasterData, Tls55020Service, Tls5
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Pos2004WithBrandItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

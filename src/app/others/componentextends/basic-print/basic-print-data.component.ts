@@ -6,7 +6,7 @@ import { TableExport } from '@others/component/table/table-export/table-export.c
 import { Column } from '@others/component/table/table.model';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemDataService } from '@service/system/system-data.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { FileExportService } from '@shared/service/file-export.service';
 import { finalize } from 'rxjs';

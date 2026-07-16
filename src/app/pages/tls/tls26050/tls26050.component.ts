@@ -18,7 +18,7 @@ import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { TLS26050Data, TLS26050QueryRequest, TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

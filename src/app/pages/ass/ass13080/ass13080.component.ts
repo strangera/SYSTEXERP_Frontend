@@ -23,7 +23,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import {
   ASS13080QueryRow,
   PrintASS13080Request,

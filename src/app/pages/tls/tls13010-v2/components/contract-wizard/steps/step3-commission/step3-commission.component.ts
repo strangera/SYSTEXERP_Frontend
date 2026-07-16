@@ -5,7 +5,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 

@@ -6,7 +6,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { ASS11060Service, DetailASS11060Response, QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';

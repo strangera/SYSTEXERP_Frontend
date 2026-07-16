@@ -20,7 +20,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { finalize } from 'rxjs';
 import { POS1004Detail, Tls42010Service } from '../../../service/api/tls/tls42010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ColorUtil } from './color-util';
 import { TlsKeyboardService } from './tls-keyboard.service';

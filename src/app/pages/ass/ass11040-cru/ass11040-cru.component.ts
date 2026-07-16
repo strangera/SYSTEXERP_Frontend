@@ -25,7 +25,7 @@ import { PanelModule } from 'primeng/panel';
 import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';

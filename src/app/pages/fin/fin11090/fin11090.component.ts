@@ -15,7 +15,7 @@ import {
 } from '../../../others/component/table/table.model';
 
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

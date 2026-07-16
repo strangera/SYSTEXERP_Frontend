@@ -11,7 +11,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
 import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

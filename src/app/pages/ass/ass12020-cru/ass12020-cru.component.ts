@@ -33,7 +33,7 @@ import { TableComponent } from '@others/component/table/table.component';
 import { Column, LazyLoadEvent, formatDate, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 /** 3.1.2.2 詢價登錄作業 CRU */

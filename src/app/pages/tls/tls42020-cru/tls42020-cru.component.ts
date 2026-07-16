@@ -13,7 +13,7 @@ import { validateMaxByteLength, validateNumber, validateRequired } from '@shared
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, of, shareReplay } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

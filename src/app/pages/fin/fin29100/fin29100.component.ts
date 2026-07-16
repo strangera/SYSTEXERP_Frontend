@@ -14,7 +14,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
 import { FIN29100Data, FIN29100Service, QueryBankAccountResponse, QueryFIN29100Request } from '../../../service/api/fin/fin29100.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 

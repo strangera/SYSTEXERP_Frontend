@@ -31,7 +31,7 @@ import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ASS13040AssetDialogComponent } from './ass13040-asset-dialog.component';
 
 interface MediaItem {

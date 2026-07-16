@@ -18,7 +18,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';

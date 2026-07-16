@@ -22,7 +22,7 @@ import {
   Fin34040Summary,
   SortItem,
 } from '../../../service/api/fin/fin34040.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

@@ -4,7 +4,7 @@ import { computed, Injectable, signal } from '@angular/core';
 import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { IDropdownItem, Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { filter, finalize, map, Observable, take, tap } from 'rxjs';

@@ -13,7 +13,7 @@ import { finalize } from 'rxjs';
 import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/others/component/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

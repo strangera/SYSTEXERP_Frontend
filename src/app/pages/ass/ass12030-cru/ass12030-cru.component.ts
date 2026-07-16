@@ -34,7 +34,7 @@ import { TableComponent } from '@others/component/table/table.component';
 import { Column, formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 /** 進入新增頁時的套用模式：已詢價=套用請購清單，未詢價=套用詢價清單 */

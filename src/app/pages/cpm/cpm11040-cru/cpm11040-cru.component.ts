@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { CPM11030DetailItem, Cpm11030Service } from '../../../service/api/cpm/cpm11030.service';
 import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

@@ -15,7 +15,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { Column } from '../../../others/component/table/table.model';

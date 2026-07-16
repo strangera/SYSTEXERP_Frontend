@@ -43,7 +43,7 @@ import { LocationOptionsService } from '@others/services/dropdownservice/locatio
 import { NegotiatorOptionsService } from '@others/services/dropdownservice/negotiator-options.service';
 import { VendorCategoryOptionsService } from '@others/services/dropdownservice/vendor-category-options.service';
 
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 
 @Component({
   selector: 'app-step1-contract-info',

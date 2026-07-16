@@ -14,7 +14,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN55010Detail, FIN55010Service } from '../../../service/api/fin/fin55010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 

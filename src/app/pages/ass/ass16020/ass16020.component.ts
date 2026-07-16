@@ -9,8 +9,8 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

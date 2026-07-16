@@ -21,7 +21,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Observable, finalize, map } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
 import { ColumnGroup, ReportColumn } from '../ass17020/ass17020-table-report.model';
 

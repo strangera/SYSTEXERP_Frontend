@@ -11,7 +11,7 @@ import { AddButton, formatDate, ReportColumn } from '@shared/components/table-re
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

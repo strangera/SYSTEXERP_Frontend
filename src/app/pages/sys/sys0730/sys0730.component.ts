@@ -10,7 +10,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 // 假設 Role 模型是這樣定義的 (來自 sys0210.service 或 shared/models/sys/role.model)
 export interface Role {

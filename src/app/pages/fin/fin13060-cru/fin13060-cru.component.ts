@@ -25,7 +25,7 @@ import { finalize } from 'rxjs';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

@@ -10,7 +10,7 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ExportLabelService, IExportLabelRequest } from '@service/utility/exportLabel.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';

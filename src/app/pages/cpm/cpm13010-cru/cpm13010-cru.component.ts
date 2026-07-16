@@ -8,7 +8,7 @@ import { InputNumberComponent } from '@shared/components/input-number/input-numb
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Cpm13010Service, QueryCPM13010Response } from '../../../service/api/cpm/cpm13010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

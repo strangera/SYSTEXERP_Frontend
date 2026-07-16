@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

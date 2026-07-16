@@ -22,7 +22,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 /** 3.1.2.3 採購申請作業 */
 @UntilDestroy()

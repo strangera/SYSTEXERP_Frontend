@@ -5,7 +5,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type UploadType = 'Points' | 'Voucher';

@@ -12,8 +12,8 @@ import {
 } from '@service/api/ass/ass16060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

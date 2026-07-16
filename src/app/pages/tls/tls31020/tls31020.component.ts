@@ -24,7 +24,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { Tls31020CruComponent } from './tls31020-cru/tls31020-cru.component';

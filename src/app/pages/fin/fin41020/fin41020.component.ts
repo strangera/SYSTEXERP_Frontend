@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,7 +9,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

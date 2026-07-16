@@ -8,7 +8,7 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { CPM11060Data, CPM11060Service } from '../../../service/api/cpm/cpm11060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';

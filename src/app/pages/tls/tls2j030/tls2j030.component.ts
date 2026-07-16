@@ -15,7 +15,7 @@ import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';

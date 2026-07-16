@@ -18,7 +18,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable, of } from 'rxjs'; // 引入 map
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 

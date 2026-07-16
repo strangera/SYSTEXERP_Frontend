@@ -16,7 +16,7 @@ import { formatDate, formatDateTime, ReportColumn } from '@shared/components/tab
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',

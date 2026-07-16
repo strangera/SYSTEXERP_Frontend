@@ -20,7 +20,7 @@ import { AddButton, ReportColumn } from '@shared/components/table-report/table-r
 import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, forkJoin } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import {
   ASS12020QueryRow,
   QueryASS12020Request,

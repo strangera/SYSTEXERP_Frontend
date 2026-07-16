@@ -8,7 +8,7 @@ import { map } from 'rxjs/operators';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

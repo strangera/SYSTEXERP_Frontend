@@ -19,7 +19,7 @@ import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
 import { finalize, map } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';

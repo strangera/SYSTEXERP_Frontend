@@ -4,8 +4,8 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

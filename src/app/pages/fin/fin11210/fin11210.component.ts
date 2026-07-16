@@ -19,7 +19,7 @@ import {
   FIN11210Service,
   QueryFIN11210Request
 } from '../../../service/api/fin/fin11210.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 

@@ -19,7 +19,7 @@ import { environment } from 'src/environments/environment';
 import { LayoutService } from '../../../core/layout/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { UserCodeService } from '../../../service/system/user-code.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { ValidationService } from '../../../shared/service/validation.service';

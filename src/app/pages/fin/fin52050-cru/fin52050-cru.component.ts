@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

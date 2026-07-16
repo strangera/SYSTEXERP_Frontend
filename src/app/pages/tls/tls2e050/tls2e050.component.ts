@@ -20,7 +20,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { debounceTime, finalize, Observable } from 'rxjs';
 import { Tls2e050MainData, Tls2e050QueryBody, Tls2e050Service, Tls2e050TotalData } from '../../../service/api/tls/tls2e050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

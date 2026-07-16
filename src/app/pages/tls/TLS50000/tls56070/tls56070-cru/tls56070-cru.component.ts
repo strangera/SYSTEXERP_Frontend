@@ -7,7 +7,7 @@ import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Servic
 import { POS2023DAMResponse, POS2024DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

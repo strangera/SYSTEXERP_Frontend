@@ -16,7 +16,7 @@ import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-imp
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 @Component({

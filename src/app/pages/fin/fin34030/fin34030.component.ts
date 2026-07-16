@@ -11,7 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { Fin34030Request, Fin34030Response, Fin34030Service } from '../../../service/api/fin/fin34030.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';

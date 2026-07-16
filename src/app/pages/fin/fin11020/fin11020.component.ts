@@ -19,7 +19,7 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 // Shared
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';

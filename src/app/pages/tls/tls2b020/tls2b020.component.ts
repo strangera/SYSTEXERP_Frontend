@@ -6,7 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 
@@ -20,7 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@others/component/table2/table2.component';
 import { AccordionModule } from 'primeng/accordion';
 import { map } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

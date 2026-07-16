@@ -4,7 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

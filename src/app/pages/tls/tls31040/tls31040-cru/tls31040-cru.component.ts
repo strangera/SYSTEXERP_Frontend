@@ -5,7 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { TLS31020Total, footerShowTotal } from 'src/app/service/api/tls/tls31020.service';
 import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040Item, TLS31040PrintDetailRequest, TLS31040Request, Tls31040Service } from 'src/app/service/api/tls/tls31040.service';
-import { NotificationService } from 'src/app/shared/component/notification-message/notification.service';
+import { NotificationService } from 'src/app/shared/components/notification-message/notification.service';
 import { formatPercentage } from 'src/app/others/component/table/table.model';
 import { environment } from 'src/environments/environment';
 import { ColumnGroup, ReportColumn, formatAmount, formatAmountWithDecimals } from '../../tls2f010-cru/tls2f010-table-report.model';

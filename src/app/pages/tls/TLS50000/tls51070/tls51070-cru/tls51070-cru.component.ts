@@ -7,7 +7,7 @@ import { formatAmount } from '@others/component/table/table.model';
 import { Tls51060Service } from '@service/api/tls/tls51060.service';
 import { POS2004, Tls51070Service } from '@service/api/tls/tls51070.service';
 import { TLS51130Service } from '@service/api/tls/tls51130.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';

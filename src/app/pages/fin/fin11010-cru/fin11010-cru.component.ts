@@ -7,7 +7,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { IDropdownItem } from 'src/app/service/utility/dropdown-api.model';
 import { FIN11010Data, FIN11010InsertRequest, FIN11010Service, FIN11010UpdateRequest } from '../../../service/api/fin/fin11010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

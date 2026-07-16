@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 
@@ -21,7 +21,7 @@ import { map } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

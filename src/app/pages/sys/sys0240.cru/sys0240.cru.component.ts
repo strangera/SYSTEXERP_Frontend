@@ -13,7 +13,7 @@ import { TableReportComponent } from 'src/app/shared/components/table-report/tab
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

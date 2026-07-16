@@ -10,7 +10,7 @@ import { InputNumberComponent } from '@shared/components/input-number/input-numb
 import { InputTextareaComponent } from "@shared/components/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

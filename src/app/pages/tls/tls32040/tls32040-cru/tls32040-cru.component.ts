@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { TLS32040DetailRequest, TLS32040DetailResponse, TLS32040Request, TLS32040Response, TLS32040Service } from 'src/app/service/api/tls/tls32040.service';
-import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({

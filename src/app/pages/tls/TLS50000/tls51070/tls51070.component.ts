@@ -7,7 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { POS2004, Tls51070Service } from '@service/api/tls/tls51070.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';

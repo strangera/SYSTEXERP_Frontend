@@ -11,7 +11,7 @@ import { combineLatest, finalize, of } from 'rxjs';
 import { debounceTime, startWith, switchMap } from 'rxjs/operators';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

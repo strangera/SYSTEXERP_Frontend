@@ -20,7 +20,7 @@ import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 

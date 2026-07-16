@@ -9,7 +9,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { IQuerySysbc00Request, ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';

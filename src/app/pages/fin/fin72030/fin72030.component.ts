@@ -15,7 +15,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { catchError, distinctUntilChanged, finalize, of } from 'rxjs';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';

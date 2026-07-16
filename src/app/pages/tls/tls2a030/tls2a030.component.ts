@@ -12,7 +12,7 @@ import { formatAmount } from 'src/app/others/component/table/table.model';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

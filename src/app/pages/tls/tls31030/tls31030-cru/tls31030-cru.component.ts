@@ -7,7 +7,7 @@ import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { TLS31030DetailItem, TLS31030DetailRequest, TLS31030Item, TLS31030PrintDetailRequest, TLS31030Request, Tls31030Service } from 'src/app/service/api/tls/tls31030.service';
 import { environment } from 'src/environments/environment';
-import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({

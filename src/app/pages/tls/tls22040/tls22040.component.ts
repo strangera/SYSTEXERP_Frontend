@@ -7,7 +7,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { map, Observable } from 'rxjs';
 import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

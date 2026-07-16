@@ -1,6 +1,6 @@
 import { HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { MessageService } from 'primeng/api'; // 需引入 PrimeNG 原生 MessageService
 import { Observable, tap } from 'rxjs';
 

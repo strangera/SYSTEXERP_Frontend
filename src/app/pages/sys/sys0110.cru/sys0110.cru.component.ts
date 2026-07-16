@@ -18,7 +18,7 @@ import { TreeSelectModule } from 'primeng/treeselect';
 import { finalize } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { UserCodeService } from '../../../service/system/user-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

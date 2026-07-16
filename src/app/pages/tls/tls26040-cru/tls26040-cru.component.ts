@@ -14,7 +14,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { TLS26040Data, TLS26040DetailData, TLS26040Service } from '../../../service/api/tls/tls26040.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';

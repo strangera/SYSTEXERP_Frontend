@@ -12,7 +12,7 @@ import { transformOptionsForExport } from 'src/app/others/componentextends/basic
 import { formatAmount, formatDateTime, formatYYYYMM } from '../../../others/component/table/table.model';
 import { Fin12010Service, IFin12010Data, IQueryFin12010Request } from '../../../service/api/fin/fin12010.service';
 import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';

@@ -21,7 +21,7 @@ import { PanelModule } from 'primeng/panel';
 import { Observable, catchError, finalize, firstValueFrom, forkJoin, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/components/input-textarea/input-textarea.component';

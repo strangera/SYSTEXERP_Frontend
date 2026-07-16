@@ -8,7 +8,7 @@ import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { PanelModule } from 'primeng/panel';
 import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { Column, formatDate as tableFormatDate } from '../../../others/component/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';

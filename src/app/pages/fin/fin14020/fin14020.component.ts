@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin14020Service } from '@service/api/fin/fin14020.service';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';

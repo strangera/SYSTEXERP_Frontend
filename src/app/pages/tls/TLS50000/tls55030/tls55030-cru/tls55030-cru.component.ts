@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IInvoiceDetail, IInvoiceDetailByDisNo, IReturnDetailByDisNoData, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from "@shared/components/calendar-range/calendar-range.component";

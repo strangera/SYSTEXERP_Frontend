@@ -11,7 +11,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // UI Components
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';

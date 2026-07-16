@@ -10,7 +10,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { Column, formatAmount, formatYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { Tls2e010Data, Tls2e010QueryBody, Tls2e010Service } from './../../../service/api/tls/tls2e010.service';

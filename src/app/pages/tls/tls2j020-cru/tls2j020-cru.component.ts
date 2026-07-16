@@ -12,7 +12,7 @@ import { validateRequired } from '@shared/components/table-edit/validate-field.m
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 

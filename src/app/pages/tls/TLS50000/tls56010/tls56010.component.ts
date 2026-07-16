@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { TLS56010Service } from '@service/api/tls/tls56010.service';
 import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/components/dropdown-table/dropdown-table.component';

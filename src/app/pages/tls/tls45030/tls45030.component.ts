@@ -13,7 +13,7 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 import { formatDate, formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 加入 finalize
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 // 2.4.5.3 收銀機開關機時間表
