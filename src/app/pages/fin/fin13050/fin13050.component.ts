@@ -149,7 +149,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
-    if (rows.some(r => r?.Voucher_No)) return this.messageService.warnBubble('已產生傳票之資料不可刪除');
     if (rows.some(r => !r?.CanDel)) return this.messageService.warnBubble('已審核之申報年月資料不可刪除');
 
     const ids = rows.map(r => r.id).filter(id => id != null);

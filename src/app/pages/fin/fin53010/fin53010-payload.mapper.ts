@@ -124,6 +124,7 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
     VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     NoteDesc: row.note_desc,
+    ACCT_KEY: row.ACCT_KEY ?? undefined,
   };
 }
 

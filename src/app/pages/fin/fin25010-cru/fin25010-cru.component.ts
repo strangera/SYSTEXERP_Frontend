@@ -269,7 +269,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     let total = 0;
     for (const item of this.selectedItems) {
       const amt = Number(item.ACP_Amt) || 0;
-      const weightedAmt = item.IN_TYPE === '3' ? -amt : amt;
+      const weightedAmt = item.IN_TYPE === '1' ? amt : -amt;
 
       // 更新總計
       total += weightedAmt;
