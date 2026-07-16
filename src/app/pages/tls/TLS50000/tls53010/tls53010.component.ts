@@ -8,12 +8,12 @@ import { TLS53010Data, TLS53010ExportRequest, TLS53010Service } from '@service/a
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';

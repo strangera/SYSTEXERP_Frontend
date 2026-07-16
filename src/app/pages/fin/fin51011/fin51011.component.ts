@@ -17,10 +17,10 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { FIN51011Data, FIN51011QueryPayload, FIN51011Service } from '@service/api/fin/fin51011.service';
 import { TLS27010Service } from '@service/api/tls/tls27010.service'; // 保留原本的 Service
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 

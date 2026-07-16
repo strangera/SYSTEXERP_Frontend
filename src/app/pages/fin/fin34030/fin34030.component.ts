@@ -5,18 +5,18 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { Fin34030Request, Fin34030Response, Fin34030Service } from '../../../service/api/fin/fin34030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 //1.3.4 應收/應付帳款查詢(FIN34030)
 @Component({

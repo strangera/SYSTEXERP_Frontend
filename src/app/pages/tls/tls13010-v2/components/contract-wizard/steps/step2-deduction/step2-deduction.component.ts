@@ -20,8 +20,8 @@ import { ToggleButtonModule } from 'primeng/togglebutton';
 
 import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { ColumnDef, ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { LocationOptionsService } from '@others/services/dropdownservice/location-options.service';

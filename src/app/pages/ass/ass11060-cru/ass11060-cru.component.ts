@@ -7,11 +7,11 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { ASS11060Service, DetailASS11060Response, QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/components/input-textarea/input-textarea.component';
 
 //3.1.1.6 供應商資料維護作業 CRU
 @Component({

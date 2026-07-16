@@ -1,7 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { TLS31090DetailResponse, TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmount } from '@others/component/table/table.model';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';

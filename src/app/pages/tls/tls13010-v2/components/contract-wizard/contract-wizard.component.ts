@@ -26,8 +26,8 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 共用組件
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
 
 // V2 服務
 import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';

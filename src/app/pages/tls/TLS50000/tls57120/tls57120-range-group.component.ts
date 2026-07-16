@@ -1,8 +1,8 @@
 import { NgClass, NgIf } from '@angular/common';
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { Subject } from 'rxjs';
 

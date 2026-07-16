@@ -10,12 +10,12 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
 import { ITLS28020Data, QueryTLS28020Request, TLS28020Service } from '@service/api/tls/tls28020.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatDate, formatDateTime, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls28020',

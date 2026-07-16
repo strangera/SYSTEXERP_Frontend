@@ -23,16 +23,16 @@ import {
   SortItem,
 } from '../../../service/api/fin/fin34040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownRangeComponent } from '../../../shared/componentkit/dropdown-range/dropdown-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
+import { DropdownRangeComponent } from '../../../shared/components/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { ColumnGroup } from '../../../others/component/table/table.model';
 
 //1.3.5 帳齡分析表(FIN34040)

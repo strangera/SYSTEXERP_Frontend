@@ -14,9 +14,9 @@ import { createPaginationConfig } from '@others/component/table/table.model';
 
 // UI
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls51130',

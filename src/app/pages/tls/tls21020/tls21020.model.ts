@@ -1,5 +1,5 @@
 import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
-import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumnExtend } from '@shared/components/table-edit/table-edit.model';
 import { Option } from 'src/app/service/utility/dropdown-api.model';
 
 export interface TLS21020Data extends Partial<EditColumnExtend> {

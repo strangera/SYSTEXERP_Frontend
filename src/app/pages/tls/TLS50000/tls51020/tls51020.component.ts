@@ -4,16 +4,16 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, take } from 'rxjs';
 import { QueryTLS51020Request, QueryTLS51020Response, Tls51020Service } from 'src/app/service/api/tls/tls51020.service';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
-import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls51020',

@@ -9,8 +9,8 @@ import { ValidationService } from '@shared/service/validation.service';
 //
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -18,11 +18,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { DeleteASS13010Request, ExportPDFASS13010Request, QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
 
 //3.1.3.1 資產維護作業

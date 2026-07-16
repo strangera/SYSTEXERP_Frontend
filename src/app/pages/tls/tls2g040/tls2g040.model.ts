@@ -1,4 +1,4 @@
-import { ReportColumn, formatAmount } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn, formatAmount } from "@shared/components/table-report/table-report.model";
 
 export const bus_typeColumns: ReportColumn[] = [
   { field: 'bus_type', header: '大分類代碼' },

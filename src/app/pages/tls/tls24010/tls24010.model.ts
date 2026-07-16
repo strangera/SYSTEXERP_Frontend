@@ -1,4 +1,4 @@
-import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatDate, formatDateTime } from "@others/component/table/table.model";
 
 export enum TXN_GUIPAPER {

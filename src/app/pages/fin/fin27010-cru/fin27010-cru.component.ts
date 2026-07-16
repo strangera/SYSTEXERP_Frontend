@@ -12,11 +12,11 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 //1.2.7.1 產生開票付款資料 CRU

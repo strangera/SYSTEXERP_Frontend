@@ -10,15 +10,15 @@ import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/others/component/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-fin42050',

@@ -15,15 +15,15 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Observable, of } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
@@ -34,7 +34,7 @@ import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import {
   ApiResponse,
   Ass16070DetailResponse,

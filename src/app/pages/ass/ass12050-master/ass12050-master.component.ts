@@ -5,7 +5,7 @@ import { ASS12050MasterRow } from '@pages/ass/ass12050/ass12050.model';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';

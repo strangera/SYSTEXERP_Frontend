@@ -9,9 +9,9 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 // 自定義組件與常數
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import * as CONST from '../tls42010.const';
 
 @NgComponent({

@@ -10,19 +10,19 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 import {
@@ -34,7 +34,7 @@ import {
   UpdateTLS25030StatusRequest,
 } from '../../../service/api/tls/tls25030.service';
 
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 interface SortItem { field: string; order: number }

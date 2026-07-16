@@ -1,4 +1,4 @@
-import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatAmount, formatDate } from "@others/component/table/table.model";
 import { formatTxnNo } from "@shared/models/system/query-form.model";
 

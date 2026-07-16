@@ -4,7 +4,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55050Service } from '@service/api/fin/fin55050.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, formatAmount } from '@others/component/table/table.model';
 import { MenuItem } from 'primeng/api';

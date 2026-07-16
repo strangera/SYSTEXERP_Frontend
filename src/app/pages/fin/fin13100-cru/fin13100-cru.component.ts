@@ -9,11 +9,11 @@ import { finalize } from 'rxjs';
 import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
+import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { getSYS1000Options } from '@service/system/sys1000.service';

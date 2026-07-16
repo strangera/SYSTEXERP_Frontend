@@ -9,7 +9,7 @@ import { createPaginationConfig } from '../../../others/component/table/table.mo
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import type { SortMeta as PSortMeta, SortMeta } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -17,10 +17,10 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize, map } from 'rxjs/operators';
 import { Cpm13020Service, ECRDropDownOption, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @UntilDestroy()
 @Component({

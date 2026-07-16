@@ -6,7 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type UploadType = 'Points' | 'Voucher';
 

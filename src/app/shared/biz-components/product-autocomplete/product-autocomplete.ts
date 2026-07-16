@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { UntilDestroy, untilDestroyed } from "@ngneat/until-destroy";
-import { DropdownTableComponent, FieldsConfig } from "@shared/componentkit/dropdown-table/dropdown-table.component";
+import { DropdownTableComponent, FieldsConfig } from "@shared/components/dropdown-table/dropdown-table.component";
 import { Subject, switchMap } from "rxjs"; // 引入 switchMap 與 Subject
 import { ProductAutocompleteService } from "./product-autocomplete.service";
 

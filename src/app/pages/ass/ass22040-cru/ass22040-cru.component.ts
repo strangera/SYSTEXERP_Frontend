@@ -7,8 +7,8 @@ import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 // Services
 

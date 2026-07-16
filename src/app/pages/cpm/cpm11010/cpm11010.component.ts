@@ -11,9 +11,9 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { CPM11010Data, CPM11010Service } from '../../../service/api/cpm/cpm11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 
 @Component({

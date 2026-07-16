@@ -15,10 +15,10 @@ import { finalize } from 'rxjs';
 import { EDCStatus, QueryTLS44020Response, TLS44020Service } from '../../../service/api/tls/tls44020.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 // 配置化管理：統一收納状态對應關係，避免 switch case 膨脹
 const STATUS_CONFIG: Record<EDCStatus, { class: string; icon: string; color: string }> = {

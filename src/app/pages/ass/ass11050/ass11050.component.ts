@@ -4,11 +4,11 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11050Service } from '@service/api/ass/ass11050.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ASS11050TreeDropdownComponent } from './ass11050-tree-dropdown/ass11050-tree-dropdown.component';
 
 export interface ASS11050Tree {

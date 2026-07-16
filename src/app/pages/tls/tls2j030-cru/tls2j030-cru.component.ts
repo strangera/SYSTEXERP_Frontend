@@ -5,10 +5,10 @@ import { UntilDestroy } from '@ngneat/until-destroy'; // 引入 UntilDestroy
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn, FieldChangeEvent } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { TableComponent } from '@others/component/table/table.component';
 import { DividerModule } from "primeng/divider";
 import { DropdownModule } from 'primeng/dropdown';
@@ -16,7 +16,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs'; // 引入 of
 import { ValidationService } from 'src/app/shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import {
   COLUMNS_CHANGE_EDIT,
   COLUMNS_CHANGE_VIEW,

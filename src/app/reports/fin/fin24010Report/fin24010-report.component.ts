@@ -8,10 +8,10 @@ import { Fin24010Service } from '@service/api/fin/fin24010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { PanelModule } from 'primeng/panel';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 

@@ -8,9 +8,9 @@ import { PrivilegeOutput, Sys0780Service } from '@service/api/sys/sys0780.servic
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TreeNode } from '@shared/models/sys/role.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';

@@ -5,12 +5,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDateTime, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service'; // 匯入 ErrorReportService
 import { FileExportService } from '@shared/service/file-export.service';
@@ -22,8 +22,8 @@ import { finalize } from 'rxjs/operators';
 import { TLS42020Data, TLS42020DetailQueryRequest, TLS42020Service } from '../../../service/api/tls/tls42020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { formatDate } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({

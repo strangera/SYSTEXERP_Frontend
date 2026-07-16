@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e060Data, Tls2e060QueryBody, Tls2e060Service } from '@service/api/tls/tls2e060.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDateTime, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { convertDateToYYYYMM, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 // 2.2.14.6 專櫃結帳前調整作業
 @Component({

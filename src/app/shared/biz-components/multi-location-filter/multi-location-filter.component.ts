@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
-import { DropdownComponent } from '../../componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../components/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../components/multi-select/multi-select.component';
 import { MultiLocationFilterService } from './multi-location-filter.service';
 
 @Component({

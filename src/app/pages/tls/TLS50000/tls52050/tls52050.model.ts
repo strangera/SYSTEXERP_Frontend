@@ -1,7 +1,7 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
-import { EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
-import { validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
-import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { EditColumn } from "@shared/components/table-edit/table-edit.model";
+import { validateMinNumber, validateRequired } from "@shared/components/table-edit/validate-field.model";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatAmount, formatDate } from "@others/component/table/table.model";
 
 export const enum MAMStatus {

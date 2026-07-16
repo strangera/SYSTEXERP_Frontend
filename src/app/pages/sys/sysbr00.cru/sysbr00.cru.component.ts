@@ -13,8 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 
 @Component({

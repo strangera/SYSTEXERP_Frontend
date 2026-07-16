@@ -1,6 +1,6 @@
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateMaxNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateMaxNumber, validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 
 // 換開狀態選項

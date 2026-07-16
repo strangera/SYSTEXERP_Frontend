@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, EventEmitter, Input, Outp
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { TLTTALENTActiveContractItem } from '../../../../service/utility/dropdown-api.model';
-import { DialogComponent } from '../../../../shared/componentkit/dialog/dialog.component';
-import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../../shared/componentkit/table-report/table-report.model';
+import { DialogComponent } from '../../../../shared/components/dialog/dialog.component';
+import { InputTextComponent } from '../../../../shared/components/input-text/input-text.component';
+import { TableReportComponent } from '../../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../../shared/components/table-report/table-report.model';
 
 /**
  * 專櫃編號選擇器（查詢頁 tls41010 / 新增編輯頁 tls41010-cru 共用）

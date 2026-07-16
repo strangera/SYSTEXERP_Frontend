@@ -12,11 +12,11 @@ import { environment } from 'src/environments/environment';
 import * as XLSX from 'xlsx-js-style';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 

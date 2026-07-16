@@ -9,14 +9,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
-import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { Column } from '../../../others/component/table/table.model';
 import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
 import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';

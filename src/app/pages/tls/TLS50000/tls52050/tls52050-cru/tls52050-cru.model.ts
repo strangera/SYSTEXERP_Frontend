@@ -1,5 +1,5 @@
-import { ColumnGroup, EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
-import { validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
+import { ColumnGroup, EditColumn } from "@shared/components/table-edit/table-edit.model";
+import { validateMinNumber, validateRequired } from "@shared/components/table-edit/validate-field.model";
 
 export const columns: EditColumn[] = [
   { field: 'PLU_MagNo', header: '商品管理編號' },

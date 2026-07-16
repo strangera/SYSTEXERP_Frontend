@@ -1,6 +1,6 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
-import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
 import { formatAmount, formatDate, formatDateTime } from "@others/component/table/table.model";
 import { formatTxnNo } from "@shared/models/system/query-form.model";
 // --- POS6118 聯信特店MIS LOG檔案 ---

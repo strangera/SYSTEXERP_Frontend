@@ -8,8 +8,8 @@ import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 //

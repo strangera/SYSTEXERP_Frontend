@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS2E100Service } from '@service/api/tls/tls2e100.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { MultiSelectComponent } from "@shared/components/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls2e100',

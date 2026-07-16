@@ -4,10 +4,10 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { APS30181, Tls55040GoodData, Tls55040GoodQueryBody, Tls55040Service } from '@service/api/tls/tls55040.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
 
 @UntilDestroy()
 @Component({

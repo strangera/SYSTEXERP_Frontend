@@ -7,7 +7,7 @@ import { SystemDataService } from '@service/system/system-data.service';
 import { FileExportService } from '@shared/service/file-export.service';
 import { finalize } from 'rxjs';
 import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
-import { ReportColumn } from '../componentkit/table-report/table-report.model';
+import { ReportColumn } from '../components/table-report/table-report.model';
 import { QueryStateService } from '../service/query-state.service';
 import { EXPORT_YN_FIELDS } from './export.constants';
 import { REPORT_TITLES } from './report-titles';

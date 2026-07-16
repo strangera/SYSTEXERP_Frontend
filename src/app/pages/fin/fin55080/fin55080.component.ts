@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin55080Service, QueryFIN55080Request, QueryFIN55080Response } from '@service/api/fin/fin55080.service'; // 假設路徑
 import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component'; // 假設路徑
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component'; // 假設路徑
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component'; // 假設路徑
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component'; // 假設路徑
+import { ButtonComponent } from '../../../shared/components/button/button.component'; // 假設路徑
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component'; // 假設路徑
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component'; // 假設路徑
 import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
 import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table.component';
 

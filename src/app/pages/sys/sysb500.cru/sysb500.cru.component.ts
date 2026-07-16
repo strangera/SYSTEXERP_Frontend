@@ -10,8 +10,8 @@ import { PanelModule } from 'primeng/panel';
 import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { Sysb500m } from '../../../shared/models/sys/sysb000.model';
 
 @Component({

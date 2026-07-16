@@ -8,9 +8,9 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { formatDate, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 

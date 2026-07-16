@@ -34,7 +34,7 @@
       "@interceptors/*": ["./src/app/interceptors/*"],
       "@service/*": ["./src/app/service/*"],
       "@shared/*": ["./src/app/shared/*"],
-      "@componentkit/*": ["./src/app/shared/componentkit/*"],
+      "@components/*": ["./src/app/shared/components/*"],
       "@utils/*": ["./src/app/utils/*"],
       "@others/*": ["./src/app/others/*"]
     }

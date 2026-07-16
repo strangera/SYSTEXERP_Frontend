@@ -16,7 +16,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ImageService } from '@service/utility/image.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
@@ -26,11 +26,11 @@ import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 interface MediaItem {
   url: string;

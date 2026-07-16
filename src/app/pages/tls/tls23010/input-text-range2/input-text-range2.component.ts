@@ -14,7 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
-import { InputTextService } from '../../../../shared/componentkit/input-text/input-text.service';
+import { InputTextService } from '../../../../shared/components/input-text/input-text.service';
 
 @Component({
   selector: 'app-input-text-range2',

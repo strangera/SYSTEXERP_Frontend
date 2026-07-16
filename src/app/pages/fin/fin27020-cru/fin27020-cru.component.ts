@@ -12,10 +12,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 //1.2.7.2 形成開票明細資料 CRU

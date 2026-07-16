@@ -1,4 +1,4 @@
-// ASS17020 fork of shared table-report-utility — sync with @shared/componentkit/table-report/table-report-utility.service.ts when needed
+// ASS17020 fork of shared table-report-utility — sync with @shared/components/table-report/table-report-utility.service.ts when needed
 import { Injectable } from '@angular/core';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
