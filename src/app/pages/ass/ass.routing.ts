@@ -45,25 +45,21 @@ export const assRoutes: Routes = [
   { path: 'ass13070cru', loadComponent: () => import('./ass13070-cru/ass13070-cru.component').then(m => m.ASS13070CRUComponent), data: { progNo: 'ASS13070' } },
   { path: 'ass13080', loadComponent: () => import('./ass13080/ass13080.component').then(m => m.ASS13080Component), data: { progNo: 'ASS13080' } }, // 資產變賣作業
   { path: 'ass13080cru', loadComponent: () => import('./ass13080-cru/ass13080-cru.component').then(m => m.ASS13080CRUComponent), data: { progNo: 'ASS13080' } },
-  { path: 'ass13090', loadComponent: () => import('./ass13090/ass13090.component').then(m => m.ASS13090Component),data: {progNo:'ASS13090'} }, // 資產攤提作業
-  { path: 'ass13090cru', loadComponent: () => import('./ass13090-cru/ass13090-cru.component').then(m => m.ASS13090CRUComponent),data: {progNo:'ASS13090'} },
+  { path: 'ass13090', loadComponent: () => import('./ass13090/ass13090.component').then(m => m.ASS13090Component), data: { progNo: 'ASS13090' } }, // 資產攤提作業
+  { path: 'ass13090cru', loadComponent: () => import('./ass13090-cru/ass13090-cru.component').then(m => m.ASS13090CRUComponent), data: { progNo: 'ASS13090' } },
   { path: 'ass13100', loadComponent: () => import('./ass13100/ass13100.component').then(m => m.ASS13100Component), data: { progNo: 'ASS13100' } }, // 資產清點作業
   { path: 'ass13100cru', loadComponent: () => import('./ass13100-cru/ass13100-cru.component').then(m => m.ASS13100CRUComponent), data: { progNo: 'ASS13100' } },
   { path: 'ass13110', loadComponent: () => import('./ass13110/ass13110.component').then(m => m.ASS13110Component), data: { progNo: 'ASS13110' } }, // 資產差異表
-  // { path: 'ass13120', loadComponent: () => import('./ass13120/ass13120.component').then(m => m.ASS13120Component),data: {progNo:'ASS13120'} }, // 折舊攤提作業
-  // { path: 'ass13120cru', loadComponent: () => import('./ass13120-cru/ass13120-cru.component').then(m => m.ASS13120CRUComponent),data: {progNo:'ASS13120'} },
+  { path: 'ass13120', loadComponent: () => import('./ass13120/ass13120.component').then(m => m.ASS13120Component), data: { progNo: 'ASS13120' } }, // 折舊攤提作業
   { path: 'ass14010', loadComponent: () => import('./ass14010/ass14010.component').then(m => m.ASS14010Component), data: { progNo: 'ASS14010' } }, // 進貨發票建檔作業
   { path: 'ass14010cru', loadComponent: () => import('./ass14010-cru/ass14010-cru.component').then(m => m.ASS14010CRUComponent), data: { progNo: 'ASS14010' } },
   // { path: 'ass14020', loadComponent: () => import('./ass14020/ass14020.component').then(m => m.ASS14020Component),data: {progNo:'ASS14020'} }, // 請款關帳作業
-  // { path: 'ass14020cru', loadComponent: () => import('./ass14020-cru/ass14020-cru.component').then(m => m.ASS14020CRUComponent),data: {progNo:'ASS14020'} },
   // { path: 'ass14030', loadComponent: () => import('./ass14030/ass14030.component').then(m => m.ASS14030Component),data: {progNo:'ASS14030'} }, // 傳票審核傳送作業
   // { path: 'ass14030cru', loadComponent: () => import('./ass14030-cru/ass14030-cru.component').then(m => m.ASS14030CRUComponent),data: {progNo:'ASS14030'} },
   // { path: 'ass14040', loadComponent: () => import('./ass14040/ass14040.component').then(m => m.ASS14040Component),data: {progNo:'ASS14040'} }, // 庫存成本月結作業
-  // { path: 'ass14040cru', loadComponent: () => import('./ass14040-cru/ass14040-cru.component').then(m => m.ASS14040CRUComponent),data: {progNo:'ASS14040'} },
   { path: 'ass15010', loadComponent: () => import('./ass15010/ass15010.component').then(m => m.ASS15010Component), data: { progNo: 'ASS15010' } }, // 財產標籤列印作業
-  // { path: 'ass15010cru', loadComponent: () => import('./ass15010-cru/ass15010-cru.component').then(m => m.ASS15010CRUComponent),data: {progNo:'ASS15010'} },
   { path: 'ass15020', loadComponent: () => import('./ass15020/ass15020.component').then(m => m.ASS15020Component), data: { progNo: 'ASS15020' } }, // 財產保管清冊
-  { path: 'ass15030', loadComponent: () => import('./ass15030/ass15030.component').then(m => m.ASS15030Component),data: {progNo:'ASS15030'} }, // 財產目錄
+  { path: 'ass15030', loadComponent: () => import('./ass15030/ass15030.component').then(m => m.ASS15030Component), data: { progNo: 'ASS15030' } }, // 財產目錄
   { path: 'ass15040', loadComponent: () => import('./ass15040/ass15040.component').then(m => m.ASS15040Component), data: { progNo: 'ASS15040' } }, // 財產目錄之會計科目報表
   { path: 'ass15070', loadComponent: () => import('./ass15070/ass15070.component').then(m => m.ASS15070Component), data: { progNo: 'ASS15070' } }, // 財產進貨清單
   { path: 'ass15050', loadComponent: () => import('./ass15050/ass15050.component').then(m => m.ASS15050Component), data: { progNo: 'ASS15050' } }, // 折舊攤提表
@@ -94,7 +90,7 @@ export const assRoutes: Routes = [
   { path: 'ass17050', loadComponent: () => import('./ass17050/ass17050.component').then(m => m.ASS17050Component), data: { progNo: 'ASS17050' } }, // 使用統計月報表
   { path: 'ass17060', loadComponent: () => import('./ass17060/ass17060.component').then(m => m.ASS17060Component), data: { progNo: 'ASS17060' } }, // 調撥明細表
   { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component), data: { progNo: 'ASS17070' } }, // 報廢明細表
-  { path: 'ass17080', loadComponent: () => import('./ass17080/ass17080.component').then(m => m.ASS17080Component),data: {progNo:'ASS17080'} }, // 耗材庫存查詢作業(含金額)
+  { path: 'ass17080', loadComponent: () => import('./ass17080/ass17080.component').then(m => m.ASS17080Component), data: { progNo: 'ASS17080' } }, // 耗材庫存查詢作業(含金額)
   { path: 'ass17090', loadComponent: () => import('./ass17090/ass17090.component').then(m => m.ASS17090Component), data: { progNo: 'ASS17090' } }, // 耗材庫存查詢作業
   { path: 'ass17100', loadComponent: () => import('./ass17100/ass17100.component').then(m => m.ASS17100Component), data: { progNo: 'ASS17100' } }, // 耗材進耗存報表
   { path: 'ass17110', loadComponent: () => import('./ass17110/ass17110.component').then(m => m.ASS17110Component), data: { progNo: 'ASS17110' } }, // 耗材進耗存之會計科目報表
