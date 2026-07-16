@@ -29,7 +29,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     '30': [1]
   };
   queryForm = this.formBuilder.nonNullable.group({
-    sam_yyymm: [new Date(), Validators.required],
+    COMM_YM: [new Date(), Validators.required],
     sam_termno: [1],
     COMM_MONEY_TYPE: ['30'],
     // 分頁欄位
@@ -83,12 +83,12 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       const pageSize = formValue.pageSize ?? 0;
       const pageIndex = (formValue.pageIndex ?? 1);
 
-      let sam_yyymm_string = '';
-      if (formValue.sam_yyymm) {
-        const date = new Date(formValue.sam_yyymm);
+      let comm_ym_string = '';
+      if (formValue.COMM_YM) {
+        const date = new Date(formValue.COMM_YM);
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        sam_yyymm_string = `${year}${month}`;
+        comm_ym_string = `${year}${month}`;
       }
 
       const params = {
@@ -97,7 +97,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
         OrderBy: formValue.OrderBy ?? '',
         Offset: Math.max(0, (pageIndex - 1) * pageSize),
         SortBy: formValue.SortBy ?? [],
-        sam_yyymm: sam_yyymm_string,
+        COMM_YM: comm_ym_string,
         money_type: formValue.COMM_MONEY_TYPE ?? null,
         sam_termno: formValue.sam_termno ?? null,
       };
@@ -114,19 +114,19 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
   // 覆寫新增/產生按鈕行為：直接呼叫 execTLS2F020
   override onCreate(): void {
     const formValue = this.queryForm.getRawValue();
-    // 轉換 sam_yyymm 為 yyyymm
-    let sam_yyymm_string = '';
-    if (formValue.sam_yyymm) {
-      const date = new Date(formValue.sam_yyymm);
+    // 轉換 COMM_YM 為 yyyymm
+    let comm_ym_string = '';
+    if (formValue.COMM_YM) {
+      const date = new Date(formValue.COMM_YM);
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      sam_yyymm_string = `${year}${month}`;
+      comm_ym_string = `${year}${month}`;
     }
 
     const sam_termno = formValue.sam_termno ?? null;
     const money_type = formValue.COMM_MONEY_TYPE ?? null;
-    if (!sam_yyymm_string) {
-      this.messageService.warnBubble('請輸入 結帳年月');
+    if (!comm_ym_string) {
+      this.messageService.warnBubble('請輸入 請款付款年月');
       return;
     }
     if (money_type == null) {
@@ -139,7 +139,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     }
 
     const params = {
-      sam_yyymm: sam_yyymm_string,
+      COMM_YM: comm_ym_string,
       money_type: money_type,
       sam_termno: sam_termno,
     };

@@ -425,7 +425,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'acc_no', header: '會計科目代號', visible: true, align: 'left' },
     { field: 'note_desc', header: '摘要', visible: true, align: 'left' },
     { field: 'sub_detail_no', header: '對象別編號', visible: true, align: 'left' },
-    { field: 'match_key', header: '對帳KEY值', visible: true, align: 'left' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
+    { field: 'PTA', header: '立沖代號', visible: true, align: 'left' },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
@@ -450,7 +451,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left' },
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'SubDetailNo', header: '對象別編號', visible: true, align: 'left' },
-    { field: 'PTA', header: '對帳KEY值', visible: true, align: 'left' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
+    { field: 'PTA', header: '立沖代號', visible: true, align: 'left' },
   ];
 
   public readonly aps2002_CRelatedColumns: ReportColumn[] = [
@@ -789,6 +791,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (AccDC === 'C') return (rowData.AccAmtD ?? 0) <= 0;
           return true;
         },
+        validate: [
+          (value: unknown, rowData: FIN53010DetailTable) => {
+            const { ABAT_YN } = this.getAccAbatInfo(rowData?.AccNo);
+            if (ABAT_YN !== 'Y') return { isValid: true, errorMessage: [] };
+            // auto-code 列由 rebuildAllAutoPta 自動補 PTA，不需使用者手動填
+            if (this.isAutoCodeRow(rowData)) return { isValid: true, errorMessage: [] };
+            const hasAmt = (rowData?.AccAmtD ?? 0) > 0 || (rowData?.AccAmtC ?? 0) > 0;
+            if (hasAmt && !value) return { isValid: false, errorMessage: ['立沖科目必須填入立沖代號'] };
+            return { isValid: true, errorMessage: [] };
+          },
+        ],
       },
       {
         field: 'ReflNo',
@@ -837,6 +850,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true, textAlign: 'left' },
     { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', type: 'input', disabled: () => true, textAlign: 'left' },
+    { field: 'PTA', header: '立沖代號', type: 'input', disabled: () => true, textAlign: 'left' },
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
@@ -1215,10 +1230,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this._previousActiveSteps = [...ordered];
   }, { allowSignalWrites: true });
 
-  /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表（僅新增模式） */
+  /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表 */
   private readonly stepRowsSyncEffect = effect(onCleanup => {
-    if (!this.isFormCreateable) return;
-
     const table = this.tableData();
     const vouRaw = this.vouDateForStepSync();
     const vouDate = vouRaw instanceof Date ? vouRaw : (vouRaw ? new Date(vouRaw) : new Date());
@@ -1258,7 +1271,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const ar: FIN53010StepAR[] = [];
         const bk: FIN53010StepBankDeposit[] = [];
 
-        for (const row of table) {
+        // 新增模式掃全部列；編輯模式只掃 _dataStatus==='new' 的新增列
+        const rowsToSync = this.isFormCreateable
+          ? table
+          : table.filter(r => (r as unknown as Record<string, unknown>)['_dataStatus'] === 'new');
+
+        for (const row of rowsToSync) {
           const accNo = String(row.AccNo ?? '');
           const vt = accVt.get(accNo);
           if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
@@ -1267,8 +1285,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const noteDesc = this.resolveNoteDescForStep(row);
 
           if (vt === '3') {
+            // 應付帳款：只有 auto-code 方向（貸方建立 AP 關係）才產生 step row
+            // 借方為沖銷方向，沖銷既有 AP 記錄，不新增
+            if (!this.isAutoCodeRow(row)) continue;
             ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
           } else if (vt === '4') {
+            // 應收帳款：只有 auto-code 方向（借方建立 AR 關係）才產生 step row
+            // 貸方為沖銷方向，沖銷既有 AR 記錄，不新增
+            if (!this.isAutoCodeRow(row)) continue;
             const arVenOpt = getVenOpt(String(row.DetailNo ?? ''));
             const payCondDay = arVenOpt?.['VEN_PayConditionDay'] as number | null | undefined;
             let ptaDate: Date | undefined;
@@ -1298,13 +1322,36 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
         }
 
-        const apWithSer = ap.map((r, i) => ({ ...r, SerNo: i + 1 }));
-        const arWithSer = ar.map((r, i) => ({ ...r, SerNo: i + 1 }));
-        const bkWithSer = bk.map((r, i) => ({ ...r, SerNo: i + 1 }));
-        this.stepAPRows.set(apWithSer);
-        this.stepARRows.set(arWithSer);
-        this.stepBankRows.set(bkWithSer);
-        this.autoFillStepApExpectedPayDate(apWithSer, onCleanup);
+        if (this.isFormCreateable) {
+          // 新增模式：全量取代
+          const apWithSer = ap.map((r, i) => ({ ...r, SerNo: i + 1 }));
+          const arWithSer = ar.map((r, i) => ({ ...r, SerNo: i + 1 }));
+          const bkWithSer = bk.map((r, i) => ({ ...r, SerNo: i + 1 }));
+          this.stepAPRows.set(apWithSer);
+          this.stepARRows.set(arWithSer);
+          this.stepBankRows.set(bkWithSer);
+          this.autoFillStepApExpectedPayDate(apWithSer, onCleanup);
+        } else {
+          // 編輯模式：保留原有 DB 列，將新明細列產生的 step rows 重新合併
+          // (以 _dataStatus==='new' 標記的 step row 為上一次 effect 產生的，先移除再重建)
+          const mergeStepRows = <T>(existing: T[], generated: T[]): T[] => {
+            const originals = existing.filter(r => (r as Record<string, unknown>)['_dataStatus'] !== 'new');
+            const withStatus = generated.map(r => ({ ...r, _dataStatus: 'new' as const }));
+            return [...originals, ...withStatus].map((r, i) => ({ ...r, SerNo: i + 1 }));
+          };
+
+          if (ap.length > 0 || this.stepAPRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
+            const merged = mergeStepRows(this.stepAPRows(), ap);
+            this.stepAPRows.set(merged);
+            this.autoFillStepApExpectedPayDate(merged, onCleanup);
+          }
+          if (ar.length > 0 || this.stepARRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
+            this.stepARRows.set(mergeStepRows(this.stepARRows(), ar));
+          }
+          if (bk.length > 0 || this.stepBankRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
+            this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
+          }
+        }
       } finally {
         this.stepRowsSyncBusy.set(!1);
       }
@@ -2303,6 +2350,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         return;
       }
 
+      // 立沖代號防呆：ABAT_YN='Y' 且非 auto-code 列 且有金額，PTA 不可空白
+      const ptaInvalidRows = this.tableData().filter(row => {
+        const { ABAT_YN } = this.getAccAbatInfo(row.AccNo);
+        if (ABAT_YN !== 'Y') return false;
+        if (this.isAutoCodeRow(row)) return false;
+        const hasAmt = (row.AccAmtD ?? 0) > 0 || (row.AccAmtC ?? 0) > 0;
+        return hasAmt && !row.PTA;
+      });
+      if (ptaInvalidRows.length > 0) {
+        const serNos = ptaInvalidRows.map(r => r.SerNo).join('、');
+        this.messageService.errorBubble(`第 ${serNos} 列為立沖科目，立沖代號必填`);
+        this.loading = false;
+        return;
+      }
+
       // 將 VoucherType 的 label 轉換回 value
       const voucherTypeLabel = d.VoucherType;
       const voucherTypeValue = this.service.voucherTypeOptions().find(opt => opt.label === voucherTypeLabel)?.value
@@ -2845,11 +2907,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const vouNo = this.dataForm.getRawValue().VouNo?.trim() ?? '';
     if (!vouNo || vouNo === '自動給號') return;
 
+    const autoPrefix = `${vouNo}-`;
     let counter = 1;
     this.tableData.update(rows =>
       rows.map(row => {
         if (this.isAutoCodeRow(row)) {
-          return { ...row, PTA: `${vouNo}-${counter++}` };
+          return { ...row, PTA: `${autoPrefix}${counter++}` };
+        }
+        // 從同方向（自動編碼）切換到反方向時，清掉舊的自動 PTA，避免 dialog 顯示殘值
+        const { ABAT_YN } = this.getAccAbatInfo(row.AccNo);
+        if (ABAT_YN === 'Y' && row.PTA?.startsWith(autoPrefix)) {
+          return { ...row, PTA: undefined };
         }
         return row;
       })

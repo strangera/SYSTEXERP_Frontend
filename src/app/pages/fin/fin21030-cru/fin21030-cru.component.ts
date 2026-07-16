@@ -13,14 +13,12 @@ import { CalendarRangeComponent } from '../../../shared/components/calendar-rang
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin21030-cru',
   templateUrl: './fin21030-cru.component.html',
   standalone: true,
   imports: [
-    MultiSelectComponent,
     MenubarComponent,
     ButtonComponent,
     PanelModule,

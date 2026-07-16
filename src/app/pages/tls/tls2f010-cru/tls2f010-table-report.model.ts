@@ -95,3 +95,13 @@ export const expandAnimation =
       animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
     ])
   ])
+// formatPercentage: 格式化為百分比，可指定小數點位數
+export const formatPercentage = (value: number | string | null | undefined, fractionDigits = 0): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return '';
+  }
+  // 將輸入值轉為數字，並四捨五入到指定小數點位數
+  const num = Number(value);
+  const roundedNum = num.toFixed(fractionDigits);
+  return `${roundedNum}%`;
+};
