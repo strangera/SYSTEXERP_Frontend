@@ -9,7 +9,7 @@ import {
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15110Service } from '@service/api/fin/fin15110.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
@@ -19,7 +19,7 @@ import {
   createPaginationConfig,
   formatAmount,
   formatDate,
-} from '@shared/componentkit/table/table.model';
+} from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';

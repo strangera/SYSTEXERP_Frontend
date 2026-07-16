@@ -21,7 +21,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 

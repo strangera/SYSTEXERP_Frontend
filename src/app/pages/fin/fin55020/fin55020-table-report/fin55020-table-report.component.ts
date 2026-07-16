@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
 import { MultiSelectModule } from 'primeng/multiselect';

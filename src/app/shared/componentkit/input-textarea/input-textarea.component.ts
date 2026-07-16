@@ -1,9 +1,10 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
 @Component({
   selector: 'app-input-textarea',
@@ -11,11 +12,14 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   styleUrl: './input-textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent, EnterToTabDirective],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputTextareaComponent extends BasicKitComponent implements OnInit {
-  @Input() override label = '';
-  @Input() override controlName = '';
+export class InputTextareaComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() customPlaceholder: string | undefined;
@@ -25,9 +29,9 @@ export class InputTextareaComponent extends BasicKitComponent implements OnInit 
 
   ngOnInit(): void {
     if (this.customPlaceholder) {
-      this.placeholder = this.customPlaceholder;
+      this.fieldState.placeholder = this.customPlaceholder;
     }
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
   }
 
   // 新增：取得 textarea 的 CSS 類別

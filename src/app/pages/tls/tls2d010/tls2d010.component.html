@@ -69,13 +69,12 @@
 </div>
 
 <div class="card">
-  <app-table [showDelete]="true" [data]="data" [columns]="columns" (edit)="onEdit(setCounterType($event))"
-    (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
-    [showExcelImport]="false" [showCustomExcelImport]="true" (importExcel)="openImportDialog()" [showExcel]="true"
+  <app-table-report tableKey="TLS2D010" [showDelete]="true" [data]="data" [columns]="columns"
+    (edit)="onEdit(setCounterType($event))" (detail)="onDetail(setCounterType($event))" [showCheckBox]="true"
+    dataKey="id" [totalRecords]="totalRecords" [showManage]="true" [loading]="loading" [showExcelImport]="false"
+    [showCustomExcelImport]="true" (importExcel)="openImportDialog()" [showExcel]="true"
     [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()" (delete)="onDelete($event)">
-  </app-table>
+  </app-table-report>
 </div>
 
 <app-dialog [visible]="dialogVisible" header="匯入前的資料刪除" (visibleChange)="onDialogClose($event)" [showFooter]="false">

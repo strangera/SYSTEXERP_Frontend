@@ -18,7 +18,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { AddButton, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AddButton, formatAmount, formatDate, formatDateTime } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';

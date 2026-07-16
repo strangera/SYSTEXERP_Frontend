@@ -22,7 +22,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls26050',

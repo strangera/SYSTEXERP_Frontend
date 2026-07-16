@@ -8,7 +8,7 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';

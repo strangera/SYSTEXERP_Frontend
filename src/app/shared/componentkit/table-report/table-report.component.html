@@ -5,7 +5,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="effectiveLazy" [virtualScroll]="data.length >= 30" [virtualScrollDelay]="0"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="effectiveLazy" [virtualScroll]="virtualScrollEnabled" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,

@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column } from '../../../others/component/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 

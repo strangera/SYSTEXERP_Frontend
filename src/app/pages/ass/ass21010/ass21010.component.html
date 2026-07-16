@@ -61,23 +61,21 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true"
+    <app-table-report [showCheckBox]="true"
                [data]="tableData()"
                [dataKey]="'ID'"
                [tableKey]="'ASS21010_Data'"
-               [apiUrl]="'QueryASS21010'"
                [columns]="columns"
                [totalRecords]="totalRecords()"
-               [multiSortMeta]="this.qf().SortBy.value!"
                [loading]="tableLoading()"
                [customReport]="true"
                (exportEvent)="onExport($event)"
                [exportExcelLoading]="service.exportLoading()"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
+               [lastQueryBody]="lastQueryBody"
+               [queryFunction]="queryFn"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"
-               [isRowSelectable]="isRowSelectable"></app-table>
+               [isRowSelectable]="isRowSelectable"></app-table-report>
   </div>
 </div>

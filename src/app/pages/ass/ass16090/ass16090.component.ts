@@ -26,7 +26,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';

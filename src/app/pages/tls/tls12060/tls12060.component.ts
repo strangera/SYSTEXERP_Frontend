@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -14,8 +14,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface response10260 {
@@ -49,7 +50,7 @@ export interface POS2013 {
   selector: 'app-tls12060',
   templateUrl: './tls12060.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableReportComponent, TranslateModule]
 })
 export class TLS12060Component extends BasicQueryPageComponent<response10260> implements OnInit {
   // 查詢
@@ -75,10 +76,13 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     tlt_building: [[],], // 館別 (SYS3800)
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'contact_USR_No', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_type_Option: option[] = [
@@ -102,7 +106,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
   tlt_building_Option: apiOption[] = []; // 館別
 
   data: response10260[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃', visible: true },
     { field: 'contact_person', header: '洽談者', visible: true },
@@ -122,7 +126,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
 
   // ----------------------------------------------------------------
   constructor(
-    private tls12060Service: Tls12060Service,
+    public readonly tls12060Service: Tls12060Service,
     private dropDownListService: DropDownListService) {
     super();
   }
@@ -139,6 +143,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.tls12060Service.queryTLS12060(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             console.log('Result', response.data);
             this.totalRecords = response.TotalCount || response.Data.length;

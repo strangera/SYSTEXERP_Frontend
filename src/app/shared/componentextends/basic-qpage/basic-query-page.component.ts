@@ -10,7 +10,7 @@ import { CurrentPageService } from '../../../core/layout/app.menulist/current-pa
 import { LoadingService } from '../../../core/services/loading.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
-import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { LazyLoadEvent } from '@others/component/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';

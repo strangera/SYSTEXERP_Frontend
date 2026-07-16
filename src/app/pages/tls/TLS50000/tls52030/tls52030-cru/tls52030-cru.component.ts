@@ -18,8 +18,8 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@shared/componentkit/table/table.model';
-import { validateMinNumber } from '@shared/componentkit/table/validate-field.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@others/component/table/table.model';
+import { validateMinNumber } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { POStatus } from '../../tls52030/tls52030.component';

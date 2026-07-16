@@ -8,7 +8,7 @@ import { Cpm12060Service, detail12060Data } from '@service/api/cpm/cpm12060.serv
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDateTime } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { CPM11020Data } from '../../../service/api/cpm/cpm11020.service';

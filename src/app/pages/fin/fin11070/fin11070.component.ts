@@ -11,7 +11,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({

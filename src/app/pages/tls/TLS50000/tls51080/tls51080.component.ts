@@ -11,7 +11,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 

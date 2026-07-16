@@ -15,7 +15,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 

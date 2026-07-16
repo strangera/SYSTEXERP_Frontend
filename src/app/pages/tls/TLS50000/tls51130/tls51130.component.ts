@@ -10,7 +10,7 @@ import { TLS51130Service } from '@service/api/tls/tls51130.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 
 // UI
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';

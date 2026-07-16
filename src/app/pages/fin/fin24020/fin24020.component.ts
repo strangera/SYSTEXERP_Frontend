@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatYN } from '@shared/componentkit/table/table.model';
+import { formatYN } from '@others/component/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';

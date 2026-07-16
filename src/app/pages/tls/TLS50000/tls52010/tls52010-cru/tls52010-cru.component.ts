@@ -24,7 +24,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount, formatAmountRoundToInteger } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatAmountRoundToInteger } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, map, of } from 'rxjs';
 

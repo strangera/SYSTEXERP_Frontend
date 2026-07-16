@@ -1,6 +1,7 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Column, LazyLoadEvent } from '@others/component/table/table.model';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -8,8 +9,8 @@ import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table'; // 引入原生的 TableModule
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { Column, LazyLoadEvent } from '../table/table.model';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
+import { focusNextFocusable } from '@shared/directive/enter-to-tab.util';
 
 export interface FieldsConfig {
   field: string;
@@ -28,9 +29,12 @@ export interface FieldsConfig {
     AutoCompleteModule, InputTextModule, OverlayPanelModule, ButtonModule,
     TableModule, // 替換為原生的 TableModule
     ControlMessagesComponent
-  ]
+  ],
+  hostDirectives: [FieldStateDirective],
 })
-export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class DropdownTableComponent implements OnInit, OnDestroy {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @Input() control = new FormControl();
   @Input() submitted = false;
 
@@ -41,7 +45,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() templateLabel = '';
   @Input() fieldsConfig: FieldsConfig[] = [];
   @Output() inputValueChanged = new EventEmitter<Record<string, string>>();
-  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 handleEnterKey 跳到下一欄位
+  // 選填：輸入框按下 Enter 時額外觸發（例如條碼槍掃描），預設仍會執行 focusNextFocusable 跳到下一欄位
   @Output() enterKey = new EventEmitter<Event>();
 
   // OverlayPanel 與 Table 基礎屬性
@@ -70,9 +74,10 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private readonly filterSubject$ = new Subject<string>();
   private initialLoadDone = false;
   private suppressNextFocus = false;
+  protected readonly focusNextFocusable = focusNextFocusable;
 
   ngOnInit(): void {
-    this.updateControlState(this.control);
+    this.fieldState.updateControlState(this.control);
 
     // 處理 AutoComplete 鍵盤打字防抖
     this.filterSubject$.pipe(

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN15040Data, FIN15040PrintRequest, FIN15040QueryRequest, FIN15040Service } from '@service/api/fin/fin15040.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -21,7 +21,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 export interface Option {

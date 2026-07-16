@@ -15,8 +15,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { AddButton, Column, createPaginationConfig } from '@others/component/table/table.model';
 
 // Shared Services
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';

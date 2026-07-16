@@ -4,7 +4,7 @@
  */
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ContractInfo } from '../../../../../core/models';
 

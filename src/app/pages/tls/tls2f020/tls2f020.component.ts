@@ -8,7 +8,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

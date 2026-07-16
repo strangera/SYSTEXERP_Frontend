@@ -16,7 +16,7 @@ import { FileUploadComponent } from '@shared/componentkit/file-upload/file-uploa
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';

@@ -10,12 +10,11 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import {
-  Column,
-  createPaginationConfig,
   formatDateTime,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls46010',
@@ -29,7 +28,7 @@ import {
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -42,17 +41,18 @@ export class TLS46010Component
     SYS_SrvNo: ['', [Validators.maxLength(8)]], // 主機編號
     SYS_SrvStatus: ['', [Validators.maxLength(2)]], // 主機狀態 A=啟用 C=停用 預設值為A
     SYS_SrvIP: ['', [Validators.maxLength(40)]], // 主機IP
-    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
-    pageSize: [30],
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'id', order: 1 }]],
   });
+  lastQueryBody: any;
   totalRecords = 0;
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // 表格
   // ----------------------------------------------------------------
   data: Pos10015[] = [];
   selectedItems: Pos10015[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'SYS_StoreNo', header: '門市店號', visible: true },
     { field: 'SYS_SrvNo', header: '主機編號', visible: true },
     { field: 'SYS_SrvIP', header: '主機IP', visible: true },
@@ -112,7 +112,7 @@ export class TLS46010Component
     { no: 'N', name: '否' }
   ];
 
-  constructor(private tls46010Service: Tls46010Service) {
+  constructor(public readonly tls46010Service: Tls46010Service) {
     super();
   }
 
@@ -126,6 +126,7 @@ export class TLS46010Component
         next: (response) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
+            this.lastQueryBody = frm.value;
             this.data = response.Data || [];
             console.log(this.data);
 

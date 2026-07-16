@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   Input,
@@ -22,7 +23,7 @@ import {
 
 // PrimeNG & Shared Components
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
@@ -106,12 +107,16 @@ import { InputTextModule } from 'primeng/inputtext';
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [FieldStateDirective],
 })
-export class YearMonthComponent extends BasicKitComponent implements OnInit, OnChanges {
-  // --- 修復繼承錯誤的區域 ---
-  // 因為父類別定義為 string，所以子類別必須也是 string，不能改用 input() Signal
-  @Input() override controlName = '';
-  @Input() override label = '交易年月';
+export class YearMonthComponent implements OnInit, OnChanges {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+  protected readonly cdr = inject(ChangeDetectorRef);
+  protected readonly destroyRef = inject(DestroyRef);
+
+  // 因為要跟其他 Signal-based Input 並存，這兩個保留為一般 @Input()
+  @Input() controlName = '';
+  @Input() label = '交易年月';
 
   // --- 其他屬性則使用 Angular 18 的 Signal ---
   readonly submitted = input<boolean>(false);
@@ -123,9 +128,6 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
 
   // --- Outputs ---
   readonly valueChanges = output<any>();
-
-  // --- Internal State ---
-  private readonly destroyRef = inject(DestroyRef);
 
   yearControl = new FormControl<Date | string | null>(null);
   monthControl = new FormControl<string | null>(null);
@@ -150,8 +152,8 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   }
 
   ngOnInit(): void {
-    // 呼叫父類別方法，傳入 Signal 內的實際 FormControl
-    this.initControl(this.control());
+    // 傳入 Signal 內的實際 FormControl
+    this.fieldState.initControl(this.control(), this.controlName, this.label);
 
     // 初始化子控件值
     this.updateChildControlsFromParent(this.control().value);
@@ -182,7 +184,6 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // BasicKitComponent 的 cdr 是注入的，可以直接使用
     this.cdr.markForCheck();
     if (changes['control']) {
       this.updateChildControlsFromParent(this.control().value);

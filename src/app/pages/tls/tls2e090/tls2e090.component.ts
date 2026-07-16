@@ -13,7 +13,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ColumnGroup } from '@shared/componentkit/table/table.model';
+import { ColumnGroup } from '@others/component/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

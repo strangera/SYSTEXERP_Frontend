@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
-import { reportType, TableTypes } from '@shared/componentkit/table/table.model';
+import { reportType, TableTypes } from '@others/component/table/table.model';
 import { SortMeta } from 'primeng/api';
 
 export interface ReportColumn {

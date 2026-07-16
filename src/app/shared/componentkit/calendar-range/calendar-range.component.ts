@@ -1,10 +1,11 @@
 import { NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
+import { FormLabelService } from '@shared/service/form-label.service';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range.model';
 
@@ -13,9 +14,14 @@ import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-r
   templateUrl: './calendar-range.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, CalendarComponent, OverlayPanelModule, SelectButtonModule]
+  imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, CalendarComponent, OverlayPanelModule, SelectButtonModule],
+  hostDirectives: [FieldStateDirective],
 })
-export class CalendarRangeComponent extends BasicKitComponent implements OnInit {
+export class CalendarRangeComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly formLabelService = inject(FormLabelService);
+
   @ViewChild('op') op: OverlayPanel | undefined;
   // 快速選擇相關資料
   timeUnitOptions = timeUnitOptions;
@@ -24,7 +30,8 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   filteredTimeRangeOptions: TimeRangeOption[] = [];
   timeRange!: TimeRangeOption | null;
   // 基本設置
-  @Input() override label = ''; // 標籤
+  @Input() label = ''; // 標籤
+  @Input() controlName = '';
   @Input() startLabel = ''; // 起始日期標籤
   @Input() endLabel = ''; // 結束日期標籤
   @Input() descLabel = '(起迄)'; // 標籤說明
@@ -61,8 +68,8 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   };
   ngOnInit() {
     const config = this.calendarConfig[this.calendarType];
-    this.placeholder = config.placeholder;
-    this.placeholder2 = config.placeholder;
+    this.fieldState.placeholder = config.placeholder;
+    this.fieldState.placeholder2 = config.placeholder;
     this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
     if (this.formLabelService) {
       if (this.label) {
@@ -80,10 +87,10 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
         }
       }
     }
-    this.initControl(this.startControl);
-    this.initControl(this.endControl);
-    this.checkRequiredValidator(this.startControl, 0);
-    this.checkRequiredValidator(this.endControl, 1);
+    this.fieldState.initControl(this.startControl);
+    this.fieldState.initControl(this.endControl);
+    this.fieldState.checkRequiredValidator(this.startControl, 0);
+    this.fieldState.checkRequiredValidator(this.endControl, 1);
     this.initQuickSelectUnit();
     this.endControl.valueChanges.subscribe(() => {
       this.validateRange();

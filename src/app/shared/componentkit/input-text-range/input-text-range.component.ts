@@ -1,9 +1,9 @@
 import { NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputTextModule } from 'primeng/inputtext';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputTextComponent } from '../input-text/input-text.component';
 
 @Component({
@@ -19,15 +19,18 @@ import { InputTextComponent } from '../input-text/input-text.component';
     ReactiveFormsModule,
     InputTextComponent,
     NgStyle
-  ]
+  ],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputTextRangeComponent extends BasicKitComponent implements OnInit {
+export class InputTextRangeComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   // 必填欄位
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() startControlName = '';
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl
@@ -40,8 +43,8 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
   @Output() endChange = new EventEmitter<string>();
 
   ngOnInit(): void {
-    this.checkRequiredValidator(this.startControl, 0);
-    this.checkRequiredValidator(this.endControl, 1);
+    this.fieldState.checkRequiredValidator(this.startControl, 0);
+    this.fieldState.checkRequiredValidator(this.endControl, 1);
   }
 
   onStartInputChange(event: string) {

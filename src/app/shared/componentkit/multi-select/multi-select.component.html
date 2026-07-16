@@ -1,6 +1,6 @@
 <label [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
 </label>
 <ng-container *ngIf="!readonly; else readonlyMode">
   <p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
@@ -11,8 +11,7 @@
     [maxSelectedLabels]="maxSelectedLabels" [virtualScroll]="options.length > 10" [virtualScrollItemSize]="40"
     [scrollHeight]="'250px'"
     [dataKey]="dataKey" [filter]="filter" [loading]="loading" [showClear]="showClear" [display]="display"
-    [styleClass]="styleClass" (onChange)="onValueChange($event)" (keydown.enter)="handleEnterKey($event)"
-    (keydown.enter.capture)="handleEnterKey($event)">
+    [styleClass]="styleClass" (onChange)="onValueChange($event)" appEnterToTab>
     <!--  簡潔的分組標題模板 -->
     <ng-template let-group pTemplate="group" *ngIf="group">
       <div class="multiSelect-group-header">

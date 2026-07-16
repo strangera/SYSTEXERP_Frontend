@@ -3,7 +3,7 @@
  * 委派給共用 V2ConditionTableConfigService
  */
 import { Injectable } from '@angular/core';
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { V2ConditionTableConfigService } from '@pages/tls/shared/services/v2-condition-table-config.service';
 import { CommissionType, CommissionTypeLabels } from '../../core/constants';
 

@@ -16,7 +16,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

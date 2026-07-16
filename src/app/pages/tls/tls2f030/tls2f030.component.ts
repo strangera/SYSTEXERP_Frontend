@@ -15,8 +15,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatAmount, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, formatAmount, formatYYYYMM } from '../../../others/component/table/table.model';
 import { FileExportService } from '../../../shared/service/file-export.service';
 
 // 2.2.15.3 專櫃進項發票未開立查詢作業
@@ -139,8 +139,8 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data
   private buildPayload(rawValue?: ReturnType<typeof this.queryForm.getRawValue>): QueryTLS2F030Request {
     const raw = rawValue ?? this.queryForm.getRawValue();
     return {
-      PageSize: raw.pageSize ?? 0,
-      PageIndex: raw.pageIndex ?? 1,
+      pageSize: raw.pageSize ?? 0,
+      pageIndex: raw.pageIndex ?? 1,
       SortBy: raw.SortBy ?? [{ field: 'tlt_no', order: 1 }],
       sam_yyymm: this.formatYearMonth(raw.sam_yyymm),
       money_type: raw.money_type,

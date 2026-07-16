@@ -21,7 +21,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { AddButton, formatYN, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({

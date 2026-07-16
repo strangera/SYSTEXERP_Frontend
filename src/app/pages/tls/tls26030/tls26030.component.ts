@@ -19,7 +19,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { createPaginationConfig, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatToSixDigits } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls26030',

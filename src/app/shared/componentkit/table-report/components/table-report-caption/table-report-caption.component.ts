@@ -218,27 +218,27 @@ export class TableReportCaptionComponent implements OnChanges {
     // 這樣就不會在每次 data 變動時都重置 filter 狀態
     if (changes['columns'] && this.columns && this.columns.length) {
       // 恢復歷史紀錄，如果沒有就使用預設值
-      setTimeout(() => {
-        if (!this.isColumnsInitialized) {
-          const storedFilter = this.queryStateService.getQueryStateValue(this.tableKey + 'Filter');
-          if (storedFilter) {
-            this.columns = storedFilter;
-            const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
-            this.selectedColumns = validFilteredColumns;
-            this.selectedColumnsEvent.emit(this.selectedColumns);
-            this.columnsEvent.emit(this.columns);
-          } else {
-            this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
-            this.selectedColumnsEvent.emit(this.selectedColumns);
-            this.columnsEvent.emit(this.columns);
-          }
-          this.isColumnsInitialized = true;
+      // queryStateService 為同步記憶體服務，故此處同步執行；先前用 setTimeout(…,300) 延遲會讓表格首次渲染時 columns 為空、
+      // 隔了 300ms 才補上，在 app-dialog 開窗等場景會被誤認為「打開看不到資料，要點一下才出現」
+      if (!this.isColumnsInitialized) {
+        const storedFilter = this.queryStateService.getQueryStateValue(this.tableKey + 'Filter');
+        if (storedFilter) {
+          this.columns = storedFilter;
+          const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
+          this.selectedColumns = validFilteredColumns;
+          this.selectedColumnsEvent.emit(this.selectedColumns);
+          this.columnsEvent.emit(this.columns);
         } else {
           this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
           this.selectedColumnsEvent.emit(this.selectedColumns);
           this.columnsEvent.emit(this.columns);
         }
-      }, 300);
+        this.isColumnsInitialized = true;
+      } else {
+        this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+        this.selectedColumnsEvent.emit(this.selectedColumns);
+        this.columnsEvent.emit(this.columns);
+      }
     }
   }
   // 全收合的邏輯

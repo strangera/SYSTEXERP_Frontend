@@ -11,8 +11,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -37,7 +37,7 @@ interface CategoryItem {
   selector: 'app-sysb920',
   templateUrl: './sysb920.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableReportComponent, TranslateModule]
 })
 // 小分類維護作業
 export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
@@ -54,12 +54,14 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_class: [[] as string[][]],// 中分類代碼
     bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    ...createPaginationConfig([{ field: 'bus_sclass', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'bus_sclass', order: 1 }]],
   });
 
   data: CategoryItem[] = [];
   filteredData: CategoryItem[] = [...this.data];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'bus_sclass', header: '小分類代碼', visible: true },
     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
     { field: 'bus_type', header: '所屬大分類代碼', visible: true },
@@ -72,13 +74,14 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   // ----------------------------------------------------------------
   industryTypeOptions: any[] = [];
   productTypeOptions: any[] = [];
-  totalRecords: number = 0;
+  lastQueryBody: any;
+  totalRecords = 0;
   selectedItems: CategoryItem[] = [];
 
   constructor(
-    private Sysb800DropdownService: Sysb800DropdownService,
-    private Sysb900DropdownService: Sysb900DropdownService,
-    private apiService: Bas1000Service,
+    private readonly Sysb800DropdownService: Sysb800DropdownService,
+    private readonly Sysb900DropdownService: Sysb900DropdownService,
+    public readonly apiService: Bas1000Service,
   ) {
     super();
   }
@@ -141,6 +144,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       this.apiService.querySYSB920(queryParams).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = queryParams;
             this.data = response.Data || [];
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
@@ -208,7 +212,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       next: (response: MiddleCategoryItem[]) => {
         // 將中分類依據大分類分組
         // 修正: 明確定義 groupedOptions 中的 value 型別
-        const groupedOptions: { [key: string]: { value: string[], label: string }[] } = {};
+        const groupedOptions: Record<string, { value: string[], label: string }[]> = {};
 
         response.forEach(item => {
           // 取得大分類代碼和名稱

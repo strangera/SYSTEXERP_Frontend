@@ -8,7 +8,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { formatAmount, formatDate, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';

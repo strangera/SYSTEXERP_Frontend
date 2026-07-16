@@ -33,7 +33,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { ColumnGroup } from '../../../shared/componentkit/table/table.model';
+import { ColumnGroup } from '../../../others/component/table/table.model';
 
 //1.3.5 帳齡分析表(FIN34040)
 @Component({

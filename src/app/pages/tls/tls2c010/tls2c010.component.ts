@@ -5,7 +5,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -17,7 +17,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls2c010',

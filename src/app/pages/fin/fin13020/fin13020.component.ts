@@ -7,7 +7,7 @@ import { AccordionModule } from 'primeng/accordion';
 
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // UI
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';

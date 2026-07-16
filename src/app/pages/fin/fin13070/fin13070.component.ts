@@ -12,14 +12,15 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, formatToSixDigits } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-fin13070',
   templateUrl: './fin13070.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextRangeComponent, ButtonComponent, TableReportComponent, TranslateModule, MultiSelectComponent]
 })
 export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -27,14 +28,17 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
     ECR_NoList: [[]], // 收銀機號清單 (多選)
     TXN_GUINo_Start: ['', [Validators.maxLength(10)]], // 發票號碼(起)
     TXN_GUINo_End: ['', [Validators.maxLength(10)]], // 發票號碼(訖)
-    ...createPaginationConfig([]) // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[]],
   });
 
   totalRecords = 0;
+  lastQueryBody: any;
   data: FIN13070Data[] = [];
   selectedItems: FIN13070Data[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'ID', header: 'ID', visible: false },
     { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -53,7 +57,7 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
   invoiceStatusOptions: any[] = [];
 
   constructor(
-    private fin13070Service: FIN13070Service,
+    public readonly fin13070Service: FIN13070Service,
     private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
@@ -69,6 +73,7 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
       this.fin13070Service.queryFIN13070(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
+          this.lastQueryBody = frm.value;
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);

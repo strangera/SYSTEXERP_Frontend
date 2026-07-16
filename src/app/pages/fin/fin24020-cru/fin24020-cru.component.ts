@@ -16,7 +16,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDateDuplicate, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';

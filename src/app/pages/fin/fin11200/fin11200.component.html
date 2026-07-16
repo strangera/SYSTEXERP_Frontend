@@ -1,78 +1,40 @@
 <div class="card fin11200">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      label="配號"
-      (click)="onAllocationOfNumber()"
-      icon="pi pi-receipt"
-      [disabled]="!hasPermission(Actions.AllocateNumber)"
-    ></app-button>
+    <app-button label="配號" (click)="onAllocationOfNumber()" icon="pi pi-receipt"
+      [disabled]="!hasPermission(Actions.AllocateNumber)"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 發票年月 -->
-          <app-year-month
-            class="col-12 md:col-6 lg:col-4"
-            label="發票年月"
-            [control]="queryForm.controls.GUI_YYMM"
-            [submitted]="submitted"
-          ></app-year-month>
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="收銀機號"
-            controlName="ECR_NoList"
-            [options]="POS_NOSOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ECR_NoList"
-            [submitted]="submitted"
-          />
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="發票使用狀態"
-            controlName="GUI_StatusList"
-            [options]="GUI_StatusOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.GUI_StatusList"
-            [submitted]="submitted"
-          />
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月" [control]="queryForm.controls.GUI_YYMM"
+            [submitted]="submitted"></app-year-month>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_NoList"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_NoList"
+            [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票使用狀態" controlName="GUI_StatusList"
+            [options]="GUI_StatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.GUI_StatusList" [submitted]="submitted" />
         </div>
         <div class="grid p-fluid mt-2">
           <div class="col-12 md:col-6 lg:col-4">
             <label for="displayModeDropdown" class="block mb-1">顯示模式</label>
-            <p-dropdown
-              inputId="displayModeDropdown"
-              [options]="displayModeOptions"
-              [(ngModel)]="displayMode"
-              [ngModelOptions]="{ standalone: true }"
-              optionLabel="label"
-              optionValue="value"
-              [style]="{ width: '100%' }"
-              (onChange)="onDisplayModeChange()"
-            ></p-dropdown>
+            <p-dropdown inputId="displayModeDropdown" [options]="displayModeOptions" [(ngModel)]="displayMode"
+              [ngModelOptions]="{ standalone: true }" optionLabel="label" optionValue="value"
+              [style]="{ width: '100%' }" (onChange)="onDisplayModeChange()"></p-dropdown>
           </div>
         </div>
         @if (displayMode === 1) {
-          <ul>
-            <li>說明：</li>
-            <li>1.　限配號當期與下一期發票券數設定。</li>
-            <li>2.　每期最後十天，可配號下一期發票券數設定。</li>
-          </ul>
+        <ul>
+          <li>說明：</li>
+          <li>1. 限配號當期與下一期發票券數設定。</li>
+          <li>2. 每期最後十天，可配號下一期發票券數設定。</li>
+        </ul>
         }
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -83,94 +45,47 @@
 
 <!-- 模式 1：明細顯示 -->
 @if (displayMode === 1) {
-  <div class="card">
-    <app-table-report
-      [exportContext]="{
+<div class="card">
+  <app-table-report [exportContext]="{
         reportTitle: 'POS電子發票配號作業 - 明細表',
-      }"
-      tableKey="fin11200"
-      dataKey="ID"
-      [data]="data"
-      [columns]="columns"
-      [showEdit]="false"
-      [showDetail]="false"
-      [showCheckBox]="true"
-      [showDelete]="false"
-      [totalRecords]="totalRecords"
-      [loading]="loading"
-      [addButton]="addButton"
-      (selectionChange)="selectedRows = $event"
-      [selectedItems]="selectedRows"
-      [buttonsLoading]="manageLoading"
-      [lastQueryBody]="lastQueryBody"
-      [lazy]="false"
-      [queryFunction]="fin11200Service.queryFIN11200.bind(fin11200Service)"
-    >
-      <header>
-        <p-button
-          [ngStyle]="{ width: '35px', height: '35px' }"
-          [style]="{ width: '35px', height: '35px' }"
-          pTooltip="下傳"
-          tooltipPosition="top"
-          pButton
-          icon="pi pi-upload rotate-180"
-          severity="success"
-          class="p-button-rounded p-button-text"
-          [disabled]="
+      }" tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
+    [showCheckBox]="true" [showDelete]="false" [totalRecords]="totalRecords" [loading]="loading" [addButton]="addButton"
+    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [buttonsLoading]="manageLoading"
+    [lastQueryBody]="lastQueryBody" [lazy]="false"
+    [queryFunction]="fin11200Service.queryFIN11200.bind(fin11200Service)">
+    <header>
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
+        tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
+        class="p-button-rounded p-button-text" [disabled]="
             selectedRows.length === 0 || !hasPermission(Actions.Download)
-          "
-          (click)="onUpload()"
-          [loading]="btnLoading"
-        />
-      </header>
-    </app-table-report>
-  </div>
+          " (click)="onUpload()" [loading]="btnLoading" />
+    </header>
+  </app-table-report>
+</div>
 }
 
 <!-- 模式 2：機號彙總(依機台) -->
 @if (displayMode === 2) {
-  <div class="card">
-    <app-table-report
-      [exportContext]="{
+<div class="card">
+  <app-table-report [exportContext]="{
         reportTitle: 'POS電子發票配號作業 - 機號彙總(依機台)',
         apiUrl: 'queryFIN11200_ECRSummary',
         conditions: summaryExportConditions,
-      }"
-      [data]="summaryData"
-      [columns]="ecrSummaryColumns"
-      [showEdit]="false"
-      [showDetail]="false"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      [showManage]="false"
-      [loading]="loading"
-      [lazy]="false"
-      [totalRecords]="summaryData.length"
-      [footerData]="summaryFooter"
-    ></app-table-report>
-  </div>
+      }" [data]="summaryData" [columns]="ecrSummaryColumns" [showEdit]="false" [showDetail]="false"
+    [showDelete]="false" [showCheckBox]="false" [showManage]="false" [loading]="loading" [lazy]="false"
+    [totalRecords]="summaryData.length" [footerData]="summaryFooter"></app-table-report>
+</div>
 }
 
 <!-- 模式 3：機號彙總(依機台+連續號) -->
 @if (displayMode === 3) {
-  <div class="card">
-    <app-table-report
-      [exportContext]="{
+<div class="card">
+  <app-table-report [exportContext]="{
         reportTitle: 'POS電子發票配號作業 - 機號彙總(依機台+連續號)',
         apiUrl: 'queryFIN11200_ECRTrackSummary',
         conditions: summaryExportConditions,
-      }"
-      [data]="summaryData"
-      [columns]="ecrTrackSummaryColumns"
-      [showEdit]="false"
-      [showDetail]="false"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      [showManage]="false"
-      [loading]="loading"
-      [lazy]="false"
-      [totalRecords]="summaryData.length"
-      [footerData]="summaryFooter"
-    ></app-table-report>
-  </div>
+      }" [data]="summaryData" [columns]="ecrTrackSummaryColumns" [showEdit]="false" [showDetail]="false"
+    [showDelete]="false" [showCheckBox]="false" [showManage]="false" [loading]="loading" [lazy]="false"
+    [totalRecords]="summaryData.length" [footerData]="summaryFooter"></app-table-report>
+</div>
 }

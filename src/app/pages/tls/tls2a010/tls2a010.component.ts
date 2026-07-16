@@ -13,7 +13,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
@@ -22,7 +22,7 @@ import { finalize, switchMap } from 'rxjs';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
-import { ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
+import { ColumnGroup } from 'src/app/others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { creditCardColumns, creditCardGroup, defaultColumns, overStatusOptions, TLS2A010Query } from './tls2a010.model';
 const yesterday = new Date();

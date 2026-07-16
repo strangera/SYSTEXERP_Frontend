@@ -13,7 +13,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatDate, formatYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';

@@ -18,7 +18,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton } from '@shared/componentkit/table/table.model';
+import { AddButton } from '@others/component/table/table.model';
 import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';

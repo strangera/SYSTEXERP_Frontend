@@ -2,8 +2,8 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/cor
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { DropDownListService, TltTalentChargeData } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, formatAmount } from '@others/component/table/table.model';
 import { STORE_WAY } from '../tls24010-cru.model';
 
 @UntilDestroy()

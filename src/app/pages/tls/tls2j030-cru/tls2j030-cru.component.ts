@@ -9,7 +9,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { DividerModule } from "primeng/divider";
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';

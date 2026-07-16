@@ -22,7 +22,7 @@ import {
   ReportColumn,
   formatDateTime,
 } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import {
   QuerySYS0790Request,
   SYS0790QueryData,

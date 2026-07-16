@@ -10,17 +10,18 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { CPM12050Data, CPM12050Service, QueryCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-cpm12050',
@@ -34,7 +35,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     CalendarRangeComponent,
     CalendarComponent,
@@ -59,7 +60,9 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
     COMPLAIN_DATE_F: [(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() as Date | null],   // 接件日期(起) 預設今天 00:00:00
     COMPLAIN_DATE_T: [(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d; })() as Date | null], // 接件日期(迄) 預設今天 23:59:59
-    ...createPaginationConfig([])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SEQ_ID', order: 1 }]],
   });
 
   //#region 下拉選單
@@ -92,13 +95,13 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // table設定
   data: CPM12050Data[] = [];
+  lastQueryBody: any;
   selectedItems: CPM12050Data[] = [];
   totalRecords = 0;
 
-  columns: Column[] = [
-    { field: 'ID', header: '序號', hidden: true },
+  columns: ReportColumn[] = [
     { field: 'SEQ_ID', header: '客戶意見編號', visible: true },
-    { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true, align: 'left' },
+    { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true, align: 'left', width: '907px' },
     { field: 'COMPLAIN_DATE', header: '接件日期', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '建檔人員', visible: true },
     { field: 'CLASS_ID', header: '責任單位', visible: true },
@@ -106,8 +109,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     { field: 'STATUS', header: '處理狀況', visible: true, format: (value: any) => this.statusOptions.find(option => option.value === value)?.label || value },
   ];
 
-  expansionColumns: Column[] = [
-    { field: 'ID', header: '序號', hidden: true },
+  expansionColumns: ReportColumn[] = [
     { field: 'ANSWER', header: '處理紀錄', visible: true },
     { field: 'ANSWER_DATE', header: '處理日期時間', visible: true, format: (v: unknown) => { if (!v) return ''; const d = new Date(v as string); if (isNaN(d.getTime())) return String(v); return d.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } },
     { field: 'ANSWER_ID', header: '處理者', visible: true },
@@ -201,7 +203,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   }
 
   constructor(
-    private cpm12050Service: CPM12050Service,
+    public readonly cpm12050Service: CPM12050Service,
     private validationService: ValidationService,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService
@@ -219,6 +221,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       this.cpm12050Service.queryCPM12050(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
+          this.lastQueryBody = form.getRawValue();
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());

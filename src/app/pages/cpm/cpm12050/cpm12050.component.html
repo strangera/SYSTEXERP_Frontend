@@ -95,15 +95,16 @@
 </div>
 <div class="card">
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="exportCustomExcel()" [loading]="exportLoading"></app-button>
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="exportCustomExcel()"
+      [loading]="exportLoading"></app-button>
     <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="exportCustomPdf()" [loading]="exportLoading"></app-button>
   </div>
-  <app-table tableKey="CPM12050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table-report tableKey="CPM12050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     [editDisabled]="editDisabled" (detail)="onDetail($event)" [showCheckBox]="false" [showDelete]="false"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="cpm12050Service.queryCPM12050.bind(cpm12050Service)"
     [loading]="loading" expansionDataKey="details" [expansionColumns]="expansionColumns"
-    [expansionLoadFn]="expansionLoadFn" [addButton]="addButton"></app-table>
+    [expansionLoadFn]="expansionLoadFn" [addButton]="addButton" [ItemSize]="82.81"></app-table-report>
 </div>
 
 <app-dialog [visible]="dialogVisible" header="結案" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"

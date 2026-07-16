@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 
 // Service imports
-import { formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate, formatYYYYMM } from '@others/component/table/table.model';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
 import { FIN13050Service } from '../../../service/api/fin/fin13050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -18,7 +18,8 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 // PrimeNG imports
 import { TranslateModule } from '@ngx-translate/core';
@@ -27,7 +28,6 @@ import { ButtonModule } from 'primeng/button';
 
 // Model imports
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
@@ -61,7 +61,7 @@ export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padS
     CalendarRangeComponent,
     InputTextComponent,
     InputNumberRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     MultiSelectComponent,
     YearMonthComponent,
@@ -94,17 +94,20 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     ExportDate_B: [null], // 輸出或結匯日期_起
     ExportDate_E: [null], // 輸出或結匯日期_迄
     INV_Remark: ['', [Validators.maxLength(100)]], // 備註
-    ...createPaginationConfig([{ field: 'ID', order: -1 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ID', order: -1 }]],
   });
 
   totalRecords = 0;
+  lastQueryBody: any;
   data: FIN13030Data[] = [];
   editDisabledFn = (row: any) => !row?.CanEdit;
   isRowSelectable = (row: any): boolean => !!row?.CanDel;
   exportExcelLoading = false;
   exportPdfLoading = false;
   selectedItems: FIN13030Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'ID', header: '資料識別碼', visible: false },
     { field: 'INV_GUINo', header: '發票號碼', visible: true, format: (_v: unknown, _i?: number, row?: FIN13030Data) => `${row?.INV_GUITrack ?? ''}${row?.INV_GUINo ?? ''}` },
     { field: 'INV_GUITrack', header: '發票字軌', visible: false },
@@ -143,7 +146,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   exportTypeOptions: { value: string; label: string }[] = [];
 
   constructor(
-    private fin13030Service: FIN13030Service,
+    public readonly fin13030Service: FIN13030Service,
     private fin13050Service: FIN13050Service,
     private validationService: ValidationService,
     private datePipe: DatePipe,
@@ -181,12 +184,20 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       this.fin13030Service.queryFIN13030(fIN13030QueryRequest)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
+          this.lastQueryBody = frm.getRawValue();
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
+
+  // table-report 內部捲動載入/排序會直接呼叫這支，需重現 onSubmit 的 INV_YM 轉換
+  queryFn = (body: any) => this.fin13030Service.queryFIN13030({
+    ...body,
+    INV_YM_B: this.datePipe.transform(body.INV_YM_B, 'yyyyMM') ?? null,
+    INV_YM_E: this.datePipe.transform(body.INV_YM_E, 'yyyyMM') ?? null,
+  });
 
   deleteRow(rowData: FIN13030Data[]) {
     if (rowData.some(r => !(r as any)?.CanDel)) {

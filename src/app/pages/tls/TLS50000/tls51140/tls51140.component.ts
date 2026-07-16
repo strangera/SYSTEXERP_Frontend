@@ -10,7 +10,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 

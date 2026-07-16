@@ -13,7 +13,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../others/component/table/table.model';
 
 @Component({
   templateUrl: './tls2a020.component.html',

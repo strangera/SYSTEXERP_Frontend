@@ -35,9 +35,9 @@
       </div>
 
       <ng-container *ngIf="editMode === 'month'">
-        <app-table tableKey="TLS2G020Details" [data]="data" [columns]="columns" (edit)="onMonthEdit($event)"
-          [loading]="loading" [showCheckBox]="false" [showDetail]="false" [showCaption]="false" [showPaginator]="false"
-          [lazy]="false"></app-table>
+        <app-table-report tableKey="TLS2G020Details" [data]="data" [columns]="columns" (edit)="onMonthEdit($event)"
+          [loading]="loading" [showCheckBox]="false" [showDetail]="false" [showCaption]="false"
+          [totalRecords]="data.length"></app-table-report>
       </ng-container>
 
       <ng-container *ngIf="editMode === 'day'">

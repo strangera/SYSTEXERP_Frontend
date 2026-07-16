@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
-import { TableRowUnSelectEvent } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { TLS21030Data, Tls21030Service, TLS21030TalentData } from '../../../service/api/tls/tls21030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,8 +13,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls21030-cru',
@@ -28,7 +27,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     NgIf,
     TranslateModule,
     RadiobuttonYNComponent,
@@ -43,9 +42,12 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     bill_remark1: [''],           // 說明1
     bill_remark2: [''],           // 說明2
     bill_remark3: [''],           // 說明3
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody: any;
   settlementMethodOptions = getSYS1000Options('money_type');
   accountingPeriodOptions = [
     { value: 1, label: '1' },
@@ -55,12 +57,14 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
   data: TLS21030TalentData[] = [];
   originalData: TLS21030TalentData[] = [];
   selectedRows: TLS21030TalentData[] = [];
-  columns: Column[] = [
+  // 唯讀模式下不可變更勾選狀態 (取代 app-table 原本的 [disabled])
+  isRowSelectable = (): boolean => !this.isFormReadable;
+  columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
   constructor(
-    private tls21030Service: Tls21030Service
+    public readonly tls21030Service: Tls21030Service
   ) { super(); }
 
   ngOnInit(): void {
@@ -102,9 +106,6 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       }
     });
   }
-  onUnSelect(event: TableRowUnSelectEvent) {
-    this.selectedRows = this.selectedRows.filter(x => x.talent_id.toString() !== event.data.talent_id.toString());
-  }
   onQuery(frm: FormGroup) {
     this.submitted = true;
     this.loading = true;
@@ -113,6 +114,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       return;
     }
     this.tls21030Service.queryTLTTALENT_By_money_type(frm.getRawValue()).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+      this.lastQueryBody = frm.getRawValue();
       this.data = res.Data;
       this.originalData = res.Data;
       this.totalRecords = res.TotalCount;

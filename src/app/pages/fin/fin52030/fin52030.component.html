@@ -64,11 +64,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="tableData()"
+    <app-table-report [data]="tableData()"
                [columns]="columns"
                [totalRecords]="totalRecords()"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="!0"
+               [lastQueryBody]="lastQueryBody"
+               [queryFunction]="service.loadFIN52030.bind(service)"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
@@ -76,6 +76,6 @@
                [showDelete]="!0"
                [loading]="tableLoading()"
                [dataKey]="'id'"
-               [tableKey]="'FIN52030'"></app-table>
+               [tableKey]="'FIN52030'"></app-table-report>
   </div>
 </div>

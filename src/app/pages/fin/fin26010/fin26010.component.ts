@@ -17,7 +17,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';

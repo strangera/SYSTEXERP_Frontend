@@ -1,0 +1,384 @@
+import { TemplateRef } from '@angular/core';
+import { SortMeta } from 'primeng/api';
+export interface Column<T = Record<string, any>> {
+  field: keyof T;     // 欄位名稱 (資料的欄位名稱)
+  header: string;    // 欄位標題 (顯示在表格上的標題)
+  /** 對齊方式：預設由元件決定，常見為 'left' | 'center' | 'right' */
+  align?: 'left' | 'center' | 'right';
+  reportType?: reportType; // 共通匯出格式類型
+  visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
+  hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
+  format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
+  exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('T116'))
+  groupField?: string;
+  isSubTotal?: boolean; // 是否為小計欄位
+  isTotal?: boolean; // 是否為總計欄位
+  showSort?: boolean;
+  sortField?: string; // 排序欄位(預設為 field)
+  htmlFormat?: boolean; // 是否為 HTML 格式 (適用於顯示特殊符號或樣式)
+  style?: string;
+  cellClass?: (rowData: any, field?: string) => string;
+
+  disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
+
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
+
+  dataKey?: string;
+  type?: TableTypes; // 欄位類型
+  prefix?: string; // 前綴 (適用於 input 類型)
+  suffix?: string; // 後綴 (適用於 input 類型)
+  fractionDigits?: number;
+  minFractionDigits?: number;
+  maxFractionDigits?: number;
+  min?: number; // 最小值 (適用於 inputNumber、percent)
+  max?: number; // 最大值 (適用於 inputNumber、percent)
+  useGrouping?: boolean;
+  required?: boolean; // 是否為必填欄位 (適用於輸入欄位)
+
+  options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
+  optionLabel?: string; // 下拉選單 optionLabel
+  optionValue?: string; // 下拉選單 optionValue
+  optionShowClear?: boolean; // 下拉選單是否顯示清除按鈕
+  templateLabel?: string; // 模板欄位 label
+  filter?: boolean;
+
+  buttonLabel?: string; // 選擇按鈕 label
+  checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
+  checkboxFalseLabel?: string; // checkbox 非編輯模式 false 顯示文字（適用於單一布林值）
+  dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
+  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
+  alignFrozen?: string; // 凍結欄位對齊方式
+
+  /** 給dropdownTable 用的數值 */
+  tableData?: any[]; // 表格數據
+  tableColumns?: any[]; // 表格欄位
+  tableKey?: string; // 表格數據的唯一鍵值欄位
+  tableRows?: number; // 表格顯示的行數
+  tableLoading?: boolean; // 載入狀態
+  valueKey?: string; // 回傳值欄位
+  totalRecords?: number; // 總數
+  multiSortMeta?: SortMeta[]; // 多重排序設定
+  lazy?: boolean; // 是否啟用懶加載
+
+  /** Template 顯示相關配置 */
+  templateRef?: TemplateRef<any>; // 自定義模板
+  templateDisplayField?: string; // 用於顯示名稱的欄位
+  tableTemplate?: () => TemplateRef<any>; // 自定義表格模板
+
+  // 觸法事件
+  onChange?: (rowData: any, value: any, col: Column) => void;
+}
+
+export interface ColumnGroup {
+  field: string;
+  header: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+export interface ColumnGroupRow {
+  columns: ColumnGroup[];
+}
+
+export interface LazyLoadEvent {
+  pageIndex: number; // 當前頁碼
+  pageSize: number; // 每頁顯示的數量
+  SortBy: SortMeta[]; // 排序欄位
+}
+
+export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
+  return {
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [defaultSortBy ?? []],
+  };
+};
+
+export interface AddButton {
+  label: string;
+  icon: string;
+  displayText?: string;
+  action: (rowData: any, event?: Event) => void;
+  disabled?: (rowData: any) => boolean;
+  loading?: (rowData: any) => boolean;
+}
+
+export interface RowEditSaveEvent<T = any> {
+  oldData: T;
+  newData: T;
+  ri: number;
+  data: T | T[];
+}
+// 欄位變更事件
+export interface FieldChangeEvent<T = any> {
+  rowData: T;
+  field: string;
+  value: T[keyof T];
+  index?: number;
+}
+//formatDate：會輸出 2024/05/27 格式
+export const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
+//formatDateTime：會輸出 2024/05/27 14:30:25 格式
+export const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+};
+
+// formatYYYYMM 輸出為 YYYY/MM
+export const formatYYYYMM = (value: string | Date | null): string => {
+  // 處理空值
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  // 檢查輸入是否為 Date 物件
+  if (value instanceof Date) {
+    const year = value.getFullYear().toString();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    return `${year}/${month}`;
+  }
+
+  // 檢查輸入是否為 YYYYMM 格式的字串
+  if (typeof value === 'string' && value.length === 6) {
+    const year = value.substring(0, 4);
+    const month = value.substring(4, 6);
+    return `${year}/${month}`;
+  }
+
+  // 如果輸入格式不符合預期，回傳空字串
+  return '';
+};
+
+// formatTimeHHMM 輸出為 HH:MM
+export const formatTimeHHMM = (value: string | number | Date): string => {
+  if (!value) return '';
+
+  if (value instanceof Date) {
+    const hh = String(value.getHours()).padStart(2, '0');
+    const mm = String(value.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+
+  const strValue = String(value).padStart(4, '0'); // 確保是4位數，不足補0
+  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
+};
+
+// 000,000,000
+export const formatAmount = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '';
+  return num.toLocaleString(); // eg. 1,000,000
+};
+// 000,000,000，中文就顯示中文，數字就千分位
+export const formatAmountCN = (val: number | string): string => {
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+  const num = Number(val);
+  if (isNaN(num)) return val.toString();
+  return num.toLocaleString('zh-CN'); // eg. 1,000,000
+};
+// 000,000,000 如果是0就不顯示
+export const formatAmountNo0 = (val: number | string | null | undefined): string => {
+  // 1. 檢查並處理 null, undefined 或空字串
+  // 如果是這些值，直接回傳空字串 ''
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+  const num = Number(val);
+  // 2. 檢查 NaN (如輸入 'abc') 或數值為 0
+  // 如果是 NaN 或 num 等於 0 (符合您「不要給我自動有0」的需求)
+  if (isNaN(num) || num === 0) {
+    return '';
+  }
+  // 3. 格式化其他大於 0 的數值
+  return num.toLocaleString(); // e.g. 1,000,000
+};
+export const formatYN = (value: string): string => {
+  return value === 'Y' ? '是' : '否';
+};
+
+export const formatTimeToHHMMSS = (date: Date): string => {
+  const hh = date.getHours().toString().padStart(2, '0');
+  const mm = date.getMinutes().toString().padStart(2, '0');
+  const ss = date.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+};
+// formatDateToYYYYMMDD：輸出為 YYYYMMDD
+export const formatDateToYYYYMMDD = (value: string | Date): string => {
+  if (!value) return '';
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
+};
+
+// 將 "YYYYMM" 轉為 Date 物件
+export function convertYYYYMMToDate(yyyymm: string): Date | null {
+  if (!/^\d{6}$/.test(yyyymm)) return null;
+  const year = Number(yyyymm.substring(0, 4));
+  const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
+  return new Date(year, month, 1);
+}
+
+// 將 Date 轉為 "YYYYMM" 物件
+export function convertDateToYYYYMM(date: any): string {
+  // 1. 基本空值檢查
+  if (!date) return '';
+
+  // 2. 如果傳進來的是字串，嘗試轉成 Date 物件
+  let d = date;
+  if (typeof date === 'string') {
+    d = new Date(date);
+  }
+
+  // 3. 檢查是否為有效的 Date 物件 (防止 Invalid Date)
+  if (!(d instanceof Date) || isNaN(d.getTime())) {
+    console.warn('Invalid date provided to convertDateToYYYYMM:', date);
+    return ''; // 或者根據需求回傳原字串或特定格式
+  }
+
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  return `${year}${month}`;
+}
+// formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
+export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
+  if (!value) return null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+// addDaysToDate：增加天數後的日期
+export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+// formatPercentage: 格式化為百分比，可指定小數點位數
+export const formatPercentage = (value: number | string | null | undefined, fractionDigits = 0): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return '';
+  }
+  // 將輸入值轉為數字，並四捨五入到指定小數點位數
+  const num = Number(value);
+  const roundedNum = num.toFixed(fractionDigits);
+  return `${roundedNum}%`;
+};
+
+// 金額格式化999,999,999，只取整數
+export const formatAmountWithFraction = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString(undefined, { maximumFractionDigits: 0 }); // eg. 1,000,000.00
+};
+
+// 將時間轉換成YYYY
+export const convertDateToYYYY = (date: Date): string => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  return String(year);
+};
+
+// 格式化為 6 位數，不足補 0
+export const formatToSixDigits = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+  const strValue = String(value);
+  return strValue.padStart(6, '0');
+};
+
+export type reportType =
+  'string' | // string 類型，匯出時直接輸出原始值
+  'percentage' // percentage 類型，匯出時將數值乘以 100 並添加百分號，保留兩位小數
+
+export type TableTypes =
+  'input' |
+  'inputNumber' |
+  'percent' |
+  'dropdown' |
+  'button' |
+  'html' |
+  'date' |
+  'autoComplete' |
+  'image' |
+  'default' |
+  'dropdownTable' |
+  'dropdownTableTemplate' |
+  'template' |
+  'detail' |
+  'link';
+
+/** 可以用來做轉換的 Map */
+export const Maps = {
+  'YN': new Map<'Y' | 'N', '是' | '否'>([
+    ['Y', '是'],
+    ['N', '否'],
+  ]),
+};
+
+/**
+ * 根據 options 將值轉換為顯示文字
+ * @param value 原始值
+ * @param options 選項陣列，格式為 { value: string, label: string }[]
+ * @returns 對應的 label 或原始值
+ */
+export const formatOptionLabel = (value: any, options: { value: string; label: string }[] | undefined): string => {
+  if (!options || options.length === 0 || value === null || value === undefined) {
+    return value?.toString() || '';
+  }
+  const option = options.find(opt => opt.value === value?.toString());
+  return option ? option.label : value?.toString() || '';
+};
+/**
+ * 格式化為金額（千分位），並四捨五入取整數
+ * 輸入 '1234.56' -> 輸出 '1,235'
+ * 輸入 '1234.4'  -> 輸出 '1,234'
+ * 輸入 null/NaN  -> 輸出 ''
+ */
+export const formatAmountRoundToInteger = (val: number | string | null | undefined): string => {
+  // 1. 基本空值檢查
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  // 2. 轉換為數字並檢查有效性
+  const num = Number(val);
+  if (isNaN(num)) {
+    return ''; // 或者根據需求回傳原字串 val.toString()
+  }
+
+  // 3. 先顯式執行四捨五入取整數
+  const roundedNum = Math.round(num);
+
+  // 4. 再進行千分位格式化
+  // 這裡使用 'en-US' 或 undefined 確保輸出的格式是標準的 1,000,000
+  return roundedNum.toLocaleString('en-US');
+};

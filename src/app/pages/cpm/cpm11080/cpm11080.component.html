@@ -29,10 +29,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" [addButton]="addButton" [showDelete]="false" [showReportMode]="false"
-      dataKey="SEQ_ID" [totalRecords]="totalRecords" [showCheckBox]="false" [lazy]="true" [loading]="loading"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false" [showEdit]="false"
-      [showDetail]="false" [showManage]="true">
-    </app-table>
+    <app-table-report tableKey="CPM11080" [data]="data" [columns]="columns" [addButton]="addButton"
+      [showDelete]="false" [showReportMode]="false" dataKey="SEQ_ID" [totalRecords]="totalRecords"
+      [showCheckBox]="false" [loading]="loading" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showExcel]="false" [showEdit]="false" [showDetail]="false"
+      [showManage]="true">
+    </app-table-report>
   </div>
 </div>

@@ -11,7 +11,7 @@ import {
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem

@@ -15,8 +15,9 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateToYYYYMMDD } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import saveAs from 'file-saver';
 import JSZip from 'jszip';
@@ -24,7 +25,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { DOC_TYPE_COLUMNS } from './tls2a040.model';
 
 export interface FileItem {
@@ -45,7 +45,7 @@ export interface FileItem {
     MultiSelectComponent,
     DropdownModule,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent,
     CalendarRangeComponent,
@@ -68,12 +68,15 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     check_statusList: [[]],                           // 狀況
     Floor_No: [null],                                 // 樓層
     Building_No: [null],                              // 館別
-    ...createPaginationConfig([{ field: 'TXN_Date,ECR_No,TXN_No', order: 1 }]),
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'TXN_Date,ECR_No,TXN_No', order: 1 }]],
   });
 
   data: any[] = [];
+  lastQueryBody: any;
   totalRecords = 0;
-  columns: Column[] = DOC_TYPE_COLUMNS['creditcard'];
+  columns: ReportColumn[] = DOC_TYPE_COLUMNS['creditcard'];
 
   // 下拉選單資料
   ECRNoOptions: any[] = [];
@@ -86,7 +89,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private readonly dropdownApiService: DropdownApiService,
     private dropDownListService: DropDownListService,
-    private tls2a040Service: Tls2a040Service
+    public readonly tls2a040Service: Tls2a040Service
   ) {
     super();
   }
@@ -129,6 +132,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           const rawData = res.Data ?? [];
 
+          this.lastQueryBody = form.value;
           this.data = rawData.map((item: any) => {
             return {
               ...item,

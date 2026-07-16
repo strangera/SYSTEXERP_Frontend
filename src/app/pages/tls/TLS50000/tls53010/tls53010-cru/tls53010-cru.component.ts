@@ -16,8 +16,8 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { Column, createPaginationConfig } from '@others/component/table/table.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { PanelModule } from 'primeng/panel';

@@ -11,7 +11,7 @@ import { finalize, Observable } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
-import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { LazyLoadEvent } from '@others/component/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 @UntilDestroy()

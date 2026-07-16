@@ -13,7 +13,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, LazyLoadEvent } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CustomFooterTableComponent } from './custom-footer-table/customFooterTable.component';

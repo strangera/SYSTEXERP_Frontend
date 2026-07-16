@@ -1,11 +1,11 @@
 <label [for]="controlName">
   {{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
 </label>
 <textarea [id]="controlName" [formControl]="control" [readonly]="readonly"
-  [placeholder]="control.disabled || readonly ? '' : placeholder" [minlength]="minLength" [maxlength]="maxLength"
+  [placeholder]="control.disabled || readonly ? '' : fieldState.placeholder" [minlength]="fieldState.minLength" [maxlength]="fieldState.maxLength"
   [rows]="rows" cols="30" [autoResize]="true" [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
-  pInputTextarea [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}" [class]="textareaClasses"
-  (keydown.enter)="handleEnterKey($event)"></textarea>
+  pInputTextarea [attr.aria-label]="label || fieldState.placeholder" title="{{ label || fieldState.placeholder }}" [class]="textareaClasses"
+  appEnterToTab></textarea>
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control"></app-control-messages>

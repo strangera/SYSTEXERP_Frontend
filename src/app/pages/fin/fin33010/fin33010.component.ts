@@ -7,8 +7,8 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';

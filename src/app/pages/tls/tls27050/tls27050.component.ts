@@ -9,7 +9,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmountWithFraction } from '@shared/componentkit/table/table.model';
+import { formatAmountWithFraction } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';

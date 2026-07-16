@@ -19,7 +19,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

@@ -13,7 +13,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM, formatAmount } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { ProductAutocompleteComponent } from 'src/app/shared/biz-components/product-autocomplete/product-autocomplete';

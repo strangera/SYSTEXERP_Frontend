@@ -6,7 +6,7 @@ import { Cpm13050Service, QueryCPM13050Request } from '@service/api/cpm/cpm13050
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

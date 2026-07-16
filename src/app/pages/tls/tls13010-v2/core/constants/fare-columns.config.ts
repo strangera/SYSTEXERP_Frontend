@@ -3,7 +3,7 @@
  * 依照不同類型 (A/B/C/D/E) 定義各自的欄位
  */
 import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 
 /**
  * 扣款類型枚舉

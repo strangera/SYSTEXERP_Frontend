@@ -30,9 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="CPM11050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table-report tableKey="CPM11050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" (delete)="onDelete($event)" [showCheckBox]="true" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
-  </app-table>
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="cpm11050Service.queryCPM11050.bind(cpm11050Service)" [loading]="loading">
+  </app-table-report>
 </div>

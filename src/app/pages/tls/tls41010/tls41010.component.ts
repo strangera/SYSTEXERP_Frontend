@@ -18,7 +18,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AddButton } from '../../../shared/componentkit/table/table.model';
+import { AddButton } from '../../../others/component/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { columns, TLS41010Data, TLS41010Item, tltNoPickerQueryColumns } from './tls41010.model';

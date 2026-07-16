@@ -12,7 +12,7 @@
           [disabled]="!isFormCreateable" [submitted]="submitted"></app-dropdown>
         <app-input-text class="col-12 md:col-6 lg:col-4" label="錶號" controlName="ENG_MeterNo"
           [control]="df().ENG_MeterNo" [disabled]="!isFormCreateable || service.engMeterNoLoading()"
-          [submitted]="submitted"></app-input-text>
+          [fieldMeta]="{ required: true, minLength: 5, maxLength: 5 }" [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="設備位置編號" controlName="Location_No" [showClear]="false"
           [options]="service.locationOptions()" optionLabel="LOCATION_Name" optionValue="LOCATION_No"
           [control]="df().Location_No" [loading]="service.locationLoading()" [submitted]="submitted"></app-dropdown>

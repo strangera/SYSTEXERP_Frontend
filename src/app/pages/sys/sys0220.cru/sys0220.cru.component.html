@@ -15,15 +15,17 @@
             [submitted]="submitted" [disabled]="true"></app-input-text>
         </div>
       </div>
-      <div class="card">
-        <app-table title="已分配角色" tableKey="SYS0230CRU" [data]="assignedRoles" [columns]="assignedRolesColumns"
-          [showManage]="false" dataKey="ID" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
-          [selectedItems]="selectedAssignedRoles" (selectionChange)="selectedAssignedRoles = $event"
-          [showReportMode]="false" [deleteData]="true" [showInsert]="true" (insert)="dialogVisible = true"
-          (delete)="onDelete($event)" [disabled]="isFormReadable" [showCaption]="!isFormReadable"
-          [showCheckBox]="!isFormReadable">
-        </app-table>
-      </div>
+      <p-divider align="left" type="solid" styleClass="p-4 m-0">
+        <span class="text-center text-xl font-bold text-primary">
+          已分配角色
+        </span>
+      </p-divider>
+      <app-table-report tableKey="SYS0230CRU" [data]="assignedRoles" [columns]="assignedRolesColumns"
+        [showManage]="false" dataKey="ID" [selectedItems]="selectedAssignedRoles" [totalRecords]="assignedRoles.length"
+        (selectionChange)="selectedAssignedRoles = $event" [showReportMode]="false" [showInsert]="true"
+        (insert)="dialogVisible = true" (delete)="onDelete($event)" [showCaption]="!isFormReadable"
+        [showCheckBox]="!isFormReadable" [ItemSize]="28.59">
+      </app-table-report>
 
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
@@ -45,9 +47,9 @@
         [disabled]="false"></app-input-text>
     </div>
   </form>
-  <app-table tableKey="SYS0220DialogTable" dataKey="ID" [showReportMode]="false" [data]="availableRoles"
+  <app-table-report tableKey="SYS0220DialogTable" dataKey="ID" [showReportMode]="false" [data]="availableRoles"
     [columns]="availableRolesColumns" [showDelete]="false" [selectedItems]="selectedAvailableRoles"
-    [showCaption]="false" (selectionChange)="selectedAvailableRoles = $event" [showHeader]="false" [showManage]="false"
-    [showCheckBox]="true">
-  </app-table>
+    [totalRecords]="availableRoles.length" [showCaption]="false" (selectionChange)="selectedAvailableRoles = $event"
+    [showManage]="false" [showCheckBox]="true" [ItemSize]="28.59">
+  </app-table-report>
 </app-dialog>

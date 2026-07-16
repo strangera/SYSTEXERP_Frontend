@@ -7,7 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, ReportColumn, formatAmount, formatDate as reportFormatYMD } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';

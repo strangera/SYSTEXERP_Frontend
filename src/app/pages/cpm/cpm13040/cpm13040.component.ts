@@ -7,10 +7,11 @@ import { CPM13040Service } from '@service/api/cpm/cpm13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -34,7 +35,7 @@ import { formatDate } from './../../../shared/componentkit/table-report/table-re
     ReactiveFormsModule,
     TranslateModule,
     CustomFooterTableComponent,
-    TableComponent,
+    TableReportComponent,
     MultiSelectComponent
   ]
 })
@@ -66,7 +67,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
   TLT_No_Options: { No: string, Name: string, label: string }[] = [];
 
   // 第一張表格：卡別彙總
-  headerColumns: Column[] = [
+  headerColumns: ReportColumn[] = [
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'FreeHours', header: '時數', visible: true, format: formatAmount },
     { field: 'CardCounts', header: '卡數', visible: true, format: formatAmount },

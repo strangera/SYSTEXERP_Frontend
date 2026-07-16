@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

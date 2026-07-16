@@ -19,8 +19,8 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDuplicate } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
+import { validateMinNumber, validateRequired } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from "primeng/table";
 import { finalize } from 'rxjs';

@@ -18,7 +18,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { ValidationService } from '@shared/service/validation.service';

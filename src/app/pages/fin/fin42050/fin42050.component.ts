@@ -12,7 +12,7 @@ import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/others/component/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';

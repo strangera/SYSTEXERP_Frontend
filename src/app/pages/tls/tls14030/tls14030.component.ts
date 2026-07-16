@@ -11,8 +11,9 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
@@ -21,7 +22,7 @@ import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls
   selector: 'app-tls14030',
   templateUrl: './tls14030.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, TableReportComponent, TranslateModule]
 })
 export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> implements OnInit {
   // 查詢表單：保證傳票
@@ -52,12 +53,15 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
-  columns: Column[] = [// 表格欄位定義
+  columns: ReportColumn[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
@@ -168,7 +172,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   opTotalRecords = 0;
 
   constructor(
-    private tls14030Service: Tls14030Service,
+    public readonly tls14030Service: Tls14030Service,
     private readonly dropDownListService: DropDownListService,
   ) { super(); }
 
@@ -185,6 +189,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
       this.tls14030Service.queryTLS14030(formValue).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            this.lastQueryBody = formValue;
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, formValue);

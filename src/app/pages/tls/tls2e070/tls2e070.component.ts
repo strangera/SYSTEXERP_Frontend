@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

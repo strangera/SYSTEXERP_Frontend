@@ -49,9 +49,8 @@
   </p-accordion>
 </div>
 <div class="card mt-2">
-  <app-table tableKey="FIN11060" [data]="data" [columns]="columns" [showCheckBox]="false" [showTotal]="true"
-    [showManage]="false" [showDelete]="false" [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="key" [multiSortMeta]="showSort"></app-table>
+  <app-table-report tableKey="FIN11060" [data]="data" [columns]="columns" [showCheckBox]="false" [showManage]="false"
+    [showDelete]="false" [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin11060Service.queryFIN11060.bind(fin11060Service)" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" dataKey="key" [footerData]="footerData"></app-table-report>
 </div>

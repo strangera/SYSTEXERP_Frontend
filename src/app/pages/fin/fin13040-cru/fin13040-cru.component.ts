@@ -17,7 +17,7 @@ import {
   FieldsConfig,
 } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';

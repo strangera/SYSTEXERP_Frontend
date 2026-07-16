@@ -1,8 +1,8 @@
 import { Component, DestroyRef, EventEmitter, Input, Output, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, LazyLoadEvent } from '@others/component/table/table.model';
 import { UserData } from '@shared/models/sys/user.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { ButtonModule } from 'primeng/button';

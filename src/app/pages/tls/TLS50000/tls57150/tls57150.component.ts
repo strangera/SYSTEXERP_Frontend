@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox'; // 引入 Checkbox 模組

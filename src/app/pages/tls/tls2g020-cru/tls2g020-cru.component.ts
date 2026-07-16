@@ -7,8 +7,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
@@ -17,7 +18,6 @@ import { DropDownListService, IDropdownItem } from '../../../service/utility/dro
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 定義日期資料的類型
 interface DayData {
@@ -43,7 +43,7 @@ interface DayData {
     TranslateModule,
     ButtonComponent,
     InputNumberModule,
-    TableComponent,
+    TableReportComponent,
     TableModule,
     NgIf,
     NgFor,
@@ -80,7 +80,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   // /** 月畫面明細 */
   data: any[] = [];
   /** 月份欄位設定 */
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'Month', header: '月', format: (v: string) => v ? v.slice(-2) : '' },
     { field: 'budget', header: '月預算', format: formatAmount },
     { field: 'avg_cag_charge_rate', header: '平均抽成', format: formatAmount },

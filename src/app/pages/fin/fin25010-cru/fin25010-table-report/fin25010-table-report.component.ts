@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '@shared/componentkit/table/import-table';
+import { TableCaptionComponent } from '@others/component/table/import-table';
 import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
 import { MultiSelectModule } from 'primeng/multiselect';

@@ -74,10 +74,9 @@
 </div>
 
 <div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" [showCheckBox]="true"
-    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-    [multiSortMeta]="[{ field: 'TXN_Date,ECR_No,TXN_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event,queryForm); onSubmit(queryForm)" [showPaginator]="true"
+  <app-table-report tableKey="TLS2A040" dataKey="id" [data]="data" [columns]="columns" [showCheckBox]="true"
+    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [totalRecords]="totalRecords"
+    [loading]="loading" [lastQueryBody]="lastQueryBody" [queryFunction]="tls2a040Service.queryTLS2A040.bind(tls2a040Service)"
     [showReportMode]="false" [showDelete]="false" [showDetail]="false" [showEdit]="false" [showManage]="false">
     <header>
       <div class="flex align-items-center">
@@ -85,5 +84,5 @@
           [disabled]="selectedCount === 0" styleClass="small-btn" [loading]="btnLoading"></p-button>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

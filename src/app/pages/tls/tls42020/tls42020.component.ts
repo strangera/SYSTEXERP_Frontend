@@ -9,9 +9,9 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service'; // 匯入 ErrorReportService
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -37,7 +37,7 @@ import { formatDate } from '../tls2f010-cru/tls2f010-table-report.model';
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DialogComponent,
     FileUploadComponent,
@@ -50,7 +50,7 @@ import { formatDate } from '../tls2f010-cru/tls2f010-table-report.model';
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
   // 使用 inject 注入 Service
   private readonly fb = inject(FormBuilder);
-  private readonly tls42020Service = inject(TLS42020Service);
+  public readonly tls42020Service = inject(TLS42020Service);
   private readonly datePipe = inject(DatePipe);
   private readonly dropDown = inject(DropdownApiService);
   private readonly errorReportService = inject(ErrorReportService);
@@ -62,9 +62,12 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     TLT_No: [null],
     SBM_BegDate: [null],
     SBM_EndDate: [null],
-    ...createPaginationConfig([{ field: "TLT_No", order: 0 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: "TLT_No", order: 0 }]],
   });
 
+  lastQueryBody: any;
   totalRecords = 0;
   data: TLS42020Data[] = [];
   selectedItems: TLS42020Data[] = [];
@@ -83,7 +86,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   menuTypeOptions = getSYS1000Options('SBM_Type');
   tltNoOptions = this.dropDown.queryTltTalent();
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'SBM_Type', header: '菜單類別', format: value => getSYS1000('SBM_Type', value) },
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
@@ -93,7 +96,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { field: 'upd_date', header: '更新日期', visible: false, format: formatDateTime }
   ];
 
-  expansionColumns: Column[] = [
+  expansionColumns: ReportColumn[] = [
     { field: 'SBM_BtnNo', header: '菜單按鍵序號' },
     { field: 'PLU_MagNo', header: '商品管理碼' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -115,6 +118,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
       this.tls42020Service.queryTLS42020(frm.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
+          this.lastQueryBody = frm.getRawValue();
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());

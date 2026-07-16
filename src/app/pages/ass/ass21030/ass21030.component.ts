@@ -3,7 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
-import { formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -14,10 +14,10 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 // 分攤設定介面

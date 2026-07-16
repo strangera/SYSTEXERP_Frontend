@@ -19,8 +19,8 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
-import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@others/component/table/table.model';
+import { validateMinNumber, validateRequired } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 

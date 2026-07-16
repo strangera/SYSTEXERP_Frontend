@@ -11,7 +11,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

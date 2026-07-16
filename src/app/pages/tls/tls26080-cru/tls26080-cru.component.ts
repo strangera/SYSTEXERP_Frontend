@@ -16,9 +16,9 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
-import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { TableComponent } from '@others/component/table/table.component';
+import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@others/component/table/table.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';

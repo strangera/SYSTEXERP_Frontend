@@ -1,0 +1,27 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="上傳檔案" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6">
+          <app-file-upload #fileUpload1 label="會員點數日結檔" class="col-12" name="Points" accept=".csv" [multiple]="true"
+            chooseLabel="選擇 CSV 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            mode="advanced" (select)="files1 = $event.files" [loading]="loading"
+            emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 檔案」按鈕。檔名格式：PointsTransactions_yyyymmdd.csv"
+            [disabled]="!hasPermission(Actions.Upload)"
+            (uploadHandler)="handleCustomUpload($event,'Points')"></app-file-upload>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-file-upload #fileUpload2 label="有價券日結檔" class="col-12" name="Voucher" accept=".csv" [multiple]="true"
+            chooseLabel="選擇 CSV 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            mode="advanced" (select)="files2 = $event.files" [loading]="loading"
+            emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 檔案」按鈕。檔名格式：VoucherTransactions_yyyymmdd.csv"
+            [disabled]="!hasPermission(Actions.Upload)"
+            (uploadHandler)="handleCustomUpload($event,'Voucher')"></app-file-upload>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>

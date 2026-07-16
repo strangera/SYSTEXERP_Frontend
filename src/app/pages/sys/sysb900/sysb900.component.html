@@ -34,10 +34,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="SYSB900" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'bus_class', order: 1 }]"
-    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [isRowSelectable]="isRowSelectable"></app-table>
+  <app-table-report tableKey="SYSB900" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords"
+    [isRowSelectable]="isRowSelectable" [loading]="loading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="apiService.querySYSB900.bind(apiService)">
+  </app-table-report>
 </div>

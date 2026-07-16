@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
+import { convertYYYYMMToDate } from '@others/component/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 假設此路徑正確
 import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';

@@ -14,7 +14,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 @Component({
   selector: 'app-tls22040',

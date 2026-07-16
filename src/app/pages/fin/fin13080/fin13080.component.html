@@ -12,7 +12,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
 
-              <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-year-month label="申報年月" [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"
               [evenMonth]="true"></app-year-month>
           </div>
@@ -40,16 +40,15 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="FIN13080" [data]="data" [columns]="columns" [(selectedItems)]="selectedItems"
-      [showRowEdit]="false" [showEdit]="false" [showManage]="false" [loading]="loading" [showDelete]="false"
-      [showCheckBox]="true" [isRowSelectable]="isRowSelectable" [multiSortMeta]="[{ field: 'No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-      (delete)="onDelete(selectedItems)">
+    <app-table-report tableKey="FIN13080" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showEdit]="false" [showManage]="false" [loading]="loading"
+      [showDelete]="false" [showCheckBox]="true" [isRowSelectable]="isRowSelectable" [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="queryFn" (delete)="onDelete(selectedItems)">
       <header>
         <div class="flex w-full justify-content-end">
           <p-button type="button" label="確認刪除" (onClick)="onDelete(selectedItems)"></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table-report>
   </div>
 </div>

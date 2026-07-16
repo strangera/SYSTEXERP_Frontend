@@ -167,20 +167,20 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS14020" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    <app-table-report tableKey="TLS14020" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showReportMode]="false"
       [showDetail]="false" [showEdit]="false" [showCheckBox]="false" [showDelete]="false" [addButton]="addButton"
-      [multiSortMeta]="[{ field: 'contract_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading"></app-table>
+      [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls14020Service.queryTLS14020.bind(tls14020Service)"
+      [loading]="loading"></app-table-report>
     <!-- (detail)="onDetail($event)" (delete)="onDelete($event)" -->
   </div>
 </div>
 <app-dialog [visible]="dialogVisible_log" header="顯示合約" [showFooter]="false"
   (visibleChange)="dialogVisible_log = $event" height="60%">
-  <app-table tableKey="TLS14020DialogTable" dataKey="id" [data]="dialogData" [columns]="dialogColumns"
-    [showReportMode]="false" [showDelete]="false" [showManage]="false"
-    [multiSortMeta]="[{ field: 'contract_version', order: 0 }]" [totalRecords]="dialogTotalRecords"
-    [showCaption]="false" [loading]="dialogLoading" (itemClick)="downloadContractLog($event)"></app-table>
+  <app-table-report tableKey="TLS14020DialogTable" dataKey="id" [data]="dialogData" [columns]="dialogColumns"
+    [showReportMode]="false" [showDelete]="false" [showManage]="false" [totalRecords]="dialogTotalRecords"
+    [showCaption]="false" [loading]="dialogLoading" (itemClick)="downloadContractLog($event)"></app-table-report>
 </app-dialog>
 <app-dialog [visible]="dialogVisible_print" header="匯出檔案" [showFooter]="false"
   (visibleChange)="dialogVisible_print = $event" height="30%" width="300px" minHeight="250px">

@@ -23,7 +23,7 @@ import {
   Column,
   formatDateTime,
   formatYYYYMM,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 const today = new Date();

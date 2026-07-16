@@ -15,7 +15,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatAmountCN } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatAmountCN } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

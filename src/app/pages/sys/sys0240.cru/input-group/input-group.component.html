@@ -1,12 +1,12 @@
 <label [for]="controlName">{{ label }}
-  <span *ngIf="isRequired" class="text-red-500">*</span>
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
 </label>
 <div class="custom-input-group p-inputgroup">
   <p-autoComplete class="w-full" [id]="controlName" [inputId]="controlName" [formControl]="control"
-    [placeholder]="customPlaceholder || placeholder" [dropdown]="!control.disabled" [suggestions]="filteredOptions"
+    [placeholder]="customPlaceholder || fieldState.placeholder" [dropdown]="!control.disabled" [suggestions]="filteredOptions"
     [optionLabel]="optionValue ? optionValue : customLabel" [optionValue]="optionValue"
     styleClass="w-full flex flex-row-reverse" inputStyleClass="w-full border-noround"
-    (completeMethod)="filterOptions($event)" appendTo="body" (onSelect)="onSelect($event)" [maxlength]="maxLength"
+    (completeMethod)="filterOptions($event)" appendTo="body" (onSelect)="onSelect($event)" [maxlength]="fieldState.maxLength"
     [forceSelection]="true" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" (onInput)="onInput($event)"
     (onKeyDown)="onInput($event)" [forceSelection]="true" [autofocus]="true" autocomplete="on">
     <ng-template let-option pTemplate="item" *ngIf="templateLabel">

@@ -14,7 +14,7 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatYYYYMM } from '@others/component/table/table.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';

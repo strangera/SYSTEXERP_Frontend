@@ -84,11 +84,9 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS14010" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    <app-table-report tableKey="TLS14010" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event" [showCheckBox]="false" [showDelete]="false" dataKey="id"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showManage]="false" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-      [loading]="loading"></app-table>
+      [showManage]="false" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="tls14010Service.queryTLS14010.bind(tls14010Service)" [loading]="loading"></app-table-report>
   </div>
 </div>

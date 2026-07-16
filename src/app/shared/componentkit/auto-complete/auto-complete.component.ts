@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common'; // 使用 CommonModule
-import { ChangeDetectionStrategy, Component, effect, input, Input, OnInit, output, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, Input, OnInit, output, signal, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
-import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 @Component({
   selector: 'app-auto-complete',
@@ -13,15 +14,19 @@ import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoComple
     FormsModule,
     ReactiveFormsModule,
     ControlMessagesComponent,
+    EnterToTabDirective,
   ],
   templateUrl: './auto-complete.component.html',
   styleUrls: ['./auto-complete.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [FieldStateDirective],
 })
-export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
+export class AutoCompleteComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @ViewChild(AutoComplete) private autoComplete?: AutoComplete;
-  @Input() override label = '';
-  @Input() override controlName = '';
+  @Input() label = '';
+  @Input() controlName = '';
   control = input.required<FormControl>();
   submitted = input<boolean>(false);
   optionLabel = input<string | undefined>(undefined);
@@ -59,10 +64,9 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
         this.filteredOptions.set([]);
       }
     }, { allowSignalWrites: true });
-    super();
   }
   ngOnInit(): void {
-    this.initControl(this.control());
+    this.fieldState.initControl(this.control(), this.controlName, this.label);
     this.control().valueChanges.subscribe(value => {
       this.valueChange.emit(value);
     })

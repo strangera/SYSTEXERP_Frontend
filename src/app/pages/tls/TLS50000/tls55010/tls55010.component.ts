@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';

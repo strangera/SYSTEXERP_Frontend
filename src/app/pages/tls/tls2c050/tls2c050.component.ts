@@ -2,7 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { forkJoin, Observable } from 'rxjs'; // 引入 forkJoin 和 Observable
 import { finalize, map } from 'rxjs/operators';

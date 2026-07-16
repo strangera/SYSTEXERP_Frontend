@@ -7,10 +7,10 @@ import { QueryTLS2D040Request, TLS2D040Service } from '@service/api/tls/tls2-d04
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { SortMeta } from 'primeng/api';
@@ -410,8 +410,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       Array.isArray(val) ? val.filter(v => v !== '') : [];
 
     return {
-      PageSize: 999999,
-      PageIndex: 0,
+      pageSize: 999999,
+      pageIndex: 0,
       OrderBy: '',
       Offset: 0,
       SortBy: raw.SortBy ?? [],

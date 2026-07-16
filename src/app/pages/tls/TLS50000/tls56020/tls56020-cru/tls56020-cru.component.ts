@@ -23,7 +23,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map } from 'rxjs';
 import { mapPagingToBackend } from '../../tls56020/tls56020.model';

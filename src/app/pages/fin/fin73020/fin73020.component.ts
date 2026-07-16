@@ -24,7 +24,7 @@ import { ReportColumn } from '../../../shared/componentkit/table-report/table-re
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
-} from '../../../shared/componentkit/table/table.model';
+} from '../../../others/component/table/table.model';
 
 import {
   FIN73020Data,

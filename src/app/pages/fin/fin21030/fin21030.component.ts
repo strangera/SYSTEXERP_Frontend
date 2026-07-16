@@ -4,8 +4,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
@@ -15,7 +15,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 //1.2.1.3 廠客資料維護
 @Component({
@@ -24,7 +23,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
     AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableComponent]
+    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })
 
 export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -48,10 +47,10 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_PayConditionDay: [''],                  // 付款期限
     VEN_CheckTitle: [''],                      // 票據抬頭
     VEN_Status: [[]],                          // 審核狀態 (dropdown)
-    ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
-    pageSize: [30],
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
-  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   VEN_FLAG_MAP: Record<string, string> = {
     '1': '廠商統一編號',
@@ -109,38 +108,38 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
   ];
   columns: any[] = [
     { field: 'VEN_No', header: '廠客代號', visible: true },
-    { field: 'VEN_Name', header: '廠客名稱', visible: true },
+    { field: 'VEN_Name', header: '廠客名稱', visible: true, width: '100px' },
     { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
     { field: 'VEN_EngName', header: '廠商英文簡稱', visible: true },
     { field: 'VEN_Flag', header: '欄位內容', visible: true },
     { field: 'VEN_Uniform', header: '廠商統一編號/身份證字號', visible: true },
     { field: 'VEN_RemitFeeMode', header: '郵電費負擔', visible: true },
     { field: 'VEN_Post', header: '郵遞區號', visible: true },
-    { field: 'VEN_Address', header: '郵寄地址', visible: true },
+    { field: 'VEN_Address', header: '郵寄地址', visible: true, width: '150px' },
     { field: 'VEN_Tel', header: '電話', visible: true },
     { field: 'VEN_Fax', header: '傳真', visible: true },
     { field: 'VEN_Email', header: '廠商電子郵件', visible: true },
-    { field: 'VEN_GUIAddr', header: '廠商發票地址', visible: true },
+    { field: 'VEN_GUIAddr', header: '廠商發票地址', visible: true, width: '150px' },
     { field: 'VEN_GUIEmail', header: '廠商發票電子郵件', visible: true },
     { field: 'VEN_PayType', header: '付款方式', visible: true },
     { field: 'VEN_BNK_No', header: '匯款銀行代碼', visible: true },
     { field: 'VEN_BNK_BranchNo', header: '匯款銀行分行代碼', visible: true },
     { field: 'VEN_BankAccountNo', header: '匯款帳號', visible: true },
-    { field: 'VEN_AccountName', header: '匯款帳戶名稱', visible: true },
+    { field: 'VEN_AccountName', header: '匯款帳戶名稱', visible: true, width: '100px' },
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'VEN_Status', header: '審核狀態', visible: true },
     { field: 'Approved_Date', header: '審核日期', visible: true, format: formatDate },
     { field: 'VEN_DiscYN', header: '貼現廠商', visible: true },
     { field: 'VEN_CTRLYN', header: '禁止背書轉讓', visible: true },
-    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: formatDate },
-    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: formatDate },
+    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: formatDate, width: '70px' },
+    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: formatDate, width: '70px' },
     { field: 'GUI_ID_WIRE', header: '匯款統一編號', visible: true },
-    { field: 'VEN_Remark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'VEN_Remark', header: '備註', visible: true, width: '150px' },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate, width: '70px' },
     { field: 'CRT_USR_No', header: '建立人員', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate, width: '70px' },
     { field: 'UPD_USR_No', header: '變更人員', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];

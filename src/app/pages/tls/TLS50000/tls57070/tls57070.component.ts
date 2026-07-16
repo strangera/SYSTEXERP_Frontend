@@ -14,7 +14,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';

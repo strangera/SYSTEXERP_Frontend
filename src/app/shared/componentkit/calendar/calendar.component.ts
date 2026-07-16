@@ -1,12 +1,13 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
 import { Subscription } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { ReadonlyCalendarDisplayComponent } from './readonly-calendar-display/readonly-calendar-display.component';
 
 export type CalendarType = 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
@@ -24,9 +25,13 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
+  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective],
+  hostDirectives: [FieldStateDirective],
 })
-export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class CalendarComponent implements OnInit, OnDestroy {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+  private readonly cdr = inject(ChangeDetectorRef);
+
   private valueChangeSubscription?: Subscription;
   private _calendarType: CalendarType = 'dateOne';
   private readonly calendarMaxLength: Record<CalendarType, number> = {
@@ -38,9 +43,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   };
 
   @Input() readonly = false;
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
 
@@ -105,7 +110,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     this.view = config.view as 'date' | 'month' | 'year';
 
     const maxLen = this.calendarMaxLength[this._calendarType];
-    this.maxLength = maxLen;
+    this.fieldState.maxLength = maxLen;
 
     const newValidators: any[] = [];
     newValidators.push(Validators.maxLength(maxLen));
@@ -123,16 +128,15 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     this.control.updateValueAndValidity({ emitEvent: false });
 
     if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
-      this.placeholder = config.customPlaceholder;
+      this.fieldState.placeholder = config.customPlaceholder;
     }
   }
 
   constructor(private validationService: ValidationService) {
-    super();
   }
 
   ngOnInit() {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label);
     this.initialRequired = this.control.hasValidator(Validators.required);
 
     const validators: any[] = [this.validationService.containsFullWidth.bind(this.validationService)];
@@ -148,7 +152,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     this.applyCalendarConfig();
 
     if (this.customPlaceholder && this.customPlaceholder !== '請選擇') {
-      this.placeholder = this.customPlaceholder;
+      this.fieldState.placeholder = this.customPlaceholder;
     }
 
     // 🔧 處理字串格式的日期，轉為 Date 物件並校正起迄日時間
@@ -190,7 +194,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   onInput(event: any) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    const maxLen = this.maxLength ?? 0;
+    const maxLen = this.fieldState.maxLength ?? 0;
 
     // 1. 如果是刪除鍵，放行讓使用者刪除
     if (event.inputType === 'deleteContentBackward') {

@@ -1,11 +1,13 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CopyControlDirective } from '@shared/directive/copy-control.directive';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldMeta, FieldStateDirective } from '@shared/directive/field-state.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { ButtonComponent } from '../button/button.component';
 import { InputTextService } from './input-text.service';
 
@@ -25,15 +27,22 @@ import { InputTextService } from './input-text.service';
     TooltipModule,
     ButtonComponent,
     ControlMessagesComponent,
+    EnterToTabDirective,
+    CopyControlDirective,
   ],
+  hostDirectives: [FieldStateDirective],
 })
-export class InputTextComponent extends BasicKitComponent implements OnInit {
+export class InputTextComponent implements OnInit {
+  protected readonly fieldState = inject(FieldStateDirective, { self: true });
+
   @Input() readonly = false; // 新增：唯讀模式
-  @Input() override label = '';
+  @Input() label = '';
   @Input() showLabel = true;
-  @Input() override controlName = '';
+  @Input() controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
+  /** 明確宣告欄位規則（required/minLength/maxLength/min/max/numberOnly），取代對驗證器的探測。不傳則沿用原本探測行為。 */
+  @Input() fieldMeta?: FieldMeta;
   @Input() showCopyButton = false;
   @Input() customPlaceholder?: string;
 
@@ -67,11 +76,10 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   atMaxLength = false;
 
   constructor(private readonly inputTextService: InputTextService) {
-    super();
   }
 
   ngOnInit(): void {
-    this.initControl(this.control);
+    this.fieldState.initControl(this.control, this.controlName, this.label, this.fieldMeta);
     if (this.disabled) {
       this.control.disable();
     }
@@ -111,8 +119,8 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
       const { trimmedValue, isMaxLength } = this.inputTextService.trimToWeighted(value, this.weightedMax);
       value = trimmedValue;
       this.atMaxLength = isMaxLength;
-    } else if (this.maxLength && value.length > this.maxLength) {
-      value = value.slice(0, this.maxLength);
+    } else if (this.fieldState.maxLength && value.length > this.fieldState.maxLength) {
+      value = value.slice(0, this.fieldState.maxLength);
       this.atMaxLength = true;
     }
 

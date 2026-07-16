@@ -19,7 +19,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { AddButton, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { AddButton, convertDateToYYYYMM } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { columns, ecrSummaryColumns, ecrTrackSummaryColumns, monthOptions, Pos1018 } from './fin11200.model';
 

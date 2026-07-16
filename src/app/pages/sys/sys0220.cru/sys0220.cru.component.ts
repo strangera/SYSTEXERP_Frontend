@@ -1,18 +1,18 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
-
-import { NgIf } from '@angular/common';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DividerModule } from 'primeng/divider';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { TableReportComponent } from 'src/app/shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
 import { tblUser } from '../../../shared/models/sys/sysb000.model';
 import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 
@@ -35,7 +35,8 @@ export interface RoleOption {
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    DividerModule,
+    TableReportComponent,
     NgIf,
     TranslateModule,
     DialogComponent,
@@ -51,13 +52,13 @@ export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser> implemen
   originalAvailableRoles: RoleOption[] = [];
   selectedAssignedRoles: RoleOption[] = [];
   selectedAvailableRoles: RoleOption[] = [];
-  assignedRolesColumns: Column[] = [
+  assignedRolesColumns: ReportColumn[] = [
     { field: 'role_no', header: '角色代號', visible: true },
     { field: 'role_name', header: '角色名稱', visible: true },
     { field: 'description', header: '角色註記', visible: true },
   ];
 
-  availableRolesColumns: Column[] = [
+  availableRolesColumns: ReportColumn[] = [
     { field: 'role_no', header: '角色代號', visible: true },
     { field: 'role_name', header: '角色名稱', visible: true },
   ];

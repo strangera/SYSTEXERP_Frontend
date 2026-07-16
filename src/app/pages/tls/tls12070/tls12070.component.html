@@ -31,25 +31,22 @@
 <div class="card" *ngIf="activeReport === 'query'">
   <div class="col-13">
     <h6>專櫃訪談紀錄追蹤表</h6>
-    <app-table tableKey="TLS12070" [data]="interview_data" [columns]="intervew_columns" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" (detail)="onDetail1($event)" [showCheckBox]="false" [showManage]="true"
-      [showEdit]="false" [showDelete]="false" dataKey="contact_USR_No"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
-        onLazyLoadData($event, queryForm); onQueryClick(queryForm)
-      " [lazy]="true" [loading]="loading" apiUrl="queryTLS12070_Count"></app-table>
+    <app-table-report tableKey="TLS12070Interview" [data]="interview_data" [columns]="intervew_columns"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (detail)="onDetail1($event)"
+      [showCheckBox]="false" [showManage]="true" [showEdit]="false" [showDelete]="false" dataKey="contact_USR_No"
+      [totalRecords]="totalRecords" [lastQueryBody]="interviewLastQueryBody"
+      [queryFunction]="tls12070Service.queryTLS12070_Count.bind(tls12070Service)" [loading]="loading"
+      [exportContext]="{ apiUrl: 'queryTLS12070_Count' }"></app-table-report>
   </div>
 </div>
 
 <div class="card" *ngIf="activeReport === 'willing'">
   <div class="col-13">
     <h6>意願報表</h6>
-    <app-table tableKey="TLS12070" [data]="willing_data" [columns]="willing_columns" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [showCheckBox]="false" [showManage]="false" [showDelete]="false"
-      dataKey="id" [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="
-        onLazyLoadData($event, queryForm); onWillingClick(queryForm)
-      " [lazy]="true" [loading]="loading" apiUrl="queryTLS12070_Summary"></app-table>
+    <app-table-report tableKey="TLS12070Willing" [data]="willing_data" [columns]="willing_columns"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="false"
+      [showManage]="false" [showDelete]="false" dataKey="id" [totalRecords]="totalRecords"
+      [lastQueryBody]="willingLastQueryBody" [queryFunction]="tls12070Service.queryTLS12070_Summary.bind(tls12070Service)"
+      [loading]="loading" [exportContext]="{ apiUrl: 'queryTLS12070_Summary' }"></app-table-report>
   </div>
 </div>

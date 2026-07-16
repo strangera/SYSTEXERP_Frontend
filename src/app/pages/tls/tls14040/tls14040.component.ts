@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -30,7 +31,7 @@ yesterday.setDate(yesterday.getDate() - 1);
     InputTextComponent,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule]
 })
 
@@ -65,12 +66,15 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     // ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     // ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
+  lastQueryBody: any;
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
 
-  columns: Column[] = [// 表格欄位定義
+  columns: ReportColumn[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
     { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
@@ -134,7 +138,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ];
 
   constructor(
-    private tls14030Service: Tls14030Service,
+    public readonly tls14030Service: Tls14030Service,
     private readonly dropDownListService: DropDownListService,
   ) { super(); }
 
@@ -151,6 +155,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
         next: (response) => {
           if (response.Status === '0000') {
             console.log('保證票彙總response', response);
+            this.lastQueryBody = formValue;
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);

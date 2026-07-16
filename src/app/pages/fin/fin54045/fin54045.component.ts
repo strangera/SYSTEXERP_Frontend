@@ -5,35 +5,38 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin54045Service } from '@service/api/fin/fin54045.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-fin54045',
   templateUrl: './fin54045.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent, TableComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent, TableReportComponent]
 })
 export class FIN54045Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     vendorSName: ['', Validators.required], //反年結（預設 disabled，會由後端填入並控制狀態）
-    ...createPaginationConfig([{ field: 'cls_date', order: -1 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'cls_date', order: -1 }]],
   });
 
 
   data: any[] = [];
+  lastQueryBody: any;
   selectedItems: any[] = [];
   totalRecords = 0;
 
-  columns: Column[] = [
-    { field: 'id', header: 'ID', hidden: true },
-    { field: 'mid', header: 'MID', hidden: true },
+  columns: ReportColumn[] = [
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'mid', header: 'MID', visible: false },
     { field: 'cls_type', header: '結算型態', visible: true },
     { field: 'cls_date', header: '結算年月', visible: true },
     { field: 'check_result', header: '結果說明', visible: true },
@@ -41,7 +44,7 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private datePipe: DatePipe,
-    private fin54045Service: Fin54045Service
+    public readonly fin54045Service: Fin54045Service
 
   ) {
     super();
@@ -58,6 +61,7 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
       this.fin54045Service.queryFIN54045({})
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
+          this.lastQueryBody = {};
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());

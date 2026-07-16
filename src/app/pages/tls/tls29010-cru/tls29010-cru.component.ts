@@ -14,7 +14,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { Tls29010Service } from '../../../service/api/tls/tls29010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -23,7 +23,7 @@ import { option } from '../../../shared/models/sys/sysb000.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {

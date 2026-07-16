@@ -40,8 +40,9 @@
 
 <!-- 第一個表格 -->
 <div class="card1 mt-3">
-  <app-table dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData" [showPaginator]="false"
-    [showCaption]="false" [showManage]="false" [showFooter]="false" [loading]="loadingHeader"></app-table>
+  <app-table-report dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData"
+    [totalRecords]="headerData.length" [showCaption]="false" [showManage]="false"
+    [loading]="loadingHeader"></app-table-report>
 </div>
 
 <!-- 第二個表格 -->

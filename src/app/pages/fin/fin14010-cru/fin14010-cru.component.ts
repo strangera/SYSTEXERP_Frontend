@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';

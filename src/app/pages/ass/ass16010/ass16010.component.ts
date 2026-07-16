@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS16010Data, ASS16010Service, QueryASS16010Request, QueryFAINVENTORYMRequest } from '@service/api/ass/ass16010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -13,7 +13,7 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 
 @Component({
   selector: 'app-ass16010',

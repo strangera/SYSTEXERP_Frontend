@@ -1,7 +1,7 @@
 /**
  * 年度總業績抽成設定欄位定義
  */
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 
 export function getAnnualColumns(): ColumnDef[] {
   return [

@@ -1,11 +1,11 @@
-import { AsyncPipe, Location } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -77,7 +77,6 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     public readonly fin29060Service: FIN29060Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
-    private readonly location: Location,
   ) { super(); }
   private readonly navHelper = inject(NavigationHelperService); // 注入導覽小幫手
   ngOnInit(): void {
