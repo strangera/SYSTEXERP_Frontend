@@ -8,7 +8,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table'; // 引入原生的 TableModule
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { focusNextFocusable } from '@shared/directive/enter-to-tab.util';
 
@@ -28,7 +27,6 @@ export interface FieldsConfig {
     NgClass, NgFor, NgIf, FormsModule, ReactiveFormsModule,
     AutoCompleteModule, InputTextModule, OverlayPanelModule, ButtonModule,
     TableModule, // 替換為原生的 TableModule
-    ControlMessagesComponent
   ],
   hostDirectives: [FieldStateDirective],
 })

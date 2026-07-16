@@ -22,7 +22,6 @@ import {
 } from '@angular/forms';
 
 // PrimeNG & Shared Components
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
@@ -38,7 +37,6 @@ import { InputTextModule } from 'primeng/inputtext';
     DropdownModule,
     InputTextModule,
     NgClass,
-    ControlMessagesComponent,
   ],
   template: `
     <div class="field year-month-field">
@@ -79,11 +77,8 @@ import { InputTextModule } from 'primeng/inputtext';
         />
       </div>
 
-      @if (!readonly()) {
-        <app-control-messages
-          [onerror]="submitted() || (control().touched && control().invalid)"
-          [control]="control()"
-        />
+      @if (!readonly() && (submitted() || (control().touched && control().invalid)) && fieldState.getErrorMessage(control()); as msg) {
+        <div class="text-red-600 text-sm">{{ msg }}</div>
       }
     </div>
   `,

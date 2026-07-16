@@ -3,7 +3,6 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } from 'primeng/calendar';
 import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
@@ -11,7 +10,7 @@ import { FieldStateDirective } from '@shared/directive/field-state.directive';
   selector: 'app-calenderone',
   standalone: true,
   styleUrls: ['./calendarone.component.scss'],
-  imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective],
+  imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, EnterToTabDirective],
   templateUrl: './calenderone.component.html',
   hostDirectives: [FieldStateDirective],
 })

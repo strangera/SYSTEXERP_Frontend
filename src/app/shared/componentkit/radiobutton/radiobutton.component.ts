@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, OnInit, output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 
@@ -32,7 +31,9 @@ import { FieldStateDirective } from '@shared/directive/field-state.directive';
   </div>
   }
 </div>
-<app-control-messages [onerror]="submitted()" [control]="control()"></app-control-messages>
+@if (submitted() && fieldState.getErrorMessage(control()); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -40,7 +41,6 @@ import { FieldStateDirective } from '@shared/directive/field-state.directive';
     RadioButtonModule,
     FormsModule,
     ReactiveFormsModule,
-    ControlMessagesComponent,
     EnterToTabDirective,
   ],
   hostDirectives: [FieldStateDirective],

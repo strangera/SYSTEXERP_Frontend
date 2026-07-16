@@ -5,7 +5,6 @@ import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
 import { Subscription } from 'rxjs';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { ReadonlyCalendarDisplayComponent } from './readonly-calendar-display/readonly-calendar-display.component';
@@ -25,7 +24,7 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, EnterToTabDirective],
+  imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, EnterToTabDirective],
   hostDirectives: [FieldStateDirective],
 })
 export class CalendarComponent implements OnInit, OnDestroy {

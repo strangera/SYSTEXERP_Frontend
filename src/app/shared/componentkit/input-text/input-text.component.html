@@ -72,12 +72,9 @@
   ></app-button>
 </div>
 
-<app-control-messages
-  [hidden]="!showErrorMessage"
-  [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"
-  [errorForGroup]="errorForGroup"
-></app-control-messages>
+@if (showErrorMessage && (submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control, errorForGroup); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}
 <small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
   {{ helpMsg }}
 </small>

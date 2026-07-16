@@ -24,8 +24,9 @@
     [placeholder]="fieldState.placeholder" [submitted]="submitted" [controlName]="controlName"></app-readonly-calendar-display>
 </ng-template>
 
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+@if ((submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}
 
 <small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
   {{ helpMsg }}

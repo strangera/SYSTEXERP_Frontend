@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common'; // 使用 CommonModule
 import { ChangeDetectionStrategy, Component, effect, inject, input, Input, OnInit, output, signal, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
@@ -13,7 +12,6 @@ import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoComple
     AutoCompleteModule,
     FormsModule,
     ReactiveFormsModule,
-    ControlMessagesComponent,
     EnterToTabDirective,
   ],
   templateUrl: './auto-complete.component.html',

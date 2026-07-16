@@ -29,4 +29,6 @@
   </div>
 </ng-template>
 
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+@if (submitted && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

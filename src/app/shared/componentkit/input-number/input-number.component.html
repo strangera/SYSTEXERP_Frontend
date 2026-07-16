@@ -27,5 +27,6 @@
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>
-<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+@if (showErrorMessage && (submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

@@ -20,9 +20,9 @@
             (click)="openSelectorPanel($event)" [disabled]="valueControl.disabled"></button>
         </div>
 
-        <app-control-messages [onerror]="
-            isSubmitted || (valueControl.touched && valueControl.invalid)
-          " [control]="valueControl"></app-control-messages>
+        @if ((isSubmitted || (valueControl.touched && valueControl.invalid)) && fieldState.getErrorMessage(valueControl); as msg) {
+          <div class="text-red-600 text-sm">{{ msg }}</div>
+        }
       </ng-container>
 
       <ng-template #otherFieldsTemplate>
