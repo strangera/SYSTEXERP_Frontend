@@ -4,12 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';

@@ -5,18 +5,18 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin11060Service } from '@service/api/fin/fin11060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
 
 export interface InvoiceBase {

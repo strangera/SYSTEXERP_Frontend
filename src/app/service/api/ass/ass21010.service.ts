@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus, EngType } from '@pages/ass/ass21010/ass21010.model';
 import { Option } from '@service/utility/dropdown-api.model';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import saveAs from 'file-saver';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';

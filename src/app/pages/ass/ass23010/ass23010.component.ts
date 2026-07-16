@@ -6,12 +6,12 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 

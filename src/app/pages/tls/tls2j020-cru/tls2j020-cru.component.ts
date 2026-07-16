@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls2j020-cru',

@@ -7,16 +7,16 @@ import { TLS42020Data, TLS42020DetailData, TLS42020DropdownResponse, TLS42020Ins
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateMaxByteLength, validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateMaxByteLength, validateNumber, validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, of, shareReplay } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls42020-cru',

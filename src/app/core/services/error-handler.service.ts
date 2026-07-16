@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../service/system/auth.service';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../shared/components/notification-message/notification.service';
 
 @Injectable({
   providedIn: 'root'

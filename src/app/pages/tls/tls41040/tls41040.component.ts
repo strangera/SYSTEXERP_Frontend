@@ -5,18 +5,18 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarComponent } from "@shared/components/calendar/calendar.component";
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDateTime } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { TLS41040Data, TLS41040QueryReq, Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { Column } from '../../../others/component/table/table.model';
 
 @Component({

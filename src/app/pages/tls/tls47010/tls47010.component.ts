@@ -11,10 +11,10 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS47010Service } from '../../../service/api/tls/tls47010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls47010',

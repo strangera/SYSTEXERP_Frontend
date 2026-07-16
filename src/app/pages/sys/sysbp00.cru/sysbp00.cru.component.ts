@@ -5,15 +5,15 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sysbp00Response, Sysbp00ResponseDetail, Sysbp00Service } from '@service/api/sys/sysbp00.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-sysbp00.cru',

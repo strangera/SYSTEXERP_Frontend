@@ -8,13 +8,13 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TLS41010Data } from '../tls41010/tls41010.model';
 @Component({
   selector: 'app-tls46030-cru',

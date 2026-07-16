@@ -3,19 +3,19 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-sysbc00.cru',

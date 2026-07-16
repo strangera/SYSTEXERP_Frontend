@@ -10,7 +10,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { finalize, Observable } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../component/notification-message/notification.service';
+import { NotificationService } from '../../components/notification-message/notification.service';
 import { LazyLoadEvent } from '@others/component/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationError, Router } from '@angular/router';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { filter } from 'rxjs';
 import { VersionCheckService } from './version-check.service';
 @Injectable({ providedIn: 'root' })

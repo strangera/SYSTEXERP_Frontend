@@ -6,14 +6,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Cpm11090Service, QueryCPM11090Response } from '@service/api/cpm/cpm11090.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 @Component({
   selector: 'app-cpm11090-cru',
   templateUrl: './cpm11090cru.component.html',

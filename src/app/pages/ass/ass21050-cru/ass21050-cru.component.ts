@@ -11,10 +11,10 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs/operators';
 import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-ass21050-cru',

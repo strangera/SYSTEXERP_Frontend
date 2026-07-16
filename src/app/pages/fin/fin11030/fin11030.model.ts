@@ -1,6 +1,6 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
-import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
-import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn } from "@shared/components/table-report/table-report.model";
+import { transformOptionsForExport } from "src/app/others/componentextends/basic-print/basic-print-data.component";
 import { formatAmount, formatDateTime, formatYN } from "../../../others/component/table/table.model";
 
 export interface APS2001Data {
@@ -75,7 +75,7 @@ const formatInvoiceYYYYMM = (
 };
 export const columns: ReportColumn[] = [
   // { field: 'id', header: '序號', visible: true },
-   {
+  {
     field: 'SAL_GUIYYYYMM',
     header: '發票年月',
     visible: true,

@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS45030Request, QueryTLS45030ResponseData, Tls45030Service } from '@service/api/tls/tls45030.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatDate, formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 加入 finalize
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 // 2.4.5.3 收銀機開關機時間表
 @Component({

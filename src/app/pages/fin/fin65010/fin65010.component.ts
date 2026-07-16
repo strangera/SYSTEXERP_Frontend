@@ -6,18 +6,18 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { APS3006Response, Fin65010Service, QueryFIN65010Response } from 'src/app/service/api/fin/fin65010.service';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputTextRangeComponent } from 'src/app/shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextRangeComponent } from 'src/app/shared/components/input-text-range/input-text-range.component';
 import { Column, createPaginationConfig, formatAmount } from 'src/app/others/component/table/table.model';
 import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-fin65010',

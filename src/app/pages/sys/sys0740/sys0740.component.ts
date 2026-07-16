@@ -4,13 +4,13 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProgNoDropdownResponse, QuerySYS0740Request, QuerySYS0740Response, Sys0740Service } from '@service/api/sys/sys0740.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-sys0740',

@@ -1,5 +1,5 @@
 import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumnExtend } from '@shared/components/table-edit/table-edit.model';
 export interface TLS26080Data {
   id: number;                  // 主鍵，自動編號
   mid: number;                 // 主檔關聯 ID

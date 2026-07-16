@@ -2,7 +2,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableCaptionComponent } from '@others/component/table/import-table';
 import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
@@ -10,6 +9,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { TableReportUtilityService } from './fin25010-table-report-utility.service';
 import { ReportColumn } from './fin25010-table-report.model';
 

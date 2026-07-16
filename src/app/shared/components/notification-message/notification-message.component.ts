@@ -81,11 +81,6 @@ export class NotificationMessageComponent implements OnInit {
     this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe((blocked) => {
       this.blockedDocument = blocked;
     });
-
-    // this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe(() => {
-    //   this.blockedDocument = false;
-    // });
-
     this.notificationService.inputBoxMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.inputBoxDisplay = true;
       this.inputBoxHeader = opts.header;
@@ -95,7 +90,6 @@ export class NotificationMessageComponent implements OnInit {
       this.inputBoxCancel = opts.cancel;
     });
   }
-  // ----------------------------------------------------------------
   hideAndCleanMsgBox() {
     this.msgBoxDisplay = false;
     this.msgBoxHeader = '';

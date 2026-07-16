@@ -6,17 +6,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin29010Data, Fin29010Request, Fin29010Service } from '@service/api/fin/fin29010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatYYYYMM, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 //1.2.9.1 保留款彙總表
 @Component({

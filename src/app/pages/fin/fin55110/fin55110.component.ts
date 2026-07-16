@@ -6,15 +6,15 @@ import { FIN55110Service } from '@service/api/fin/fin55110.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin55110',

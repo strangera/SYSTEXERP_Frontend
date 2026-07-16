@@ -8,14 +8,14 @@ import { FIN55020Data, Fin55020Service } from '@service/api/fin/fin55020.service
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { Fin55020TableReportComponent } from './fin55020-table-report/fin55020-table-report.component';
 import { formatAmountNo0, formatDate, ReportColumn } from './fin55020-table-report/fin55020-table-report.model';
 @Component({

@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { TableService } from '@shared/exports/report.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { QueryStateService } from '@shared/service/query-state.service';

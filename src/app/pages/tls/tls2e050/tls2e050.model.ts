@@ -1,4 +1,4 @@
-import { formatAmount, ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatAmount, ReportColumn } from "@shared/components/table-report/table-report.model";
 import { ColumnGroup } from "@others/component/table/table.model";
 
 // 專櫃帳款試算彙總表 (queryTLS2E050) - 保持不變

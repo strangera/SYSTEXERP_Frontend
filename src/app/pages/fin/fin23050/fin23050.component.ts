@@ -5,11 +5,11 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { AuthService } from '../../../service/system/auth.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 //

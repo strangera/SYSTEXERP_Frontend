@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { FIN15080Service } from '../../../service/api/fin/fin15080.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 interface StoTaxNoOption {

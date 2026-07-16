@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin62010Service, QueryFIN62010Response } from '@service/api/fin/fin62010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextareaComponent } from "@shared/components/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-fin62010-cru',

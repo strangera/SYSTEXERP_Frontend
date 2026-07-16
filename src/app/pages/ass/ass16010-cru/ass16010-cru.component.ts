@@ -3,14 +3,14 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS16010Data, ASS16010Service, InsertASS16010Request, QueryASS11020Request, QueryASS11100Request } from '@service/api/ass/ass16010.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-ass16010-cru',

@@ -10,13 +10,13 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { distinctUntilChanged, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatAmountWithDecimals, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { formatAmountWithDecimals, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { QueryASS17070DataWrapper, QueryASS17070Detail, QueryASS17070Request } from './ass17070.model';
 
 @UntilDestroy()

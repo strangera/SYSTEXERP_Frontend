@@ -8,7 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { first } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from '../../service/system/auth.service';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../shared/components/notification-message/notification.service';
 import { SsoDashboardService } from './sso-dashboard/sso-dashboard.service';
 
 @Component({

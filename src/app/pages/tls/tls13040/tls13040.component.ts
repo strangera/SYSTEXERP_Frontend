@@ -15,13 +15,13 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
 
 // UI
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { TableUtilityService } from '@others/component/table/table-utility.service';
 import { AddButton, Column, ColumnGroup, LazyLoadEvent } from '@others/component/table/table.model';
@@ -23,6 +22,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { debounceTime, finalize, fromEvent, Observable } from 'rxjs';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-fin29060-table-subheader',

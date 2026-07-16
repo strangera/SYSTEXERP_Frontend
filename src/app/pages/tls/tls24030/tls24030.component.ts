@@ -8,19 +8,19 @@ import { TLS41010Service } from '@service/api/tls/tls41010.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model'; // 引入 Option 型別
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AutoCompleteComponent } from '@shared/components/auto-complete/auto-complete.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable, of } from 'rxjs'; // 引入 map
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-tls24030',

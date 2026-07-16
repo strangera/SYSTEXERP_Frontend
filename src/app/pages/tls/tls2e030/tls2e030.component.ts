@@ -6,14 +6,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e030Data, Tls2e030EstBody, Tls2e030QueryBody, Tls2e030Service } from '@service/api/tls/tls2e030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDate, formatYYYYMM, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 // 2.2.14.3 專櫃帳款試算作業

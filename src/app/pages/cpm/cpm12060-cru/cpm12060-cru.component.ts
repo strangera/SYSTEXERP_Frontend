@@ -6,18 +6,18 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Cpm12010Service } from '@service/api/cpm/cpm12010.service';
 import { Cpm12060Service, detail12060Data } from '@service/api/cpm/cpm12060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { formatDateTime } from '@others/component/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { CPM11020Data } from '../../../service/api/cpm/cpm11020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
+import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
 
 //5.1.2.6  顧客意見處理狀況表 CRU
 @Component({

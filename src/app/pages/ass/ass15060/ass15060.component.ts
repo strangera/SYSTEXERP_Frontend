@@ -7,16 +7,16 @@ import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { Column, createPaginationConfig, formatDate } from '../../../others/component/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
@@ -24,7 +24,7 @@ import { ASS11010Data } from '../ass11010/ass11010.model';
 import { ASS11020Data } from '../ass11020/ass11020.model';
 import { ASS11030Data } from '../ass11030/ass11030.model';
 import { Ass15060Service } from './../../../service/api/ass/ass15060.service';
-import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton/radiobutton.component';
+import { RadiobuttonComponent } from './../../../shared/components/radiobutton/radiobutton.component';
 
 
 // 財產變更記錄查詢

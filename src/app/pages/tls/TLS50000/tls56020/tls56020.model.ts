@@ -1,4 +1,4 @@
-import { formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/components/table-report/table-report.model';
 import { Column } from '@others/component/table/table.model';
 
 /** === 清單：單筆資料 === */

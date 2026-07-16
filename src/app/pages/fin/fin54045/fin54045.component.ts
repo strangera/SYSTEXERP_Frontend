@@ -4,15 +4,15 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin54045Service } from '@service/api/fin/fin54045.service';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 @Component({
   selector: 'app-fin54045',

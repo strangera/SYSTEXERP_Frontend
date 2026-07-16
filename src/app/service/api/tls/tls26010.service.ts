@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal, WritableSignal } from '@angular/core';
 import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';

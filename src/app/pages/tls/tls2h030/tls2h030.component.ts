@@ -8,12 +8,12 @@ import { Tls2h030Service } from '@service/api/tls/tls2h030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '@shared/components/table-report/table-report.model'; // 引入 ReportColumn
 import { formatYYYYMM } from '@others/component/table/table.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
@@ -21,9 +21,9 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 // 2.2.17.1 租金發票套印作業
 @Component({

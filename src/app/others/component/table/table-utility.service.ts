@@ -1,7 +1,7 @@
 // table-utility.service.ts
 import { Injectable } from '@angular/core';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
 import { Column, ColumnGroup } from './table.model';
 

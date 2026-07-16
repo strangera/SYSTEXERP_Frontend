@@ -7,18 +7,18 @@ import { Fin24010Service, QueryBankAccountRequest } from '@service/api/fin/fin24
 import { FIN29020Detail, FIN29020QueryRequest, FIN29020Service } from '@service/api/fin/fin29020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-fin29020',

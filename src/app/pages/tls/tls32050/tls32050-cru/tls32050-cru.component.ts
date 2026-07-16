@@ -1,13 +1,13 @@
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmountWithDecimals } from '@shared/components/table-report/table-report.model';
 import { formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { TLS32050DetailRequest, TLS32050DetailResponse, TLS32050Request, TLS32050Response, TLS32050Service } from 'src/app/service/api/tls/tls32050.service';
-import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({

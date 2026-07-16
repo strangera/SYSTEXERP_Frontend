@@ -5,16 +5,16 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CPM11080Service } from '@service/api/cpm/cpm11080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { AddButton, formatDate, formatYN } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
 const formatSubKind = (value: string | null | undefined, fallbackName?: string): string => {
   if (!value && !fallbackName) { return ''; }

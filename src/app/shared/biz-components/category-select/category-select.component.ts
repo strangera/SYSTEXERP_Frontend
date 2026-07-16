@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
 import { Subject, debounceTime, of, switchMap, takeUntil, tap } from 'rxjs';
 

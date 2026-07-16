@@ -3,16 +3,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Cpm13010Service, QueryCPM13010Response } from '../../../service/api/cpm/cpm13010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-cpm13010-cru',

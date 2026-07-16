@@ -16,19 +16,19 @@ import { DropdownApiService } from '../../../service/utility/dropdown-api.servic
 import {
   formatAmount,
   ReportColumn
-} from '../../../shared/componentkit/table-report/table-report.model';
+} from '../../../shared/components/table-report/table-report.model';
 
 // UI 元件
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls23050',

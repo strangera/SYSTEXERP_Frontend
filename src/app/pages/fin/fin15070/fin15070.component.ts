@@ -8,13 +8,13 @@ import {
 import { AccordionModule } from 'primeng/accordion';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { FIN15070Service } from '../../../service/api/fin/fin15070.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../others/component/table/table.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { QueryYearMonthComponent } from './query-year-month/query-year-month.component';
 
 @Component({

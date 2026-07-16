@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { EditColumn } from '../table-edit.model';
 
 // 定義 RowValidationFn 類型，這是 TableEditComponent 的 @Input() rowValidate 參數的類型

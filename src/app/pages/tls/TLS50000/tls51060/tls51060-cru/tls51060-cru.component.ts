@@ -4,12 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PluLogo, Tls51060Service } from '@service/api/tls/tls51060.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { apiOption, Sysb300m } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';

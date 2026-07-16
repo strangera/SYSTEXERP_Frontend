@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { environment } from 'src/environments/environment';
 
 const DEBUG_KEY = 'AppDebugModeEnabled';

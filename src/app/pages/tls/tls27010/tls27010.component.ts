@@ -6,17 +6,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS27010Service } from '@service/api/tls/tls27010.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatDate, formatDateTime, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',

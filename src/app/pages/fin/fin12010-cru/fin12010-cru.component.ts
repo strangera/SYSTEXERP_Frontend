@@ -6,12 +6,12 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
 import { SystemOption, SystemOptionsService } from '../../../service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { monthOptions } from '../fin11200/fin11200.model';
 

@@ -19,9 +19,9 @@ import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import * as XLSX from 'xlsx-js-style';
 
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 interface SubTable {

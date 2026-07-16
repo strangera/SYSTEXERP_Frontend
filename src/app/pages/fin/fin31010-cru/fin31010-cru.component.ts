@@ -5,14 +5,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { Fin31010Service, QueryFin31010Response } from '@service/api/fin/fin31010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextareaComponent } from "@shared/components/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 //1.3.1.1 收款項目對照會計科目維護 CRU
 @Component({

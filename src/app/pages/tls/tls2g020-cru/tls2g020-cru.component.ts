@@ -4,11 +4,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
@@ -16,8 +16,8 @@ import { TableModule } from 'primeng/table';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 // 定義日期資料的類型
 interface DayData {

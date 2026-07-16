@@ -4,14 +4,14 @@ import { untilDestroyed } from '@ngneat/until-destroy'; // 確保您有安裝此
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm12010Data, Cpm12010Service, DropdownCpm12010Data, QueryCpm12010Request } from '@service/api/cpm/cpm12010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { Column, formatDateTime } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 引入 finalize
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 //5.1.2.1 顧客意見類別維護
 @Component({

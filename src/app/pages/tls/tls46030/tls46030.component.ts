@@ -6,13 +6,13 @@ import { QueryTLS46030Request, QueryTLS46030Response, Tls46030Service } from '@s
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TLS46030TableReportComponent } from './tls46030-table-report/tls46030-table-report.component';
 import { formatDate, formatDateTime, ReportColumn } from './tls46030-table-report/tls46030-table-report.model';
 // 2.4.6.4  收銀機異動排程維護

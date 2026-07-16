@@ -5,16 +5,16 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin54025Service } from '@service/api/fin/fin54025.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 
 @Component({

@@ -5,8 +5,8 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72020Data, FIN72020Service, QueryFIN72020Request, voidFIN72020Request } from '@service/api/fin/fin72020.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -18,10 +18,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { AddButton, Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 

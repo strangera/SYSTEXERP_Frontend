@@ -4,10 +4,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { Sysb100Service } from '../../../service/api/sys/sysb100.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { Sysb100m } from '../../../shared/models/sys/sysb000.model';

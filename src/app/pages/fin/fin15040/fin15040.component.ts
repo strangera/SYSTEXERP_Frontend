@@ -7,20 +7,20 @@ import { FIN15040Data, FIN15040PrintRequest, FIN15040QueryRequest, FIN15040Servi
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../others/component/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 

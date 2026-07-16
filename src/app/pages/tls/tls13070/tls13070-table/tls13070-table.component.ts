@@ -3,11 +3,11 @@ import { HttpResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { ButtonModule } from 'primeng/button';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { Table, TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 
 export interface FlattenedTls13070Row extends Tls13070Response {
   rowIndex: number;

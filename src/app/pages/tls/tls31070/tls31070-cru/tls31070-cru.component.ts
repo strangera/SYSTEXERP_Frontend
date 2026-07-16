@@ -1,13 +1,13 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31070DetailItem, TLS31070DetailRequest, TLS31070Item, TLS31070PrintDetailRequest, TLS31070Request, Tls31070Service } from '@service/api/tls/tls31070.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { NotificationService } from '../../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
