@@ -1031,6 +1031,7 @@ export interface FIN53010StepAP {
   ven_check_title?: string;
   acc_no?: string;
   note_desc?: string;
+  PTA?: string | null;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */

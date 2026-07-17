@@ -840,6 +840,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ven_check_title', header: '票據抬頭', textAlign: 'left', type: 'input', disabled: () => true },
     { field: 'acc_no', header: '會計科目代號', textAlign: 'left', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', textAlign: 'left', type: 'input' },
+    { field: 'PTA', header: '立沖代號', textAlign: 'left', type: 'input', disabled: () => true },
   ];
 
   public readonly stepARColumns: EditColumn[] = [
@@ -850,8 +851,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true, textAlign: 'left' },
     { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
-    { field: 'ACCT_KEY', header: '對帳KEY值', type: 'input', disabled: () => true, textAlign: 'left' },
     { field: 'PTA', header: '立沖代號', type: 'input', disabled: () => true, textAlign: 'left' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', type: 'input', disabled: () => true, textAlign: 'left' },
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
@@ -1309,6 +1310,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               pta_date: ptaDate,
               acc_no: row.AccNo,
               note_desc: noteDesc,
+              PTA: row.PTA ?? null,
             });
           } else if (vt === '7') {
             bk.push({
@@ -1390,6 +1392,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ven_check_title: venCheckTitle,
       acc_no: row.AccNo,
       note_desc: this.resolveNoteDescForStep(row),
+      PTA: row.PTA ?? null,
     };
   }
 
@@ -2184,6 +2187,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const mapped = mapFin53010ForUpdateResponseToStepRows(res.Data);
           this.stepAPRows.set(mapped.stepAPRows);
           this.stepARRows.set(mapped.stepARRows);
+          this.syncStepRowsPta();
           this.stepSalesRows.set(mapped.stepSalesRows);
           this.stepSalesAllowanceRows.set(mapped.stepSalesAllowanceRows);
           this.stepPurchaseRows.set(mapped.stepPurchaseRows);
@@ -2482,14 +2486,71 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onDataChange(data: FIN53010DetailTable[]): void {
     this.logger.debug(`onDataChange:`, [data]);
+    const oldData = this.tableData();
     const renumbered = data.map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i }));
     this.tableData.set(renumbered);
     this.rebuildAllAutoPta();
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
+
+    const newById = new Map(this.tableData().filter(r => r.id).map(r => [r.id, r]));
+    const deletedPTAs = new Set<string>();
+    const ptaRemap = new Map<string, string>();
+    const vendorChanges = new Map<string, string>();
+
+    for (const old of oldData) {
+      if (!old.PTA || !old.id) continue;
+      const newRow = newById.get(old.id);
+      if (newRow) {
+        if (newRow.PTA && newRow.PTA !== old.PTA) ptaRemap.set(old.PTA, newRow.PTA);
+        if (newRow.PTA && newRow.DetailNo !== old.DetailNo) vendorChanges.set(newRow.PTA, newRow.DetailNo ?? '');
+      } else {
+        deletedPTAs.add(old.PTA);
+      }
+    }
+
+    if (deletedPTAs.size > 0) {
+      this.stepAPRows.update(rows => rows.filter(r => !r.PTA || !deletedPTAs.has(r.PTA)));
+      this.stepARRows.update(rows => rows.filter(r => !r.PTA || !deletedPTAs.has(r.PTA)));
+    }
+    if (ptaRemap.size > 0) {
+      this.stepAPRows.update(rows => rows.map(r => r.PTA && ptaRemap.has(r.PTA) ? { ...r, PTA: ptaRemap.get(r.PTA) } : r));
+      this.stepARRows.update(rows => rows.map(r => r.PTA && ptaRemap.has(r.PTA) ? { ...r, PTA: ptaRemap.get(r.PTA) } : r));
+    }
+    if (vendorChanges.size > 0) {
+      this.stepAPRows.update(rows => rows.map(r => r.PTA && vendorChanges.has(r.PTA) ? { ...r, ven_no: vendorChanges.get(r.PTA) } : r));
+      this.stepARRows.update(rows => rows.map(r => r.PTA && vendorChanges.has(r.PTA) ? { ...r, ven_no: vendorChanges.get(r.PTA) } : r));
+    }
+
+    // Always sync amounts from current tableData to AP/AR rows by PTA (works for both create and edit mode)
+    const ptaToAmt = new Map<string, number | undefined>();
+    for (const row of this.tableData()) {
+      if (row.PTA) {
+        const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
+        ptaToAmt.set(row.PTA, amt || undefined);
+      }
+    }
+    if (ptaToAmt.size > 0) {
+      this.stepAPRows.update(rows => rows.map(r =>
+        r.PTA && ptaToAmt.has(r.PTA) ? { ...r, acp_amt: ptaToAmt.get(r.PTA) } : r
+      ));
+      this.stepARRows.update(rows => rows.map(r =>
+        r.PTA && ptaToAmt.has(r.PTA) ? { ...r, ars_amt: ptaToAmt.get(r.PTA) } : r
+      ));
+    }
   }
 
   public onStepAPDataChange(data: FIN53010StepAP[]): void {
+    const newPTAs = new Set(data.map(r => r.PTA).filter((p): p is string => !!p));
+    const deletedPTAs = this.stepAPRows()
+      .map(r => r.PTA)
+      .filter((p): p is string => !!p && !newPTAs.has(p));
+    if (deletedPTAs.length > 0) {
+      this.tableData.update(rows =>
+        rows.map(row => (row.PTA && deletedPTAs.includes(row.PTA) ? { ...row, PTA: undefined } as FIN53010DetailTable : row))
+      );
+    }
     this.stepAPRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
+    this.syncStepRowsPta();
   }
 
   public onInsertStepApRow(): void {
@@ -2512,7 +2573,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public onStepARDataChange(data: FIN53010StepAR[]): void {
+    const newPTAs = new Set(data.map(r => r.PTA).filter((p): p is string => !!p));
+    const deletedPTAs = this.stepARRows()
+      .map(r => r.PTA)
+      .filter((p): p is string => !!p && !newPTAs.has(p));
+    if (deletedPTAs.length > 0) {
+      this.tableData.update(rows =>
+        rows.map(row => (row.PTA && deletedPTAs.includes(row.PTA) ? { ...row, PTA: undefined } as FIN53010DetailTable : row))
+      );
+    }
     this.stepARRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
+    this.syncStepRowsPta();
   }
 
   public onStepSalesDataChange(data: FIN53010StepSalesInvoiceRow[]): void {
@@ -2922,6 +2993,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         return row;
       })
     );
+  }
+
+  /** 依傳票明細 DetailNo(廠商) → PTA 的對應，補齊 AP/AR 列中空白的 PTA */
+  private syncStepRowsPta(): void {
+    const ptaByVendor = new Map<string, string>();
+    for (const row of this.tableData()) {
+      if (row.PTA && row.DetailNo) {
+        ptaByVendor.set(row.DetailNo, row.PTA);
+      }
+    }
+    if (ptaByVendor.size === 0) return;
+    this.stepAPRows.update(rows => rows.map(r =>
+      r.ven_no && ptaByVendor.has(r.ven_no) ? { ...r, PTA: ptaByVendor.get(r.ven_no)! } : r
+    ));
+    this.stepARRows.update(rows => rows.map(r =>
+      r.ven_no && ptaByVendor.has(r.ven_no) ? { ...r, PTA: ptaByVendor.get(r.ven_no)! } : r
+    ));
   }
 
   public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
