@@ -1338,7 +1338,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           // 編輯模式：保留原有 DB 列，將新明細列產生的 step rows 重新合併
           // (以 _dataStatus==='new' 標記的 step row 為上一次 effect 產生的，先移除再重建)
           const mergeStepRows = <T>(existing: T[], generated: T[]): T[] => {
-            const originals = existing.filter(r => (r as Record<string, unknown>)['_dataStatus'] !== 'new');
+            // Trim PTAs to guard against DB CHAR-field padding mismatches
+            const generatedPTAs = new Set(
+              generated
+                .map(r => ((r as Record<string, unknown>)['PTA'] as string | null | undefined)?.trim())
+                .filter((p): p is string => !!p),
+            );
+            const originals = existing.filter(r => {
+              if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return false;
+              const pta = ((r as Record<string, unknown>)['PTA'] as string | null | undefined)?.trim();
+              // 若新產生的 rows 已包含同 PTA，移除舊的（避免刪除後重新新增時重複）
+              return !pta || !generatedPTAs.has(pta);
+            });
             const withStatus = generated.map(r => ({ ...r, _dataStatus: 'new' as const }));
             return [...originals, ...withStatus].map((r, i) => ({ ...r, SerNo: i + 1 }));
           };
@@ -1353,6 +1364,41 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
           if (bk.length > 0 || this.stepBankRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
             this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
+          }
+
+          // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
+          // 觸發時機：1) tableData 改變（廠商選擇） 2) vendorOptions 更新（hydration 完成後）
+          const ptaVenSyncMap = new Map<string, string | undefined>();
+          for (const row of table) {
+            const pta = (row.PTA as string | undefined)?.trim();
+            if (pta && row.DetailNo) ptaVenSyncMap.set(pta, row.DetailNo ?? undefined);
+          }
+          if (ptaVenSyncMap.size > 0) {
+            this.stepAPRows.update(rows => rows.map(r => {
+              if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+              const pta = r.PTA?.trim();
+              if (!pta || !ptaVenSyncMap.has(pta)) return r;
+              const venNo = ptaVenSyncMap.get(pta);
+              const venOpt = venNo ? getVenOpt(venNo) : undefined;
+              if (venOpt?.['VEN_PayType'] == null) return r; // 等 hydration 完成再同步
+              const venPayType = venOpt['VEN_PayType'] as string;
+              return {
+                ...r,
+                ven_no: venNo,
+                ven_pay_type: venPayType,
+                ven_bnk_no: venOpt['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : r.ven_bnk_no,
+                ven_bnk_branch_no: venOpt['VEN_BNK_BranchNo'] != null ? String(venOpt['VEN_BNK_BranchNo']) : r.ven_bnk_branch_no,
+                ven_bank_account: this.formatVenBankAccount(venOpt) ?? r.ven_bank_account,
+                ven_ctrlyn: (venOpt['VEN_CTRLYN'] as string | undefined) ?? r.ven_ctrlyn,
+                ven_check_title: venPayType === '2' ? (venOpt['VEN_Name'] as string | undefined) : '',
+              };
+            }));
+            this.stepARRows.update(rows => rows.map(r => {
+              if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+              const pta = r.PTA?.trim();
+              if (!pta || !ptaVenSyncMap.has(pta)) return r;
+              return { ...r, ven_no: ptaVenSyncMap.get(pta) };
+            }));
           }
         }
       } finally {
@@ -2188,7 +2234,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const mapped = mapFin53010ForUpdateResponseToStepRows(res.Data);
           this.stepAPRows.set(mapped.stepAPRows);
           this.stepARRows.set(mapped.stepARRows);
-          this.syncStepRowsPta();
           this.stepSalesRows.set(mapped.stepSalesRows);
           this.stepSalesAllowanceRows.set(mapped.stepSalesAllowanceRows);
           this.stepPurchaseRows.set(mapped.stepPurchaseRows);
@@ -2517,22 +2562,56 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     // Always sync vendor + amount from current tableData to AP/AR rows by PTA (works for both create and edit mode)
+    // Trim PTAs to guard against DB CHAR-field padding mismatches
     const ptaToVendor = new Map<string, string | undefined>();
     const ptaToAmt = new Map<string, number | undefined>();
     for (const row of this.tableData()) {
-      if (row.PTA) {
-        ptaToVendor.set(row.PTA, row.DetailNo ?? undefined);
+      const pta = row.PTA?.trim();
+      if (pta) {
+        ptaToVendor.set(pta, row.DetailNo ?? undefined);
         const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
-        ptaToAmt.set(row.PTA, amt || undefined);
+        ptaToAmt.set(pta, amt || undefined);
       }
     }
     if (ptaToVendor.size > 0) {
-      this.stepAPRows.update(rows => rows.map(r =>
-        r.PTA && ptaToVendor.has(r.PTA) ? { ...r, ven_no: ptaToVendor.get(r.PTA), acp_amt: ptaToAmt.get(r.PTA) } : r
-      ));
-      this.stepARRows.update(rows => rows.map(r =>
-        r.PTA && ptaToVendor.has(r.PTA) ? { ...r, ven_no: ptaToVendor.get(r.PTA), ars_amt: ptaToAmt.get(r.PTA) } : r
-      ));
+      const vouRaw = this.dataForm.controls.VouDate.value;
+      const vouDate = vouRaw instanceof Date ? vouRaw : (vouRaw ? new Date(vouRaw as string) : new Date());
+
+      this.stepAPRows.update(rows => rows.map(r => {
+        const pta = r.PTA?.trim();
+        if (!pta || !ptaToVendor.has(pta)) return r;
+        const newVenNo = ptaToVendor.get(pta);
+        const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
+        const venPayType = venOpt?.['VEN_PayType'] as string | undefined;
+        return {
+          ...r,
+          ven_no: newVenNo,
+          acp_amt: ptaToAmt.get(pta),
+          ...(venOpt != null ? {
+            ven_pay_type: venPayType,
+            ven_bnk_no: venOpt['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : r.ven_bnk_no,
+            ven_bnk_branch_no: venOpt['VEN_BNK_BranchNo'] != null ? String(venOpt['VEN_BNK_BranchNo']) : r.ven_bnk_branch_no,
+            ven_bank_account: this.formatVenBankAccount(venOpt) ?? r.ven_bank_account,
+            ven_ctrlyn: (venOpt['VEN_CTRLYN'] as string | undefined) ?? r.ven_ctrlyn,
+            ven_check_title: venPayType === '2' ? (venOpt['VEN_Name'] as string | undefined) : '',
+          } : {}),
+        };
+      }));
+
+      this.stepARRows.update(rows => rows.map(r => {
+        const pta = r.PTA?.trim();
+        if (!pta || !ptaToVendor.has(pta)) return r;
+        const newVenNo = ptaToVendor.get(pta);
+        const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
+        const payCondDay = venOpt?.['VEN_PayConditionDay'] as number | null | undefined;
+        let ptaDate: Date | null | undefined = r.pta_date;
+        if (payCondDay != null && venOpt != null && vouDate instanceof Date) {
+          const d = new Date(vouDate);
+          d.setDate(d.getDate() + payCondDay);
+          ptaDate = d;
+        }
+        return { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta), pta_date: ptaDate };
+      }));
     }
   }
 
@@ -2547,7 +2626,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       );
     }
     this.stepAPRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
-    this.syncStepRowsPta();
   }
 
   public onInsertStepApRow(): void {
@@ -2580,7 +2658,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       );
     }
     this.stepARRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
-    this.syncStepRowsPta();
   }
 
   public onStepSalesDataChange(data: FIN53010StepSalesInvoiceRow[]): void {
@@ -2969,44 +3046,61 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return false;
   }
 
-  /** 重新為所有「自動編碼」列指定 PTA = VouNo-1, VouNo-2...
-   *  新增模式（VouNo='自動給號'）時不處理 */
+  /** 為「自動編碼」列指定 PTA。
+   *  新增模式（VouNo='自動給號'）：沒有 PTA 的 auto-code row 給暫存 ID #1, #2, …
+   *  編輯模式：只補沒有 PTA 的 auto-code row，取現有最大號 +1；原號不重排。 */
   private rebuildAllAutoPta(): void {
     const vouNo = this.dataForm.getRawValue().VouNo?.trim() ?? '';
-    if (!vouNo || vouNo === '自動給號') return;
 
+    if (!vouNo || vouNo === '自動給號') {
+      // 新增模式：計算已用最大暫存號，再補給空缺的 auto-code rows
+      let counter = 1;
+      for (const r of this.tableData()) {
+        if (this.isAutoCodeRow(r) && r.PTA?.startsWith('#')) {
+          const n = parseInt(r.PTA.slice(1), 10);
+          if (!isNaN(n) && n >= counter) counter = n + 1;
+        }
+      }
+      this.tableData.update(rows =>
+        rows.map(row => {
+          if (this.isAutoCodeRow(row) && !row.PTA) {
+            return { ...row, PTA: `#${counter++}` };
+          }
+          return row;
+        })
+      );
+      return;
+    }
+
+    // 編輯模式：取現有最大序號，只補沒有 PTA 的 auto-code row
     const autoPrefix = `${vouNo}-`;
-    let counter = 1;
+    const detailNums = this.tableData()
+      .filter(r => r.PTA?.startsWith(autoPrefix))
+      .map(r => parseInt(r.PTA!.slice(autoPrefix.length), 10))
+      .filter(n => !isNaN(n));
+    // 也納入 step rows 已用的號碼，避免刪除後重新新增時產生重複 PTA
+    const stepNums = [
+      ...this.stepAPRows().map(r => r.PTA),
+      ...this.stepARRows().map(r => r.PTA),
+    ].filter((p): p is string => typeof p === 'string' && p.startsWith(autoPrefix))
+      .map(p => parseInt(p.slice(autoPrefix.length), 10))
+      .filter(n => !isNaN(n));
+    const allNums = [...detailNums, ...stepNums];
+    let maxCounter = allNums.length > 0 ? Math.max(...allNums) : 0;
+
     this.tableData.update(rows =>
       rows.map(row => {
-        if (this.isAutoCodeRow(row)) {
-          return { ...row, PTA: `${autoPrefix}${counter++}` };
+        if (this.isAutoCodeRow(row) && !row.PTA) {
+          return { ...row, PTA: `${autoPrefix}${++maxCounter}` };
         }
-        // 從同方向（自動編碼）切換到反方向時，清掉舊的自動 PTA，避免 dialog 顯示殘值
+        // 方向切換 → 清掉舊的自動 PTA
         const { ABAT_YN } = this.getAccAbatInfo(row.AccNo);
-        if (ABAT_YN === 'Y' && row.PTA?.startsWith(autoPrefix)) {
+        if (ABAT_YN === 'Y' && row.PTA?.startsWith(autoPrefix) && !this.isAutoCodeRow(row)) {
           return { ...row, PTA: undefined };
         }
         return row;
       })
     );
-  }
-
-  /** 依傳票明細 DetailNo(廠商) → PTA 的對應，補齊 AP/AR 列中空白的 PTA */
-  private syncStepRowsPta(): void {
-    const ptaByVendor = new Map<string, string>();
-    for (const row of this.tableData()) {
-      if (row.PTA && row.DetailNo) {
-        ptaByVendor.set(row.DetailNo, row.PTA);
-      }
-    }
-    if (ptaByVendor.size === 0) return;
-    this.stepAPRows.update(rows => rows.map(r =>
-      r.ven_no && ptaByVendor.has(r.ven_no) ? { ...r, PTA: ptaByVendor.get(r.ven_no)! } : r
-    ));
-    this.stepARRows.update(rows => rows.map(r =>
-      r.ven_no && ptaByVendor.has(r.ven_no) ? { ...r, PTA: ptaByVendor.get(r.ven_no)! } : r
-    ));
   }
 
   public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
