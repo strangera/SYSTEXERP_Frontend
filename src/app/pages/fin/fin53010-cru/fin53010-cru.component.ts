@@ -3,20 +3,20 @@ import { afterNextRender, Component, computed, effect, Injector, OnInit, signal,
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
 import { FIN32030Service, QueryAbatAcctResponse } from '@service/api/fin/fin32030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn, formatAmount as reportFormatAmount, formatDate as reportFormatDate } from '@shared/components/table-report/table-report.model';
-import { TableComponent } from '@others/component/table/table.component';
-import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { ConfirmationService } from 'primeng/api';
@@ -36,8 +36,6 @@ import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010Payload
 import {
   Aps2002DetailDataByInvoiceNoData,
   Aps4023DetailDataByInvoiceNumberData,
-  Pos4023DetailDataByInvoiceNumberData,
-  SalesInvoicePickItem,
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
@@ -56,7 +54,9 @@ import {
   FIN53010StepPurchaseInvoiceRow,
   FIN53010StepSalesInvoiceRow,
   FIN53010UpdateResult,
+  Pos4023DetailDataByInvoiceNumberData,
   QueryFIN53010Detail,
+  SalesInvoicePickItem,
 } from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
 import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent } from './table-edit/table-edit.model';
@@ -417,59 +417,60 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }));
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
-    { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
-    { field: 'ven_no', header: '廠商代號', visible: true, align: 'left' },
-    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'acc_no', header: '會計科目代號', visible: true, align: 'left' },
-    { field: 'note_desc', header: '摘要', visible: true, align: 'left' },
-    { field: 'sub_detail_no', header: '對象別編號', visible: true, align: 'left' },
-    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
-    { field: 'PTA', header: '立沖代號', visible: true, align: 'left' },
+    { field: 'org_id', header: '組織代號', visible: true, align: 'left', width: '100px' },
+    { field: 'ven_no', header: '廠商代號', visible: true, align: 'left', width: '100px' },
+    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'acc_no', header: '會計科目代號', visible: true, align: 'left', width: '100px' },
+    { field: 'note_desc', header: '摘要', visible: true, align: 'left', width: '200px' },
+    { field: 'sub_detail_no', header: '對象別編號', visible: true, align: 'left', width: '100px' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left', width: '100px' },
+    { field: 'PTA', header: '立沖代號', visible: true, align: 'left', width: '100px' },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
-    { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
-    { field: 'VEN_No', header: '廠商代號', visible: true, align: 'left' },
+    { field: 'org_id', header: '組織代號', visible: true, align: 'left', width: '100px' },
+    { field: 'VEN_No', header: '廠商代號', visible: true, align: 'left', width: '100px' },
     {
       field: 'VEN_PayType_Name', header: '付款方式', visible: true, format: (v, _i, row) => {
         const r = row as FIN53010Aps3001Row;
         return String(v ?? r?.VEN_PayType ?? '');
       },
-      align: 'left'
+      align: 'left',
+      width: '100px'
     },
-    { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true, align: 'left' },
-    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true, align: 'left' },
-    { field: 'VEN_AccountName', header: '帳號名稱', visible: true, align: 'left' },
-    { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true, align: 'left' },
-    { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true, align: 'left' },
-    { field: 'AccNo', header: '會計科目代號', visible: true, align: 'left' },
-    { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left' },
-    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
-    { field: 'SubDetailNo', header: '對象別編號', visible: true, align: 'left' },
-    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
-    { field: 'PTA', header: '立沖代號', visible: true, align: 'left' },
+    { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true, align: 'left', width: '100px' },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true, align: 'left', width: '100px' },
+    { field: 'VEN_AccountName', header: '帳號名稱', visible: true, align: 'left', width: '150px' },
+    { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true, align: 'left', width: '100px' },
+    { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true, align: 'left', width: '100px' },
+    { field: 'AccNo', header: '會計科目代號', visible: true, align: 'left', width: '100px' },
+    { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left', width: '100px' },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left', width: '200px' },
+    { field: 'SubDetailNo', header: '對象別編號', visible: true, align: 'left', width: '100px' },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left', width: '100px' },
+    { field: 'PTA', header: '立沖代號', visible: true, align: 'left', width: '100px' },
   ];
 
   public readonly aps2002_CRelatedColumns: ReportColumn[] = [
-    { field: 'Orig_RepYYYYMM', header: '原發票申報年月', visible: true, align: 'left' },
-    { field: 'InvoiceNo', header: '發票號碼/憑證單號', visible: true, align: 'left' },
-    { field: 'VoucherType', header: '發票格式', visible: true, align: 'left' },
-    { field: 'Orig_InvoiceDate', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
-    { field: 'RepYYYYMM', header: '申報年月', visible: true, align: 'left' },
-    { field: 'CreditTypeDesc', header: '區別', visible: true, align: 'left' },
-    { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true, align: 'left' },
-    { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'TaxTypeDesc', header: '課稅別', visible: true, align: 'left' },
-    { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'Orig_RepYYYYMM', header: '原發票申報年月', visible: true, align: 'left', width: '100px' },
+    { field: 'InvoiceNo', header: '發票號碼/憑證單號', visible: true, align: 'left', width: '100px' },
+    { field: 'VoucherType', header: '發票格式', visible: true, align: 'left', width: '100px' },
+    { field: 'Orig_InvoiceDate', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left', width: '100px' },
+    { field: 'RepYYYYMM', header: '申報年月', visible: true, align: 'left', width: '100px' },
+    { field: 'CreditTypeDesc', header: '區別', visible: true, align: 'left', width: '100px' },
+    { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true, align: 'left', width: '100px' },
+    { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'TaxTypeDesc', header: '課稅別', visible: true, align: 'left', width: '100px' },
+    { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
+    { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right', width: '100px' },
   ];
 
   public readonly aps2002RelatedColumns: ReportColumn[] = [
@@ -2446,13 +2447,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     // 若有進項或銷項列發票號碼與憑證單號皆空，先詢問是否以傳票號碼自動填入憑證單號
     const purchaseAutoFillRows = this.activeVoucherSteps().includes(5)
       ? this.stepPurchaseRows()
-          .map((r, i) => ({ r, i }))
-          .filter(({ r }) => !String(r.invoice_no ?? '').trim() && !String(r.source_doc_no ?? '').trim())
+        .map((r, i) => ({ r, i }))
+        .filter(({ r }) => !String(r.invoice_no ?? '').trim() && !String(r.source_doc_no ?? '').trim())
       : [];
     const salesAutoFillRows = this.activeVoucherSteps().includes(6)
       ? this.stepSalesRows()
-          .map((r, i) => ({ r, i }))
-          .filter(({ r }) => !String(r.invoice_no ?? '').trim() && !String(r.source_doc_no ?? '').trim())
+        .map((r, i) => ({ r, i }))
+        .filter(({ r }) => !String(r.invoice_no ?? '').trim() && !String(r.source_doc_no ?? '').trim())
       : [];
 
     if (purchaseAutoFillRows.length > 0 || salesAutoFillRows.length > 0) {
