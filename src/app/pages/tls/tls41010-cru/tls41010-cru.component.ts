@@ -86,7 +86,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_Name: [null, [Validators.required, Validators.maxLength(20)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_TLT_Name: [null, [Validators.maxLength(60)]],
-    ECR_Type: ['1', [Validators.required, Validators.maxLength(2)]],
+    ECR_Type: ['2', [Validators.required, Validators.maxLength(2)]],
     ECR_SAL_Type: [null, [Validators.maxLength(8)]],
     ECR_LocNo: [null, [Validators.maxLength(10)]],
     ECR_USR_No: [null, [Validators.maxLength(8)]],
