@@ -2496,14 +2496,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const newById = new Map(this.tableData().filter(r => r.id).map(r => [r.id, r]));
     const deletedPTAs = new Set<string>();
     const ptaRemap = new Map<string, string>();
-    const vendorChanges = new Map<string, string>();
 
     for (const old of oldData) {
       if (!old.PTA || !old.id) continue;
       const newRow = newById.get(old.id);
       if (newRow) {
         if (newRow.PTA && newRow.PTA !== old.PTA) ptaRemap.set(old.PTA, newRow.PTA);
-        if (newRow.PTA && newRow.DetailNo !== old.DetailNo) vendorChanges.set(newRow.PTA, newRow.DetailNo ?? '');
       } else {
         deletedPTAs.add(old.PTA);
       }
@@ -2517,25 +2515,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       this.stepAPRows.update(rows => rows.map(r => r.PTA && ptaRemap.has(r.PTA) ? { ...r, PTA: ptaRemap.get(r.PTA) } : r));
       this.stepARRows.update(rows => rows.map(r => r.PTA && ptaRemap.has(r.PTA) ? { ...r, PTA: ptaRemap.get(r.PTA) } : r));
     }
-    if (vendorChanges.size > 0) {
-      this.stepAPRows.update(rows => rows.map(r => r.PTA && vendorChanges.has(r.PTA) ? { ...r, ven_no: vendorChanges.get(r.PTA) } : r));
-      this.stepARRows.update(rows => rows.map(r => r.PTA && vendorChanges.has(r.PTA) ? { ...r, ven_no: vendorChanges.get(r.PTA) } : r));
-    }
 
-    // Always sync amounts from current tableData to AP/AR rows by PTA (works for both create and edit mode)
+    // Always sync vendor + amount from current tableData to AP/AR rows by PTA (works for both create and edit mode)
+    const ptaToVendor = new Map<string, string | undefined>();
     const ptaToAmt = new Map<string, number | undefined>();
     for (const row of this.tableData()) {
       if (row.PTA) {
+        ptaToVendor.set(row.PTA, row.DetailNo ?? undefined);
         const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
         ptaToAmt.set(row.PTA, amt || undefined);
       }
     }
-    if (ptaToAmt.size > 0) {
+    if (ptaToVendor.size > 0) {
       this.stepAPRows.update(rows => rows.map(r =>
-        r.PTA && ptaToAmt.has(r.PTA) ? { ...r, acp_amt: ptaToAmt.get(r.PTA) } : r
+        r.PTA && ptaToVendor.has(r.PTA) ? { ...r, ven_no: ptaToVendor.get(r.PTA), acp_amt: ptaToAmt.get(r.PTA) } : r
       ));
       this.stepARRows.update(rows => rows.map(r =>
-        r.PTA && ptaToAmt.has(r.PTA) ? { ...r, ars_amt: ptaToAmt.get(r.PTA) } : r
+        r.PTA && ptaToVendor.has(r.PTA) ? { ...r, ven_no: ptaToVendor.get(r.PTA), ars_amt: ptaToAmt.get(r.PTA) } : r
       ));
     }
   }
