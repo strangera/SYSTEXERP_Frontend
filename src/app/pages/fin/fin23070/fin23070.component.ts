@@ -11,13 +11,13 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { combineLatest, finalize, map } from 'rxjs';
 import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
+import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { TableReportComponent } from '../fin25010-cru/fin25010-table-report/fin25010-table-report.component';
 
 // 1.2.3.7 暫付款核銷報表
 @Component({
