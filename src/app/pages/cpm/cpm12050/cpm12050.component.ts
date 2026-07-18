@@ -6,22 +6,22 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
 import { AddButton, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { ReportColumn } from 'src/app/shared/componentkit/table-report/table-report.model';
+import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { CPM12050Data, CPM12050Service, QueryCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
 @Component({
   selector: 'app-cpm12050',

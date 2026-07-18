@@ -1,0 +1,34 @@
+<label [for]="controlName">
+  {{ label }}
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
+</label>
+<ng-container *ngIf="!readonly; else readonlyMode">
+  <p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
+    [optionValue]="optionValue" [formControl]="control"
+    [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" [showToggleAll]="true" placeholder="全部"
+    [variant]="variant" [group]="group" [optionGroupLabel]="optionGroupLabel" [appendTo]="appendTo"
+    [optionGroupChildren]="optionGroupChildren" [resetFilterOnHide]="true" [selectedItemsLabel]="selectedItemsLabel"
+    [maxSelectedLabels]="maxSelectedLabels" [virtualScroll]="options.length > 10" [virtualScrollItemSize]="40"
+    [scrollHeight]="'250px'"
+    [dataKey]="dataKey" [filter]="filter" [loading]="loading" [showClear]="showClear" [display]="display"
+    [styleClass]="styleClass" (onChange)="onValueChange($event)" appEnterToTab>
+    <!--  簡潔的分組標題模板 -->
+    <ng-template let-group pTemplate="group" *ngIf="group">
+      <div class="multiSelect-group-header">
+        <span>{{ group[optionGroupLabel] }}</span>
+      </div>
+    </ng-template>
+  </p-multiSelect>
+</ng-container>
+
+<!-- 唯讀模式 -->
+<ng-template #readonlyMode>
+  <div class="readonly-multiselect">
+    <input type="text" [id]="controlName" [value]="selectedItemsDisplayText" [class]="multiSelectClasses"
+      [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" placeholder="無選擇項目" readonly />
+  </div>
+</ng-template>
+
+@if (submitted && fieldState.getErrorMessage(control); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

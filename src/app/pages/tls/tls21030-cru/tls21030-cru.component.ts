@@ -4,17 +4,17 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { InputTextareaComponent } from "@shared/components/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { TLS21030Data, Tls21030Service, TLS21030TalentData } from '../../../service/api/tls/tls21030.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { RadiobuttonYNComponent } from '../../../shared/components/radiobutton-yn/radiobutton-yn.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls21030-cru',

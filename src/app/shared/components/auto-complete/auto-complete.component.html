@@ -1,0 +1,20 @@
+<label [hidden]="label === ''" [for]="controlName">
+  {{ label }}
+  @if (fieldState.isRequired) {
+  <span class="text-red-500">*</span>
+  }
+  <ng-content select="header"></ng-content>
+</label>
+<p-autoComplete [inputId]="controlName" [id]="controlName" [formControl]="control()" placeholder="請選擇"
+  [suggestions]="filteredOptions()" [optionLabel]="optionLabel()"
+  [optionValue]="autoHighlight() ? optionValue() : undefined"
+  [forceSelection]="autoHighlight() ? forceSelection() : false" [autoHighlight]="autoHighlight()"
+  [showClear]="showClear()" [ngClass]="{ 'ng-dirty ng-invalid': submitted() && control().invalid }" [lazy]="true"
+  [dropdownIcon]="control().disabled ? 'hidden' : 'pi pi-angle-down'" appendTo="body" [virtualScroll]="true"
+  [virtualScrollItemSize]="38" [scrollHeight]="'200px'" (completeMethod)="filterOptions($event)" [dropdown]="true"
+  [forceSelection]="forceSelection()" [ariaLabel]="'請輸入' + label" [dropdownAriaLabel]="'請選擇' + label"
+  [ariaLabelledBy]="controlName" [autofocus]="autofocus()" (onSelect)="handleOptionSelected($event)"
+  appEnterToTab />
+@if ((submitted() || (control().touched && control().invalid)) && fieldState.getErrorMessage(control()); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}

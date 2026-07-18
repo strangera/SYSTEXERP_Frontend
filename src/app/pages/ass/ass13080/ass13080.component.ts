@@ -10,20 +10,20 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import {
   ASS13080QueryRow,
   PrintASS13080Request,

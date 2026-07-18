@@ -10,15 +10,15 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { FIN15090Service } from '@service/api/fin/fin15090.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import {
   Column,
   formatDateTime,

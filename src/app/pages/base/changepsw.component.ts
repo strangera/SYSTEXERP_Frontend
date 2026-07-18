@@ -9,7 +9,7 @@ import { PasswordModule } from 'primeng/password';
 import { finalize, take } from 'rxjs/operators';
 import { AuthService } from '../../service/system/auth.service';
 import { UserCodeService } from '../../service/system/user-code.service';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../shared/components/notification-message/notification.service';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { ValidationService } from '../../shared/service/validation.service';
 

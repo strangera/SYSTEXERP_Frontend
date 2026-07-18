@@ -1,145 +1,95 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+// 折舊攤提作業 (ASS13120)
+
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS13120Service } from '@service/api/ass/ass13120.service';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { finalize } from 'rxjs';
+
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 //3.1.3.12  折舊攤提作業
 @Component({
-  selector: 'app-ass13120',
-  templateUrl: './ass13120.component.html',
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+    selector: 'app-ass13120',
+    templateUrl: './ass13120.component.html',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        TranslateModule,
+        AccordionModule,
+        MenubarComponent,
+        ButtonComponent,
+        CalendarComponent,
+    ],
 })
-export class ASS13120Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    depreciationLife: [, [Validators.required]], // 折舊年限
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '財產編號', visible: true },
-    { field: 'col2', header: '財產名稱', visible: true },
-    { field: 'col3', header: '清點單號', visible: true },
-    { field: 'col4', header: '購入日期', visible: true },
-    { field: 'col5', header: '購入金額', visible: true },
-    { field: 'col6', header: '重估後金額', visible: true },
-    { field: 'col7', header: '累計折舊', visible: true },
-    { field: 'col8', header: '未折餘額', visible: true },
-    { field: 'col9', header: '資產狀態', visible: true },
-    { field: 'col10', header: '保管單位', visible: true },
+export class ASS13120Component extends BasicQueryPageComponent<unknown> implements OnInit {
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly ass13120Service = inject(ASS13120Service);
+    queryForm = this.formBuilder.group({
+        DepreYM: [null as Date | null, Validators.required],
+    });
 
-    // { field: 'col11', header: '會計科目代號', visible: true },
-    // { field: 'col12', header: '購入金額', visible: true },
-    // { field: 'col13', header: '驗收單號', visible: true },
+    // 最後傳票產生日期提示文字 (SP 已回傳完整說明句，如：最後傳票產生日期：2026年05月)
+    lastVoucherInfo = '';
+    creating = false;
 
-    // { field: 'col14', header: '入帳日期', visible: true },
-    // { field: 'col15', header: '條件篩選', visible: true },
-    // { field: 'col16', header: '顯示筆數', visible: true },
-
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  // dataStatusOptions: any[] = [
-  //   { value: 1, label: '良好' },
-  //   { value: 2, label: '損壞' },
-  //   { value: 3, label: '下落不明' },
-  // ];
-
-  //
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    //
-  ) {
-    super(); // 呼叫父類建構子
-  }
-
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310027';
-    this.cruPage = '/ASS1000/ASS13120CRU';
-    // ----------------------------------------------------------------
-  }
-
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    ngOnInit(): void {
+        this.initializePage('ASS13120');
+        this.loadLastVoucherDate();
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    loadLastVoucherDate(): void {
+        this.ass13120Service
+            .queryASS13120()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((res) => {
+                // SP 回傳的 Result 已內含「最後傳票產生日期：」字樣，這裡只取冒號後的內容，
+                // 避免跟畫面上固定的標籤文字重複顯示
+                const raw = res?.Data?.Result ?? '';
+                const idx = raw.indexOf('：');
+                this.lastVoucherInfo = idx >= 0 ? raw.slice(idx + 1) : raw;
+            });
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    onGenerate(form: FormGroup): void {
+        this.handleSubmit(form, () => {
+            const depreYM = this.toYYYYMM(form.value.DepreYM as Date | null);
+            this.creating = true;
+
+            this.ass13120Service
+                .createASS13120({ DepreYM: depreYM })
+                .pipe(
+                    takeUntilDestroyed(this.destroyRef),
+                    finalize(() => {
+                        this.loading = false;
+                        this.creating = false;
+                        this.messageService.unblockUi();
+                    })
+                )
+                .subscribe((res) => {
+                    if (res?.Status === '0000' && res.Data?.IsSuccess) {
+                        this.messageService.successBubble('建立成功');
+                        this.queryForm.reset();
+                        this.loadLastVoucherDate();
+                    } else if (res?.Data && !res.Data.IsSuccess) {
+                        this.messageService.errorBubble(res.Data.Message || '建立折舊傳票失敗');
+                    }
+                });
+        });
     }
-  }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
+    private toYYYYMM(value: Date | null): string {
+        if (!value) return '';
+        const y = value.getFullYear();
+        const m = `${value.getMonth() + 1}`.padStart(2, '0');
+        return `${y}${m}`;
+    }
 }

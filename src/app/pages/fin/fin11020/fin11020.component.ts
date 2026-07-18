@@ -6,9 +6,9 @@ import { finalize } from 'rxjs';
 
 // Services & Components
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { Fin11020Service, MainInvoiceData } from '../../../service/api/fin/fin11020.service';
 
 // PrimeNG
@@ -18,12 +18,12 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 // Shared
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { YearMonthComponent } from './query-year-month.component';
 
 @Component({

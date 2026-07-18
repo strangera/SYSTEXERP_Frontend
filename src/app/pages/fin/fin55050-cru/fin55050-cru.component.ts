@@ -7,12 +7,12 @@ import { finalize } from 'rxjs';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 interface DetailRow {
   VouDate?: string | null;

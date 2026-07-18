@@ -249,15 +249,13 @@
       <app-table-edit
         [showCheckBox]="false"
         [showReorder]="false"
-        [disabled]="isFormReadable || isPostedEdit"
+        [showDelete]="false"
+        [showInsert]="false"
         [canInsert]="false"
-        [showInsert]="
-          !isFormReadable && !isPostedEdit && stepAPTableCanInsert()
-        "
+        [disabled]="isFormReadable || isPostedEdit"
         [data]="stepAPRows()"
         [columns]="stepAPColumns"
         [tableKey]="'FIN53010_step_ap'"
-        (insert)="onInsertStepApRow()"
         (dataChange)="onStepAPDataChange($event)"
         [footerData]="stepAPFooter()"
       ></app-table-edit>
@@ -295,6 +293,9 @@
       <app-table-edit
         [showCheckBox]="false"
         [showReorder]="false"
+        [showDelete]="false"
+        [showInsert]="false"
+        [canInsert]="false"
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepARRows()"
         [columns]="stepARColumns"
@@ -562,6 +563,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps4002Footer()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -582,6 +584,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyArs3001Footer()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -602,6 +605,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps3001Footer()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -622,6 +626,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps2002_CFooter()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -642,6 +647,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps2002Footer()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -662,6 +668,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps4023_CFooter()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>
@@ -682,6 +689,7 @@
         [showReportMode]="false"
         [showCheckBox]="false"
         [footerData]="readonlyAps4023Footer()"
+        [ItemSize]="24.44"
       ></app-table-report>
     </p-panel>
   </div>

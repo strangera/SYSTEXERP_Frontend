@@ -7,10 +7,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { forkJoin, Observable } from 'rxjs'; // 引入 forkJoin 和 Observable
 import { finalize, map } from 'rxjs/operators';
 import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls2c050',

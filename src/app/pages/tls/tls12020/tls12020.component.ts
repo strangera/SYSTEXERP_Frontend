@@ -5,19 +5,19 @@ import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls12020',

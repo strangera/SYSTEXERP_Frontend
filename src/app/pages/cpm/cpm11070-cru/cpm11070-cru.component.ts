@@ -8,18 +8,18 @@ import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-cpm11070-cru',

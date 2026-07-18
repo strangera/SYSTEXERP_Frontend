@@ -4,15 +4,15 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin33010Service } from '@service/api/fin/fin33010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { TableComponent } from '@others/component/table/table.component';
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin33010',

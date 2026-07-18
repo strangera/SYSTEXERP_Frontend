@@ -6,21 +6,21 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin63050ListData, Fin63050Service, QueryFin63050Request } from '@service/api/fin/fin63050.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-fin63050',

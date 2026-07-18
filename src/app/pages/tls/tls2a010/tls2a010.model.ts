@@ -1,4 +1,4 @@
-import { ColumnGroup, formatAmount, ReportColumn } from "src/app/shared/componentkit/table-report/table-report.model";
+import { ColumnGroup, formatAmount, ReportColumn } from "src/app/shared/components/table-report/table-report.model";
 
 export interface TLS2A010Data {
   TXN_Date: string;         // 日期，例如：'2024/05/08'

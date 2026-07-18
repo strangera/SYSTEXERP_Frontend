@@ -5,19 +5,19 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
-import { formatDate, } from 'src/app/shared/componentkit/table-edit/table-edit-format';
+import { formatDate, } from 'src/app/shared/components/table-edit/table-edit-format';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { Fin34010Row, Fin34010Service, } from '../../../service/api/fin/fin34010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { formatAmount, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-fin34010',

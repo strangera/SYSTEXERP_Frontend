@@ -1,4 +1,4 @@
-import { ReportColumn, ColumnGroup, formatAmount } from "@shared/componentkit/table-report/table-report.model";
+import { ReportColumn, ColumnGroup, formatAmount } from "@shared/components/table-report/table-report.model";
 export interface TLS22020Data {
   ECR_No: string;
   tlt_no: string;

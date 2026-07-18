@@ -3,21 +3,21 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { Fin64050Service, Fin64050UpdateRequest, QueryFIN64050Request, QueryFIN64050Row } from '../../../service/api/fin/fin64050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @UntilDestroy()
 @Component({

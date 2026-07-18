@@ -7,9 +7,9 @@ import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng
 import { POS5008Data, Tls24010Service } from '../../../../service/api/tls/tls24010.service';
 import { getSYS1000Options } from '../../../../service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
-import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../../shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../../shared/components/input-text/input-text.component';
 import { Column } from '../../../../others/component/table/table.model';
 import { POS5008Columns } from '../tls24010-cru.model';
 

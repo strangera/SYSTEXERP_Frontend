@@ -20,15 +20,15 @@ import {
 } from '../../../others/component/table/table.model';
 
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 import {
   ApiResponse,

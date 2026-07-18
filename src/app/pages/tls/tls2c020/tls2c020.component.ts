@@ -6,19 +6,19 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { TLS2C020Data, TLS2C020Service } from '@service/api/tls/tls2-c020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { TabViewModule } from 'primeng/tabview';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { formatDate } from '../../../others/component/table/table.model';
 
 export interface CheckData {

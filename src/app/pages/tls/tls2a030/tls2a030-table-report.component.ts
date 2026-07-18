@@ -5,13 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { ReportColumn, TableQueryPayload } from './tls2a030-table-report.model';
 
 @Component({

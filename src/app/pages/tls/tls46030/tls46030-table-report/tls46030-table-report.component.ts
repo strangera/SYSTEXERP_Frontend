@@ -3,15 +3,15 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { getSYS1000 } from '@service/system/sys1000.service';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { ReportColumn } from './tls46030-table-report.model';
 
 @Component({

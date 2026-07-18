@@ -6,15 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CPM12030Data, Cpm12030Service, CSS10031Data, CSS1004Data } from '@service/api/cpm/cpm12030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 @Component({
   selector: 'app-cpm12030-cru',
   templateUrl: './cpm12030-cru.component.html',

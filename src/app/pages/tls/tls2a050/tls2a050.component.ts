@@ -4,9 +4,9 @@ import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ColumnGroup, ReportColumn, formatAmount, formatDate as reportFormatYMD } from '@shared/componentkit/table-report/table-report.model';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ColumnGroup, ReportColumn, formatAmount, formatDate as reportFormatYMD } from '@shared/components/table-report/table-report.model';
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { saveAs } from 'file-saver';
@@ -18,11 +18,11 @@ import {
   QueryTLS2A050Request,
   Tls2A050Service
 } from 'src/app/service/api/tls/tls2a050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 
 type FlatDataRow = Record<string, string | number | null>;
 

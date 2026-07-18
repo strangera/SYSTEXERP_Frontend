@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx-js-style';
-import { NotificationService } from '../component/notification-message/notification.service';
+import { NotificationService } from '../components/notification-message/notification.service';
 
 export interface ImportExcelColumn {
   field: string;

@@ -5,13 +5,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Sysbq00Data, Sysbq00DropDownItem, Sysbq00Request, Sysbq00Service } from '../../../service/api/sys/sysbq00.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '../../../shared/componentkit/table-edit/validate-field.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
+import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
+import { validateRequired } from '../../../shared/components/table-edit/validate-field.model';
 
 interface LineRow {
   line_name: string | null;

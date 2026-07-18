@@ -31,14 +31,14 @@ import { TooltipModule } from 'primeng/tooltip';
 
 // 共用組件
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableComponent } from '@others/component/table/table.component';
 
 // V2 服務與類型

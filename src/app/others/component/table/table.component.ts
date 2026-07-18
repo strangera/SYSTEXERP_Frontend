@@ -4,7 +4,7 @@ import { SortMeta } from 'primeng/api';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowReorderEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from './import-table';
 import { TableUtilityService } from './table-utility.service';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';

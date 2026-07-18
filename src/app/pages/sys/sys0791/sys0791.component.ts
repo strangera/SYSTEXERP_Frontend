@@ -12,12 +12,12 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown'; // 還原引入 PrimeNG 下拉元件
 import { finalize } from 'rxjs';
 import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-sys0791',

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { IconFieldModule } from 'primeng/iconfield';

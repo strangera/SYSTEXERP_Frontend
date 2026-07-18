@@ -8,16 +8,16 @@ import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { DeleteFIN32030RecvCascadeBatchRequest, FIN32030Service, QueryFIN32030ARResponse, QueryFIN32030Response } from '../../../service/api/fin/fin32030.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { formatAmountWithFraction, formatDate } from '../../../others/component/table/table.model';
 
 //1.3.2.3 收款沖帳維護

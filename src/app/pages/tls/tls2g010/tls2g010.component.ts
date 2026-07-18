@@ -6,8 +6,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS2G010Service } from '@service/api/tls/tls2g010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -15,10 +15,10 @@ import { DividerModule } from 'primeng/divider';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls2g010',

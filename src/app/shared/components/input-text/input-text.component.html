@@ -1,0 +1,80 @@
+<label [hidden]="!showLabel || !label" [for]="controlName">
+  {{ label }}
+  <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
+  <ng-content select="header"></ng-content>
+</label>
+
+<div class="input-group">
+  <ng-container *ngIf="!showStar; else starredInput">
+    <input
+      [class]="inputClasses"
+      autocomplete="off"
+      [id]="controlName"
+      type="text"
+      [formControl]="control"
+      [style.text-align]="textAlign"
+      [readonly]="readonly"
+      [placeholder]="
+        alwaysShowPlaceholder || !control.disabled
+          ? customPlaceholder || fieldState.placeholder
+          : ''
+      "
+      [attr.minlength]="fieldState.minLength ?? null"
+      [attr.maxlength]="
+        autoPadZero ? padLength : weightedMax ? null : fieldState.maxLength
+      "
+      [attr.inputmode]="autoPadZero ? 'numeric' : null"
+      [attr.pattern]="autoPadZero ? '[0-9]*' : null"
+      [ngClass]="{
+        'ng-invalid ng-dirty':
+          (submitted && control.errors) ||
+          (errorForGroup && control.parent?.errors),
+      }"
+      pInputText
+      [attr.aria-label]="label || fieldState.placeholder"
+      [title]="label || fieldState.placeholder"
+      (compositionstart)="onCompositionStart()"
+      (compositionend)="onCompositionEnd($event)"
+      (input)="onInput($event)"
+      (blur)="onBlur($event)"
+      appEnterToTab
+      [pKeyFilter]="keyFilter"
+    />
+  </ng-container>
+
+  <ng-template #starredInput>
+    <input
+      class="w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="value"
+      [disabled]="true"
+      appEnterToTab
+    />
+  </ng-template>
+
+  <span
+    *ngIf="showCopyButton"
+    role="button"
+    tabindex="0"
+    pTooltip="複製"
+    tooltipPosition="top"
+    [appCopyControl]="control"
+    class="copy-button pi pi-copy"
+  ></span>
+
+  <app-button
+    *ngIf="showButton"
+    [label]="buttonLabel"
+    (click)="onClick()"
+    [loading]="buttonLoading"
+    [styleClass]="'p-2'"
+  ></app-button>
+</div>
+
+@if (showErrorMessage && (submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control, errorForGroup); as msg) {
+  <div class="text-red-600 text-sm">{{ msg }}</div>
+}
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{ helpMsg }}
+</small>

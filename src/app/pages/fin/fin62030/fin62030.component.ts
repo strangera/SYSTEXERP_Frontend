@@ -4,15 +4,15 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN62030Data, FIN62030Service, QueryFIN62030Request } from '@service/api/fin/fin62030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownComponent } from "@shared/components/dropdown/dropdown.component";
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { Column, formatAmount, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-fin62030',

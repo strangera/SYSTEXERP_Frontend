@@ -4,14 +4,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDate } from '@others/component/table/table.model';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { CPM11050Data, CPM11050Service } from '../../../service/api/cpm/cpm11050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
 @Component({
   selector: 'app-cpm11050',

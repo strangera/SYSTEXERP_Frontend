@@ -4,18 +4,18 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { POS1004Master, Tls42010MQuery, Tls42010Service, USRLevelOption } from '../../../service/api/tls/tls42010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 
 @Component({
   selector: 'app-tls42010',

@@ -4,11 +4,11 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 // Services
 

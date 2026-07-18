@@ -1,0 +1,154 @@
+<div class="grid p-fluid">
+  <ng-container *ngFor="let field of fieldsConfig">
+    <div class="col pb-0">
+      <ng-container *ngIf="field.mainDataField">
+        <label [for]="field.field">
+          {{ field.header }}
+          <span *ngIf="fieldState.isRequired" class="text-red-500">*</span>
+        </label>
+        <p-autoComplete
+          [formControl]="control"
+          [id]="field.field"
+          [optionLabel]="optionLabel"
+          (click)="onFocusAndInitialLoad($event)"
+          [suggestions]="suggestions"
+          [optionValue]="optionValue"
+          [placeholder]="control.disabled ? '' : fieldState.placeholder"
+          (keydown.enter)="focusNextFocusable($event); enterKey.emit($event)"
+          (completeMethod)="onCompleteMethod($event)"
+          (onSelect)="onAutoCompleteSelect($event)"
+          [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
+        >
+          <ng-template let-options pTemplate="item">
+            <div class="flex align-items-center gap-2">
+              <div>
+                {{
+                  templateLabel !== ""
+                    ? options[templateLabel]
+                    : options[optionLabel]
+                }}
+              </div>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+        @if ((submitted || (control.touched && control.invalid)) && fieldState.getErrorMessage(control); as msg) {
+          <div class="text-red-600 text-sm">{{ msg }}</div>
+        }
+      </ng-container>
+
+      <ng-container *ngIf="!field.mainDataField">
+        <label [for]="field.field">{{ field.header }}</label>
+        <input
+          type="text"
+          pInputText
+          [disabled]="true"
+          [value]="getFieldValue(field)"
+        />
+      </ng-container>
+    </div>
+  </ng-container>
+</div>
+
+<p-overlayPanel
+  #op
+  [style]="{ 'min-width': '700px', 'max-width': '90vw' }"
+  [appendTo]="'body'"
+  [showCloseIcon]="true"
+>
+  <ng-container *ngIf="showOverlay && formGroup">
+    <form [formGroup]="formGroup" class="grid p-fluid pt-2">
+      <ng-content />
+      <div class="col-12">
+        <p-table
+          #dt
+          [value]="dialogData"
+          [columns]="dialogColumns"
+          [selection]="selectedItems"
+          (selectionChange)="onSelectionChange($event)"
+          [selectionMode]="selectionMode"
+          [dataKey]="optionValue"
+          [loading]="loading"
+          [paginator]="showPage"
+          [rows]="rows"
+          [totalRecords]="totalRecords"
+          [rowsPerPageOptions]="rowsPerPageOptions"
+          [lazy]="lazy"
+          (onLazyLoad)="onPrimeTableLazyLoad($event)"
+          [scrollable]="true"
+          [scrollHeight]="scrollHeight"
+          styleClass="p-datatable-sm p-datatable-gridlines"
+        >
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+              <th
+                *ngIf="showCheckBox && selectionMode === 'multiple'"
+                scope="col"
+                class="w-3rem text-center"
+              >
+                <p-tableHeaderCheckbox />
+              </th>
+              <th
+                *ngIf="showCheckBox && selectionMode === 'single'"
+                scope="col"
+                class="w-3rem"
+              ></th>
+              <th *ngFor="let col of columns" scope="col" class="text-center">
+                {{ col.header }}
+              </th>
+            </tr>
+          </ng-template>
+
+          <ng-template
+            pTemplate="body"
+            let-rowData
+            let-columns="columns"
+            let-rowIndex="rowIndex"
+          >
+            <tr
+              [pSelectableRow]="rowData"
+              [pSelectableRowIndex]="rowIndex"
+            >
+              <td
+                *ngIf="showCheckBox && selectionMode === 'multiple'"
+                class="text-center"
+              >
+                <p-tableCheckbox [value]="rowData" />
+              </td>
+              <td
+                *ngIf="showCheckBox && selectionMode === 'single'"
+                class="text-center"
+              >
+                <p-tableRadioButton [value]="rowData" />
+              </td>
+              <td
+                *ngFor="let col of columns"
+                [ngClass]="getTableCellClass(col, rowData)"
+              >
+                {{
+                  col.format
+                    ? col.format(rowData[col.field], rowIndex, rowData)
+                    : rowData[col.field]
+                }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td
+                [attr.colspan]="dialogColumns.length + (showCheckBox ? 1 : 0)"
+              >
+                <div
+                  class="flex justify-content-center align-items-center p-4 font-bold text-500"
+                >
+                  <i class="pi pi-search mr-2"></i>
+                  查無資料
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </form>
+  </ng-container>
+</p-overlayPanel>

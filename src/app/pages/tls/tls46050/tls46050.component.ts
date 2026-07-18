@@ -7,16 +7,16 @@ import { Tls46050Request, Tls46050Response, Tls46050Service } from '@service/api
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, formatAmount2, formatDateTime } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn, formatAmount2, formatDateTime } from '@shared/components/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 
 // 2.4.6.5  TM監控報表
 @Component({

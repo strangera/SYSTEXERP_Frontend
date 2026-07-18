@@ -11,15 +11,15 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 // UI Components
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatYYYYMMDD } from '@shared/componentkit/table-report/table-report.model';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatYYYYMMDD } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
@@ -149,7 +149,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
-    if (rows.some(r => r?.Voucher_No)) return this.messageService.warnBubble('已產生傳票之資料不可刪除');
     if (rows.some(r => !r?.CanDel)) return this.messageService.warnBubble('已審核之申報年月資料不可刪除');
 
     const ids = rows.map(r => r.id).filter(id => id != null);

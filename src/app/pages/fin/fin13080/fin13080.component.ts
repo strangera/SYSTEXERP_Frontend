@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';

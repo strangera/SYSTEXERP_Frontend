@@ -2,15 +2,15 @@ import { CommonModule, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ImageModule } from 'primeng/image';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { QueryTLS12050Request, TLS12050Detail, TLS12050Service, TLS12050Summary } from '../../../service/api/tls/tls12050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { formatDate, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 

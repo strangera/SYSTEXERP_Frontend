@@ -8,7 +8,7 @@ import { ASS17040Service } from '../../../service/api/ass/ass17040.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { SystemDataService } from '../../../service/system/system-data.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { PermissionGuardService } from '../../../shared/service/permission-guard.service';
 import { QueryStateService } from '../../../shared/service/query-state.service';
 import { ASS17040Component } from './ass17040.component';

@@ -1,4 +1,4 @@
-import { formatAmount, ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatAmount, ReportColumn } from "@shared/components/table-report/table-report.model";
 import { SortMeta } from "primeng/api";
 
 /**

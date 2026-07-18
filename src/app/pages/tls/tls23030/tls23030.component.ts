@@ -6,8 +6,8 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -18,15 +18,15 @@ import { catchError, finalize, map, shareReplay, timeout } from 'rxjs/operators'
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23030Service, TLS23030SumPayNoRow } from '../../../service/api/tls/tls23030.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { formatAmount, formatDate, formatTime, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
+import { formatAmount, formatDate, formatTime, ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 const TOTAL_FIELD_MAP = {
   TXN_PayAmt: 'Total_TXN_PayAmt',
@@ -38,16 +38,6 @@ const TOTAL_FIELD_MAP = {
   selector: 'app-tls23030',
   standalone: true,
   templateUrl: './tls23030.component.html',
-  // CRD_No 欄位需要把多組卡號（; 分隔轉出的 \n）呈現成各自一行；
-  // 純文字 + white-space: pre-line，不走 [innerHTML]/webkit-line-clamp，避免複製異常。
-  // 只在本頁面 scope，不動共通元件 table-report.component.scss。
-  styles: [`
-    /* table-report 共用 .p-datatable-tbody > tr > td 有 white-space: normal !important，
-       specificity 需 >= 該規則（class+type+type）才蓋得過，故加上同層 class 疊加。 */
-    :host ::ng-deep .p-datatable-tbody > tr > td.crd-no-multiline {
-      white-space: pre-line !important;
-    }
-  `],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, TranslateModule,
     AccordionModule, CheckboxModule, ButtonModule, DialogModule, RadioButtonModule,
@@ -89,6 +79,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     TXN_MemCard: [''],
     CRD_Type: [],
     CRD_No: [''],
+    CPN_NO: [''],
     IsHaveTERM_No: [],
     pay_taxtype: [''],
     org_id: [],
@@ -210,6 +201,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
       TXN_MemCard: emptyToNull(raw['TXN_MemCard']),
       CRD_Type: ensureArr(raw['CRD_Type']),
       CRD_No: emptyToNull(raw['CRD_No']),
+      CPN_NO: emptyToNull(raw['CPN_NO']),
       IsHaveTERM_No: this.toBoolOrNull(raw['IsHaveTERM_No']),
       pay_taxtype: emptyToNull(raw['pay_taxtype']),
       org_id: ensureArr(raw['org_id']),
@@ -301,9 +293,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         this.data = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          // 多組卡號以 ; 分隔：轉純文字換行字元（非 <br>），避免走 [innerHTML] 造成無法正常複製
-          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '\n');
-          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
+          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const totalCount = Number(res?.TotalCount ?? 0);
@@ -341,9 +331,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
         const rows = rawRows.map((item: any, i: number) => {
           const ymd = this.toYMD(item?.TXN_Date) ?? '';
           const key = `${ymd}|${String(item?.ECR_No ?? '').trim()}|${String(item?.TXN_No ?? '').trim()}`;
-          // 多組卡號以 ; 分隔：轉純文字換行字元（非 <br>），避免走 [innerHTML] 造成無法正常複製
-          const CRD_No = String(item?.CRD_No ?? '').replaceAll(/;/g, '\n');
-          return { ...item, CRD_No, _rowKey: `${key}|${i}`, groupKey: key };
+          return { ...item, _rowKey: `${key}|${i}`, groupKey: key };
         });
 
         const grand = wrappers.reduce((agg: Record<string, number>, w: any) => {
@@ -606,7 +594,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: formatTime },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right', cellClass: () => 'crd-no-multiline' },
+    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, align: 'right' },
     { field: 'TERM_No', header: '是否分期', visible: true, format: (v: any) => v == null ? '' : Number(v ?? 0) > 1 ? '是' : '否' },
     { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },

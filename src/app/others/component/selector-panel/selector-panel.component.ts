@@ -9,7 +9,6 @@ import { SortMeta } from 'primeng/api';
 import { Column, LazyLoadEvent } from '../table/table.model';
 import { NgFor, NgIf } from '@angular/common';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableComponent } from '../table/table.component';
 
@@ -26,7 +25,7 @@ export interface DisplayFieldConfig {
   styleUrl: './selector-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, EnterToTabDirective],
+  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, InputTextModule, OverlayPanelModule, TableComponent, EnterToTabDirective],
   hostDirectives: [FieldStateDirective],
 })
 export class SelectorPanelComponent implements OnInit, OnDestroy {

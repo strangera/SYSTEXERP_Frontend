@@ -63,6 +63,7 @@ export function mapAps3001RowToStepAP(row: APS3001): FIN53010StepAP {
     ven_check_title: row.VEN_CheckTitle ?? undefined,
     acc_no: row.AccNo ?? undefined,
     note_desc: row.NoteDesc ?? undefined,
+    PTA: row.PTA ?? null,
   };
 }
 
@@ -85,6 +86,8 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
     ars_date: parseYmdToDate(ars),
     acc_no: acc || undefined,
     note_desc: note || undefined,
+    ACCT_KEY: row.ACCT_KEY ?? null,
+    PTA: row.PTA ?? null,
   };
 }
 

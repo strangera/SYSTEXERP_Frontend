@@ -3,11 +3,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13020Service } from '@service/api/ass/ass13020.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';

@@ -6,23 +6,23 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 
 
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { ExpandableEditTableComponent } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 import { Tls29010Service } from '../../../service/api/tls/tls29010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
 
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { validateRequired } from '@others/component/table/validate-field.model';
 
 // TALPORDERM (主檔)

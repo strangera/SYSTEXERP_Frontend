@@ -8,17 +8,17 @@ import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { debounceTime, finalize, skip } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
 
 // 2.2.16.4 預算日報表

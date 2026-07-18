@@ -1,23 +1,23 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@others/component/table/table.model';
 import { Fin23070Data, Fin23070DetailData, FIN23070Service } from '@service/api/fin/fin23070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { combineLatest, finalize, map } from 'rxjs';
+import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { TableReportComponent } from '../fin25010-cru/fin25010-table-report/fin25010-table-report.component';
 
 // 1.2.3.7 暫付款核銷報表
 @Component({

@@ -9,15 +9,15 @@ import { ASS11090Service } from '../../../service/api/ass/ass11090.service';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
-import { EditColumn, FieldChangeEvent } from '../../../shared/componentkit/table-edit/table-edit.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/components/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
+import { EditColumn, FieldChangeEvent } from '../../../shared/components/table-edit/table-edit.model';
 import { ASS11090Data, ASS11090DetailItem, ASS11090DetailRequest, ASS11090UpdateRequest, DepreciationDetail, ExpenseTransferDetail, PurchaseAccountDetail, VouAccDetail } from '../ass11090/ass11090.model';
 
 //3.1.1.9 資材中分類會計科目維護作業 CRU

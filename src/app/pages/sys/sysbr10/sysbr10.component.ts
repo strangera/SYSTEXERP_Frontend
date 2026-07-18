@@ -3,22 +3,22 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inje
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column } from '@others/component/table/table.model';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, formatDateTime, formatYN, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column } from '@others/component/table/table.model';
+import { RadiobuttonYNComponent } from '@shared/components/radiobutton-yn/radiobutton-yn.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { AddButton, formatDateTime, formatYN, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
+import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { QuerySYSBR10Request, QuerySYSBR10Response, SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-sysbr10',

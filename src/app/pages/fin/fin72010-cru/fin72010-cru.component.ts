@@ -4,10 +4,10 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72010Service, QueryFIN72010DetailDetailResponse, QueryFIN72010DetailRequest, saveFIN72010Request } from '@service/api/fin/fin72010.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { DialogModule } from 'primeng/dialog';
@@ -18,11 +18,11 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
 
 @Component({

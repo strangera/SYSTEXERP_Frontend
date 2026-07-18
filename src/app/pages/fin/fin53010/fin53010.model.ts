@@ -190,6 +190,7 @@ export interface InsertARS3001DataBody {
   VEN_Uniform?: string | null;
   AccNo?: string | null;
   NoteDesc?: string | null;
+  ACCT_KEY?: string | null;
 }
 
 /** Swagger insertAPS4023Data */
@@ -735,6 +736,7 @@ export interface ARS3001 {
   ARS_SourceNo?: string | null;
   ARS_Status?: string | null;
   PTA?: string | null;
+  ACCT_KEY?: string | null;
   NoteDesc?: string | null;
   gls3001_id?: number | null;
   CompNo?: string | null;
@@ -1029,6 +1031,7 @@ export interface FIN53010StepAP {
   ven_check_title?: string;
   acc_no?: string;
   note_desc?: string;
+  PTA?: string | null;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */
@@ -1044,6 +1047,8 @@ export interface FIN53010StepAR {
   ars_date?: Date | null;
   acc_no?: string;
   note_desc?: string;
+  ACCT_KEY?: string | null;
+  PTA?: string | null;
 }
 
 /** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */

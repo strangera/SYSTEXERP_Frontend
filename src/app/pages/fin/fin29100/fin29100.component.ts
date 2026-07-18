@@ -5,18 +5,18 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn, formatAmount, formatDate } from '@shared/components/table-report/table-report.model';
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
 import { FIN29100Data, FIN29100Service, QueryBankAccountResponse, QueryFIN29100Request } from '../../../service/api/fin/fin29100.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 
 interface TxnTypeOption { label: string; value: string }
 

@@ -1,4 +1,4 @@
-import { ColumnGroup, formatAmount, ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { ColumnGroup, formatAmount, ReportColumn } from "@shared/components/table-report/table-report.model";
 
 // 專櫃帳款試算彙總表 (queryTLS2E050) - 保持不變
 export const columns1: ReportColumn[] = [

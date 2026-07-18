@@ -21,19 +21,19 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn, FieldChangeEvent } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn, FieldChangeEvent } from '@shared/components/table-edit/table-edit.model';
+import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, LazyLoadEvent, formatDate, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 /** 3.1.2.2 詢價登錄作業 CRU */

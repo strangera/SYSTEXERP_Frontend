@@ -3,7 +3,6 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { TableComponent } from '@others/component/table/table.component';
 import { PrimeTemplate } from 'primeng/api';
@@ -28,7 +27,7 @@ export interface InputGroupColumn {
   styleUrl: './input-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent],
+  imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, DialogModule, NgFor, TableComponent],
   hostDirectives: [FieldStateDirective],
 })
 export class InputGroupComponent implements OnInit, OnChanges {

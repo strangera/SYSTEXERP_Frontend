@@ -6,18 +6,18 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { InputTextareaComponent } from "src/app/shared/componentkit/input-textarea/input-textarea.component";
+import { InputTextareaComponent } from "src/app/shared/components/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
 import { DropDownListService, IDropdownItem, ITLS42010KBLevelItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { TLS41010Data, TLS41010Item, tltNoPickerCruColumns } from '../tls41010/tls41010.model';
 import { TltNoPickerComponent } from '../tls41010/tlt-no-picker/tlt-no-picker.component';
 
@@ -86,7 +86,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_Name: [null, [Validators.required, Validators.maxLength(20)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_TLT_Name: [null, [Validators.maxLength(60)]],
-    ECR_Type: ['1', [Validators.required, Validators.maxLength(2)]],
+    ECR_Type: ['2', [Validators.required, Validators.maxLength(2)]],
     ECR_SAL_Type: [null, [Validators.maxLength(8)]],
     ECR_LocNo: [null, [Validators.maxLength(10)]],
     ECR_USR_No: [null, [Validators.maxLength(8)]],

@@ -5,18 +5,18 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
 

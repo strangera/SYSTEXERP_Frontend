@@ -7,13 +7,13 @@ import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
 import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
 export interface Customer_interview {
   contact_Date_Start: string; // 接洽日期_起始日

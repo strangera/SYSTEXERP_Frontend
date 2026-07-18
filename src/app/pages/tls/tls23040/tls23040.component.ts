@@ -4,8 +4,8 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -16,13 +16,13 @@ import { catchError, finalize, map, shareReplay } from 'rxjs/operators';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { formatAmount, formatDate, ReportColumn, } from '../../../shared/componentkit/table-report/table-report.model';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
+import { formatAmount, formatDate, ReportColumn, } from '../../../shared/components/table-report/table-report.model';
 
 @Component({
   selector: 'app-tls23040',

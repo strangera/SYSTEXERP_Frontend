@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from '@others/component/table/import-table';
 import { TableUtilityService } from '@others/component/table/table-utility.service';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from '@others/component/table/table.model';
@@ -10,6 +9,7 @@ import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
+import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-customFooter-table',

@@ -13,7 +13,7 @@
 - **Framework**: Angular 18.1.0 (Standalone Pattern), TypeScript (~5.5.2), RxJS (~7.8.0)
 - **UI Toolkit**: PrimeNG 17.18.15 + PrimeFlex 3.3.1.
   - **Global Header**: EVERY page/action component MUST include `app-menubar` (located in `src/app/shared/component/menubar/`) at the very top of the HTML, binding `[ProgNo]="ProgNo"`.
-  - **Allowed Shared Components**: Prioritize and ONLY use these 14 valid components in `src/app/shared/componentkit/`:
+  - **Allowed Shared Components**: Prioritize and ONLY use these 14 valid components in `src/app/shared/components/`:
     - `auto-complete`
     - `button`
     - `calendar`
@@ -29,7 +29,7 @@
     - `table-edit`
     - `table-report`
   - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
-  - **🚫 FORBIDDEN — do NOT use these in new code**: `expandable-edit-table`, `selector-panel`, and the plain `table` (`app-table`) component have been moved out of `shared/` to `src/app/others/component/` because they are NOT common/shared components (they were historically misplaced there). Do not import them for new pages. For tabular data use `table-edit` or `table-report` from `shared/componentkit/`; for any other need, import PrimeNG's own modules directly (e.g. `primeng/table`) in your own component instead of relying on a shared wrapper.
+  - **🚫 FORBIDDEN — do NOT use these in new code**: `expandable-edit-table`, `selector-panel`, and the plain `table` (`app-table`) component have been moved out of `shared/` to `src/app/others/component/` because they are NOT common/shared components (they were historically misplaced there). Do not import them for new pages. For tabular data use `table-edit` or `table-report` from `shared/components/`; for any other need, import PrimeNG's own modules directly (e.g. `primeng/table`) in your own component instead of relying on a shared wrapper.
 - **Inheritance Pattern**:
   - Query/List pages MUST extend `BasicQueryPageComponent` (located in `src/app/shared/componentextends/basic-qpage/`).
   - Create/Read/Update pages MUST extend `BasicCruPageComponent` (located in `src/app/shared/componentextends/basic-crupage/`).

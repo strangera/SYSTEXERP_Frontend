@@ -3,12 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TreeDropdownComponent } from '../../../others/component/tree-dropdown/tree-dropdown.component';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TreeDropdownComponent } from '../../../shared/componentkit/tree-dropdown/tree-dropdown.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 
 @Component({

@@ -3,16 +3,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { EditFIN41020Request, FIN41020Data, FIN41020Service } from '@service/api/fin/fin41020.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { finalize } from 'rxjs';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { TableEditComponent } from '../fin13040-cru/fin13040-table-edit/fin13040-table-edit.component';
 import { EditColumn } from '../fin13040-cru/fin13040-table-edit/fin13040-table-edit.model';
 

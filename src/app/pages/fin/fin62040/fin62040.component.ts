@@ -8,15 +8,15 @@ import {
   QueryFIN62040Request
 } from '@service/api/fin/fin62040.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { Column, formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-fin62040',

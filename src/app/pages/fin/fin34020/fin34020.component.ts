@@ -5,19 +5,19 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { ApiResponse, Fin34020Service, QueryFIN34020Request, QueryFIN34020Row, SortItem } from '../../../service/api/fin/fin34020.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 
 @Component({
   selector: 'app-fin34020',

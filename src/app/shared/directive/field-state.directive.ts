@@ -2,6 +2,7 @@ import { ChangeDetectorRef, DestroyRef, Directive, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
 import { FormLabelService } from '@shared/service/form-label.service';
+import { ValidationService } from '@shared/service/validation.service';
 /**
  * 明確宣告欄位規則，取代對 FormControl 驗證器的探測反推。
  * 未提供的屬性會 fallback 用原本的驗證器探測（過渡期相容，行為不變）。
@@ -36,8 +37,35 @@ export class FieldStateDirective {
   isNumberOnly = false;
 
   private readonly formLabelService = inject(FormLabelService);
+  private readonly validService = inject(ValidationService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * 取得欄位目前的錯誤訊息文字，取代個別頁面各自套用 <app-control-messages> 的寫法。
+   * 呼叫端仍需自行決定何時顯示（submitted / touched && invalid）。
+   */
+  getErrorMessage(control: AbstractControl | null, errorForGroup = false): string | null {
+    if (!control) return null;
+
+    if (control.errors) {
+      for (const propertyName in control.errors) {
+        if (Object.prototype.hasOwnProperty.call(control.errors, propertyName)) {
+          return this.validService.getValidatorErrorMessage(propertyName, control.errors[propertyName]);
+        }
+      }
+    }
+
+    if (errorForGroup && control.parent?.errors) {
+      for (const propertyName in control.parent.errors) {
+        if (Object.prototype.hasOwnProperty.call(control.parent.errors, propertyName)) {
+          return this.validService.getValidatorErrorMessage(propertyName, control.parent.errors[propertyName]);
+        }
+      }
+    }
+
+    return null;
+  }
 
   initControl(control: FormControl, controlName?: string, label?: string, meta?: FieldMeta): void {
     if (controlName && label) {

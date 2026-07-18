@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { ASS17020TableReportUtilityService } from './ass17020-table-report-utility.service';
 import { ReportColumn } from './ass17020-table-report.model';
 

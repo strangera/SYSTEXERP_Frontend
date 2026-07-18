@@ -6,14 +6,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS17040Service } from '@service/api/ass/ass17040.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import {
   formatAmount
-} from '@shared/componentkit/table-report/table-report.model';
+} from '@shared/components/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';

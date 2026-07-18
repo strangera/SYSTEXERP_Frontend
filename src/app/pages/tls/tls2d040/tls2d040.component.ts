@@ -6,10 +6,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS2D040Request, TLS2D040Service } from '@service/api/tls/tls2-d040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { Column, createPaginationConfig, formatAmount } from '@others/component/table/table.model';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
@@ -17,9 +17,9 @@ import { SortMeta } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 interface TLS2D040FormValue {
   tlt_no: string[];

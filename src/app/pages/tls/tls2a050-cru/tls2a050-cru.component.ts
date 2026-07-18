@@ -6,8 +6,8 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { QueryTLS22050Response, Tls22050Service } from 'src/app/service/api/tls/tls22050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 interface ParentQueryRow {
   TXN_Date: string | null;
