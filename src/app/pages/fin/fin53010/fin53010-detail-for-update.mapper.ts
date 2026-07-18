@@ -63,6 +63,7 @@ export function mapAps3001RowToStepAP(row: APS3001): FIN53010StepAP {
     ven_check_title: row.VEN_CheckTitle ?? undefined,
     acc_no: row.AccNo ?? undefined,
     note_desc: row.NoteDesc ?? undefined,
+    PTA: row.PTA ?? null,
   };
 }
 
