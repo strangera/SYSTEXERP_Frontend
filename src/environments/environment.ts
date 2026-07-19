@@ -1,10 +1,15 @@
 // 開發環境的 API 路徑
+// API host 動態跟著瀏覽器網址走：本機開 localhost:4200 → API 打 localhost:5142（跟原本一樣）；
+// 手機/其他裝置連開發機的 dev server → API 自動指回同一台開發機（後端需綁 0.0.0.0 才連得到）。
+// SSR 等沒有 location 的環境退回 localhost。
+const devApiHost = typeof location !== 'undefined' ? location.hostname : 'localhost';
+
 export const environment = {
   production: false,
   version: '2025/01/15_V1 09:30', // 手動設定的預設值
   showDebugToggleInMenu: true,
-  BaseUrl: 'http://localhost:5142',
-  ApiUrl: 'http://localhost:5142',
+  BaseUrl: `http://${devApiHost}:5142`,
+  ApiUrl: `http://${devApiHost}:5142`,
   // BaseUrl: 'https://localhost:7271',
   // ApiUrl: 'https://localhost:7271',
 
