@@ -710,6 +710,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionValue: 'value',
         templateLabel: 'label',
         validate: [this.validateRequired],
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => !!rowData?.id,
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
