@@ -716,6 +716,12 @@ export class FIN53010Service {
   /** 已以 queryPOS2013_FIN53010_DropDownList 合併過的廠商代號（每鍵僅請求一次） */
   private readonly fin53010VenHydrationKeys = new Set<string>();
 
+  /** 廠商代號是否已完成 FIN53010 補水化（API 已回應，無論是否帶回 VEN_PayConditionDay） */
+  public isVendorHydratedForFin53010(venNo: string): boolean {
+    const key = typeof venNo === 'string' ? venNo.trim() : '';
+    return !!key && this.fin53010VenHydrationKeys.has(key);
+  }
+
   /**
    * 以 queryPOS2013_FIN53010_DropDownList 合併廠商主檔（含 VEN_PayType、VEN_BNK_No、帳號等），
    * 並與既有 queryPOS2013 全量清單併入同一筆 option。每個廠商代號僅請求一次。

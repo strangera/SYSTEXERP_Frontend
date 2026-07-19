@@ -113,6 +113,8 @@ function parseApiDateToLocal(s: string | null | undefined): Date | null {
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
   private static readonly SUMMARY_INVOICE_REGEX = /([A-Za-z]{2})(\d{8})\*(\d{2})\*/;
 
+  @ViewChild('apTableEdit') apTableEditComponent?: TableEditComponent;
+  @ViewChild('arTableEdit') arTableEditComponent?: TableEditComponent;
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
   @ViewChild('ptaDialogTable') ptaDialogTable!: TableComponent;
@@ -1485,12 +1487,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const applyDate = <T extends object>(row: T, venNoKey: keyof T, dateKey: keyof T): T => {
       const venNo = String((row[venNoKey] as unknown) ?? '').trim();
       if (!venNo) return row;
-      const venOpt = this.service.findVendorOptionByVenNo(venNo);
-      // 未載入或尚未補水化 FIN53010 欄位：保留現有日期，排入補載佇列
-      if (!venOpt || !('VEN_PayConditionDay' in (venOpt as object))) {
+      // 以 fin53010VenHydrationKeys 判斷是否已完成補水化，比 key 存在檢查更可靠
+      if (!this.service.isVendorHydratedForFin53010(venNo)) {
         vensToLoad.add(venNo);
         return row;
       }
+      const venOpt = this.service.findVendorOptionByVenNo(venNo);
       const date = this.calcExpectPayDate(venOpt);
       return date !== undefined ? { ...row, [dateKey]: date } : row;
     };
@@ -2359,6 +2361,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   };
 
   public onSubmit(): void {
+    // 應付/應收步驟表格：在當前步驟時用 ViewChild 驗證（顯示欄位紅框）；非當前步驟則用資料層檢查
+    const apValid = this.apTableEditComponent?.validateAndShowErrors();
+    const arValid = this.arTableEditComponent?.validateAndShowErrors();
+    if (apValid === false || arValid === false) return;
+
+    if (this.activeVoucherSteps().includes(3) && apValid === undefined) {
+      const badAP = this.stepAPRows().filter(r =>
+        !r.org_id || !r.ven_no || !r.ven_pay_type || !(r.acp_amt ?? 0) || !r.acp_expect_pay_date || !r.acp_date || !r.acc_no
+      );
+      if (badAP.length > 0) {
+        this.messageService.errorBubble(`應付帳款第 ${badAP.map(r => r.SerNo).join('、')} 筆有必填欄位未填`);
+        return;
+      }
+    }
+    if (this.activeVoucherSteps().includes(4) && arValid === undefined) {
+      const badAR = this.stepARRows().filter(r =>
+        !r.org_id || !r.ven_no || !(r.ars_amt ?? 0) || !r.pta_date || !r.ars_date || !r.acc_no
+      );
+      if (badAR.length > 0) {
+        this.messageService.errorBubble(`應收帳款第 ${badAR.map(r => r.SerNo).join('、')} 筆有必填欄位未填`);
+        return;
+      }
+    }
+
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
     const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
 
@@ -2590,16 +2616,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (ptaToVendor.size > 0) {
       const vensToLoad = new Set<string>();
 
-      // 判斷廠商選項是否已完成 FIN53010 補水化（VEN_PayConditionDay 等欄位存在）
-      const isFin53010Hydrated = (opt: Record<string, unknown>): boolean => 'VEN_PayConditionDay' in opt;
-
-      const applyVenOptToAP = (r: FIN53010StepAP, venOpt: Record<string, unknown>): FIN53010StepAP => {
+      const applyVenOptToAP = (r: FIN53010StepAP, venNo: string, venOpt: Record<string, unknown>): FIN53010StepAP => {
         const venPayType = venOpt['VEN_PayType'] as string | undefined;
         const venOptAsOption = venOpt as unknown as Option;
-        const hydrated = isFin53010Hydrated(venOpt);
+        const hydrated = this.service.isVendorHydratedForFin53010(venNo);
         return {
           ...r,
-          // 未補水化前 VEN_PayConditionDay 不存在，保留現有日期避免被 undefined 覆蓋；補水化後無條件更新
+          // API 未回應前保留現有日期；API 回應後無條件以 calcExpectPayDate 更新
           acp_expect_pay_date: hydrated ? this.calcExpectPayDate(venOpt) : r.acp_expect_pay_date,
           ven_pay_type: venPayType ?? r.ven_pay_type,
           ven_bnk_no: venOpt['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : r.ven_bnk_no,
@@ -2615,10 +2638,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         if (!pta || !ptaToVendor.has(pta)) return r;
         const newVenNo = ptaToVendor.get(pta);
         const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
-        // 未載入或尚未補水化 FIN53010 欄位：排入補載佇列
-        if (newVenNo && !(venOpt && isFin53010Hydrated(venOpt))) vensToLoad.add(newVenNo);
+        if (newVenNo && !this.service.isVendorHydratedForFin53010(newVenNo)) vensToLoad.add(newVenNo);
         return venOpt
-          ? applyVenOptToAP({ ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta) }, venOpt)
+          ? applyVenOptToAP({ ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta) }, newVenNo ?? '', venOpt)
           : { ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta) };
       }));
 
@@ -2627,8 +2649,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         if (!pta || !ptaToVendor.has(pta)) return r;
         const newVenNo = ptaToVendor.get(pta);
         const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
-        if (newVenNo && !(venOpt && isFin53010Hydrated(venOpt))) vensToLoad.add(newVenNo);
-        const hydrated = venOpt != null && isFin53010Hydrated(venOpt);
+        if (newVenNo && !this.service.isVendorHydratedForFin53010(newVenNo)) vensToLoad.add(newVenNo);
+        const hydrated = !!newVenNo && this.service.isVendorHydratedForFin53010(newVenNo);
         return venOpt
           ? { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta), pta_date: hydrated ? this.calcExpectPayDate(venOpt) : r.pta_date }
           : { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta) };
@@ -2642,7 +2664,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             this.stepAPRows.update(rows => rows.map(r => {
               const venNo = String(r.ven_no ?? '').trim();
               const venOpt = venNo ? this.service.findVendorOptionByVenNo(venNo) : undefined;
-              return venOpt ? applyVenOptToAP(r, venOpt) : r;
+              return venOpt ? applyVenOptToAP(r, venNo, venOpt) : r;
             }));
             this.stepARRows.update(rows => rows.map(r => {
               const venNo = String(r.ven_no ?? '').trim();
