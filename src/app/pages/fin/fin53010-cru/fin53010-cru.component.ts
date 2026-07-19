@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { afterNextRender, Component, computed, DestroyRef, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
@@ -1076,6 +1076,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
+    private readonly destroyRef: DestroyRef,
     private readonly validationService: ValidationService,
     private readonly confirmationService: ConfirmationService,
   ) {
@@ -1260,10 +1261,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     if (vensNeedingFin53010.size > 0) {
-      const sub = forkJoin([...vensNeedingFin53010].map(v => this.service.ensureFin53010VendorForSteps(v))).subscribe({
-        error: err => this.logger.error('補詢廠商主檔 queryPOS2013_FIN53010 失敗', err),
-      });
-      onCleanup(() => sub.unsubscribe());
+      // 不用 onCleanup 取消：hydration 具不可撤銷副作用（更新 vendorOptions signal），
+      // 取消會使 tap 不執行，導致 VEN_PayConditionDay 永遠無法合併進選項。
+      // ensureFin53010VendorForSteps 本身已以 fin53010VenHydrationKeys 保證每鍵只打一次。
+      forkJoin([...vensNeedingFin53010].map(v => this.service.ensureFin53010VendorForSteps(v)))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ error: err => this.logger.error('補詢廠商主檔 queryPOS2013_FIN53010 失敗', err) });
     }
 
     if (table.length === 0) {
