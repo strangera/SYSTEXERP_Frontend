@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { afterNextRender, Component, computed, DestroyRef, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
@@ -113,6 +113,8 @@ function parseApiDateToLocal(s: string | null | undefined): Date | null {
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
   private static readonly SUMMARY_INVOICE_REGEX = /([A-Za-z]{2})(\d{8})\*(\d{2})\*/;
 
+  @ViewChild('apTableEdit') apTableEditComponent?: TableEditComponent;
+  @ViewChild('arTableEdit') arTableEditComponent?: TableEditComponent;
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
   @ViewChild('ptaDialogTable') ptaDialogTable!: TableComponent;
@@ -1074,6 +1076,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
+    private readonly destroyRef: DestroyRef,
     private readonly validationService: ValidationService,
     private readonly confirmationService: ConfirmationService,
   ) {
@@ -1258,10 +1261,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     if (vensNeedingFin53010.size > 0) {
-      const sub = forkJoin([...vensNeedingFin53010].map(v => this.service.ensureFin53010VendorForSteps(v))).subscribe({
-        error: err => this.logger.error('補詢廠商主檔 queryPOS2013_FIN53010 失敗', err),
-      });
-      onCleanup(() => sub.unsubscribe());
+      // 不用 onCleanup 取消：hydration 具不可撤銷副作用（更新 vendorOptions signal），
+      // 取消會使 tap 不執行，導致 VEN_PayConditionDay 永遠無法合併進選項。
+      // ensureFin53010VendorForSteps 本身已以 fin53010VenHydrationKeys 保證每鍵只打一次。
+      forkJoin([...vensNeedingFin53010].map(v => this.service.ensureFin53010VendorForSteps(v)))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ error: err => this.logger.error('補詢廠商主檔 queryPOS2013_FIN53010 失敗', err) });
     }
 
     if (table.length === 0) {
@@ -1300,14 +1305,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             // 應收帳款：只有 auto-code 方向（借方建立 AR 關係）才產生 step row
             // 貸方為沖銷方向，沖銷既有 AR 記錄，不新增
             if (!this.isAutoCodeRow(row)) continue;
-            const arVenOpt = getVenOpt(String(row.DetailNo ?? ''));
-            const ptaDate = this.calcExpectPayDate(arVenOpt);
             ar.push({
               org_id: row.ORG_ID ?? '100000',
               ven_no: row.DetailNo,
               ars_amt: amt || undefined,
               ars_date: vouDate,
-              pta_date: ptaDate,
+              // 日期一律交由 reconcileStepExpectedDates 權威填入（後端優先），此處不預填以免壓過後端值
+              pta_date: undefined,
               acc_no: row.AccNo,
               note_desc: noteDesc,
               PTA: row.PTA ?? null,
@@ -1335,7 +1339,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               ...r,
               SerNo: i + 1,
               ...(existing != null ? {
-                // 廠商選項尚未載入時 calcExpectPayDate 回 undefined，暫保留舊值；autoFillStepExpectedDates 非同步更新後會覆蓋
+                // 新建列日期一律為 undefined，保留既有值以免重建時閃爍；reconcileStepExpectedDates 會權威補齊
                 acp_expect_pay_date: r.acp_expect_pay_date ?? existing.acp_expect_pay_date,
                 ven_ctrlyn: existing.ven_ctrlyn ?? r.ven_ctrlyn,
                 note_desc: existing.note_desc ?? r.note_desc,
@@ -1357,7 +1361,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.stepAPRows.set(apWithSer);
           this.stepARRows.set(arWithSer);
           this.stepBankRows.set(bkWithSer);
-          this.autoFillStepExpectedDates();
+          this.reconcileStepExpectedDates();
         } else {
           // 編輯模式：保留原有 DB 列，將新明細列產生的 step rows 重新合併
           // (以 _dataStatus==='new' 標記的 step row 為上一次 effect 產生的，先移除再重建)
@@ -1385,7 +1389,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             this.stepARRows.set(mergeStepRows(this.stepARRows(), ar));
           }
           if (ap.length > 0 || ar.length > 0) {
-            this.autoFillStepExpectedDates();
+            this.reconcileStepExpectedDates();
           }
           if (bk.length > 0 || this.stepBankRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
             this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
@@ -1456,7 +1460,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ven_pay_type: venPayType,
       acp_amt: amt || undefined,
       acp_date: vouDate,
-      acp_expect_pay_date: this.calcExpectPayDate(venOpt),
+      // 日期一律交由 reconcileStepExpectedDates 權威填入（後端優先），此處不預填以免壓過後端值
+      acp_expect_pay_date: undefined,
       ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
       ven_bnk_branch_no: venOpt?.['VEN_BNK_BranchNo'] != null ? String(venOpt['VEN_BNK_BranchNo']) : undefined,
       ven_bank_account: this.formatVenBankAccount(venOpt),
@@ -1479,41 +1484,69 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return new Date(base.getFullYear(), base.getMonth(), base.getDate() + payCondDay);
   }
 
-  private autoFillStepExpectedDates(): void {
-    const vensToLoad = new Set<string>();
+  /**
+   * AP/AR 步驟列預計付款/收款日的「唯一」填值入口——具收斂性、可重入、只補空白列。
+   *
+   * 設計目標：傳票明細填完 → 產生應收/應付 → 打 API → 日期一定帶得進來，不再有時序漏帶。
+   *
+   * 兩個獨立來源（任一成功即可帶入日期，徹底杜絕單一來源失效造成的空白）：
+   *   1) 後端權威值 getCalculatedPayDate(廠商, 立帳日)——不依賴下拉是否帶回 VEN_PayConditionDay。
+   *   2) 前端計算值 calcExpectPayDate(已補水化廠商的 VEN_PayConditionDay)——作為 fallback。
+   *
+   * 尚未有定論的廠商會被非同步補查（後端日期 + 廠商補水化），回來後再套用一次，直到收斂。
+   * 只填「目前為空」的列，因此不會覆蓋 DB 載入值或使用者手動輸入值。
+   */
+  private reconcileStepExpectedDates(): void {
+    const vouRaw = this.vouDateForStepSync();
+    const vouDate = vouRaw instanceof Date ? vouRaw : (vouRaw ? new Date(vouRaw) : new Date());
+    const dateKey = this.datePipe.transform(vouDate, 'yyyy-MM-dd') ?? '';
 
-    const applyDate = <T extends object>(row: T, venNoKey: keyof T, dateKey: keyof T): T => {
-      const venNo = String((row[venNoKey] as unknown) ?? '').trim();
-      if (!venNo) return row;
-      const venOpt = this.service.findVendorOptionByVenNo(venNo);
-      // 未載入或尚未補水化 FIN53010 欄位：保留現有日期，排入補載佇列
-      if (!venOpt || !('VEN_PayConditionDay' in (venOpt as object))) {
-        vensToLoad.add(venNo);
-        return row;
+    const pendingBackend = new Set<string>();
+    const pendingHydrate = new Set<string>();
+
+    // 回傳 Date=可填、null=確定無日期、undefined=尚無定論(已排入待查)
+    const resolveDate = (venNo: string): Date | null | undefined => {
+      const backend = this.service.getCachedPayDate(venNo, dateKey);
+      if (backend instanceof Date) return backend;
+      if (backend === undefined) pendingBackend.add(venNo);
+      if (this.service.isVendorHydratedForFin53010(venNo)) {
+        const clientDate = this.calcExpectPayDate(this.service.findVendorOptionByVenNo(venNo));
+        if (clientDate) return clientDate;
+        if (backend === null) return null; // 後端與前端都判定無日期 → 確定不帶
+      } else {
+        pendingHydrate.add(venNo);
       }
-      const date = this.calcExpectPayDate(venOpt);
-      return date !== undefined ? { ...row, [dateKey]: date } : row;
+      return undefined;
     };
 
-    const apUpdated = this.stepAPRows().map(r => applyDate(r, 'ven_no', 'acp_expect_pay_date'));
-    if (apUpdated.some((r, i) => r !== this.stepAPRows()[i])) this.stepAPRows.set(apUpdated);
+    const fill = <T extends object>(rows: T[], venKey: keyof T, dateField: keyof T): T[] => {
+      let changed = false;
+      const next = rows.map(r => {
+        if (r[dateField] != null) return r; // 已有值不覆蓋
+        const venNo = String((r[venKey] as unknown) ?? '').trim();
+        if (!venNo) return r;
+        const d = resolveDate(venNo);
+        if (d instanceof Date) { changed = true; return { ...r, [dateField]: d }; }
+        return r;
+      });
+      return changed ? next : rows;
+    };
 
-    const arUpdated = this.stepARRows().map(r => applyDate(r, 'ven_no', 'pta_date'));
-    if (arUpdated.some((r, i) => r !== this.stepARRows()[i])) this.stepARRows.set(arUpdated);
+    const applyOnce = () => {
+      this.stepAPRows.update(rows => fill(rows, 'ven_no', 'acp_expect_pay_date'));
+      this.stepARRows.update(rows => fill(rows, 'ven_no', 'pta_date'));
+    };
 
-    if (vensToLoad.size > 0) {
-      forkJoin([...vensToLoad].map(v => this.service.ensureFin53010VendorForSteps(v)))
-        .pipe(take(1))
-        .subscribe(() => {
-          this.stepAPRows.update(rows => {
-            const refreshed = rows.map(r => applyDate(r, 'ven_no', 'acp_expect_pay_date'));
-            return refreshed.some((r, i) => r !== rows[i]) ? refreshed : rows;
-          });
-          this.stepARRows.update(rows => {
-            const refreshed = rows.map(r => applyDate(r, 'ven_no', 'pta_date'));
-            return refreshed.some((r, i) => r !== rows[i]) ? refreshed : rows;
-          });
-        });
+    applyOnce(); // 同步填入已快取者，並蒐集 pending
+    const waits: Observable<unknown>[] = [
+      ...[...pendingBackend].map(v => this.service.ensureCalculatedPayDate(v, dateKey)),
+      ...[...pendingHydrate].map(v => this.service.ensureFin53010VendorForSteps(v)),
+    ];
+    if (waits.length > 0) {
+      forkJoin(waits).pipe(take(1)).subscribe({
+        next: () => applyOnce(),
+        error: err => this.logger.error('補查預計付款/收款日失敗', err),
+      });
     }
   }
 
@@ -2359,6 +2392,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   };
 
   public onSubmit(): void {
+    // 應付/應收步驟表格：在當前步驟時用 ViewChild 驗證（顯示欄位紅框）；非當前步驟則用資料層檢查
+    const apValid = this.apTableEditComponent?.validateAndShowErrors();
+    const arValid = this.arTableEditComponent?.validateAndShowErrors();
+    if (apValid === false || arValid === false) return;
+
+    if (this.activeVoucherSteps().includes(3) && apValid === undefined) {
+      const badAP = this.stepAPRows().filter(r =>
+        !r.org_id || !r.ven_no || !r.ven_pay_type || !(r.acp_amt ?? 0) || !r.acp_expect_pay_date || !r.acp_date || !r.acc_no
+      );
+      if (badAP.length > 0) {
+        this.messageService.errorBubble(`應付帳款第 ${badAP.map(r => r.SerNo).join('、')} 筆有必填欄位未填`);
+        return;
+      }
+    }
+    if (this.activeVoucherSteps().includes(4) && arValid === undefined) {
+      const badAR = this.stepARRows().filter(r =>
+        !r.org_id || !r.ven_no || !(r.ars_amt ?? 0) || !r.pta_date || !r.ars_date || !r.acc_no
+      );
+      if (badAR.length > 0) {
+        this.messageService.errorBubble(`應收帳款第 ${badAR.map(r => r.SerNo).join('、')} 筆有必填欄位未填`);
+        return;
+      }
+    }
+
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
     const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
 
@@ -2590,17 +2647,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (ptaToVendor.size > 0) {
       const vensToLoad = new Set<string>();
 
-      // 判斷廠商選項是否已完成 FIN53010 補水化（VEN_PayConditionDay 等欄位存在）
-      const isFin53010Hydrated = (opt: Record<string, unknown>): boolean => 'VEN_PayConditionDay' in opt;
-
+      // 只同步「非日期」的廠商欄位（付款方式、銀行、抬頭等）；日期一律交給 reconcileStepExpectedDates
       const applyVenOptToAP = (r: FIN53010StepAP, venOpt: Record<string, unknown>): FIN53010StepAP => {
         const venPayType = venOpt['VEN_PayType'] as string | undefined;
         const venOptAsOption = venOpt as unknown as Option;
-        const hydrated = isFin53010Hydrated(venOpt);
         return {
           ...r,
-          // 未補水化前 VEN_PayConditionDay 不存在，保留現有日期避免被 undefined 覆蓋；補水化後無條件更新
-          acp_expect_pay_date: hydrated ? this.calcExpectPayDate(venOpt) : r.acp_expect_pay_date,
           ven_pay_type: venPayType ?? r.ven_pay_type,
           ven_bnk_no: venOpt['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : r.ven_bnk_no,
           ven_bnk_branch_no: venOpt['VEN_BNK_BranchNo'] != null ? String(venOpt['VEN_BNK_BranchNo']) : r.ven_bnk_branch_no,
@@ -2614,27 +2666,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const pta = r.PTA?.trim();
         if (!pta || !ptaToVendor.has(pta)) return r;
         const newVenNo = ptaToVendor.get(pta);
+        // 廠商變更 → 清空日期，讓 reconcile 依新廠商重新帶入
+        const venChanged = String(r.ven_no ?? '').trim() !== String(newVenNo ?? '').trim();
         const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
-        // 未載入或尚未補水化 FIN53010 欄位：排入補載佇列
-        if (newVenNo && !(venOpt && isFin53010Hydrated(venOpt))) vensToLoad.add(newVenNo);
-        return venOpt
-          ? applyVenOptToAP({ ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta) }, venOpt)
-          : { ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta) };
+        if (newVenNo && !this.service.isVendorHydratedForFin53010(newVenNo)) vensToLoad.add(newVenNo);
+        const base = { ...r, ven_no: newVenNo, acp_amt: ptaToAmt.get(pta), ...(venChanged ? { acp_expect_pay_date: undefined } : {}) };
+        return venOpt ? applyVenOptToAP(base, venOpt) : base;
       }));
 
       this.stepARRows.update(rows => rows.map(r => {
         const pta = r.PTA?.trim();
         if (!pta || !ptaToVendor.has(pta)) return r;
         const newVenNo = ptaToVendor.get(pta);
-        const venOpt = newVenNo ? this.service.findVendorOptionByVenNo(newVenNo) : undefined;
-        if (newVenNo && !(venOpt && isFin53010Hydrated(venOpt))) vensToLoad.add(newVenNo);
-        const hydrated = venOpt != null && isFin53010Hydrated(venOpt);
-        return venOpt
-          ? { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta), pta_date: hydrated ? this.calcExpectPayDate(venOpt) : r.pta_date }
-          : { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta) };
+        const venChanged = String(r.ven_no ?? '').trim() !== String(newVenNo ?? '').trim();
+        if (newVenNo && !this.service.isVendorHydratedForFin53010(newVenNo)) vensToLoad.add(newVenNo);
+        return { ...r, ven_no: newVenNo, ars_amt: ptaToAmt.get(pta), ...(venChanged ? { pta_date: undefined } : {}) };
       }));
 
-      // 廠商選項未載入時，非同步補載後重算所有相關欄位
+      // 廠商選項未載入時補水化，回來後重算非日期欄位（日期由 reconcile 收斂）
       if (vensToLoad.size > 0) {
         forkJoin([...vensToLoad].map(v => this.service.ensureFin53010VendorForSteps(v)))
           .pipe(take(1))
@@ -2644,13 +2693,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               const venOpt = venNo ? this.service.findVendorOptionByVenNo(venNo) : undefined;
               return venOpt ? applyVenOptToAP(r, venOpt) : r;
             }));
-            this.stepARRows.update(rows => rows.map(r => {
-              const venNo = String(r.ven_no ?? '').trim();
-              const venOpt = venNo ? this.service.findVendorOptionByVenNo(venNo) : undefined;
-              return venOpt ? { ...r, pta_date: this.calcExpectPayDate(venOpt) } : r;
-            }));
+            this.reconcileStepExpectedDates();
           });
       }
+
+      // 唯一日期填值入口（同步已快取者，未定者非同步補齊後收斂）
+      this.reconcileStepExpectedDates();
     }
   }
 
