@@ -440,8 +440,9 @@ export class FIN53010Service {
           return data
             ? data.map(item => ({
               ...item,
-              value: item.VEN_No ?? '',
-              label: `${item.VEN_No ?? ''} - ${item.VEN_Name ?? ''}`,
+              // trim 防止 DB CHAR 欄位尾端空白導致後續 value 比對失敗
+              value: (item.VEN_No ?? '').trim(),
+              label: `${(item.VEN_No ?? '').trim()} - ${item.VEN_Name ?? ''}`,
             }))
             : null;
         }),
@@ -713,10 +714,12 @@ export class FIN53010Service {
     return this.vendorOptions().find(o => String(o.value) === v);
   }
 
-  /** 已以 queryPOS2013_FIN53010_DropDownList 合併過的廠商代號（每鍵僅請求一次） */
+  /** 已成功取得並合併 FIN53010 廠商資料的廠商代號（有此 key 才算真正水化完成） */
   private readonly fin53010VenHydrationKeys = new Set<string>();
+  /** 進行中的補水化請求（同一廠商併發時共用同一條 Observable，避免重複發請求、也避免提早完成） */
+  private readonly fin53010VenInflight = new Map<string, Observable<void>>();
 
-  /** 廠商代號是否已完成 FIN53010 補水化（API 已回應，無論是否帶回 VEN_PayConditionDay） */
+  /** 廠商代號是否已成功取得 FIN53010 補水化資料（VEN_PayConditionDay 等已合入 option） */
   public isVendorHydratedForFin53010(venNo: string): boolean {
     const key = typeof venNo === 'string' ? venNo.trim() : '';
     return !!key && this.fin53010VenHydrationKeys.has(key);
@@ -724,29 +727,35 @@ export class FIN53010Service {
 
   /**
    * 以 queryPOS2013_FIN53010_DropDownList 合併廠商主檔（含 VEN_PayType、VEN_BNK_No、帳號等），
-   * 並與既有 queryPOS2013 全量清單併入同一筆 option。每個廠商代號僅請求一次。
+   * 並與既有 queryPOS2013 全量清單併入同一筆 option。
+   *
+   * 併發保護：同一廠商在請求進行中時，所有呼叫者共用同一條 Observable，
+   * 因此每個 subscribe 都會在「資料真的回來」之後才完成——這是修正「日期偶爾帶不進來」
+   * 的關鍵（舊版用 attemptedKeys 讓後續呼叫者立即拿到 of(void 0)，導致其 subscribe 早於資料抵達）。
    */
   public ensureFin53010VendorForSteps(venNo: string): Observable<void> {
     const key = typeof venNo === 'string' ? venNo.trim() : '';
     if (!key) return of(void 0);
+    // 已成功取得資料 → 直接返回
     if (this.fin53010VenHydrationKeys.has(key)) return of(void 0);
-    return this.queryPos2013Fin53010({ VEN_No: key }).pipe(
+    // 請求進行中 → 回傳同一條，等它真正完成
+    const inflight = this.fin53010VenInflight.get(key);
+    if (inflight) return inflight;
+    const req$ = this.queryPos2013Fin53010({ VEN_No: key }).pipe(
       take(1),
       tap(opts => {
+        // value 已在 queryPos2013Fin53010 的 map 中 trim，這裡再加 .trim() 當保險
+        const match = opts?.find(o => String(o.value).trim() === key);
+        if (!match) return; // API 未回傳此廠商資料，不標記為成功水化，允許下次重試
         this.fin53010VenHydrationKeys.add(key);
-        const match = opts?.find(o => String(o.value) === key);
         this.vendorOptions.update(list => {
-          const idx = list.findIndex(o => String(o.value) === key);
-          if (match) {
-            if (idx >= 0) {
-              const next = [...list];
-              next[idx] = { ...next[idx], ...match };
-              return next;
-            }
-            return [...list, match];
+          const idx = list.findIndex(o => String(o.value).trim() === key);
+          if (idx >= 0) {
+            const next = [...list];
+            next[idx] = { ...next[idx], ...match };
+            return next;
           }
-          if (idx < 0) return [...list, { value: key, label: key } as Option];
-          return list;
+          return [...list, { ...match, value: key }];
         });
       }),
       catchError(err => {
@@ -754,7 +763,57 @@ export class FIN53010Service {
         return of(null);
       }),
       map(() => void 0),
+      // 請求結束（成功或失敗）後移除 inflight；成功者已進 hydrationKeys，失敗者可下次重試
+      finalize(() => this.fin53010VenInflight.delete(key)),
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
+    this.fin53010VenInflight.set(key, req$);
+    return req$;
+  }
+
+  /** 預計付款/收款日快取：key = `${venNo}|${yyyy-MM-dd}` → Date | null（null = 廠商無付款條件，不帶日期） */
+  private readonly payDateCache = new Map<string, Date | null>();
+  /** 進行中的 getCalculatedPayDate 請求，同 key 併發共用 */
+  private readonly payDateInflight = new Map<string, Observable<Date | null>>();
+
+  private payDateKey(venNo: string, dateKey: string): string {
+    return `${(venNo ?? '').trim()}|${dateKey}`;
+  }
+
+  /**
+   * 讀取已快取的預計付款/收款日。
+   * 回傳 undefined = 尚未查詢（需呼叫 ensureCalculatedPayDate）；Date = 已算出；null = 廠商無付款條件。
+   */
+  public getCachedPayDate(venNo: string, dateKey: string): Date | null | undefined {
+    const k = this.payDateKey(venNo, dateKey);
+    return this.payDateCache.has(k) ? this.payDateCache.get(k) : undefined;
+  }
+
+  /**
+   * 以後端 getCalculatedPayDate 為權威來源，確保 (廠商, 立帳日) 的預計付款/收款日已查詢並快取。
+   * 每組 (venNo, dateKey) 僅打一次 API；失敗不寫快取，允許下次重試。
+   */
+  public ensureCalculatedPayDate(venNo: string, dateKey: string): Observable<Date | null> {
+    const v = (venNo ?? '').trim();
+    const k = this.payDateKey(v, dateKey);
+    if (this.payDateCache.has(k)) return of(this.payDateCache.get(k)!);
+    if (!v || !dateKey) return of(null);
+    const inflight = this.payDateInflight.get(k);
+    if (inflight) return inflight;
+    const req$ = this.getCalculatedPayDate({ VenNo: v, _Date: dateKey }).pipe(
+      map(res => {
+        const raw = res?.Data;
+        const d = raw ? new Date(raw) : null;
+        const val = d && !isNaN(d.getTime()) ? d : null;
+        this.payDateCache.set(k, val); // 含 null：確定無日期，避免重複查
+        return val;
+      }),
+      catchError(() => of(null as Date | null)), // 失敗不寫快取，下次可重試
+      finalize(() => this.payDateInflight.delete(k)),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+    this.payDateInflight.set(k, req$);
+    return req$;
   }
 
   public getUsrOptions(): void {
