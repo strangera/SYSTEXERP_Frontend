@@ -747,6 +747,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         textAlign: 'right',
         type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+        // DB 已存列：貸方有值時禁止輸入借方（方向鎖定，避免切換後 PTA 無法復原）
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
+          !!rowData?.id && (rowData.AccAmtC ?? 0) > 0,
       },
       {
         field: 'AccAmtC',
@@ -754,6 +757,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         textAlign: 'right',
         type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+        // DB 已存列：借方有值時禁止輸入貸方（方向鎖定，避免切換後 PTA 無法復原）
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
+          !!rowData?.id && (rowData.AccAmtD ?? 0) > 0,
       },
       {
         field: 'ORG_ID',
@@ -1326,9 +1332,33 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         }
 
         if (this.isFormCreateable) {
-          // 新增模式：全量取代
-          const apWithSer = ap.map((r, i) => ({ ...r, SerNo: i + 1 }));
-          const arWithSer = ar.map((r, i) => ({ ...r, SerNo: i + 1 }));
+          // 新增模式：依 PTA 合併，保留使用者已填的可編輯欄位（例如 acp_expect_pay_date、pta_date、note_desc）
+          const existingAPByPTA = new Map(this.stepAPRows().map(r => [r.PTA?.trim(), r]));
+          const existingARByPTA = new Map(this.stepARRows().map(r => [r.PTA?.trim(), r]));
+
+          const apWithSer = ap.map((r, i) => {
+            const existing = r.PTA ? existingAPByPTA.get(r.PTA.trim()) : undefined;
+            return {
+              ...r,
+              SerNo: i + 1,
+              ...(existing != null ? {
+                acp_expect_pay_date: existing.acp_expect_pay_date,
+                ven_ctrlyn: existing.ven_ctrlyn ?? r.ven_ctrlyn,
+                note_desc: existing.note_desc ?? r.note_desc,
+              } : {}),
+            };
+          });
+          const arWithSer = ar.map((r, i) => {
+            const existing = r.PTA ? existingARByPTA.get(r.PTA.trim()) : undefined;
+            return {
+              ...r,
+              SerNo: i + 1,
+              ...(existing != null ? {
+                pta_date: existing.pta_date,
+                note_desc: existing.note_desc ?? r.note_desc,
+              } : {}),
+            };
+          });
           const bkWithSer = bk.map((r, i) => ({ ...r, SerNo: i + 1 }));
           this.stepAPRows.set(apWithSer);
           this.stepARRows.set(arWithSer);
@@ -2165,6 +2195,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
           return;
         }
+        // 重置 fingerprint，確保 dataEffect 一定重新套用（避免同張傳票因快取被跳過）
+        this._lastAppliedDetailTableFingerprint = null;
         this.fin53010DetailData.set(res.Data);
         this.totalRecords.set(res.TotalCount);
         const accNos = Array.from(new Set(
@@ -2997,13 +3029,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'AccAmtD':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtC = void 0;
-          this.rebuildAllAutoPta();
+          // rebuildAllAutoPta 由 onDataChange 呼叫（tableData 已更新後），
+          // 在此提前呼叫時 tableData 仍是舊值，會錯誤清除原有 PTA 並產生新號
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtD = void 0;
-          this.rebuildAllAutoPta();
           break;
 
         case 'ORG_ID':
@@ -3093,9 +3125,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         if (this.isAutoCodeRow(row) && !row.PTA) {
           return { ...row, PTA: `${autoPrefix}${++maxCounter}` };
         }
-        // 方向切換 → 清掉舊的自動 PTA
+        // 方向切換 → 清掉舊的自動 PTA（僅對尚未存入 DB 的新列；已存 DB 的列 PTA 不自動清除，須由 user 手動刪除）
         const { ABAT_YN } = this.getAccAbatInfo(row.AccNo);
-        if (ABAT_YN === 'Y' && row.PTA?.startsWith(autoPrefix) && !this.isAutoCodeRow(row)) {
+        if (ABAT_YN === 'Y' && row.PTA?.startsWith(autoPrefix) && !this.isAutoCodeRow(row) && !row.id) {
           return { ...row, PTA: undefined };
         }
         return row;
