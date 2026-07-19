@@ -20,3 +20,10 @@ export const formatAmount = (val: number | string): string => {
   if (isNaN(num)) return '0';
   return num.toLocaleString(); // eg. 1,000,000
 };
+
+// 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位 (eg. 4335615.16 -> "4,335,615")
+export const formatInt = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return Math.round(num).toLocaleString();
+};
