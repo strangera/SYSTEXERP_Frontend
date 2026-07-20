@@ -103,6 +103,25 @@ export interface POS6118Insert {
   NCML_TxnTime: string
 }
 
+export interface POS6118HInsert {
+  ECR_No: string,
+  TXN_No: number | null,
+  TLT_No: string,
+  CRD_Type: string | null,
+  NCML_TxnType: string,
+  NCML_TxnAmt: number,
+  NCML_CrdNo: string | null,
+  NCML_TmID: string | null,
+  NCML_DepDate: string | null,   // 請款日期
+  NCML_TxnDate: string | null,   // 交易(銷售)日期
+  NCML_ApprovalCode: string | null,
+  NCML_EntryFg: string,
+  NCML_PayType: string | null,   // 付款別，I=分期付款、2=紅利抵扣
+  NCML_TermNo: number | null,
+  NCML_TxnTime: string,          // 交易時間
+  NCML_TXN_Date: string | null,  // 帳務日期
+}
+
 export interface POS6119Insert {
   CTBC_Date: string,
   ECR_No: string,
@@ -158,6 +177,24 @@ export interface POS6118Update {
 export interface POS6118HUpdate {
   ID: number,
   ECR_No: string,
+  TXN_No: number | null,
+  TLT_No: string,
+  CRD_Type: string | null,
+  NCML_TxnType: string,
+  NCML_TxnAmt: number,
+  PRM_NCML_TxnAmt: number | null,   // 原始交易金額(調整前)
+  NCML_CrdNo: string | null,
+  NCML_TmID: string | null,
+  NCML_DepDate: string | null,      // 請款日期
+  NCML_TxnDate: string | null,      // 交易(銷售)日期
+  NCML_ApprovalCode: string | null,
+  NCML_EntryFg: string,
+  NCML_PayType: string | null,      // 付款別，I=分期付款、2=紅利抵扣
+  NCML_TermNo: number | null,
+  NCML_TxnTime: string,             // 交易時間
+  NCML_TXN_Date: string | null,     // 帳務日期
+  old_ECR_No: string | null,        // 原收銀機號
+  old_AccTxnDate: string | null,    // 原帳務日期
 }
 
 export interface POS6119Update {
@@ -230,6 +267,13 @@ export class TLS27040Service {
    */
   insertPOS6118(body: POS6118Insert): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertPOS6118`, body);
+  }
+
+  /**
+   * 新增 POS6118H（聯合 - 實收信用卡調整作業）
+   */
+  insertPOS6118H(body: POS6118HInsert): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertPOS6118H`, body);
   }
 
   /**

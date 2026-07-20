@@ -4,6 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
+import { formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { QueryTLS27040Request, TLS27040Data, TLS27040Service, TotalData } from '@service/api/tls/tls27040.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -14,15 +15,14 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { getDateTime, toHHmm } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, queryTxnTypeOptions } from './tls27040.model';
 @Component({
@@ -265,10 +265,6 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   };
 
   isRowSelectable(rowData: TLS27040Data): boolean {
-    // 優先判斷：如果是 POS6118H，則不可選取
-    if (rowData.tableName === 'POS6118H') {
-      return false;
-    }
     // 非手動新增的不可刪除
     if (rowData.FileName !== 'ManualInput') {
       return false;

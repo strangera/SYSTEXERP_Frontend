@@ -10,13 +10,13 @@ import { formatTxnNo } from '@shared/models/system/query-form.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 確保 AuthService 被導入
 import { PanelModule } from 'primeng/panel';
 import { finalize, Observable, take } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions } from '../tls27040/tls27040.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { POS6118_TxnTypeOptions, pos6118hPayTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions } from '../tls27040/tls27040.model';
 
 @Component({
   selector: 'app-tls27040-cru',
@@ -25,12 +25,7 @@ import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, PO
   imports: [AsyncPipe, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> implements OnInit {
-  // 收單行選項，新增時下拉不包含 "聯合-宏誌"
-  get POS611XOptions() {
-    return this.isFormCreateable
-      ? POS611XOptions.filter(item => item.value !== 'POS6118H')
-      : POS611XOptions;
-  }
+  POS611XOptions = POS611XOptions;
   TLT_NoOptions = this.dropdown.queryTltTalent();   // 專櫃編號
   ECR_NoOptions = this.dropdown.queryPos1002();   // ECR編號
   // =========================================================================
@@ -85,7 +80,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     NCML_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
     NCML_ApprovalCode: [null as string | null, [Validators.maxLength(6)]], // 授權碼
     NCML_EntryFg: ['2', [Validators.maxLength(2)]], // 輸入狀況
-    NCML_CrdTxnFg: ['0', [Validators.maxLength(1)]], // 交易類別
+    NCML_PayType: [null as string | null, [Validators.maxLength(1)]], // 付款別，空=一般、I=分期付款、2=紅利抵扣
     NCML_TermNo: [null as string | null, [Validators.max(99)]], // 期數
     NCML_TxnTime: [null as Date | null, [Validators.required]], // 銷售時間
   });
@@ -135,6 +130,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   POS6119_TxnCodeOptions = POS6119_TxnCodeOptions;
   POS6119P_TxnTypeOptions = POS6119P_TxnTypeOptions;
   pos6118TxnFgOptions = pos6118TxnFgOptions;
+  pos6118hPayTypeOptions = pos6118hPayTypeOptions;
   pos6119TxnFgOptions = pos6119TxnFgOptions;
   pos6119pTxnFgOptions = pos6119pTxnFgOptions;
 
@@ -304,7 +300,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               NCML_TmID: rawData.TmID,
               NCML_ApprovalCode: rawData.ApprovalCode,
               NCML_TxnType: rawData.TxnType,
-              NCML_CrdTxnFg: rawData.CrdTxnFg,
+              NCML_PayType: rawData.CrdTxnFg, // 付款別：查詢以 CrdTxnFg 別名回傳(空值已正規化為 '0')
               NCML_Check: rawData.CheckStatus,
               NCML_TermNo: rawData.TermNo ?? null,
               NCML_EntryFg: rawData.EntryFg,
@@ -319,11 +315,42 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
 
           // 統一處理欄位狀態
           const form = this.POS6118HdataForm;
+          form.get('tableName')?.disable(); // 收單行一律鎖定
           if (this.isFormEditable) {
-            form.disable();
-            form.get('ECR_No')?.enable({ emitEvent: false });
-            form.get('TLT_No')?.enable({ emitEvent: false });
-            form.get('NCML_TXN_Date')?.enable({ emitEvent: false });
+            if (rawData.FileName !== 'ManualInput') {
+              // 轉入的資料編輯時只能異動收銀機號、專櫃編號、帳務日期
+              form.disable();
+              form.get('ECR_No')?.enable({ emitEvent: false });
+              form.get('TLT_No')?.enable({ emitEvent: false });
+              form.get('NCML_TXN_Date')?.enable({ emitEvent: false });
+            }
+            // FileName === 'ManualInput'：比照 POS6118 全部開放（收單行已於上方 disable）
+            // 編輯時拿掉交易序號必填
+            const txnNoControl = form.get('TXN_No');
+            if (txnNoControl) {
+              txnNoControl.setValidators([Validators.maxLength(8)]);
+              txnNoControl.updateValueAndValidity();
+            }
+          }
+          if (this.isFormCreateable) {
+            form.patchValue({
+              ECR_No: rawData.ECR_No,
+              TXN_No: rawData.TXN_No ? Number(rawData.TXN_No) : Number('99999999'), // 無輸交易序號時，給入99999999
+              tableName: rawData.tableName,
+              NCML_TxnDate: rawData.TXN_Date,
+              NCML_TXN_Date: rawData.TXN_Date,
+            });
+
+            // 根據交易序號決定欄位狀態
+            const txnNoValue = form.get('TXN_No')?.value;
+            if (Number(txnNoValue) !== 99999999) {
+              form.get('ECR_No')?.disable({ emitEvent: false });
+              form.get('TXN_No')?.disable({ emitEvent: false });
+              form.get('NCML_TXN_Date')?.disable({ emitEvent: false });
+            } else {
+              form.get('TXN_No')?.disable({ emitEvent: false });
+            }
+            this.onECRNoChange(form);
           }
 
           // Read 模式下需手動 disable 所有欄位
@@ -353,7 +380,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               CTBC_ApprovalCode: rawData.ApprovalCode,
               CTBC_Check: rawData.CheckStatus,
               CTBC_TermNo: rawData.TermNo ?? null,
-              CTBC_DataType: rawData.CrdTxnFg, // 資料型態 (猜測對應 CrdTxnFg)
+              CTBC_DataType: rawData.CrdTxnFg, // 資料型態
               CTBC_EntryFg: rawData.EntryFg,
               CTBC_TXN_Date: this.parseDateString(rawData.AccTxnDate),
               CTBC_TxnTime: this.parseDateString(fullDateTimeStr),
@@ -573,15 +600,58 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           }
         case 'POS6118H':
           {
-            const body = {
-              ECR_No: formValue.ECR_No,
-              TLT_No: formValue.TLT_No,
-              NCML_TXN_Date: this.datePipe.transform(formValue.NCML_TXN_Date, 'yyyy-MM-dd'),
-              old_ECR_No: this.old_ECR_No,
-              old_AccTxnDate: this.datePipe.transform(this.old_AccTxnDate, 'yyyy-MM-dd'),
-            };
-            if (this.isFormEditable) {
-              apiCall = this.tls27040Service.updatePOS6118H({ ID: this.rowdata?.ID as number, ...body });
+            // 日期/時間轉換（新增與編輯共用）
+            const formattedTxnDate = this.datePipe.transform(formValue.NCML_TxnDate, 'yyyy-MM-dd'); // 銷售日期
+            const formattedNCMLTxnDate = this.datePipe.transform(formValue.NCML_TXN_Date, 'yyyy-MM-dd'); // 帳務日期
+            const formattedDepDate = this.datePipe.transform(formValue.NCML_BatCloseDate, 'yyyy-MM-dd'); // 請款日期
+            const formattedTxnTimeOnly = this.datePipe.transform(formValue.NCML_TxnTime, 'HH:mm:ss');
+            const fullTxnDateTime = `${formattedTxnDate}T${formattedTxnTimeOnly}`;
+
+            if (this.isFormCreateable) {
+              const requestBody = {
+                ECR_No: formValue.ECR_No,
+                TXN_No: formValue.TXN_No != '' ? Number(formValue.TXN_No) : null,
+                TLT_No: formValue.TLT_No,
+                CRD_Type: formValue.CRD_Type,
+                NCML_TxnType: formValue.NCML_TxnType,
+                NCML_TxnAmt: formValue.NCML_TxnAmt,
+                NCML_CrdNo: formValue.NCML_CrdNo,
+                NCML_TmID: formValue.NCML_TmID,
+                NCML_ApprovalCode: formValue.NCML_ApprovalCode,
+                NCML_EntryFg: formValue.NCML_EntryFg ?? '2', // 預設值為 '2'
+                NCML_PayType: formValue.NCML_PayType, // 付款別
+                NCML_TermNo: formValue.NCML_TermNo != null ? Number(formValue.NCML_TermNo) : null,
+                NCML_DepDate: formattedDepDate, // 請款日期
+                NCML_TxnDate: formattedTxnDate, // 銷售日期
+                NCML_TXN_Date: formattedNCMLTxnDate, // 帳務日期
+                NCML_TxnTime: fullTxnDateTime, // 交易時間
+              };
+              apiCall = this.tls27040Service.insertPOS6118H(requestBody);
+            } else if (this.isFormEditable) {
+              // 送完整欄位；後端依 NCML_File='ManualInput' 決定哪些欄位實際寫入
+              const requestBody = {
+                ID: this.rowdata?.ID as number,
+                ECR_No: formValue.ECR_No,
+                TXN_No: formValue.TXN_No != '' ? Number(formValue.TXN_No) : null,
+                TLT_No: formValue.TLT_No,
+                CRD_Type: formValue.CRD_Type,
+                NCML_TxnType: formValue.NCML_TxnType,
+                NCML_TxnAmt: formValue.NCML_TxnAmt,
+                PRM_NCML_TxnAmt: formValue.PRM_NCML_TxnAmt, // 原始交易金額
+                NCML_CrdNo: formValue.NCML_CrdNo,
+                NCML_TmID: formValue.NCML_TmID,
+                NCML_ApprovalCode: formValue.NCML_ApprovalCode,
+                NCML_EntryFg: formValue.NCML_EntryFg,
+                NCML_PayType: formValue.NCML_PayType, // 付款別
+                NCML_TermNo: formValue.NCML_TermNo != null ? Number(formValue.NCML_TermNo) : null,
+                NCML_DepDate: formattedDepDate, // 請款日期
+                NCML_TxnDate: formattedTxnDate, // 銷售日期
+                NCML_TXN_Date: formattedNCMLTxnDate, // 帳務日期
+                NCML_TxnTime: fullTxnDateTime, // 交易時間
+                old_ECR_No: this.old_ECR_No,
+                old_AccTxnDate: this.datePipe.transform(this.old_AccTxnDate, 'yyyy-MM-dd'),
+              };
+              apiCall = this.tls27040Service.updatePOS6118H(requestBody);
             }
             break;
           }
