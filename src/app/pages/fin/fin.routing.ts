@@ -105,8 +105,9 @@ export const finRoutes: Routes = [
   // { path: 'fin23010', loadComponent: () => import('./fin23010/fin23010.component').then(m => m.FIN23010Component),data:{progNo:'FIN23010'} },
   // { path: 'fin23010cru', loadComponent: () => import('./fin23010-cru/fin23010-cru.component').then(m => m.FIN23010CRUComponent),data: { progNo: 'FIN23010'} },
   // 暫付款申請傳票拋轉作業
-  // { path: 'fin23020', loadComponent: () => import('./fin23020/fin23020.component').then(m => m.FIN23020Component),data:{progNo:'FIN23020'} },
-  // { path: 'fin23020cru', loadComponent: () => import('./fin23020-cru/fin23020-cru.component').then(m => m.FIN23020CRUComponent),data: { progNo: 'FIN23020'} },
+  { path: 'fin23020', loadComponent: () => import('./fin23020/fin23020.component').then(m => m.FIN23020Component), data: { progNo: 'FIN23020' } },
+  // fin23020cru 僅作拋轉預覽(唯讀)，實際拋轉動作固定在查詢頁用checkbox多選+按鈕完成
+  { path: 'fin23020cru', loadComponent: () => import('./fin23020-cru/fin23020-cru.component').then(m => m.FIN23020CRUComponent), data: { progNo: 'FIN23020' } },
   // 暫付款申請單列印
   // { path: 'fin23030', loadComponent: () => import('./fin23030/fin23030.component').then(m => m.FIN23030Component),data:{progNo:'FIN23030'} },
   // { path: 'fin23030cru', loadComponent: () => import('./fin23030-cru/fin23030-cru.component').then(m => m.FIN23030CRUComponent),data: { progNo: 'FIN23030'} },
