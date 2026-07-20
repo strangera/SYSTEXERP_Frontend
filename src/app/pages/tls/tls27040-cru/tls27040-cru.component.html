@@ -133,8 +133,8 @@
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="輸入狀況" controlName="NCML_EntryFg"
           [options]="EntryFgOptions" [control]="POS6118HdataForm.controls.NCML_EntryFg" [submitted]="submitted"
           optionLabel="label" optionValue="value" />
-        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="NCML_CrdTxnFg"
-          [options]="pos6118TxnFgOptions" [control]="POS6118HdataForm.controls.NCML_CrdTxnFg" [submitted]="submitted"
+        <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="付款模式" controlName="NCML_PayType"
+          [options]="pos6118hPayTypeOptions" [control]="POS6118HdataForm.controls.NCML_PayType" [submitted]="submitted"
           optionLabel="label" optionValue="value" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="NCML_TermNo"
           [options]="TermNoOptions" [control]="POS6118HdataForm.controls.NCML_TermNo" [submitted]="submitted"
