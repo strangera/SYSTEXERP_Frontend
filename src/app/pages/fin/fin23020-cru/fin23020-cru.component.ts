@@ -2,7 +2,6 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize, forkJoin } from 'rxjs';
 import { DetailFIN23020Line, Fin23020Service, PostingFIN23020Request, QueryFIN23020Response } from '@service/api/fin/fin23020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -12,6 +11,8 @@ import { TableEditComponent } from '@shared/components/table-edit/table-edit.com
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { formatAmount } from '@shared/components/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
+import { finalize, forkJoin } from 'rxjs';
+import { CalendarComponent } from 'src/app/shared/components/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 /** 查詢頁勾選多筆後帶進本頁的最小資料 */
@@ -40,7 +41,7 @@ interface PostingLine extends DetailFIN23020Line {
   selector: 'app-fin23020-cru',
   templateUrl: './fin23020-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TableEditComponent, TranslateModule]
+  imports: [CalendarComponent, MenubarComponent, PanelModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TableEditComponent, TranslateModule]
 })
 export class FIN23020CRUComponent extends BasicCruPageComponent<Fin23020CruState> implements OnInit {
   private readonly fin23020Service = inject(Fin23020Service);

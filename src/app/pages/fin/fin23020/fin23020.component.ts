@@ -4,12 +4,12 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin23020Service, QueryFIN23020Response } from '@service/api/fin/fin23020.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { toLocalDateTimeString } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -42,6 +42,7 @@ export class FIN23020Component extends BasicQueryPageComponent<QueryFIN23020Resp
 
   data: QueryFIN23020Response[] = [];
   selectedItems: QueryFIN23020Response[] = [];
+  footerData: any = null;
   totalRecords = 0;
   lastQuery: unknown = null;
 
@@ -65,17 +66,15 @@ export class FIN23020Component extends BasicQueryPageComponent<QueryFIN23020Resp
       this.fin23020Service.queryFIN23020(frm.value).pipe(
         finalize(() => this.loading = false),
         untilDestroyed(this),
-      ).subscribe({
-        next: res => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.lastQuery = frm.value;
-          this.selectedItems = [];
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢暫付款申請傳票拋轉作業失敗，請稍後再試');
-        }
+      ).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = frm.value;
+        this.selectedItems = [];
+        this.footerData = {
+          PrepAmt: res.TotalAmt ?? 0
+        };
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
