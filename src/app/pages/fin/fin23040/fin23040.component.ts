@@ -1,127 +1,106 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { Component, inject, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Fin23040Service, QueryFIN23040Type1Response } from '@service/api/fin/fin23040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize, forkJoin } from 'rxjs';
+import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
+import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { NotificationService } from '../../../shared/components/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
 
-//1.2.3.4 暫付款核銷作業
 @Component({
   selector: 'app-fin23040',
   templateUrl: './fin23040.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TranslateModule]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, InputTextComponent]
 })
-export class FIN23040Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    writeOffSheetNumber: [, [Validators.maxLength(13)]], // 核銷單號
-    advanceSheetNumber: [, [Validators.maxLength(13)]], // 預支單號
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '預支單號', visible: true },
-    { field: 'col2', header: '預支金額', visible: true },
-    { field: 'col3', header: '申請日期', visible: true },
-    { field: 'col4', header: '預計核銷日', visible: true },
-    { field: 'col5', header: '廠商編號', visible: true },
-    { field: 'col6', header: '付款方式', visible: true },
-    { field: 'col7', header: '匯款銀行代號', visible: true },
-    { field: 'col8', header: '銀行帳號', visible: true },
-    { field: 'col9', header: '帳戶名稱', visible: true },
-    { field: 'col10', header: '票據禁止背書轉讓', visible: true },
-    { field: 'col11', header: '票據抬頭', visible: true },
-    { field: 'col12', header: '摘要', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type1Response> implements OnInit {
+  public readonly fin23040Service = inject(Fin23040Service);
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-  ) {
-    super(); // 呼叫父類建構子
-  }
+  queryForm = this.formBuilder.group({
+    Type: [1, [Validators.required]], // 查詢頁面固定為 1
+    REDEEM_NO: [null as string | null, [Validators.maxLength(16)]],
+    PREP_NO: [null as string | null, [Validators.maxLength(16)]],
+    pageSize: [1000],
+    pageIndex: [1],
+    SortBy: [[{ field: 'PREP_NO', order: 1 }]],
+  });
+
+  data: QueryFIN23040Type1Response[] = [];
+  selectedItems: QueryFIN23040Type1Response[] = [];
+  totalRecords = 0;
+  lastQuery: unknown = null;
+
+  // 固定為 Type 1 的欄位結構
+  columns: ReportColumn[] = [
+    { field: 'redeeM_NO', header: '核銷單號', align: 'left' },
+    { field: 'preP_NO', header: '預支單號', align: 'left' },
+    { field: 'redeemAmt', header: '核銷金額', format: formatAmount, align: 'right' },
+    { field: 'yn', header: '可否刪修', align: 'center', width: '90px' },
+  ];
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120010';
-    this.cruPage = '/FIN2000/FIN23040CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN23040', 'fin/fin23040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin23040Service.queryFIN23040(frm.value).pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this),
+      ).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = frm.value;
+        this.selectedItems = [];
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
+    });
   }
+  /**
+     * 透過此方法卡控該列資料是否允許被勾選
+     * 只有當 yn 等於 'Y' 的項目才能勾選
+     */
+  isRowSelectable = (event: { data: QueryFIN23040Type1Response }) => {
+    return event.data?.yn === 'Y';
+  };
+  /**
+   * 點擊刪除按鈕事件
+   */
+  onDelete() {
+    if (this.selectedItems.length === 0) return;
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
+    this.messageService.confirm({
+      header: `刪除確認`,
+      message: `確定要刪除選取的資料嗎？`,
+      accept: () => {
+        this.loading = true;
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+        // 產生批次刪除的 Observable 陣列
+        const deleteTasks = this.selectedItems.map(item =>
+          this.fin23040Service.voidFIN23040({
+            stO_No: storeNo,
+            preP_NO: item.preP_NO,
+            redeeM_NO: item.redeeM_NO
+          })
+        );
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+        // 同步執行批次刪除
+        forkJoin(deleteTasks).pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        ).subscribe(res => {
+          this.messageService.successBubble('刪除成功');
+          // 重新整理列表
+          if (this.lastQuery) {
+            this.onSubmit(this.queryForm);
+          }
+        });
+      }
+    });
   }
 }
