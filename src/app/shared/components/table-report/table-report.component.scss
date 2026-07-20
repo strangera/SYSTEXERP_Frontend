@@ -96,6 +96,10 @@
         background-color: var(--table-header-bg-group) !important;
       }
     }
+    // 支援儲存格內容依 \n 換行（例如以分隔符號組成的多筆資料）
+    .p-datatable-tbody > tr > td.multiline-cell {
+      white-space: pre-line !important;
+    }
     // --- 資料列與單元格樣式 (tbody / tr / td) ---
     .p-datatable-tbody > tr {
       > td {
