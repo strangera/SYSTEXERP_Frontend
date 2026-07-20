@@ -186,22 +186,30 @@
 
   // HTML 內嵌呈現（限制一行並自動文字省略 ── 常用於 ERP 摘要）
   .html-cell {
-    &,
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    font-weight: normal !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: -webkit-inline-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 1.2em;
+    word-break: break-word;
+    max-width: 75px;
+
+    // 內層元素（例如狀態圖示 <span>）不可再套用 -webkit-box/line-clamp，
+    // 否則會被 -webkit-box-orient: vertical 視為獨立一行，導致圖示後面的文字（如 ECR_No）被 line-clamp: 1 吃掉而整個消失
     * {
-      font-size: 14px !important;
-      line-height: 1.2 !important;
-      font-weight: normal !important;
+      font-size: inherit !important;
+      line-height: inherit !important;
+      font-weight: inherit !important;
       margin: 0 !important;
       padding: 0 !important;
-      display: -webkit-inline-box;
-      -webkit-line-clamp: 1;
-      line-clamp: 1;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-height: 1.2em;
-      word-break: break-word;
-      max-width: 75px;
+      display: inline;
     }
   }
 
