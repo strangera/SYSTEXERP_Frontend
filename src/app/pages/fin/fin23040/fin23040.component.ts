@@ -53,7 +53,8 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
         finalize(() => this.loading = false),
         untilDestroyed(this),
       ).subscribe(res => {
-        this.data = res.Data;
+        // 本頁固定查詢 Type=1，回傳資料一律為 QueryFIN23040Type1Response 結構
+        this.data = (res.Data ?? []) as QueryFIN23040Type1Response[];
         this.totalRecords = res.TotalCount;
         this.lastQuery = frm.value;
         this.selectedItems = [];

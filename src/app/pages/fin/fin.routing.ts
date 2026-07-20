@@ -113,7 +113,7 @@ export const finRoutes: Routes = [
   // { path: 'fin23030cru', loadComponent: () => import('./fin23030-cru/fin23030-cru.component').then(m => m.FIN23030CRUComponent),data: { progNo: 'FIN23030'} },
   // 暫付款核銷作業
   { path: 'fin23040', loadComponent: () => import('./fin23040/fin23040.component').then(m => m.FIN23040Component), data: { progNo: 'FIN23040' } },
-  // { path: 'fin23040cru', loadComponent: () => import('./fin23040-cru/fin23040-cru.component').then(m => m.FIN23040CRUComponent),data: { progNo: 'FIN23040'} },
+  { path: 'fin23040cru', loadComponent: () => import('./fin23040-cru/fin23040-cru.component').then(m => m.FIN23040CRUComponent), data: { progNo: 'FIN23040' } },
   // 暫付款核銷傳票拋轉作業
   // { path: 'fin23050', loadComponent: () => import('./fin23050/fin23050.component').then(m => m.FIN23050Component),data:{progNo:'FIN23050'} },
   // { path: 'fin23050cru', loadComponent: () => import('./fin23050-cru/fin23050-cru.component').then(m => m.FIN23050CRUComponent),data: { progNo: 'FIN23050'} },
