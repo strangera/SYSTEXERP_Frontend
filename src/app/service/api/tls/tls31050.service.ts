@@ -8,6 +8,7 @@ import { TLS31020Total } from './tls31020.service';
 export interface TLS31050Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
+  TLT_NO: string[]
   tlt_building: string[]
   tlt_floor: string[]
   area_no: string[]
@@ -30,6 +31,7 @@ export interface TLS31050PrintRequest extends TLS31050Request {
 export interface TLS31050DetailRequest {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
+  TLT_NO: string[]
   tlt_building: string[]
   tlt_floor: string[]
   area_no: string[]
