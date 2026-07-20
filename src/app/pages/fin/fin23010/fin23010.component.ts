@@ -1,144 +1,181 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { NotificationService } from '../../../shared/components/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { finalize } from 'rxjs';
+
+import { getSYS1000Options$ } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FIN23010Data, FIN23010Service, QueryFIN23010Request } from '../../../service/api/fin/fin23010.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '../../../shared/components/table-report/table-report.model';
+import { VenEmpPicked, VenEmpPickerComponent } from '../fin23010-cru/ven-emp-picker/ven-emp-picker.component';
+
+/** 票據禁止背書轉讓 是/否 (單純Y/N旗標，非SYS1000代碼表) */
+const CTRLYN_OPTIONS = [
+  { label: '是', value: 'Y' },
+  { label: '否', value: 'N' },
+];
 
 //1.2.3.1 暫付款申請作業
 @Component({
   selector: 'app-fin23010',
   templateUrl: './fin23010.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputNumberRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableReportComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputNumberRangeComponent, DropdownComponent, InputTextComponent, TableReportComponent, VenEmpPickerComponent, ButtonModule, InputTextModule, AsyncPipe, TranslateModule]
 })
-export class FIN23010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    advanceSheetNumber: [, [Validators.maxLength(13)]], // 預支單號
-    startRequestDate: [], //申請日期
-    endRequestDate: [], //申請日期
-    startAdvanceAmount: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 預支金額
-    endAdvanceAmount: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 預支金額
-    startWriteOffDate: [], //預計核銷日
-    endWriteOffDate: [], //預計核銷日
-    requsetEmployee: [], //申請廠商/員工
-    payoutMethod: [[] as number[]], //付款方式
-    transferAccount: [], //匯款銀行代號
-    bankAccount: [, [Validators.maxLength(20)]], // 銀行帳號
-    accountName: ['', [Validators.maxLength(64)]], // 帳戶名稱
-    ticketTransfer: [[] as number[]], // 票據禁止背書轉讓
-    ticketTitle: ['', [Validators.maxLength(20)]], // 票據抬頭
-    startExpectPayDate: [], //預計付款日
-    endExpectPayfDate: [], //預計付款日
-    summary: ['', [Validators.maxLength(160)]], // 摘要
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '預支單號', visible: true },
-    { field: 'col2', header: '預支金額', visible: true },
-    { field: 'col3', header: '申請日期', visible: true },
-    { field: 'col4', header: '預計核銷日', visible: true },
-    { field: 'col5', header: '廠商編號', visible: true },
-    { field: 'col6', header: '付款方式', visible: true },
-    { field: 'col7', header: '匯款銀行代號', visible: true },
-    { field: 'col8', header: '銀行帳號', visible: true },
-    { field: 'col9', header: '帳戶名稱', visible: true },
-    { field: 'col10', header: '票據禁止背書轉讓', visible: true },
-    { field: 'col11', header: '票據抬頭', visible: true },
-    { field: 'col12', header: '摘要', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> implements OnInit {
+  private readonly finService = inject(FIN23010Service);
+  private readonly dropdown = inject(DropdownApiService);
+  private readonly datePipe = inject(DatePipe);
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,
-  ) {
-    super(); // 呼叫父類建構子
-  }
+  queryForm = this.formBuilder.group({
+    advanceSheetNumber: [''], // 預支單號
+    startRequestDate: [null as Date | null], //申請日期
+    endRequestDate: [null as Date | null], //申請日期
+    startAdvanceAmount: [null as number | null], // 預支金額
+    endAdvanceAmount: [null as number | null], // 預支金額
+    startWriteOffDate: [null as Date | null], //預計核銷日
+    endWriteOffDate: [null as Date | null], //預計核銷日
+    requsetEmployee: [''], //申請廠商/員工(VEN_No)
+    payoutMethod: [null as string | null], //付款方式
+    transferAccount: [null as string | null], //匯款銀行代號
+    bankAccount: [''], // 銀行帳號
+    accountName: [''], // 帳戶名稱
+    ticketTransfer: [null as string | null], // 票據禁止背書轉讓
+    ticketTitle: [''], // 票據抬頭
+    startExpectPayDate: [null as Date | null], //預計付款日
+    endExpectPayfDate: [null as Date | null], //預計付款日
+    summary: [''], // 摘要
+  });
+
+  readonly ctrlYNOptions = CTRLYN_OPTIONS;
+  readonly payoutMethodOptions$ = getSYS1000Options$(this.systemDataService, 'VEN_PayType');
+  readonly bankOptions$ = this.dropdown.queryAps1001NoBranch();
+
+  data: FIN23010Data[] = [];
+  totalRecords = 0;
+  lastQueryBody: QueryFIN23010Request | null = null;
+  selectedItems: FIN23010Data[] = [];
+  voiding = false;
+
+  readonly tableQueryFunction = (body: QueryFIN23010Request) => this.finService.queryFIN23010(body);
+
+  columns: ReportColumn[] = [
+    { field: 'PrepNo', header: '預支單號' },
+    { field: 'PrepAmt', header: '預支金額', align: 'right', format: formatAmount },
+    { field: 'ApplyDate', header: '申請日期' },
+    { field: 'PlanCloseDate', header: '預計核銷日' },
+    { field: 'VenNo', header: '廠商/員工代號' },
+    { field: 'VenName', header: '廠商/員工名稱' },
+    { field: 'PayTypeName', header: '付款方式' },
+    { field: 'BnkNo', header: '匯款銀行代號' },
+    { field: 'BnkAccNo', header: '銀行帳號' },
+    { field: 'BnkAccountName', header: '帳戶名稱' },
+    { field: 'VenCtrlYNName', header: '票據禁止背書轉讓' },
+    { field: 'VenCheckTitle', header: '票據抬頭' },
+    { field: 'Summary', header: '摘要' },
+    { field: 'PlanPayDate', header: '預計付款日' },
+  ];
+
+  pickerVisible = false;
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120007';
-    this.cruPage = '/FIN2000/FIN23010CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN23010', 'fin/fin23010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const payload = this.buildQueryBodyFromForm();
+      this.finService.queryFIN23010(payload).pipe(
+        finalize(() => (this.loading = false)),
+      ).subscribe(res => {
+        this.data = res.Data ?? [];
+        this.totalRecords = res.TotalCount ?? 0;
+        this.lastQueryBody = payload;
+        this.selectedItems = [];
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  openPicker(): void {
+    this.pickerVisible = true;
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  onPickerSelected(picked: VenEmpPicked): void {
+    this.queryForm.controls.requsetEmployee.setValue(picked.code);
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  onDelete() {
+    if (!this.selectedItems.length) return;
+    const ids = this.selectedItems.map(row => row.id);
+    this.messageService.confirm({
+      header: '作廢確認',
+      message: `是否作廢選取的 ${ids.length} 筆暫付款申請資料？`,
+      accept: () => {
+        this.voiding = true;
+        let remaining = ids.length;
+        const failedMessages: string[] = [];
+        ids.forEach(id => {
+          this.finService.voidFIN23010(id).pipe(
+            finalize(() => {
+              remaining -= 1;
+              if (remaining === 0) {
+                this.voiding = false;
+                if (failedMessages.length) {
+                  this.messageService.errorBubble(failedMessages.join('；'), '部分作廢失敗');
+                } else {
+                  this.messageService.successBubble('作廢成功');
+                }
+                this.onSubmit(this.queryForm);
+              }
+            }),
+          ).subscribe(res => {
+            if (!res.Data?.Success) {
+              failedMessages.push(res.Data?.Message || '作廢失敗');
+            }
+          });
+        });
+      },
+    });
   }
+  /** 從表單組出查詢條件(過濾空值) */
+  private buildQueryBodyFromForm(): QueryFIN23010Request {
+    const raw = this.queryForm.getRawValue();
+    const toDateStr = (v: Date | null) => v ? (this.datePipe.transform(v, 'yyyy-MM-dd') ?? undefined) : undefined;
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    const payload: QueryFIN23010Request = {
+      PREP_NO: raw.advanceSheetNumber || undefined,
+      APPY_DateS: toDateStr(raw.startRequestDate),
+      APPY_DateE: toDateStr(raw.endRequestDate),
+      PREP_AmtS: raw.startAdvanceAmount ?? undefined,
+      PREP_AmtE: raw.endAdvanceAmount ?? undefined,
+      CLOSE_DateS: toDateStr(raw.startWriteOffDate),
+      CLOSE_DateE: toDateStr(raw.endWriteOffDate),
+      VEN_No: raw.requsetEmployee || undefined,
+      VEN_PayType: raw.payoutMethod || undefined,
+      BNK_No: raw.transferAccount || undefined,
+      BNK_AccNo: raw.bankAccount || undefined,
+      BNK_AccountName: raw.accountName || undefined,
+      VEN_CTRLYN: raw.ticketTransfer || undefined,
+      VEN_CheckTitle: raw.ticketTitle || undefined,
+      PAY_DateS: toDateStr(raw.startExpectPayDate),
+      PAY_DateE: toDateStr(raw.endExpectPayfDate),
+      Summary: raw.summary || undefined,
+      pageIndex: 1,
+      pageSize: 1000,
+    };
+    return payload;
   }
 }
