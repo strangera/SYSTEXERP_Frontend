@@ -71,6 +71,14 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   readonly tableQueryFunction = (body: QueryFIN23010Request) => this.finService.queryFIN23010(body);
 
+  isRowSelectable(row: FIN23010Data): boolean { return !!row.VouNo && row.CanVoid !== '1' };
+
+  editDisabled = (row: FIN23010Data): boolean => {
+    if (!row.VouNo) return true;
+    if (row.CanVoid === '1') return true;
+    return false;
+  }
+
   columns: ReportColumn[] = [
     { field: 'PrepNo', header: '預支單號' },
     { field: 'PrepAmt', header: '預支金額', align: 'right', format: formatAmount },

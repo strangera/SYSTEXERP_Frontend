@@ -1,6 +1,5 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -20,7 +19,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { VenEmpPicked, VenEmpPickedType, VenEmpPickerComponent } from './ven-emp-picker/ven-emp-picker.component';
+import { VenEmpPicked, VenEmpPickerComponent } from './ven-emp-picker/ven-emp-picker.component';
 
 /** 票據禁止背書轉讓 是/否 (單純Y/N旗標，非SYS1000代碼表) */
 const CTRLYN_OPTIONS = [
@@ -39,7 +38,6 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
   private readonly finService = inject(FIN23010Service);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
-  private readonly destroyRef = inject(DestroyRef);
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
@@ -66,6 +64,8 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
 
   /** 目前選定的廠商/員工名稱(顯示用) */
   venName = '';
+  /** 目前選定的廠商/員工統一編號或身分證字號(顯示用；由 ven-emp-picker 直接帶出，不需另外呼叫API) */
+  venUniform = '';
   /** 目前資料 id(修改時使用) */
   private currentId: number | null = null;
   /** 目前狀態(0作廢/1建立/2已付款)，供畫面顯示 */
@@ -127,6 +127,8 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
         this.vouNo = d.VouNo ?? '';
         this.redeemNo = d.REDEEM_NO ?? '';
         this.venName = d.VenName ?? '';
+        // getByIdFIN23010 不含統一編號/身分證字號欄位，此欄位僅在本次挑選(picker)當下有值
+        this.venUniform = '';
         this.dataForm.patchValue({
           advanceSheetNumber: d.PREP_NO,
           requestDate: d.APPY_Date ? new Date(d.APPY_Date) : null,
@@ -160,50 +162,22 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     this.pickerVisible = true;
   }
 
+  /**
+   * ven-emp-picker 選定後直接帶出完整回填欄位(queryVenEmpFIN23010一支API查完，不需再呼叫
+   * queryVenFIN23010/queryEmpFIN23010)。注意：POS2013無費用組織欄位，選擇員工時費用組織
+   * 不會自動帶入(與舊版queryEmpFIN23010行為不同)，需由使用者自行於下拉選擇。
+   */
   onPickerSelected(picked: VenEmpPicked): void {
-    this.loading = true;
-    const done = (venName: string, patch: Record<string, unknown>) => {
-      this.venName = venName;
-      this.dataForm.patchValue({ requsetEmployee: picked.code, ...patch });
-      this.loading = false;
-    };
-    if (picked.type === VenEmpPickedType.Vendor) {
-      this.finService.queryVenFIN23010(picked.code).pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => (this.loading = false)),
-      ).subscribe(res => {
-        const v = res.Data;
-        if (!v) {
-          this.messageService.warnBubble('查無此廠商資料。');
-          return;
-        }
-        done(v.VenName ?? '', {
-          payoutMethod: v.PayType,
-          transferAccount: v.BnkNo,
-          bankAccount: v.BnkAccNo,
-          accountName: v.BnkAccountName,
-          ticketTitle: v.CheckTitle,
-        });
-      });
-    } else {
-      this.finService.queryEmpFIN23010(picked.code).pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => (this.loading = false)),
-      ).subscribe(res => {
-        const e = res.Data;
-        if (!e) {
-          this.messageService.warnBubble('查無此員工資料。');
-          return;
-        }
-        done(e.VenName ?? '', {
-          payoutMethod: e.PayType,
-          transferAccount: e.BnkNo,
-          bankAccount: e.BnkAccNo,
-          accountName: e.BnkAccountName,
-          organization: e.CostOrg,
-        });
-      });
-    }
+    this.venName = picked.venName;
+    this.venUniform = picked.venUniform ?? '';
+    this.dataForm.patchValue({
+      requsetEmployee: picked.code,
+      payoutMethod: picked.payType,
+      transferAccount: picked.bnkNo,
+      bankAccount: picked.bnkAccNo,
+      accountName: picked.bnkAccountName,
+      ticketTitle: picked.checkTitle,
+    });
   }
 
   // ----------------------------------------------------------------

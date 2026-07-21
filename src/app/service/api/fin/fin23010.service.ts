@@ -46,6 +46,8 @@ export interface FIN23010Data {
   VenCheckTitle: string | null;
   Summary: string | null;
   PlanPayDate: string | null;
+  VouNo: string | null;
+  CanVoid: string | null;
 }
 
 /** 編輯畫面單筆資料 */
@@ -146,6 +148,34 @@ export interface QueryEmpFIN23010Response {
   Org_Name: string | null;
 }
 
+/** 「申請廠商/員工」清單即時查詢條件 */
+export interface QueryVenEmpFIN23010Request {
+  /** 關鍵字(編號/名稱/簡稱，模糊查詢；空值查前50筆) */
+  Keyword?: string | null;
+  /** 類型篩選：V=廠商 E=員工，空值=不篩選 */
+  VenEmpType?: 'V' | 'E' | null;
+}
+
+/** 「申請廠商/員工」清單即時查詢結果(對應POS2013，一支API取代原本廠商/員工分開查詢) */
+export interface QueryVenEmpFIN23010Response {
+  VenNo: string | null;
+  VenName: string | null;
+  VenShortName: string | null;
+  /** 1=統編(公司) 2=身分證(個人，本作業視為員工) 3=自編編號 (對應POS2013.VEN_Flag) */
+  VenFlag: string | null;
+  PayType: string | null;
+  PayTypeName: string | null;
+  BnkNo: string | null;
+  BnkAccNo: string | null;
+  BnkAccountName: string | null;
+  CheckTitle: string | null;
+  PayConditionDay: number | null;
+  VenStatus: string | null;
+  VenStatusName: string | null;
+  /** 統一編號/身分證字號(供選定後帶入表單，之後串接EIP/其他用途；不對應畫面顯示欄位) */
+  VenUniform: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FIN23010Service {
   private readonly apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
@@ -180,5 +210,10 @@ export class FIN23010Service {
   /** 新增頁「申請廠商/員工」選擇員工時，依員工編號查詢員工資料 */
   queryEmpFIN23010(user_No: string): Observable<ApiResponse<QueryEmpFIN23010Response>> {
     return this.http.post<ApiResponse<QueryEmpFIN23010Response>>(`${this.apiUrl}/queryEmpFIN23010`, { user_No });
+  }
+
+  /** 新增頁「申請廠商/員工」清單即時查詢(一支API取代原本分開查詢廠商/員工的流程，直接查POS2013) */
+  queryVenEmpFIN23010(body: QueryVenEmpFIN23010Request): Observable<ApiResponse<QueryVenEmpFIN23010Response[]>> {
+    return this.http.post<ApiResponse<QueryVenEmpFIN23010Response[]>>(`${this.apiUrl}/queryVenEmpFIN23010`, body);
   }
 }

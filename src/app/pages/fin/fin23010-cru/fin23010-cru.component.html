@@ -36,6 +36,7 @@
               [disabled]="dataForm.disabled"></button>
           </div>
           <small class="p-error" *ngIf="submitted && dataForm.controls.requsetEmployee.invalid">必填</small>
+          <small *ngIf="venUniform" class="text-600">統編/身分證：{{ venUniform }}</small>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="付款方式" controlName="payoutMethod" optionLabel="label" optionValue="value"

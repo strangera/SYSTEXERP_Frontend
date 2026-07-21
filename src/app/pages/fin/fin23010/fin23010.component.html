@@ -94,7 +94,8 @@
     <app-table-report tableKey="FIN23010" dataKey="id" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
       [lastQueryBody]="lastQueryBody" [queryFunction]="tableQueryFunction" [loading]="loading" [showCheckBox]="true"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (edit)="onEdit($event)"
-      (detail)="onDetail($event)" (delete)="onDelete()">
+      (detail)="onDetail($event)" (delete)="onDelete()" [isRowSelectable]="isRowSelectable"
+      [editDisabled]="editDisabled">
     </app-table-report>
   </div>
 </div>

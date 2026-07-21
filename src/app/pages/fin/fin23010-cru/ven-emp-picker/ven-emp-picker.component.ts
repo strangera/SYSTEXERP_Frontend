@@ -1,17 +1,15 @@
 import { DestroyRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Option } from '@service/utility/dropdown-api.model';
-import { Sys0110Service } from '@service/api/sys/sys0110.service';
-import { UserData } from '@shared/models/sys/user.model';
-import { ButtonModule } from 'primeng/button';
+import { FIN23010Service, QueryVenEmpFIN23010Response } from '@service/api/fin/fin23010.service';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
+import { TableModule } from 'primeng/table';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
-/** 1=廠商 2=員工 (對應 SP_FIN23010GetById 的 VenEmpType 回顯欄位) */
+/** 1=廠商 2=員工 (依回傳列資料的 VenFlag 即時判斷：VenFlag==='2' 為員工，其餘為廠商) */
 export enum VenEmpPickedType {
   Vendor = 1,
   Employee = 2,
@@ -21,29 +19,38 @@ export interface VenEmpPicked {
   /** 廠商編號 / 員工編號 */
   code: string;
   type: VenEmpPickedType;
+  /** 廠商/員工名稱 */
+  venName: string;
+  payType: string | null;
+  payTypeName: string | null;
+  bnkNo: string | null;
+  bnkAccNo: string | null;
+  bnkAccountName: string | null;
+  /** 票據抬頭(僅廠商有意義) */
+  checkTitle: string | null;
+  /** 統一編號/身分證字號 */
+  venUniform: string | null;
 }
-
-const PAGE_SIZE = 20;
 
 /**
  * FIN23010 暫付款申請作業 - 「申請廠商/員工」彈窗選擇
- * 廠商：走既有 queryPOS2013_DropDownList(全檔)，前端關鍵字篩選(編號/名稱)。
- * 員工：走既有 Sys0110Service.queryUser(後端分頁)。
- * 選定後僅回傳代號+類別，實際欄位帶入由呼叫端另外呼叫 FIN23010Service.queryVenFIN23010 / queryEmpFIN23010 取得。
+ * 廠商與員工實際上共用同一張POS2013主檔(僅VEN_Flag不同)，一支API(queryVenEmpFIN23010)即可查詢兩種類型，
+ * 不再分別呼叫DropdownApiService.queryPos2013(廠商)與Sys0110Service.queryUser(員工，SYS0110使用者主檔，
+ * 與本作業實際查詢對象不符)。輸入關鍵字debounce後即時查詢，不需查詢按鈕；選定後直接回傳完整回填欄位，
+ * 呼叫端不需再另外呼叫queryVenFIN23010/queryEmpFIN23010。
  */
 @Component({
   selector: 'app-fin23010-ven-emp-picker',
   standalone: true,
   templateUrl: './ven-emp-picker.component.html',
-  imports: [DialogModule, RadioButtonModule, InputTextModule, ButtonModule, FormsModule, TableModule],
+  imports: [DialogModule, RadioButtonModule, InputTextModule, FormsModule, TableModule],
 })
 export class VenEmpPickerComponent {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() selected = new EventEmitter<VenEmpPicked>();
 
-  private readonly dropdown = inject(DropdownApiService);
-  private readonly sys0110 = inject(Sys0110Service);
+  private readonly finService = inject(FIN23010Service);
   private readonly destroyRef = inject(DestroyRef);
 
   mode: 'vendor' | 'employee' = 'vendor';
@@ -51,101 +58,68 @@ export class VenEmpPickerComponent {
   loading = false;
   hasSearched = false;
 
-  private vendorOptions: Option[] = [];
-  filteredVendors: Option[] = [];
+  rows: QueryVenEmpFIN23010Response[] = [];
 
-  employees: UserData[] = [];
-  totalRecords = 0;
-  readonly pageSize = PAGE_SIZE;
+  private readonly keyword$ = new Subject<string>();
+
+  constructor() {
+    this.keyword$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(keyword => {
+        this.loading = true;
+        return this.finService.queryVenEmpFIN23010({
+          Keyword: keyword || null,
+          VenEmpType: this.mode === 'vendor' ? 'V' : 'E',
+        });
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: res => {
+        this.rows = res.Data ?? [];
+        this.hasSearched = true;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; },
+    });
+  }
 
   onShow(): void {
     this.keyword = '';
     this.hasSearched = false;
-    this.filteredVendors = [];
-    this.employees = [];
-    this.totalRecords = 0;
-    if (this.mode === 'vendor') {
-      this.loadVendors();
-    }
+    this.rows = [];
+    this.search();
   }
 
   onModeChange(): void {
     this.keyword = '';
     this.hasSearched = false;
-    this.filteredVendors = [];
-    this.employees = [];
-    this.totalRecords = 0;
-    if (this.mode === 'vendor') {
-      this.loadVendors();
-    }
+    this.rows = [];
+    this.search();
   }
 
-  private loadVendors(): void {
-    this.loading = true;
-    this.dropdown.queryPos2013({ VEN_Flag: '' })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: options => {
-          this.vendorOptions = options ?? [];
-          this.filteredVendors = this.vendorOptions;
-          this.hasSearched = true;
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
-      });
+  onKeywordChange(): void {
+    this.search();
   }
 
-  onSearch(): void {
-    if (this.mode === 'vendor') {
-      const kw = this.keyword.trim().toLowerCase();
-      this.filteredVendors = !kw
-        ? this.vendorOptions
-        : this.vendorOptions.filter(v =>
-          String(v['VEN_No'] ?? v.value ?? '').toLowerCase().includes(kw) ||
-          String(v['Name'] ?? v.label ?? '').toLowerCase().includes(kw) ||
-          String(v['ShortName'] ?? '').toLowerCase().includes(kw));
-      this.hasSearched = true;
-    } else {
-      this.fetchEmployees(1);
-    }
+  private search(): void {
+    this.keyword$.next(this.keyword.trim());
   }
 
-  onEmployeeLazyLoad(event: TableLazyLoadEvent): void {
-    if (!this.hasSearched) return;
-    const pageIndex = Math.floor((event.first ?? 0) / this.pageSize) + 1;
-    this.fetchEmployees(pageIndex);
-  }
-
-  private fetchEmployees(pageIndex: number): void {
-    this.hasSearched = true;
-    this.loading = true;
-    this.sys0110.queryUser({
-      user_No: this.keyword || undefined,
-      user_Name: this.keyword || undefined,
-      PageIndex: pageIndex,
-      PageSize: this.pageSize,
-    })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => {
-          this.employees = res.Data ?? [];
-          this.totalRecords = res.TotalCount ?? this.employees.length;
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
-      });
-  }
-
-  pickVendor(row: Option): void {
-    const code = String(row['VEN_No'] ?? row.value ?? '');
-    if (!code) return;
-    this.selected.emit({ code, type: VenEmpPickedType.Vendor });
-    this.close();
-  }
-
-  pickEmployee(row: UserData): void {
-    if (!row.user_No) return;
-    this.selected.emit({ code: row.user_No, type: VenEmpPickedType.Employee });
+  pick(row: QueryVenEmpFIN23010Response): void {
+    if (!row.VenNo) return;
+    this.selected.emit({
+      code: row.VenNo,
+      type: row.VenFlag === '2' ? VenEmpPickedType.Employee : VenEmpPickedType.Vendor,
+      venName: row.VenName ?? '',
+      payType: row.PayType,
+      payTypeName: row.PayTypeName,
+      bnkNo: row.BnkNo,
+      bnkAccNo: row.BnkAccNo,
+      bnkAccountName: row.BnkAccountName,
+      checkTitle: row.CheckTitle,
+      venUniform: row.VenUniform,
+    });
     this.close();
   }
 

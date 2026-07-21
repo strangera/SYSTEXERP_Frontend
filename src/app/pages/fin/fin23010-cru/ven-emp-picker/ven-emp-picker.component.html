@@ -3,12 +3,12 @@
   header="選擇申請廠商/員工"
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '700px' }"
+  [style]="{ width: '960px' }"
   (onShow)="onShow()"
   (onHide)="close()"
 >
   <div class="flex flex-column gap-3">
-    <!-- 模式切換 -->
+    <!-- 模式切換(僅作為篩選條件，兩者皆走同一支API查POS2013) -->
     <div class="flex gap-4">
       <div class="flex align-items-center gap-2">
         <p-radioButton name="mode" value="vendor" [(ngModel)]="mode" (ngModelChange)="onModeChange()" inputId="fin23010-mode-vendor" />
@@ -20,79 +20,54 @@
       </div>
     </div>
 
-    <!-- 搜尋列 -->
-    <div class="flex gap-2">
-      <input
-        pInputText
-        [(ngModel)]="keyword"
-        [placeholder]="mode === 'vendor' ? '廠商編號/名稱' : '員工編號/姓名'"
-        class="flex-1"
-        (keyup.enter)="onSearch()"
-      />
-      <p-button label="查詢" icon="pi pi-search" (click)="onSearch()" [loading]="loading" />
-    </div>
+    <!-- 關鍵字輸入：debounce後即時查詢，無需查詢按鈕 -->
+    <input
+      pInputText
+      [(ngModel)]="keyword"
+      [placeholder]="mode === 'vendor' ? '輸入廠商編號/名稱即時查詢' : '輸入員工編號/姓名即時查詢'"
+      class="w-full"
+      (ngModelChange)="onKeywordChange()"
+    />
 
-    <!-- 廠商清單(前端關鍵字篩選) -->
-    @if (mode === 'vendor') {
-      <p-table
-        [value]="filteredVendors"
-        [paginator]="true"
-        [rows]="pageSize"
-        [rowsPerPageOptions]="[20, 50, 100]"
-        [loading]="loading"
-        [scrollable]="true"
-        scrollHeight="380px"
-        dataKey="VEN_No"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th style="width: 30%">廠商編號</th>
-            <th style="width: 40%">廠商名稱</th>
-            <th style="width: 30%">簡稱</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-row>
-          <tr class="cursor-pointer" (click)="pickVendor(row)">
-            <td>{{ row.VEN_No }}</td>
-            <td>{{ row.Name }}</td>
-            <td>{{ row.ShortName }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr><td colspan="3">{{ hasSearched ? '查無資料' : '請輸入查詢條件' }}</td></tr>
-        </ng-template>
-      </p-table>
-    } @else {
-      <!-- 員工清單(後端分頁) -->
-      <p-table
-        [value]="employees"
-        [paginator]="true"
-        [rows]="pageSize"
-        [rowsPerPageOptions]="[20, 50, 100]"
-        [lazy]="true"
-        [totalRecords]="totalRecords"
-        [loading]="loading"
-        [scrollable]="true"
-        scrollHeight="380px"
-        dataKey="user_No"
-        (onLazyLoad)="onEmployeeLazyLoad($event)"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th style="width: 40%">員工編號</th>
-            <th style="width: 60%">員工姓名</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-row>
-          <tr class="cursor-pointer" (click)="pickEmployee(row)">
-            <td>{{ row.user_No }}</td>
-            <td>{{ row.user_Name }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr><td colspan="2">{{ hasSearched ? '查無資料' : '請輸入查詢條件' }}</td></tr>
-        </ng-template>
-      </p-table>
-    }
+    <p-table
+      [value]="rows"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[20, 50]"
+      [loading]="loading"
+      [scrollable]="true"
+      scrollHeight="420px"
+      dataKey="VenNo"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 12%">代號</th>
+          <th style="width: 16%">名稱</th>
+          <th style="width: 8%">付款方式</th>
+          <th style="width: 10%">全省銀行代號</th>
+          <th style="width: 14%">銀行帳號</th>
+          <th style="width: 14%">帳戶名稱</th>
+          <th style="width: 12%">開票抬頭</th>
+          <th style="width: 6%">票期</th>
+          <th style="width: 8%">審核狀態</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr class="cursor-pointer" (click)="pick(row)">
+          <td>{{ row.VenNo }}</td>
+          <td>{{ row.VenName }}</td>
+          <td>{{ row.PayType }} {{ row.PayTypeName }}</td>
+          <td>{{ row.BnkNo }}</td>
+          <td>{{ row.BnkAccNo }}</td>
+          <td>{{ row.BnkAccountName }}</td>
+          <td>{{ row.CheckTitle }}</td>
+          <td>{{ row.PayConditionDay }}</td>
+          <td>{{ row.VenStatusName }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="9">{{ hasSearched ? '查無資料' : '請輸入關鍵字查詢' }}</td></tr>
+      </ng-template>
+    </p-table>
   </div>
 </p-dialog>
