@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -41,7 +41,6 @@ import { debounceTime, distinctUntilChanged, finalize, forkJoin, map, of } from 
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    NgIf,
     InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
