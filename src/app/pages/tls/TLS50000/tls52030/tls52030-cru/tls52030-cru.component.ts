@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -40,7 +40,6 @@ import { POStatus } from '../../tls52030/tls52030.component';
     CalendarComponent,
     InputTextareaComponent,
     TableReportComponent,
-    NgIf,
     DialogComponent,
     TranslateModule,
     TableEditComponent,
