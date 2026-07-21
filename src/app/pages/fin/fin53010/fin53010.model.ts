@@ -1130,3 +1130,21 @@ export interface FIN53010StepBankDeposit {
   note_desc?: string;
   txn_date?: Date | null;
 }
+
+export interface QueryGLS3003AbatAcctRequest {
+  AccNo?: string | null;
+  VouNo?: string | null;
+  PTA?: string | null;
+}
+
+export interface QueryGLS3003AbatAcctResponse {
+  RowNum?: number | null;
+  VouNo?: string | null;
+  NoteDesc?: string | null;
+  DebitAmt?: number | null;
+  CreditAmt?: number | null;
+  PTA?: string | null;
+  VEN_No?: string | null;
+  VEN_Uniform?: string | null;
+  VEN_ShortName?: string | null;
+}

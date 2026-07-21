@@ -5,8 +5,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
-import { FIN32030Service, QueryAbatAcctResponse } from '@service/api/fin/fin32030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
+import { QueryGLS3003AbatAcctResponse } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
@@ -210,8 +210,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   // 立沖代號選取彈窗
   showPtaDialog = false;
   ptaDialogLoading = false;
-  ptaDialogSelectedItem: QueryAbatAcctResponse | null = null;
-  ptaDialogData: QueryAbatAcctResponse[] = [];
+  ptaDialogSelectedItem: QueryGLS3003AbatAcctResponse | null = null;
+  ptaDialogData: QueryGLS3003AbatAcctResponse[] = [];
   ptaFilterForm = this.formBuilder.group({
     VouNo: [''],
     PTA: [''],
@@ -1072,7 +1072,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   constructor(
     public readonly service: FIN53010Service,
-    private readonly fin32030Service: FIN32030Service,
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
@@ -3153,6 +3152,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (this.isAutoCodeRow(row) && !row.PTA) {
             return { ...row, PTA: `#${counter++}` };
           }
+          // 曾是 auto-code row（有 #N）但條件已不符（科目換掉、金額清空、方向切換）→ 清除暫存 PTA
+          if (row.PTA?.startsWith('#') && !this.isAutoCodeRow(row)) {
+            return { ...row, PTA: undefined };
+          }
           return row;
         })
       );
@@ -3356,9 +3359,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     const currentPta = rowData.PTA;
     this.ptaDialogLoading = true;
-    this.fin32030Service.queryAbatAcct({ AccNo: rowData.AccNo })
+    this.service.queryGLS3003AbatAcct({ AccNo: rowData.AccNo })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
-      .subscribe(response => {
+      .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
         this.ptaDialogData = response.Data ?? [];
         if (currentPta) {
           const match = this.ptaDialogData.find(item => item.PTA === currentPta);
@@ -3376,21 +3379,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   filterPtaDialog(): void {
-    const { VouNo, PTA, VEN_No } = this.ptaFilterForm.value;
+    const { VouNo, PTA } = this.ptaFilterForm.value;
     this.ptaDialogLoading = true;
-    this.fin32030Service.queryAbatAcct({
+    this.service.queryGLS3003AbatAcct({
       AccNo: this.currentEditingPtaAccNo,
       VouNo: VouNo || null,
       PTA: PTA || null,
-      VEN_No: VEN_No || null,
     })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
-      .subscribe(response => {
+      .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
         this.ptaDialogData = response.Data ?? [];
       });
   }
 
-  onPtaRowSelect(event: { data?: QueryAbatAcctResponse }): void {
+  onPtaRowSelect(event: { data?: QueryGLS3003AbatAcctResponse }): void {
     if (event.data) {
       this.ptaDialogSelectedItem = event.data;
     }
@@ -3400,7 +3402,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     let selected = this.ptaDialogSelectedItem;
     if (!selected) {
       const raw = this.ptaDialogTable?.selectedItems;
-      selected = Array.isArray(raw) ? (raw[0] ?? null) : (raw as QueryAbatAcctResponse ?? null);
+      selected = Array.isArray(raw) ? (raw[0] ?? null) : (raw as QueryGLS3003AbatAcctResponse ?? null);
     }
     if (!selected) return;
 
