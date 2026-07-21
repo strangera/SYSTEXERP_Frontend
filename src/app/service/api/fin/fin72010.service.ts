@@ -113,7 +113,7 @@ export interface QueryFIN72010DetailDetailResponse {
   PCS_Amt: number;   // 申請總金額（系統自動計算 = 淨額 + 稅額）
   PCS_Net: number;   // 申請淨額（未稅金額）
   PCS_Tax: number;   // 申請稅額
-  VEN_UniformNum: string;   // 廠商統一編號
+  VEN_Uniform: string;   // 廠商統一編號
   PUR_VoucherType: string;   // 憑證類別（發票格式）
   PUR_DiscNo: string;   // 扣抵代號（1=可扣抵進貨費用 2=可扣抵固定資產 3=不可扣抵進貨費用 4=不可扣抵固定資產）
   PCS_TaxType: string;   // 課稅別（0=免稅 1=應稅 2=零稅率）
@@ -204,7 +204,7 @@ export interface FIN72010SaveDetailItem {
   DEC_YM: string;   // 申報年月 (格式：YYYYMM，通常為雙數月，必填)
   PCS_Net: number;   // 申請淨額 (未稅金額，必填)
   PCS_Tax: number;   // 申請稅額：課稅別非「應稅」時，SP 會自動強制改為 0 (必填)
-  VEN_UniformNum?: string;   // 廠商統一編號
+  VEN_Uniform?: string;   // 廠商統一編號
   PUR_VoucherType?: string;   // 憑證類別 (發票格式)：明細類別為「發票」時必填
   PUR_DiscNo?: string;   // 扣抵代號：1=可扣抵進貨費用, 2=可扣抵固定資產, 3=不可扣抵進貨費用, 4=不可扣抵固定資產
   PCS_TaxType: string;   // 課稅別：0=免稅, 1=應稅, 2=零稅率 (必填)
