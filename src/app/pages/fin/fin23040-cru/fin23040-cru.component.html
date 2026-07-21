@@ -7,111 +7,32 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="核銷單號" controlName="redeemNo" [control]="dataForm.controls.redeemNo"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="預支單號" controlName="prepNo" optionLabel="label" optionValue="value"
-            [options]="prepNoOptions" [control]="dataForm.controls.prepNo" [submitted]="submitted"></app-dropdown>
+            [options]="prepNoOptions$ | async" [control]="dataForm.controls.prepNo"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number label="預支金額" controlName="prepAmt" [control]="dataForm.controls.prepAmt"
             [submitted]="submitted"></app-input-number>
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="費用會計科目" controlName="accNo" optionLabel="label" optionValue="value"
-            [options]="accNoOptions$ | async" [control]="dataForm.controls.accNo" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="項目摘要" controlName="purRemark" [control]="dataForm.controls.purRemark"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="明細類別" controlName="acpType" optionLabel="label" optionValue="value"
-            [options]="acpTypeOptions$ | async" [control]="dataForm.controls.acpType"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="發票格式" controlName="purVoucherType" optionLabel="label" optionValue="value"
-            [options]="purVoucherTypeOptions$ | async" [control]="dataForm.controls.purVoucherType"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="發票號碼" controlName="purGUINo" [control]="dataForm.controls.purGUINo"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="發票日期" controlName="purGUIDate"
-            [control]="dataForm.controls.purGUIDate" [submitted]="submitted"></app-calendar>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateMonthOne" label="申報年月" controlName="purExpGLDate"
-            [control]="dataForm.controls.purExpGLDate" [submitted]="submitted"></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商統一編號" controlName="purVenUniform" optionLabel="label" optionValue="value"
-            [options]="purVenUniformOptions$ | async" [control]="dataForm.controls.purVenUniform"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="發票用途" controlName="purDirectType" optionLabel="label" optionValue="value"
-            [options]="purDirectTypeOptions$ | async" [control]="dataForm.controls.purDirectType"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="發票總金額" controlName="purAmt" [control]="dataForm.controls.purAmt"
-            [submitted]="submitted"></app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="課稅別" controlName="purTaxType" optionLabel="label" optionValue="value"
-            [options]="purTaxTypeOptions$ | async" [control]="dataForm.controls.purTaxType"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="發票未稅金額" controlName="purNet" [control]="dataForm.controls.purNet"
+          <app-input-number label="可核銷餘額" controlName="balanceAmt" [control]="dataForm.controls.balanceAmt"
             [submitted]="submitted"></app-input-number>
         </div>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="發票稅額" controlName="purTax" [control]="dataForm.controls.purTax"
-            [submitted]="submitted"></app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="活動代碼" controlName="projectNo" optionLabel="label" optionValue="value"
-            [options]="projectNoOptions$ | async" [control]="dataForm.controls.projectNo"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="扣抵代號" controlName="purDiscNo" optionLabel="label" optionValue="value"
-            [options]="purDiscNoOptions$ | async" [control]="dataForm.controls.purDiscNo"
-            [submitted]="submitted"></app-dropdown>
-        </div>
+
+      <div class="mt-3">
+        <app-table-edit tableKey="fin23040-detail" title="核銷明細" [data]="data" [columns]="columns" [showCheckBox]="true"
+          [showInsert]="true" [showDelete]="true" [canInsert]="true" [showFooter]="true" [disabled]="detailDisabled"
+          [loading]="loading" (dataChange)="data = $event" (delete)="onDeleteRows($event)"
+          [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="類別區分" controlName="purType" optionLabel="label" optionValue="value"
-            [options]="purTypeOptions$ | async" [control]="dataForm.controls.purType"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="彙總張數" controlName="purCombCnt" [control]="dataForm.controls.purCombCnt"
-            [submitted]="submitted"></app-input-number>
-        </div>
-      </div>
+
       @if (!isFormReadable) {
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" [loading]="loading"></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
       }
     </form>
   </p-panel>

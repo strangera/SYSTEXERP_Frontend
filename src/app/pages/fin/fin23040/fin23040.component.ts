@@ -36,11 +36,12 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
   lastQuery: unknown = null;
 
   // 固定為 Type 1 的欄位結構
+  // 欄位命名對齊後端 C# 屬性原始大小寫(Program.cs 設定 PropertyNamingPolicy = null，JSON 不轉 camelCase)
   columns: ReportColumn[] = [
-    { field: 'redeeM_NO', header: '核銷單號', align: 'left' },
-    { field: 'preP_NO', header: '預支單號', align: 'left' },
-    { field: 'redeemAmt', header: '核銷金額', format: formatAmount, align: 'right' },
-    { field: 'yn', header: '可否刪修', align: 'center', width: '90px' },
+    { field: 'REDEEM_NO', header: '核銷單號', align: 'left' },
+    { field: 'PREP_NO', header: '預支單號', align: 'left' },
+    { field: 'RedeemAmt', header: '核銷金額', format: formatAmount, align: 'right' },
+    { field: 'YN', header: '可否刪修', align: 'center', width: '90px' },
   ];
 
   ngOnInit(): void {
@@ -64,10 +65,10 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
   }
   /**
      * 透過此方法卡控該列資料是否允許被勾選
-     * 只有當 yn 等於 'Y' 的項目才能勾選
+     * 只有當 YN 等於 'Y' 的項目才能勾選
      */
-  isRowSelectable = (event: { data: QueryFIN23040Type1Response }) => {
-    return event.data?.yn === 'Y';
+  isRowSelectable = (data: QueryFIN23040Type1Response) => {
+    return data?.YN === 'Y';
   };
   /**
    * 點擊刪除按鈕事件
@@ -84,9 +85,9 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
         // 產生批次刪除的 Observable 陣列
         const deleteTasks = this.selectedItems.map(item =>
           this.fin23040Service.voidFIN23040({
-            stO_No: storeNo,
-            preP_NO: item.preP_NO,
-            redeeM_NO: item.redeeM_NO
+            STO_No: storeNo,
+            PREP_NO: item.PREP_NO,
+            REDEEM_NO: item.REDEEM_NO
           })
         );
 
@@ -94,7 +95,7 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
         forkJoin(deleteTasks).pipe(
           finalize(() => this.loading = false),
           untilDestroyed(this)
-        ).subscribe(res => {
+        ).subscribe(() => {
           this.messageService.successBubble('刪除成功');
           // 重新整理列表
           if (this.lastQuery) {

@@ -14,46 +14,52 @@ export interface QueryFIN23040Request {
   SortBy?: { field: string; order: number }[];
 }
 
-/** Type = 1：查詢已核銷清單 Response */
+/**
+ * Type = 1：查詢已核銷清單 Response
+ * 修復重點：後端 Program.cs 對 AddJsonOptions 設定 `PropertyNamingPolicy = null`，
+ * 代表 API 回傳的 JSON key 完全保留 C# 屬性原始大小寫(不會轉 camelCase)。
+ * 這裡欄位命名務必逐一對照 FIN23040Response.cs 的 C# 屬性名稱(大小寫全部照抄)，
+ * 之前(本頁新建當天)誤植成假想的 camelCase 寫法，導致所有欄位實際上都讀不到值(undefined)。
+ */
 export interface QueryFIN23040Type1Response {
-  id: number;
-  yn: string;        // 是否可刪除或修改 (Y/N)
-  redeeM_NO: string;  // 核銷單號
-  preP_NO: string;   // 預支單號
-  redeemAmt: number; // 核銷金額
+  ID: number;
+  YN: string;        // 是否可刪除或修改 (Y/N)
+  REDEEM_NO: string; // 核銷單號
+  PREP_NO: string;   // 預支單號
+  RedeemAmt: number; // 核銷金額
 }
 
 /** Type = 2：查詢所有尚未核銷的預支單號 Response */
 export interface QueryFIN23040Type2Response {
-  id: number;
-  preP_NO: string;
-  veN_No: string;
-  veN_Name: string;
-  appY_Date: string;
-  closE_Date: string;
-  paY_Date: string;
-  preP_Amt: number;
-  redeemedAmt: number;
-  balanceAmt: number;
+  ID: number;
+  PREP_NO: string;
+  VEN_No: string;
+  VEN_Name: string;
+  APPY_Date: string;
+  CLOSE_Date: string;
+  PAY_Date: string;
+  PREP_Amt: number;
+  RedeemedAmt: number;
+  BalanceAmt: number;
 }
 
 /** Type = 3：依預支單號查詢預支金額 Response */
 export interface QueryFIN23040Type3Response {
-  preP_Amt: number;
+  PREP_Amt: number;
 }
 
 // 聯集型別，方便組件端相容
 export type QueryFIN23040Response = QueryFIN23040Type1Response | QueryFIN23040Type2Response | QueryFIN23040Type3Response;
 /** 刪除/作廢暫付款核銷 Request */
 export interface VoidFIN23040Request {
-  stO_No: string;     // 分店編號 (對齊前端 Token 常規或資料欄位)
-  preP_NO: string;    // 預支單號
-  redeeM_NO: string;   // 核銷單號
+  STO_No: string;     // 分店編號
+  PREP_NO: string;    // 預支單號
+  REDEEM_NO: string;  // 核銷單號
 }
 /** 刪除/作廢暫付款核銷 Response */
 export interface VoidFIN23040Response {
-  success: boolean;
-  message: string | null;
+  Success: boolean;
+  Message: string | null;
 }
 
 /** 核銷明細查詢 Request (對應 SP_FIN23040Detail) */
@@ -64,25 +70,25 @@ export interface DetailFIN23040Request {
 
 /** 核銷明細查詢 Response (對應 SP_FIN23040Detail，一列對應一筆傳票分錄明細) */
 export interface DetailFIN23040Response {
-  id: number;
-  accNo: string;
-  accCName: string;
-  remark: string;
-  acP_Type: string;
-  puR_VoucherType: string | null;
-  puR_GUINo: string | null;
-  puR_GUIDate: string | null;
-  puR_ExpGLDate: string;
-  puR_VenUniform: string | null;
-  puR_DirectType: string | null;
-  puR_Amt: number | null;
-  puR_TaxType: string;
-  puR_Net: number | null;
-  puR_Tax: number | null;
-  projectNo: string | null;
-  puR_DiscNo: string | null;
-  puR_Type: string | null;
-  puR_Comb_Cnt: number | null;
+  ID: number;
+  AccNo: string;
+  AccCName: string;
+  Remark: string;
+  ACP_Type: string;
+  PUR_VoucherType: string | null;
+  PUR_GUINo: string | null;
+  PUR_GUIDate: string | null;
+  PUR_ExpGLDate: string;
+  PUR_VenUniform: string | null;
+  PUR_DirectType: string | null;
+  PUR_Amt: number | null;
+  PUR_TaxType: string;
+  PUR_Net: number | null;
+  PUR_Tax: number | null;
+  ProjectNo: string | null;
+  PUR_DiscNo: string | null;
+  PUR_Type: string | null;
+  PUR_Comb_Cnt: number | null;
 }
 
 /** 新增/修改暫付款核銷 Request (對應 SP_FIN23040Save) */
@@ -112,9 +118,9 @@ export interface SaveFIN23040Request {
 
 /** 新增/修改暫付款核銷 Response (對應 SP_FIN23040Save OUTPUT) */
 export interface SaveFIN23040Response {
-  success: boolean;
-  redeeM_NO: string | null;
-  message: string | null;
+  Success: boolean;
+  REDEEM_NO: string | null;
+  Message: string | null;
 }
 
 @Injectable({
