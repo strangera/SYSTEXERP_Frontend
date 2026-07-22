@@ -1,16 +1,15 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1;">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="預支單號" controlName="advanceSheetNumber"
-            [control]="dataForm.controls.advanceSheetNumber" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="預支單號" controlName="advanceSheetNumber" [control]="dataForm.controls.advanceSheetNumber"
+            [submitted]="submitted">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" controlName="requestDate"
@@ -18,8 +17,8 @@
           </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="預支金額" controlName="advanceAmount"
-            [control]="dataForm.controls.advanceAmount" [submitted]="submitted">
+          <app-input-number label="預支金額" controlName="advanceAmount" [control]="dataForm.controls.advanceAmount"
+            [submitted]="submitted">
           </app-input-number>
         </div>
       </div>
@@ -30,26 +29,31 @@
           </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="申請廠商/員工" controlName="requsetEmployee" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.requsetEmployee" [submitted]="submitted">
-          </app-dropdown>
+          <label>申請廠商/員工<span class="text-red-500"> *</span></label>
+          <div class="p-inputgroup">
+            <input pInputText readonly [value]="venDisplayValue" placeholder="請選擇廠商/員工" (click)="openPicker()" />
+            <button type="button" pButton icon="pi pi-search" (click)="openPicker()"
+              [disabled]="dataForm.disabled"></button>
+          </div>
+          <small class="p-error" *ngIf="submitted && dataForm.controls.requsetEmployee.invalid">必填</small>
+          <small *ngIf="venUniform" class="text-600">統編/身分證：{{ venUniform }}</small>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="付款方式" controlName="payoutMethod" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.payoutMethod" [submitted]="submitted">
+            [options]="payoutMethodOptions$ | async" [control]="dataForm.controls.payoutMethod" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="匯款銀行代號" controlName="transferAccount"
-            [control]="dataForm.controls.transferAccount" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="匯款銀行代號" controlName="transferAccount" [control]="dataForm.controls.transferAccount"
+            [submitted]="submitted">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="銀行帳號" controlName="bankAccount"
-            [control]="dataForm.controls.bankAccount" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="銀行帳號" controlName="bankAccount" [control]="dataForm.controls.bankAccount"
+            [submitted]="submitted">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="帳戶名稱" controlName="accountName" [control]="dataForm.controls.accountName"
@@ -60,7 +64,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="票據禁止背書轉讓" controlName="ticketTransfer" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.ticketTransfer" [submitted]="submitted">
+            [options]="ctrlYNOptions" [control]="dataForm.controls.ticketTransfer" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -77,7 +81,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="費用組織" controlName="organization" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.organization" [submitted]="submitted">
+            [options]="organizationOptions$ | async" [control]="dataForm.controls.organization" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -86,12 +90,12 @@
           </app-input-text>
         </div>
       </div>
-    </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-    </div>
+    </form>
   </p-panel>
 </div>
+
+<app-fin23010-ven-emp-picker [(visible)]="pickerVisible" (selected)="onPickerSelected($event)" />

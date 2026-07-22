@@ -99,6 +99,12 @@ export const pos6119TxnFgOptions = [
 export const pos6119pTxnFgOptions = [
   { label: '一般', value: 'C' },
 ];
+// 聯合 POS6118H 付款別 (NCML_PayType)，0=一般、I=分期付款、2=紅利抵扣
+export const pos6118hPayTypeOptions = [
+  { label: '一般', value: '0' },
+  { label: '分期付款', value: 'I' },
+  { label: '紅利抵扣', value: '2' },
+];
 
 export const POS611XOptions = [
   { label: '聯合', value: 'POS6118' },

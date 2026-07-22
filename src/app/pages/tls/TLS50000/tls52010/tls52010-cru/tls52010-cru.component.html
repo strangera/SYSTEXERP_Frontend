@@ -1,6 +1,13 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    @if (!isFormReadable) {
+    <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
+    <!-- 按鈕搬到 form 外，故意用 btnType="default" 覆寫 label/icon 還原「確認」外觀，
+           避免 btnType="submit" 強制產生的 type="submit" 在沒有關聯 form 的情況下留下語意隱患，
+           一律靠 (clickEvent) 顯式呼叫 onSubmit，行為與原本一致 -->
+    <app-button btnType="default" label="確認" icon="pi pi-check" [loading]="loading" (clickEvent)="onSubmit(dataForm)" />
+    }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
@@ -66,11 +73,6 @@
           [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)"
           (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.PO_Status === '0'"
           [insertDisabled]="!(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)" />
-      </div>
-
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
-        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
   </p-panel>

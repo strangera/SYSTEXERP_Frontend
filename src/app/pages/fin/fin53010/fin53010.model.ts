@@ -151,6 +151,7 @@ export interface InsertAPS3001DataBody {
   ACP_ExpectPayDate?: string | null;
   NoteDesc?: string | null;
   VEN_CTRLYN?: string | null;
+  PTA?: string | null;
 }
 
 /** Swagger insertAPS2002Data */
@@ -191,6 +192,7 @@ export interface InsertARS3001DataBody {
   AccNo?: string | null;
   NoteDesc?: string | null;
   ACCT_KEY?: string | null;
+  PTA?: string | null;
 }
 
 /** Swagger insertAPS4023Data */

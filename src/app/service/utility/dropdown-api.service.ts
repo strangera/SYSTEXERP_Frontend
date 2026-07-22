@@ -779,6 +779,18 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
+  /** 查詢廠商統一編號下拉(POS2013，value=統一編號 No，label='統編 - 廠商名稱') — 供 FIN23040 廠商統一編號欄位使用 */
+  queryPos2013VenUniform(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos2013Item, Pos2013Query>(
+      '/queryPOS2013_DropDownList',
+      'No',
+      'Name',
+      { VEN_Flag: '' }
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢廠商資料表(POS2013)(統一編號為主) */
   queryVendorNoGroup(body: any = { VEN_Flag: '' }): Observable<any[] | null> {
     return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, body).pipe(

@@ -3,6 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <!-- 基本資料 顯示畫面 -->
@@ -19,6 +20,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"
@@ -29,12 +31,14 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="cashApplicant" class="block">
+            <label for="PCS_UsrDisplay" class="block">
               零用金申請人
               <span class="required-star">*</span>
             </label>
+
             <p-inputGroup>
               <input
+                id="PCS_UsrDisplay"
                 type="text"
                 pInputText
                 formControlName="PCS_UsrDisplay"
@@ -42,19 +46,21 @@
                 class="user-display-input"
                 readonly
               />
+
               <button
                 *ngIf="dataForm.get('PCS_UsrDisplay')?.value"
                 type="button"
-                aria-label="清除"
+                aria-label="清除零用金申請人"
                 pButton
                 icon="pi pi-times"
                 class="clear-user-button"
                 (click)="clearUser('PCS')"
                 [disabled]="isRead"
               ></button>
+
               <button
                 type="button"
-                aria-label="搜尋"
+                aria-label="選擇零用金申請人"
                 pButton
                 icon="pi pi-angle-down"
                 (click)="openUserDialog('PCS_UsrNo')"
@@ -64,12 +70,14 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="cashApplicant" class="block">
+            <label for="Keep_UsrDisplay" class="block">
               零用金保管人
               <span class="required-star">*</span>
             </label>
+
             <p-inputGroup>
               <input
+                id="Keep_UsrDisplay"
                 type="text"
                 pInputText
                 formControlName="Keep_UsrDisplay"
@@ -77,19 +85,21 @@
                 class="user-display-input"
                 readonly
               />
+
               <button
                 *ngIf="dataForm.get('Keep_UsrDisplay')?.value"
                 type="button"
-                aria-label="清除"
+                aria-label="清除零用金保管人"
                 pButton
                 icon="pi pi-times"
                 class="clear-user-button"
                 (click)="clearUser('Keep')"
                 [disabled]="isRead"
               ></button>
+
               <button
                 type="button"
-                aria-label="搜尋"
+                aria-label="選擇零用金保管人"
                 pButton
                 icon="pi pi-angle-down"
                 (click)="openUserDialog('Keep_UsrNo')"
@@ -106,6 +116,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="保管人組織代號"
@@ -153,6 +164,7 @@
           [disabled]="isFormReadable"
         ></app-table-edit>
       </ng-container>
+
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
@@ -162,6 +174,7 @@
           [form]="dataForm"
           (click)="reset51070()"
         ></app-button>
+
         <app-button btnType="submit"></app-button>
       </div>
     </form>

@@ -31,6 +31,8 @@ export interface ApiResponse<T, F = undefined> {
   Message: string;
   TotalCount: number;
   TotalPage: number;
+  /** 合計金額(僅部分查詢作業有小計需求，未提供時為 undefined) */
+  TotalAmt?: number;
 }
 
 /**

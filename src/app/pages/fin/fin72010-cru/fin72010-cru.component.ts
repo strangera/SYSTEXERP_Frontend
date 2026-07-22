@@ -1,6 +1,6 @@
 import { CommonModule, NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72010Service, QueryFIN72010DetailDetailResponse, QueryFIN72010DetailRequest, saveFIN72010Request } from '@service/api/fin/fin72010.service';
@@ -24,6 +24,24 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
+
+interface UserOrgOption {
+  user_No: string;
+  user_Name: string;
+  Org_ID: string;
+  Org_Name: string;
+}
+
+interface LoginUserInfo {
+  user_No?: string;
+  user_Name?: string;
+  Org_ID?: string;
+  Org_Name?: string;
+  USER_No?: string;
+  USER_Name?: string;
+  org_ID?: string;
+  org_Name?: string;
+}
 
 @Component({
   selector: 'app-fin72010-cru',
@@ -57,17 +75,31 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   isRefreshing = false; // 是否是重製表單狀態(預設為false)
   orgdataForm: any;
   dataForm = this.formBuilder.group({
-    PCS_No: [{ value: null, disabled: true }, [Validators.required, Validators.maxLength(20)]], // 零用金單號
-    PCS_Date: [null, [Validators.required]], // 申請日期
-    PCS_UsrNo: [null, [Validators.required]], // 申請人
-    PCS_UsrName: [''], // 申請人名稱
-    PCS_UsrDisplay: [''], // 申請人顯示用
-    Keep_UsrNo: [null, [Validators.required]], // 保管人
-    Keep_UsrName: [''], // 保管人名稱
-    Keep_UsrDisplay: [''], // 保管人顯示用
-    PCS_OrgID: [null, [Validators.required, Validators.maxLength(20)]], // 申請人組織代號
-    Keep_OrgID: [null, [Validators.required, Validators.maxLength(20)]], // 保管人組織代號
-    //keepingUnitName: ['', [Validators.maxLength(20)]], // 保管單位名稱
+    PCS_No: new FormControl<string | null>(
+      { value: null, disabled: true },
+      [Validators.required, Validators.maxLength(20)]
+    ),
+    PCS_Date: new FormControl<Date | string | null>(null, [
+      Validators.required
+    ]),
+    PCS_UsrNo: new FormControl<string | null>(null, [
+      Validators.required
+    ]),
+    PCS_UsrName: new FormControl<string>('', { nonNullable: true }),
+    PCS_UsrDisplay: new FormControl<string>('', { nonNullable: true }),
+    Keep_UsrNo: new FormControl<string | null>(null, [
+      Validators.required
+    ]),
+    Keep_UsrName: new FormControl<string>('', { nonNullable: true }),
+    Keep_UsrDisplay: new FormControl<string>('', { nonNullable: true }),
+    PCS_OrgID: new FormControl<string | null>(null, [
+      Validators.required,
+      Validators.maxLength(20)
+    ]),
+    Keep_OrgID: new FormControl<string | null>(null, [
+      Validators.required,
+      Validators.maxLength(20)
+    ])
   });
   DetailColumn: EditColumn[] = []; // 明細表格欄位定義
 
@@ -87,11 +119,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   userQueryForm!: FormGroup;
 
   // 原始完整資料
-  allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  allUserResultData = signal<UserOrgOption[]>([]);
   // 畫面目前顯示資料
-  userResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  userResultData = signal<UserOrgOption[]>([]);
 
-  selectedUser: any = null;
+  selectedUser: UserOrgOption | null = null;
   selectedUserName = '';
   // 目前選擇的使用者類別
   currentUserTarget: 'PCS_UsrNo' | 'Keep_UsrNo' | null = null;
@@ -123,6 +155,13 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
 
   ngOnInit(): void {
     this.initializePage('FIN72010', this.dataForm);
+
+    // 新增模式：申請日期預設今天
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.patchValue({
+        PCS_Date: new Date()
+      });
+    }
     //導入下拉清單
     // this.loadOptions();
 
@@ -189,7 +228,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
           if (this.canAdd()) {
             const updateRequest: saveFIN72010Request = {
               ActionMode: 'I',
-              PCS_Date: this.dataForm.getRawValue().PCS_Date || '',
+              PCS_Date: this.formatDateToApi(this.dataForm.getRawValue().PCS_Date),
               PCS_UsrNo: this.dataForm.getRawValue().PCS_UsrNo || '',
               PCS_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().PCS_UsrNo),
               PCS_OrgID: this.dataForm.getRawValue().PCS_OrgID || '',
@@ -207,11 +246,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: item.PUR_Date,
+                  PUR_Date: this.formatDateToApi(item.PUR_Date),
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
-                  VEN_UniformNum: item.VEN_UniformNum,
+                  VEN_Uniform: item.VEN_Uniform ?? '',
                   PUR_DiscNo: item.PUR_DiscNo,
                   PCS_TaxType: item.PCS_TaxType,
                   PUR_DirectType: item.PUR_DirectType,
@@ -243,7 +282,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
             const editRequest: saveFIN72010Request = {
               ActionMode: 'U',
               PCS_No: this.dataForm.getRawValue().PCS_No || '',
-              PCS_Date: this.dataForm.getRawValue().PCS_Date || '',
+              PCS_Date: this.formatDateToApi(this.dataForm.getRawValue().PCS_Date),
               PCS_UsrNo: this.dataForm.getRawValue().PCS_UsrNo || '',
               PCS_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().PCS_UsrNo),
               PCS_OrgID: this.dataForm.getRawValue().PCS_OrgID || '',
@@ -269,11 +308,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: item.PUR_Date,
+                  PUR_Date: this.formatDateToApi(item.PUR_Date),
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
-                  VEN_UniformNum: item.VEN_UniformNum,
+                  VEN_Uniform: item.VEN_Uniform ?? '',
                   PUR_DiscNo: item.PUR_DiscNo,
                   PCS_TaxType: item.PCS_TaxType,
                   PUR_DirectType: item.PUR_DirectType,
@@ -367,6 +406,25 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     this.dataForm.reset(); // 重置表單
   }
 
+  /** 將 Date 或日期字串轉為後端需要的 YYYY-MM-DD */
+  private formatDateToApi(
+    value: Date | string | null | undefined
+  ): string {
+    if (!value) {
+      return '';
+    }
+
+    if (value instanceof Date) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    }
+
+    return value.substring(0, 10);
+  }
+
   // 將 Date 物件或 "YYYY-MM" 格式的字串轉換成 "YYYYMM" 格式的字串，以符合後端 API 的需求
   private formatDateToYm(value: Date | string | null | undefined): string {
     if (!value) {
@@ -423,32 +481,53 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   }
 
   // #region 明細檔 重製
-  reset51070() {
-    // 將明細檔重新刷新
-    if (this.crudstatus == CRUDStatus.Create) {
-      this.isRefreshing = true
+  reset51070(): void {
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.isRefreshing = true;
+
+      this.dataForm.reset({
+        PCS_No: null,
+        PCS_Date: new Date(),
+        PCS_UsrNo: null,
+        PCS_UsrName: '',
+        PCS_UsrDisplay: '',
+        Keep_UsrNo: null,
+        Keep_UsrName: '',
+        Keep_UsrDisplay: '',
+        PCS_OrgID: null,
+        Keep_OrgID: null
+      });
+
       this.Detaildata = [];
-      this.isRefreshing = false
-    } else if (this.crudstatus == CRUDStatus.Edit) {
-      if (this.orgdataForm) {
-        this.isRefreshing = true;
+      this.orgDetaildata = [];
+      this.selectedPOS2064Items = [];
 
-        const magno = this.dataForm.get('PLU_MagNo')?.value;
+      this.setDefaultApplicant();
 
-        this.loadDetail(magno || '')
-          .then(() => {
-            console.log('編輯模式重製完成', this.dataForm.value);
-            this.isRefreshing = false;
-          })
-          .catch(() => {
-            this.isRefreshing = false;
-          });
-
-        // this.Detaildata = this.orgDetaildata;
-      }
-    } else {
-      console.log('查看模式無須重製');
+      this.isRefreshing = false;
+      return;
     }
+
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const pcsNo = this.dataForm.get('PCS_No')?.value;
+
+      if (!pcsNo) {
+        return;
+      }
+
+      this.isRefreshing = true;
+      this.loadDetail(pcsNo)
+        .then(() => {
+          this.isRefreshing = false;
+        })
+        .catch(() => {
+          this.isRefreshing = false;
+        });
+
+      return;
+    }
+
+    console.log('查看模式無須重製');
   }
 
   // 判斷是否為空值
@@ -561,30 +640,29 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     this.selectedUser = null;
   }
 
-  onSelectUser(row: any): void {
-    if (!this.currentUserTarget) return;
-
-    const nameControlName = this.currentUserTarget.replace('No', 'Name');
-    const DisplayName = this.currentUserTarget.replace('No', 'Display');
-
-    this.dataForm.patchValue({
-      [this.currentUserTarget]: row.user_No ?? '',
-      [nameControlName]: row.user_Name ?? '',
-      [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
-    });
+  onSelectUser(row: UserOrgOption): void {
+    if (!this.currentUserTarget) {
+      return;
+    }
 
     if (this.currentUserTarget === 'PCS_UsrNo') {
       this.dataForm.patchValue({
-        PCS_OrgID: row.Org_ID, // 申請人組織代號
+        PCS_UsrNo: row.user_No ?? '',
+        PCS_UsrName: row.user_Name ?? '',
+        PCS_UsrDisplay: this.getUserDisplay(row),
+        PCS_OrgID: row.Org_ID ?? ''
       });
-    }
-    else if (this.currentUserTarget === 'Keep_UsrNo') {
+    } else {
       this.dataForm.patchValue({
-        Keep_OrgID: row.Org_ID, // 保管人組織代號
+        Keep_UsrNo: row.user_No ?? '',
+        Keep_UsrName: row.user_Name ?? '',
+        Keep_UsrDisplay: this.getUserDisplay(row),
+        Keep_OrgID: row.Org_ID ?? ''
       });
     }
 
     this.userDialogVisible = false;
+    this.selectedUser = null;
     this.currentUserTarget = null;
   }
 
@@ -616,15 +694,99 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     if (type === 'PCS') {
       this.dataForm.patchValue({
         PCS_UsrNo: null,
-        PCS_UsrDisplay: null,
+        PCS_UsrName: '',
+        PCS_UsrDisplay: '',
+        PCS_OrgID: null
       });
       return;
     }
 
     this.dataForm.patchValue({
       Keep_UsrNo: null,
-      Keep_UsrDisplay: null
+      Keep_UsrName: '',
+      Keep_UsrDisplay: '',
+      Keep_OrgID: null
     });
+  }
+
+  private getUserDisplay(user: UserOrgOption): string {
+    return `${user.user_No ?? ''} - ${user.user_Name ?? ''}`;
+  }
+
+  private getLoginUserInfo(): LoginUserInfo | null {
+    try {
+      const rawUserInfo = localStorage.getItem('UserInfo');
+
+      if (!rawUserInfo) {
+        console.warn('[FIN72010] localStorage 找不到 UserInfo');
+        return null;
+      }
+
+      return JSON.parse(rawUserInfo) as LoginUserInfo;
+    } catch (error) {
+      console.error('[FIN72010] UserInfo JSON 解析失敗：', error);
+      return null;
+    }
+  }
+
+  /** 新增模式預設申請人為目前登入者 */
+  private setDefaultApplicant(): void {
+    if (this.crudstatus !== CRUDStatus.Create) {
+      return;
+    }
+
+    if (this.dataForm.controls.PCS_UsrNo.value) {
+      return;
+    }
+
+    const loginUserInfo = this.getLoginUserInfo();
+    const loginUserNo = String(
+      loginUserInfo?.user_No ??
+      loginUserInfo?.USER_No ??
+      ''
+    ).trim();
+
+    if (!loginUserNo) {
+      console.warn('[FIN72010] UserInfo 找不到 user_No');
+      return;
+    }
+
+    const matchedUser = this.allUserResultData().find(
+      user =>
+        String(user.user_No ?? '').trim().toLowerCase() ===
+        loginUserNo.toLowerCase()
+    );
+
+    if (matchedUser) {
+      this.dataForm.patchValue({
+        PCS_UsrNo: matchedUser.user_No,
+        PCS_UsrName: matchedUser.user_Name,
+        PCS_UsrDisplay: this.getUserDisplay(matchedUser),
+        PCS_OrgID: matchedUser.Org_ID
+      });
+
+      console.log('[FIN72010] 已帶入登入申請人：', matchedUser);
+      return;
+    }
+
+    const loginUserName = String(
+      loginUserInfo?.user_Name ??
+      loginUserInfo?.USER_Name ??
+      ''
+    ).trim();
+
+    this.dataForm.patchValue({
+      PCS_UsrNo: loginUserNo,
+      PCS_UsrName: loginUserName,
+      PCS_UsrDisplay: loginUserName
+        ? `${loginUserNo} - ${loginUserName}`
+        : loginUserNo,
+      PCS_OrgID: null
+    });
+
+    console.warn(
+      `[FIN72010] 使用者清單找不到 ${loginUserNo}，無法帶入組織代號`
+    );
   }
 
   // 從下拉選單選項中取得使用者名稱
@@ -671,7 +833,13 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
 
         this.allUserResultData.set(options); // 原始完整資料
         this.userResultData.set(options);   // 畫面顯示資料
+
+        // 使用者清單載入完成後，再依登入帳號帶入申請人
+        this.setDefaultApplicant();
       },
+      error: error => {
+        console.error('[FIN72010] 使用者及組織資料載入失敗：', error);
+      }
     });
 
     // 保管單位

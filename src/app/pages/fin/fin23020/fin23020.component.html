@@ -1,8 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -10,18 +8,32 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="預支單號"
-              [startControl]="queryForm.controls.startAdvanceSheetNumber"
-              [endControl]="queryForm.controls.endAdvanceSheetNumber" [submitted]="submitted"></app-input-number-range>
+            <app-input-text-range label="預支單號" [startControl]="queryForm.controls.PREP_NOS"
+              [endControl]="queryForm.controls.PREP_NOE" [submitted]="submitted"></app-input-text-range>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" (onClick)="onSubmit(queryForm)" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report dataKey="id" [data]="data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
+    [lastQueryBody]="lastQuery" [showDelete]="false" [showManage]="false"
+    [queryFunction]="fin23020Service.queryFIN23020.bind(fin23020Service)" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [showCheckBox]="true" [footerData]="footerData" footerLabel="小計">
+    <header>
+      <div class="flex align-items-center gap-2">
+        <p-button styleClass="p-button-sm p-button-primary" label="預覽傳票" [rounded]="true" icon="pi pi-eye"
+          (click)="onPreview()" [disabled]="isPreviewDisabled"></p-button>
+        <div style="width: 160px">
+          <app-calendar label="傳票日期" calendarType="dateOne" [control]="voucherDateControl"></app-calendar>
+        </div>
+      </div>
+    </header>
+  </app-table-report>
 </div>

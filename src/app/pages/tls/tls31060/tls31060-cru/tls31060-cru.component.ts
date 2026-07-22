@@ -99,6 +99,7 @@ export class Tls31060CRUComponent implements OnChanges {
     return {
       TXN_DateS: q.TXN_DateS,
       TXN_DateE: q.TXN_DateE,
+      TLT_NO: q.TLT_NO ?? [],
       tlt_building: q.tlt_building ?? [],
       tlt_floor: q.tlt_floor ?? [],
       area_no: q.area_no ?? [],

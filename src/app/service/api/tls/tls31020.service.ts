@@ -29,6 +29,7 @@ export interface TLS31020PrintRequest extends TLS31020Request {
 export interface TLS31020DetailRequest {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
+  TLT_NO: string[]
   tlt_building: string[]
   tlt_floor: string;
   area_no: string[]

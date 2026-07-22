@@ -109,6 +109,7 @@ function mapStepApToInsert(
     ACP_ExpectPayDate: toYmd(row.acp_expect_pay_date ?? undefined, deps.datePipe),
     NoteDesc: row.note_desc,
     VEN_CTRLYN: row.ven_ctrlyn,
+    PTA: row.PTA ?? null,
   };
 }
 
@@ -125,6 +126,7 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
     AccNo: row.acc_no,
     NoteDesc: row.note_desc,
     ACCT_KEY: row.ACCT_KEY ?? undefined,
+    PTA: row.PTA ?? null,
   };
 }
 
