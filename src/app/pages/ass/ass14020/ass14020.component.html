@@ -1,50 +1,27 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="關帳" icon="pi pi-lock" [permissionCode]="Actions.CloseCase"
+      [disabled]="selectedItems.length === 0" [loading]="loading" (click)="onClose(queryForm)"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="關帳日期" [control]="queryForm.controls.closeDate"
-              [submitted]="submitted"></app-calendar>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="發票維護單號" controlName="maintenanceID"
-              [control]="queryForm.controls.maintenanceID" [submitted]="submitted"></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="未稅總金額" controlName="noTaxAmount" [control]="queryForm.controls.noTaxAmount"
-              [submitted]="submitted"></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="稅額" controlName="taxAmount" [control]="queryForm.controls.taxAmount"
-              [submitted]="submitted"></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="總金額" controlName="totalAmount" [control]="queryForm.controls.totalAmount"
-              [submitted]="submitted"></app-input-number>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+            <app-calendar calendarType="dateOne" label="關帳日期" controlName="CloseDate"
+              [control]="queryForm.controls.CloseDate" [submitted]="submitted"></app-calendar>
           </div>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
+</div>
+<div class="card">
+  <app-table-report tableKey="ass14020" dataKey="ID" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [showCheckBox]="true" [showDelete]="false" [showReportMode]="false" [showDetail]="false" [showEdit]="false"
+    [showManage]="false" [loading]="loading" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event">
+  </app-table-report>
 </div>
