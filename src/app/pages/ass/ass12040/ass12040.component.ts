@@ -6,7 +6,6 @@ import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
@@ -14,6 +13,7 @@ import { DropdownComponent } from '@shared/components/dropdown/dropdown.componen
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AddButton, formatAmount2, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
@@ -310,6 +310,11 @@ export class ASS12040Component extends BasicQueryPageComponent<ASS12040QueryRow>
       icon: 'pi pi-check',
       action: (row: ASS12040QueryRow) => this.onApprove(row),
       // disabled: () => !this.hasPermission(Actions.Audit),
+      // 已審核會DISABLED
+      disabled: (row: ASS12040QueryRow) => {
+        const status = String(row.SUBPOENA_STATUS ?? '').trim();
+        return status === '2';
+      },
     },
   ];
 
