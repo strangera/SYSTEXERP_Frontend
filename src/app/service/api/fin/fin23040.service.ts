@@ -50,12 +50,14 @@ export interface QueryFIN23040Type3Response {
 
 // 聯集型別，方便組件端相容
 export type QueryFIN23040Response = QueryFIN23040Type1Response | QueryFIN23040Type2Response | QueryFIN23040Type3Response;
+
 /** 刪除/作廢暫付款核銷 Request */
 export interface VoidFIN23040Request {
   STO_No: string;     // 分店編號
   PREP_NO: string;    // 預支單號
   REDEEM_NO: string;  // 核銷單號
 }
+
 /** 刪除/作廢暫付款核銷 Response */
 export interface VoidFIN23040Response {
   Success: boolean;
@@ -97,6 +99,11 @@ export interface SaveFIN23040Request {
   STO_No: string;
   PREP_NO: string;
   REDEEM_NO?: string | null; // I 時傳 null；U 時必填傳入既有單號
+  InvoiceList: FIN23040InvoiceItem[]; // 💡 改為多筆發票明細陣列 (對應後端 TVP)
+}
+
+/** 發票明細子項目 */
+export interface FIN23040InvoiceItem {
   AccNo: string;
   PUR_Remark: string;
   ACP_Type: string;
@@ -138,6 +145,7 @@ export class Fin23040Service {
       body
     );
   }
+
   /** 查詢暫付款核銷明細 (呼叫 SP_FIN23040Detail) */
   detailFIN23040(body: DetailFIN23040Request): Observable<ApiResponse<DetailFIN23040Response[]>> {
     return this.http.post<ApiResponse<DetailFIN23040Response[]>>(
@@ -145,6 +153,7 @@ export class Fin23040Service {
       body
     );
   }
+
   /** 新增/修改暫付款核銷 (呼叫 SP_FIN23040Save) */
   saveFIN23040(body: SaveFIN23040Request): Observable<ApiResponse<SaveFIN23040Response>> {
     return this.http.post<ApiResponse<SaveFIN23040Response>>(
@@ -152,6 +161,7 @@ export class Fin23040Service {
       body
     );
   }
+
   /** 刪除/作廢暫付款核銷 (呼叫 SP_FIN23040Void) */
   voidFIN23040(body: VoidFIN23040Request): Observable<ApiResponse<VoidFIN23040Response>> {
     return this.http.post<ApiResponse<VoidFIN23040Response>>(
