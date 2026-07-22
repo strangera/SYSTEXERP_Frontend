@@ -94,6 +94,8 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   ReflNo?: string;
   PTA?: string;
   recKey?: string;
+  /** 立帳已被沖帳 → 該列不可編輯 */
+  _ptaLocked?: boolean;
 }
 
 export interface FIN53010Payload extends ApiRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {

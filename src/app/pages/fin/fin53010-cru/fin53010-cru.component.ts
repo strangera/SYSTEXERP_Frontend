@@ -644,6 +644,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
     this._lastAppliedDetailTableFingerprint = fp;
+    this._ptaLockKey = ''; // 重新載入 → 讓沖帳鎖定重查
 
     this.tableData.set(data.Details.map((v, index) => {
       const accNo = String(v.AccNo ?? '').trim(); // DB CHAR 欄位有 padding，trim 後才對得上下拉選項 value
@@ -669,6 +670,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       tableSample: rows.slice(0, 5),
     });
   }, { allowSignalWrites: !0 });
+
+  /** 已被沖帳的立帳列不可編輯：載入傳票後查 checkGLS3003PtaLocked，於列上標記 _ptaLocked */
+  private _ptaLockKey = '';
+  private readonly ptaLockEffect = effect(() => {
+    if (this.isFormCreateable) return;
+    const rows = this.tableData();
+    const lizIds = rows.filter(r => r.id && r.PTA).map(r => r.id);
+    const key = lizIds.slice().sort((a, b) => a - b).join(',');
+    if (!lizIds.length || key === this._ptaLockKey) return;
+    this._ptaLockKey = key;
+
+    this.service.checkGLS3003PtaLocked({ Gls3002Ids: lizIds }).pipe(take(1)).subscribe(res => {
+      const locked = res.Data ?? [];
+      if (!locked.length) return;
+      const lockedSet = new Set(locked.map(d => d.Gls3002Id));
+      this.tableData.update(rs => rs.map(r =>
+        (r.id != null && lockedSet.has(r.id)) ? { ...r, _ptaLocked: true } : r));
+    });
+  }, { allowSignalWrites: !0 });
+
+  /** 該列是否因立帳已被沖帳而鎖定（不可編輯） */
+  private isRowLocked = (rowData?: FIN53010DetailTable): boolean => !!rowData?._ptaLocked;
 
   // Template 相關屬性
   public readonly vouTermSearchTemp = signal<string>('');
@@ -710,7 +733,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionValue: 'value',
         templateLabel: 'label',
         validate: [this.validateRequired],
-        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => !!rowData?.id,
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => !!rowData?.id || this.isRowLocked(rowData),
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
@@ -728,6 +751,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         type: 'template',
         templateDisplayField: 'DetailName',
         templateRef: this.venUsrTemplate(),
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'DetailName',
@@ -741,6 +765,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '摘要',
         textAlign: 'left',
         type: 'input',
+        // 摘要即使立帳被沖帳仍可修改
       },
       {
         field: 'AccAmtD',
@@ -750,7 +775,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
         // DB 已存列：貸方有值時禁止輸入借方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
-          !!rowData?.id && (rowData.AccAmtC ?? 0) > 0,
+          (!!rowData?.id && (rowData.AccAmtC ?? 0) > 0) || this.isRowLocked(rowData),
       },
       {
         field: 'AccAmtC',
@@ -760,7 +785,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
         // DB 已存列：借方有值時禁止輸入貸方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
-          !!rowData?.id && (rowData.AccAmtD ?? 0) > 0,
+          (!!rowData?.id && (rowData.AccAmtD ?? 0) > 0) || this.isRowLocked(rowData),
       },
       {
         field: 'ORG_ID',
@@ -772,6 +797,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionLabel: 'label',
         optionValue: 'value',
         validate: [this.validateRequired],
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'PTA',
@@ -789,6 +815,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         },
         disabled: (_v, _i, rowData) => {
           if (this.isFormReadable) return true;
+          if (this.isRowLocked(rowData)) return true;
           if (!rowData?.AccNo) return true;
           const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
           if (ABAT_YN !== 'Y') return true;
@@ -819,12 +846,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         options: () => this.service.refNameOptions(),
         optionLabel: 'label',
         optionValue: 'value',
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'recKey',
         header: '對帳KEY值',
         textAlign: 'left',
         type: 'input',
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
     ];
   });
