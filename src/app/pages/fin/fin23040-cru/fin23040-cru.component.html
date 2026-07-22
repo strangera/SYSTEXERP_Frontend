@@ -24,8 +24,7 @@
       <div class="mt-3">
         <app-table-edit tableKey="fin23040-detail" title="核銷明細" [data]="data" [columns]="columns" [showCheckBox]="true"
           [showInsert]="true" [showDelete]="true" [canInsert]="true" [showFooter]="true" [disabled]="detailDisabled"
-          [loading]="loading" (dataChange)="data = $event" (delete)="onDeleteRows($event)"
-          [defaultInsertData]="defaultInsertData"></app-table-edit>
+          [loading]="loading" (dataChange)="data = $event" [defaultInsertData]="defaultInsertData"></app-table-edit>
       </div>
 
       @if (!isFormReadable) {

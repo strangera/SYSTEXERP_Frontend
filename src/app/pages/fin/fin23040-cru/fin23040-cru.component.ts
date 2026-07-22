@@ -144,7 +144,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     },
     {
       field: 'purGUINo', header: '發票/收據號碼', width: '140px', type: 'input', textAlign: 'left',
-      validate: [this.guiNoRule, this.maxLengthRule(10)],
+      validate: [this.requiredRule, this.guiNoRule, this.maxLengthRule(10)],
     },
     { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [this.requiredRule] },
     { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [this.requiredRule] },
@@ -392,37 +392,6 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       }
     });
   }
-
-  onDeleteRows(fullData: DetailRow[]): void {
-    const toVoid = fullData.filter(r => r._dataStatus === 'deleted' && r.redeemNo);
-    if (toVoid.length === 0) return;
-
-    const prepNo = this.dataForm.getRawValue().prepNo ?? '';
-    const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
-
-    this.messageService.confirm({
-      header: '作廢確認',
-      message: `刪除將立即作廢已存檔的核銷單，確定要繼續嗎？`,
-      accept: () => {
-        this.loading = true;
-        const redeemNoToVoid = toVoid[0].redeemNo as string;
-        this.fin23040Service.voidFIN23040({
-          STO_No: storeNo,
-          PREP_NO: prepNo,
-          REDEEM_NO: redeemNoToVoid,
-        }).pipe(
-          finalize(() => (this.loading = false)),
-        ).subscribe(res => {
-          if (!res.Data?.Success) {
-            this.messageService.errorBubble(res.Data?.Message || '作廢失敗', '作廢失敗');
-          } else {
-            this.messageService.successBubble('作廢成功');
-          }
-        });
-      },
-    });
-  }
-
   private toDateString(value: Date | string | null | undefined): string {
     if (!value) return '';
     if (value instanceof Date) {

@@ -69,6 +69,10 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
   isRowSelectable = (data: QueryFIN23040Type1Response) => {
     return data?.YN === 'Y';
   };
+
+  editDisabled = (data: QueryFIN23040Type1Response) => {
+    return data?.YN === 'N';
+  };
   /**
    * 點擊刪除按鈕事件
    */
