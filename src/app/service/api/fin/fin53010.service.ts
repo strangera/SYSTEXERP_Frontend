@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, QueryGLS3003AbatAcctRequest, QueryGLS3003AbatAcctResponse, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, QueryGLS3003AbatAcctRequest, QueryGLS3003AbatAcctResponse, CheckGLS3003PtaLockedRequest, CheckGLS3003PtaLockedResponse, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -373,6 +373,16 @@ export class FIN53010Service {
       catchError(err => {
         this.logger.error('API queryGLS3003AbatAcct 失敗:', err);
         return of({ Status: '9999', Data: [], Message: '查詢失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<QueryGLS3003AbatAcctResponse[]>);
+      }),
+    );
+  }
+
+  public checkGLS3003PtaLocked(request: CheckGLS3003PtaLockedRequest): Observable<ApiResponse<CheckGLS3003PtaLockedResponse[]>> {
+    return this.http.post<ApiResponse<CheckGLS3003PtaLockedResponse[]>>(`${apiUrl}/checkGLS3003PtaLocked`, request).pipe(
+      take(1),
+      catchError(err => {
+        this.logger.error('API checkGLS3003PtaLocked 失敗:', err);
+        return of({ Status: '9999', Data: [], Message: '檢查失敗', Error: null, Meta: { Timestamp: '', RequestId: '' }, TotalCount: 0, TotalPage: 0 } as ApiResponse<CheckGLS3003PtaLockedResponse[]>);
       }),
     );
   }

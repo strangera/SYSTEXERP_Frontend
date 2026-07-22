@@ -29,7 +29,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
-import { concatMap, EMPTY, finalize, forkJoin, Observable, startWith, switchMap, take, tap } from 'rxjs';
+import { concatMap, EMPTY, finalize, forkJoin, map, Observable, of, startWith, switchMap, take, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
 import { mapFin53010ForUpdateResponseToStepRows } from '../fin53010/fin53010-detail-for-update.mapper';
 import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010PayloadMapperDeps } from '../fin53010/fin53010-payload.mapper';
@@ -3232,6 +3232,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       },
     });
   }
+
+  /**
+   * 傳票明細刪除前的檢查（供 app-table-edit 的 beforeDelete 使用）。
+   * 立帳明細（有 PTA 且已存 DB）若已被沖帳 → 回 false 擋下刪除。
+   */
+  public ptaDeleteGuard = (rows: (FIN53010DetailTable & EditColumnExtend)[]): Observable<boolean> => {
+    const lockGls3002Ids = (rows ?? [])
+      .filter(r => r?.id && r.PTA)
+      .map(r => r.id as number);
+
+    if (!lockGls3002Ids.length) return of(true);
+
+    return this.service.checkGLS3003PtaLocked({ Gls3002Ids: lockGls3002Ids }).pipe(
+      take(1),
+      map(res => {
+        const locked = res.Data ?? [];
+        if (locked.length) {
+          const ptas = locked.map(l => l.PTA).filter(Boolean).join('、');
+          this.messageService.errorBubble(`立沖代號 ${ptas} 之立帳已被沖帳，無法刪除`);
+          return false;
+        }
+        return true;
+      }),
+    );
+  };
 
   public getVocherTemplate(): void {
     const payload: FIN53010Payload = {

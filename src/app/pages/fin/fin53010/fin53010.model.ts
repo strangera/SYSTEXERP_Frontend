@@ -1148,3 +1148,14 @@ export interface QueryGLS3003AbatAcctResponse {
   VEN_Uniform?: string | null;
   VEN_ShortName?: string | null;
 }
+
+export interface CheckGLS3003PtaLockedRequest {
+  Gls3002Ids: number[];
+}
+
+export interface CheckGLS3003PtaLockedResponse {
+  Gls3002Id: number;
+  PTA?: string | null;
+  AccNo?: string | null;
+  AccAmt?: number | null;
+}
