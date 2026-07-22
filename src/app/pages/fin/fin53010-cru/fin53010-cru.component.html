@@ -226,6 +226,7 @@
           [showCheckBox]="!isFormReadable && !isPostedEdit"
           [showReorder]="!isFormReadable && !isPostedEdit"
           [disabled]="isFormReadable || isPostedEdit"
+          [beforeDelete]="ptaDeleteGuard"
           (fieldChange)="onFieldChange($event)"
           (dataChange)="onDataChange($event)"
           [data]="tableData()"

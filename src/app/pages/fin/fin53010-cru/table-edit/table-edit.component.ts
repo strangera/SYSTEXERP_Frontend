@@ -18,6 +18,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
+import { Observable, take } from 'rxjs';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
@@ -86,6 +87,8 @@ export class TableEditComponent implements OnChanges {
   // Header(左) 相關
   @Input() showDelete = true;                 // 是否顯示 刪除按鈕
   @Output() delete = new EventEmitter<any>(); // 刪除事件
+  // 刪除前的非同步守衛：回傳 false 則中止刪除（由守衛自行提示訊息）
+  @Input() beforeDelete?: (rows: any[]) => Observable<boolean>;
   @Input() showInsert = false;                // 是否顯示 新增按鈕
   @Input() insertText: string | undefined;               // 新增按鈕文字
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
@@ -292,31 +295,44 @@ export class TableEditComponent implements OnChanges {
       return;
     }
 
+    // 實際執行刪除
+    const doDelete = () => {
+      // 呼叫 Service 執行刪除邏輯
+      const { fullData, cleanData } = this.dataService.deleteRows(
+        selectedItems,
+        this.dataKey,
+        this.dataStatusField,
+        this.dataStatusValue,
+        this.canInsert,
+        this.keepDeletedData
+      );
+
+      this.delete.emit(fullData); // 傳遞包含 Deleted 狀態的完整資料
+      this.selectedItems = [];
+
+      // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
+      if (this._tableData.length === 0 && this.canInsert) {
+        this.insertRow();
+      }
+      this._calculatedFooterData = this.calculateFooterData();
+      // 3. 發射資料給父層
+      this.dataChange.emit(cleanData);
+      this.cdr.markForCheck();
+    };
+
     // 顯示確認對話框
     this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
-        // 呼叫 Service 執行刪除邏輯
-        const { fullData, cleanData } = this.dataService.deleteRows(
-          selectedItems,
-          this.dataKey,
-          this.dataStatusField,
-          this.dataStatusValue,
-          this.canInsert,
-          this.keepDeletedData
-        );
-
-        this.delete.emit(fullData); // 傳遞包含 Deleted 狀態的完整資料
-        this.selectedItems = [];
-
-        // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
-        if (this._tableData.length === 0 && this.canInsert) {
-          this.insertRow();
+        // 有守衛時先檢查（例：立帳已被沖帳不可刪），回 false 則中止
+        if (this.beforeDelete) {
+          this.beforeDelete(selectedItems).pipe(take(1)).subscribe(ok => {
+            if (ok) doDelete();
+            this.cdr.markForCheck();
+          });
+          return;
         }
-        this._calculatedFooterData = this.calculateFooterData();
-        // 3. 發射資料給父層
-        this.dataChange.emit(cleanData);
-        this.cdr.markForCheck();
+        doDelete();
       }
     });
   }

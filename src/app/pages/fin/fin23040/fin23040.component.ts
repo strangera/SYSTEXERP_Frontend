@@ -41,7 +41,6 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
     { field: 'REDEEM_NO', header: '核銷單號', align: 'left' },
     { field: 'PREP_NO', header: '預支單號', align: 'left' },
     { field: 'RedeemAmt', header: '核銷金額', format: formatAmount, align: 'right' },
-    { field: 'YN', header: '可否刪修', align: 'center', width: '90px' },
   ];
 
   ngOnInit(): void {
@@ -69,6 +68,10 @@ export class FIN23040Component extends BasicQueryPageComponent<QueryFIN23040Type
      */
   isRowSelectable = (data: QueryFIN23040Type1Response) => {
     return data?.YN === 'Y';
+  };
+
+  editDisabled = (data: QueryFIN23040Type1Response) => {
+    return data?.YN === 'N';
   };
   /**
    * 點擊刪除按鈕事件

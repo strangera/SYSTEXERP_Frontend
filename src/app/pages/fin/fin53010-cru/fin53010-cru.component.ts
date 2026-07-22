@@ -5,8 +5,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
-import { FIN32030Service, QueryAbatAcctResponse } from '@service/api/fin/fin32030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
+import { QueryGLS3003AbatAcctResponse } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
@@ -29,7 +29,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
-import { concatMap, EMPTY, finalize, forkJoin, Observable, startWith, switchMap, take, tap } from 'rxjs';
+import { concatMap, EMPTY, finalize, forkJoin, map, Observable, of, startWith, switchMap, take, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
 import { mapFin53010ForUpdateResponseToStepRows } from '../fin53010/fin53010-detail-for-update.mapper';
 import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010PayloadMapperDeps } from '../fin53010/fin53010-payload.mapper';
@@ -210,8 +210,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   // 立沖代號選取彈窗
   showPtaDialog = false;
   ptaDialogLoading = false;
-  ptaDialogSelectedItem: QueryAbatAcctResponse | null = null;
-  ptaDialogData: QueryAbatAcctResponse[] = [];
+  ptaDialogSelectedItem: QueryGLS3003AbatAcctResponse | null = null;
+  ptaDialogData: QueryGLS3003AbatAcctResponse[] = [];
   ptaFilterForm = this.formBuilder.group({
     VouNo: [''],
     PTA: [''],
@@ -644,6 +644,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
     this._lastAppliedDetailTableFingerprint = fp;
+    this._ptaLockKey = ''; // 重新載入 → 讓沖帳鎖定重查
 
     this.tableData.set(data.Details.map((v, index) => {
       const accNo = String(v.AccNo ?? '').trim(); // DB CHAR 欄位有 padding，trim 後才對得上下拉選項 value
@@ -669,6 +670,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       tableSample: rows.slice(0, 5),
     });
   }, { allowSignalWrites: !0 });
+
+  /** 已被沖帳的立帳列不可編輯：載入傳票後查 checkGLS3003PtaLocked，於列上標記 _ptaLocked */
+  private _ptaLockKey = '';
+  private readonly ptaLockEffect = effect(() => {
+    if (this.isFormCreateable) return;
+    const rows = this.tableData();
+    const lizIds = rows.filter(r => r.id && r.PTA).map(r => r.id);
+    const key = lizIds.slice().sort((a, b) => a - b).join(',');
+    if (!lizIds.length || key === this._ptaLockKey) return;
+    this._ptaLockKey = key;
+
+    this.service.checkGLS3003PtaLocked({ Gls3002Ids: lizIds }).pipe(take(1)).subscribe(res => {
+      const locked = res.Data ?? [];
+      if (!locked.length) return;
+      const lockedSet = new Set(locked.map(d => d.Gls3002Id));
+      this.tableData.update(rs => rs.map(r =>
+        (r.id != null && lockedSet.has(r.id)) ? { ...r, _ptaLocked: true } : r));
+    });
+  }, { allowSignalWrites: !0 });
+
+  /** 該列是否因立帳已被沖帳而鎖定（不可編輯） */
+  private isRowLocked = (rowData?: FIN53010DetailTable): boolean => !!rowData?._ptaLocked;
 
   // Template 相關屬性
   public readonly vouTermSearchTemp = signal<string>('');
@@ -710,7 +733,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionValue: 'value',
         templateLabel: 'label',
         validate: [this.validateRequired],
-        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => !!rowData?.id,
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => !!rowData?.id || this.isRowLocked(rowData),
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
@@ -728,6 +751,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         type: 'template',
         templateDisplayField: 'DetailName',
         templateRef: this.venUsrTemplate(),
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'DetailName',
@@ -741,6 +765,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '摘要',
         textAlign: 'left',
         type: 'input',
+        // 摘要即使立帳被沖帳仍可修改
       },
       {
         field: 'AccAmtD',
@@ -750,7 +775,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
         // DB 已存列：貸方有值時禁止輸入借方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
-          !!rowData?.id && (rowData.AccAmtC ?? 0) > 0,
+          (!!rowData?.id && (rowData.AccAmtC ?? 0) > 0) || this.isRowLocked(rowData),
       },
       {
         field: 'AccAmtC',
@@ -760,7 +785,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
         // DB 已存列：借方有值時禁止輸入貸方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
-          !!rowData?.id && (rowData.AccAmtD ?? 0) > 0,
+          (!!rowData?.id && (rowData.AccAmtD ?? 0) > 0) || this.isRowLocked(rowData),
       },
       {
         field: 'ORG_ID',
@@ -772,6 +797,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionLabel: 'label',
         optionValue: 'value',
         validate: [this.validateRequired],
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'PTA',
@@ -789,6 +815,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         },
         disabled: (_v, _i, rowData) => {
           if (this.isFormReadable) return true;
+          if (this.isRowLocked(rowData)) return true;
           if (!rowData?.AccNo) return true;
           const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
           if (ABAT_YN !== 'Y') return true;
@@ -819,12 +846,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         options: () => this.service.refNameOptions(),
         optionLabel: 'label',
         optionValue: 'value',
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
         field: 'recKey',
         header: '對帳KEY值',
         textAlign: 'left',
         type: 'input',
+        disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
     ];
   });
@@ -1072,7 +1101,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   constructor(
     public readonly service: FIN53010Service,
-    private readonly fin32030Service: FIN32030Service,
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
@@ -3153,6 +3181,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (this.isAutoCodeRow(row) && !row.PTA) {
             return { ...row, PTA: `#${counter++}` };
           }
+          // 曾是 auto-code row（有 #N）但條件已不符（科目換掉、金額清空、方向切換）→ 清除暫存 PTA
+          if (row.PTA?.startsWith('#') && !this.isAutoCodeRow(row)) {
+            return { ...row, PTA: undefined };
+          }
           return row;
         })
       );
@@ -3229,6 +3261,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       },
     });
   }
+
+  /**
+   * 傳票明細刪除前的檢查（供 app-table-edit 的 beforeDelete 使用）。
+   * 立帳明細（有 PTA 且已存 DB）若已被沖帳 → 回 false 擋下刪除。
+   */
+  public ptaDeleteGuard = (rows: (FIN53010DetailTable & EditColumnExtend)[]): Observable<boolean> => {
+    const lockGls3002Ids = (rows ?? [])
+      .filter(r => r?.id && r.PTA)
+      .map(r => r.id as number);
+
+    if (!lockGls3002Ids.length) return of(true);
+
+    return this.service.checkGLS3003PtaLocked({ Gls3002Ids: lockGls3002Ids }).pipe(
+      take(1),
+      map(res => {
+        const locked = res.Data ?? [];
+        if (locked.length) {
+          const ptas = locked.map(l => l.PTA).filter(Boolean).join('、');
+          this.messageService.errorBubble(`立沖代號 ${ptas} 之立帳已被沖帳，無法刪除`);
+          return false;
+        }
+        return true;
+      }),
+    );
+  };
 
   public getVocherTemplate(): void {
     const payload: FIN53010Payload = {
@@ -3356,9 +3413,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     const currentPta = rowData.PTA;
     this.ptaDialogLoading = true;
-    this.fin32030Service.queryAbatAcct({ AccNo: rowData.AccNo })
+    this.service.queryGLS3003AbatAcct({ AccNo: rowData.AccNo })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
-      .subscribe(response => {
+      .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
         this.ptaDialogData = response.Data ?? [];
         if (currentPta) {
           const match = this.ptaDialogData.find(item => item.PTA === currentPta);
@@ -3376,21 +3433,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   filterPtaDialog(): void {
-    const { VouNo, PTA, VEN_No } = this.ptaFilterForm.value;
+    const { VouNo, PTA } = this.ptaFilterForm.value;
     this.ptaDialogLoading = true;
-    this.fin32030Service.queryAbatAcct({
+    this.service.queryGLS3003AbatAcct({
       AccNo: this.currentEditingPtaAccNo,
       VouNo: VouNo || null,
       PTA: PTA || null,
-      VEN_No: VEN_No || null,
     })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
-      .subscribe(response => {
+      .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
         this.ptaDialogData = response.Data ?? [];
       });
   }
 
-  onPtaRowSelect(event: { data?: QueryAbatAcctResponse }): void {
+  onPtaRowSelect(event: { data?: QueryGLS3003AbatAcctResponse }): void {
     if (event.data) {
       this.ptaDialogSelectedItem = event.data;
     }
@@ -3400,7 +3456,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     let selected = this.ptaDialogSelectedItem;
     if (!selected) {
       const raw = this.ptaDialogTable?.selectedItems;
-      selected = Array.isArray(raw) ? (raw[0] ?? null) : (raw as QueryAbatAcctResponse ?? null);
+      selected = Array.isArray(raw) ? (raw[0] ?? null) : (raw as QueryGLS3003AbatAcctResponse ?? null);
     }
     if (!selected) return;
 

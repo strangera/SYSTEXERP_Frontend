@@ -29,8 +29,10 @@
 <div class="card">
   <!-- 調整：[showDelete] 改為 true，並將傳入的 event 移除改為標準寫法 -->
   <app-table-report dataKey="ID" [data]="data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
-    [lastQueryBody]="lastQuery" [showDelete]="true" [showManage]="false" (delete)="onDelete()" (detail)="onEdit($event)"
+    [lastQueryBody]="lastQuery" [showDelete]="true" [showManage]="true" (delete)="onDelete()"
+    (detail)="onDetail($event)" (edit)="onEdit($event)"
     [queryFunction]="fin23040Service.queryFIN23040.bind(fin23040Service)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="true" [isRowSelectable]="isRowSelectable">
+    (selectionChange)="selectedItems = $event" [showCheckBox]="true" [isRowSelectable]="isRowSelectable"
+    [editDisabled]="editDisabled">
   </app-table-report>
 </div>

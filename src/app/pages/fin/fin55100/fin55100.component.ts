@@ -40,7 +40,7 @@ export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Resp
     CmpDateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
     CmpDateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
     // 類別預設為 '1' (明細)
-    Ledger_MD: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    Ledger_MD: this.formBuilder.nonNullable.control('1', [Validators.required]),
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     ShowZero: this.formBuilder.nonNullable.control(false),

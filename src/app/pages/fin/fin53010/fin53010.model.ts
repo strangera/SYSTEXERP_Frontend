@@ -94,6 +94,8 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   ReflNo?: string;
   PTA?: string;
   recKey?: string;
+  /** 立帳已被沖帳 → 該列不可編輯 */
+  _ptaLocked?: boolean;
 }
 
 export interface FIN53010Payload extends ApiRequest, Partial<Pick<FIN53010Basic, 'VouType' | 'PostFlag' | 'VouAccType'>> {
@@ -1129,4 +1131,33 @@ export interface FIN53010StepBankDeposit {
   status?: string;
   note_desc?: string;
   txn_date?: Date | null;
+}
+
+export interface QueryGLS3003AbatAcctRequest {
+  AccNo?: string | null;
+  VouNo?: string | null;
+  PTA?: string | null;
+}
+
+export interface QueryGLS3003AbatAcctResponse {
+  RowNum?: number | null;
+  VouNo?: string | null;
+  NoteDesc?: string | null;
+  DebitAmt?: number | null;
+  CreditAmt?: number | null;
+  PTA?: string | null;
+  VEN_No?: string | null;
+  VEN_Uniform?: string | null;
+  VEN_ShortName?: string | null;
+}
+
+export interface CheckGLS3003PtaLockedRequest {
+  Gls3002Ids: number[];
+}
+
+export interface CheckGLS3003PtaLockedResponse {
+  Gls3002Id: number;
+  PTA?: string | null;
+  AccNo?: string | null;
+  AccAmt?: number | null;
 }
