@@ -1,18 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
 import { TranslateModule } from '@ngx-translate/core';
+import { convertDateToYYYYMM } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { AuthService } from '../../../service/system/auth.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { NotificationService } from '../../../shared/components/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ass14040Request, Ass14040Service } from 'src/app/service/api/ass/ass14040.service';
+import { BasicQueryPageComponent } from 'src/app/shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 //3.1.4.4  庫存成本月結作業
 @Component({
@@ -21,132 +17,112 @@ import { ValidationService } from '../../../shared/service/validation.service';
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
-export class ASS14040Component extends BasicQpageComponent implements OnInit {
-  //
+export class ASS14040Component extends BasicQueryPageComponent<any> implements OnInit {
+  // 查詢
   queryForm = this.formBuilder.group({
-    checkoutYM: [, [Validators.required]], // 結算年月
+    YYYYMM: [null, [Validators.required]],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '傳票編號', visible: true },
-    { field: 'col2', header: '傳票種類', visible: true },
-    { field: 'col3', header: '發票維護單號', visible: true },
-    { field: 'col4', header: '傳票日期', visible: true },
-    { field: 'col5', header: '傳票狀態', visible: true },
-    { field: 'col6', header: '傳票摘要', visible: true },
-    { field: 'col7', header: '結帳單號', visible: true },
-    // { field: 'col8', header: '扣抵別', visible: true },
-    // { field: 'col9', header: '資產狀態', visible: true },
-    // { field: 'col10', header: '保管單位', visible: true },
-
-    // { field: 'col11', header: '會計科目代號', visible: true },
-    // { field: 'col12', header: '購入金額', visible: true },
-    // { field: 'col13', header: '驗收單號', visible: true },
-
-    // { field: 'col14', header: '入帳日期', visible: true },
-    // { field: 'col15', header: '條件篩選', visible: true },
-    // { field: 'col16', header: '顯示筆數', visible: true },
-
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  latestMessage = ''; // 或預設為 '最近結算年月: -'
   // ----------------------------------------------------------------
-
-  // subpoenaStatusOptions: any[] = [
-  //   { value: 0, label: '未拋轉' },
-  //   { value: 1, label: '已拋轉' },
-  //   { value: 2, label: '已退回' },
-  // ];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private ass14040Service: Ass14040Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310031';
-    this.cruPage = '/ASS1000/ASS14040CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS14040', '', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      console.log('庫存月結request:', JSON.stringify(frm.value, null, 2));
+      this.ass14040Service.queryASS14040().subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.latestMessage = response.Data?.Message || '';
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  // 試算
+  onCalc(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = this.buildCalcRequest(frm);
+      if (!body) {
+        return;
+      }
+      this.ass14040Service.calcASS14040(body).subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data?.Success) {
+            this.messageService.successBubble(response.Data?.Message || '試算成功');
+          } else {
+            this.messageService.errorBubble(response.Data?.Message || '試算失敗');
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
+
+  // 結算
+  onClose(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = this.buildCalcRequest(frm);
+      if (!body) {
+        return;
+      }
+      this.ass14040Service.closeASS14040(body).subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data?.Success) {
+            this.messageService.successBubble(response.Data?.Message || '結算成功');
+            this.onSubmit(frm);
+          } else {
+            this.messageService.errorBubble(response.Data?.Message || '結算失敗');
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
+
+  private buildCalcRequest(frm: FormGroup): ass14040Request | null {
+    const user = this.authService.currentUserValue;
+    if (!user) {
+      this.messageService.errorBubble('無法取得使用者資訊');
+      this.loading = false;
+      this.messageService.unblockUi();
+      return null;
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    return {
+      YYYYMM: convertDateToYYYYMM(frm.value.YYYYMM),
+    };
   }
 }
