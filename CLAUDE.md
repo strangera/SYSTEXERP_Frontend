@@ -28,7 +28,7 @@
     - `multi-select`
     - `table-edit`
     - `table-report`
-  - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
+  - **CRITICAL**: Ignore any other legacy or rogue components inside `shared/`. Never reference or mimic `src/app/pages/tls/tls13010/` (it violates architectural patterns and creates shared pollution). Page-specific components MUST stay inside their respective feature module folder (e.g., `src/app/pages/tls/`).
   - **🚫 FORBIDDEN — do NOT use these in new code**: `expandable-edit-table`, `selector-panel`, and the plain `table` (`app-table`) component have been moved out of `shared/` to `src/app/others/component/` because they are NOT common/shared components (they were historically misplaced there). Do not import them for new pages. For tabular data use `table-edit` or `table-report` from `shared/components/`; for any other need, import PrimeNG's own modules directly (e.g. `primeng/table`) in your own component instead of relying on a shared wrapper.
 - **Inheritance Pattern**:
   - Query/List pages MUST extend `BasicQueryPageComponent` (located in `src/app/shared/componentextends/basic-qpage/`).
