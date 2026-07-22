@@ -36,6 +36,10 @@ export interface closeASS14020Response {
   VouNo: string | null;
 }
 
+export interface closeASS14020Result {
+  VoucherList: closeASS14020Response[] | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -51,7 +55,7 @@ export class Ass14020Service {
   }
 
   // 建立請款關帳進貨傳票
-  closeASS14020(body: closeASS14020Request): Observable<ApiResponse<closeASS14020Response>> {
-    return this.http.post<ApiResponse<closeASS14020Response>>(`${this.apiUrl}/closeASS14020`, body);
+  closeASS14020(body: closeASS14020Request): Observable<ApiResponse<closeASS14020Result>> {
+    return this.http.post<ApiResponse<closeASS14020Result>>(`${this.apiUrl}/closeASS14020`, body);
   }
 }

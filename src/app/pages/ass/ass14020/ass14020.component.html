@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="關帳" icon="pi pi-lock" [permissionCode]="Actions.CloseCase"
+    <app-button label="關帳" icon="pi pi-lock" [permissionCode]="Actions.CloseAccount"
       [disabled]="selectedItems.length === 0" [loading]="loading" (click)="onClose(queryForm)"></app-button>
   </div>
   <p-accordion>

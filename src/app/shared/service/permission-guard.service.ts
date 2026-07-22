@@ -58,7 +58,8 @@ export enum Actions {
   Copy = '360',                    // 複製
   Check = '370',                   // 檢核
   OnlineCheck = '480',             // 網路對帳
-  AUTOMAIL = '490'                 // AUTOMAIL
+  AUTOMAIL = '490',                // AUTOMAIL
+  CloseAccount = '510'             // 關帳
 }
 
 @Injectable({

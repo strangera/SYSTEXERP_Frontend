@@ -38,12 +38,10 @@ export class ASS14020Component extends BasicQueryPageComponent<queryASS14020Resp
   selectedItems: queryASS14020Response[] = [];
 
   columns: ReportColumn[] = [
-    { field: 'MID', header: '商場編號', visible: true },
-    { field: 'STO_NO', header: '分店編號', visible: true },
     { field: 'RECEIPT_INS_ID', header: '發票維護單號', visible: true },
-    { field: 'NTX_AMT', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'NTX_AMT', header: '未稅總金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'TX_AMT', header: '稅額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'AMT', header: '含稅總金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AMT', header: '總金額', visible: true, format: formatAmount, align: 'right' },
   ];
 
   constructor(private readonly ass14020Service: Ass14020Service) {
@@ -88,7 +86,8 @@ export class ASS14020Component extends BasicQueryPageComponent<queryASS14020Resp
       this.ass14020Service.closeASS14020(body)
         .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
         .subscribe(res => {
-          this.messageService.successBubble(`關帳成功，傳票號碼：${res?.Data?.VouNo ?? ''}`, '成功');
+          const vouNo = res?.Data?.VoucherList?.map(v => v.VouNo).filter(Boolean).join('、') ?? '';
+          this.messageService.successBubble(`關帳成功，傳票號碼：${vouNo}`, '成功');
           this.onQuery();
         });
     });
