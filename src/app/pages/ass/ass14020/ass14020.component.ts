@@ -87,8 +87,16 @@ export class ASS14020Component extends BasicQueryPageComponent<queryASS14020Resp
         .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
         .subscribe(res => {
           const vouNo = res?.Data?.VoucherList?.map(v => v.VouNo).filter(Boolean).join('、') ?? '';
-          this.messageService.successBubble(`關帳成功，傳票號碼：${vouNo}`, '成功');
           this.onQuery();
+          setTimeout(() => {
+            this.messageService.confirm({
+              header: '關帳成功',
+              message: `傳票號碼：${vouNo}`,
+              icon: 'pi pi-check-circle',
+              acceptLabel: '確定',
+              showRejectButton: false
+            });
+          }, 200);
         });
     });
   }
