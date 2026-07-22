@@ -77,7 +77,6 @@ export class FIN23020CRUComponent extends BasicCruPageComponent<Fin23020CruState
             const selected = options?.find(opt => opt.value === value);
             if (selected) {
               rowData.AcctName = (selected as unknown as { Name: string }).Name;
-              rowData._dataStatus = 'modified';
             }
           });
         } else {
@@ -100,7 +99,6 @@ export class FIN23020CRUComponent extends BasicCruPageComponent<Fin23020CruState
             const selected = options?.find(opt => opt.value === value);
             if (selected) {
               rowData.DeptName = (selected as unknown as { Name: string }).Name;
-              rowData._dataStatus = 'modified';
             }
           });
         } else {
@@ -109,10 +107,7 @@ export class FIN23020CRUComponent extends BasicCruPageComponent<Fin23020CruState
       }
     },
     { field: 'DeptName', header: '組織名稱', width: '110px', textAlign: 'left', disabled: () => true },
-    {
-      field: 'OffsetCode', header: '立沖代號', width: '110px', type: 'input', textAlign: 'left',
-      disabled: (_v, _i, rowData: PostingLine) => !rowData._isDebit, // 貸方立沖代號拋轉時自動產生，不開放編輯
-    },
+    { field: 'PTA', header: '立沖代號', textAlign: 'left', type: 'input', disabled: () => true, width: '70px' },
     { field: 'ActivityCode', header: '活動代號', width: '110px', textAlign: 'left', disabled: () => true }, // SP_FIN23020Posting目前無對應參數，僅供顯示
   ];
 

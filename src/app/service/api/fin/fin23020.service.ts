@@ -60,7 +60,6 @@ export interface DetailFIN23020Line {
   DeptName: string;
   OffsetCode: string;
   ActivityCode: string;
-  _dataStatus: string;
 }
 
 /** 預覽拋轉傳票 Response */
