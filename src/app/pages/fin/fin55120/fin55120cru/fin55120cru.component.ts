@@ -94,6 +94,7 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
       VouStatusList: ['3'], // 資產負債表只顯示已過帳的資料
       PageSize: 999,
       PageIndex: 1,
+      ReportMode: '2', // 含無交易科目，避免像 216112/216114 這種目前無交易的科目被 SP 濾掉
     };
 
     this.fin55120Service.queryFIN55050(body).pipe(
@@ -102,37 +103,50 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
     ).subscribe(response => {
       const rawData = response.Data || [];
 
-      this.dataList = rawData.map(item => {
-        const details = [...(item._Details || [])]; // 淺拷貝一份陣列避免影響原始資料
+      this.dataList = rawData
+        // ReportMode=2 會多帶回無交易的科目，期初餘額為 0 又沒有明細的科目不顯示
+        .filter(item => this.shouldDisplayAccount(item._Details || []))
+        .map(item => {
+          const details = [...(item._Details || [])]; // 淺拷貝一份陣列避免影響原始資料
 
-        let displayDetails: FIN55050Detail[] = [];
-        let lastDetail = null;
+          let displayDetails: FIN55050Detail[] = [];
+          let lastDetail = null;
 
-        if (details.length > 0) {
-          // 1. 處理第一筆：將傳票號碼改為「期初餘額」
-          // 根據 SP 邏輯，details[0] 一定是 SortKey=0 的期初資料
-          details[0] = {
-            ...details[0],
-            VouNo: '期初餘額' // 這裡塞入你想顯示的字眼
-          };
+          if (details.length > 0) {
+            // 1. 處理第一筆：將傳票號碼改為「期初餘額」
+            // 根據 SP 邏輯，details[0] 一定是 SortKey=0 的期初資料
+            details[0] = {
+              ...details[0],
+              VouNo: '期初餘額' // 這裡塞入你想顯示的字眼
+            };
 
-          // 2. 處理最後一筆 (總計)
-          if (details.length >= 2) {
-            lastDetail = details[details.length - 1]; // 取得最後一筆
-            displayDetails = details.slice(0, -1);    // Table Body 顯示「第一筆到倒數第二筆」
-          } else {
-            // 如果只有一筆資料（只有期初），就全部顯示
-            displayDetails = details;
+            // 2. 處理最後一筆 (總計)
+            if (details.length >= 2) {
+              lastDetail = details[details.length - 1]; // 取得最後一筆
+              displayDetails = details.slice(0, -1);    // Table Body 顯示「第一筆到倒數第二筆」
+            } else {
+              // 如果只有一筆資料（只有期初），就全部顯示
+              displayDetails = details;
+            }
           }
-        }
 
-        return {
-          ...item,
-          displayDetails: displayDetails,
-          lastDetail: lastDetail
-        };
-      });
+          return {
+            ...item,
+            displayDetails: displayDetails,
+            lastDetail: lastDetail
+          };
+        });
     });
+  }
+
+  /**
+   * 判斷該會計科目是否要顯示：期初餘額(OpeningBal)為 0 且沒有明細資料(只有期初那一筆)時不顯示。
+   */
+  private shouldDisplayAccount(details: FIN55050Detail[]): boolean {
+    if (!details || details.length === 0) return false;
+    const openingBal = Number(details[0]?.OpeningBal) || 0;
+    const hasTransactionDetails = details.length > 1; // 除了期初餘額之外還有明細
+    return hasTransactionDetails || openingBal !== 0;
   }
 
   onCellLinkClick(event: { rowData: FIN55050Detail, field: string }) {
