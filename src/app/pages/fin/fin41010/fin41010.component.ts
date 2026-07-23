@@ -131,6 +131,9 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               );
             }
           },
+          // 不需要寫 error callback：非2xx回應已由全局 errorInterceptor + ErrorHandlerService
+          // 統一攔截並跳出錯誤提示 (見 core/interceptors/error.interceptor.ts)。
+          // 這裡只要確保「業務驗證失敗」情境後端回200 (見Controller)，走得進 next 即可客製化顯示錯誤檔。
         });
     });
   }
