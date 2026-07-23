@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN41010Service } from '@service/api/fin/fin41010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { FIN41010ImportRowError } from './fin41010.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -82,7 +83,7 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               OrgId: orgId!,
             })
             .pipe(untilDestroyed(this)),
-          '.csv',
+          '.xlsx',
           (isLoading) => (this.loading = isLoading),
         )
         .subscribe();
@@ -116,12 +117,30 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               );
             } else {
               this.messageService.errorBubble(
-                res.Message ?? '匯入失敗',
+                this.buildImportErrorMessage(res.Message, res.Data?.Errors),
               );
             }
           },
         });
     });
+  }
+
+  /** 將匯入錯誤明細組成可讀訊息：哪一行、什麼會科、什麼原因 */
+  private buildImportErrorMessage(
+    message: string | undefined,
+    errors: FIN41010ImportRowError[] | null | undefined,
+  ): string {
+    if (!errors?.length) {
+      return message ?? '匯入失敗';
+    }
+    const MAX_LINES = 10;
+    const lines = errors
+      .slice(0, MAX_LINES)
+      .map((e) => `第 ${e.RowNumber} 行${e.AccNo ? `（會科 ${e.AccNo}）` : ''}：${e.Reason}`);
+    if (errors.length > MAX_LINES) {
+      lines.push(`...等共 ${errors.length} 筆資料有誤，請修正後重新匯入`);
+    }
+    return lines.join('\n');
   }
 
   onApprove(): void {
