@@ -243,24 +243,37 @@
     (detail)="onDetail($event)"
   >
     <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出 PDF"
-          icon="pi pi-file-pdf"
-          (click)="onExportPDF()"
-          [loading]="PDFBtnLoading"
-          [disabled]="loading || (data.length || 0) === 0"
-        ></p-button>
+      <div class="flex flex-column align-items-end gap-2">
+        <div class="flex justify-content-end align-items-center gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出 PDF"
+            icon="pi pi-file-pdf"
+            (click)="onExportPDF()"
+            [loading]="PDFBtnLoading"
+            [disabled]="loading || (data.length || 0) === 0"
+          ></p-button>
 
-        <p-button
-          styleClass="p-2"
-          label="匯出 Excel"
-          icon="pi pi-file-excel"
-          (click)="onExportXLSX()"
-          [loading]="XLSXBtnLoading"
-          [disabled]="loading || (data.length || 0) === 0"
-        ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="匯出 Excel"
+            icon="pi pi-file-excel"
+            (click)="onExportXLSX()"
+            [loading]="XLSXBtnLoading"
+            [disabled]="loading || (data.length || 0) === 0"
+          ></p-button>
+        </div>
+
+        <div class="flex justify-content-end align-items-center gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出 Excel（不分頁）"
+            icon="pi pi-file-excel"
+            (click)="onExportXLSXSingleSheet()"
+            [loading]="XLSXSingleSheetBtnLoading"
+            [disabled]="loading || (data.length || 0) === 0"
+          ></p-button>
+        </div>
       </div>
     </header>
   </app-table-subheader>

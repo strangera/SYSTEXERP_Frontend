@@ -60,6 +60,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   ) { super(); }
   PDFBtnLoading = false;
   XLSXBtnLoading = false;
+  XLSXSingleSheetBtnLoading = false;
   queryForm = this.formBuilder.group({
     DateFrom: [yesterday, Validators.required],
     DateTo: [yesterday, Validators.required],
@@ -267,8 +268,17 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   onExportXLSX() {
     if (!this.data?.length || !this.lastQueryConditions) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
-    const export$ = this.fin55050Service.exportFIN55050Excel(this.lastQueryConditions);
+    const payload: ExportFIN55050Payload = { ...this.lastQueryConditions, IsExportSingle: 'N' };
+    const export$ = this.fin55050Service.exportFIN55050Excel(payload);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.XLSXBtnLoading = isLoading).subscribe();
+  }
+
+  /** 匯出 Excel（不拆分頁，所有會科往下排列在同一頁） */
+  onExportXLSXSingleSheet() {
+    if (!this.data?.length || !this.lastQueryConditions) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+    const payload: ExportFIN55050Payload = { ...this.lastQueryConditions, IsExportSingle: 'Y' };
+    const export$ = this.fin55050Service.exportFIN55050Excel(payload);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.XLSXSingleSheetBtnLoading = isLoading).subscribe();
   }
   private toNullableNumber(value: unknown): number | null {
     if (value === null || value === undefined) {

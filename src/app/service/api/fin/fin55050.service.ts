@@ -97,6 +97,8 @@ export interface ExportFIN55050Payload {
   ACCT_KEY: string;
   AmtFrom?: number | null;
   AmtTo?: number | null;
+  /** 匯出會科是否單一頁（Y=不拆分頁/N=依會科拆分頁），未帶預設 N */
+  IsExportSingle?: string;
 }
 
 export interface VendorPickerItem {
