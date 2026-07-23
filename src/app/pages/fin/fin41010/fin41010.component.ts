@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,6 +7,7 @@ import { FIN41010Service } from '@service/api/fin/fin41010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { FIN41010ImportRowError } from './fin41010.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -45,6 +46,8 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
 
   files: File[] = [];
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
+
+  private readonly errorReportService = inject(ErrorReportService);
 
   constructor(
     private readonly dropdownApi: DropdownApiService,
@@ -115,7 +118,14 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               this.messageService.successBubble(
                 res.Message ?? '匯入成功',
               );
+            } else if (res.Data?.ErrorFilePath) {
+              // 產得出錯誤檢查檔：跳出可下載的錯誤報告(原始檔標紅+錯誤原因欄)
+              this.errorReportService.showImportError(
+                res.Data.ErrorFilePath,
+                res.Message ?? '資料檢核未通過，請下載錯誤報告並修正資料後重新上傳。',
+              );
             } else {
+              // 產不出錯誤檔時的保底：至少列出逐行原因
               this.messageService.errorBubble(
                 this.buildImportErrorMessage(res.Message, res.Data?.Errors),
               );

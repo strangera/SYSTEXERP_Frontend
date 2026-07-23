@@ -50,6 +50,8 @@ export interface FIN41010ImportData {
   TotalUpsertRows: number;
   /** 匯入錯誤明細，成功時為 null */
   Errors: FIN41010ImportRowError[] | null;
+  /** 錯誤檢查檔相對路徑(在原始檔案標示錯誤列)，成功時為 null */
+  ErrorFilePath: string | null;
 }
 
 /** 審核/反審核 API 回傳的 Data */
