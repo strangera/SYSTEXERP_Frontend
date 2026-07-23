@@ -62,6 +62,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     VouStatus: [null], // 傳票狀態
     ACP_Status_Param: [null], // 應付狀態 (VARCHAR(1))
     SubDetailNo_Param: [null], // 對象別編號 (VARCHAR(30))
+    PTA: [null, [Validators.maxLength(19)]], // 立沖代號 (VARCHAR(19))
     HasUnpaid: [null], // 是否有未付款
     CheckChangedUser: [null], // 是否只顯示銀行資料有差異
   });
@@ -85,6 +86,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     { field: 'VouNo', header: '傳票編號' },
     { field: 'Vou_PostFlagName', header: '傳票狀態' }, // 使用後端給的中文說明欄位
     { field: 'ACP_Status_Name', header: '狀態' }, // 應付帳款狀態 (0=作廢 2=建立)
+    { field: 'PTA_Key', header: '立沖代號' },
   ];
 
   // 2. 是否只顯示銀行資料有差異專屬欄位 (新增)

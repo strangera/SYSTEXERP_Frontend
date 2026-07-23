@@ -40,6 +40,7 @@ export interface QueryFIN24010Request {
   SubDetailNo_Param?: string,
   HasUnpaid?: string,
   CheckChangedUser?: string, // <-- 缺少
+  PTA?: string, // 立沖代號
 }
 
 export interface QueryFIN24010Response {
@@ -76,6 +77,7 @@ export interface QueryFIN24010Response {
   Vou_PostFlagName: string,
   ACP_Status: string,
   SubDetailNo: string,
+  PTA_Key: string, // 立沖代號
   CRT_Date: string,
   CRT_USR_No: string,
   CRT_USR_Name: string,

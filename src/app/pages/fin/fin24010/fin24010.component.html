@@ -181,6 +181,11 @@
             <app-dropdown label="是否有未付款" controlName="HasUnpaid" [options]="HasUnpaidOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.HasUnpaid" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- PTA: 立沖代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="立沖代號" controlName="PTA" [control]="queryForm.controls.PTA"
+              [submitted]="submitted"></app-input-text>
+          </div>
         </div>
         <!-- 欄位組 10 (是否只顯示銀行資料有差異) -->
         <div class="grid p-fluid">

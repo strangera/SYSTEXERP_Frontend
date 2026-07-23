@@ -42,6 +42,13 @@
       color: var(--red-500) !important;
       background-color: var(--table-invalid-row) !important;
     }
+    // 立沖代號欄位底色提示：同方向自動產生 vs 反向須手動挑選
+    td.pta-cell-auto {
+      background-color: var(--green-100) !important;
+    }
+    td.pta-cell-manual {
+      background-color: var(--yellow-100) !important;
+    }
     .insert-row {
       .p-dropdown.p-component,
       .p-inputtext {
