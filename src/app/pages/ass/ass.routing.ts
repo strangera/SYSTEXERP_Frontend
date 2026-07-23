@@ -53,7 +53,7 @@ export const assRoutes: Routes = [
   { path: 'ass13120', loadComponent: () => import('./ass13120/ass13120.component').then(m => m.ASS13120Component), data: { progNo: 'ASS13120' } }, // 折舊攤提作業
   { path: 'ass14010', loadComponent: () => import('./ass14010/ass14010.component').then(m => m.ASS14010Component), data: { progNo: 'ASS14010' } }, // 進貨發票建檔作業
   { path: 'ass14010cru', loadComponent: () => import('./ass14010-cru/ass14010-cru.component').then(m => m.ASS14010CRUComponent), data: { progNo: 'ASS14010' } },
-  // { path: 'ass14020', loadComponent: () => import('./ass14020/ass14020.component').then(m => m.ASS14020Component),data: {progNo:'ASS14020'} }, // 請款關帳作業
+  { path: 'ass14020', loadComponent: () => import('./ass14020/ass14020.component').then(m => m.ASS14020Component), data: { progNo: 'ASS14020' } }, // 請款關帳作業
   // { path: 'ass14030', loadComponent: () => import('./ass14030/ass14030.component').then(m => m.ASS14030Component),data: {progNo:'ASS14030'} }, // 傳票審核傳送作業
   // { path: 'ass14030cru', loadComponent: () => import('./ass14030-cru/ass14030-cru.component').then(m => m.ASS14030CRUComponent),data: {progNo:'ASS14030'} },
   { path: 'ass14040', loadComponent: () => import('./ass14040/ass14040.component').then(m => m.ASS14040Component), data: { progNo: 'ASS14040' } }, // 庫存成本月結作業

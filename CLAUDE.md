@@ -161,6 +161,26 @@ brandOptions = this.dropdown.queryPluLogo();     // 品牌代碼
 - 禁止在 module 頂層常數（如 `export const COLUMNS_XXX = [{ options: getSYS1000Options('X') }]`）或 class field 初始化式中直接呼叫 `getSYS1000Options()`。
 - 一律包成 function 在 render 時才呼叫：`options: () => getSYS1000Options('X')`（`EditColumn.options` 支援 function 形式），或改用 reactive 版本 `getSYS1000Options$()`。
 
+## 全局 HTTP 錯誤處理機制 — subscribe 通常不需要自己寫 error callback
+
+**說明**：`core/interceptors/error.interceptor.ts`(`errorInterceptor`) 已攔截**所有**非 2xx 的 HTTP 回應，交給
+`core/services/error-handler.service.ts`(`ErrorHandlerService.handleError`) 統一處理：跳出通用 `errorBubble`
+錯誤提示(含後端 `Message`)、記錄到 sessionStorage、回報後端錯誤監控，最後把原始 `HttpErrorResponse` `throwError`
+重新拋出。
+
+**這代表兩件事**：
+
+1. 一般頁面在 `.subscribe({ next: ... })` **不需要**額外寫 `error:` callback 只為了「跳錯誤訊息」——攔截器已經跳過了，
+   自己再寫一次會變成使用者看到兩則錯誤訊息，或是做重複勞動。只有需要**針對特定狀態碼做客製化行為**(例如 409 衝突要
+   跳確認框、或要從 `err.error` 撈特殊欄位做非「純顯示訊息」的 UI 行為)時才需要在 component 補 `error:` callback。
+2. **地雷**：如果某支 API 在「業務邏輯驗證失敗」(不是系統例外/請求格式錯誤，而是「有具體明細要給前端客製化顯示」的情境，
+   例如匯入資料檢核失敗要附上錯誤明細/錯誤檔路徑供下載) 時，後端 Controller 回傳 **400/500**，Angular `HttpClient`
+   會直接走 `error` 分支，`next` 完全收不到那包 body——就算 body 裡確實帶了 `Errors`/`ErrorFilePath` 等客製化欄位，
+   前端也沒機會用上，只會看到全局攔截器跳出的通用文字提示。這種「需要 body 內容做客製化 UI」的情境，後端必須改回
+   **200**，靠 body 內的 `Status`/自訂欄位讓前端在 `next` 分支判斷成功/失敗(參考寫法見 `TLS2G010Controller.ImportTLS2G010`
+   與 `FIN41010Controller.importYearBudgetFIN41010`：只有請求格式錯誤如檔案為空才用 400，業務驗證失敗一律 200)。
+   400/500 應保留給「真的沒有客製化 body 需求、丟給全局攔截器處理就夠」的系統例外。
+
 ## 按鈕權限控制 (Permission Code) — 固定寫法，禁止手動寫 hasPermission 布林判斷式
 
 **說明**: `create`/`edit`/`delete`/`query` 四種標準 `btnType` 已在 `button.component.ts` 的 `buttonConfig` 內建對應 `permissionCode`（'20'/'30'/'40'/'10'），會自動根據使用者權限算 disabled，不需額外處理。其餘功能性按鈕（審核、結算、配號、匯出、上傳等，`btnType="default"` 或自訂 label）**一律**透過 `app-button` 的 `[permissionCode]` Input 宣告對應的 `Actions` 代碼，交由元件自動判斷，禁止在 template 手動寫 `[disabled]="!hasPermission(Actions.X)"`。

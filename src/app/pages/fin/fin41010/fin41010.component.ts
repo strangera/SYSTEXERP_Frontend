@@ -1,11 +1,13 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN41010Service } from '@service/api/fin/fin41010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { FIN41010ImportRowError } from './fin41010.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -45,6 +47,8 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
   files: File[] = [];
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
 
+  private readonly errorReportService = inject(ErrorReportService);
+
   constructor(
     private readonly dropdownApi: DropdownApiService,
     private readonly fin41010Service: FIN41010Service,
@@ -82,7 +86,7 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               OrgId: orgId!,
             })
             .pipe(untilDestroyed(this)),
-          '.csv',
+          '.xlsx',
           (isLoading) => (this.loading = isLoading),
         )
         .subscribe();
@@ -114,14 +118,42 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
               this.messageService.successBubble(
                 res.Message ?? '匯入成功',
               );
+            } else if (res.Data?.ErrorFilePath) {
+              // 產得出錯誤檢查檔：跳出可下載的錯誤報告(原始檔標紅+錯誤原因欄)
+              this.errorReportService.showImportError(
+                res.Data.ErrorFilePath,
+                res.Message ?? '資料檢核未通過，請下載錯誤報告並修正資料後重新上傳。',
+              );
             } else {
+              // 產不出錯誤檔時的保底：至少列出逐行原因
               this.messageService.errorBubble(
-                res.Message ?? '匯入失敗',
+                this.buildImportErrorMessage(res.Message, res.Data?.Errors),
               );
             }
           },
+          // 不需要寫 error callback：非2xx回應已由全局 errorInterceptor + ErrorHandlerService
+          // 統一攔截並跳出錯誤提示 (見 core/interceptors/error.interceptor.ts)。
+          // 這裡只要確保「業務驗證失敗」情境後端回200 (見Controller)，走得進 next 即可客製化顯示錯誤檔。
         });
     });
+  }
+
+  /** 將匯入錯誤明細組成可讀訊息：哪一行、什麼會科、什麼原因 */
+  private buildImportErrorMessage(
+    message: string | undefined,
+    errors: FIN41010ImportRowError[] | null | undefined,
+  ): string {
+    if (!errors?.length) {
+      return message ?? '匯入失敗';
+    }
+    const MAX_LINES = 10;
+    const lines = errors
+      .slice(0, MAX_LINES)
+      .map((e) => `第 ${e.RowNumber} 行${e.AccNo ? `（會科 ${e.AccNo}）` : ''}：${e.Reason}`);
+    if (errors.length > MAX_LINES) {
+      lines.push(`...等共 ${errors.length} 筆資料有誤，請修正後重新匯入`);
+    }
+    return lines.join('\n');
   }
 
   onApprove(): void {
