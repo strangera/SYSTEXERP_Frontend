@@ -17,7 +17,6 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { formatAmount, formatInt, ReportColumn } from './tls32020-table/tls32020-report-table.model';
@@ -28,7 +27,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
   templateUrl: './tls32020.component.html',
   standalone: true,
   imports: [
-    DropdownRangeComponent, NgIf, DividerModule,
+    DropdownRangeComponent, NgIf,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
     MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
