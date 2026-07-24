@@ -5,21 +5,96 @@ import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { TLS31020Total } from './tls31020.service';
 
+// --- 動態欄位重構點 --- (Request 擴充)
 export interface TLS31070Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  TLT_NO: string[]
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[][]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[][];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31070DetailRequest {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  paper_type: string;
+  TaxType: string;
+  IsRece_Yn: string;
+  pageIndex: number;
+  pageSize: number;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+// --- 動態欄位重構點 --- (Item Interface 清理舊 key 並調整為新 key)
+export interface TLS31070Item {
+  paper_type: string;
+  paper_type_desc: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
+}
+
+export interface TLS31070DetailItem {
+  tlt_no: string;
+  tlt_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31070PrintRequest extends TLS31070Request {
