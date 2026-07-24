@@ -112,8 +112,20 @@ export interface Fin34040DetailRequest {
   ARS_DateFrom?: string | null;
   /** 立帳日期迄 (yyyy-MM-dd) */
   ARS_DateTo?: string | null;
-  /** 分析日期 (yyyy-MM-dd) */
+  /** 收款/沖帳/調整判斷基準日 (yyyy-MM-dd) */
   BaseDate: string;
+  /** 帳齡分析日期 (yyyy-MM-dd) */
+  AnalysisDate: string;
+  /** 每期天數 */
+  IntervalDays: number;
+  /** 分析期數 */
+  AnalysisPeriods: number;
+  /** A=立帳日 / P=預計收款日 */
+  AnalysisDateType: string;
+  /** 到期別 O=已到期 / N=未到期 */
+  DueType?: string | null;
+  /** 第幾期 */
+  BucketNo?: number | null;
 }
 
 /** 明細資料列 */
