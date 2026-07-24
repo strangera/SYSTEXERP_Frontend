@@ -18,6 +18,10 @@ export interface TLS31010Request {
   org_id: string[]
   TaxType: string
   IsRece_Yn: string
+  /** 是否顯示預售業績欄位（對應查詢畫面「預售」勾選框），列印/匯出報表用 */
+  PreSale?: boolean
+  /** 是否顯示消費人數/消費客單欄位（對應查詢畫面「消費人數」勾選框），列印/匯出報表用 */
+  ConsumerNum?: boolean
 }
 
 export interface TLS31010QueryData {
@@ -68,7 +72,6 @@ export interface TLS31010TotalData {
   TotalMonthlyBudget: number,
   TotalMonthlySales: number,
   AvgCompletionRate: number,
-  TotalPreOrderAmt: number,
   TotalPrePerformance: number, // 預售業績總計
   TotalConsumerNum: number, // 消費人數總計
   TotalConsumerOrder: number, // 消費客單總計
@@ -105,7 +108,6 @@ export class Tls31010Service {
           MonthlyBudgetTotal: res.Data.TotalData.TotalMonthlyBudget,
           MonthlySalesTotal: res.Data.TotalData.TotalMonthlySales,
           CompletionRate: res.Data.TotalData.AvgCompletionRate,
-          PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt,
 
           PrePerformance: res.Data.TotalData.TotalPrePerformance,
           ConsumerNum: res.Data.TotalData.TotalConsumerNum,
