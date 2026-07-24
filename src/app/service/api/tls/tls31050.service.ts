@@ -8,18 +8,126 @@ import { TLS31020Total } from './tls31020.service';
 export interface TLS31050Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  TLT_NO: string[]
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  // --- 動態欄位重構點 ---
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31050DetailRequest {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string;
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  pageIndex: number;
+  pageSize: number;
+  // --- 動態欄位重構點 ---
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31050Item {
+  tlt_term_type: string;
+  tlt_term_desc: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 ---
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
+}
+
+export interface TLS31050DetailItem {
+  building_desc: string;
+  org_name: string;
+  tlt_kind: string;
+  tlt_no: string;
+  location_no: string;
+  tlt_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+
+  NormalSales: number;
+  SpecialSales: number;
+  Discount95Sales: number;
+  Discount90Sales: number;
+  Discount80Sales: number;
+  Discount70Sales: number;
+
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 ---
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
+}
+
+export interface footer31050Total {
+  budget?: number;
+  AVN_TotSaleAmt?: number;
+  AchievementRate?: number;
+  TxnCount?: number;
+  AvgTicket?: number;
+  tlt_space?: number;
+  MonthlyPSM?: number;
+  MonthlyPayment?: number;
+  TempCounterSaleAmt?: number;
+  MonthlyBudgetTotal?: number;
+  MonthlySalesTotal?: number;
+  CompletionRate?: number;
+
+  // --- 動態欄位重構點 ---
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31050PrintRequest extends TLS31050Request {
