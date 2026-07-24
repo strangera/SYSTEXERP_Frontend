@@ -10,6 +10,7 @@ export interface fin13090Item {
   PostFlagName: string, // 傳票狀態名稱
   TaxTotal: number // 進項稅額貸方 (APS2002.PUR_Tax 合計)
   PUR_RepYYYYMM?: string | null;
+  IsLocked: boolean; // 申報年月已審核，列為唯讀不可編輯
 }
 
 export interface fin13090Detail {
