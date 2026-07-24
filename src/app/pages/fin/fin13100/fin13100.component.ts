@@ -59,7 +59,7 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
 
   data: FIN13100Row[] = [];
   totalRecords = 0;
-editDisabled = (row: FIN13100Row): boolean => !!row?.IsLocked;
+  editDisabled = (row: FIN13100Row): boolean => !!row?.IsLocked;
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
