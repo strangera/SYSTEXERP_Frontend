@@ -1,7 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Item, TLS31020Request, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
@@ -55,7 +55,9 @@ export class Tls31020CruComponent implements OnChanges {
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '月營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
-    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
+    { field: 'PrePerformance', header: '預售業績', format: formatAmount, align: 'right', visible: false },
+    { field: 'ConsumerNum', header: '消費人數', format: formatAmount, align: 'right', visible: false },
+    { field: 'ConsumerOrder', header: '消費客單', format: formatAmount, align: 'right', visible: false }
   ];
 
   columnGroup: ColumnGroup[] = [
@@ -124,6 +126,8 @@ export class Tls31020CruComponent implements OnChanges {
       TaxType: q.TaxType,
       IsRece_Yn: q.IsRece_Yn,
       pageSize: 100,
+      PreSale: q.PreSale,
+      ConsumerNum: q.ConsumerNum,
     };
   }
 
@@ -147,7 +151,9 @@ export class Tls31020CruComponent implements OnChanges {
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder
         } : null;
         this.totalRecords = res.TotalCount;
       });
