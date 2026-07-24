@@ -8,18 +8,108 @@ import { TLS31020Total } from './tls31020.service';
 export interface TLS31060Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  TLT_NO: string[]
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  // --- 動態欄位重構點 ---
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31060PrintRequest extends TLS31060Request {
+  IsMerge: boolean;
+  IsExcel: boolean;
+}
+
+// 單一組織
+export interface TLS31060DetailRequest {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string; // 單組織
+  TaxType: string;
+  IsRece_Yn: string;
+  pageSize?: number;
+  // --- 動態欄位重構點 ---
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31060PrintDetailRequest extends TLS31060DetailRequest {
+  IsMerge: boolean;
+  IsExcel: boolean;
+}
+
+export interface TLS31060Item {
+  org_id: string;
+  org_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 --- (刪除舊 PreOrderAmt，替換為新動態欄位)
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
+}
+
+export interface TLS31060DetailItem {
+  building_desc: string;
+  org_name: string;
+  tlt_kind: string;
+  tlt_no: string;
+  location_no: string;
+  tlt_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 --- (明細同步更新屬性)
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31060PrintRequest extends TLS31060Request {
