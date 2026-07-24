@@ -3,10 +3,10 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
+import { formatPercentage } from 'src/app/others/component/table/table.model';
 import { TLS31020Total, footerShowTotal } from 'src/app/service/api/tls/tls31020.service';
 import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040Item, TLS31040PrintDetailRequest, TLS31040Request, Tls31040Service } from 'src/app/service/api/tls/tls31040.service';
 import { NotificationService } from 'src/app/shared/components/notification-message/notification.service';
-import { formatPercentage } from 'src/app/others/component/table/table.model';
 import { environment } from 'src/environments/environment';
 import { ColumnGroup, ReportColumn, formatAmount, formatAmountWithDecimals } from '../../tls2f010-cru/tls2f010-table-report.model';
 
@@ -56,8 +56,81 @@ export class Tls31040CRUComponent implements OnChanges {
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '月營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
-    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
+
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right' },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right' },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right' }
   ];
+
+  // --- 動態欄位重構點 --- (在 queryDetail / sync 呼叫時根據主查詢帶入 visible 狀態)
+  private syncColumnsVisibility(): void {
+    const q = this.queryConditions;
+    if (!q) return;
+
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: q.PreSale === true,
+      ConsumerNum: q.ConsumerNum === true,
+      ConsumerOrder: q.ConsumerNum === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
+  }
+
+  // --- 動態欄位重構點 --- (建立 Request 時一併帶入 PreSale / ConsumerNum)
+  private buildRequest(): TLS31040DetailRequest {
+    const q = this.queryConditions!;
+    return {
+      TXN_DateS: q.TXN_DateS,
+      TXN_DateE: q.TXN_DateE,
+      TLT_NO: q.TLT_NO ?? [],
+      tlt_building: q.tlt_building ?? [],
+      tlt_floor: q.tlt_floor ?? [],
+      area_no: q.area_no ?? [],
+      bus_type: q.bus_type ?? [],
+      bus_class: q.bus_class ?? [],
+      bus_sclass: q.bus_sclass ?? [],
+      tlt_kind: this.rowData!.tlt_kind,
+      tlt_term_type: q.tlt_term_type ?? [],
+      org_id: q.org_id ?? [],
+      TaxType: q.TaxType,
+      IsRece_Yn: q.IsRece_Yn,
+      PreSale: q.PreSale,
+      ConsumerNum: q.ConsumerNum,
+      pageSize: 100,
+    };
+  }
+
+  private queryDetail(): void {
+    this.syncColumnsVisibility();
+    const request = this.buildRequest();
+    this.historyRequestBody = request;
+    this.loading = true;
+    this.tls31040Service.queryTLS31040Detail(request)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(res => {
+        this.data = res.Data ?? [];
+        this.footerTotal = res.TotalData ?? null;
+        this.footershowTotal = this.footerTotal ? {
+          budget: this.footerTotal.TotalBudget,
+          AVN_TotSaleAmt: this.footerTotal.TotalSales,
+          TxnCount: this.footerTotal.TotalTxnCount,
+          AvgTicket: this.footerTotal.AvgTicket,
+          tlt_space: this.footerTotal.TotalSpace,
+          MonthlyPSM: this.footerTotal.AvgPSM,
+          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+          AchievementRate: this.footerTotal.AvgAchievementRate,
+          CompletionRate: this.footerTotal.AvgCompletionRate,
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder,
+        } : null;
+        this.totalRecords = res.TotalCount;
+      });
+  }
 
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -107,50 +180,4 @@ export class Tls31040CRUComponent implements OnChanges {
     }
   }
 
-  private buildRequest(): TLS31040DetailRequest {
-    const q = this.queryConditions!;
-    return {
-      TXN_DateS: q.TXN_DateS,
-      TXN_DateE: q.TXN_DateE,
-      TLT_NO: q.TLT_NO ?? [],
-      tlt_building: q.tlt_building ?? [],
-      tlt_floor: q.tlt_floor ?? [],
-      area_no: q.area_no ?? [],
-      bus_type: q.bus_type ?? [],
-      bus_class: q.bus_class ?? [],
-      bus_sclass: q.bus_sclass ?? [],
-      tlt_kind: this.rowData!.tlt_kind,
-      tlt_term_type: q.tlt_term_type ?? [],
-      org_id: q.org_id ?? [],
-      TaxType: q.TaxType,
-      IsRece_Yn: q.IsRece_Yn,
-      pageSize: 100,
-    };
-  }
-
-  private queryDetail(): void {
-    const request = this.buildRequest();
-    this.historyRequestBody = request;
-    this.loading = true;
-    this.tls31040Service.queryTLS31040Detail(request)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe(res => {
-        this.data = res.Data ?? [];
-        this.footerTotal = res.TotalData ?? null;
-        this.footershowTotal = this.footerTotal ? {
-          budget: this.footerTotal.TotalBudget,
-          AVN_TotSaleAmt: this.footerTotal.TotalSales,
-          TxnCount: this.footerTotal.TotalTxnCount,
-          AvgTicket: this.footerTotal.AvgTicket,
-          tlt_space: this.footerTotal.TotalSpace,
-          MonthlyPSM: this.footerTotal.AvgPSM,
-          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-          AchievementRate: this.footerTotal.AvgAchievementRate,
-          CompletionRate: this.footerTotal.AvgCompletionRate,
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
-        } : null;
-        this.totalRecords = res.TotalCount;
-      });
-  }
 }

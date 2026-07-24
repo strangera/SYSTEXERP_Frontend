@@ -8,18 +8,47 @@ import { TLS31020Total } from './tls31020.service';
 export interface TLS31040Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  TLT_NO: string[]
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  // --- 動態欄位重構點 ---
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31040Item {
+  tlt_kind: string;
+  tlt_kindName: string;
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 --- (清理舊欄位 PreOrderAmt，替換為新動態欄位)
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31040PrintRequest extends TLS31040Request {
@@ -42,6 +71,8 @@ export interface TLS31040DetailRequest {
   tlt_term_type: string[]
   org_id: string[]
   TaxType: string
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
   IsRece_Yn: string
   pageSize?: number
 }

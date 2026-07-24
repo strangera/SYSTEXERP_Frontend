@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31040Item, TLS31040PrintRequest, TLS31040Request, TLS31040Response, Tls31040Service } from '@service/api/tls/tls31040.service';
@@ -17,16 +18,15 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonYNComponent } from '@shared/components/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31040CRUComponent } from './tls31040-cru/tls31040-cru.component';
 
@@ -152,10 +152,9 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
+  // --- 動態欄位重構點 ---
   columns: ReportColumn[] = [
-    // { field: 'tlt_kind', header: '櫃別代碼', align: 'left' },
     { field: 'tlt_kindName', header: '櫃別名稱', align: 'left' },
-
     { field: 'budget', header: '營業目標', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
@@ -165,20 +164,32 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { field: 'AvgTicket', header: '客單價', groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
-
     { field: 'TempCounterSaleAmt', header: '營業實績', groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    // 已移除 PreOrderAmt，增加 dynamic columns 並受 visible 控制
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right', isTotal: true },
   ];
+
+  // --- 動態欄位重構點 ---
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
+  }
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
     { field: '營業佔比', header: '營業佔比' },
@@ -315,10 +326,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
           map(res => ({ selectedMValues, data: res.Data }))
         );
-      }),
-
-      tap(result => {
-        console.log('所有 API 呼叫結果：', result);
       })
     ).subscribe(result => {
 
@@ -356,7 +363,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       }, {} as Record<string, any>);
 
       this.bus_sclass_Option = Object.values(groupedData);
-      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
@@ -379,8 +385,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31040Request;
-
-      console.log('送出request請求', formValue);
       this.tls31040Service.queryTLS31040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data ?? [];               // 查詢資料
         this.footerTotal = res.TotalData ?? null;;    // 總計資料
@@ -401,18 +405,12 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
 
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
-
           PrePerformance: this.footerTotal.TotalPrePerformance,
           ConsumerNum: this.footerTotal.TotalConsumerNum,
           ConsumerOrder: this.footerTotal.TotalConsumerOrder,
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
-        console.log('查詢結果', this.data);
-        console.log('查詢總計', this.footerTotal);
-        console.log('查詢總計(轉換後)', this.footershowTotal);
-
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         // ---同步儲存比較表單的query資訊---
@@ -436,9 +434,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
       TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31040PrintRequest;
-
-    console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
-
     this.btnLoading = true;
     this.tls31040Service.printTLS31040(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
       .subscribe(res => {
@@ -522,8 +517,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
 
   // 活動下拉改變
   queryEvent(event: any) {
-    console.log(event);
-    console.log(this.EventIDOptions);
     this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
     this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
   }
@@ -615,18 +608,5 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   onDetail1(event: TLS31040Item) {
     this.selectedRow = event;
     this.dialogVisible = true;
-  }
-
-  setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
   }
 }
