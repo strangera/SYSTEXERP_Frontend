@@ -61,8 +61,14 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
     this.initializePage('SYSBC00', this.dataForm);
     if (!this.isFormCreateable && this.dataForm.value.BNK_No) {
       this.dataForm.get('BNK_No')?.disable();
-      const body = { BNK_No: this.dataForm.getRawValue().BNK_No };
-      this.sys1004Service.queryAPS1004(body).pipe(untilDestroyed(this)).subscribe(data => {
+      const body = {
+    BNK_No: this.dataForm.getRawValue().BNK_No,
+    pageSize: 1000,
+    pageIndex: 1,
+    SortBy: [{ field: 'BNK_BranchNo', order: 1 }]
+};
+
+this.sys1004Service.queryAPS1004(body).pipe(untilDestroyed(this)).subscribe(data => {
         this.data = data.Data.map(item => ({ ...item, ID: item.id }));
       });
     }
