@@ -192,6 +192,7 @@
       [lazy]="true"
       [footerData]="footerData"
       footerLabel="總合計"
+      [ItemSize]="24.44"
     >
       <header>
         <div class="flex justify-content-end gap-2">
@@ -199,14 +200,24 @@
             label="匯出 PDF"
             icon="pi pi-file-pdf"
             (click)="onExportPdf()"
-            [disabled]="tableLoading() || exportPdfLoading || exportExcelLoading || data.length === 0"
+            [disabled]="
+              tableLoading() ||
+              exportPdfLoading ||
+              exportExcelLoading ||
+              data.length === 0
+            "
             [loading]="exportPdfLoading"
           ></p-button>
           <p-button
             label="匯出 Excel"
             icon="pi pi-file-excel"
             (click)="onExportExcel()"
-            [disabled]="tableLoading() || exportExcelLoading || exportPdfLoading || data.length === 0"
+            [disabled]="
+              tableLoading() ||
+              exportExcelLoading ||
+              exportPdfLoading ||
+              data.length === 0
+            "
             [loading]="exportExcelLoading"
           ></p-button>
         </div>

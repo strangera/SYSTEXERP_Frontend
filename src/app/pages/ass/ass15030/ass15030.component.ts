@@ -223,7 +223,12 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
         // 末頁偵測：後端原始 row 數 < pageSize → 視為末頁，
         // 把 TotalCount 設為「append 後累計筆數」讓 table-report 停止再觸發
         const isLastPage = rawCount < apiPageSize;
-        const adjustedTotal = isLastPage ? this.accumulatedRowCount : totalCount;
+        // 後端 TOTAL_COUNT 若缺漏/未正確填值，很容易剛好等於目前已載入筆數（甚至 0），
+        // 導致 table-report 誤判「已載入=總筆數」而永久停止捲動載入。
+        // 只有當後端回報的總數確實大於目前累計筆數時才採信，否則假設還有下一頁，
+        // 交給上面 isLastPage（依實際回傳筆數 < pageSize）去真正判斷末頁。
+        const reliableTotal = totalCount > this.accumulatedRowCount ? totalCount : this.accumulatedRowCount + 1;
+        const adjustedTotal = isLastPage ? this.accumulatedRowCount : reliableTotal;
 
         return {
           Data: rows,
