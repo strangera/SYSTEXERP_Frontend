@@ -204,6 +204,8 @@ export interface ASS12050Detail {
 export interface ASS12050DetailItem {
   /** 品項代號 */
   GOODS_ID?: string | null;
+  /** 驗收明細ID */
+  DETAIL_ID?: string | null;
   /** 品項名稱 */
   GOODS_NAME?: string | null;
   /** 單位 */
@@ -215,9 +217,11 @@ export interface ASS12050DetailItem {
   /** 驗收數量 */
   CHECK_QTY?: number | null;
   /** 單價(未稅) */
-  GOODS_PRICE?: number | null;
+  GOODS_PRICE: number | 0;
   /** 折讓單價 */
-  DIS_PRICE?: number | null;
+  DIS_PRICE: number | 0;
+  /** 總金額 */
+  AMT: number | 0;
   /** 分店 */
   SITE_ID?: string | null;
   /** 倉別 */
@@ -248,6 +252,7 @@ export interface ASS12050UpdateRequest {
   DIS_PRICE?: number | null;
   AMT?: number | null;
   NOTES?: string | null;
+  NTAX_AMT?: number | null;
 }
 
 // ==================== 強制結案 ====================

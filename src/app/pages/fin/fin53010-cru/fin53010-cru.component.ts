@@ -379,10 +379,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.isFormEditable && this.dataForm.controls.PostFlag.value === '3';
   }
 
-  /** 補發票欄位可編輯條件：傳票型態=GL 且 狀態=建立(1) */
+  /** 補發票欄位可編輯條件：狀態=建立(1) */
   get isInvYnEditable(): boolean {
     if (this.isFormReadable) return false;
-    return this.voucherTypeCode() === 'GL' && this.dataForm.controls.PostFlag.value === '1';
+    return this.dataForm.controls.PostFlag.value === '1';
   }
 
   /** 查詢傳票編號為空白（含僅空白字元）時，停用「載入傳票」 */
