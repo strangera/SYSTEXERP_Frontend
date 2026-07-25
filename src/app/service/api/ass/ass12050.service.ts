@@ -18,6 +18,7 @@ import {
   ASS12050UpdateRequest,
   ASS12050VoidRequest,
   QueryASS12050Request,
+  ASS12050ApproveRequest
 } from '@pages/ass/ass12050/ass12050.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
@@ -71,7 +72,10 @@ export class ASS12050Service {
   confirmASS12050(body: ASS12050ConfirmRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/confirmASS12050`, body);
   }
-
+  /** 驗收審核 */
+  approveASS12050(body: ASS12050ApproveRequest): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/approveASS12050`, body);
+  }
   /** 更新驗收單 */
   updateASS12050(body: ASS12050UpdateRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/updateASS12050`, body);
