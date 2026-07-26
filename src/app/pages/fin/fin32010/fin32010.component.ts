@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDate } from '@others/component/table/table.model';
 import { Fin32010Service } from '@service/api/fin/fin32010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -13,13 +14,12 @@ import { InputNumberRangeComponent } from '@shared/components/input-number-range
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatDate } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { formatAmount } from './../../../shared/components/table-report/table-report.model';
 //1.3.2.1 應收帳款維護
 @Component({
@@ -53,6 +53,7 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     ARS_Status: [null],
     SubDetailNo: [null],
     NoteDesc: [null, [Validators.maxLength(160)]],
+    PTA: [null, [Validators.maxLength(19)]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -75,6 +76,7 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'VouStatus', header: '傳票狀態' },
     { field: 'ARS_StatusName', header: '應收狀態' },
+    { field: 'PTA_Key', header: '立沖代號' }
   ];
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
@@ -160,6 +162,7 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
         ARS_SourceNo: frm.value.ARS_SourceNo || null,
         VouNo: frm.value.VouNo || null,
         NoteDesc: frm.value.NoteDesc || null,
+        PTA: frm.value.PTA || null,
       };
 
       this.fin32010Service.queryFIN32010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {

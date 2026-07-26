@@ -115,6 +115,7 @@ export interface QueryFIN55050Request {
   PageSize?: number;
   PageIndex?: number;
   VouStatusList?: string[];
+  ReportMode?: string; // 報表方式(1=只含交易科目；2=含無交易科目)
 }
 
 /**

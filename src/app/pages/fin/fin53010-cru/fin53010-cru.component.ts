@@ -379,10 +379,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.isFormEditable && this.dataForm.controls.PostFlag.value === '3';
   }
 
-  /** 補發票欄位可編輯條件：傳票型態=GL 且 狀態=建立(1) */
+  /** 補發票欄位可編輯條件：狀態=建立(1) */
   get isInvYnEditable(): boolean {
     if (this.isFormReadable) return false;
-    return this.voucherTypeCode() === 'GL' && this.dataForm.controls.PostFlag.value === '1';
+    return this.dataForm.controls.PostFlag.value === '1';
   }
 
   /** 查詢傳票編號為空白（含僅空白字元）時，停用「載入傳票」 */
@@ -804,6 +804,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '立沖代號',
         textAlign: 'left',
         type: 'input',
+        cellClass: this.ptaCellClass,
         placeholder: '點擊選擇...',
         onFocus: (_r, _v, _c, index: number) => {
           if (this.isFormReadable) return;
@@ -3151,6 +3152,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ABAT_YN: String(info?.['ABAT_YN'] ?? '').trim(),
     };
   }
+
+  /** 立沖代號欄位底色：
+   *  同方向（系統自動產生 #N）→ 綠底 pta-cell-auto
+   *  反向（須自行挑選立沖代號）→ 橘底 pta-cell-manual */
+  public ptaCellClass = (rowData: FIN53010DetailTable): string => {
+    const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData?.AccNo);
+    if (ABAT_YN !== 'Y') return '';
+    if (this.isAutoCodeRow(rowData)) return 'pta-cell-auto';
+    const isReverse = (AccDC === 'D' && (rowData?.AccAmtC ?? 0) > 0)
+      || (AccDC === 'C' && (rowData?.AccAmtD ?? 0) > 0);
+    return isReverse ? 'pta-cell-manual' : '';
+  };
 
   /** 判斷該列是否應自動編碼 PTA（同方向 + ABAT_YN=Y） */
   private isAutoCodeRow(rowData: FIN53010DetailTable): boolean {

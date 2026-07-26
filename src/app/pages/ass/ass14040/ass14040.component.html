@@ -5,11 +5,13 @@
       btnType="query"
       label="試算"
       (click)="onCalc(queryForm)"
+      [disabled]="!hasPermission(Actions.Trial)"
     ></app-button>
     <app-button
       btnType="query"
       label="結算"
       (click)="onClose(queryForm)"
+      [disabled]="!hasPermission(Actions.Settle)"
     ></app-button>
   </div>
   <p-accordion>

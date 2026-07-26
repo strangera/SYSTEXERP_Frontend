@@ -19,11 +19,11 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, map } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
+import { formatAmount, formatAmountCN } from '../../../others/component/table/table.model';
 import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../service/api/tls/tls32010.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { formatAmount, formatAmountCN } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-tls32010',
@@ -131,7 +131,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       });
     })
   );
-  taxOptions = [{ value: '1', label: '含稅' }, { value: '2', label: '未稅' }];
+  taxOptions = [{ value: '1', label: '是' }, { value: '2', label: '否' }];
   monthOptions = Array.from({ length: 12 }, (_, i) => ({
     value: i + 1, label: `${i + 1} 月`
   }));

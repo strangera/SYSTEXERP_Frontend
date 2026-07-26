@@ -15,9 +15,9 @@
             #fileUpload
             class="col-12"
             name="file"
-            accept=".csv"
+            accept=".xlsx"
             [multiple]="false"
-            chooseLabel="選擇 CSV 檔案"
+            chooseLabel="選擇 Excel 檔案"
             [auto]="false"
             [customUpload]="true"
             [showUploadButton]="false"
@@ -26,7 +26,7 @@
             [loading]="loading"
             (remove)="onFileRemove()"
             label="檔案名稱"
-            emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 檔案」按鈕。"
+            emptyMessage="拖曳檔案到此處或點擊「選擇 Excel 檔案」按鈕。"
             [disabled]="false"
           ></app-file-upload>
 

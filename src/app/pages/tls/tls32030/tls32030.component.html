@@ -6,126 +6,149 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-        <div class="grid p-fluid mb-4">
-          <div class="col-12">
-            <B><u>報表類型條件</u></B>
+        <!-- 日期查詢條件 -->
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-12">
             <app-radiobutton groupname="DayType" [control]="queryForm.controls.DayType" [submitted]="submitted"
               [options]="DayTypeOptions"></app-radiobutton>
           </div>
-        </div>
-
-        <!-- 註記: 比較日期基準日期呈現字眼互換，TS主邏輯皆無改動 -->
-        <B class="block mb-2"><u>日期查詢條件</u></B>
-        <div class="flex w-full mb-4">
-          <div class="flex-1 p-2">
-            <div class="text-center mb-2">
-              <B><u>比較資料查詢條件</u></B>
+          <!-- 註記: 比較日期基準日期呈現字眼互換，TS主邏輯皆無改動 -->
+          <!-- 日營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '1'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
+              <div class="col-12">
+                <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.BaseDateFrom"
+                  [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
+              </div>
             </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '1'">
-              <div class="col-12 text-600 text-sm mt-3">
-                <div class="grid p-fluid" [hidden]="true">
-                  <div class="col-12">
-                    <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.BaseDateFrom"
-                      [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
-                  </div>
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
+              <div class="col-12">
+                <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.CompareDateFrom"
+                  [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
+              </div>
+            </div>
+          </div>
+          <!-- 週營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '2'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
+                    [control]="queryForm.controls.year" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="週次" controlName="week" [options]="weekOptions" optionLabel="label"
+                    optionValue="value" [control]="queryForm.controls.week" [submitted]="submitted" />
                 </div>
               </div>
             </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '2'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="週次" controlName="week" [options]="weekOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.week" [submitted]="submitted" />
-              </div>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '3'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
-              </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="月份" controlName="month" [options]="monthOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.month" [submitted]="submitted" />
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
+                    [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="週次" controlName="CompareWeek" [options]="weekOptions" optionLabel="label"
+                    optionValue="value" [control]="queryForm.controls.CompareWeek" [submitted]="submitted" />
+                </div>
               </div>
             </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '4'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
-                  [control]="queryForm.controls.year" [submitted]="submitted" />
+          </div>
+          <!-- 月營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '3'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
               </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="半年別" controlName="halfYear" [options]="halfYearOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.halfYear" [submitted]="submitted" />
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
+                    [control]="queryForm.controls.year" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="月份" controlName="month" [options]="monthOptions" optionLabel="label"
+                    optionValue="value" [control]="queryForm.controls.month" [submitted]="submitted" />
+                </div>
               </div>
             </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '5'">
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
+                    [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="月份" controlName="CompareMonth" [options]="monthOptions" optionLabel="label"
+                    optionValue="value" [control]="queryForm.controls.CompareMonth" [submitted]="submitted" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 半年營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '4'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
+                    [control]="queryForm.controls.year" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="半年別" controlName="halfYear" [options]="halfYearOptions" optionLabel="label"
+                    optionValue="value" [control]="queryForm.controls.halfYear" [submitted]="submitted" />
+                </div>
+              </div>
+            </div>
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
+              <div class="grid p-fluid p-2">
+                <div class="col-6">
+                  <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
+                    [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+                </div>
+                <div class="col-6">
+                  <app-dropdown label="半年別" controlName="CompareHalfYear" [options]="halfYearOptions"
+                    optionLabel="label" optionValue="value" [control]="queryForm.controls.CompareHalfYear"
+                    [submitted]="submitted" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 年營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '5'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
                   [control]="queryForm.controls.year" [submitted]="submitted" />
               </div>
             </div>
-          </div>
-
-          <p-divider layout="vertical" class="m-0 p-0"></p-divider>
-
-          <div class="flex-1 p-2">
-            <div class="text-center mb-2">
-              <B><u>基準資料查詢條件</u></B>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '1'">
-              <div class="col-12 text-600 text-sm mt-3">
-                <div class="grid p-fluid" [hidden]="true">
-                  <div class="col-12">
-                    <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.CompareDateFrom"
-                      [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
-                  </div>
-                </div>
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
               </div>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '2'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
-              </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="週次" controlName="CompareWeek" [options]="weekOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareWeek" [submitted]="submitted" />
-              </div>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '3'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
-              </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="月份" controlName="CompareMonth" [options]="monthOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareMonth" [submitted]="submitted" />
-              </div>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '4'">
-              <div class="col-12 lg:col-6">
-                <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
-                  [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
-              </div>
-              <div class="col-12 lg:col-6">
-                <app-dropdown label="半年別" controlName="CompareHalfYear" [options]="halfYearOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.CompareHalfYear" [submitted]="submitted" />
-              </div>
-            </div>
-
-            <div class="grid p-fluid" *ngIf="queryForm.controls.DayType.value === '5'">
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
                   [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
@@ -133,27 +156,10 @@
             </div>
           </div>
         </div>
-
-        <!-- <div class="grid p-fluid" [hidden]="true">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.BaseDateFrom"
-              [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
-          </div>
-        </div>
-        <div class="grid p-fluid" [hidden]="true">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.CompareDateFrom"
-              [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
-          </div>
-        </div> -->
         <hr />
 
+        <!-- 合約查詢條件 -->
         <div class="grid p-fluid">
-          <div class="col-12">
-            <span>
-              <B><u>合約查詢條件</u></B>
-            </span>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="館別" controlName="BuildingList" [options]="auditoriumOptions | async"
               optionLabel="Name" optionValue="No" [control]="queryForm.controls.BuildingList"
@@ -169,15 +175,17 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類" controlName="BusTypeList" [options]="businessTypeCodeOptions | async"
+            <app-multi-select label="大分類代碼/名稱" controlName="BusTypeList" [options]="businessTypeCodeOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.BusTypeList"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類" controlName="BusClassList" [options]="BusClassListOptions | async"
+            <app-multi-select label="中分類代碼/名稱" controlName="BusClassList" [options]="BusClassListOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.BusClassList"
               [submitted]="submitted"></app-multi-select>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="TltKindList" [options]="operationsOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.TltKindList" [submitted]="submitted"></app-multi-select>
@@ -195,7 +203,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="TltNoList" [options]="counterCodeOptions | async"
+            <app-multi-select label="專櫃編號/名稱" controlName="TltNoList" [options]="counterCodeOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.TltNoList"
               [submitted]="submitted"></app-multi-select>
           </div>

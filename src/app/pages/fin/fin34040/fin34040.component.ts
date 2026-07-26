@@ -338,13 +338,19 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   }
 
   private buildDetailPayload(venNo: string, bucket: Fin34040Bucket): Fin34040DetailRequest {
-    const payload: Fin34040DetailRequest = {
+    const form = this.queryForm.getRawValue();
+    return {
       VenNo: venNo,
-      BaseDate: this.datePipe.transform(this.queryForm.controls.PayDate.value, 'yyyy-MM-dd') || '',
+      BaseDate: this.datePipe.transform(form.PayDate, 'yyyy-MM-dd') || '',
+      ARS_DateFrom: this.datePipe.transform(form.ARS_Date_From, 'yyyy-MM-dd') || null,
+      ARS_DateTo: this.datePipe.transform(form.ARS_Date_To, 'yyyy-MM-dd') || null,
+      AnalysisDate: this.datePipe.transform(form.AnalysisDate, 'yyyy-MM-dd') || '',
+      IntervalDays: form.IntervalDays ?? 0,
+      AnalysisPeriods: form.AnalysisPeriods ?? 0,
+      AnalysisDateType: form.AnalysisDateType || 'P',
+      DueType: bucket.Side,
+      BucketNo: bucket.BucketNo,
     };
-    if (bucket.DateFrom) payload.ARS_DateFrom = bucket.DateFrom;
-    if (bucket.DateTo) payload.ARS_DateTo = bucket.DateTo;
-    return payload;
   }
 
   onLinkClick(event: { rowData: any; field: string }): void {

@@ -3,6 +3,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, formatDate } from '@others/component/table/table.model';
 import { ASS12010Data, ASS12010DetailResponse } from '@pages/ass/ass12010/ass12010.model';
 import { ASS12020Detail, ASS12020QueryRow } from '@pages/ass/ass12020/ass12020.model';
 import {
@@ -30,8 +32,6 @@ import {
   validateMinNumber,
   validateRequired,
 } from '@shared/components/table-edit/validate-field.model';
-import { TableComponent } from '@others/component/table/table.component';
-import { Column, formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
@@ -366,20 +366,48 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
+
             const d: ASS12010DetailResponse = res.Data;
+
+            const orgId = d?.Header?.ORG_ID ?? row.ORG_ID ?? '';
+            const orgName = d?.Header?.ORG_NAME ?? row.ORG_NAME ?? '';
+
+            // 避免停用部門不在下拉選項中，導致畫面無法顯示名稱
+            this.ensureEntrustOrgOption(orgId, orgName);
+
             this.dataForm.patchValue({
-              EMP_ID: d?.Header?.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? '',
-              ORG_ID: d?.Header?.ORG_ID ?? this.dataForm.get('ORG_ID')?.value ?? '',
-              APPLY_DATE: d?.Header?.APPLY_DATE ? new Date(String(d.Header.APPLY_DATE)) : this.dataForm.get('APPLY_DATE')?.value,
-              NOTES: d?.Header?.NOTE ?? this.dataForm.get('NOTES')?.value ?? '',
+              EMP_ID:
+                d?.Header?.EMP_ID ??
+                this.dataForm.get('EMP_ID')?.value ??
+                '',
+
+              ORG_ID:
+                orgId ||
+                this.dataForm.get('ORG_ID')?.value ||
+                '',
+
+              APPLY_DATE: d?.Header?.APPLY_DATE
+                ? new Date(String(d.Header.APPLY_DATE))
+                : this.dataForm.get('APPLY_DATE')?.value,
+
+              NOTES:
+                d?.Header?.NOTE ??
+                this.dataForm.get('NOTES')?.value ??
+                '',
             });
+
             const needId = d?.Header?.NEED_ID ?? row.NEED_ID ?? '';
+
             this.data = (d?.Details ?? []).map(item => ({
               GOODS_ID: item.GOODS_ID,
               NEED_ID: needId,
               QTY: item.QTY,
               NOTES: item.NOTES,
+TAX_CODE: '1', // 預設應稅
+              // 委託部門帶入請購單表頭部門
+              ORG_ID: orgId,
             }));
+
             this.displayApplyDialog = false;
             this.messageService.successBubble('套用成功');
           },
@@ -411,13 +439,33 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
             WH_ID: item.WH_ID,
             NEED_ID: item.NEED_ID,
             NOTES: item.NOTES,
+            TAX_CODE: '1', // 預設應稅
           }));
           this.displayApplyDialog = false;
           this.messageService.successBubble('套用成功');
         },
       });
   }
+  private ensureEntrustOrgOption(
+    orgId: string | null | undefined,
+    orgName: string | null | undefined
+  ): void {
+    if (!orgId) return;
 
+    const exists = this.entrustOrgIdOptions.some(
+      option => option.value === orgId
+    );
+
+    if (!exists) {
+      this.entrustOrgIdOptions = [
+        ...this.entrustOrgIdOptions,
+        {
+          value: orgId,
+          label: `${orgId} - ${orgName ?? ''}`,
+        },
+      ];
+    }
+  }
   get applyDialogTitle(): string {
     return this.applyDialogMode === 'quoted' ? '選擇請購清單（套用請購清單）' : '選擇詢價清單（套用詢價清單）';
   }
@@ -435,7 +483,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     return {
       GOODS_ID: null,
       NEED_ID: null,
-      TAX_CODE: null,
+      TAX_CODE: '1', // 預設應稅
       QTY: null,
       GOODS_PRICE: null,
       ORG_ID: null,
@@ -470,8 +518,8 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
       const applyDate = raw.APPLY_DATE instanceof Date
-        ? raw.APPLY_DATE.toISOString().slice(0, 10)
-        : String(raw.APPLY_DATE ?? '');
+  ? this.formatLocalDate(raw.APPLY_DATE)
+  : String(raw.APPLY_DATE ?? '');
 
       if (this.crudstatus === CRUDStatus.Create) {
         const payload: ASS12030InsertRequest = {
@@ -524,4 +572,13 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       }
     });
   }
+  private formatLocalDate(date: Date | null): string {
+  if (!date) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
 }

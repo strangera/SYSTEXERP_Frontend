@@ -145,6 +145,10 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
+
+    // --- 區間報（type 6）
+    sad_startdate: [null as Date | null],
+    sad_enddate: [null as Date | null],
   });
 
   halfyearOptions = [
@@ -163,7 +167,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     { value: 'MONTH', label: '月營業報表' },
     { value: 'HALFYEAR', label: '半年營業報表' },
     { value: 'YEAR', label: '年營業報表' },
-    // { value: '6', label: '區間營業報表' }, //本作業不使用
+    { value: 'SAD', label: '區間營業報表' },
   ];
 
   totalRecords = 0;
@@ -715,6 +719,12 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         break;
+      case 'SAD': // 區間營業報表
+        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
+        this.c_dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.c_dateForm.get('sad_enddate')?.setValidators([Validators.required]);
+        break;
     }
 
     // 更新所有欄位驗證狀態
@@ -855,6 +865,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         }
         break;
       }
+
+      case 'SAD': // 區間報：直接分別取用 dateForm / c_dateForm 的日期，不鎖定也不自動帶入
+        start = this.dateForm.get('sad_startdate')?.value as Date | null;
+        end = this.dateForm.get('sad_enddate')?.value as Date | null;
+        compareStart = this.c_dateForm.get('sad_startdate')?.value as Date | null;
+        compareEnd = this.c_dateForm.get('sad_enddate')?.value as Date | null;
+        break;
     }
 
     // 套用到 queryForm
@@ -942,6 +959,12 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
           compareStart = new Date(year, 0, 1);         // 1/1
           compareEnd = new Date(year, 11, 31);         // 12/31
         }
+        break;
+      }
+
+      case 'SAD': { // 區間報
+        compareStart = this.c_dateForm.controls.sad_startdate.value;
+        compareEnd = this.c_dateForm.controls.sad_enddate.value;
         break;
       }
     }

@@ -3,28 +3,27 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatPercentage } from '@others/component/table/table.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatPercentage } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { DividerModule } from 'primeng/divider';
 import { finalize, startWith } from 'rxjs';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 
 @Component({
@@ -78,7 +77,6 @@ import { createPaginationConfig } from '../../../others/component/table/table.mo
     MenubarComponent,
     ButtonComponent,
     CalendarComponent,
-    DividerModule,
     CalendarRangeComponent,
     DropdownComponent,
     MultiSelectComponent,
@@ -137,7 +135,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: '5', label: '年營業報表' },
   ];
 
-  taxOptions = [{ value: 'G', label: '含稅' }, { value: 'N', label: '未稅' }];
+  taxOptions = [{ value: 'G', label: '是' }, { value: 'N', label: '否' }];
   auditoriumOptions = this.dropdown.querySys3800();
   organizationOptions = this.dropdown.querySys3100();
   regionOptions = this.dropdown.querySys3A00();

@@ -3,21 +3,24 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15040Service } from '@service/api/ass/ass15040.service';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { map, Observable, of } from 'rxjs';
+import { formatAmount, formatDate } from 'src/app/shared/components/table-report/table-report.model';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { FileExportService } from '../../../shared/service/file-export.service';
 import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } from './ass15040.model';
+
 
 // 3.1.5.4 財產目錄之會計科目報表
 @UntilDestroy()
@@ -53,25 +56,25 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
   exportPdfLoading = false;
   exportExcelLoading = false;
 
-  columns: any[] = [
-    { field: 'STYPE_ID', header: '會計科目代碼', visible: true },
-    { field: 'STYPE_NAME', header: '會計科目名稱', visible: true },
-    { field: 'ASSET_ID', header: '資產編號', visible: true },
-    { field: 'GOODS_ID', header: '品項編號', visible: true },
-    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
-    { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: true },
-    { field: 'HOLD_ORG_NAME', header: '保管單位名稱', visible: true },
-    { field: 'GET_DATE', header: '取得日期', visible: true },
-    { field: 'NOTES', header: '備註', visible: true },
-    { field: 'EXP_YEAR', header: '耐用年數', visible: true },
-    { field: 'GET_COST', header: '取得成本', visible: true },
-    { field: 'RESI_VALUE', header: '殘值', visible: true },
-    { field: 'YEAR_BEGIN_DEPREAMT', header: '年初累計折舊', visible: true },
-    { field: 'PREV_DEPREAMT', header: '前期折舊', visible: true },
-    { field: 'YEAR_DEPREAMT', header: '本期折舊', visible: true },
-    { field: 'MONTH_DEPREAMT', header: '本月折舊', visible: true },
-    { field: 'ACCUMULATED_DEPREAMT', header: '累計折舊', visible: true },
-    { field: 'AMT', header: '帳面價值（淨值）', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'STYPE_ID', header: '會計科目代碼', visible: true, align: 'left' },
+    { field: 'STYPE_NAME', header: '會計科目名稱', visible: true, align: 'left' },
+    { field: 'ASSET_ID', header: '資產編號', visible: true, align: 'left', width: '150px' },
+    { field: 'GOODS_ID', header: '品項編號', visible: true, align: 'left', width: '150px' },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true, align: 'left' },
+    { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: true, align: 'left' },
+    { field: 'HOLD_ORG_NAME', header: '保管單位名稱', visible: true, align: 'left' },
+    { field: 'GET_DATE', header: '取得日期', visible: true, align: 'left', format: formatDate, width: '100px' },
+    { field: 'NOTES', header: '備註', visible: true, align: 'left', width: '300px' },
+    { field: 'EXP_YEAR', header: '耐用年數', visible: true, align: 'right', format: formatAmount },
+    { field: 'GET_COST', header: '取得成本', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'RESI_VALUE', header: '殘值', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'YEAR_BEGIN_DEPREAMT', header: '年初累計折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'PREV_DEPREAMT', header: '前期折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'YEAR_DEPREAMT', header: '本期折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'MONTH_DEPREAMT', header: '本月折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'ACCUMULATED_DEPREAMT', header: '累計折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
+    { field: 'AMT', header: '帳面價值（淨值）', visible: true, align: 'right', format: formatAmount, width: '100px' },
   ];
 
   keeperUnitOptions: Option[] = [];
