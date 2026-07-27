@@ -141,6 +141,8 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
     });
   }
 
+  isRowSelectable = (row: FIN25010Data): boolean => !row.WSLIP_NO;
+
   onDelete(selectedItems: FIN25010Data[]) {
     const body = {
       selectList: selectedItems.map(item => ({
