@@ -101,7 +101,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
     AnalysisDate: [null as Date | null, [Validators.required]],
     IntervalDays: [null as number | null, [Validators.required]],
     AnalysisPeriods: [null as number | null, [Validators.required]],
-    AnalysisDateType: [null as string | null],
+    AnalysisDateType: ['A', [Validators.required]],
     VEN_No_From: [null as string | null],
     VEN_No_To: [null as string | null],
     ARS_Date_From: [null as Date | null],
