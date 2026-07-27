@@ -135,6 +135,9 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       });
   }
 
+  isRowSelectable = (row: QueryFIN32030Response): boolean => !row.VouNo;
+  editDisabled = (row: QueryFIN32030Response): boolean => !!row.VouNo;
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
