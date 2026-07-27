@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { formatPercentage } from '@others/component/table/table.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -12,6 +13,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, startWith } from 'rxjs';
+import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
@@ -84,7 +86,8 @@ import { TableReportComponent } from '../../../shared/components/table-report/ta
     TableReportComponent,
     CheckboxModule,
     NgFor,
-    LocationSplitPipe
+    LocationSplitPipe,
+    CategorySelectComponent
   ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
@@ -92,12 +95,14 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     DayType: ['3' as string | null], // 【修改】移除預設值 '3'，改為 null
     BaseDateFrom: [null as Date | null, [Validators.required]],
     BaseDateTo: [null as Date | null, [Validators.required]],
+    day: [null as Date | null], // 日營業報表：單一比較日期
     year: [null as Date | null],
     week: [null as number | null],
     month: [null as number | null],
     halfYear: [null as number | null],
     CompareDateFrom: [null as Date | null, [Validators.required]],
     CompareDateTo: [null as Date | null, [Validators.required]],
+    CompareDay: [null as Date | null], // 日營業報表：單一基準日期
     CompareYear: [null as Date | null],
     CompareWeek: [null as number | null],
     CompareMonth: [null as number | null],
@@ -105,8 +110,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     FloorList: [""],
     AreaList: [""],
     BuildingList: [""],
-    BusTypeList: [""],
-    BusClassList: [""],
+    category: [null as { bus_type: string[]; bus_class: BusClassItem[]; bus_sclass: BusSClassItem[] } | null],
     TltKindList: [""],
     OrgList: [""],
     TltNoList: [""],
@@ -133,6 +137,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
+    { value: '6', label: '區間營業報表' },
   ];
 
   taxOptions = [{ value: 'G', label: '是' }, { value: 'N', label: '否' }];
@@ -140,10 +145,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   organizationOptions = this.dropdown.querySys3100();
   regionOptions = this.dropdown.querySys3A00();
   floorOptions = this.dropdown.querySys3900();
-  businessTypeCodeOptions = this.dropdown.queryTltBusType();
-  BusClassListOptions = this.dropdown.queryTltBusType();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
-  operationsOptions = getSYS1000Options('store_way');
+  operationsOptions = getSYS1000Options('TLT_Kind');
   counterCodeOptions = this.dropdown.queryTltTalent();
   ReceFilterOptions = [
     { value: 'A', label: '全部' },
@@ -255,6 +258,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       untilDestroyed(this)
     ).subscribe(type => {
       // 【修改】切換 DayType 時，純粹清空所有輔助與日期欄位，不給予任何預設值
+      this.queryForm.controls.day.setValue(null, { emitEvent: false });
+      this.queryForm.controls.CompareDay.setValue(null, { emitEvent: false });
       this.queryForm.controls.year.setValue(null, { emitEvent: false });
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
       this.queryForm.controls.month.setValue(null, { emitEvent: false });
@@ -276,6 +281,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     });
 
     // 訂閱欄位變化後重新計算區間（若有值才計算）
+    this.queryForm.controls.day.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareDay.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(year => {
       this.setWeekOptions(year);
       this.calculateDateRanges(this.queryForm.controls.DayType.value);
@@ -349,6 +356,20 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     let baseRange: { from: Date, to: Date } | null = null;
     let compareRange: { from: Date, to: Date } | null = null;
 
+    if (type === '1') {
+      // 日營業報表：單一比較日/基準日各自由使用者選擇，不需要年度輔助欄位，故獨立處理、不受下方年度檢查阻擋
+      const baseDay = this.queryForm.controls.day.value;
+      const compareDay = this.queryForm.controls.CompareDay.value;
+      if (baseDay) baseRange = { from: baseDay, to: baseDay };
+      if (compareDay) compareRange = { from: compareDay, to: compareDay };
+
+      this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
+      this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
+      this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
+      this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
+      return;
+    }
+
     const baseYear = this.queryForm.controls.year.value;
     const baseWeek = this.queryForm.controls.week.value;
     const baseMonth = this.queryForm.controls.month.value;
@@ -366,15 +387,6 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     const compareYearNum = compareYear.getFullYear();
 
     switch (type) {
-      case '1': // 日營業報表：若不需隨今天連動預設，亦可改為留空或保留今日vs昨日
-        {
-          const today = new Date();
-          const yesterday = new Date(today);
-          yesterday.setDate(today.getDate() - 1);
-          baseRange = { from: today, to: today };
-          compareRange = { from: yesterday, to: yesterday };
-          break;
-        }
       case '2':
         if (baseWeek) baseRange = this.getWeekRange(baseYearNum, baseWeek);
         if (compareWeek) compareRange = this.getWeekRange(compareYearNum, compareWeek);
@@ -391,6 +403,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         baseRange = this.getYearRange(baseYearNum);
         compareRange = this.getYearRange(compareYearNum);
         break;
+      // case '6' 區間營業報表：BaseDateFrom/BaseDateTo/CompareDateFrom/CompareDateTo 由使用者直接輸入
+      // （app-calendar-range 直接綁定），不透過本函式計算，維持 baseRange/compareRange 為 null 即可。
     }
 
     this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
@@ -469,6 +483,10 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       };
 
+      // 分類條件：與 TLS32020 一致，統一交由 app-category-select 維護大/中/小分類的連動關係，
+      // 送出時再依代碼組成後端既有的逗號分隔字串格式。
+      const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
+
       const body = {
         PageSize: formValue.PageSize ?? formValue.pageSize ?? 0,
         PageIndex: formValue.PageIndex ?? formValue.pageIndex ?? 0,
@@ -483,8 +501,10 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         ReceFilter: formValue.ReceFilter ?? null,
         FloorList: this.formatListForBackend(formValue.FloorList),
         AreaList: this.formatListForBackend(formValue.AreaList),
-        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
-        BusClassList: this.formatListForBackend(formValue.BusClassList),
+        BusTypeList: this.formatListForBackend(cat.bus_type),
+        BusClassList: this.formatListForBackend(cat.bus_class?.map((c: BusClassItem) => c.No)),
+        // 小分類：只送小分類代碼 (No)，格式與 BusTypeList/BusClassList 一致 (逗號分隔字串，非複合鍵)。
+        BusSClassList: this.formatListForBackend(cat.bus_sclass?.map((s: BusSClassItem) => s.No)),
         TltKindList: this.formatListForBackend(formValue.TltKindList),
         OrgList: this.formatListForBackend(formValue.OrgList),
         TltNoList: this.formatListForBackend(formValue.TltNoList),

@@ -7,11 +7,11 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 
 import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
 import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -178,7 +178,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
         header: '申報年月',
         type: 'input',
         width: '130px',
-        disabled: () => true,
+        validate: [this.validateEvenMonth],
       },
       {
         field: 'TXN_Uniform',
@@ -481,4 +481,31 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     const date = this.toDateString(v);
     return date ? date.replace(/-/g, '/') : '';
   }
+
+  // 驗證申報年月 (必須為偶數月)
+  validateEvenMonth = (value: any) => {
+    // 1. 檢查是否為空 (若非必填可直接通過，若必填則交由 validateRequired)
+    if (!value) return { isValid: true, errorMessage: [] };
+
+    const valStr = String(value);
+    const month = parseInt(valStr.substring(4, 6), 10);
+
+    // 2. 基本格式檢查 (YYYYMM)
+    if (!/^\d{6}$/.test(valStr) || month < 1 || month > 12) {
+      return {
+        isValid: false,
+        errorMessage: [`格式錯誤，應為 YYYYMM (如 202402)`]
+      };
+    }
+
+    // 3. 偶數月檢查
+    if (month % 2 !== 0) {
+      return {
+        isValid: false,
+        errorMessage: [`必須為雙數月`]
+      };
+    }
+
+    return { isValid: true, errorMessage: [] };
+  };
 }

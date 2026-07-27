@@ -5,13 +5,13 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { fin13090Detail, Fin13090Service } from '@service/api/fin/fin13090.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
@@ -278,7 +278,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '190px', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
       { field: 'PUR_GUINo', header: '發票號碼', type: 'input', width: '130px', maxLength: 10, validate: [this.validateGUINo], disabled: locked },
       { field: 'PUR_GUIDate', header: '發票日期', type: 'date', width: '140px', validate: [validateRequired], disabled: locked },
-      { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input', width: '110px', validate: [this.validateEvenMonth], disabled: () => true },
+      { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input', width: '110px', validate: [this.validateEvenMonth]},
       { field: 'PUR_VenNo', header: '廠商編號', type: 'custom', width: '190px', validate: [validateRequired], disabled: locked },
       { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', width: '140px', maxLength: 10, disabled: locked },
       { field: 'PUR_VenName', header: '廠商名稱', type: 'input', width: '180px', maxLength: 60, disabled: locked },
