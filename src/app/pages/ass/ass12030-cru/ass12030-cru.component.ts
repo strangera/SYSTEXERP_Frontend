@@ -3,6 +3,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, formatDate } from '@others/component/table/table.model';
 import { ASS12010Data, ASS12010DetailResponse } from '@pages/ass/ass12010/ass12010.model';
 import { ASS12020Detail, ASS12020QueryRow } from '@pages/ass/ass12020/ass12020.model';
 import {
@@ -30,8 +32,6 @@ import {
   validateMinNumber,
   validateRequired,
 } from '@shared/components/table-edit/validate-field.model';
-import { TableComponent } from '@others/component/table/table.component';
-import { Column, formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
@@ -315,7 +315,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     this.applyListLoading = true;
     this.selectedQuotedRow = null;
     this.ass12010Service
-      .queryASS12010({ PageSize: 9999, PageIndex: 1 })
+      .queryASS12010({ PageSize: 9999, PageIndex: 1, NEEDS_STATUS: '2' })
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
