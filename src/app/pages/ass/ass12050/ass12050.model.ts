@@ -194,6 +194,8 @@ export interface ASS12050Detail {
   TAX_AMT?: number | null;
   /** 含稅總金額 */
   AMT?: number | null;
+  /** 驗收狀態 */
+  CHK_Status?: string | null;
   /** 明細列 */
   Details?: ASS12050DetailItem[];
 }
@@ -233,14 +235,32 @@ export interface ASS12050DetailItem {
 }
 
 // ==================== 驗收確認 ====================
-
-/** 驗收確認 Request（明細級） */
+/** 驗收確認 Request */
 export interface ASS12050ConfirmRequest {
+  SUBCHECK_ID: string;
+  USR_NO?: string | null;
+  USR_NAME?: string | null;
+  /** 驗收確認明細 */
+  DETAILS: ASS12050ConfirmDetail[];
+}
+
+// ==================== 明細項目 ====================
+/** 驗收確認明細 */
+export interface ASS12050ConfirmDetail {
+  /** 驗收明細 ID */
   DETAIL_ID: string;
-  CHECK_QTY?: number | null;
-  DIS_PRICE?: number | null;
-  NTAX_AMT?: number | null;
-  NOTES?: string | null;
+
+  /** 本次驗收數量 */
+  CHECK_QTY: number;
+
+  /** 折讓單價 */
+  DIS_PRICE: number;
+
+  /** 未稅金額 */
+  NTAX_AMT: number;
+
+  /** 說明 */
+  NOTES: string | null;
 }
 
 // ==================== 編輯 ====================
@@ -255,6 +275,12 @@ export interface ASS12050UpdateRequest {
   NTAX_AMT?: number | null;
 }
 
+// ==================== 審核 ====================
+
+/** 作廢 Request */
+export interface ASS12050ApproveRequest {
+  SUBCHECK_ID: string;
+}
 // ==================== 強制結案 ====================
 
 /** 強制結案明細項目 */
