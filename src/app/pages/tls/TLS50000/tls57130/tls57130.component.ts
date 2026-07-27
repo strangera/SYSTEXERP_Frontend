@@ -4,17 +4,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatAmount, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { Tls57130DataItem, Tls57130Request, Tls57130Service } from '@service/api/tls/tls57130.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatAmount, formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -34,7 +34,7 @@ export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem>
     RNK_No: [null],// 顯示名次
     RNK_Status: [null, [Validators.required]],// 排名方式(1.金額2.數量)
     SortBy: [[{ field: 'LOGO_No', order: 1 }]],
-    PageSize: [30],
+    PageSize: [1000],
     PageIndex: [1],
   });
   RNK_StatusOptions = [{ value: '1', label: '金額' }, { value: '2', label: '數量' }];
