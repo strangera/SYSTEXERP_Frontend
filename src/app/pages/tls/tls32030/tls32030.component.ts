@@ -484,7 +484,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       };
 
       // 分類條件：與 TLS32020 一致，統一交由 app-category-select 維護大/中/小分類的連動關係，
-      // 送出時再依代碼組成後端既有的逗號分隔字串格式 (TLS32030 後端目前尚未支援 BusSClassList，見下方註記)。
+      // 送出時再依代碼組成後端既有的逗號分隔字串格式。
       const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
 
       const body = {
@@ -503,8 +503,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         AreaList: this.formatListForBackend(formValue.AreaList),
         BusTypeList: this.formatListForBackend(cat.bus_type),
         BusClassList: this.formatListForBackend(cat.bus_class?.map((c: BusClassItem) => c.No)),
-        // 【後端尚未支援】TLS32030Request/Repository/SP 目前都沒有小分類參數，這裡先送出讓 UI 邏輯與
-        // TLS32020 一致；實際篩選要生效需另外請後端在 TLS32030Request + Repository + SP 補上 BusSClassList。
+        // 小分類：只送小分類代碼 (No)，格式與 BusTypeList/BusClassList 一致 (逗號分隔字串，非複合鍵)。
         BusSClassList: this.formatListForBackend(cat.bus_sclass?.map((s: BusSClassItem) => s.No)),
         TltKindList: this.formatListForBackend(formValue.TltKindList),
         OrgList: this.formatListForBackend(formValue.OrgList),
