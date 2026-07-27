@@ -194,6 +194,8 @@ export interface ASS12050Detail {
   TAX_AMT?: number | null;
   /** 含稅總金額 */
   AMT?: number | null;
+  /** 驗收狀態 */
+  CHK_Status?: string | null;
   /** 明細列 */
   Details?: ASS12050DetailItem[];
 }

@@ -66,6 +66,7 @@ export class ASS12050CRUComponent
     NTAX_AMT: [null as number | null],
     TAX_AMT: [null as number | null],
     AMT: [null as number | null],
+    IsCanArrpove: [null as boolean | null],
   });
 
   /** 明細資料（table-edit 綁定） */
@@ -88,6 +89,7 @@ export class ASS12050CRUComponent
 
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
+
 
   editColumns: EditColumn[] = [
     {
@@ -113,7 +115,7 @@ export class ASS12050CRUComponent
     },
     {
       field: 'SHIP_QTY',
-      header: '出貨數量',
+      header: '應驗數量',
       type: 'inputNumber',
       disabled: () => !this.isFormCreateable,
     },
@@ -227,23 +229,11 @@ export class ASS12050CRUComponent
    * APPLY_DATE 來源為 FAASSCHKD_LIST.APPLY_DATE。
    */
   get canApprove(): boolean {
-    if (!this.isFormEditable || this.loading || this.data.length === 0) {
+    if (!this.isFormEditable || this.loading) {
       return false;
     }
 
-    return this.data.every(item => {
-      const applyDate = (
-        item as ASS12050DetailItem & {
-          APPLY_DATE?: string | Date | null;
-        }
-      ).APPLY_DATE;
-
-      return (
-        applyDate !== null &&
-        applyDate !== undefined &&
-        String(applyDate).trim() !== ''
-      );
-    });
+    return this.dataForm.get('IsCanArrpove')?.value === true;
   }
 
   /** 覆寫：從編輯主檔進入時，返回編輯主檔而非查詢頁 */
@@ -309,6 +299,7 @@ export class ASS12050CRUComponent
             NTAX_AMT: detail?.NTAX_AMT ?? null,
             TAX_AMT: detail?.TAX_AMT ?? null,
             AMT: detail?.AMT ?? null,
+            IsCanArrpove: detail?.CHK_Status == '1' ? true : false,
           });
 
           const details = (detail?.Details ?? []).map(item => ({
@@ -562,16 +553,7 @@ export class ASS12050CRUComponent
       this.dataForm.get('SUBCHECK_ID')?.value;
 
     if (!subcheckId) {
-      this.messageService.warnBubble(
-        '無可審核的驗收單',
-      );
-      return;
-    }
-
-    if (!this.canApprove) {
-      this.messageService.warnBubble(
-        '尚有明細未完成驗收，不可執行審核',
-      );
+      this.messageService.warnBubble('無可審核的驗收單');
       return;
     }
 
@@ -581,10 +563,6 @@ export class ASS12050CRUComponent
       accept: () => {
         this.loading = true;
 
-        /*
-         * 審核 Service 名稱若不是 confirmASS12050，
-         * 請替換成專案既有的審核方法名稱。
-         */
         this.ass12050Service
           .approveASS12050({
             SUBCHECK_ID: subcheckId,
@@ -597,22 +575,18 @@ export class ASS12050CRUComponent
             next: res => {
               if (res.Status !== '0000') {
                 this.messageService.errorBubble(
-                  '審核失敗：' +
-                  (res.Message ?? ''),
+                  '審核失敗：' + (res.Message ?? ''),
                 );
                 return;
               }
 
-              this.messageService.successBubble(
-                '審核成功',
-              );
+              this.messageService.successBubble('審核成功');
               this.onCancel();
             },
           });
       },
     });
   }
-
   /** 作廢（單據級） */
   onVoid(): void {
     const subcheckId =
