@@ -29,7 +29,7 @@
             ></app-dropdown-range>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="科目代號"
               controlName="AccNoList"
@@ -39,6 +39,19 @@
               [control]="queryForm.controls.AccNoList"
               [submitted]="submitted"
             ></app-multi-select>
+          </div> -->
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-range
+              label="科目代號"
+              controlName="AccNo_Start"
+              [startControl]="queryForm.controls.AccNo_Start"
+              [endControl]="queryForm.controls.AccNo_End"
+              [submitted]="submitted"
+              [options]="accNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -129,7 +142,7 @@
     [footerData]="footerData"
     [queryFunction]="queryFIN34020ForReport"
     [lastQueryBody]="lastQueryBody"
-    [ItemSize]="22.4"
+    [ItemSize]="24.44"
     [showDelete]="false"
   >
     <header>

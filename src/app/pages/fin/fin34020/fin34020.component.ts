@@ -15,9 +15,9 @@ import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
 import { FileExportService } from 'src/app/shared/service/file-export.service';
 import { ApiResponse, Fin34020Service, QueryFIN34020Request, QueryFIN34020Row, SortItem } from '../../../service/api/fin/fin34020.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin34020',
@@ -73,6 +73,8 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
     { field: 'VouNo', header: '傳票號碼', width: '100px' },
     { field: 'RcvOrAdjAmt', header: '收款/調整金額', format: formatAmount, width: '80px', align: 'right' },
     { field: 'UnpaidBalanceAmt', header: '未沖餘額', format: formatAmount, width: '80px', align: 'right' },
+    { field: 'Pay_VouNo', header: '傳票號碼', format: formatAmount, width: '100px', align: 'right' }, // 第二行的傳票號碼
+    { field: 'Pay_Amt', header: '調整/收款金額', format: formatAmount, width: '100px', align: 'right' },
   ];
   showFlagOptions = [{ value: '1', label: '顯示' }, { value: '0', label: '不顯示' },];
   moneyTypeOptions = [0, 11, 15, 30, 45].map(v => ({ value: v, label: String(v) }));
@@ -85,7 +87,9 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
     RCV_Date_To: [null as Date | null],
     ADJ_Date_From: [null as Date | null],
     ADJ_Date_To: [null as Date | null],
-    AccNoList: [[] as string[]],
+    // AccNoList: [[] as string[]], // AccNo 改為區間查詢，多選保留不使用
+    AccNo_Start: [null as string | null],
+    AccNo_End: [null as string | null],
     MoneyTypeList: [[] as number[]],
     ShowARSAmount: ['1' as string],
     ShowZeroBalance: ['1' as string],
@@ -123,7 +127,9 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
       RCV_Date_To: this.datePipe.transform(body.RCV_Date_To, 'yyyy-MM-dd') ?? undefined,
       ADJ_Date_From: this.datePipe.transform(body.ADJ_Date_From, 'yyyy-MM-dd') ?? undefined,
       ADJ_Date_To: this.datePipe.transform(body.ADJ_Date_To, 'yyyy-MM-dd') ?? undefined,
-      AccNoList: body.AccNoList?.length ? body.AccNoList.join(',') : undefined,
+      // AccNoList: body.AccNoList?.length ? body.AccNoList.join(',') : undefined,
+      AccNo_Start: body.AccNo_Start?.trim() || undefined,
+      AccNo_End: body.AccNo_End?.trim() || undefined,
       MoneyTypeList: body.MoneyTypeList?.length ? body.MoneyTypeList.join(',') : undefined,
       ShowARSAmount: body.ShowARSAmount ?? undefined,
       ShowZeroBalance: body.ShowZeroBalance ?? undefined,
