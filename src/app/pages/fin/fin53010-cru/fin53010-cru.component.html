@@ -129,7 +129,7 @@
               controlName="INVOptions"
               [showClear]="!1"
               [filter]="!1"
-              [disabled]="!isInvYnEditable"
+              [disabled]="!isInvYnEditable || isRcRmVoucher()"
               [options]="service.INVOptions"
               optionLabel="label"
               optionValue="value"
