@@ -51,17 +51,70 @@
 - **Host Bindings**: Do NOT use `@HostBinding` or `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` decorator instead.
 - **Signals**: Use Angular Signals (`signal()`, `computed()`) for local component state management where appropriate. Do NOT use `mutate` on signals; use `update` or `set`.
 
-## Standard Query Page HTML Pattern (Use as Layout Reference)
+## Standard Query Page Pattern (Use as Layout Reference)
+
+Query 頁面 extends `BasicQueryPageComponent<T>`；`ngOnInit()` 呼叫 `initializePage(progNo, cruPage, queryForm, onSubmit)`，`cruPage` 是導去維護頁的路由片段（例如 `'TLS/TLS52010cru'`），讓使用者從維護頁「返回」查詢頁時能自動還原上次查詢條件。
+
+**TS 骨架**：
+
+```typescript
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+export class {代碼}Component extends BasicQueryPageComponent<{代碼}Data> implements OnInit {
+  private readonly service = inject({代碼}Service);
+  private readonly destroyRef = inject(DestroyRef);
+
+  queryForm = this.formBuilder.group({
+    someField: [null as string | null, [Validators.maxLength(20)]],
+    pageSize: [1000],
+    pageIndex: [1],
+    SortBy: [[{ field: 'SomeField', order: -1 }]],
+  });
+
+  totalRecords = 0;
+  data: {代碼}Data[] = [];
+  lastQueryBody: I{代碼}Request | null = null; // 給 app-table-report 內部分頁/排序直接呼叫 queryFunction 用，欄位名稱固定叫這個
+
+  columns: ReportColumn[] = [
+    { field: 'SomeField', header: '欄位名稱', visible: true },
+  ];
+
+  ngOnInit(): void {
+    this.initializePage('{代碼}', '{模組}/{代碼小寫}cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.service.query{代碼}(frm.value).pipe(
+        this.withLoading(),                 // 基底提供的收尾 operator：關 loading + unblockUi，不要自己手刻 finalize
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQueryBody = frm.value;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value); // 讓「返回」查詢頁時能還原這次查詢條件
+      });
+    });
+  }
+
+  onCreateData(frm: FormGroup): void {
+    this.onCreate(frm.value); // 導去 CRU 頁新增，權限檢查已包在 BasicQueryPageComponent.onCreate() 裡
+  }
+
+  onDetailData(row: {代碼}Data): void {
+    this.onDetail(row, this.queryForm.value); // 導去 CRU 頁明細
+  }
+}
+```
+
+**HTML 骨架**：
 
 ```html
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreateData(queryForm)"
-      [disabled]="isClosed"
-    />
+    <app-button btnType="create" (click)="onCreateData(queryForm)" />
   </div>
   <p-accordion>
     <p-accordionTab
@@ -70,7 +123,7 @@
       headerStyleClass="query-accordionTab"
     >
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-        <div class="grid p-fluid"></div>
+        <div class="grid p-fluid"><!-- 查詢欄位依此重複，範例見上方共通下拉/共通元件章節 --></div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
@@ -84,16 +137,147 @@
 <div class="card">
   <app-table-report
     dataKey="Id"
-    [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
-    [queryFunction]="tableQueryFunction"
     [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="service.query{代碼}.bind(service)"
     (detail)="onDetailData($event)"
   ></app-table-report>
 </div>
 ```
+
+**要點**：
+- 不寫 constructor：依賴一律用 `inject()` 當 class field（跟維護頁一致）。
+- 送出固定走 `handleSubmit(frm, callback)`，callback 裡才真正打 API。
+- API 呼叫接基底的 `this.withLoading()`（內建關 `loading` + `unblockUi`）再接 `takeUntilDestroyed(this.destroyRef)`，不要手刻 `finalize(() => this.loading = false)` 或用舊版 `untilDestroyed(this)` decorator。
+- 查詢成功記得呼叫 `this.queryStateService.setQueryState(this.ProgNo, frm.value)`——使用者從 CRU 頁「返回」查詢頁時，`initializePage()` 才能自動還原上次查詢條件，漏掉這行「返回」功能就會失效。
+- **`[queryFunction]` 務必綁定 `service.query{代碼}.bind(service)`（或等效的 bound function），不要包一層頁面自己的方法再轉呼叫**——`app-table-report` 內部分頁/排序/捲動載入（`loadMoreData()`/`onSort()`）會直接呼叫這個 function 打 API，完全不經過頁面的 `onSubmit()`。`[lastQueryBody]` 綁的欄位名稱必須跟 TS 裡存查詢條件的欄位一致（固定叫 `lastQueryBody`，不要自創別的名字，`app-table-report` 內部也是讀這個變數名的語意在用，改名字不會壞但會跟其他頁面不一致）。
+- 新增/明細/編輯導頁一律呼叫基底的 `onCreate()`/`onDetail()`/`onEdit()`（內部已包裝權限檢查 + `navigateWithState()`），不要自己手刻 `router.navigate`。
+
+**⚠️ 現成頁面範例的落差**：作為下拉選單共通寫法範例引用的 `tls52010.component.ts`（查詢頁本體，非 CRU 那支）本身，建構子仍是舊式參數注入（不是 `inject()`）、subscribe 仍用舊版 `untilDestroyed(this)`、也沒有用基底類別 `BasicQueryPageComponent` 自己文件裡建議的 `this.withLoading()`，改用手刻 `finalize()`——這些都是既有技術負債，**新查詢頁不要照抄這部分**，表單欄位/`columns`/`addButton` 結構仍可參考。
+
+## Standard Maintenance (CRU) Page Pattern (Use as Layout Reference)
+
+Query 頁面 extends `BasicQueryPageComponent`；**新增/修改/明細（維護）頁面一律 extends `BasicCruPageComponent<T>`**（`src/app/shared/componentextends/basic-crupage/`）。`crudstatus`（Create/Edit/Read）由 `initializePage()` 依路由 state 自動判斷，不用自己讀 query param。
+
+**TS 骨架**（單純表單版；有主檔+明細表格的版本見下方「明細表格」段落）：
+
+```typescript
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+export class {代碼}CRUComponent extends BasicCruPageComponent<{代碼}Data> implements OnInit {
+  private readonly service = inject({代碼}Service);
+  private readonly destroyRef = inject(DestroyRef); // 給下面每個 subscribe 的 takeUntilDestroyed() 用
+
+  // 欄位是否留 null 依業務語意決定（下拉/日期「未選」是合法狀態的話就留 null），
+  // 不用為了少打幾個 `as X | null` 硬套 formBuilder.nonNullable。
+  dataForm = this.formBuilder.group({
+    someNo: [{ value: '系統自動產生', disabled: true }],       // 單號類：系統編碼，disabled
+    someRequiredField: [null as string | null, [Validators.required]],
+    someRemark: ['', [Validators.maxLength(200)]],
+  });
+
+  // 不寫 constructor：BasicCruPageComponent 本身沒有自訂建構子，所有依賴都用上面的
+  // inject() 當 class field 取得即可，不需要 constructor() { super(); } 這種舊寫法殘留。
+
+  ngOnInit(): void {
+    // 清單頁傳回的列資料欄位命名常跟本頁表單不同，不要傳 dataForm 給 initializePage 自動 patch，
+    // 一律自己依 id 呼叫 getById 拿完整資料後手動 patchValue（見 fin23010-cru 範例）。
+    this.initializePage('{代碼}');
+    // 用 crudstatus 判斷「新增 vs 編輯/明細」，不要用 isFormCreateable —— 那個 getter
+    // 疊加了權限判斷（crudstatus === Create && canAdd()），拿來判斷「要不要載入既有資料」
+    // 遇到使用者剛好沒新增權限的情況會誤判，跟本來要問的「這筆是不是新資料」是兩件事。
+    if (this.crudstatus !== CRUDStatus.Create) this.loadDetail();
+  }
+
+  private loadDetail(): void {
+    const id = this.rowdata?.id;
+    if (!id) { this.messageService.warnBubble('缺少識別碼，無法載入資料。'); return; }
+    this.loading = true;
+    this.service.getById{代碼}(id).pipe(
+      this.withLoading(),                 // 基底提供的收尾 operator：關 loading + unblockUi，不要自己手刻 finalize
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      // 不用寫 error callback：400 以上一律由全局 errorInterceptor 統一跳錯誤提示
+      // （見下方「全局 HTTP 錯誤處理機制」章節），自己再寫一次只會讓使用者看到兩則錯誤訊息。
+      const d = res.Data;
+      if (!d) { this.messageService.warnBubble('查無此筆資料。'); return; }
+      this.dataForm.patchValue({ someRequiredField: d.SomeField, someRemark: d.Remark });
+      // 唯讀模式，或業務上已不可編輯（已核准/已作廢等）一併鎖表單
+      if (this.crudstatus === CRUDStatus.Read || !d.CanEdit) this.dataForm.disable();
+    });
+  }
+
+  onSubmit(frm: FormGroup): void {
+    // 存檔邏輯直接寫在 callback 裡，不用另外拆一個 doSave()——handleSubmit 本身
+    // 就是唯一呼叫點，多一層函式沒有降低複雜度，只是多一次跳轉。
+    this.handleSubmit(frm, () => {
+      const v = this.dataForm.getRawValue();
+      const isCreate = this.crudstatus === CRUDStatus.Create; // 同上，用 crudstatus 不用 isFormCreateable
+      const payload = {
+        ActionMode: (isCreate ? 'I' : 'U') as 'I' | 'U',
+        id: isCreate ? null : this.rowdata?.id,
+        SomeField: v.someRequiredField,
+        Remark: v.someRemark || null,
+      };
+      this.service.save{代碼}(payload).pipe(
+        this.withLoading(),                 // 基底提供的收尾 operator：關 loading + unblockUi，不要自己手刻 finalize
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe(res => {
+        if (!res.Data?.Success) { this.messageService.errorBubble(res.Data?.Message || '儲存失敗'); return; }
+        this.messageService.successBubble(res.Data.Message || '儲存成功');
+        this.onCancel(); // 固定導回查詢頁，不要自己組路由字串
+      });
+    });
+  }
+}
+```
+
+**⚠️ 現成頁面範例的落差**：`fin23010-cru`/`ass12030-cru`/`tls52010-cru` 這三支被拿來當參考的既有頁面，實際上用的是舊版 `untilDestroyed(this)` decorator 取消訂閱寫法，跟本檔案「Critical Code Conventions」第 2 條訂的 `takeUntilDestroyed()` 不一致——那是既有程式碼的技術負債，**新頁面一律照上面骨架用 `takeUntilDestroyed(this.destroyRef)`，不要照抄舊範例的取消訂閱寫法**（表單結構/API 呼叫方式仍可參考那三支)。
+
+**HTML 骨架**：
+
+```html
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="欄位名稱"
+            controlName="someRequiredField"
+            [control]="dataForm.controls.someRequiredField"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <!-- 其餘欄位依此重複；下拉一律走 DropdownApiService（見上方共通下拉章節），
+             不要在頁面手刻 http.post -->
+      </div>
+      @if (!isFormReadable) {
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
+        </div>
+      }
+    </form>
+  </p-panel>
+</div>
+```
+
+**要點**：
+- `isFormReadable` 為 true 時整個 `dataForm.disable()`；`isFormCreateable`/`isFormEditable` 用來控制欄位是否可編輯或按鈕是否顯示，不要自己另外宣告布林旗標判斷 CRU 狀態。
+- 送出固定走 `handleSubmit(frm, callback)`，不要自己手刻 `loading`/`submitted` 賦值。
+- API 呼叫（`loadDetail`/存檔）一律接基底的 `this.withLoading()`（內建關 `loading` + `unblockUi`）再接 `takeUntilDestroyed(this.destroyRef)`，不要手刻 `finalize(() => this.loading = false)`——跟 Query 頁面同一套標準，`BasicCruPageComponent` 自己也有這個 `withLoading()`。
+- 儲存成功一律呼叫 `this.onCancel()` 導回查詢頁。
+- **主檔+明細表格版**（例如審核類、單據類作業常見）：明細用 `app-table-edit`（`EditColumn[]` 定義欄位），儲存時額外把明細陣列組進 payload 的 `Details` 欄位一起送出。完整範例見 `src/app/pages/tls/TLS50000/tls52010/tls52010-cru/tls52010-cru.component.ts`（含雙向連動下拉＋商品挑選 dialog）與 `src/app/pages/ass/ass12030-cru/ass12030-cru.component.ts`（含套用清單 dialog）。
+- 表單欄位命名兩種都可接受：直接對應 DB 欄位（如 `ass12030-cru`）或用 camelCase 業務名稱在組 `payload` 時轉換（如 `fin23010-cru`）——跟該模組其他既有頁面保持一致即可，不要自創第三種風格。
 
 ## AI Response Style
 

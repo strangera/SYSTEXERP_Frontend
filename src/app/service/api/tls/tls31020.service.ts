@@ -19,6 +19,8 @@ export interface TLS31020Request {
   org_id: string[];
   TaxType: string;
   IsRece_Yn: string;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
 }
 
 export interface TLS31020PrintRequest extends TLS31020Request {
@@ -42,6 +44,8 @@ export interface TLS31020DetailRequest {
   TaxType: string
   IsRece_Yn: string
   pageSize?: number
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
 }
 
 export interface TLS31020DetialPrintRequest extends TLS31020DetailRequest {
@@ -69,7 +73,9 @@ export interface TLS31020Item {
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
-  PreOrderAmt: number;
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31020DetailItem {
@@ -93,6 +99,9 @@ export interface TLS31020DetailItem {
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 // ---營業報表統計(response和mapping response) 和 footerShowTotal 會和後面的-70一起共用---
@@ -113,7 +122,6 @@ export interface TLS31020Total {
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
   AvgCompletionRate: number;
-  TotalPreOrderAmt: number;
 
   TotalPrePerformance: number; // 預售業績總計
   TotalConsumerNum: number; // 消費人數總計
@@ -142,7 +150,6 @@ export interface footerShowTotal {
   MonthlySalesTotal?: number;
 
   CompletionRate?: number;
-  PreOrderAmt?: number;
 
   PrePerformance?: number; // 預售業績
   ConsumerNum?: number; // 消費人數

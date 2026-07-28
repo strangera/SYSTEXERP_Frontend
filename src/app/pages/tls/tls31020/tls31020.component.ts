@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -16,7 +17,6 @@ import { RadiobuttonYNComponent } from '@shared/components/radiobutton-yn/radiob
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -24,9 +24,9 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { Tls31020CruComponent } from './tls31020-cru/tls31020-cru.component';
 
 @Component({
@@ -278,17 +278,9 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       exportFormat: 'suffix:%' as any,
       align: 'right'
     },
-
-    {
-      field: 'PreOrderAmt',
-      header: '預售實績',
-      visible: true,
-      format: formatAmount,
-      align: 'right'
-    },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right' },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right' },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right' }
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -524,8 +516,6 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
 
           CompletionRate: this.footerTotal.AvgCompletionRate,
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
-
           PrePerformance: this.footerTotal.TotalPrePerformance,
           ConsumerNum: this.footerTotal.TotalConsumerNum,
           ConsumerOrder: this.footerTotal.TotalConsumerOrder,
@@ -764,15 +754,13 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
+    const isPreSale = this.queryForm.get('PreSale')?.value === true;
+    const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
 
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = this.columns.map(col => {
+      if (col.field === 'PrePerformance') return { ...col, visible: isPreSale };
+      if (col.field === 'ConsumerNum' || col.field === 'ConsumerOrder') return { ...col, visible: isConsumerNum };
+      return col;
+    });
   }
 }

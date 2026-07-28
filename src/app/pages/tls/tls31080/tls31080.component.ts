@@ -123,6 +123,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   //時段控制（stored property，避免每次 CD 產生新陣列）
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
+  // --- 動態欄位重構點 ---
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
@@ -136,18 +137,84 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       }
     });
 
+    const isPreSale = this.queryForm.get('PreSale')?.value === true;
+    const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
+
     return [
       { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
       ...filteredHours,
       { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'PrePerformance', header: '預售業績', visible: isPreSale, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerNum', header: '消費人數', visible: isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerOrder', header: '消費客單', visible: isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
       { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
     ];
+  }
+
+  // --- 動態欄位重構點 ---
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      const formValue = {
+        ...raw,
+        TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
+        CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
+        CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+        CatSNos: (raw.CatSNos || []).map((x: any) => x.No ?? x).join(','),
+        Floors: (raw.Floors || []).join(','),
+        Areas: (raw.Areas || []).join(','),
+        CabinetKinds: (raw.CabinetKinds || []).join(','),
+        OrgIds: (raw.OrgIds || []).join(','),
+        CounterNos: (raw.CounterNos || []).join(','),
+        ChargeTypes: (raw.ChargeTypes || []).join(','),
+        Buildings: (raw.Buildings || []).join(','),
+      } as TLS31080Request;
+
+      this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data.Data ?? [];
+        this.footerData = {
+          floor_desc: '營業實績',
+          TimeType: '',
+          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0,
+          Subtotal: res.Data.TotalData.TotalSales ?? 0,
+          Reentry: res.Data.TotalData.TotalReentry ?? 0,
+          PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
+          PrePerformance: res.Data.TotalData.TotalPrePerformance,
+          ConsumerNum: res.Data.TotalData.TotalConsumerNum,
+          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder,
+
+          H00: res.Data.TotalData.TotalH00 ?? 0,
+          H01: res.Data.TotalData.TotalH01 ?? 0,
+          H02: res.Data.TotalData.TotalH02 ?? 0,
+          H03: res.Data.TotalData.TotalH03 ?? 0,
+          H04: res.Data.TotalData.TotalH04 ?? 0,
+          H05: res.Data.TotalData.TotalH05 ?? 0,
+          H06: res.Data.TotalData.TotalH06 ?? 0,
+          H07: res.Data.TotalData.TotalH07 ?? 0,
+          H08: res.Data.TotalData.TotalH08 ?? 0,
+          H09: res.Data.TotalData.TotalH09 ?? 0,
+          H10: res.Data.TotalData.TotalH10 ?? 0,
+          H11: res.Data.TotalData.TotalH11 ?? 0,
+          H12: res.Data.TotalData.TotalH12 ?? 0,
+          H13: res.Data.TotalData.TotalH13 ?? 0,
+          H14: res.Data.TotalData.TotalH14 ?? 0,
+          H15: res.Data.TotalData.TotalH15 ?? 0,
+          H16: res.Data.TotalData.TotalH16 ?? 0,
+          H17: res.Data.TotalData.TotalH17 ?? 0,
+          H18: res.Data.TotalData.TotalH18 ?? 0,
+          H19: res.Data.TotalData.TotalH19 ?? 0,
+          H20: res.Data.TotalData.TotalH20 ?? 0,
+          H21: res.Data.TotalData.TotalH21 ?? 0,
+          H22: res.Data.TotalData.TotalH22 ?? 0,
+          H23: res.Data.TotalData.TotalH23 ?? 0,
+        };
+        this.historyRequestBody = formValue;
+        this.totalRecords = res.Data.Data.length;
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      });
+    });
   }
 
   columnGroup: ColumnGroup[] = [
@@ -338,78 +405,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       this.setColumns();
     });
   }
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const raw = frm.getRawValue();
-      const formValue = {
-        ...raw,
-        // 日期格式化
-        TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
 
-        // 分類轉成編號
-        CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-        CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
-        CatSNos: (raw.CatSNos || []).map((x: any) => x.No ?? x).join(','),
-
-        // 多選陣列轉成逗號字串
-        Floors: (raw.Floors || []).join(','),
-        Areas: (raw.Areas || []).join(','),
-        CabinetKinds: (raw.CabinetKinds || []).join(','),
-        OrgIds: (raw.OrgIds || []).join(','),
-        CounterNos: (raw.CounterNos || []).join(','),
-        ChargeTypes: (raw.ChargeTypes || []).join(','),
-        Buildings: (raw.Buildings || []).join(','),
-      } as TLS31080Request;
-
-      console.log('送出request請求', formValue);
-      this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.Data ?? [];               // 查詢資料
-        this.footerData = {
-          floor_desc: '營業實績',
-          TimeType: '',
-
-          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0, // 交易筆數總計
-          Subtotal: res.Data.TotalData.TotalSales ?? 0, // 營業實績總計
-          Reentry: res.Data.TotalData.TotalReentry ?? 0,
-          PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
-          PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
-
-          PrePerformance: res.Data.TotalData.TotalPrePerformance,
-          ConsumerNum: res.Data.TotalData.TotalConsumerNum,
-          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder,
-
-          H00: res.Data.TotalData.TotalH00 ?? 0,
-          H01: res.Data.TotalData.TotalH01 ?? 0,
-          H02: res.Data.TotalData.TotalH02 ?? 0,
-          H03: res.Data.TotalData.TotalH03 ?? 0,
-          H04: res.Data.TotalData.TotalH04 ?? 0,
-          H05: res.Data.TotalData.TotalH05 ?? 0,
-          H06: res.Data.TotalData.TotalH06 ?? 0,
-          H07: res.Data.TotalData.TotalH07 ?? 0,
-          H08: res.Data.TotalData.TotalH08 ?? 0,
-          H09: res.Data.TotalData.TotalH09 ?? 0,
-          H10: res.Data.TotalData.TotalH10 ?? 0,
-          H11: res.Data.TotalData.TotalH11 ?? 0,
-          H12: res.Data.TotalData.TotalH12 ?? 0,
-          H13: res.Data.TotalData.TotalH13 ?? 0,
-          H14: res.Data.TotalData.TotalH14 ?? 0,
-          H15: res.Data.TotalData.TotalH15 ?? 0,
-          H16: res.Data.TotalData.TotalH16 ?? 0,
-          H17: res.Data.TotalData.TotalH17 ?? 0,
-          H18: res.Data.TotalData.TotalH18 ?? 0,
-          H19: res.Data.TotalData.TotalH19 ?? 0,
-          H20: res.Data.TotalData.TotalH20 ?? 0,
-          H21: res.Data.TotalData.TotalH21 ?? 0,
-          H22: res.Data.TotalData.TotalH22 ?? 0,
-          H23: res.Data.TotalData.TotalH23 ?? 0,
-        }
-        this.historyRequestBody = formValue;
-        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
-        console.log('查詢結果', res.Data ?? []);
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      })
-    })
-  }
   onReport(frm: FormGroup, isExcel: boolean) {
     console.log('匯出Excel');
     const raw = frm.getRawValue();

@@ -93,7 +93,10 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
   onWslipSelect(rows: any): void {
     const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row?.WSLIP_NO) return;
-    this.queryForm.patchValue({ WSLIP_NO: row.WSLIP_NO });
+    this.queryForm.patchValue({
+      WSLIP_NO: row.WSLIP_NO,
+      ...(row.RMT_Date ? { VouDate: new Date(row.RMT_Date) } : {}),
+    });
     this.wslipDialogVisible = false;
   }
 

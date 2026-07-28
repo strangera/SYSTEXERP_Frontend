@@ -36,7 +36,8 @@
 </div>
 <div class="card">
   <app-table-report tableKey="FIN32030" dataKey="RCV_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showEdit]="true" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (detail)="onDetail($event)" [showEdit]="true" [editDisabled]="editDisabled" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [showReportMode]="true" [showDelete]="true" (delete)="onDelete($event)"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFn"
     [loading]="loading"></app-table-report>

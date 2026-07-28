@@ -5,21 +5,99 @@ import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { TLS31020Total } from './tls31020.service'; //總計的部分會和TLS31020Total共用
 
+// --- 動態欄位重構點 ---
 export interface TLS31030Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  TLT_NO: string[]
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31030DetailRequest {
+  TXN_DateS: string | Date;
+  TXN_DateE: string | Date;
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string;
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
+  pageSize: number;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
+}
+
+export interface TLS31030Item {
+  bus_type: string;
+  bus_type_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點：移除 PreOrderAmt，改為新欄位 ---
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
+}
+
+export interface TLS31030DetailItem {
+  building_desc: string;
+  org_name: string;
+  tlt_kind: string;
+  tlt_no: string;
+  location_no: string;
+  tlt_name: string;
+
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  MonthlyPayment: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
+
+  // --- 動態欄位重構點 ---
+  PrePerformance?: number;
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 export interface TLS31030PrintRequest extends TLS31030Request {

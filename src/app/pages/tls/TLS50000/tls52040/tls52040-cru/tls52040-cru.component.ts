@@ -1,12 +1,13 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@others/component/table/table.model';
+import { validateMinNumber } from '@others/component/table/validate-field.model';
 import { IGetPOS2031PRequest, ITLS52040Data, ITLS52040Detail, TLS52040Request, Tls52040Service } from '@service/api/tls/tls52040.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
@@ -15,11 +16,10 @@ import { DropdownComponent } from '@shared/components/dropdown/dropdown.componen
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@others/component/table/table.model';
-import { validateMinNumber } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { POStatus } from '../../tls52040/tls52040.component';
@@ -39,7 +39,6 @@ import { POStatus } from '../../tls52040/tls52040.component';
     CalendarComponent,
     InputTextareaComponent,
     TableReportComponent,
-    NgIf,
     DialogComponent,
     TranslateModule,
     TableEditComponent,
@@ -140,18 +139,6 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
       this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-      // this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
-      //   this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
-      //     const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
-      //     const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
-      //     let finalHOSNo: string | null = null;
-      //     if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
-      //       finalHOSNo = suggestedHOSNo;
-      //     }
-      //     this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
-      //     resetFormData();
-      //   });
-      // });
     }
   }
   private resetFormForContinueNew(): void {

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
@@ -56,7 +56,6 @@ export class Tls31030CRUComponent implements OnChanges {
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '月營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
-    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
   ];
 
   columnGroup: ColumnGroup[] = [
@@ -148,7 +147,7 @@ export class Tls31030CRUComponent implements OnChanges {
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
+
         } : null;
         this.totalRecords = res.TotalCount;
       });

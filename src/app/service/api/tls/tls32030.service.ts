@@ -23,6 +23,8 @@ export interface TLS32030QueryRequest {
   AreaList: (string | number)[];
   BusTypeList: (string | number)[];
   BusClassList: (string | number)[];
+  /** 小分類：後端 TLS32030Request/Repository/SP 目前尚未支援此欄位，前端已送出但暫不生效，待後端補上對應參數 */
+  BusSClassList: (string | number)[];
   TltKindList: (string | number)[];
   OrgList: (string | number)[];
   TltNoList: (string | number)[];

@@ -315,7 +315,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     this.applyListLoading = true;
     this.selectedQuotedRow = null;
     this.ass12010Service
-      .queryASS12010({ PageSize: 9999, PageIndex: 1 })
+      .queryASS12010({ PageSize: 9999, PageIndex: 1, NEEDS_STATUS: '2' })
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {

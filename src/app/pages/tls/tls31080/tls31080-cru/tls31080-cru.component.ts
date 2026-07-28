@@ -1,8 +1,8 @@
 import { Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { formatAmount } from '@others/component/table/table.model';
 import { TLS31080DetailResponse, TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { formatAmount } from '@others/component/table/table.model';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
@@ -77,14 +77,16 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
     }
   }
 
+  // --- 動態欄位重構點 ---
   private buildColumns(): void {
-    const { TimeMode, TimeFromHH, TimeToHH } = this.queryConditions!;
+    const { TimeMode, TimeFromHH, TimeToHH, PreSale, ConsumerNum } = this.queryConditions!;
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) return true;
       const hourNum = Number.parseInt(col.field.substring(1), 10);
       if (TimeFromHH <= TimeToHH) return hourNum >= TimeFromHH && hourNum <= TimeToHH;
       return hourNum >= TimeFromHH || hourNum <= TimeToHH;
     });
+
     this.columns = [
       { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
       { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
@@ -92,17 +94,30 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
       ...filteredHours,
       { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      // --- 動態欄位重構點 (移除 PreOrderAmt，同步主表 visible 狀態) ---
+      { field: 'PrePerformance', header: '預售業績', visible: PreSale === true, format: formatAmount, align: 'right' },
+      { field: 'ConsumerNum', header: '消費人數', visible: ConsumerNum === true, format: formatAmount, align: 'right' },
+      { field: 'ConsumerOrder', header: '消費客單', visible: ConsumerNum === true, format: formatAmount, align: 'right' },
       { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
     ];
   }
 
+  // --- 動態欄位重構點 ---
   private buildRequest(): TLS31080Request {
     const matched = this.floorOptions.find(x => x.Name === this.rowData!.floor_desc);
-    return { ...this.queryConditions!, Floors: matched?.No ?? '', pageIndex: 1, pageSize: 1000 };
+    return {
+      ...this.queryConditions!,
+      Floors: matched?.No ?? '',
+      // 同步帶入開關條件
+      PreSale: this.queryConditions?.PreSale,
+      ConsumerNum: this.queryConditions?.ConsumerNum,
+      pageIndex: 1,
+      pageSize: 1000
+    };
   }
 
+  // --- 動態欄位重構點 ---
   private queryDetail(): void {
     const request = this.buildRequest();
     this.historyRequestBody = request;
@@ -120,8 +135,11 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
           H16: t.H16 ?? 0, H17: t.H17 ?? 0, H18: t.H18 ?? 0, H19: t.H19 ?? 0,
           H20: t.H20 ?? 0, H21: t.H21 ?? 0, H22: t.H22 ?? 0, H23: t.H23 ?? 0,
           ReentryAmt: t.ReentryAmt ?? 0,
-          PreOrderAmt: t.PreOrderAmt ?? 0,
           PresaleCheckoutAmt: t.PresaleCheckoutAmt ?? 0,
+          // --- 動態欄位重構點 (對應 Footer 欄位) ---
+          PrePerformance: t.PrePerformance ?? 0,
+          ConsumerNum: t.ConsumerNum ?? 0,
+          ConsumerOrder: t.ConsumerOrder ?? 0,
           SubTotal: t.SubTotal ?? 0,
         } : null;
         this.totalRecords = this.data.length;

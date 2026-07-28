@@ -1525,6 +1525,16 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       return;
     }
 
+    // 檢查收款項目明細總金額是否等於應收帳款確認總金額
+    const itemTotal = this.totalItemAmount;
+    const arTotal = this.totalARAmount;
+    if (Math.round(itemTotal * 100) !== Math.round(arTotal * 100)) {
+      const itemTotalStr = itemTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const arTotalStr = arTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      this.messageService.errorBubble(`收款項目明細總金額(${itemTotalStr})與應收帳款確認總金額(${arTotalStr})不符`);
+      return;
+    }
+
     this.loading = true;
 
     const step1Value = this.step1Form.getRawValue();

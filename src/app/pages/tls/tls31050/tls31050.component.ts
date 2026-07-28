@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footer31050Total, TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service, TLS31050Total } from '@service/api/tls/tls31050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -16,15 +17,14 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonYNComponent } from '@shared/components/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31050CRUComponent } from './tls31050-cru/tls31050-cru.component';
 
@@ -147,11 +147,9 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
 
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
-
+  // --- 動態欄位重構點 --- (移除 PreOrderAmt，設置動態屬性控制 visible)
   columns: ReportColumn[] = [
-    // { field: 'tlt_term_type', header: '抽成別代碼', align: 'left' },
     { field: 'tlt_term_desc', header: '抽成別名稱', align: 'left' },
-
     { field: 'budget', header: '營業目標', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
@@ -161,20 +159,35 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
     { field: 'AvgTicket', header: '客單價', groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
-
     { field: 'TempCounterSaleAmt', header: '營業實績', groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'PreOrderSaleAmt', header: '預售實績', format: formatAmount, align: 'right' },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    // 動態欄位
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right', isTotal: true },
   ];
+
+  // --- 動態欄位重構點 --- (依勾選狀態顯隱欄位)
+  setColumns() {
+    const isPreSale = this.queryForm.get('PreSale')?.value === true;
+    const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
+
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: isPreSale,
+      ConsumerNum: isConsumerNum,
+      ConsumerOrder: isConsumerNum
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible ?? true
+    }));
+  }
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
     { field: '營業佔比', header: '營業佔比' },
@@ -610,18 +623,5 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   onDetail1(event: TLS31050Item) {
     this.selectedRow = event;
     this.dialogVisible = true;
-  }
-
-  setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
   }
 }

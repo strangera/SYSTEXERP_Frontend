@@ -2,18 +2,20 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@others/component/table/table.component';
+import { Column, formatDate } from '@others/component/table/table.model';
 import {
+  ASS12050ConfirmDetail,
   ASS12050Detail,
   ASS12050DetailItem,
   ASS12050InsertRequest,
   ASS12050TransferRow,
-  ASS12050UpdateRequest,
+  ASS12050UpdateRequest
 } from '@pages/ass/ass12050/ass12050.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
@@ -21,10 +23,9 @@ import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
-import { TableComponent } from '@others/component/table/table.component';
-import { Column, formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { concat, finalize, last, tap } from 'rxjs';
@@ -65,6 +66,7 @@ export class ASS12050CRUComponent
     NTAX_AMT: [null as number | null],
     TAX_AMT: [null as number | null],
     AMT: [null as number | null],
+    IsCanArrpove: [null as boolean | null],
   });
 
   /** 明細資料（table-edit 綁定） */
@@ -87,6 +89,7 @@ export class ASS12050CRUComponent
 
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
+
 
   editColumns: EditColumn[] = [
     {
@@ -112,7 +115,7 @@ export class ASS12050CRUComponent
     },
     {
       field: 'SHIP_QTY',
-      header: '出貨數量',
+      header: '應驗數量',
       type: 'inputNumber',
       disabled: () => !this.isFormCreateable,
     },
@@ -226,23 +229,11 @@ export class ASS12050CRUComponent
    * APPLY_DATE 來源為 FAASSCHKD_LIST.APPLY_DATE。
    */
   get canApprove(): boolean {
-    if (!this.isFormEditable || this.loading || this.data.length === 0) {
+    if (!this.isFormEditable || this.loading) {
       return false;
     }
 
-    return this.data.every(item => {
-      const applyDate = (
-        item as ASS12050DetailItem & {
-          APPLY_DATE?: string | Date | null;
-        }
-      ).APPLY_DATE;
-
-      return (
-        applyDate !== null &&
-        applyDate !== undefined &&
-        String(applyDate).trim() !== ''
-      );
-    });
+    return this.dataForm.get('IsCanArrpove')?.value === true;
   }
 
   /** 覆寫：從編輯主檔進入時，返回編輯主檔而非查詢頁 */
@@ -308,6 +299,7 @@ export class ASS12050CRUComponent
             NTAX_AMT: detail?.NTAX_AMT ?? null,
             TAX_AMT: detail?.TAX_AMT ?? null,
             AMT: detail?.AMT ?? null,
+            IsCanArrpove: detail?.CHK_Status == '1' ? true : false,
           });
 
           const details = (detail?.Details ?? []).map(item => ({
@@ -502,16 +494,14 @@ export class ASS12050CRUComponent
       });
   }
 
-  /** 驗收確認（明細級） */
+  /** 驗收 */
   onConfirm(): void {
     const subcheckId =
       this.subcheckId ??
       this.dataForm.get('SUBCHECK_ID')?.value;
 
     if (!subcheckId) {
-      this.messageService.errorBubble(
-        '無可驗收的資料',
-      );
+      this.messageService.errorBubble('無可驗收的資料');
       return;
     }
 
@@ -521,9 +511,20 @@ export class ASS12050CRUComponent
       accept: () => {
         this.loading = true;
 
+
+        const details: ASS12050ConfirmDetail[] =
+          this.data.map(item => ({
+            DETAIL_ID: item.DETAIL_ID!,
+            CHECK_QTY: item.CHECK_QTY ?? 0,
+            DIS_PRICE: item.DIS_PRICE ?? 0,
+            NTAX_AMT: this.calculateDetailNtaxAmount(item),
+            NOTES: item.NOTES ?? null,
+          }));
+
         this.ass12050Service
           .confirmASS12050({
-            DETAIL_ID: subcheckId,
+            DETAILS: details,
+            SUBCHECK_ID: subcheckId,
           })
           .pipe(
             untilDestroyed(this),
@@ -533,27 +534,18 @@ export class ASS12050CRUComponent
             next: res => {
               if (res.Status !== '0000') {
                 this.messageService.errorBubble(
-                  '操作失敗：' +
-                  (res.Message ?? ''),
+                  '操作失敗：' + (res.Message ?? ''),
                 );
                 return;
               }
 
-              this.messageService.successBubble(
-                '驗收確認成功',
-              );
-
-              /*
-               * 驗收成功後重新查詢，取得後端更新後的
-               * FAASSCHKD_LIST.APPLY_DATE。
-               */
+              this.messageService.successBubble('驗收確認成功');
               this.loadDetail(subcheckId);
             },
           });
       },
     });
   }
-
   /** 審核驗收單 */
   onApprove(): void {
     const subcheckId =
@@ -561,16 +553,7 @@ export class ASS12050CRUComponent
       this.dataForm.get('SUBCHECK_ID')?.value;
 
     if (!subcheckId) {
-      this.messageService.warnBubble(
-        '無可審核的驗收單',
-      );
-      return;
-    }
-
-    if (!this.canApprove) {
-      this.messageService.warnBubble(
-        '尚有明細未完成驗收，不可執行審核',
-      );
+      this.messageService.warnBubble('無可審核的驗收單');
       return;
     }
 
@@ -580,13 +563,9 @@ export class ASS12050CRUComponent
       accept: () => {
         this.loading = true;
 
-        /*
-         * 審核 Service 名稱若不是 confirmASS12050，
-         * 請替換成專案既有的審核方法名稱。
-         */
         this.ass12050Service
-          .confirmASS12050({
-            DETAIL_ID: subcheckId,
+          .approveASS12050({
+            SUBCHECK_ID: subcheckId,
           })
           .pipe(
             untilDestroyed(this),
@@ -596,22 +575,18 @@ export class ASS12050CRUComponent
             next: res => {
               if (res.Status !== '0000') {
                 this.messageService.errorBubble(
-                  '審核失敗：' +
-                  (res.Message ?? ''),
+                  '審核失敗：' + (res.Message ?? ''),
                 );
                 return;
               }
 
-              this.messageService.successBubble(
-                '審核成功',
-              );
+              this.messageService.successBubble('審核成功');
               this.onCancel();
             },
           });
       },
     });
   }
-
   /** 作廢（單據級） */
   onVoid(): void {
     const subcheckId =

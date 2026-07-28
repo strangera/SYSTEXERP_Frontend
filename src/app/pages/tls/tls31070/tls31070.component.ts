@@ -150,8 +150,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
+  // --- 動態欄位重構點 --- (Columns 配置移除 PreOrderAmt 並補全預設欄位)
   columns: ReportColumn[] = [
-    // { field: 'paper_type', header: '營業形態代號', align: 'left' },
     { field: 'paper_type_desc', header: '營業形態', align: 'left' },
 
     { field: 'budget', header: '營業目標', groupField: '營業額', format: formatAmount, align: 'right' },
@@ -163,7 +163,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { field: 'AvgTicket', header: '客單價', groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
-    // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', groupField: 'space' },
 
     { field: 'TempCounterSaleAmt', header: '營業實績', groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
@@ -173,11 +172,24 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { field: 'MonthlySalesTotal', header: '營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'PreOrderAmt', header: '預售實績', format: formatAmount, align: 'right' },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right', isTotal: true },
   ];
+
+  // --- 動態欄位重構點 --- (setColumns 動態控制 visible)
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
+  }
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
     { field: '營業佔比', header: '營業佔比' },
@@ -400,8 +412,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
 
-          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
-
           PrePerformance: this.footerTotal.TotalPrePerformance,
           ConsumerNum: this.footerTotal.TotalConsumerNum,
           ConsumerOrder: this.footerTotal.TotalConsumerOrder,
@@ -608,18 +618,5 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   onDetail1(event: TLS31070Item) {
     this.selectedRow = event;
     this.dialogVisible = true;
-  }
-
-  setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
   }
 }

@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -11,15 +12,14 @@ import { InputNumberRangeComponent } from '@shared/components/input-number-range
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
 
@@ -124,33 +124,45 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   //時段控制（stored property，避免每次 CD 產生新陣列）
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
+  // --- 動態欄位重構點 ---
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
     const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
       if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
         return true;
       }
       const hourNum = parseInt(col.field.substring(1), 10);
-      if (TimeFromHH <= TimeToHH) {
-        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
-      } else {
-        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
-      }
+      return TimeFromHH <= TimeToHH
+        ? hourNum >= TimeFromHH && hourNum <= TimeToHH
+        : hourNum >= TimeFromHH || hourNum <= TimeToHH;
     });
 
     return [
       { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
 
-      ...filteredHours, // 注入動態過濾後的小時區間
+      ...filteredHours,
 
       { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
-      { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'PrePerformance', header: '預售業績', visible: this.queryForm.get('PreSale')?.value === true, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerNum', header: '消費人數', visible: this.queryForm.get('ConsumerNum')?.value === true, format: formatAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerOrder', header: '消費客單', visible: this.queryForm.get('ConsumerNum')?.value === true, format: formatAmount, align: 'right', isTotal: true },
       { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
     ];
+  }
+
+  // --- 動態欄位重構點 ---
+  setColumns() {
+    const visibleMap: Record<string, boolean> = {
+      PrePerformance: this.queryForm.get('PreSale')?.value === true,
+      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
+    };
+
+    this.columns = this.columns.map(col => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible
+    }));
   }
 
   columnGroup: ColumnGroup[] = [
@@ -483,18 +495,4 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     this.selectedRow = event;
     this.dialogVisible = true;
   }
-
-  setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
-  }
-
 }

@@ -20,8 +20,8 @@
                 <B><u>比較資料查詢條件</u></B>
               </div>
               <div class="col-12">
-                <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.BaseDateFrom"
-                  [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
+                <app-calendar calendarType="dateOne" label="比較日期" [control]="queryForm.controls.day"
+                  [submitted]="submitted"></app-calendar>
               </div>
             </div>
             <div class="col-6 flex flex-column">
@@ -29,8 +29,8 @@
                 <B><u>基準資料查詢條件</u></B>
               </div>
               <div class="col-12">
-                <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.CompareDateFrom"
-                  [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
+                <app-calendar calendarType="dateOne" label="基準日期" [control]="queryForm.controls.CompareDay"
+                  [submitted]="submitted"></app-calendar>
               </div>
             </div>
           </div>
@@ -155,6 +155,27 @@
               </div>
             </div>
           </div>
+          <!-- 區間營業報表 -->
+          <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '6'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
+              <div class="col-12">
+                <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.BaseDateFrom"
+                  [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
+              </div>
+            </div>
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
+              <div class="col-12">
+                <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.CompareDateFrom"
+                  [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
+              </div>
+            </div>
+          </div>
         </div>
         <hr />
 
@@ -174,15 +195,8 @@
               optionValue="No" [control]="queryForm.controls.AreaList" [submitted]="submitted"></app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類代碼/名稱" controlName="BusTypeList" [options]="businessTypeCodeOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusTypeList"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類代碼/名稱" controlName="BusClassList" [options]="BusClassListOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusClassList"
-              [submitted]="submitted"></app-multi-select>
+          <div class="col-12">
+            <app-category-select formControlName="category"></app-category-select>
           </div>
         </div>
         <div class="grid p-fluid">
