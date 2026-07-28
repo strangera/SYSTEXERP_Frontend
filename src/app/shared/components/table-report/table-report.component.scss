@@ -84,7 +84,9 @@
     }
     .p-datatable-thead > tr > th {
       background: var(--table-header-bg);
-
+      white-space: normal !important;
+      word-break: break-all !important; 
+      overflow-wrap: break-word !important;
       // 支援自訂標題換行類別
       &.wrap-header {
         white-space: normal;
@@ -94,6 +96,11 @@
       }
       &.group-header {
         background-color: var(--table-header-bg-group) !important;
+      }
+      // 調整內部的 Sort Icon，避免 Icon 擠壓文字欄寬
+      p-sortIcon {
+        display: inline-block;
+        vertical-align: middle;
       }
     }
     // 支援儲存格內容依 \n 換行（例如以分隔符號組成的多筆資料）
