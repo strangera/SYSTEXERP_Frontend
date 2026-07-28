@@ -12,8 +12,8 @@ import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 
@@ -141,9 +141,6 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // APS4023 來源無實際交易序號，重送固定帶入 0
   private resolveTxnNo(item: any): string | number {
-    return item._TableName === 'APS4023' ? 0 : (item.TXN_No ?? '');
+    return item._TableName === 'APS4023' ? '0' : (item.TXN_No ?? '');
   }
-
-
-
 }
