@@ -15,7 +15,8 @@
           </div>
 
           <!-- 日營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '1'">
+          @if (dateForm.controls.reportType.value === '1') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar calendarType="dateOne" label="日期" [control]="dateForm.controls.onedatedd"
@@ -23,9 +24,11 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- 週營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '2'">
+          @if (dateForm.controls.reportType.value === '2') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" [control]="dateForm.controls.onedateyy"
@@ -41,9 +44,11 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- 月營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '3'">
+          @if (dateForm.controls.reportType.value === '3') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar calendarType="dateMonthOne" label="年月" [control]="dateForm.controls.onedatemm"
@@ -51,9 +56,11 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- 半年營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '4'">
+          @if (dateForm.controls.reportType.value === '4') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" [control]="dateForm.controls.halfyear_onedateyy"
@@ -65,9 +72,11 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- 年營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '5'">
+          @if (dateForm.controls.reportType.value === '5') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" [control]="dateForm.controls.year_onedateyy"
@@ -75,9 +84,11 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- 區間營業報表 -->
-          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '6'">
+          @if (dateForm.controls.reportType.value === '6') {
+          <div class="flex col-12">
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12">
                 <app-calendar-range label="日期範圍" [startControl]="dateForm.controls.sad_startdate"
@@ -85,6 +96,7 @@
               </div>
             </div>
           </div>
+          }
         </div>
 
         <hr />
@@ -103,23 +115,13 @@
             <app-multi-select label="區域" controlName="area_no" [options]="area_no_Option | async" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.area_no" [submitted]="submitted"></app-multi-select>
           </div>
+        </div>
+
+        <app-category-select formControlName="category"></app-category-select>
+
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類代碼/名稱" controlName="bus_type" [options]="bus_type_Option | async"
-              optionLabel="label" optionValue="No" [control]="queryForm.controls.bus_type"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_class_Option" optionLabel="label"
-              [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true"
-              optionGroupLabel="CAT_LName" optionGroupChildren="items"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="小分類代碼/名稱" controlName="bus_sclass" [options]="bus_sclass_Option"
-              optionLabel="label" [control]="queryForm.controls.bus_sclass" [submitted]="submitted"
-              optionGroupLabel="label" optionGroupChildren="items" [group]="true"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="櫃別" controlName="tlt_kind" [options]="tlt_kind_Option" optionLabel="label"
+            <app-multi-select label="櫃別" controlName="tlt_kind" [options]="tlt_kind_Option$ | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.tlt_kind" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

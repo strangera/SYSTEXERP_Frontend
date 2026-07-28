@@ -20,39 +20,32 @@
           </div>
 
           <!-- 起訖時段：只有當 TimeMode === 'T' 時才顯示 -->
-          <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.controls.TimeMode.value === 'T'">
+          @if (queryForm.controls.TimeMode.value === 'T') {
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="交易時段" [startControl]="queryForm.controls.TimeFromHH"
               [endControl]="queryForm.controls.TimeToHH" [submitted]="submitted"></app-input-number-range>
           </div>
+          }
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option" optionLabel="Name"
+            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option | async" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Buildings" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" controlName="Floors" [options]="tlt_floor_Option" optionLabel="Name"
+            <app-multi-select label="樓層" controlName="Floors" [options]="tlt_floor_Option | async" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Floors" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域" controlName="Areas" [options]="area_no_Option" optionLabel="Name"
+            <app-multi-select label="區域" controlName="Areas" [options]="area_no_Option | async" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.Areas" [submitted]="submitted"></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類代碼/名稱" controlName="CatLNos" [options]="bus_type_Option" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.CatLNos" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類代碼/名稱" controlName="CatMNos" [options]="bus_class_Option" optionLabel="label"
-              [control]="queryForm.controls.CatMNos" [submitted]="submitted" [group]="true" optionGroupLabel="CatLNos"
-              optionGroupChildren="items"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="小分類代碼/名稱" controlName="CatSNos" [options]="bus_sclass_Option" optionLabel="label"
-              [control]="queryForm.controls.CatSNos" [submitted]="submitted" optionGroupLabel="label"
-              optionGroupChildren="items" [group]="true"></app-multi-select>
-          </div>
+        </div>
+
+        <app-category-select formControlName="category"></app-category-select>
+
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="CabinetKinds" [options]="tlt_kind_Option" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CabinetKinds"
@@ -63,11 +56,11 @@
               optionValue="value" [control]="queryForm.controls.ChargeTypes" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織" controlName="OrgIds" [options]="org_id_Option" optionLabel="label"
+            <app-multi-select label="組織" controlName="OrgIds" [options]="org_id_Option | async" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.OrgIds" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號/名稱" controlName="CounterNos" [options]="CounterNos_Option" optionLabel="label"
+            <app-multi-select label="專櫃編號/名稱" controlName="CounterNos" [options]="CounterNos_Option | async" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.CounterNos" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

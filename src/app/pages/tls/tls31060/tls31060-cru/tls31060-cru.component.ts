@@ -9,6 +9,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { applyDisplayStatusVisibility } from '../../TLS30000/common/report-display-status.util';
 
 @Component({
   selector: 'app-tls31060-cru',
@@ -76,19 +77,11 @@ export class Tls31060CRUComponent implements OnChanges {
 
   setColumns() {
     const q = this.queryConditions;
-    const isPreSale = q?.PreSale === true;
-    const isConsumerNum = q?.ConsumerNum === true;
-
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: isPreSale,
-      ConsumerNum: isConsumerNum,
-      ConsumerOrder: isConsumerNum
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible ?? true
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: q?.PreSale === true,
+      consumerNum: q?.ConsumerNum === true,
+      fallbackWhenUnset: true,
+    });
   }
 
   // --- 動態欄位重構點 --- (建立包含 PreSale / ConsumerNum 的 Request)

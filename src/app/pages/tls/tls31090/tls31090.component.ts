@@ -1,11 +1,12 @@
-import { CommonModule, formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, CommonModule, formatDate } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
@@ -17,13 +18,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { filterHourColumns } from '../TLS30000/common/report-hour-columns.const';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
 
-@UntilDestroy()
 @Component({
   selector: 'app-tls31090',
   templateUrl: './tls31090.component.html',
@@ -31,6 +33,7 @@ import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
   imports: [
     MenubarComponent,
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,
@@ -44,6 +47,7 @@ import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    CategorySelectComponent,
     Tls31090CRUComponent,
   ]
 })
@@ -59,9 +63,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     StoreNos: [this.authService.getUserInfo()?.SYS_StoreNo], //門市代號，多選以逗號分隔 (例: "001,002,003")
     Floors: [[]], //樓層代號，多選以逗號分隔
     Areas: [[]], //區域代號，多選以逗號分隔
-    CatLNos: [[] as string[]], //大分類代號，多選以逗號分隔
-    CatMNos: [[] as IDropdownItem[]], //中分類代號，多選以逗號分隔
-    CatSNos: [[] as IDropdownItem[]],//小分類
+    category: [{ bus_type: [], bus_class: [], bus_sclass: [] }], //大中小分類（app-category-select 複合欄位）
     CabinetKinds: [[]], //櫃別類型，多選以逗號分隔 (TLTTALENT.tlt_kind)
     OrgIds: [[]], //組織代號，多選以逗號分隔
     CounterNos: [[]], //專櫃代號，多選以逗號分隔 (TLTTALENT.tlt_no)
@@ -93,48 +95,12 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
-  // 時段column
-  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
-    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-  ];
-
   //時段控制（stored property，避免每次 CD 產生新陣列）
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
   // --- 動態欄位重構點 ---
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
-    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
-      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
-        return true;
-      }
-      const hourNum = parseInt(col.field.substring(1), 10);
-      return TimeFromHH <= TimeToHH
-        ? hourNum >= TimeFromHH && hourNum <= TimeToHH
-        : hourNum >= TimeFromHH || hourNum <= TimeToHH;
-    });
+    const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH);
 
     return [
       { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
@@ -153,16 +119,10 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   // --- 動態欄位重構點 ---
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+    });
   }
 
   columnGroup: ColumnGroup[] = [
@@ -196,19 +156,15 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { value: "Y", label: "是" },
     { value: "N", label: "否" },
   ]
-  tlt_building_Option: IDropdownItem[] = []; // 館別
-  tlt_floor_Option: IDropdownItem[] = []; // 樓層
-  area_no_Option: IDropdownItem[] = []; // 區域
-  bus_type_Option: IDropdownItem[] = []; // 大分類
-  bus_class_Option: IDropdownItem[] = []; // 中分類
-  bus_sclass_Option: IDropdownItem[] = []; // 小分類
-  org_id_Option: IDropdownItem[] = []; // 組織
-  CounterNos_Option: IDropdownItem[] = []; // 專櫃代號
+  private readonly dropdown = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  public readonly tls31090Service = inject(Tls31090Service);
 
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    public readonly tls31090Service: Tls31090Service,
-  ) { super(); }
+  tlt_building_Option = this.dropdown.querySys3800(); // 館別
+  tlt_floor_Option = this.dropdown.querySys3900(); // 樓層
+  area_no_Option = this.dropdown.querySys3A00(); // 區域
+  org_id_Option = this.dropdown.querySys3100(); // 組織
+  CounterNos_Option = this.dropdown.queryTltTalent(); // 專櫃代號
 
   ngOnInit(): void {
     this.initializePage('TLS31090', '', this.queryForm, (frm) => this.onSubmit(frm));
@@ -221,141 +177,21 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       this.queryForm.controls.TimeMode.valueChanges,
       this.queryForm.controls.TimeFromHH.valueChanges,
       this.queryForm.controls.TimeToHH.valueChanges,
-    ]).pipe(debounceTime(50), untilDestroyed(this)).subscribe(([mode, from, to]) => {
+    ]).pipe(debounceTime(50), takeUntilDestroyed(this.destroyRef)).subscribe(([mode, from, to]) => {
       this.columns = this.buildColumns(mode, from, to);
     });
 
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_building_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_floor_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.area_no_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    })
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.CounterNos_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    })
-    // 獲取大分類下拉選項
-    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    });
-    // 監聽大分類變化
-    this.queryForm.controls.CatLNos.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
-      if (value && value.length > 0) {
-        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
-          const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            const groupKey = currentItem.bus_type || '';
-            if (!accumulator[groupKey]) {
-              accumulator[groupKey] = {
-                label: currentItem.bus_type_name,
-                items: []
-              };
-            }
-
-            accumulator[groupKey].items.push({
-              ...currentItem,
-              label: `${currentItem.No} - ${currentItem.Name}`,
-            });
-
-            return accumulator;
-          }, {} as Record<string, any>);
-
-          // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
-          this.bus_class_Option = Object.values(groupedData);
-        });
-      } else {
-        this.bus_class_Option = [];
-        this.bus_sclass_Option = [];
-        this.queryForm.controls.CatSNos.setValue([]);
-        this.queryForm.controls.CatMNos.setValue([]);
-      }
-    });
-    // 監聽中分類變化，獲取小分類並分組
-    this.queryForm.controls.CatMNos.valueChanges.pipe(
-      debounceTime(300),
-      untilDestroyed(this),
-      map(selectedMValues => selectedMValues || []),
-
-      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-      switchMap((selectedMValues: IDropdownItem[]) => {
-        if (selectedMValues.length === 0) {
-          this.bus_sclass_Option = [];
-          this.queryForm.controls.CatSNos.setValue([]);
-          //  統一回傳型別，避免 TypeScript 推斷成 never[]
-          return of({ selectedMValues: [], data: [] });
-        }
-
-        //  組成符合新 API 的請求格式
-        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
-          .filter(v => v && v.bus_type) // 過濾 undefined
-          .map(v => ({
-            bus_type: v.bus_type!,   // 非空斷言
-            bus_class: v.No
-          }));
-
-        //  呼叫新 API（一次呼整包）
-        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
-          map(res => ({ selectedMValues, data: res.Data }))
-        );
-      }),
-
-      tap(result => {
-        console.log('所有 API 呼叫結果：', result);
-      })
-    ).subscribe(result => {
-
-      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-        const groupKey = `${mValue.bus_type}_${mValue.No}`;
-        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
-
-        //  過濾小分類資料對應到當前中分類
-        const items = result.data
-          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
-          .map(item => ({
-            ...item,
-            label: `${item.No} - ${item.Name}`,
-            bus_type: mValue.bus_type,
-            bus_type_name: mValue.bus_type_name,
-            CAT_MNo: mValue.No,
-            CAT_MName: mValue.Name
-          }));
-
-        //  去重
-        const uniqueItemsMap = new Map<string, typeof items[0]>();
-        items.forEach(item => {
-          if (!uniqueItemsMap.has(item.No)) {
-            uniqueItemsMap.set(item.No, item);
-          }
-        });
-
-
-        accumulator[groupKey] = {
-          label: groupLabel,
-          items: Array.from(uniqueItemsMap.values())
-        };
-
-        return accumulator;
-      }, {} as Record<string, any>);
-
-      this.bus_sclass_Option = Object.values(groupedData);
-      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
-    });
-
-    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+    this.queryForm.get('PreSale')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
     });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
+      const cat = raw.category || {};
 
       // 可用 2025-10-01 測試
 
@@ -365,8 +201,10 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
 
         // 分類轉成編號
-        CatMNos: (frm.getRawValue().CatMNos || []).map((x: any) => [x.bus_type, x.No]),
-        CatSNos: (frm.getRawValue().CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+        CatLNos: cat.bus_type || [],
+        CatMNos: (cat.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+        CatSNos: (cat.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+        category: undefined,
 
         // 多選陣列轉成逗號字串
         Floors: (raw.Floors || []).join(','),
@@ -379,7 +217,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       } as TLS31090Request;
 
       console.log('送出request請求', formValue);
-      this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls31090Service.queryTLS31090(formValue).pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef)).subscribe(res => {
         this.data = res.Data.Data ?? [];               // 查詢資料
         this.footerData = {
           BusTypeName: '營業實績',
@@ -426,14 +264,17 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   onReport(frm: FormGroup, isExcel: boolean) {
     console.log('匯出Excel');
     const raw = frm.getRawValue();
+    const cat = raw.category || {};
     const formValue = {
       ...raw,
       // 日期格式化
       TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
 
       // 分類轉成編號
-      CatMNos: (frm.getRawValue().CatMNos || []).map((x: any) => [x.bus_type, x.No]),
-      CatSNos: (frm.getRawValue().CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+      CatLNos: cat.bus_type || [],
+      CatMNos: (cat.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      CatSNos: (cat.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+      category: undefined,
 
       // 多選陣列轉成逗號字串
       Floors: (raw.Floors || []).join(','),

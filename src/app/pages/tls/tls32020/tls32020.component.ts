@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS32020Data, TLS32020QueryRequest, TLS32020Service } from '@service/api/tls/tls32020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -797,15 +798,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      BasePreOrderAmt: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      preSaleField: 'BasePreOrderAmt',
+    });
   }
 }

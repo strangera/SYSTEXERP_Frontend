@@ -15,6 +15,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -447,15 +448,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+    });
   }
 }

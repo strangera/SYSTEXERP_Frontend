@@ -9,6 +9,7 @@ import { TLS31040DetailItem, TLS31040DetailRequest, TLS31040Item, TLS31040PrintD
 import { NotificationService } from 'src/app/shared/components/notification-message/notification.service';
 import { environment } from 'src/environments/environment';
 import { ColumnGroup, ReportColumn, formatAmount, formatAmountWithDecimals } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { applyDisplayStatusVisibility } from '../../TLS30000/common/report-display-status.util';
 
 @Component({
   selector: 'app-tls31040-cru',
@@ -67,16 +68,10 @@ export class Tls31040CRUComponent implements OnChanges {
     const q = this.queryConditions;
     if (!q) return;
 
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: q.PreSale === true,
-      ConsumerNum: q.ConsumerNum === true,
-      ConsumerOrder: q.ConsumerNum === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: q.PreSale === true,
+      consumerNum: q.ConsumerNum === true,
+    });
   }
 
   // --- 動態欄位重構點 --- (建立 Request 時一併帶入 PreSale / ConsumerNum)

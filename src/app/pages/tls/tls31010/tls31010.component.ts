@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS31010QueryData, TLS31010Request, Tls31010Service, TLS31010TotalData } from '@service/api/tls/tls31010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -162,19 +163,11 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
 
   /** 動態更新表格欄位可見度 */
   private setColumns() {
-    const isPreSale = !!this.queryForm.get('PreSale')?.value;
-    const isConsumerNum = !!this.queryForm.get('ConsumerNum')?.value;
-
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: isPreSale,
-      ConsumerNum: isConsumerNum,
-      ConsumerOrder: isConsumerNum,
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible ?? true
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: !!this.queryForm.get('PreSale')?.value,
+      consumerNum: !!this.queryForm.get('ConsumerNum')?.value,
+      fallbackWhenUnset: true,
+    });
   }
 
   /** 當切換顯示狀態勾選時，即時更新 lastQueryBody 中的值 */

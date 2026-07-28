@@ -8,6 +8,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { ColumnGroup, formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { applyDisplayStatusVisibility } from '../../TLS30000/common/report-display-status.util';
 
 @Component({
   selector: 'app-tls31070-cru',
@@ -86,16 +87,10 @@ export class Tls31070CRUComponent implements OnChanges {
     const q = this.queryConditions;
     if (!q) return;
 
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: q.PreSale === true,
-      ConsumerNum: q.ConsumerNum === true,
-      ConsumerOrder: q.ConsumerNum === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: q.PreSale === true,
+      consumerNum: q.ConsumerNum === true,
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
