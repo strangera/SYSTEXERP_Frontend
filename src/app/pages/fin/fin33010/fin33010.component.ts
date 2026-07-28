@@ -116,9 +116,10 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
     if (this.selectedItemsDialog && this.selectedItemsDialog.length) {
       const sel = this.selectedItemsDialog[0];
       this.queryForm.controls.RCV_No.setValue(sel.RCV_No);
+      if (sel.RCV_Date) {
+        this.queryForm.controls.VouDate.setValue(new Date(sel.RCV_Date));
+      }
       this.rcvDialogVisible = false;
-
-      console.log('選擇項目', sel);
     }
   }
 
