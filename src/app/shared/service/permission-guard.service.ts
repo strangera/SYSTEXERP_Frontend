@@ -59,7 +59,9 @@ export enum Actions {
   Check = '370',                   // 檢核
   OnlineCheck = '480',             // 網路對帳
   AUTOMAIL = '490',                // AUTOMAIL
-  CloseAccount = '510'             // 關帳
+  CloseAccount = '510',             // 關帳
+  Connect = '520',             // 連線
+  Control = '530'             // 控制
 }
 
 @Injectable({

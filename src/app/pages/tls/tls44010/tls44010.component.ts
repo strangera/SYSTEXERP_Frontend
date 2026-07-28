@@ -97,6 +97,8 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   vncControlDialogVisible = false;
   vncControlPassword = '';
   vncControlLoading = false;
+  /** 本次 VNC 連線 session 是否已成功驗證過密碼；true 時再次接管控制不需重複輸入密碼 */
+  private vncControlVerified = false;
 
   eosHubStatus: 'connected' | 'reconnecting' | 'disconnected' = 'disconnected';
   eosLastUpdated: Date | null = null;
@@ -116,6 +118,10 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   }
 
   openVnc(row: QueryTLS44010Response) {
+    if (!this.hasPermission(this.Actions.Connect)) {
+      this.notemessage.errorBubble('您沒有「連線」操作權限');
+      return;
+    }
     this.selectedVncRow = row;
     this.vncDialogVisible = true;
   }
@@ -188,6 +194,16 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   }
 
   onVncControlRequest(): void {
+    if (!this.hasPermission(this.Actions.Control)) {
+      this.notemessage.errorBubble('您沒有「控制」操作權限');
+      this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_DENIED' }, globalThis.location.origin);
+      return;
+    }
+    // 本次 VNC 連線 session 已驗證過密碼，之後再接管控制不需重複輸入
+    if (this.vncControlVerified) {
+      this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, globalThis.location.origin);
+      return;
+    }
     this.vncControlPassword = '';
     this.vncControlDialogVisible = true;
   }
@@ -209,6 +225,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
       .pipe(finalize(() => { this.vncControlLoading = false; }))
       .subscribe({
         next: () => {
+          this.vncControlVerified = true;
           this.vncControlDialogVisible = false;
           this.vncControlPassword = '';
           this.vncIframeRef?.nativeElement.contentWindow?.postMessage({ type: 'CONTROL_GRANTED' }, globalThis.location.origin);
