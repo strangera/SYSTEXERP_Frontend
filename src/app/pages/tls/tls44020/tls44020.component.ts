@@ -14,10 +14,10 @@ import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
 import { EDCStatus, QueryTLS44020Response, TLS44020Service } from '../../../service/api/tls/tls44020.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 // 配置化管理：統一收納状态對應關係，避免 switch case 膨脹
@@ -57,7 +57,7 @@ export class TLS44020Component extends BasicQueryPageComponent<QueryTLS44020Resp
   items: MenuItem[] = [{ label: '全部' }, { label: '連線機台' }, { label: '離線機台' }];
   activeItem: MenuItem | undefined = this.items[0];
   ECRNoOptions = this.dropdownApiService.queryPos1002()
-  CounterOptions = this.dropdownApiService.queryPos2001()
+  CounterOptions = this.dropdownApiService.queryTltTalent()
   buildingNoOptions = this.dropdownApiService.querySys3800()
   floorOptions = this.dropdownApiService.querySys3900()
   globalFilter = '';

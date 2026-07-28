@@ -3,6 +3,7 @@ import { Component, DestroyRef, ElementRef, inject, OnInit, ViewChild } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import * as signalR from '@microsoft/signalr';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
@@ -16,16 +17,15 @@ import { PasswordModule } from 'primeng/password';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TooltipModule } from 'primeng/tooltip';
-import * as signalR from '@microsoft/signalr';
 import { filter, finalize, firstValueFrom, fromEvent } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { EOSStatus, QueryTLS44010Response, TLS44010Service } from '../../../service/api/tls/tls44010.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
+import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 
 // 狀態映射字典配置：將 0~5 的狀態配置化管理
@@ -80,7 +80,7 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
 
   // 完美宣告：直接綁定新版快取選單機制
   ECRNoOptions$ = this.dropdownApiService.queryPos1002();
-  CounterOptions$ = this.dropdownApiService.queryPos2001();
+  CounterOptions$ = this.dropdownApiService.queryTltTalent();
   buildingNoOptions$ = this.dropdownApiService.querySys3800();
   floorOptions$ = this.dropdownApiService.querySys3900();
 
