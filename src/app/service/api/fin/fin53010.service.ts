@@ -701,6 +701,9 @@ export class FIN53010Service {
       take(1),
       map(res => res ?? []),
       tap(res => {
+        // 全量清單重載時清除 hydration 快取，避免舊快取阻擋下次補水化
+        this.fin53010VenHydrationKeys.clear();
+        this.fin53010VenInflight.clear();
         this.vendorOptions.set(res);
         this.logger.debug('查詢VendorOptions結果:', [res]);
       }),

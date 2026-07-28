@@ -129,7 +129,7 @@
               controlName="INVOptions"
               [showClear]="!1"
               [filter]="!1"
-              [disabled]="!isInvYnEditable"
+              [disabled]="!isInvYnEditable || isRcRmVoucher()"
               [options]="service.INVOptions"
               optionLabel="label"
               optionValue="value"
@@ -223,8 +223,10 @@
     <div class="col-12">
       <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
         <app-table-edit
-          [showCheckBox]="!isFormReadable && !isPostedEdit"
+          [showCheckBox]="!isFormReadable && !isPostedEdit && !isRcRmVoucher()"
           [showReorder]="!isFormReadable && !isPostedEdit"
+          [showDelete]="!isRcRmVoucher()"
+          [canInsert]="!isRcRmVoucher()"
           [disabled]="isFormReadable || isPostedEdit"
           [beforeDelete]="ptaDeleteGuard"
           (fieldChange)="onFieldChange($event)"
@@ -235,7 +237,7 @@
           [loading]="tableLoading()"
           [tableKey]="'FIN52030_detail'"
           [tableRequired]="true"
-          [columns]="columns()"
+          [columns]="effectiveColumns()"
           [scrollable]="true"
           [rowValidate]="validateRow"
         ></app-table-edit>
@@ -955,6 +957,19 @@
       optionValue="value"
       [showClear]="true"
       [filter]="true"
+      (valueChange)="$event && ptaFilterForm.controls.USR_No.setValue(null)"
+    />
+    <app-dropdown
+      class="col-12 md:col-4"
+      label="員工代號/名稱"
+      controlName="USR_No"
+      [control]="ptaFilterForm.controls.USR_No"
+      [options]="service.usrOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [showClear]="true"
+      [filter]="true"
+      (valueChange)="$event && ptaFilterForm.controls.VEN_No.setValue(null)"
     />
   </form>
   <div class="flex justify-content-end mb-2">
