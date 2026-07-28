@@ -144,6 +144,23 @@
     [lastQueryBody]="lastQueryBody"
     [ItemSize]="24.44"
     [showDelete]="false"
+    [customTemplates]="{
+      VEN_No: firstLineTemplate,
+      VEN_Name: firstLineTemplate,
+      PayType: firstLineTemplate,
+      ARS_No: firstLineTemplate,
+      AccNo: firstLineTemplate,
+      AccCName: firstLineTemplate,
+      ARS_Date: firstLineTemplate,
+      PTA_Date: firstLineTemplate,
+      ARS_Amt: firstLineTemplate,
+      NoteDesc: firstLineTemplate,
+      RefNo: secondLineTemplate,
+      RCV_Date: secondLineTemplate,
+      VouNo: voucherNoTemplate,
+      RcvOrAdjAmt: amountTemplate,
+      UnpaidBalanceAmt: firstLineTemplate,
+    }"
   >
     <header>
       <div class="flex justify-content-end gap-2">
@@ -167,3 +184,66 @@
     </header>
   </app-table-report>
 </div>
+
+<ng-template
+  #secondLineTemplate
+  let-rowData
+  let-column="column"
+  let-index="index"
+>
+  <div>&nbsp;</div>
+  @if (
+    rowData[column.field] !== null &&
+    rowData[column.field] !== undefined &&
+    rowData[column.field] !== ""
+  ) {
+    <div>
+      {{
+        column.format
+          ? column.format(rowData[column.field], index, rowData)
+          : rowData[column.field]
+      }}
+    </div>
+  }
+</ng-template>
+
+<ng-template
+  #firstLineTemplate
+  let-rowData
+  let-column="column"
+  let-index="index"
+>
+  <div>
+    {{
+      column.format
+        ? column.format(rowData[column.field], index, rowData)
+        : rowData[column.field]
+    }}
+  </div>
+  <div>&nbsp;</div>
+</ng-template>
+
+<ng-template #voucherNoTemplate let-rowData>
+  <div>{{ rowData.VouNo }}</div>
+  <div>{{ rowData.Pay_VouNo || " " }}</div>
+</ng-template>
+<ng-template #amountTemplate let-rowData let-column="column" let-index="index">
+  <div>
+    {{
+      column.format
+        ? column.format(rowData[column.field], index, rowData)
+        : rowData[column.field]
+    }}
+  </div>
+  <div>
+    {{
+      rowData.Pay_Amt !== null &&
+      rowData.Pay_Amt !== undefined &&
+      rowData.Pay_Amt !== ""
+        ? column.format
+          ? column.format(rowData.Pay_Amt, index, rowData)
+          : rowData.Pay_Amt
+        : " "
+    }}
+  </div>
+</ng-template>
