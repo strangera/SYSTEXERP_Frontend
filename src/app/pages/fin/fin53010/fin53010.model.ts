@@ -1137,6 +1137,8 @@ export interface QueryGLS3003AbatAcctRequest {
   AccNo?: string | null;
   VouNo?: string | null;
   PTA?: string | null;
+  /** 廠商或員工代號（對應 GLS3002.DetailNo，模糊查詢） */
+  VEN_No?: string | null;
 }
 
 export interface QueryGLS3003AbatAcctResponse {
@@ -1149,6 +1151,7 @@ export interface QueryGLS3003AbatAcctResponse {
   VEN_No?: string | null;
   VEN_Uniform?: string | null;
   VEN_ShortName?: string | null;
+  USR_Name?: string | null;
 }
 
 export interface CheckGLS3003PtaLockedRequest {

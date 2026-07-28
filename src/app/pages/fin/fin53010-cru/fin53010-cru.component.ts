@@ -215,7 +215,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ptaFilterForm = this.formBuilder.group({
     VouNo: [''],
     PTA: [''],
-    VEN_No: [null as string | null],
+    VEN_No: [null as string | null],  // 廠商代號
+    USR_No: [null as string | null],  // 員工代號（與 VEN_No 二選一）
   });
   ptaDialogColumns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true },
@@ -223,11 +224,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'DebitAmt', header: '借方(餘額)', visible: true, format: formatAmount, align: 'right' },
     { field: 'CreditAmt', header: '貸方(餘額)', visible: true, format: formatAmount, align: 'right' },
     { field: 'PTA', header: '立沖代號', visible: true },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
-    { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
+    { field: 'VEN_No', header: '廠商/員工代號', visible: true },
+    {
+      field: 'VEN_ShortName',
+      header: '廠商/員工名稱',
+      visible: true,
+      format: (_v, _i, row) => {
+        const r = row as QueryGLS3003AbatAcctResponse;
+        return r?.VEN_ShortName ?? r?.USR_Name ?? '';
+      },
+    },
   ];
   private currentEditingPtaRowIndex: number | null = null;
   private currentEditingPtaAccNo: string | null = null;
+  /** 從哪個金額欄觸發的 PTA dialog（null = 從 PTA 欄直接點） */
+  private currentEditingPtaAmtField: 'AccAmtD' | 'AccAmtC' | null = null;
   /** 避免 effect 在 maps 抖動時反覆 tableData.set 造成 table-edit 重初始化 */
   private _lastAppliedDetailTableFingerprint: string | null = null;
   public readonly currentStep = signal<number>(1);
@@ -373,6 +384,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   /** 追蹤實際傳票型態代碼（form 存 label，需另存 code 供判斷） */
   readonly voucherTypeCode = signal<string>('GL');
+  /** RC/RM 傳票類型：僅允許編輯摘要，不可新增或刪除明細列，其餘欄位鎖定 */
+  readonly isRcRmVoucher = computed(() => {
+    const t = this.voucherTypeCode().trim().toUpperCase();
+    return t === 'RC' || t === 'RM';
+  });
 
   /** 過帳後進入編輯模式：只允許修改摘要(Remark)，其餘欄位唯讀 */
   get isPostedEdit(): boolean {
@@ -629,10 +645,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       INV_YN: (data.INV_YN ?? 'N') as 'N' | 'Y',
       VouAccType: ['0', '1'].includes(String(data.VouAccType)) ? String(data.VouAccType) as '0' | '1' : '0',
       CompNo: data.CompNo,
-      ...data.CRT_USR_No ? { CRT_USR_No: data.CRT_USR_No } : {},
-      ...data.CRT_Date ? { CRT_Date: new Date(data.CRT_Date) } : {},
-      ...data.UPD_USR_No ? { UPD_USR_No: data.UPD_USR_No } : {},
-      ...data.UPD_Date ? { UPD_Date: new Date(data.UPD_Date) } : {},
+      CRT_USR_No: data.CRT_USR_No ?? void 0,
+      CRT_Date: data.CRT_Date ? new Date(data.CRT_Date) : void 0,
+      UPD_USR_No: data.UPD_USR_No ?? void 0,
+      UPD_Date: data.UPD_Date ? new Date(data.UPD_Date) : void 0,
     });
 
     if (!this.areDetailMapsReady()) {
@@ -714,7 +730,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const accMap = this.service.accNoMap();
     const vendorMap = this.service.vendorMap();
     const usrMap = this.service.usrMap();
-
     return [
       {
         field: 'AccNo',
@@ -776,6 +791,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         // DB 已存列：貸方有值時禁止輸入借方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
           (!!rowData?.id && (rowData.AccAmtC ?? 0) > 0) || this.isRowLocked(rowData),
+        // 立沖科目（AccDC=C）新增列：首次 focus 自動開 PTA dialog，選完後帶回金額/廠商/摘要
+        onFocus: (_r, _v, _c, index: number) => {
+          if (this.isFormReadable) return;
+          const rowData = this.tableData()[index];
+          if (!rowData?.AccNo || rowData.id) return;
+          const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+          if (ABAT_YN !== 'Y' || AccDC !== 'C' || rowData.PTA) return;
+          this.openPtaDialog(index, 'AccAmtD');
+        },
       },
       {
         field: 'AccAmtC',
@@ -786,6 +810,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         // DB 已存列：借方有值時禁止輸入貸方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
           (!!rowData?.id && (rowData.AccAmtD ?? 0) > 0) || this.isRowLocked(rowData),
+        // 立沖科目（AccDC=D）新增列：首次 focus 自動開 PTA dialog，選完後帶回金額/廠商/摘要
+        onFocus: (_r, _v, _c, index: number) => {
+          if (this.isFormReadable) return;
+          const rowData = this.tableData()[index];
+          if (!rowData?.AccNo || rowData.id) return;
+          const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+          if (ABAT_YN !== 'Y' || AccDC !== 'D' || rowData.PTA) return;
+          this.openPtaDialog(index, 'AccAmtC');
+        },
       },
       {
         field: 'ORG_ID',
@@ -857,6 +890,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
     ];
+  });
+
+  /** RC/RM 傳票：除摘要外其餘欄位全部鎖定 */
+  public readonly effectiveColumns = computed(() => {
+    const cols = this.columns();
+    if (!this.isRcRmVoucher()) return cols;
+    return cols.map(col => col.field === 'NoteDesc' ? col : { ...col, disabled: () => true });
   });
 
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
@@ -3413,12 +3453,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   // ── 立沖代號選取彈窗 ─────────────────────────────────────────────────────
 
-  openPtaDialog(rowIndex: number): void {
+  openPtaDialog(rowIndex: number, amtField?: 'AccAmtD' | 'AccAmtC'): void {
     const rowData = this.tableData()[rowIndex];
     if (!rowData?.AccNo) return;
 
     this.currentEditingPtaRowIndex = rowIndex;
     this.currentEditingPtaAccNo = rowData.AccNo ?? null;
+    this.currentEditingPtaAmtField = amtField ?? null;
     this.showPtaDialog = true;
     this.ptaFilterForm.reset();
     this.ptaDialogSelectedItem = null;
@@ -3446,12 +3487,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   filterPtaDialog(): void {
-    const { VouNo, PTA } = this.ptaFilterForm.value;
+    const { VouNo, PTA, VEN_No, USR_No } = this.ptaFilterForm.value;
     this.ptaDialogLoading = true;
     this.service.queryGLS3003AbatAcct({
       AccNo: this.currentEditingPtaAccNo,
       VouNo: VouNo || null,
       PTA: PTA || null,
+      VEN_No: VEN_No || USR_No || null,  // 廠商或員工代號二選一
     })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
       .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
@@ -3474,13 +3516,39 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!selected) return;
 
     const rowIndex = this.currentEditingPtaRowIndex;
+    const amtField = this.currentEditingPtaAmtField;
     if (rowIndex !== null) {
       this.tableData.update(rows =>
-        rows.map((r, i) => i === rowIndex ? { ...r, PTA: selected.PTA ?? '' } : r)
+        rows.map((r, i) => {
+          if (i !== rowIndex) return r;
+          const updated: FIN53010DetailTable = { ...r, PTA: selected.PTA ?? '' };
+          if (amtField) {
+            // 從 PTA 對象自動回填廠商代號、摘要
+            const venNo = (selected.VEN_No ?? '').trim();
+            if (venNo) {
+              updated.DetailNo = venNo;
+              // templateDisplayField='DetailName' 讀的是 rowData.DetailName，需同步設定
+              const vendorOpt = this.service.vendorMap().get(venNo);
+              updated.DetailName = vendorOpt?.['short'] ?? vendorOpt?.label ?? selected.VEN_ShortName ?? '';
+            }
+            if (selected.NoteDesc) updated.NoteDesc = selected.NoteDesc;
+            // AccDC=C 科目：反向在借方（AccAmtD）→ 沖貸方餘額（CreditAmt）
+            // AccDC=D 科目：反向在貸方（AccAmtC）→ 沖借方餘額（DebitAmt）
+            if (amtField === 'AccAmtD') {
+              updated.AccAmtD = selected.CreditAmt ?? selected.DebitAmt ?? undefined;
+              updated.AccAmtC = undefined;
+            } else {
+              updated.AccAmtC = selected.DebitAmt ?? selected.CreditAmt ?? undefined;
+              updated.AccAmtD = undefined;
+            }
+          }
+          return updated;
+        })
       );
     }
     this.showPtaDialog = false;
     this.currentEditingPtaRowIndex = null;
+    this.currentEditingPtaAmtField = null;
     this.ptaDialogSelectedItem = null;
   }
 
