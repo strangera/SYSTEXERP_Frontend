@@ -149,6 +149,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv' },
     { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
     { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
+    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
 
     // ======================= 比較期 (Compare) 欄位 =======================
     { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
@@ -158,6 +161,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV' },
     { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
     { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
+    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
 
     // ======================= 差異 (Difference) 欄位 =======================
     { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true },
@@ -166,10 +172,11 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true },
     { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatInt, isSubTotal: true },
     { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
 
     { field: 'BasePreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isSubTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [
@@ -801,7 +808,11 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.columns = applyDisplayStatusVisibility(this.columns, {
       preSale: this.queryForm.get('PreSale')?.value === true,
       consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      preSaleField: 'BasePreOrderAmt',
+      preSaleField: ['BasePreOrderAmt', 'Base_PrePerformance', 'Comp_PrePerformance', 'Diff_PrePerformance'],
+      consumerNumFields: [
+        'Base_ConsumerNum', 'Comp_ConsumerNum', 'Diff_ConsumerNum',
+        'Base_ConsumerOrder', 'Comp_ConsumerOrder', 'Diff_ConsumerOrder',
+      ],
     });
   }
 }

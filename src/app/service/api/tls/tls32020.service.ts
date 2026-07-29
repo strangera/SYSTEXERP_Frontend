@@ -42,6 +42,9 @@ export interface TLS32020Data {
   BaseTicket: number,
   BasePyeff: number,
   BasePyContrib: number,
+  Base_PrePerformance: number,
+  Base_ConsumerNum: number,
+  Base_ConsumerOrder: number,
 
   // ======================= 比較期 (Compare) 欄位 =======================
   CompareTarget: number,
@@ -51,6 +54,9 @@ export interface TLS32020Data {
   CompareTicket: number,
   ComparePyeff: number,
   ComparePyContrib: number,
+  Comp_PrePerformance: number,
+  Comp_ConsumerNum: number,
+  Comp_ConsumerOrder: number,
 
   // ======================= 差異 (Difference) 欄位 =======================
   DiffAmt: number,
@@ -59,12 +65,12 @@ export interface TLS32020Data {
   DiffTicket: number,
   DiffPyeff: number,
   DiffPyContrib: number,
+  Diff_PrePerformance: number,
+  Diff_ConsumerNum: number,
+  Diff_ConsumerOrder: number,
 
   // ======================= 狀態 欄位 =======================
-  BasePreOrderAmt?: number; // 預售業績（SP_TLS32020Query 只回傳基準期，無 Compare/Diff 版本）
-  // ConsumerNum/ConsumerOrder：SP_TLS32020Query 目前未輸出這兩欄，欄位保留供畫面「消費人數」開關對應，值恆為 undefined
-  ConsumerNum?: number;
-  ConsumerOrder?: number;
+  BasePreOrderAmt?: number; // 預售業績（舊欄位，SP 保留相容，值與 Base_PrePerformance 相同）
 }
 
 @Injectable({
