@@ -108,54 +108,47 @@ export interface TLS31020DetailItem {
 export interface TLS31020Total {
   TotalBudget: number;
   TotalSales: number;
+  TotalPreOrderAmt: number;
+  TotalPrePerformance: number;
   AvgAchievementRate: number;
-  AvgBudgetRate: number;
-  AvgPerformanceRate: number;
+  AvgBudgetRate: number;       // 補上
+  AvgPerformanceRate: number;  // 補上
   TotalTxnCount: number;
   AvgTicket: number;
+  TotalConsumerNum: number;
+  TotalConsumerOrder: number;
   TotalSpace: number;
   AvgPSM: number;
   AvgMonthlyPayment: number;
   TotalTempCounterSales: number;
-  AvgTempCounterSalesRate: number;
-  AvgTempCounterAmtRate: number;
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
+  TotalMonthlyPreOrder: number;
   AvgCompletionRate: number;
-
-  TotalPrePerformance: number; // 預售業績總計
-  TotalConsumerNum: number; // 消費人數總計
-  TotalConsumerOrder: number; // 消費客單總計
 }
 export interface footerShowTotal {
   budget?: number;
   AVN_TotSaleAmt?: number;
-
+  PreOrderAmt?: number;          // ✅ 補上
+  PrePerformance?: number;
   AchievementRate?: number;
   BudgetRate?: number;
   PerformanceRate?: number;
-
   TxnCount?: number;
   AvgTicket?: number;
-
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
   tlt_space?: number;
   MonthlyPSM?: number;
   MonthlyPayment?: number;
-
   TempCounterSaleAmt?: number;
   TempCounterSalesRate?: number;
   TempCounterAmtRate?: number;
-
   MonthlyBudgetTotal?: number;
   MonthlySalesTotal?: number;
-
+  MonthlyPreOrderTotal?: number; // ✅ 補上
   CompletionRate?: number;
-
-  PrePerformance?: number; // 預售業績
-  ConsumerNum?: number; // 消費人數
-  ConsumerOrder?: number; // 消費客單
 }
-
 export interface TLS31020Response {
   QueryData: TLS31020Item[];
   TotalData: TLS31020Total;

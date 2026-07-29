@@ -4,8 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
-import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
-import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import {
   applyEventDateRange,
   applyReportDateTypeValidators,
@@ -15,9 +13,11 @@ import {
   REPORT_HALFYEAR_OPTIONS,
   resetReportDateForm,
 } from '@pages/tls/TLS30000/common/report-date-range.util';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31040Item, TLS31040PrintRequest, TLS31040Request, Tls31040Service } from '@service/api/tls/tls31040.service';
+import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -115,12 +115,10 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
   });
 
   halfyearOptions = REPORT_HALFYEAR_OPTIONS;
-
   EventIDOptions = [
     { value: '1', label: '活動1', TXN_DateS: null, TXN_DateE: null },
     { value: '2', label: '活動2', TXN_DateS: null, TXN_DateE: null },
   ];
-
   reportTypeOptions = REPORT_DATE_TYPE_OPTIONS;
 
   totalRecords = 0;
@@ -168,7 +166,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
   ];
 
   tlt_kind_Option$ = getSYS1000Options$(this.systemDataService, 'TLT_Kind');
-
   tlt_term_type = [
     { value: '1', label: '固定租金' },
     { value: '2', label: '底租抽成取高者' },
@@ -205,9 +202,10 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
 
     this.dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncDateToQueryForm());
 
-    // 監聽顯示狀態變化
+    // 監聽顯示狀態變化 (動態切換欄位顯示)
     const preSale$ = this.queryForm.get('PreSale')!.valueChanges;
     const consumerNum$ = this.queryForm.get('ConsumerNum')!.valueChanges;
+
     merge(preSale$, consumerNum$)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -219,7 +217,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = this.buildRequestBody(frm.getRawValue());
-
       this.tls31040Service
         .queryTLS31040(formValue)
         .pipe(
@@ -248,18 +245,14 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
               ConsumerOrder: this.footerTotal.TotalConsumerOrder,
             }
             : null;
-
           this.footershowPercent = this.footerTotal
             ? {
               AchievementRate: this.footerTotal.AvgAchievementRate,
               BudgetRate: this.footerTotal.AvgBudgetRate,
               PerformanceRate: this.footerTotal.AvgPerformanceRate,
-              TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
-              TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
               CompletionRate: this.footerTotal.AvgCompletionRate,
             }
             : null;
-
           this.historyRequestBody = formValue;
           this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -308,10 +301,12 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Item> imp
   queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
     if (!control.value) return;
+
     const payload = {
       onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
       weeks: event,
     };
+
     this.tls26050Service
       .queryTLS26050Week(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))

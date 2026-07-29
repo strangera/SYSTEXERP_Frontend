@@ -4,8 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
-import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
-import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import {
   applyEventDateRange,
   applyReportDateTypeValidators,
@@ -15,6 +13,7 @@ import {
   REPORT_HALFYEAR_OPTIONS,
   resetReportDateForm,
 } from '@pages/tls/TLS30000/common/report-date-range.util';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import {
   footerShowTotal,
@@ -24,6 +23,7 @@ import {
   Tls31020Service,
   TLS31020Total,
 } from '@service/api/tls/tls31020.service';
+import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -232,27 +232,27 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Item> imp
         .subscribe((res) => {
           this.data = res.Data ?? [];
           this.footerTotal = res.TotalData ?? null;
+
           this.footershowTotal = this.footerTotal
             ? {
               budget: this.footerTotal.TotalBudget,
               AVN_TotSaleAmt: this.footerTotal.TotalSales,
+              PrePerformance: this.footerTotal.TotalPrePerformance,
               AchievementRate: this.footerTotal.AvgAchievementRate,
               BudgetRate: this.footerTotal.AvgBudgetRate,
               PerformanceRate: this.footerTotal.AvgPerformanceRate,
               TxnCount: this.footerTotal.TotalTxnCount,
               AvgTicket: this.footerTotal.AvgTicket,
+              ConsumerNum: this.footerTotal.TotalConsumerNum,
+              ConsumerOrder: this.footerTotal.TotalConsumerOrder,
               tlt_space: this.footerTotal.TotalSpace,
               MonthlyPSM: this.footerTotal.AvgPSM,
               MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
               TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-              TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
-              TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
+              // ❌ 移除 AvgTempCounterSalesRate 與 AvgTempCounterAmtRate
               MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
               MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
               CompletionRate: this.footerTotal.AvgCompletionRate,
-              PrePerformance: this.footerTotal.TotalPrePerformance,
-              ConsumerNum: this.footerTotal.TotalConsumerNum,
-              ConsumerOrder: this.footerTotal.TotalConsumerOrder,
             }
             : null;
 
@@ -261,8 +261,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Item> imp
               AchievementRate: this.footerTotal.AvgAchievementRate,
               BudgetRate: this.footerTotal.AvgBudgetRate,
               PerformanceRate: this.footerTotal.AvgPerformanceRate,
-              TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
-              TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
+              // ❌ 這裡也同步拿掉
               CompletionRate: this.footerTotal.AvgCompletionRate,
             }
             : null;

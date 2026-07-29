@@ -4,8 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
-import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
-import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import {
   applyEventDateRange,
   applyReportDateTypeValidators,
@@ -15,8 +13,9 @@ import {
   REPORT_HALFYEAR_OPTIONS,
   resetReportDateForm,
 } from '@pages/tls/TLS30000/common/report-date-range.util';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { footerShowTotal } from '@service/api/tls/tls31020.service';
 import {
   TLS31060Item,
   TLS31060PrintRequest,
@@ -24,6 +23,7 @@ import {
   TLS31060Request,
   Tls31060Service,
 } from '@service/api/tls/tls31060.service';
+import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -131,7 +131,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
 
   totalRecords = 0;
   data: TLS31060Item[] = [];
-  footerTotal: TLS31020Total | null = null;
+  footerTotal: any | null = null;
   footershowTotal: footerShowTotal | null = null;
   footershowPercent: footerShowTotal | null = null;
   historyRequestBody: TLS31060Request | null = null;

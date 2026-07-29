@@ -4,8 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
-import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
-import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import {
   applyEventDateRange,
   applyReportDateTypeValidators,
@@ -15,9 +13,11 @@ import {
   REPORT_HALFYEAR_OPTIONS,
   resetReportDateForm,
 } from '@pages/tls/TLS30000/common/report-date-range.util';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31030Item, TLS31030PrintRequest, TLS31030Request, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -255,8 +255,6 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
               AchievementRate: this.footerTotal.AvgAchievementRate,
               BudgetRate: this.footerTotal.AvgBudgetRate,
               PerformanceRate: this.footerTotal.AvgPerformanceRate,
-              TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
-              TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
               CompletionRate: this.footerTotal.AvgCompletionRate,
             }
             : null;
