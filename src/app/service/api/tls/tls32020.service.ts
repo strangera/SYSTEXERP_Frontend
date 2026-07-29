@@ -5,24 +5,27 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface TLS32020QueryRequest {
-  reportType: string;
   // 基準日期
   BaseDateFrom: string | null;
   BaseDateTo: string | null;
   // 比較日期
   CompareDateFrom: string | null;
   CompareDateTo: string | null;
-  FloorList: string | null;
-  AreaList: string | null;
-  BusTypeList: string | null;
-  BusClassList: string | null;
-  CabinetKindList: string | null;
-  TermTypeList: string | null;
-  OrgList: string | null;
-  TltNoList: string | null;
-  AuditoriumList: string | null; // 新增：館別
-  TaxFlag: string;
-  isOwnerInvoice: string; // 新增：是否開立業主發票
+  FloorList: string[] | null;
+  AreaList: string[] | null;
+  BuildingList: string[] | null;
+  BusTypeList: string[] | null;
+  BusClassList: string[][] | null;
+  BusSClassList: string[][] | null;
+  CounterKindList: string[] | null;
+  OrgList: string[] | null;
+  TalentNoList: string[] | null;
+  TermTypeList: string[] | null;
+  TaxMode: string;
+  OwnerInvFlag: string;
+  DayType: string;
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
 }
 
 export interface TLS32020Data {
@@ -37,15 +40,17 @@ export interface TLS32020Data {
   BaseAchieveRate: number,
   BaseTxnCnt: number,
   BaseTicket: number,
-  BasePyeff: number,       // <--- 補充：基準期坪效
-  BasePyContrib: number,   // <--- 補充：基準期坪貢獻
+  BasePyeff: number,
+  BasePyContrib: number,
 
   // ======================= 比較期 (Compare) 欄位 =======================
+  CompareTarget: number,
   CompareSale: number,
+  CompareAchieveRate: number,
   CompareTxnCnt: number,
   CompareTicket: number,
-  ComparePyeff: number,    // <--- 補充：比較期坪效
-  ComparePyContrib: number,  // <--- 補充：比較期坪貢獻
+  ComparePyeff: number,
+  ComparePyContrib: number,
 
   // ======================= 差異 (Difference) 欄位 =======================
   DiffAmt: number,
@@ -56,9 +61,10 @@ export interface TLS32020Data {
   DiffPyContrib: number,
 
   // ======================= 狀態 欄位 =======================
-  PrePerformance?: number; // 預售業績
-  ConsumerNum?: number; // 消費人數
-  ConsumerOrder?: number; // 消費客單
+  BasePreOrderAmt?: number; // 預售業績（SP_TLS32020Query 只回傳基準期，無 Compare/Diff 版本）
+  // ConsumerNum/ConsumerOrder：SP_TLS32020Query 目前未輸出這兩欄，欄位保留供畫面「消費人數」開關對應，值恆為 undefined
+  ConsumerNum?: number;
+  ConsumerOrder?: number;
 }
 
 @Injectable({

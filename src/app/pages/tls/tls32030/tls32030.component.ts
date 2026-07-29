@@ -15,7 +15,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
-import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -26,6 +25,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 
 
 @Component({
@@ -87,7 +87,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   private readonly dropdown = inject(DropdownApiService);
   private readonly fileExportService = inject(FileExportService);
   queryForm = this.formBuilder.group({
-    DayType: ['3' as string | null], // 【修改】移除預設值 '3'，改為 null
+    DayType: ['3' as string | null],
     BaseDateFrom: [null as Date | null, [Validators.required]],
     BaseDateTo: [null as Date | null, [Validators.required]],
     day: [null as Date | null], // 日營業報表：單一比較日期
@@ -155,40 +155,47 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'SYS_Name', header: '櫃別', align: 'left' },
     { field: 'TltNo', header: '專櫃編號', align: 'left' },
     { field: 'TltName', header: '專櫃名稱', align: 'left' },
+
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
     { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_SaleAmt', header: '銷售總金額', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
     { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
-    { field: 'Comp_PreOrderAmt', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'CompCustCnt', header: '消費人數', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_PrePerformance', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount, visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
     { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_SaleAmt', header: '銷售總金額', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
     { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
-    { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'BaseCustCnt', header: '消費人數', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_Target', header: '目標差異', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: (value) => formatPercentage(value, 2) },
-    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Base_PrePerformance', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount, visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', groupField: '基準', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', groupField: '基準', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Diff_SaleAmt', header: '銷售總金額', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_Target', header: '目標', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_DaySpaceEff', header: '日坪效', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_AchieveRate', header: '達成率', align: 'right', groupField: '差異', format: (value) => formatPercentage(value, 2) },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_PrePerformance', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount, visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', groupField: '差異', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', groupField: '差異', format: formatAmount, visible: this.isConsumerNum },
     { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
-    { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
     { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
-    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_PrePerformancePct', header: '預售實績', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isPreSale },
+    { field: 'Growth_ConsumerNumPct', header: '消費人數', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isConsumerNum },
+    { field: 'Growth_ConsumerOrderPct', header: '消費客單', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isConsumerNum },
   ];
   columnGroup = [
     { header: '基準', field: '基準' },
@@ -435,7 +442,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         OrgList: this.formatListForBackend(formValue.OrgList),
         TltNoList: this.formatListForBackend(formValue.TltNoList),
         TermTypeList: this.formatListForBackend(formValue.TermTypeList),
-        BuildingList: this.formatListForBackend(formValue.BuildingList)
+        BuildingList: this.formatListForBackend(formValue.BuildingList),
+        PreSale: formValue.PreSale === true,
+        ConsumerNum: formValue.ConsumerNum === true,
       };
 
       this.historyRequestBody = body;
@@ -451,6 +460,11 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.columns = applyDisplayStatusVisibility(this.columns, {
       preSale: this.queryForm.get('PreSale')?.value === true,
       consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      preSaleField: ['Comp_PrePerformance', 'Base_PrePerformance', 'Diff_PrePerformance', 'Growth_PrePerformancePct'],
+      consumerNumFields: [
+        'Comp_ConsumerNum', 'Base_ConsumerNum', 'Diff_ConsumerNum', 'Growth_ConsumerNumPct',
+        'Comp_ConsumerOrder', 'Base_ConsumerOrder', 'Diff_ConsumerOrder', 'Growth_ConsumerOrderPct',
+      ],
     });
   }
 }

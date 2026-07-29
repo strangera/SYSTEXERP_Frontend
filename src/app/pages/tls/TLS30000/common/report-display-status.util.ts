@@ -21,8 +21,9 @@ export interface DisplayStatusVisibilityOptions {
   preSale: boolean;
   consumerNum: boolean;
   /** PreSale 開關對應的欄位名稱，預設 'PrePerformance'（多數作業用這個名字，少數作業如
-   *  tls32010 用 'PreOrderAmt'、tls32020 用 'BasePreOrderAmt'，呼叫時才需要覆蓋）。 */
-  preSaleField?: string;
+   *  tls32010 用 'PreOrderAmt'、tls32020 用 'BasePreOrderAmt'，呼叫時才需要覆蓋）。
+   *  少數有基準/比較/差異/成長率四組欄位都要跟著同一個開關切換的作業（如 tls32030），可傳陣列一次涵蓋多個欄位名稱。 */
+  preSaleField?: string | string[];
   /** ConsumerNum 開關對應的欄位名稱清單，預設 ['ConsumerNum', 'ConsumerOrder']（目前所有作業都一致）。 */
   consumerNumFields?: string[];
   /** 欄位不在上述兩組對應表內、且欄位本身沒帶 visible 時的預設值。
@@ -35,10 +36,13 @@ export function applyDisplayStatusVisibility<T extends { field: string; visible?
   columns: T[],
   options: DisplayStatusVisibilityOptions,
 ): T[] {
-  const preSaleField = options.preSaleField ?? 'PrePerformance';
+  const preSaleFields = options.preSaleField
+    ? (Array.isArray(options.preSaleField) ? options.preSaleField : [options.preSaleField])
+    : ['PrePerformance'];
   const consumerNumFields = options.consumerNumFields ?? ['ConsumerNum', 'ConsumerOrder'];
 
-  const visibleMap: Record<string, boolean> = { [preSaleField]: options.preSale };
+  const visibleMap: Record<string, boolean> = {};
+  for (const field of preSaleFields) visibleMap[field] = options.preSale;
   for (const field of consumerNumFields) visibleMap[field] = options.consumerNum;
 
   return columns.map(col => ({
