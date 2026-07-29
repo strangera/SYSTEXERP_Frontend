@@ -29,11 +29,9 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
   footerData: Partial<TLS31080DetailResponse> | null = null;
   historyRequestBody: TLS31080Request | null = null;
   columns: ReportColumn[] = [];
-
   private floorOptions: IDropdownItem[] = [];
 
-  readonly detailQueryFn = (body: TLS31080Request) =>
-    this.tls31080Service.queryTLS31080Detail(body);
+  readonly detailQueryFn = (body: TLS31080Request) => this.tls31080Service.queryTLS31080Detail(body);
 
   ngOnInit(): void {
     this.dropDownListService.querySYS3900_DropDownList().subscribe(res => {
@@ -51,7 +49,6 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
     }
   }
 
-  // --- 動態欄位重構點 ---
   private buildColumns(): void {
     const { TimeMode, TimeFromHH, TimeToHH, PreSale, ConsumerNum } = this.queryConditions!;
     const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH);
@@ -64,7 +61,6 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
       ...filteredHours,
       { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
       { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-      // --- 動態欄位重構點 (移除 PreOrderAmt，同步主表 visible 狀態) ---
       { field: 'PrePerformance', header: '預售業績', visible: PreSale === true, format: formatAmount, align: 'right' },
       { field: 'ConsumerNum', header: '消費人數', visible: ConsumerNum === true, format: formatAmount, align: 'right' },
       { field: 'ConsumerOrder', header: '消費客單', visible: ConsumerNum === true, format: formatAmount, align: 'right' },
@@ -72,13 +68,12 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
     ];
   }
 
-  // --- 動態欄位重構點 ---
   private buildRequest(): TLS31080Request {
     const matched = this.floorOptions.find(x => x.Name === this.rowData!.floor_desc);
     return {
       ...this.queryConditions!,
       Floors: matched?.No ?? '',
-      // 同步帶入開關條件
+      TaxType: this.queryConditions?.IncludeTax ? 1 : 0, // ✅ 轉成後端 Detail SP 接收的 TaxType
       PreSale: this.queryConditions?.PreSale,
       ConsumerNum: this.queryConditions?.ConsumerNum,
       pageIndex: 1,
@@ -86,31 +81,32 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
     };
   }
 
-  // --- 動態欄位重構點 ---
   private queryDetail(): void {
     const request = this.buildRequest();
     this.historyRequestBody = request;
     this.loading = true;
+
     this.tls31080Service.queryTLS31080Detail(request)
       .pipe(finalize(() => this.loading = false))
       .subscribe(res => {
-        this.data = res.Data?.QueryData ?? [];
-        const t = res.Data?.TotalData;
+        // ✅ 修正點：對接後端 ApiResult 的 Data 與 TotalData
+        const queryData = res.Data ?? [];
+        const t = res.TotalData;
+
+        this.data = queryData;
         this.footerData = t ? {
-          H00: t.H00 ?? 0, H01: t.H01 ?? 0, H02: t.H02 ?? 0, H03: t.H03 ?? 0,
-          H04: t.H04 ?? 0, H05: t.H05 ?? 0, H06: t.H06 ?? 0, H07: t.H07 ?? 0,
-          H08: t.H08 ?? 0, H09: t.H09 ?? 0, H10: t.H10 ?? 0, H11: t.H11 ?? 0,
-          H12: t.H12 ?? 0, H13: t.H13 ?? 0, H14: t.H14 ?? 0, H15: t.H15 ?? 0,
-          H16: t.H16 ?? 0, H17: t.H17 ?? 0, H18: t.H18 ?? 0, H19: t.H19 ?? 0,
-          H20: t.H20 ?? 0, H21: t.H21 ?? 0, H22: t.H22 ?? 0, H23: t.H23 ?? 0,
+          H00: t.H00 ?? 0, H01: t.H01 ?? 0, H02: t.H02 ?? 0, H03: t.H03 ?? 0, H04: t.H04 ?? 0, H05: t.H05 ?? 0,
+          H06: t.H06 ?? 0, H07: t.H07 ?? 0, H08: t.H08 ?? 0, H09: t.H09 ?? 0, H10: t.H10 ?? 0, H11: t.H11 ?? 0,
+          H12: t.H12 ?? 0, H13: t.H13 ?? 0, H14: t.H14 ?? 0, H15: t.H15 ?? 0, H16: t.H16 ?? 0, H17: t.H17 ?? 0,
+          H18: t.H18 ?? 0, H19: t.H19 ?? 0, H20: t.H20 ?? 0, H21: t.H21 ?? 0, H22: t.H22 ?? 0, H23: t.H23 ?? 0,
           ReentryAmt: t.ReentryAmt ?? 0,
           PresaleCheckoutAmt: t.PresaleCheckoutAmt ?? 0,
-          // --- 動態欄位重構點 (對應 Footer 欄位) ---
           PrePerformance: t.PrePerformance ?? 0,
           ConsumerNum: t.ConsumerNum ?? 0,
           ConsumerOrder: t.ConsumerOrder ?? 0,
           SubTotal: t.SubTotal ?? 0,
         } : null;
+
         this.totalRecords = this.data.length;
       });
   }

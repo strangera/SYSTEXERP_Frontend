@@ -1,5 +1,5 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { footerShowTotal } from '@service/api/tls/tls31020.service';
 import { TLS31070DetailItem, TLS31070DetailRequest, TLS31070Item, TLS31070PrintDetailRequest, TLS31070Request, Tls31070Service } from '@service/api/tls/tls31070.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
@@ -29,7 +29,7 @@ export class Tls31070CRUComponent implements OnChanges {
   btnLoading = false;
   totalRecords = 0;
   data: TLS31070DetailItem[] = [];
-  footerTotal: TLS31020Total | null = null;
+  footerTotal: any | null = null;
   footershowTotal: footerShowTotal | null = null;
   historyRequestBody: TLS31070DetailRequest | null = null;
 

@@ -84,16 +84,16 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],
     TXN_DateE: [yesterday, [Validators.required]],
-    TLT_NO: [[]],
-    tlt_building: [[]],
-    tlt_floor: [[]],
-    area_no: [[]],
+    TLT_NO: [[] as string[]],
+    tlt_building: [[] as string[]],
+    tlt_floor: [[] as string[]],
+    area_no: [[] as string[]],
     category: [{ bus_type: [], bus_class: [], bus_sclass: [] }],
-    tlt_kind: [[]],
-    tlt_term_type: [[]],
-    org_id: [[]],
+    tlt_kind: [[] as string[]],
+    tlt_term_type: [[] as string[]],
+    org_id: [[] as string[]],
     TaxType: ['1'],
-    IsRece_Yn: [null],
+    IsRece_Yn: [null as string | null],
     PreSale: [false],
     ConsumerNum: [false],
     pageSize: [1000],
@@ -120,12 +120,10 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   });
 
   halfyearOptions = REPORT_HALFYEAR_OPTIONS;
-
   EventIDOptions = [
     { value: '1', label: '活動1', TXN_DateS: null, TXN_DateE: null },
     { value: '2', label: '活動2', TXN_DateS: null, TXN_DateE: null },
   ];
-
   reportTypeOptions = REPORT_DATE_TYPE_OPTIONS;
 
   totalRecords = 0;
@@ -137,12 +135,11 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
   dialogVisible = false;
   selectedRow: TLS31070Item | null = null;
-
   btnPDFLoading = false;
   btnExcelLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'paper_type_desc', header: '營業形態', align: 'left' },
+    { field: 'paper_type_desc', header: '營業型態', align: 'left' },
     { field: 'budget', header: '營業目標', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', groupField: '營業額', format: (v) => formatPercentage(v, 2), align: 'right' },
@@ -153,8 +150,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (v) => formatAmountWithDecimals(v, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'TempCounterSaleAmt', header: '營業實績', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-    { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: (v) => formatPercentage(v, 2), align: 'right' },
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: (v) => formatPercentage(v, 2), align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
@@ -173,7 +170,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   ];
 
   tlt_kind_Option$ = getSYS1000Options$(this.systemDataService, 'TLT_Kind');
-
   tlt_term_type = [
     { value: '1', label: '固定租金' },
     { value: '2', label: '底租抽成取高者' },
@@ -182,7 +178,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     { value: '5', label: '層級抽成' },
     { value: '6', label: '包底加層級' },
   ];
-
   TaxType_Option = [
     { value: '1', label: '是' },
     { value: '0', label: '否' },
@@ -210,9 +205,10 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
     this.dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncDateToQueryForm());
 
-    // 監聽顯示狀態變化
+    // 監聽顯示狀態變化 (即時連動 Column 顯隱與 historyRequestBody)
     const preSale$ = this.queryForm.get('PreSale')!.valueChanges;
     const consumerNum$ = this.queryForm.get('ConsumerNum')!.valueChanges;
+
     merge(preSale$, consumerNum$)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -224,7 +220,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = this.buildRequestBody(frm.getRawValue());
-
       this.tls31070Service
         .queryTLS31070(formValue)
         .pipe(
@@ -234,6 +229,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
         .subscribe((res) => {
           this.data = res.Data ?? [];
           this.footerTotal = res.TotalData ?? null;
+
           this.footershowTotal = this.footerTotal
             ? {
               budget: this.footerTotal.TotalBudget,
@@ -313,10 +309,12 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
     if (!control.value) return;
+
     const payload = {
       onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
       weeks: event,
     };
+
     this.tls26050Service
       .queryTLS26050Week(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -375,7 +373,11 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   private syncLastQueryBodyWithDisplayStatus() {
     if (!this.historyRequestBody) return;
     const { PreSale, ConsumerNum } = this.queryForm.getRawValue();
-    this.historyRequestBody = { ...this.historyRequestBody, PreSale, ConsumerNum };
+    this.historyRequestBody = {
+      ...this.historyRequestBody,
+      PreSale,
+      ConsumerNum,
+    };
   }
 
   private buildRequestBody(rawValue: any): TLS31070Request {

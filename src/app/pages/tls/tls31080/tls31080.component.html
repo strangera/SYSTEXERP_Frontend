@@ -30,8 +30,9 @@
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.Buildings" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.Buildings"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" controlName="Floors" [options]="tlt_floor_Option | async" optionLabel="Name"
@@ -60,8 +61,9 @@
               optionValue="No" [control]="queryForm.controls.OrgIds" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號/名稱" controlName="CounterNos" [options]="CounterNos_Option | async" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.CounterNos" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="專櫃編號/名稱" controlName="CounterNos" [options]="CounterNos_Option | async"
+              optionLabel="label" optionValue="No" [control]="queryForm.controls.CounterNos"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="銷售金額是否含稅" controlName="IncludeTax" groupname="IncludeTax"
@@ -99,10 +101,10 @@
     [queryFunction]="tls31080Service.queryTLS31080.bind(tls31080Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="各時段之樓層營業報表.PDF" [loading]="btnPDFLoading" icon="pi pi-file"
-          (click)="onReport(queryForm, false)" [disabled]="data.length === 0" [loading]="btnPDFLoading"></p-button>
-        <p-button styleClass="p-2" label="各時段之樓層營業報表.XLSX" [loading]="btnExcelLoading" icon="pi pi-file"
-          (click)="onReport(queryForm, true)" [disabled]="data.length === 0" [loading]="btnExcelLoading"></p-button>
+        <p-button styleClass="p-2" label="各時段之樓層營業報表.PDF" icon="pi pi-file" (click)="onReport(queryForm, false)"
+          [disabled]="data.length === 0" [loading]="btnPDFLoading"></p-button>
+        <p-button styleClass="p-2" label="各時段之樓層營業報表.XLSX" icon="pi pi-file" (click)="onReport(queryForm, true)"
+          [disabled]="data.length === 0" [loading]="btnExcelLoading"></p-button>
       </div>
     </header>
   </app-table-report>

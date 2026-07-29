@@ -121,12 +121,10 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
   });
 
   halfyearOptions = REPORT_HALFYEAR_OPTIONS;
-
   EventIDOptions = [
     { value: '1', label: '活動1', TXN_DateS: null, TXN_DateE: null },
     { value: '2', label: '活動2', TXN_DateS: null, TXN_DateE: null },
   ];
-
   reportTypeOptions = REPORT_DATE_TYPE_OPTIONS;
 
   totalRecords = 0;
@@ -135,10 +133,8 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
   footershowTotal: footerShowTotal | null = null;
   footershowPercent: footerShowTotal | null = null;
   historyRequestBody: TLS31060Request | null = null;
-
   dialogVisible = false;
   selectedRow: TLS31060Item | null = null;
-
   btnPDFLoading = false;
   btnExcelLoading = false;
 
@@ -154,8 +150,8 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (v) => formatAmountWithDecimals(v, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'TempCounterSaleAmt', header: '營業實績', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-    { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: formatAmount, align: 'right' },
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', groupField: '臨時櫃', format: (v) => formatPercentage(v, 2), align: 'right' },
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', groupField: '臨時櫃', format: (v) => formatPercentage(v, 2), align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
@@ -174,7 +170,6 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
   ];
 
   tlt_kind_Option$ = getSYS1000Options$(this.systemDataService, 'TLT_Kind');
-
   tlt_term_type = [
     { value: '1', label: '固定租金' },
     { value: '2', label: '底租抽成取高者' },
@@ -183,7 +178,6 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
     { value: '5', label: '層級抽成' },
     { value: '6', label: '包底加層級' },
   ];
-
   TaxType_Option = [
     { value: '0', label: '是' },
     { value: '1', label: '否' },
@@ -214,6 +208,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
     // 監聽顯示狀態變化
     const preSale$ = this.queryForm.get('PreSale')!.valueChanges;
     const consumerNum$ = this.queryForm.get('ConsumerNum')!.valueChanges;
+
     merge(preSale$, consumerNum$)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -225,7 +220,6 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = this.buildRequestBody(frm.getRawValue());
-
       this.tls31060Service
         .queryTLS31060(formValue)
         .pipe(
@@ -314,10 +308,12 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Item> imp
   queryWeek(event: string) {
     const control = this.dateForm.controls['onedateyy'];
     if (!control.value) return;
+
     const payload = {
       onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
       weeks: event,
     };
+
     this.tls26050Service
       .queryTLS26050Week(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
