@@ -1366,14 +1366,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const noteDesc = this.resolveNoteDescForStep(row);
 
           if (vt === '3') {
-            // 應付帳款：只有 auto-code 方向（貸方建立 AP 關係）才產生 step row
-            // 借方為沖銷方向，沖銷既有 AP 記錄，不新增
-            if (!this.isAutoCodeRow(row)) continue;
+            // 應付帳款：方向對齊（貸方科目放貸方）才產生 step row；反向為沖銷，不新增
+            // ABAT_YN 僅影響 PTA 自動編碼，不影響應付列是否產生
+            if (!this.isCreatingDirectionRow(row)) continue;
             ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
           } else if (vt === '4') {
-            // 應收帳款：只有 auto-code 方向（借方建立 AR 關係）才產生 step row
-            // 貸方為沖銷方向，沖銷既有 AR 記錄，不新增
-            if (!this.isAutoCodeRow(row)) continue;
+            // 應收帳款：方向對齊（借方科目放借方）才產生 step row；反向為沖銷，不新增
+            // ABAT_YN 僅影響 PTA 自動編碼，不影響應收列是否產生
+            if (!this.isCreatingDirectionRow(row)) continue;
             ar.push({
               org_id: row.ORG_ID ?? '100000',
               ven_no: row.DetailNo,
@@ -3205,13 +3205,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return isReverse ? 'pta-cell-manual' : '';
   };
 
-  /** 判斷該列是否應自動編碼 PTA（同方向 + ABAT_YN=Y） */
-  private isAutoCodeRow(rowData: FIN53010DetailTable): boolean {
-    const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
-    if (ABAT_YN !== 'Y') return false;
+  /** 判斷該列是否為「建立方向」（與科目借貸方向一致且有金額），不考慮 ABAT_YN。
+   *  用於判斷 Voucher_Type=3/4 是否應產生應付/應收列。 */
+  private isCreatingDirectionRow(rowData: FIN53010DetailTable): boolean {
+    const { AccDC } = this.getAccAbatInfo(rowData.AccNo);
     if (AccDC === 'D' && (rowData.AccAmtD ?? 0) > 0) return true;
     if (AccDC === 'C' && (rowData.AccAmtC ?? 0) > 0) return true;
     return false;
+  }
+
+  /** 判斷該列是否應自動編碼 PTA（同方向 + ABAT_YN=Y） */
+  private isAutoCodeRow(rowData: FIN53010DetailTable): boolean {
+    const { ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+    if (ABAT_YN !== 'Y') return false;
+    return this.isCreatingDirectionRow(rowData);
   }
 
   /** 為「自動編碼」列指定 PTA。

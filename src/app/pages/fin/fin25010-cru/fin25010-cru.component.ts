@@ -115,6 +115,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     { field: 'ACCNO', header: '會計科目' },
     { field: 'ACP_STATUS', header: '狀態', format: (v) => getSYS1000('ACP_Status', v), exportFormat: transformOptionsForExport(getSYS1000Options('ACP_Status')) },
     { field: 'ORG_ID', header: '組織代號' },
+    { field: 'PTA', header: '立沖代號' },
   ];
 
   apiUrl = 'query_addFIN25010'

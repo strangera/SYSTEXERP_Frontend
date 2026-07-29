@@ -72,6 +72,7 @@ export interface QueryAddFIN25010Response {
   ACP_TERMNO?: string;
   Remit_Status?: string;
   RMT_TYPE?: string;
+  PTA?: string;
 }
 
 // 新增 APS3009 資料表 Request
