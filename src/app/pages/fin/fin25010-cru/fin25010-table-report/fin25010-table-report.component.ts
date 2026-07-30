@@ -28,6 +28,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   virtualData: any = [];
+  @Input() ItemSize = 46;
+  @Input() numToleratedItems?: number;
+  get computedNumToleratedItems(): number {
+    return this.numToleratedItems ?? Math.ceil(1000 / this.ItemSize) * 2;
+  }
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
@@ -90,12 +95,33 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
         }
         this.cdr.detectChanges();
-        this.dt.virtualScroll = this.data.length > 30; // 超過 300 筆資料才啟用虛擬滾動
-        this.virtualData = Array.from({ length: this.data.length });
+        const flatData = this.buildVirtualData(this.data);
+        this.dt.virtualScroll = flatData.length > 30; // 超過 30 筆資料才啟用虛擬滾動
+        this.virtualData = Array.from({ length: flatData.length });
         this.cdr.detectChanges();
-        this.virtualData = this.data;
+        this.virtualData = flatData;
       }
     }
+  }
+  /**
+   * 有分組小計時，把小計列攤平成陣列裡獨立的一筆(標記 __subtotalRow)，讓虛擬滾動
+   * 「一筆資料 = 一個固定高度 <tr>」的假設成立，不會因為小計多插一個 <tr> 而回彈。
+   * 小計物件複製了來源列的所有欄位(而非只給 __groupSourceRow)，是因為 p-table 沒有
+   * customSort、會直接對這個陣列做內部排序：欄位值跟來源列完全相同才能在排序時「打平手」，
+   * 靠 Array.sort 的穩定排序特性緊跟在來源列後面；否則小計缺欄位(undefined)比較時
+   * 會被排到最後面，導致所有小計都跑到資料尾端。
+   */
+  private buildVirtualData(data: any[]): any[] {
+    if (!this.groupRowsBy || !this.hasSubtotalColumns()) return data;
+    const result: any[] = [];
+    data.forEach((row, idx) => {
+      row.__serial = idx + 1;
+      result.push(row);
+      if (this.isGroupLastRow(row, idx)) {
+        result.push({ ...row, __subtotalRow: true, __groupSourceRow: row });
+      }
+    });
+    return result;
   }
   onScroll(event: any) {
     if (this._loading) return;
