@@ -147,7 +147,7 @@
   width="95vw">
   <app-table-report tableKey="TLS22010CRU" [data]="dialogData" [columns]="columnscru" [showCheckBox]="false"
     dataKey="TXN_No" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"
-    [showDelete]="false" [lastQueryBody]="dialogHistoryRequestBody" [footerData]="dialogFooterData"
+    [showDelete]="false" [lastQueryBody]="dialogHistoryRequestBody" [footerData]="dialogFooterData" [ItemSize]="25"
     [showReportMode]="false" [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
     apiUrl="queryTLS22010_Detail" [customReport]="true" (exportEvent)="onExport($event)"></app-table-report>
 </app-dialog>
