@@ -26,6 +26,7 @@ export interface TLS32020QueryRequest {
   DayType: string;
   PreSale?: boolean;
   ConsumerNum?: boolean;
+  ShowBuilding?: boolean;
 }
 
 export interface TLS32020Data {

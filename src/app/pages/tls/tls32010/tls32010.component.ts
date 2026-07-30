@@ -20,11 +20,11 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, map } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { formatAmount, formatAmountCN } from '../../../others/component/table/table.model';
-import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../service/api/tls/tls32010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 
 @Component({
   selector: 'app-tls32010',
@@ -388,8 +388,15 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
       const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
+
+      // 確保明確取得 boolean 值
+      const isPreSale = formValue.PreSale === true;
+      const isConsumerNum = formValue.ConsumerNum === true;
+
       const body: TLS32010QueryRequest = {
         ...formValue,
+        PreSale: isPreSale,
+        ConsumerNum: isConsumerNum,
         BusTypeList: cat.bus_type,
         BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]),
         BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]),
@@ -401,22 +408,23 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
         TltNoList: formValue.TltNoList,
         DateFrom: this.datePipe.transform(formValue.DateFrom, 'yyyy-MM-dd'),
         DateTo: this.datePipe.transform(formValue.DateTo, 'yyyy-MM-dd'),
-        year: undefined, week: undefined, month: undefined,
-        halfYear: undefined, category: undefined
+        year: undefined,
+        week: undefined,
+        month: undefined,
+        halfYear: undefined,
+        category: undefined
       } as TLS32010QueryRequest;
+
       this.tls32010Service.queryTLS32010(body).pipe(
         untilDestroyed(this),
         finalize(() => this.loading = false)
       ).subscribe(response => {
-        this.historyRequestBody = body;
-        const rawData = response.Data || [];
+        this.historyRequestBody = body; // 這時候歷史請求參數就確定包含了正確的 PreSale 與 ConsumerNum 布林值
 
+        const rawData = response.Data || [];
         if (rawData.length > 0) {
-          // 2. 修正總計列處理：判斷 rowNo 是否為空 (後端 SP 總計列的 RowNo 是 NULL)
-          // 或者判斷 buildingDesc 是否為 "總計"
           const lastIndex = rawData.length - 1;
           const lastRow = rawData[lastIndex];
-
           if (lastRow.RowNo === null || lastRow.BuildingDesc === '總計') {
             this.footerData = { ...lastRow, BuildingDesc: '' };
             this.data = rawData.slice(0, lastIndex);
@@ -438,7 +446,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    this.updateSortForExport();
+    this.updateSortAndFormStateForExport();
     const export$ = this.tls32010Service.exportTLS32010PDF(this.historyRequestBody);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
@@ -448,15 +456,21 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    this.updateSortForExport();
+    this.updateSortAndFormStateForExport();
     const export$ = this.tls32010Service.exportTLS32010Excel(this.historyRequestBody);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
-  private updateSortForExport() {
-    if (this.historyRequestBody && this.tableReport) {
-      const currentSort = this.tableReport.multiSortMeta;
-      this.historyRequestBody.SortBy = currentSort.length > 0 ? currentSort : undefined;
+  private updateSortAndFormStateForExport() {
+    if (this.historyRequestBody) {
+      // 1. 同步最新排序
+      if (this.tableReport) {
+        const currentSort = this.tableReport.multiSortMeta;
+        this.historyRequestBody.SortBy = currentSort.length > 0 ? currentSort : undefined;
+      }
+      // 2. 同步最新勾選狀態 (避免查詢後勾選開關直接匯出沒刷新的問題)
+      this.historyRequestBody.PreSale = this.queryForm.get('PreSale')?.value === true;
+      this.historyRequestBody.ConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
     }
   }
 

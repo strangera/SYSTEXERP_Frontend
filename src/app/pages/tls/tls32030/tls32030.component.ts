@@ -122,7 +122,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   footerData: TLS32030FooterData | null = null;
   totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
-  btnLoading = false;
+  pdfBtnLoading = false;
+  excelBtnLoading = false;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
   DayTypeOptions = [
@@ -260,11 +261,18 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.queryForm.controls.CompareWeek.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareMonth.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+    this.queryForm.get('PreSale')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
       this.setColumns();
+      if (this.historyRequestBody) {
+        this.historyRequestBody.PreSale = val === true;
+      }
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
       this.setColumns();
+      if (this.historyRequestBody) {
+        this.historyRequestBody.ConsumerNum = val === true;
+      }
     });
   }
   historyRequestBody: any | null = null;
@@ -274,7 +282,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       return;
     }
     const export$ = this.tls32030Service.ExportTLS32030PDF(this.historyRequestBody as any);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.pdfBtnLoading = isLoading).subscribe();
   }
   onExportXLSX() {
     if (!this.historyRequestBody) {
@@ -282,7 +290,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       return;
     }
     const export$ = this.tls32030Service.ExportTLS32030Excel(this.historyRequestBody as any);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.excelBtnLoading = isLoading).subscribe();
   }
   setWeekOptions(year: Date | null): void {
     if (!year) {
