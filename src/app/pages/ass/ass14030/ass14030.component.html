@@ -1,33 +1,23 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
+      headerStyleClass="query-accordionTab"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="傳票總類"
-              controlName="subpoenaType"
-              [options]="subpoenaTypeOptions"
+              label="傳票種類"
+              controlName="SrcSheetType"
+              [options]="srcSheetTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.subpoenaType"
+              [control]="queryForm.controls.SrcSheetType"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -35,55 +25,53 @@
             <app-calendar-range
               calendarType="dateRange"
               label="傳票日期"
-              [startControl]="queryForm.controls.subpoenaDateFrom"
-              [endControl]="queryForm.controls.subpoenaDateTo"
+              [startControl]="queryForm.controls.VouDateS"
+              [endControl]="queryForm.controls.VouDateE"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="傳票狀態"
-              controlName="subpoenaStatus"
-              [options]="subpoenaStatusOptions"
+              controlName="Trans_Status"
+              [options]="transStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.subpoenaStatus"
+              [control]="queryForm.controls.Trans_Status"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="結帳單號"
-              controlName="checkoutNumber"
-              [control]="queryForm.controls.checkoutNumber"
+              controlName="ORI_SLIP"
+              [control]="queryForm.controls.ORI_SLIP"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    dataKey="VouNo"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="service.queryASS14030.bind(service)"
+    [showDelete]="false"
+    (detail)="onDetailData($event)"
+    (edit)="onEditData($event)"
+    (linkClick)="onLinkClick($event)"
+  ></app-table-report>
 </div>
