@@ -7,11 +7,11 @@ import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-
 import { TLS32020Data, TLS32020QueryRequest, TLS32020Service } from '@service/api/tls/tls32020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -84,18 +84,15 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     PreSale: [false],
     ConsumerNum: [false],
   });
-
-  // 其餘屬性 (沿用 TLS32020)
   totalRecords = 0;
   historyRequestBody: TLS32020QueryRequest | null = null;
   data: TLS32020Data[] = [];
   footerData: TLS32020Data | null = null;
   subFooterData: TLS32020Data[] = []; // **新增**：用於存放期間小計資料
-  btnLoading = false;
-
+  pdfBtnLoading = false;
+  excelBtnLoading = false;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
-
   // **變更**：移除類型 6/7，預設為 '3'
   DayTypeOptions = [
     { value: '1', label: '日營業報表' },
@@ -104,7 +101,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
   ];
-
   // 下拉選單/Radio Button 選項
   // **新增**：館別
   auditoriumOptions = this.dropdown.querySys3800();
@@ -140,7 +136,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   columns: ReportColumn[] = [
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
     { field: 'BuildingName', header: '館別', align: 'left' },
-
     // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
     { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
@@ -149,10 +144,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv' },
     { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
     { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
-    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
-    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
-
+    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer' },
+    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
+    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
     // ======================= 比較期 (Compare) 欄位 =======================
     { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
     { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
@@ -161,10 +155,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV' },
     { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
     { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
-    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
-    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
-
+    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
+    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
     // ======================= 差異 (Difference) 欄位 =======================
     { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true },
     { field: 'GrowthRate', header: '成長率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true },
@@ -180,12 +173,14 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [
-    { field: 'revenue', header: 'YYYY 營業額' }, // 調整 Group Header
-    { field: 'atv', header: 'YYYY 客單價' }, // 調整 Group Header
-    { field: 'salesPerArea', header: 'YYYY 營業坪效' }, // <--- 新增 Group
-    { field: 'compareRevenue', header: 'XXXX 營業額' }, // <--- 新增 Group
-    { field: 'compareATV', header: 'XXXX 客單價' }, // <--- 新增 Group
-    { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' }, // <--- 新增 Group
+    { field: 'revenue', header: 'YYYY 營業額' },
+    { field: 'atv', header: 'YYYY 客單價' },
+    { field: 'salesPerArea', header: 'YYYY 營業坪效' },
+    { field: 'preSaleConsumer', header: 'YYYY 預售/消費' }, // <--- 新增基準期群組
+    { field: 'compareRevenue', header: 'XXXX 營業額' },
+    { field: 'compareATV', header: 'XXXX 客單價' },
+    { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
+    { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 新增比較期群組
   ];
   constructor() { super(); }
 
@@ -294,28 +289,29 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   private updateColumnGroupHeader(baseYearNum: number, compareYearNum: number): void {
     const baseYearStr = `${baseYearNum}年`;
     const compareYearStr = `${compareYearNum}年`;
-
     this.columnGroup.forEach(group => {
       switch (group.field) {
         case 'revenue':
         case 'atv':
         case 'salesPerArea':
+        case 'preSaleConsumer': // <--- 加入此項
           group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
           break;
         case 'compareRevenue':
         case 'compareATV':
         case 'compareSalesPerArea':
+        case 'comparePreSaleConsumer': // <--- 加入此項
           group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
           break;
       }
     });
   }
-  // 輔助方法：保持標頭後半段字串一致
+
   private getOriginHeader(field: string): string {
     if (field.includes('Revenue')) return '營業額';
     if (field.includes('ATV')) return '客單價';
     if (field.includes('SalesPerArea')) return '營業坪效';
-    // 根據你原始定義的欄位名稱對應
+    if (field.includes('PreSaleConsumer') || field === 'preSaleConsumer') return '預售/消費'; // <--- 新增對應
     if (field === 'revenue') return '營業額';
     if (field === 'atv') return '客單價';
     if (field === 'salesPerArea') return '營業坪效';
@@ -708,7 +704,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
       const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
-      // 2. 組裝最終傳輸給後端的 Body
       const body: TLS32020QueryRequest = {
         ...formValue,
         BuildingList: formValue.BuildingList || null, // 這裡 BuildingList
@@ -721,50 +716,20 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         BusTypeList: cat.bus_type || null,
         BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]) || null,
         BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]) || null,
-        // **變更**：覆蓋四個日期欄位格式化
         BaseDateFrom: this.datePipe.transform(formValue.BaseDateFrom, 'yyyy-MM-dd'),
         BaseDateTo: this.datePipe.transform(formValue.BaseDateTo, 'yyyy-MM-dd'),
         CompareDateFrom: this.datePipe.transform(formValue.CompareDateFrom, 'yyyy-MM-dd'),
         CompareDateTo: this.datePipe.transform(formValue.CompareDateTo, 'yyyy-MM-dd'),
-        // 移除前端專用的日期計算控制項
-        year: undefined,
-        week: undefined,
-        yearTo: undefined,
-        weekTo: undefined,
-        month: undefined,
-        monthTo: undefined,
-        halfYear: undefined,
-        halfYearTo: undefined,
-        category: undefined
+        year: undefined, week: undefined, yearTo: undefined, weekTo: undefined, month: undefined, monthTo: undefined, halfYear: undefined, halfYearTo: undefined, category: undefined
       } as TLS32020QueryRequest;
-
-      this.tls32020Service.queryTLS32020(body).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe(response => {
+      this.tls32020Service.queryTLS32020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.historyRequestBody = body;
         const allData = response.Data;
-
-        // --- 數據分離與處理 (保留前次的修改) ---
-
-        // 1. 取得總計 (假設為最後一筆)
         const grandTotal = allData.length > 0 ? allData[allData.length - 1] : null;
-
-        // 2. 篩選出所有期間小計 (BuildingName === '小計')
         this.subFooterData = allData.filter(item => item.BuildingName === '小計');
-
-        // 3. 取得明細數據 (排除總計和所有期間小計)
-        this.data = allData
-          .slice(0, allData.length - 1) // 移除最後一筆總計
-          .filter(item => item.BuildingName !== '小計'); // 移除期間小計
-
-        // 4. 設置 Footer 數據 (使用總計數據)
+        this.data = allData.slice(0, allData.length - 1).filter(item => item.BuildingName !== '小計');
         if (grandTotal) {
-          this.footerData = {
-            ...grandTotal,
-            YM: '',
-            BuildingName: '',
-          };
+          this.footerData = { ...grandTotal, YM: '', BuildingName: '', };
         } else {
           this.footerData = null;
         }
@@ -778,30 +743,16 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
     const export$ = this.tls32020Service.exportTLS32020PDF(this.historyRequestBody);
-
-    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.pdf',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.pdfBtnLoading = isLoading).subscribe();
   }
-
   onExportXLSX() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
     const export$ = this.tls32020Service.exportTLS32020Excel(this.historyRequestBody);
-
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.xlsx',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.excelBtnLoading = isLoading).subscribe();
   }
 
   setColumns() {

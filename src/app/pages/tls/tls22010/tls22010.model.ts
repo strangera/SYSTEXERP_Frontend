@@ -176,8 +176,7 @@ export const columns: ReportColumn[] = [
 
 export const columnscru: ReportColumn[] = [
   { field: 'TXN_No', header: '交易序號', visible: true, format: formatTxnNo },
-  { field: 'TXN_GUIBegNo', header: '起始發票號', visible: true },
-  { field: 'TXN_GUIEndNo', header: '結束發票號', visible: true },
+  { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
   { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, align: 'right' },
   { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: formatAmount, align: 'right' },
   { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: formatAmount, align: 'right' },
