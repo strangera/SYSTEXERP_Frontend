@@ -3,21 +3,21 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatAmount } from '@others/component/table/table.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 import { Fin28010Service } from '@service/api/fin/fin28010.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
-import { formatAmount } from '@others/component/table/table.model';
-import { validateRequired } from '@others/component/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin28010-cru',
@@ -39,7 +39,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     WSLIP_NO: [{ value: '系統自動產生', disabled: true }],  // 匯款單號
-    INV_YN: ['N'],                     // 補發票與否
+    INV_YN: ['Y'],                     // 補發票與否
     VouType: ['3'],                    // 傳票種類
     VouDate: [''],                     // 傳票日期
     Remark: [''],                         // 傳票摘要
