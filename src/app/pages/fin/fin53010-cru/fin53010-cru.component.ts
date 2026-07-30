@@ -1537,7 +1537,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
    * 員工付款：明細列選員工時，APS3001 匯款欄位改由 tblUser_BnkAcct 帶出（員工不在 POS2013 廠商主檔，
    * 走既有廠商 venOpt 路徑會是空白）。只補「銀行欄位為空」的員工列，不覆蓋既有值或使用者輸入。
    * 已快取者立即套用；未快取者非同步補查後再呼叫自己收斂（快取寫入後不會再排入 pending，故不會無限迴圈）。
-   * 員工付款方式固定電匯('1')。
+   * 員工付款方式固定電匯('1')，票據抬頭一律帶員工名稱（員工不在廠商主檔，走 venOpt 路徑會是空白）。
    */
   private reconcileEmployeeBankAccounts(): void {
     const pending = new Set<string>();
@@ -1548,13 +1548,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (r.ven_bnk_no || r.ven_bank_account) return r; // 已有銀行值 → 不覆蓋
       const cached = this.service.getCachedEmployeeBank(venNo);
       if (cached === undefined) { pending.add(venNo); return r; } // 尚未查 → 排入補查
-      if (cached === null) return { ...r, ven_pay_type: r.ven_pay_type ?? '1' }; // 查無帳號，仍給預設付款方式
+      // 員工不在廠商主檔，票據抬頭一律帶員工名稱（銀行 API 的 UserName 優先，查無帳號時 fallback 員工下拉名稱）
+      const empName = (cached?.UserName as string | undefined)
+        ?? (this.service.usrMap().get(venNo)?.['user_Name'] as string | undefined)
+        ?? r.ven_check_title;
+      if (cached === null) return { ...r, ven_pay_type: r.ven_pay_type ?? '1', ven_check_title: empName }; // 查無帳號，仍給預設付款方式與抬頭
       return {
         ...r,
         ven_pay_type: r.ven_pay_type ?? '1',
         ven_bnk_no: cached.VEN_BNK_No != null ? String(cached.VEN_BNK_No) : r.ven_bnk_no,
         ven_bnk_branch_no: cached.VEN_BNK_BranchNo != null ? String(cached.VEN_BNK_BranchNo) : r.ven_bnk_branch_no,
         ven_bank_account: this.formatEmployeeBankAccount(cached) ?? r.ven_bank_account,
+        ven_check_title: empName,
       };
     };
 

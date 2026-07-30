@@ -400,9 +400,13 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   };
 
   // 驗證發票號碼 (2碼大寫英文 + 8碼數字)
-  validateGUINo = (value: string) => {
+  validateGUINo = (value: string, rowData?: fin13090Detail) => {
     // 1. 檢查是否為空 (若非必填可直接通過，交由 validateRequired 處理)
     if (!value) return { isValid: true, errorMessage: [] };
+
+    // 22/25 為彙加發票，號碼留空或以 0000000000 代表，不做格式驗證
+    const vType = String(rowData?.PUR_VoucherType ?? '').trim();
+    if (vType === '22' || vType === '25') return { isValid: true, errorMessage: [] };
 
     const valStr = String(value).trim(); // 去除前後空白
 
@@ -479,9 +483,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }
     }
 
-    // 發票號碼必填
+    // 發票號碼必填（22/25 為彙加發票，號碼可留空，後端自動給 0000000000）
     for (let i = 0; i < this.detailData.length; i++) {
       const row = this.detailData[i];
+      const vType = String(row.PUR_VoucherType ?? '').trim();
+      if (vType === '22' || vType === '25') continue;
       if (!String(row.PUR_GUINo ?? '').trim()) {
         this.messageService.errorBubble(`第 ${i + 1} 筆明細：請輸入發票號碼`);
         return false;
