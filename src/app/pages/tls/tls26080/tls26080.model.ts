@@ -108,16 +108,14 @@ export interface TLS26080InsertPayload {
 export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
   pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
 }
-
 export interface TLS26080Query extends ApiRequest {
-  POD_No?: string;            // 活動申請編號
-  POD_Desc?: string;          // 活動名稱
-  POD_SDate_start?: Date;     // 活動日期 (起)
-  POD_SDate_end?: Date;       // 活動日期 (迄)
-  POD_BusDate?: Date;         // 活動正檔日期
-  CAP_ItemList?: string[];    // 活動項目列表
+  POD_No?: string;
+  POD_Desc?: string;
+  POD_SDate_start?: string;
+  POD_SDate_end?: string;
+  POD_BusDate?: string;
+  CAP_ItemList?: string[];
 }
-
 /** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
 export interface ExportTLS26080PDFRequest extends ApiRequest {
   POD_No?: string;

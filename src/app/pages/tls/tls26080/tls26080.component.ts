@@ -97,17 +97,48 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   ];
 
   /** 組裝查詢 payload，供 onSubmit 與 queryFunction 使用 */
-  private buildQueryPayload(overrides?: Partial<Record<string, unknown>>): TLS26080Query {
-    const raw = { ...this.queryForm.getRawValue(), ...overrides } as Record<string, unknown>;
-    return Object.fromEntries(Object.entries(raw).filter(([, v]) =>
-      v !== null && v !== undefined && (!(Array.isArray(v)) || (v as unknown[]).length > 0)
-    )) as TLS26080Query;
-  }
+ private buildQueryPayload(
+  overrides?: Partial<TLS26080Query>
+): TLS26080Query {
+  const formValue = this.queryForm.getRawValue();
 
-  public readonly queryFunction = (body: unknown) => {
-    const payload = this.buildQueryPayload(body as Record<string, unknown>);
-    return this.service.loadTLS26080(payload);
+  const payload: TLS26080Query = {
+    POD_No: formValue.pod_no || undefined,
+    POD_Desc: formValue.pod_desc || undefined,
+
+    POD_SDate_start: formValue.pod_sdate
+      ? this.datePipe.transform(formValue.pod_sdate, 'yyyy-MM-dd') ?? undefined
+      : undefined,
+
+    POD_SDate_end: formValue.pod_edate
+      ? this.datePipe.transform(formValue.pod_edate, 'yyyy-MM-dd') ?? undefined
+      : undefined,
+
+    POD_BusDate: formValue.pod_busdate
+      ? this.datePipe.transform(formValue.pod_busdate, 'yyyy-MM-dd') ?? undefined
+      : undefined,
+
+    pageIndex: formValue.pageIndex ?? 1,
+    pageSize: formValue.pageSize ?? 30,
+    SortBy: formValue.SortBy?.length
+      ? formValue.SortBy
+      : [...this.defaultSort],
+
+    ...overrides,
   };
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) =>
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      (!Array.isArray(value) || value.length > 0)
+    )
+  ) as TLS26080Query;
+}
+ public readonly queryFunction = (body: unknown) => {
+  return this.service.loadTLS26080(body as TLS26080Query);
+};
 
   public readonly columns: ReportColumn[] = [
     { field: 'pod_no', header: '活動編號' },
