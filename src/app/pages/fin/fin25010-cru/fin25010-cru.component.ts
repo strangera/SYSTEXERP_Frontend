@@ -160,6 +160,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       )
       .subscribe(response => {
         this.data = response.Data || [];
+        this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
         this.totalRecords = response.TotalCount;
         this.apiUrl = 'query_detailFIN25010'; // 切換 API URL 以供匯出使用
 
@@ -190,6 +191,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
         }), finalize(() => this.loading = false)).subscribe(response => {
           this.lastQueryBody = queryParams;
           this.data = response.Data || [];
+          this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
           this.totalRecords = response.TotalCount;
 
           // 查詢後重設勾選與小計
@@ -200,6 +202,12 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   }
 
   onGenerate() {
+    const overAmtItem = this.selectedItems.find(item => Number(item.ACP_Amt) > (item.OriginalACP_Amt ?? 0));
+    if (overAmtItem) {
+      this.messageService.errorBubble(`更改金額(${overAmtItem.ACP_Amt})不可大於原始金額(${overAmtItem.OriginalACP_Amt})`);
+      return;
+    }
+
     if (this.subTotalData.some(s => s.ACP_Amt < 0) || (this.footerData?.ACP_Amt ?? 0) < 0) {
       this.messageService.errorBubble('分組小計或總計不可為負數');
       return;
@@ -254,6 +262,16 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
         });
       }
     });
+  }
+
+  // 付款金額編輯校驗：更改金額不可大於原始金額
+  onAmtInput(rowData: QueryAddFIN25010Response): void {
+    const original = rowData.OriginalACP_Amt ?? 0;
+    if (Number(rowData.ACP_Amt) > original) {
+      this.messageService.errorBubble(`更改金額(${rowData.ACP_Amt})不可大於原始金額(${original})`);
+      rowData.ACP_Amt = original;
+    }
+    this.calculateFooter();
   }
 
   // 1. 新增計算小計的方法

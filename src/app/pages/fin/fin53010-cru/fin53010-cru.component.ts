@@ -36,6 +36,7 @@ import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010Payload
 import {
   Aps2002DetailDataByInvoiceNoData,
   Aps4023DetailDataByInvoiceNumberData,
+  EmployeeBankAccountItem,
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
@@ -356,6 +357,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
     return [...base, ...extra];
   });
+
+  /** 應付帳款「廠商/員工代號」顯示用選項：合併廠商 + 員工（欄位唯讀，僅供顯示名稱，員工付款時才對得上 label） */
+  public readonly apVenOptions = computed(() => [...this.service.vendorOptions(), ...this.service.usrOptions()]);
 
   /** 供「下一步」步驟表同步時讀取傳票日期（表單非 signal，需轉成 signal） */
   private readonly vouDateForStepSync = toSignal(
@@ -907,7 +911,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly stepAPColumns: EditColumn[] = [
     { field: 'org_id', header: '組織代號', textAlign: 'left', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, validate: [this.validateRequired] },
-    { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, validate: [this.validateRequired] },
+    { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.apVenOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, validate: [this.validateRequired] },
     { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, validate: [this.validateRequired] },
     { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '', validate: [this.validateRequired] },
     { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date', validate: [this.validateRequired] },
@@ -1030,7 +1034,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const vt = String((rowData as Record<string, unknown>)['voucher_type'] ?? '').trim();
     const v = String(value ?? '').trim();
     if (vt === '21' && !v) return { isValid: false, errorMessage: ['發票號碼不可為空'] };
-    if (vt === '25') {
+    if (vt === '22' || vt === '25') {
       const trackNo = String((rowData as Record<string, unknown>)['track_no'] ?? '').trim();
       if (trackNo && !v) return { isValid: false, errorMessage: ['輸入字軌時，發票號碼不可為空'] };
     }
@@ -1431,6 +1435,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.stepARRows.set(arWithSer);
           this.stepBankRows.set(bkWithSer);
           this.reconcileStepExpectedDates();
+          this.reconcileEmployeeBankAccounts();
         } else {
           // 編輯模式：保留原有 DB 列，將新明細列產生的 step rows 重新合併
           // (以 _dataStatus==='new' 標記的 step row 為上一次 effect 產生的，先移除再重建)
@@ -1459,6 +1464,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
           if (ap.length > 0 || ar.length > 0) {
             this.reconcileStepExpectedDates();
+            this.reconcileEmployeeBankAccounts();
           }
           if (bk.length > 0 || this.stepBankRows().some(r => (r as Record<string, unknown>)['_dataStatus'] === 'new')) {
             this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
@@ -1518,6 +1524,49 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return s || undefined;
   }
 
+  private formatEmployeeBankAccount(item?: EmployeeBankAccountItem | null): string | undefined {
+    if (!item) return undefined;
+    const a = item.VEN_BankAccountNo;
+    const b = item.VEN_AccountName;
+    if (a && b) return `${a} / ${b}`;
+    const s = (a ?? b ?? '') as string;
+    return s || undefined;
+  }
+
+  /**
+   * 員工付款：明細列選員工時，APS3001 匯款欄位改由 tblUser_BnkAcct 帶出（員工不在 POS2013 廠商主檔，
+   * 走既有廠商 venOpt 路徑會是空白）。只補「銀行欄位為空」的員工列，不覆蓋既有值或使用者輸入。
+   * 已快取者立即套用；未快取者非同步補查後再呼叫自己收斂（快取寫入後不會再排入 pending，故不會無限迴圈）。
+   * 員工付款方式固定電匯('1')。
+   */
+  private reconcileEmployeeBankAccounts(): void {
+    const pending = new Set<string>();
+
+    const apply = (r: FIN53010StepAP): FIN53010StepAP => {
+      const venNo = String(r.ven_no ?? '').trim();
+      if (!venNo || !this.service.isEmployeePayee(venNo)) return r;
+      if (r.ven_bnk_no || r.ven_bank_account) return r; // 已有銀行值 → 不覆蓋
+      const cached = this.service.getCachedEmployeeBank(venNo);
+      if (cached === undefined) { pending.add(venNo); return r; } // 尚未查 → 排入補查
+      if (cached === null) return { ...r, ven_pay_type: r.ven_pay_type ?? '1' }; // 查無帳號，仍給預設付款方式
+      return {
+        ...r,
+        ven_pay_type: r.ven_pay_type ?? '1',
+        ven_bnk_no: cached.VEN_BNK_No != null ? String(cached.VEN_BNK_No) : r.ven_bnk_no,
+        ven_bnk_branch_no: cached.VEN_BNK_BranchNo != null ? String(cached.VEN_BNK_BranchNo) : r.ven_bnk_branch_no,
+        ven_bank_account: this.formatEmployeeBankAccount(cached) ?? r.ven_bank_account,
+      };
+    };
+
+    this.stepAPRows.update(rows => rows.map(apply));
+
+    if (pending.size > 0) {
+      forkJoin([...pending].map(u => this.service.ensureEmployeeBankAccount(u)))
+        .pipe(take(1))
+        .subscribe(() => this.reconcileEmployeeBankAccounts());
+    }
+  }
+
   private buildStepApRowFromDetailTableRow(row: FIN53010DetailTable, vouDate: Date): FIN53010StepAP {
     const venOpt = this.service.findVendorOptionByVenNo(String(row.DetailNo ?? ''));
     const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
@@ -1575,6 +1624,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     // 回傳 Date=可填、null=確定無日期、undefined=尚無定論(已排入待查)
     const resolveDate = (venNo: string): Date | null | undefined => {
+      // 員工不在廠商主檔、無付款條件天數，預計付款/收款日一律帶立帳日(=傳票日期)
+      if (this.service.isEmployeePayee(venNo)) return vouDate;
       const backend = this.service.getCachedPayDate(venNo, dateKey);
       if (backend instanceof Date) return backend;
       if (backend === undefined) pendingBackend.add(venNo);
@@ -2565,7 +2616,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         datePipe: this.datePipe,
         resolveNoteDesc: (note, row) =>
           this.service.noteDescMap().get(String(note))?.label ?? (note != null ? String(note) : undefined),
-        getVendorOption: v => this.service.findVendorOptionByVenNo(v),
+        // 員工不在廠商主檔，falls back 到員工選項，讓 VEN_Name 帶得到員工姓名
+        getVendorOption: v => this.service.findVendorOptionByVenNo(v) ?? this.service.usrMap().get(String(v ?? '').trim()),
       };
 
       // 確保進項發票每筆 ven_no 都有值（舊資料可能因 vendor_tax_id 未重新選取而遺失）
@@ -2763,11 +2815,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               return venOpt ? applyVenOptToAP(r, venOpt) : r;
             }));
             this.reconcileStepExpectedDates();
+            this.reconcileEmployeeBankAccounts();
           });
       }
 
       // 唯一日期填值入口（同步已快取者，未定者非同步補齊後收斂）
       this.reconcileStepExpectedDates();
+      this.reconcileEmployeeBankAccounts();
     }
   }
 
@@ -3529,19 +3583,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rows.map((r, i) => {
           if (i !== rowIndex) return r;
           const updated: FIN53010DetailTable = { ...r, PTA: selected.PTA ?? '' };
-          if (amtField) {
+          // 決定沖帳金額落在哪個方向：從金額欄開窗用該欄；從立沖代號欄開窗(amtField=null)
+          // 則依科目 AccDC 推導（C 科目沖在借方、D 科目沖在貸方），才能在「改選不同 PTA」時
+          // 一樣回填廠商/金額/摘要（過去只在金額欄開窗才填，改 PTA 欄只換代號，是這次的 bug）
+          const effAmtField: 'AccAmtD' | 'AccAmtC' | null = amtField
+            ?? (this.getAccAbatInfo(r.AccNo).AccDC === 'C' ? 'AccAmtD'
+              : this.getAccAbatInfo(r.AccNo).AccDC === 'D' ? 'AccAmtC'
+                : null);
+          if (effAmtField) {
             // 從 PTA 對象自動回填廠商代號、摘要
             const venNo = (selected.VEN_No ?? '').trim();
             if (venNo) {
               updated.DetailNo = venNo;
               // templateDisplayField='DetailName' 讀的是 rowData.DetailName，需同步設定
               const vendorOpt = this.service.vendorMap().get(venNo);
-              updated.DetailName = vendorOpt?.['short'] ?? vendorOpt?.label ?? selected.VEN_ShortName ?? '';
+              updated.DetailName = vendorOpt?.['short'] ?? vendorOpt?.label
+                ?? this.service.usrMap().get(venNo)?.label
+                ?? selected.VEN_ShortName ?? selected.USR_Name ?? '';
             }
             if (selected.NoteDesc) updated.NoteDesc = selected.NoteDesc;
             // AccDC=C 科目：反向在借方（AccAmtD）→ 沖貸方餘額（CreditAmt）
             // AccDC=D 科目：反向在貸方（AccAmtC）→ 沖借方餘額（DebitAmt）
-            if (amtField === 'AccAmtD') {
+            if (effAmtField === 'AccAmtD') {
               updated.AccAmtD = selected.CreditAmt ?? selected.DebitAmt ?? undefined;
               updated.AccAmtC = undefined;
             } else {

@@ -60,6 +60,7 @@ export interface QueryAddFIN25010Response {
   ven_name?: string;
   IN_TYPE?: string;
   ACP_Amt?: number;
+  OriginalACP_Amt?: number; // 原始付款金額，供前端校驗調整後金額不可超過原始金額
   acp_DATE?: string;
   PTA_Date?: string;
   NoteDesc?: string;
