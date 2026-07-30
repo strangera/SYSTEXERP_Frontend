@@ -111,7 +111,7 @@ export class ASS14030Component extends BasicQueryPageComponent<ASS14030QueryRow>
     const receiptInsId = event.rowData?.RECEIPT_INS_ID;
     if (!receiptInsId) return;
     this.router.navigate(['/account/ass/ass14030paydetail'], {
-      state: { RECEIPT_INS_ID: receiptInsId, fromRoute: this.router.url },
+      state: { RECEIPT_INS_ID: receiptInsId, PayType: event.rowData?.PayType, fromRoute: this.router.url },
     });
   }
 }

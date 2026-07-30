@@ -3,56 +3,29 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      headerStyleClass="query-accordionTab"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+      headerStyleClass="query-accordionTab">
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="傳票種類"
-              controlName="SrcSheetType"
-              [options]="srcSheetTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.SrcSheetType"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SrcSheetType"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="傳票日期"
-              [startControl]="queryForm.controls.VouDateS"
-              [endControl]="queryForm.controls.VouDateE"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="傳票日期" [startControl]="queryForm.controls.VouDateS"
+              [endControl]="queryForm.controls.VouDateE" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="Trans_Status"
-              [options]="transStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Trans_Status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="傳票狀態" controlName="Trans_Status" [options]="transStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Trans_Status" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="結帳單號"
-              controlName="ORI_SLIP"
-              [control]="queryForm.controls.ORI_SLIP"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="結帳單號" controlName="ORI_SLIP" [control]="queryForm.controls.ORI_SLIP"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -61,17 +34,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    dataKey="VouNo"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="service.queryASS14030.bind(service)"
-    [showDelete]="false"
-    (detail)="onDetailData($event)"
-    (edit)="onEditData($event)"
-    (linkClick)="onLinkClick($event)"
-  ></app-table-report>
+  <app-table-report dataKey="VouNo" [data]="data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
+    [lastQueryBody]="lastQueryBody" [lazy]="false" [showDelete]="false" (detail)="onDetailData($event)"
+    (edit)="onEditData($event)" (linkClick)="onLinkClick($event)"></app-table-report>
 </div>

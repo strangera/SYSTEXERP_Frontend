@@ -26,35 +26,41 @@ export class ASS14030PayDetailComponent extends BasicQueryPageComponent<ASS14030
 
   private receiptInsId = '';
 
-  columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '應付帳款代號', visible: true, align: 'center' },
-    { field: 'ORG_ID', header: '組織代碼', visible: true },
-    { field: 'VEN_Uniform', header: '客戶代碼', visible: true },
-    { field: 'SUPPLIER_ID', header: '廠商代碼', visible: true },
-    { field: 'VouType', header: '傳票類型', visible: true },
-    { field: 'sam_yyymm', header: '年月', visible: true },
-    { field: 'sam_termno', header: '帳次', visible: true, align: 'center' },
-    { field: 'Amt', header: '應付帳款金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'VEN_PayType', header: '付款方式', visible: true },
-    { field: 'BNKNo', header: '銀行代碼', visible: true },
-    { field: 'VEN_BankAccountNo', header: '帳號', visible: true },
-    { field: 'VEN_AccountName', header: '戶名', visible: true },
-    { field: 'VEN_Name', header: '公司抬頭', visible: true },
-    { field: 'AccNo', header: '會計科目', visible: true },
-    { field: 'Pay_Date', header: '預計收款日期', visible: true, format: formatDate },
-    { field: 'VouDate', header: '立帳日期', visible: true, format: formatDate },
-    { field: 'Remark', header: '備註', visible: true },
-  ];
+  columns: ReportColumn[] = [];
 
   ngOnInit(): void {
     this.initializePage('ASS14030');
     const state = this.router.lastSuccessfulNavigation?.extras.state as Record<string, unknown> | undefined;
     this.receiptInsId = (state?.['RECEIPT_INS_ID'] as string) ?? '';
+    const isReceivable = (state?.['PayType'] as string) === '應收';
+    this.columns = this.buildColumns(isReceivable);
     if (!this.receiptInsId) {
       this.messageService.warnBubble('缺少發票維護單號，無法載入資料。');
       return;
     }
     this.loadData();
+  }
+
+  private buildColumns(isReceivable: boolean): ReportColumn[] {
+    return [
+      { field: 'SeqNo', header: isReceivable ? '應收帳款代號' : '應付帳款代號', visible: true, align: 'center' },
+      { field: 'ORG_ID', header: '組織代碼', visible: true },
+      { field: 'VEN_Uniform', header: '客戶代碼', visible: true },
+      { field: 'SUPPLIER_ID', header: '廠商代碼', visible: true },
+      { field: 'VouType', header: '傳票類型', visible: true },
+      { field: 'sam_yyymm', header: '年月', visible: true },
+      { field: 'sam_termno', header: '帳次', visible: true, align: 'center' },
+      { field: 'Amt', header: isReceivable ? '應收帳款金額' : '應付帳款金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
+      { field: 'VEN_PayType', header: '付款方式', visible: true },
+      { field: 'BNKNo', header: '銀行代碼', visible: true },
+      { field: 'VEN_BankAccountNo', header: '帳號', visible: true },
+      { field: 'VEN_AccountName', header: '戶名', visible: true },
+      { field: 'VEN_Name', header: '公司抬頭', visible: true },
+      { field: 'AccNo', header: '會計科目', visible: true },
+      { field: 'Pay_Date', header: '預計收款日期', visible: true, format: formatDate },
+      { field: 'VouDate', header: '立帳日期', visible: true, format: formatDate },
+      { field: 'Remark', header: '備註', visible: true },
+    ];
   }
 
   private loadData(): void {
