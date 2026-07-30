@@ -83,6 +83,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     PreSale: [false],
     ConsumerNum: [false],
+    ShowBuilding: [true],
   });
 
   // 其餘屬性 (沿用 TLS32020)
@@ -95,6 +96,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   excelBtnLoading = false;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+  isShowBuilding = this.queryForm.get('ShowBuilding')?.value ?? true;
 
   // **變更**：移除類型 6/7，預設為 '3'
   DayTypeOptions = [
@@ -139,7 +141,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   columns: ReportColumn[] = [
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
-    { field: 'BuildingName', header: '館別', align: 'left' },
+    { field: 'BuildingName', header: '館別', align: 'left', visible: this.isShowBuilding },
 
     // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
@@ -284,6 +286,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.updateHistoryRequestBody();
     });
     this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+      this.setColumns();
+      this.updateHistoryRequestBody();
+    });
+    this.queryForm.get('ShowBuilding')?.valueChanges.subscribe(() => {
       this.setColumns();
       this.updateHistoryRequestBody();
     });
@@ -817,6 +823,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         'Base_ConsumerOrder', 'Comp_ConsumerOrder', 'Diff_ConsumerOrder',
       ],
     });
+    const showBuilding = this.queryForm.get('ShowBuilding')?.value !== false;
+    this.columns = this.columns.map(col =>
+      col.field === 'BuildingName' ? { ...col, visible: showBuilding } : col
+    );
   }
 
   private updateHistoryRequestBody(): void {
@@ -825,6 +835,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         ...this.historyRequestBody,
         PreSale: this.queryForm.get('PreSale')?.value ?? false,
         ConsumerNum: this.queryForm.get('ConsumerNum')?.value ?? false,
+        ShowBuilding: this.queryForm.get('ShowBuilding')?.value ?? true,
       };
     }
   }
