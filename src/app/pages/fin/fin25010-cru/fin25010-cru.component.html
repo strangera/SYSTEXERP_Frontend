@@ -75,8 +75,8 @@
   </p-panel>
 </div>
 <ng-template #acpAmtTemplate let-rowData let-index="index">
-  <ng-container *ngIf="rowData.IN_TYPE === '3'; else normalText">
-    <p-inputNumber class="w-full" styleClass="w-full" inputId="integeronly" (onInput)="calculateFooter()"
+  <ng-container *ngIf="!isFormReadable && (rowData.IN_TYPE === '3' || rowData.IN_TYPE === '2'); else normalText">
+    <p-inputNumber class="w-full" styleClass="w-full" inputId="integeronly" (onInput)="onAmtInput(rowData)"
       [(ngModel)]="rowData.ACP_Amt" placeholder="請輸入付款金額" />
   </ng-container>
 

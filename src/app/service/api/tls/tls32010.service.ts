@@ -1,6 +1,6 @@
-import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 // 1. 修正查詢參數 Interface，使其與後端 DTO 結構一致
@@ -23,6 +23,8 @@ export interface TLS32010QueryRequest extends ApiRequest {
   TltNoList?: string[] | null;
 
   TaxFlag?: string; // 配合後端改為 TaxFlag (1 或 2)
+  PreSale?: boolean;
+  ConsumerNum?: boolean;
 }
 
 // 查詢結果 Model (保持不變)

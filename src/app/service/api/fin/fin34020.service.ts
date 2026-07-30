@@ -5,7 +5,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export type SortItem = { field: string; order: number };
+export interface SortItem { field: string; order: number }
 
 /** ========== Request ========== */
 export interface QueryFIN34020Request {
@@ -30,7 +30,9 @@ export interface QueryFIN34020Request {
   ADJ_Date_To?: string | null;
 
   /** 科目代號清單(多筆逗號分隔) */
-  AccNoList?: string | null;
+  AccNoList?: string | null; // 多選不使用，改為區間
+  AccNo_Start?: string | null;
+  AccNo_End?: string | null;
 
   /** 月結天數(多筆逗號分隔) */
   MoneyTypeList?: string | null;
@@ -67,10 +69,14 @@ export interface QueryFIN34020Row {
 
   RefNo?: string;
   RCV_Date?: string | null; // date
-  VouNo?: string;
+  VouNo?: string; // 第一行的傳票號碼
 
   RcvOrAdjAmt?: number | null;
   UnpaidBalanceAmt?: number | null;
+
+  // 新增第二行欄位
+  Pay_VouNo?: string; // 第二行的傳票號碼
+  Pay_Amt?: number | null; // 調整/收款金額
 }
 
 @Injectable({ providedIn: 'root' })
@@ -127,3 +133,4 @@ export class Fin34020Service {
 }
 
 export { ApiResponse };
+

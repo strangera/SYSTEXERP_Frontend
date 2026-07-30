@@ -3,6 +3,7 @@ import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatAmount, formatPercentage } from '@others/component/table/table.model';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { TLS32050Request, TLS32050Response, TLS32050Service } from '@service/api/tls/tls32050.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
@@ -13,17 +14,16 @@ import { InputTextComponent } from '@shared/components/input-text/input-text.com
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { formatAmount, formatPercentage } from '@others/component/table/table.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { yesterday } from 'src/app/shared/models/system/query-form.model';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
-import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 
 @Component({
@@ -156,13 +156,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   columns: ReportColumn[] = [
-    { field: 'BuildingName', header: '館別', visible: true, align: 'left' },
-    { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
+    { field: 'BuildingName', header: '館別', visible: true, align: 'left', width: '35px' },
+    { field: 'TeamId', header: '單位代碼', visible: true, align: 'left', width: '50px' },
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left', width: '100px' },
-    { field: 'OrgId', header: '樓組代碼', visible: true, align: 'left' },
+    { field: 'OrgId', header: '樓組代碼', visible: true, align: 'left', width: '50px' },
     { field: 'OrgName', header: '樓組名稱', visible: true, align: 'left', width: '100px' },
     { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left', width: '100px' },
-    { field: 'Bus_Class', header: '中分類代碼', visible: true, align: 'left', width: '55px' },
+    { field: 'Bus_Class', header: '中分類代碼', visible: true, align: 'left', width: '15px' },
     { field: 'BusClassName', header: '中分類名稱', visible: true, align: 'left' },
 
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', width: '100px' },
@@ -174,18 +174,16 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right', width: '100px' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
+
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right', width: '100px' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
+
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right', width: '100px' },
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
     { field: 'AVN_PreOrderAmt', header: '預售金額', visible: true, format: formatAmount, align: 'right' },
-
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },

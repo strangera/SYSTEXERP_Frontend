@@ -119,7 +119,7 @@ export class TLS22010Component extends BasicQueryPageComponent<ITxnData> impleme
     this.selectedData = data;
     const body = {
       ...data,
-      PageSize: 30,
+      PageSize: 1000,
       PageIndex: 1,
       SortBy: [{ field: 'TXN_No', order: 1 }],
       TXN_Date: toApiDate(data?.TXN_DATE),

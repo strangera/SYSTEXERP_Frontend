@@ -3,14 +3,15 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS32020Data, TLS32020QueryRequest, TLS32020Service } from '@service/api/tls/tls32020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -82,6 +83,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     PreSale: [false],
     ConsumerNum: [false],
+    ShowBuilding: [true],
   });
 
   // 其餘屬性 (沿用 TLS32020)
@@ -90,10 +92,11 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   data: TLS32020Data[] = [];
   footerData: TLS32020Data | null = null;
   subFooterData: TLS32020Data[] = []; // **新增**：用於存放期間小計資料
-  btnLoading = false;
-
+  pdfBtnLoading = false;
+  excelBtnLoading = false;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+  isShowBuilding = this.queryForm.get('ShowBuilding')?.value ?? true;
 
   // **變更**：移除類型 6/7，預設為 '3'
   DayTypeOptions = [
@@ -138,7 +141,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   columns: ReportColumn[] = [
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
-    { field: 'BuildingName', header: '館別', align: 'left' },
+    { field: 'BuildingName', header: '館別', align: 'left', visible: this.isShowBuilding },
 
     // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
@@ -148,7 +151,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv' },
     { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
     { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
-
+    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer' },
+    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
+    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
     // ======================= 比較期 (Compare) 欄位 =======================
     { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
     { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
@@ -157,6 +162,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV' },
     { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
     { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
+    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
+    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
 
     // ======================= 差異 (Difference) 欄位 =======================
     { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true },
@@ -165,19 +173,22 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true },
     { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatInt, isSubTotal: true },
     { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
 
-    { field: 'BasePreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isSubTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isSubTotal: true },
+    //先拿掉 { field: 'BasePreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isSubTotal: true },
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [
-    { field: 'revenue', header: 'YYYY 營業額' }, // 調整 Group Header
-    { field: 'atv', header: 'YYYY 客單價' }, // 調整 Group Header
-    { field: 'salesPerArea', header: 'YYYY 營業坪效' }, // <--- 新增 Group
-    { field: 'compareRevenue', header: 'XXXX 營業額' }, // <--- 新增 Group
-    { field: 'compareATV', header: 'XXXX 客單價' }, // <--- 新增 Group
-    { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' }, // <--- 新增 Group
+    { field: 'revenue', header: 'YYYY 營業額' },
+    { field: 'atv', header: 'YYYY 客單價' },
+    { field: 'salesPerArea', header: 'YYYY 營業坪效' },
+    { field: 'preSaleConsumer', header: 'YYYY 預售/消費' }, // <--- 新增基準期群組
+    { field: 'compareRevenue', header: 'XXXX 營業額' },
+    { field: 'compareATV', header: 'XXXX 客單價' },
+    { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
+    { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 新增比較期群組
   ];
   constructor() { super(); }
 
@@ -272,9 +283,15 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
       this.setColumns();
+      this.updateHistoryRequestBody();
     });
     this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
       this.setColumns();
+      this.updateHistoryRequestBody();
+    });
+    this.queryForm.get('ShowBuilding')?.valueChanges.subscribe(() => {
+      this.setColumns();
+      this.updateHistoryRequestBody();
     });
   }
   // 【新增】更新欄位群組標頭的邏輯
@@ -292,11 +309,13 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         case 'revenue':
         case 'atv':
         case 'salesPerArea':
+        case 'preSaleConsumer': // <--- 加入此項
           group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
           break;
         case 'compareRevenue':
         case 'compareATV':
         case 'compareSalesPerArea':
+        case 'comparePreSaleConsumer': // <--- 加入此項
           group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
           break;
       }
@@ -304,13 +323,11 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
   // 輔助方法：保持標頭後半段字串一致
   private getOriginHeader(field: string): string {
-    if (field.includes('Revenue')) return '營業額';
-    if (field.includes('ATV')) return '客單價';
-    if (field.includes('SalesPerArea')) return '營業坪效';
-    // 根據你原始定義的欄位名稱對應
-    if (field === 'revenue') return '營業額';
-    if (field === 'atv') return '客單價';
-    if (field === 'salesPerArea') return '營業坪效';
+    const lowerField = field.toLowerCase();
+    if (lowerField.includes('revenue')) return '營業額';
+    if (lowerField.includes('atv')) return '客單價';
+    if (lowerField.includes('salesperarea')) return '營業坪效';
+    if (lowerField.includes('presaleconsumer')) return '預售/消費';
     return '';
   }
   /**
@@ -777,7 +794,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.pdf',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+      (isLoading) => this.pdfBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
   }
 
@@ -792,20 +809,34 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.xlsx',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+      (isLoading) => this.excelBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      BasePreOrderAmt: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      preSaleField: ['BasePreOrderAmt', 'Base_PrePerformance', 'Comp_PrePerformance', 'Diff_PrePerformance'],
+      consumerNumFields: [
+        'Base_ConsumerNum', 'Comp_ConsumerNum', 'Diff_ConsumerNum',
+        'Base_ConsumerOrder', 'Comp_ConsumerOrder', 'Diff_ConsumerOrder',
+      ],
+    });
+    const showBuilding = this.queryForm.get('ShowBuilding')?.value !== false;
+    this.columns = this.columns.map(col =>
+      col.field === 'BuildingName' ? { ...col, visible: showBuilding } : col
+    );
+  }
 
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+  private updateHistoryRequestBody(): void {
+    if (this.historyRequestBody) {
+      this.historyRequestBody = {
+        ...this.historyRequestBody,
+        PreSale: this.queryForm.get('PreSale')?.value ?? false,
+        ConsumerNum: this.queryForm.get('ConsumerNum')?.value ?? false,
+        ShowBuilding: this.queryForm.get('ShowBuilding')?.value ?? true,
+      };
+    }
   }
 }

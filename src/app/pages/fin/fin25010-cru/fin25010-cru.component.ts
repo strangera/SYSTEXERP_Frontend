@@ -11,12 +11,12 @@ import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
 import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableReportComponent, } from './fin25010-table-report/fin25010-table-report.component';
 import { formatAmount, formatDate, ReportColumn } from './fin25010-table-report/fin25010-table-report.model';
 @Component({
@@ -115,6 +115,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     { field: 'ACCNO', header: '會計科目' },
     { field: 'ACP_STATUS', header: '狀態', format: (v) => getSYS1000('ACP_Status', v), exportFormat: transformOptionsForExport(getSYS1000Options('ACP_Status')) },
     { field: 'ORG_ID', header: '組織代號' },
+    { field: 'PTA', header: '立沖代號' },
   ];
 
   apiUrl = 'query_addFIN25010'
@@ -159,6 +160,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       )
       .subscribe(response => {
         this.data = response.Data || [];
+        this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
         this.totalRecords = response.TotalCount;
         this.apiUrl = 'query_detailFIN25010'; // 切換 API URL 以供匯出使用
 
@@ -189,6 +191,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
         }), finalize(() => this.loading = false)).subscribe(response => {
           this.lastQueryBody = queryParams;
           this.data = response.Data || [];
+          this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
           this.totalRecords = response.TotalCount;
 
           // 查詢後重設勾選與小計
@@ -199,6 +202,12 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   }
 
   onGenerate() {
+    const overAmtItem = this.selectedItems.find(item => Number(item.ACP_Amt) > (item.OriginalACP_Amt ?? 0));
+    if (overAmtItem) {
+      this.messageService.errorBubble(`更改金額(${overAmtItem.ACP_Amt})不可大於原始金額(${overAmtItem.OriginalACP_Amt})`);
+      return;
+    }
+
     if (this.subTotalData.some(s => s.ACP_Amt < 0) || (this.footerData?.ACP_Amt ?? 0) < 0) {
       this.messageService.errorBubble('分組小計或總計不可為負數');
       return;
@@ -253,6 +262,16 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
         });
       }
     });
+  }
+
+  // 付款金額編輯校驗：更改金額不可大於原始金額
+  onAmtInput(rowData: QueryAddFIN25010Response): void {
+    const original = rowData.OriginalACP_Amt ?? 0;
+    if (Number(rowData.ACP_Amt) > original) {
+      this.messageService.errorBubble(`更改金額(${rowData.ACP_Amt})不可大於原始金額(${original})`);
+      rowData.ACP_Amt = original;
+    }
+    this.calculateFooter();
   }
 
   // 1. 新增計算小計的方法

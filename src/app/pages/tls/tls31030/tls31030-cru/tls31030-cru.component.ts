@@ -1,5 +1,6 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { ColumnGroup, formatAmount, formatPercentage } from '@others/component/table/table.model';
+import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
@@ -34,8 +35,7 @@ export class Tls31030CRUComponent implements OnChanges {
   footershowTotal: footerShowTotal | null = null;
   historyRequestBody: TLS31030DetailRequest | null = null;
 
-  readonly detailQueryFn = (body: TLS31030DetailRequest) =>
-    this.tls31030Service.queryTLS31030Detail(body);
+  readonly detailQueryFn = (body: TLS31030DetailRequest) => this.tls31030Service.queryTLS31030Detail(body);
 
   columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
@@ -56,6 +56,10 @@ export class Tls31030CRUComponent implements OnChanges {
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '月營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
+    // 動態開關欄位 (預設 visible: false)
+    { field: 'PrePerformance', header: '預售業績', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerNum', header: '消費人數', visible: false, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ConsumerOrder', header: '消費客單', visible: false, format: formatAmount, align: 'right', isTotal: true },
   ];
 
   columnGroup: ColumnGroup[] = [
@@ -72,6 +76,7 @@ export class Tls31030CRUComponent implements OnChanges {
       this.footerTotal = null;
       this.footershowTotal = null;
       this.totalRecords = 0;
+      this.setColumns(); // ✅ 開啟彈窗時根據勾選條件顯示欄位
       this.queryDetail();
     }
   }
@@ -80,9 +85,9 @@ export class Tls31030CRUComponent implements OnChanges {
     if (!this.historyRequestBody) return;
     const req: TLS31030PrintDetailRequest = {
       ...this.historyRequestBody,
-      // IsMerge: true,
       IsExcel: isExcel,
     };
+
     if (isExcel) {
       this.btnExcelLoading = true;
       this.tls31030Service.printTLS31030Detail(req)
@@ -106,6 +111,14 @@ export class Tls31030CRUComponent implements OnChanges {
     }
   }
 
+  private setColumns(): void {
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: !!this.queryConditions?.PreSale,
+      consumerNum: !!this.queryConditions?.ConsumerNum,
+      fallbackWhenUnset: true,
+    });
+  }
+
   private buildRequest(): TLS31030DetailRequest {
     const q = this.queryConditions!;
     return {
@@ -123,6 +136,8 @@ export class Tls31030CRUComponent implements OnChanges {
       org_id: q.org_id ?? [],
       TaxType: q.TaxType,
       IsRece_Yn: q.IsRece_Yn,
+      PreSale: q.PreSale,           // ✅ 補上預售開關
+      ConsumerNum: q.ConsumerNum,   // ✅ 補上消費人數開關
       pageSize: 100,
     };
   }
@@ -147,7 +162,9 @@ export class Tls31030CRUComponent implements OnChanges {
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
-
+          PrePerformance: this.footerTotal.TotalPrePerformance,
+          ConsumerNum: this.footerTotal.TotalConsumerNum,
+          ConsumerOrder: this.footerTotal.TotalConsumerOrder,
         } : null;
         this.totalRecords = res.TotalCount;
       });

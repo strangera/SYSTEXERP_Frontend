@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, QueryGLS3003AbatAcctRequest, QueryGLS3003AbatAcctResponse, CheckGLS3003PtaLockedRequest, CheckGLS3003PtaLockedResponse, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, GetEmployeeBankAccountRequest, GetEmployeeBankAccountResult, EmployeeBankAccountItem, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, QueryGLS3003AbatAcctRequest, QueryGLS3003AbatAcctResponse, CheckGLS3003PtaLockedRequest, CheckGLS3003PtaLockedResponse, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -701,6 +701,9 @@ export class FIN53010Service {
       take(1),
       map(res => res ?? []),
       tap(res => {
+        // 全量清單重載時清除 hydration 快取，避免舊快取阻擋下次補水化
+        this.fin53010VenHydrationKeys.clear();
+        this.fin53010VenInflight.clear();
         this.vendorOptions.set(res);
         this.logger.debug('查詢VendorOptions結果:', [res]);
       }),
@@ -833,6 +836,56 @@ export class FIN53010Service {
       shareReplay({ bufferSize: 1, refCount: false }),
     );
     this.payDateInflight.set(k, req$);
+    return req$;
+  }
+
+  /** 員工銀行帳號快取：userNo → item | null（null = 查無，避免重複查） */
+  private readonly employeeBankCache = new Map<string, EmployeeBankAccountItem | null>();
+  /** 進行中的員工銀行帳號請求，同 userNo 併發共用 */
+  private readonly employeeBankInflight = new Map<string, Observable<EmployeeBankAccountItem | null>>();
+
+  /** 是否為員工付款對象（在員工清單，且非廠商）——員工銀行資料需改由 tblUser_BnkAcct 帶出 */
+  public isEmployeePayee(no: string | null | undefined): boolean {
+    const k = typeof no === 'string' ? no.trim() : '';
+    return !!k && this.usrMap().has(k) && !this.vendorMap().has(k);
+  }
+
+  /** 讀取已快取員工銀行帳號；undefined=尚未查、null=查無、物件=有 */
+  public getCachedEmployeeBank(userNo: string): EmployeeBankAccountItem | null | undefined {
+    const k = (userNo ?? '').trim();
+    return this.employeeBankCache.has(k) ? this.employeeBankCache.get(k) : undefined;
+  }
+
+  /**
+   * 以後端 getEmployeeBankAccount 為權威來源，確保員工銀行帳號已查詢並快取。
+   * 一員工一對一帳號；若多筆取 SEQ_NO 最小者為主帳號。失敗不寫快取，允許下次重試。
+   */
+  public ensureEmployeeBankAccount(userNo: string): Observable<EmployeeBankAccountItem | null> {
+    const k = (userNo ?? '').trim();
+    if (!k) return of(null);
+    if (this.employeeBankCache.has(k)) return of(this.employeeBankCache.get(k)!);
+    const inflight = this.employeeBankInflight.get(k);
+    if (inflight) return inflight;
+    const req$ = this.http
+      .post<GetEmployeeBankAccountResult>(`${apiUrl}/getEmployeeBankAccount`, { UserNo: k } as GetEmployeeBankAccountRequest)
+      .pipe(
+        take(1),
+        map(res => {
+          const list = res?.Data ?? [];
+          const first = list.length
+            ? [...list].sort((a, b) => (a.SEQ_NO ?? 0) - (b.SEQ_NO ?? 0))[0]
+            : null;
+          this.employeeBankCache.set(k, first);
+          return first;
+        }),
+        catchError(err => {
+          this.logger.error('API getEmployeeBankAccount 失敗:', err);
+          return of(null as EmployeeBankAccountItem | null); // 失敗不寫快取，下次可重試
+        }),
+        finalize(() => this.employeeBankInflight.delete(k)),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    this.employeeBankInflight.set(k, req$);
     return req$;
   }
 

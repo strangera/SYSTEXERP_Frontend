@@ -1,0 +1,20 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onBack()"></app-button>
+  </div>
+  <app-table-report
+    dataKey="SeqNo"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lazy]="false"
+    [showManage]="false"
+    [showCheckBox]="false"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showFilter]="false"
+    [footerData]="footerData"
+  ></app-table-report>
+</div>

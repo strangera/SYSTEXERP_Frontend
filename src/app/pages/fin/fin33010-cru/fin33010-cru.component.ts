@@ -3,21 +3,21 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin33010Service } from '@service/api/fin/fin33010.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@others/component/custom-footer-table/customFooterTable.component';
-import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
-import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { formatAmount } from '@others/component/table/table.model';
 import { validateRequired } from '@others/component/table/validate-field.model';
+import { Fin33010Service } from '@service/api/fin/fin33010.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin33010-cru',
@@ -43,14 +43,14 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
   @ViewChild(TableEditComponent) tableEditComponent?: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     WSLIP_NO: [{ value: '系統自動產生', disabled: true }],  // 匯款單號
-    INV_YN: ['N'],                     // 補發票與否
+    INV_YN: ['Y'],                     // 補發票與否
     VouType: ['3'],                    // 傳票種類
     VouDate: [''],                     // 傳票日期
     Remark: [''],                         // 傳票摘要
     PostFlag: ['1'],                     // 傳票狀態
     CRT_USR_No: [''],                // 建立人員
     CRT_Date: [''],                  // 建立日期
-    VoucherType: ['RM'],              // 傳票種類
+    VoucherType: ['RC'],              // 傳票種類
   });
 
   // 傳票型態

@@ -1,6 +1,6 @@
 import { CommonModule, NgIf } from '@angular/common';
-import { Component, OnInit, } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, } from '@angular/core';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { fin13090Detail, Fin13090Service } from '@service/api/fin/fin13090.service';
@@ -20,8 +20,8 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, of } from 'rxjs';
+import { ValidationService } from 'src/app/shared/service/validation.service';
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -33,9 +33,7 @@ import { finalize, forkJoin } from 'rxjs';
     ButtonComponent,
     ButtonModule,
     DialogModule,
-    TableModule,
     PanelModule,
-    FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberComponent,
@@ -48,6 +46,7 @@ import { finalize, forkJoin } from 'rxjs';
   templateUrl: './fin13090-cru.component.html'
 })
 export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> implements OnInit {
+  private readonly validationService = inject(ValidationService);
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     VouNo: [null, [Validators.required]], // 傳票編號
@@ -64,11 +63,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   PUR_DiscNo_Options: { value: string; label: string }[] = []; // 扣抵代號
   PUR_Type_Options: { value: string; label: string }[] = []; // 類別區分
   readonly rowSelectableFn = (row: any) => !row?.IsLocked;
-  // ---------廠商查詢 Dialog-------------------------------------------------------
-  vendorDialogVisible = false;
-  vendorKeyword = '';
-  vendorFiltered: { No: string; Name: string; VEN_No: string; Label: string }[] = [];
-  private dialogTargetRow: fin13090Detail | null = null;
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
@@ -127,7 +121,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             PUR_GUINo: item.PUR_GUINo,
             PUR_GUIDate: item.PUR_GUIDate,
             PUR_RepYYYYMM: item.PUR_RepYYYYMM,
-            PUR_VenNo: item.PUR_VenNo,
+            PUR_VenNo: item.PUR_VenNo || '',
             PUR_VenName: item.PUR_VenName,
             PUR_VenUniform: item.PUR_VenUniform,
             ACP_Type: item.ACP_Type,
@@ -265,9 +259,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           Name: item.Name,
           Label: `${item.VEN_No} - ${item.Name}`,
         }));
-        // 更新已初始化欄位的 options reference
-        const venCol = this.detailColumn.find(c => c.field === 'PUR_VenNo');
-        if (venCol) venCol.options = this.VEN_Uniform_Option;
       });
   }
 
@@ -277,11 +268,59 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     this.detailColumn = [
       { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '190px', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
       { field: 'PUR_GUINo', header: '發票號碼', type: 'input', width: '130px', maxLength: 10, validate: [this.validateGUINo], disabled: locked },
-      { field: 'PUR_GUIDate', header: '發票日期', type: 'date', width: '140px', validate: [validateRequired], disabled: locked },
+      {
+        field: 'PUR_GUIDate', header: '發票日期', type: 'date', width: '140px', validate: [validateRequired], disabled: locked,
+        calculate: (_rowData: fin13090Detail, value: unknown) => {
+          // 只有在「發票日期」這欄本身被異動時才自動帶入申報年月(轉雙數月)，
+          // 使用者手動改過申報年月後，不會因為改了其他欄位就被這裡蓋回去。
+          if (!value) return {};
+          const dateValue = new Date(value as string | number | Date);
+          if (isNaN(dateValue.getTime())) return {};
+          const year = dateValue.getFullYear();
+          let month = dateValue.getMonth() + 1;
+          if (month % 2 !== 0) month += 1; // 轉雙數月
+          const formattedMonth = month.toString().padStart(2, '0');
+          return { PUR_RepYYYYMM: `${year}${formattedMonth}` };
+        }
+      },
       { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input', width: '110px', validate: [this.validateEvenMonth]},
-      { field: 'PUR_VenNo', header: '廠商編號', type: 'custom', width: '190px', validate: [validateRequired], disabled: locked },
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', width: '140px', maxLength: 10, disabled: locked },
-      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', width: '180px', maxLength: 60, disabled: locked },
+      { field: 'PUR_VenNo', header: '廠商編號', type: 'input', width: '190px', disabled: () => true },
+      {
+        field: 'PUR_VenUniform', header: '廠商統一編號', type: 'autoComplete', width: '200px',
+        validate: [validateRequired, this.validateVenUniform],
+        optionsAsync: true,
+        options: (_rowData: fin13090Detail, query: string) => of(this.filterVenUniformOptions(query)),
+        // optionLabel 故意指到 No：下拉清單顯示用 templateLabel(Label) 即可，
+        // 但輸入框選取後顯示的文字是由 PrimeNG 用 optionLabel 從選到的物件取值，
+        // 指到 No 才能確保選完輸入框顯示/實際帶入的是廠商統編本身，不是「廠商編號-廠商名稱」的組合字串。
+        optionLabel: 'No',
+        templateLabel: 'Label',
+        disabled: locked,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        calculate: (rowData: fin13090Detail, value: any) => {
+          // 下拉選取時 value 是使用者實際點選的那一筆完整物件，同一統編可能對到多筆廠商編號，
+          // 直接用這筆物件本身的 VEN_No/Name，不要再用 No 去重新 find（find 只會找到第一筆，
+          // 會導致選第2、3筆時都被誤帶成第1筆廠商編號）。
+          if (value && typeof value === 'object') {
+            const picked = value as { No: string; VEN_No: string; Name: string };
+            if (!picked.No) return { PUR_VenUniform: '', PUR_VenNo: '', PUR_VenName: '' };
+            return { PUR_VenUniform: picked.No, PUR_VenNo: picked.VEN_No, PUR_VenName: picked.Name };
+          }
+          // 手動輸入純文字：統編被清空，一併清空廠商編號、廠商名稱
+          if (!value) return { PUR_VenUniform: '', PUR_VenNo: '', PUR_VenName: '' };
+          // 選取下拉後，PrimeNG 選取完成會再觸發一次 blur，value 這時會變回純文字(統編)，
+          // 若目前列上的廠商編號本來就是這個統編底下的其中一筆，代表剛才已經選好，維持原狀，
+          // 不要再用「統編」重新 find（find 只會抓到第一筆，會把剛選好的第2、3筆蓋掉）。
+          if (rowData.PUR_VenNo && this.VEN_Uniform_Option.some(v => v.No === value && v.VEN_No === rowData.PUR_VenNo)) {
+            return {};
+          }
+          const matched = this.VEN_Uniform_Option.find(v => v.No === value);
+          // 手key 且沒對上下拉資料：只寫回輸入文字，不覆蓋既有的廠商編號/廠商名稱
+          if (!matched) return { PUR_VenUniform: value };
+          return { PUR_VenUniform: matched.No, PUR_VenNo: matched.VEN_No, PUR_VenName: matched.Name };
+        }
+      },
+      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', width: '180px', disabled: () => true },
       { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', width: '130px', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
       {
         field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', width: '150px', validate: [validateRequired], textAlign: 'right',
@@ -361,9 +400,13 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   };
 
   // 驗證發票號碼 (2碼大寫英文 + 8碼數字)
-  validateGUINo = (value: string) => {
+  validateGUINo = (value: string, rowData?: fin13090Detail) => {
     // 1. 檢查是否為空 (若非必填可直接通過，交由 validateRequired 處理)
     if (!value) return { isValid: true, errorMessage: [] };
+
+    // 22/25 為彙加發票，號碼留空或以 0000000000 代表，不做格式驗證
+    const vType = String(rowData?.PUR_VoucherType ?? '').trim();
+    if (vType === '22' || vType === '25') return { isValid: true, errorMessage: [] };
 
     const valStr = String(value).trim(); // 去除前後空白
 
@@ -377,6 +420,18 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       };
     }
 
+    return { isValid: true, errorMessage: [] };
+  };
+
+  // 驗證廠商統一編號：若有在下拉選單內(既有廠商資料)就不用再驗證，手key沒對到下拉資料才驗證檢查碼
+  validateVenUniform = (value: unknown) => {
+    if (value === '' || value === null || value === undefined) return { isValid: true, errorMessage: [] };
+    const valStr = String(value).trim();
+    if (this.VEN_Uniform_Option.some(v => v.No === valStr)) return { isValid: true, errorMessage: [] };
+    const error = this.validationService.companyIdValidator({ value: valStr });
+    if (error) {
+      return { isValid: false, errorMessage: ['統一編號格式錯誤'] };
+    }
     return { isValid: true, errorMessage: [] };
   };
 
@@ -428,11 +483,33 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }
     }
 
-    // 發票號碼必填
+    // 發票號碼必填（22/25 為彙加發票，號碼可留空，後端自動給 0000000000）
     for (let i = 0; i < this.detailData.length; i++) {
       const row = this.detailData[i];
+      const vType = String(row.PUR_VoucherType ?? '').trim();
+      if (vType === '22' || vType === '25') continue;
       if (!String(row.PUR_GUINo ?? '').trim()) {
         this.messageService.errorBubble(`第 ${i + 1} 筆明細：請輸入發票號碼`);
+        return false;
+      }
+    }
+
+    // 廠商統一編號格式驗證：有在下拉選單內的既有廠商資料不用驗證，手key沒對到下拉資料才驗證檢查碼
+    for (let i = 0; i < this.detailData.length; i++) {
+      const row = this.detailData[i];
+      const result = this.validateVenUniform(row.PUR_VenUniform);
+      if (!result.isValid) {
+        this.messageService.errorBubble(`第 ${i + 1} 筆明細：${result.errorMessage.join('、')}`);
+        return false;
+      }
+    }
+
+    // 申報年月格式驗證：須為 YYYYMM 且為雙數月
+    for (let i = 0; i < this.detailData.length; i++) {
+      const row = this.detailData[i];
+      const result = this.validateEvenMonth(row.PUR_RepYYYYMM);
+      if (!result.isValid) {
+        this.messageService.errorBubble(`第 ${i + 1} 筆明細：${result.errorMessage.join('、')}`);
         return false;
       }
     }
@@ -450,60 +527,21 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   //明細變動檢查
   onDetailChange(newData: fin13090Detail[]) {
-    // 遍歷每一筆資料進行檢查與自動帶入
-    newData.forEach(row => {
-      // --- 處理日期連動申報年月 ---
-      if (row.PUR_GUIDate) {
-        const dateValue = new Date(row.PUR_GUIDate); // 確保轉為 Date 物件
-        if (!isNaN(dateValue.getTime())) {
-          const year = dateValue.getFullYear();
-          let month = dateValue.getMonth() + 1;
-
-          if (month % 2 !== 0) month += 1; // 轉雙數月
-
-          const formattedMonth = month.toString().padStart(2, '0');
-          const targetYYYYMM = `${year}${formattedMonth}`;
-
-          // 只有在值不同時才更新，避免無限迴圈
-          if (row.PUR_RepYYYYMM !== targetYYYYMM) {
-            row.PUR_RepYYYYMM = targetYYYYMM;
-          }
-        }
-      }
-    });
-
-    // 更新資料源
+    // 申報年月的日期連動已改到 PUR_GUIDate 欄位的 calculate 處理(只在發票日期本身變動時才觸發)，
+    // 這裡不用再遍歷整批資料強制覆蓋，避免使用者手動修改申報年月被其他欄位的異動蓋掉。
     this.detailData = [...newData];
   }
 
   // ---進頁提示 Dialog---
   infoDialogVisible = false;
 
-  // ---廠商查詢 Dialog---
-  openVendorDialog(row: fin13090Detail, isDisabled: boolean): void {
-    if (isDisabled) return;
-    this.dialogTargetRow = row;
-    this.vendorKeyword = '';
-    this.vendorFiltered = [...this.VEN_Uniform_Option];
-    this.vendorDialogVisible = true;
-  }
-
-  filterVendors(): void {
-    const kw = this.vendorKeyword.trim().toLowerCase();
-    this.vendorFiltered = kw
-      ? this.VEN_Uniform_Option.filter(v =>
-          v.VEN_No.toLowerCase().includes(kw) || v.Name.toLowerCase().includes(kw)
-        )
-      : [...this.VEN_Uniform_Option];
-  }
-
-  selectVendor(vendor: { No: string; Name: string; VEN_No: string }): void {
-    if (this.dialogTargetRow) {
-      this.dialogTargetRow.PUR_VenNo = vendor.VEN_No;
-      this.dialogTargetRow.PUR_VenName = vendor.Name;
-      this.dialogTargetRow.PUR_VenUniform = vendor.No;
-    }
-    this.vendorDialogVisible = false;
+  // 廠商統一編號下拉篩選 (No/VEN_No/Name 皆可比對)
+  private filterVenUniformOptions(query: string): { No: string; VEN_No: string; Name: string; Label: string }[] {
+    const kw = (query ?? '').trim().toLowerCase();
+    if (!kw) return this.VEN_Uniform_Option;
+    return this.VEN_Uniform_Option.filter(v =>
+      v.No.toLowerCase().includes(kw) || v.VEN_No.toLowerCase().includes(kw) || v.Name.toLowerCase().includes(kw)
+    );
   }
 
   //清除明細內容

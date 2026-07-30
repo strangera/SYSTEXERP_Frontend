@@ -29,7 +29,7 @@
             ></app-dropdown-range>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="科目代號"
               controlName="AccNoList"
@@ -39,6 +39,19 @@
               [control]="queryForm.controls.AccNoList"
               [submitted]="submitted"
             ></app-multi-select>
+          </div> -->
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-range
+              label="科目代號"
+              controlName="AccNo_Start"
+              [startControl]="queryForm.controls.AccNo_Start"
+              [endControl]="queryForm.controls.AccNo_End"
+              [submitted]="submitted"
+              [options]="accNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -129,8 +142,25 @@
     [footerData]="footerData"
     [queryFunction]="queryFIN34020ForReport"
     [lastQueryBody]="lastQueryBody"
-    [ItemSize]="22.4"
+    [ItemSize]="24.44"
     [showDelete]="false"
+    [customTemplates]="{
+      VEN_No: firstLineTemplate,
+      VEN_Name: firstLineTemplate,
+      PayType: firstLineTemplate,
+      ARS_No: firstLineTemplate,
+      AccNo: firstLineTemplate,
+      AccCName: firstLineTemplate,
+      ARS_Date: firstLineTemplate,
+      PTA_Date: firstLineTemplate,
+      ARS_Amt: firstLineTemplate,
+      NoteDesc: firstLineTemplate,
+      RefNo: secondLineTemplate,
+      RCV_Date: secondLineTemplate,
+      VouNo: voucherNoTemplate,
+      RcvOrAdjAmt: amountTemplate,
+      UnpaidBalanceAmt: firstLineTemplate,
+    }"
   >
     <header>
       <div class="flex justify-content-end gap-2">
@@ -154,3 +184,66 @@
     </header>
   </app-table-report>
 </div>
+
+<ng-template
+  #secondLineTemplate
+  let-rowData
+  let-column="column"
+  let-index="index"
+>
+  <div>&nbsp;</div>
+  @if (
+    rowData[column.field] !== null &&
+    rowData[column.field] !== undefined &&
+    rowData[column.field] !== ""
+  ) {
+    <div>
+      {{
+        column.format
+          ? column.format(rowData[column.field], index, rowData)
+          : rowData[column.field]
+      }}
+    </div>
+  }
+</ng-template>
+
+<ng-template
+  #firstLineTemplate
+  let-rowData
+  let-column="column"
+  let-index="index"
+>
+  <div>
+    {{
+      column.format
+        ? column.format(rowData[column.field], index, rowData)
+        : rowData[column.field]
+    }}
+  </div>
+  <div>&nbsp;</div>
+</ng-template>
+
+<ng-template #voucherNoTemplate let-rowData>
+  <div>{{ rowData.VouNo }}</div>
+  <div>{{ rowData.Pay_VouNo || " " }}</div>
+</ng-template>
+<ng-template #amountTemplate let-rowData let-column="column" let-index="index">
+  <div>
+    {{
+      column.format
+        ? column.format(rowData[column.field], index, rowData)
+        : rowData[column.field]
+    }}
+  </div>
+  <div>
+    {{
+      rowData.Pay_Amt !== null &&
+      rowData.Pay_Amt !== undefined &&
+      rowData.Pay_Amt !== ""
+        ? column.format
+          ? column.format(rowData.Pay_Amt, index, rowData)
+          : rowData.Pay_Amt
+        : " "
+    }}
+  </div>
+</ng-template>

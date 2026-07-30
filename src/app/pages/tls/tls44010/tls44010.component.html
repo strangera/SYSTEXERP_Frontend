@@ -126,7 +126,7 @@
                 </div>
 
                 <button class="vnc-btn" (click)="openVnc(row)" pTooltip="開啟 VNC 遠端連線" tooltipPosition="top"
-                  [disabled]="row.EOS_Online !== 'Y'">
+                  [disabled]="row.EOS_Online !== 'Y' || !hasPermission(Actions.Connect)">
                   <i class="pi pi-desktop"></i> VNC
                 </button>
               </div>
@@ -162,7 +162,7 @@
                     <span class="ml-1 text-xs text-700 font-medium">{{ row.TLT_Name }}</span>
                   </div>
                   <button class="vnc-btn" (click)="openVnc(row)" pTooltip="開啟 VNC 遠端連線" tooltipPosition="top"
-                    [disabled]="row.EOS_Online !== 'Y'">
+                    [disabled]="row.EOS_Online !== 'Y' || !hasPermission(Actions.Connect)">
                     <i class="pi pi-desktop"></i>
                   </button>
                 </div>
@@ -217,6 +217,6 @@
   </div>
   <ng-template pTemplate="footer">
     <p-button label="取消" [text]="true" [disabled]="vncControlLoading" (click)="onVncControlCancel()"></p-button>
-    <p-button label="確認接管" [loading]="vncControlLoading" (click)="onVncControlConfirm()"></p-button>
+    <p-button label="確認接管" [loading]="vncControlLoading" [disabled]="!hasPermission(Actions.Control)" (click)="onVncControlConfirm()"></p-button>
   </ng-template>
 </p-dialog>

@@ -1,5 +1,5 @@
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,7 +15,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -26,6 +25,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
 
 
 @Component({
@@ -36,23 +36,15 @@ import { TableReportComponent } from '../../../shared/components/table-report/ta
       .bg-group-base {
         background-color: #e3edf4 !important;
       }
-
-      // 比較群組 - 帶有朝氣的清新莫蘭迪綠（柔和舒適）
       .bg-group-compare {
         background-color: #e2f2e5 !important;
       }
-
-      // 差異群組 - 溫暖溫潤的莫蘭迪落日橘黃（醒目不刺眼）
       .bg-group-diff {
         background-color: #fff1e0 !important;
       }
-
-      // 成長率群組 - 氣質迷人的莫蘭迪微醺紫（點綴效果佳）
       .bg-group-growth {
         background-color: #f3e9f7 !important;
       }
-
-      // 小技巧：讓表格滑鼠滑過時的 hover 效果依舊自然
       .p-datatable-tbody > tr:hover > td.bg-group-base {
         background-color: #d4e3ee !important;
       }
@@ -91,8 +83,11 @@ import { TableReportComponent } from '../../../shared/components/table-report/ta
   ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
+  public readonly tls32030Service = inject(TLS32030Service);
+  private readonly dropdown = inject(DropdownApiService);
+  private readonly fileExportService = inject(FileExportService);
   queryForm = this.formBuilder.group({
-    DayType: ['3' as string | null], // 【修改】移除預設值 '3'，改為 null
+    DayType: ['3' as string | null],
     BaseDateFrom: [null as Date | null, [Validators.required]],
     BaseDateTo: [null as Date | null, [Validators.required]],
     day: [null as Date | null], // 日營業報表：單一比較日期
@@ -119,18 +114,18 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     ReceFilter: ['A'],
     PreSale: [false],
     ConsumerNum: [false],
-    ...createPaginationConfig([{ field: 'TltNo', order: -1 }])
+    pageSize: [1000],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'TltNo', order: -1 }]],
   });
-
   data: TLS32030Data[] = [];
   footerData: TLS32030FooterData | null = null;
   totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
-  btnLoading = false;
-
+  pdfBtnLoading = false;
+  excelBtnLoading = false;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
-
   DayTypeOptions = [
     { value: '1', label: '日營業報表' },
     { value: '2', label: '週營業報表' },
@@ -139,7 +134,6 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: '5', label: '年營業報表' },
     { value: '6', label: '區間營業報表' },
   ];
-
   taxOptions = [{ value: 'G', label: '是' }, { value: 'N', label: '否' }];
   auditoriumOptions = this.dropdown.querySys3800();
   organizationOptions = this.dropdown.querySys3100();
@@ -153,85 +147,68 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' }
   ];
-
-  monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1,
-    label: `${i + 1} 月`
-  }));
+  monthOptions = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `${i + 1} 月` }));
   weekOptions: { value: number, label: string }[] = [];
-  halfYearOptions = [
-    { value: 1, label: '上半年' },
-    { value: 2, label: '下半年' }
-  ];
-
+  halfYearOptions = [{ value: 1, label: '上半年' }, { value: 2, label: '下半年' }];
   columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
     { field: 'Org_Name', header: '組織', align: 'left' },
     { field: 'SYS_Name', header: '櫃別', align: 'left' },
     { field: 'TltNo', header: '專櫃編號', align: 'left' },
     { field: 'TltName', header: '專櫃名稱', align: 'left' },
-    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '比較' }, // 👈 拿掉 type 和 format
-    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
-    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
-    { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount },
-    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '基準' }, // 👈 拿掉 type 和 format
-    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
-    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
-    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Comp_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_Target', header: '目標差異', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異', format: (value) => formatPercentage(value, 2) },
-    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
-    { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
-    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount },
-    { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-  ];
 
+    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Comp_SaleAmt', header: '銷售總金額', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_PrePerformance', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount, visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
+    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Base_SaleAmt', header: '銷售總金額', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
+    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_PrePerformance', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount, visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', groupField: '基準', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', groupField: '基準', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Diff_SaleAmt', header: '銷售總金額', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_Target', header: '目標', width: '75px', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_DaySpaceEff', header: '日坪效', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_AchieveRate', header: '達成率', align: 'right', groupField: '差異', format: (value) => formatPercentage(value, 2) },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_PrePerformance', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount, visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', groupField: '差異', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', groupField: '差異', format: formatAmount, visible: this.isConsumerNum },
+    { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2) },
+    { field: 'Growth_PrePerformancePct', header: '預售實績', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isPreSale },
+    { field: 'Growth_ConsumerNumPct', header: '消費人數', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isConsumerNum },
+    { field: 'Growth_ConsumerOrderPct', header: '消費客單', align: 'right', groupField: '成長率', format: (value) => formatPercentage(value, 2), visible: this.isConsumerNum },
+  ];
   columnGroup = [
     { header: '基準', field: '基準' },
     { header: '比較', field: '比較' },
     { header: '差異', field: '差異' },
     { header: '成長率', field: '成長率' }
   ];
-
-  constructor(
-    public readonly tls32030Service: TLS32030Service,
-    private readonly dropdown: DropdownApiService,
-    private readonly fileExportService: FileExportService
-  ) {
-    super();
-  }
-
   private formatListForBackend(list: any[] | string | null | undefined): string | null {
-    if (Array.isArray(list) && list.length > 0) {
-      return list.map(x => String(x)).join(',');
-    }
-    if (typeof list === 'string' && list.trim() !== '') {
-      return list;
-    }
+    if (Array.isArray(list) && list.length > 0) return list.map(x => String(x)).join(',');
+    if (typeof list === 'string' && list.trim() !== '') return list;
     return null;
   }
-
   ngOnInit(): void {
     this.initializePage('TLS32030', 'tls/tls32030', this.queryForm, f => this.onSubmit(f));
     this.columns = this.columns.map((col): ReportColumn => ({
@@ -249,14 +226,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       format: col.format ? col.format : undefined
     }));
     this.setWeekOptions(this.queryForm.controls.year.value);
-
-    // 【修改】初始化時傳入 null，不再預設計算月報表日期
-    this.calculateInitialRanges(null);
-
-    this.queryForm.controls.DayType.valueChanges.pipe(
-      startWith(this.queryForm.controls.DayType.value),
-      untilDestroyed(this)
-    ).subscribe(type => {
+    this.queryForm.controls.DayType.valueChanges.pipe(startWith(this.queryForm.controls.DayType.value), untilDestroyed(this)).subscribe(type => {
       // 【修改】切換 DayType 時，純粹清空所有輔助與日期欄位，不給予任何預設值
       this.queryForm.controls.day.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareDay.setValue(null, { emitEvent: false });
@@ -274,12 +244,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.BaseDateTo.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareDateFrom.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareDateTo.setValue(null, { emitEvent: false });
-
-      if (type === '2') {
-        this.setWeekOptions(null);
-      }
+      if (type === '2') this.setWeekOptions(null);
     });
-
     // 訂閱欄位變化後重新計算區間（若有值才計算）
     this.queryForm.controls.day.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareDay.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
@@ -295,50 +261,37 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.queryForm.controls.CompareWeek.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareMonth.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-
-    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+    this.queryForm.get('PreSale')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
       this.setColumns();
+      if (this.historyRequestBody) {
+        this.historyRequestBody.PreSale = val === true;
+      }
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
       this.setColumns();
+      if (this.historyRequestBody) {
+        this.historyRequestBody.ConsumerNum = val === true;
+      }
     });
   }
-
   historyRequestBody: any | null = null;
-
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
     const export$ = this.tls32030Service.ExportTLS32030PDF(this.historyRequestBody as any);
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
-      '.pdf',
-      (isLoading) => this.btnLoading = isLoading
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.pdfBtnLoading = isLoading).subscribe();
   }
-
   onExportXLSX() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
     const export$ = this.tls32030Service.ExportTLS32030Excel(this.historyRequestBody as any);
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
-      '.xlsx',
-      (isLoading) => this.btnLoading = isLoading
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.excelBtnLoading = isLoading).subscribe();
   }
-
-  private getCurrentWeekNumber(date: Date): number {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  }
-
   setWeekOptions(year: Date | null): void {
     if (!year) {
       this.weekOptions = [];
@@ -350,19 +303,16 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
     }
   }
-
   calculateDateRanges(type: string | null): void {
     if (!type) return;
     let baseRange: { from: Date, to: Date } | null = null;
     let compareRange: { from: Date, to: Date } | null = null;
-
     if (type === '1') {
       // 日營業報表：單一比較日/基準日各自由使用者選擇，不需要年度輔助欄位，故獨立處理、不受下方年度檢查阻擋
       const baseDay = this.queryForm.controls.day.value;
       const compareDay = this.queryForm.controls.CompareDay.value;
       if (baseDay) baseRange = { from: baseDay, to: baseDay };
       if (compareDay) compareRange = { from: compareDay, to: compareDay };
-
       this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
       this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
       this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
@@ -466,12 +416,6 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     dateTo.setDate(dateFrom.getDate() + 6);
     return { from: dateFrom, to: dateTo };
   }
-
-  // 【修改】將初始化計算區間徹底清空，不再自動代入任何初始日期
-  calculateInitialRanges(defaultType: string | null): void {
-    // 留空，不賦予任何 initial value
-  }
-
   onSubmit(form: any): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
@@ -482,11 +426,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         if (isNaN(d.getTime())) return null;
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       };
-
       // 分類條件：與 TLS32020 一致，統一交由 app-category-select 維護大/中/小分類的連動關係，
       // 送出時再依代碼組成後端既有的逗號分隔字串格式。
       const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
-
       const body = {
         PageSize: formValue.PageSize ?? formValue.pageSize ?? 0,
         PageIndex: formValue.PageIndex ?? formValue.pageIndex ?? 0,
@@ -503,13 +445,14 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         AreaList: this.formatListForBackend(formValue.AreaList),
         BusTypeList: this.formatListForBackend(cat.bus_type),
         BusClassList: this.formatListForBackend(cat.bus_class?.map((c: BusClassItem) => c.No)),
-        // 小分類：只送小分類代碼 (No)，格式與 BusTypeList/BusClassList 一致 (逗號分隔字串，非複合鍵)。
         BusSClassList: this.formatListForBackend(cat.bus_sclass?.map((s: BusSClassItem) => s.No)),
         TltKindList: this.formatListForBackend(formValue.TltKindList),
         OrgList: this.formatListForBackend(formValue.OrgList),
         TltNoList: this.formatListForBackend(formValue.TltNoList),
         TermTypeList: this.formatListForBackend(formValue.TermTypeList),
-        BuildingList: this.formatListForBackend(formValue.BuildingList)
+        BuildingList: this.formatListForBackend(formValue.BuildingList),
+        PreSale: formValue.PreSale === true,
+        ConsumerNum: formValue.ConsumerNum === true,
       };
 
       this.historyRequestBody = body;
@@ -522,15 +465,14 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+      preSaleField: ['Comp_PrePerformance', 'Base_PrePerformance', 'Diff_PrePerformance', 'Growth_PrePerformancePct'],
+      consumerNumFields: [
+        'Comp_ConsumerNum', 'Base_ConsumerNum', 'Diff_ConsumerNum', 'Growth_ConsumerNumPct',
+        'Comp_ConsumerOrder', 'Base_ConsumerOrder', 'Diff_ConsumerOrder', 'Growth_ConsumerOrderPct',
+      ],
+    });
   }
 }

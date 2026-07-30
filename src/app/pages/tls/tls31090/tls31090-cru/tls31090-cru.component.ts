@@ -6,6 +6,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { filterHourColumns } from '../../TLS30000/common/report-hour-columns.const';
 
 @Component({
   selector: 'app-tls31090-cru',
@@ -32,33 +33,6 @@ export class Tls31090CRUComponent implements OnChanges, OnInit {
 
   readonly detailQueryFn = (body: TLS31090Request) => this.tls31090Service.queryTLS31090Detail(body);
 
-  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
-    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-  ];
-
   ngOnInit(): void {
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().subscribe(res => {
       this.catOptions = res.Data;
@@ -77,12 +51,7 @@ export class Tls31090CRUComponent implements OnChanges, OnInit {
 
   private buildColumns(): void {
     const { TimeMode, TimeFromHH, TimeToHH, PreSale, ConsumerNum } = this.queryConditions!;
-    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
-      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) return true;
-      const hourNum = Number.parseInt(col.field.substring(1), 10);
-      if (TimeFromHH <= TimeToHH) return hourNum >= TimeFromHH && hourNum <= TimeToHH;
-      return hourNum >= TimeFromHH || hourNum <= TimeToHH;
-    });
+    const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH);
 
     // --- 動態欄位重構點 ---
     this.columns = [

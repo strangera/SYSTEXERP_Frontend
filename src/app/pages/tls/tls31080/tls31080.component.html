@@ -3,186 +3,76 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <!-- 日期與時段條件 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-12">
-            <app-radiobutton
-              groupname="TimeMode"
-              [control]="queryForm.controls.TimeMode"
-              [options]="reportTypeOptions"
-              (valueChange)="onTimeModeChange($event)"
-            ></app-radiobutton>
+            <app-radiobutton groupname="TimeMode" [control]="queryForm.controls.TimeMode" [options]="reportTypeOptions"
+              (valueChange)="onTimeModeChange($event)"></app-radiobutton>
           </div>
 
           <!-- 日期（全部模式都要） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="交易日期"
-              [control]="queryForm.controls.TxnDate"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="交易日期" [control]="queryForm.controls.TxnDate"
+              [submitted]="submitted"></app-calendar>
           </div>
 
           <!-- 起訖時段：只有當 TimeMode === 'T' 時才顯示 -->
-          <div
-            class="col-12 md:col-6 lg:col-4"
-            *ngIf="queryForm.controls.TimeMode.value === 'T'"
-          >
-            <app-input-number-range
-              [useGrouping]="false"
-              label="交易時段"
-              [startControl]="queryForm.controls.TimeFromHH"
-              [endControl]="queryForm.controls.TimeToHH"
-              [submitted]="submitted"
-            ></app-input-number-range>
+          @if (queryForm.controls.TimeMode.value === 'T') {
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range [useGrouping]="false" label="交易時段" [startControl]="queryForm.controls.TimeFromHH"
+              [endControl]="queryForm.controls.TimeToHH" [submitted]="submitted"></app-input-number-range>
           </div>
+          }
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="CounterNos"
-              [options]="CounterNos_Option"
-              optionLabel="label"
-              optionValue="No"
-              [control]="queryForm.controls.CounterNos"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="館別" controlName="Buildings" [options]="tlt_building_Option | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.Buildings"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="館別"
-              controlName="Buildings"
-              [options]="tlt_building_Option"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.Buildings"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" controlName="Floors" [options]="tlt_floor_Option | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.Floors" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              controlName="Floors"
-              [options]="tlt_floor_Option"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.Floors"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="區域" controlName="Areas" [options]="area_no_Option | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.Areas" [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+
+        <app-category-select formControlName="category"></app-category-select>
+
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="櫃別" controlName="CabinetKinds" [options]="tlt_kind_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CabinetKinds"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              controlName="Areas"
-              [options]="area_no_Option"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.Areas"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="抽成別" controlName="ChargeTypes" [options]="tlt_term_type" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ChargeTypes" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="大分類代碼/名稱"
-              controlName="CatLNos"
-              [options]="bus_type_Option"
-              optionLabel="label"
-              optionValue="No"
-              [control]="queryForm.controls.CatLNos"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織" controlName="OrgIds" [options]="org_id_Option | async" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.OrgIds" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="中分類代碼/名稱"
-              controlName="CatMNos"
-              [options]="bus_class_Option"
-              optionLabel="label"
-              [control]="queryForm.controls.CatMNos"
-              [submitted]="submitted"
-              [group]="true"
-              optionGroupLabel="CatLNos"
-              optionGroupChildren="items"
-            ></app-multi-select>
+            <app-multi-select label="專櫃編號/名稱" controlName="CounterNos" [options]="CounterNos_Option | async"
+              optionLabel="label" optionValue="No" [control]="queryForm.controls.CounterNos"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="小分類代碼/名稱"
-              controlName="CatSNos"
-              [options]="bus_sclass_Option"
-              optionLabel="label"
-              [control]="queryForm.controls.CatSNos"
-              [submitted]="submitted"
-              optionGroupLabel="label"
-              optionGroupChildren="items"
-              [group]="true"
-            ></app-multi-select>
+            <app-radiobutton label="銷售金額是否含稅" controlName="IncludeTax" groupname="IncludeTax"
+              [control]="queryForm.controls.IncludeTax" [options]="TaxType_Option"
+              [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="櫃別"
-              controlName="CabinetKinds"
-              [options]="tlt_kind_Option"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.CabinetKinds"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="抽成別"
-              controlName="ChargeTypes"
-              [options]="tlt_term_type"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ChargeTypes"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織"
-              controlName="OrgIds"
-              [options]="org_id_Option"
-              optionLabel="label"
-              optionValue="No"
-              [control]="queryForm.controls.OrgIds"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="銷售金額是否含稅"
-              controlName="IncludeTax"
-              groupname="IncludeTax"
-              [control]="queryForm.controls.IncludeTax"
-              [options]="TaxType_Option"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否開立業主發票"
-              controlName="BizInvFlag"
-              [control]="queryForm.controls.BizInvFlag"
-              [options]="BizInvFlag_Option"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="是否開立業主發票" controlName="BizInvFlag" [control]="queryForm.controls.BizInvFlag"
+              [options]="BizInvFlag_Option" [submitted]="submitted"></app-radiobutton>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton-yn label="是否開立業主發票" controlName="BizInvFlag" [control]="queryForm.controls.BizInvFlag"
@@ -191,22 +81,12 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex flex-wrap gap-3 p-2">
               <label for="displayStatus">顯示狀態</label>
-              <p-checkbox
-                label="預售"
-                [binary]="true"
-                formControlName="PreSale"
-              ></p-checkbox>
-              <p-checkbox
-                label="消費人數"
-                [binary]="true"
-                formControlName="ConsumerNum"
-              ></p-checkbox>
+              <p-checkbox label="預售" [binary]="true" formControlName="PreSale"></p-checkbox>
+              <p-checkbox label="消費人數" [binary]="true" formControlName="ConsumerNum"></p-checkbox>
             </div>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -215,43 +95,19 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    tableKey="tls31080"
-    [lastQueryBody]="historyRequestBody"
-    [data]="data"
-    [footerData]="footerData"
-    [columns]="columns"
-    [columnGroup]="columnGroup"
-    [totalRecords]="totalRecords"
-    (detail)="onDetail1($event)"
-    [showDelete]="false"
-    [showEdit]="false"
-    [loading]="loading"
-    [showManage]="true"
-    [queryFunction]="tls31080Service.queryTLS31080.bind(tls31080Service)"
-  >
+  <app-table-report tableKey="tls31080" [lastQueryBody]="historyRequestBody" [data]="data" [footerData]="footerData"
+    [columns]="columns" [columnGroup]="columnGroup" [totalRecords]="totalRecords" (detail)="onDetail1($event)"
+    [showDelete]="false" [showEdit]="false" [loading]="loading" [showManage]="true"
+    [queryFunction]="tls31080Service.queryTLS31080.bind(tls31080Service)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="各時段之樓層營業報表.PDF"
-          [loading]="btnPDFLoading"
-          icon="pi pi-file"
-          (click)="onReport(queryForm, false)"
-          [disabled]="data.length === 0"
-          [loading]="btnPDFLoading"
-        ></p-button>
-        <p-button
-          styleClass="p-2"
-          label="各時段之樓層營業報表.XLSX"
-          [loading]="btnExcelLoading"
-          icon="pi pi-file"
-          (click)="onReport(queryForm, true)"
-          [disabled]="data.length === 0"
-          [loading]="btnExcelLoading"
-        ></p-button>
+        <p-button styleClass="p-2" label="各時段之樓層營業報表.PDF" icon="pi pi-file" (click)="onReport(queryForm, false)"
+          [disabled]="data.length === 0" [loading]="btnPDFLoading"></p-button>
+        <p-button styleClass="p-2" label="各時段之樓層營業報表.XLSX" icon="pi pi-file" (click)="onReport(queryForm, true)"
+          [disabled]="data.length === 0" [loading]="btnExcelLoading"></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
-<app-tls31080-cru [(visible)]="dialogVisible" [rowData]="selectedRow" [queryConditions]="historyRequestBody"></app-tls31080-cru>
+<app-tls31080-cru [(visible)]="dialogVisible" [rowData]="selectedRow"
+  [queryConditions]="historyRequestBody"></app-tls31080-cru>

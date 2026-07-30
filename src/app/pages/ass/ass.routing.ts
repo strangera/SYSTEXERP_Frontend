@@ -54,8 +54,9 @@ export const assRoutes: Routes = [
   { path: 'ass14010', loadComponent: () => import('./ass14010/ass14010.component').then(m => m.ASS14010Component), data: { progNo: 'ASS14010' } }, // 進貨發票建檔作業
   { path: 'ass14010cru', loadComponent: () => import('./ass14010-cru/ass14010-cru.component').then(m => m.ASS14010CRUComponent), data: { progNo: 'ASS14010' } },
   { path: 'ass14020', loadComponent: () => import('./ass14020/ass14020.component').then(m => m.ASS14020Component), data: { progNo: 'ASS14020' } }, // 請款關帳作業
-  // { path: 'ass14030', loadComponent: () => import('./ass14030/ass14030.component').then(m => m.ASS14030Component),data: {progNo:'ASS14030'} }, // 傳票審核傳送作業
-  // { path: 'ass14030cru', loadComponent: () => import('./ass14030-cru/ass14030-cru.component').then(m => m.ASS14030CRUComponent),data: {progNo:'ASS14030'} },
+  { path: 'ass14030', loadComponent: () => import('./ass14030/ass14030.component').then(m => m.ASS14030Component), data: { progNo: 'ASS14030' } }, // 傳票審核傳送作業
+  { path: 'ass14030cru', loadComponent: () => import('./ass14030-cru/ass14030-cru.component').then(m => m.ASS14030CRUComponent), data: { progNo: 'ASS14030' } },
+  { path: 'ass14030paydetail', loadComponent: () => import('./ass14030-paydetail/ass14030-paydetail.component').then(m => m.ASS14030PayDetailComponent), data: { progNo: 'ASS14030' } },
   { path: 'ass14040', loadComponent: () => import('./ass14040/ass14040.component').then(m => m.ASS14040Component), data: { progNo: 'ASS14040' } }, // 庫存成本月結作業
   { path: 'ass15010', loadComponent: () => import('./ass15010/ass15010.component').then(m => m.ASS15010Component), data: { progNo: 'ASS15010' } }, // 財產標籤列印作業
   { path: 'ass15020', loadComponent: () => import('./ass15020/ass15020.component').then(m => m.ASS15020Component), data: { progNo: 'ASS15020' } }, // 財產保管清冊

@@ -30,51 +30,67 @@ export interface TLS32030QueryRequest {
   TltNoList: (string | number)[];
   TermTypeList: (string | number)[];
   BuildingList: (string | number)[];
+
+  /** 顯示狀態：是否顯示預售相關欄位，同時決定 PDF/Excel 匯出是否包含這些欄位 */
+  PreSale?: boolean;
+  /** 顯示狀態：是否顯示消費人數/消費客單相關欄位，同時決定 PDF/Excel 匯出是否包含這些欄位 */
+  ConsumerNum?: boolean;
 }
 
 export interface TLS32030Data {
-  id: number;
-  building: string;
-  organization: string;
-  counterType: string;
-  counterNumber: string;
-  counterName: string;
+  TltNo: string;
+  TltName: string;
+  Org_Name: string;
+  building_desc: string;
+  SYS_Name: string;
 
-  compare_salesAmount: number;
-  compare_salesCount: number;
-  compare_customerCount: number;
-  compare_unitPrice: number;
-  compare_conversionRate: number;
-  compare_averageSpend: number;
-  compare_position: number;
+  Base_LocationNo: string;
+  Base_Space: number;
+  Base_SaleAmt: number;
+  Base_PreOrderAmt: number;
+  Base_PrePerformance: number;
+  Base_TxnCnt: number;
+  Base_Target: number;
+  Base_DaySpaceEff: number;
+  Base_AchieveRate: number;
+  Base_AvgTicket: number;
+  Base_ConsumerNum: number;
+  Base_ConsumerOrder: number;
 
-  baseline_salesAmount: number;
-  baseline_salesCount: number;
-  baseline_customerCount: number;
-  baseline_unitPrice: number;
-  baseline_conversionRate: number;
-  baseline_averageSpend: number;
-  baseline_position: number;
+  Comp_LocationNo: string;
+  Comp_Space: number;
+  Comp_SaleAmt: number;
+  Comp_PreOrderAmt: number;
+  Comp_PrePerformance: number;
+  Comp_TxnCnt: number;
+  Comp_Target: number;
+  Comp_DaySpaceEff: number;
+  Comp_AchieveRate: number;
+  Comp_AvgTicket: number;
+  Comp_ConsumerNum: number;
+  Comp_ConsumerOrder: number;
 
-  growth_salesAmount: number;
-  growth_salesCount: number;
-  growth_customerCount: number;
-  growth_unitPrice: number;
-  growth_conversionRate: number;
-  growth_averageSpend: number;
-  growth_position: number;
+  Diff_SaleAmt: number;
+  Diff_PreOrderAmt: number;
+  Diff_PrePerformance: number;
+  Diff_TxnCnt: number;
+  Diff_Target: number;
+  Diff_DaySpaceEff: number;
+  Diff_AchieveRate: number;
+  Diff_AvgTicket: number;
+  Diff_ConsumerNum: number;
+  Diff_ConsumerOrder: number;
 
-  diff_salesAmount: number;
-  diff_salesCount: number;
-  diff_customerCount: number;
-  diff_unitPrice: number;
-  diff_conversionRate: number;
-  diff_averageSpend: number;
-  diff_position: number;
-
-  PrePerformance?: number; // 預售業績
-  ConsumerNum?: number; // 消費人數
-  ConsumerOrder?: number; // 消費客單
+  Growth_SaleAmtPct: number;
+  Growth_PreOrderAmtPct: number;
+  Growth_PrePerformancePct: number;
+  Growth_TxnCntPct: number;
+  Growth_TargetPct: number;
+  Growth_DaySpaceEffPct: number;
+  Growth_AchieveRatePct: number;
+  Growth_AvgTicketPct: number;
+  Growth_ConsumerNumPct: number;
+  Growth_ConsumerOrderPct: number;
 }
 
 export interface TLS32030FooterData {
@@ -87,38 +103,46 @@ export interface TLS32030FooterData {
   Base_Space: number,
   Base_SaleAmt: number,
   Base_PreOrderAmt: number,
+  Base_PrePerformance: number,
   Base_TxnCnt: number,
   Base_Target: number,
   Base_DaySpaceEff: number,
   Base_AchieveRate: number,
   Base_AvgTicket: number,
+  Base_ConsumerNum: number,
+  Base_ConsumerOrder: number,
   Comp_LocationNo: string,
   Comp_Space: number,
   Comp_SaleAmt: number,
   Comp_PreOrderAmt: number,
+  Comp_PrePerformance: number,
   Comp_TxnCnt: number,
   Comp_Target: number,
   Comp_DaySpaceEff: number,
   Comp_AchieveRate: number,
   Comp_AvgTicket: number,
+  Comp_ConsumerNum: number,
+  Comp_ConsumerOrder: number,
   Diff_SaleAmt: number,
   Diff_PreOrderAmt: number,
+  Diff_PrePerformance: number,
   Diff_TxnCnt: number,
   Diff_Target: number,
   Diff_DaySpaceEff: number,
   Diff_AchieveRate: number,
   Diff_AvgTicket: number,
+  Diff_ConsumerNum: number,
+  Diff_ConsumerOrder: number,
   Growth_SaleAmtPct: number,
   Growth_PreOrderAmtPct: number,
+  Growth_PrePerformancePct: number,
   Growth_TxnCntPct: number,
   Growth_TargetPct: number,
   Growth_DaySpaceEffPct: number,
   Growth_AchieveRatePct: number,
   Growth_AvgTicketPct: number,
-
-  TotalPrePerformance: number; // 預售業績總計
-  TotalConsumerNum: number; // 消費人數總計
-  TotalConsumerOrder: number; // 消費客單總計
+  Growth_ConsumerNumPct: number,
+  Growth_ConsumerOrderPct: number,
 }
 
 

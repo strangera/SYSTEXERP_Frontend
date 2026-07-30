@@ -34,16 +34,6 @@
           [isRowSelectable]="rowSelectableFn"
           [scrollable]="true"
         >
-          <ng-template #customCell let-rowData="rowData" let-col="col" let-index="index">
-            <input
-              class="p-inputtext p-component"
-              [value]="rowData[col.field] ?? ''"
-              (input)="rowData[col.field] = $any($event.target).value"
-              [disabled]="!!col.disabled?.(rowData[col.field], index, rowData)"
-              (dblclick)="openVendorDialog(rowData, !!col.disabled?.(rowData[col.field], index, rowData))"
-              style="width:100%"
-            />
-          </ng-template>
         </app-table-edit>
       </div>
       <div
@@ -72,47 +62,4 @@
   <ng-template pTemplate="footer">
     <p-button label="確定" (click)="infoDialogVisible = false" />
   </ng-template>
-</p-dialog>
-
-<p-dialog
-  [(visible)]="vendorDialogVisible"
-  header="廠商查詢"
-  [modal]="true"
-  [draggable]="true"
-  [style]="{ width: '680px' }"
->
-  <div class="p-inputgroup mb-3" style="display:flex">
-    <input
-      class="p-inputtext p-component"
-      placeholder="輸入廠商編號或名稱"
-      [(ngModel)]="vendorKeyword"
-      (input)="filterVendors()"
-      style="flex:1"
-    />
-    <p-button icon="pi pi-search" (click)="filterVendors()" />
-  </div>
-  <p-table
-    [value]="vendorFiltered"
-    [scrollable]="true"
-    scrollHeight="380px"
-    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th scope="col">廠商編號</th>
-        <th scope="col">廠商名稱</th>
-        <th scope="col">統一編號</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-v>
-      <tr style="cursor:pointer" (click)="selectVendor(v)">
-        <td>{{ v.VEN_No }}</td>
-        <td>{{ v.Name }}</td>
-        <td>{{ v.No }}</td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr><td colspan="3" class="text-center p-3">查無資料</td></tr>
-    </ng-template>
-  </p-table>
 </p-dialog>

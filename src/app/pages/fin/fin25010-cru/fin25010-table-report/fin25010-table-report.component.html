@@ -3,12 +3,13 @@
   [multiSortMeta]="[{ field: 'ven_no', order: 1 }, { field: 'IN_TYPE', order: 1 }, { field: 'acp_DATE', order: 1 }]"
   [selectionMode]="'multiple'" [rowTrackBy]="trackByFn" styleClass="p-datatable-sm p-datatable-gridlines"
   [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)"
-  (selectionChange)="onSelectionChange($event)" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  (selectionChange)="onSelectionChange($event)" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
-    autoSize: true,
     onScroll: onScroll,
+    itemSize: ItemSize,
+    numToleratedItems: computedNumToleratedItems
   }" [loading]="loading">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [footerData]="footerData" [columns]="columns" (columnsEvent)="columns = $event"
@@ -23,13 +24,14 @@
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th id="frozenCol" class="w-1rem text-center" pFrozenColumn>序號</th>
+      <th id="frozenCol" class="text-center white-space-nowrap" style="min-width: 3.5rem; width: 3.5rem"
+        pFrozenColumn>序號</th>
       <th id="frozenCol" class="w-1rem text-center" *ngIf="showCheckBox">
         <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
         <span *ngIf="tableHeaderCheckboxLabel">{{ tableHeaderCheckboxLabel }}</span>
       </th>
       <th id="frozenCol" *ngFor="let col of columns" [pSortableColumn]="col.sortField" class="text-center wrap-header"
-        style="min-width: 55px">
+        [style.min-width]="col.width || '55px'" [style.width]="col.width">
         {{ col.header }}
         <p-sortIcon [field]="col.field" />
       </th>
@@ -37,9 +39,9 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded">
-    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [style]="{ height: 46 + 'px' }" [pSelectableRowIndex]="rowIndex">
-      <td class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
+    <tr *ngIf="!rowData?.__subtotalRow; else subtotalRow" [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined"
+      [pSelectableRow]="rowData" [style]="{ height: ItemSize + 'px' }" [pSelectableRowIndex]="rowIndex">
+      <td class="text-center white-space-nowrap" style="min-width: 3.5rem; width: 3.5rem" pFrozenColumn>{{ rowData?.__serial ?? (rowIndex + 1) }}</td>
       <td *ngIf="showCheckBox">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" />
       </td>
@@ -59,22 +61,23 @@
         </ng-template>
       </td>
     </tr>
-    <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
-      class="font-bold text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="1 + (showCheckBox ? 1 : 0)  + tableUtility.getFirstSubtotalIndex(columns)">
-        <span class="font-bold">
-          {{ subTotalLabel }} {{ groupRowsBy ? '(' + tableUtility.getGroupValue(rowData, groupRowsBy,columns) + ')' : ''
-          }}
-        </span>
-      </td>
-      <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstSubtotalIndex(columns)"
-          [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [ngClass]="[col.cellClass ? col.cellClass(rowData, 'subtotal') || '' : '']">
-          <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
+    <ng-template #subtotalRow>
+      <tr class="font-bold text-sm bg-gray-200 text-primary" [style]="{ height: ItemSize + 'px' }">
+        <td class="text-center" [colSpan]="1 + (showCheckBox ? 1 : 0) + tableUtility.getFirstSubtotalIndex(columns)">
+          <span class="font-bold">
+            {{ subTotalLabel }} {{ groupRowsBy ? '(' + tableUtility.getGroupValue(rowData.__groupSourceRow,
+            groupRowsBy, columns) + ')' : '' }}
+          </span>
         </td>
-      </ng-container>
-    </tr>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <td *ngIf="i >= tableUtility.getFirstSubtotalIndex(columns)"
+            [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+            [ngClass]="[col.cellClass ? col.cellClass(rowData.__groupSourceRow, 'subtotal') || '' : '']">
+            <span class="font-bold"> {{ getGroupSubtotal(rowData.__groupSourceRow, col) }}</span>
+          </td>
+        </ng-container>
+      </tr>
+    </ng-template>
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">

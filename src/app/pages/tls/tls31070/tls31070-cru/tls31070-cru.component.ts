@@ -1,5 +1,5 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { footerShowTotal } from '@service/api/tls/tls31020.service';
 import { TLS31070DetailItem, TLS31070DetailRequest, TLS31070Item, TLS31070PrintDetailRequest, TLS31070Request, Tls31070Service } from '@service/api/tls/tls31070.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { ColumnGroup, formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { applyDisplayStatusVisibility } from '../../TLS30000/common/report-display-status.util';
 
 @Component({
   selector: 'app-tls31070-cru',
@@ -28,7 +29,7 @@ export class Tls31070CRUComponent implements OnChanges {
   btnLoading = false;
   totalRecords = 0;
   data: TLS31070DetailItem[] = [];
-  footerTotal: TLS31020Total | null = null;
+  footerTotal: any | null = null;
   footershowTotal: footerShowTotal | null = null;
   historyRequestBody: TLS31070DetailRequest | null = null;
 
@@ -86,16 +87,10 @@ export class Tls31070CRUComponent implements OnChanges {
     const q = this.queryConditions;
     if (!q) return;
 
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: q.PreSale === true,
-      ConsumerNum: q.ConsumerNum === true,
-      ConsumerOrder: q.ConsumerNum === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: q.PreSale === true,
+      consumerNum: q.ConsumerNum === true,
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

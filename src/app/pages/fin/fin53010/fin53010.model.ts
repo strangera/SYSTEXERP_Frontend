@@ -578,6 +578,28 @@ export type GetCalculatedPayDateResult = Omit<ApiResponse<string | null[]>, 'Dat
   Data: string | null;
 };
 
+/** getEmployeeBankAccount Request */
+export interface GetEmployeeBankAccountRequest {
+  UserNo: string;
+}
+
+/** getEmployeeBankAccount 單筆（欄位對齊 APS3001 匯款欄位；員工尚未進 POS2013 廠商主檔時改由 tblUser_BnkAcct 帶出） */
+export interface EmployeeBankAccountItem {
+  UserNo?: string | null;
+  UserName?: string | null;
+  VEN_BNK_No?: string | null;
+  VEN_BNK_BranchNo?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  SEQ_NO?: number | null;
+  RATIO?: number | null;
+}
+
+/** getEmployeeBankAccount Response */
+export type GetEmployeeBankAccountResult = Omit<ApiResponse<EmployeeBankAccountItem[]>, 'Data'> & {
+  Data: EmployeeBankAccountItem[] | null;
+};
+
 /** queryAPS4023DetatilData_ByInvoiceNumber 200 Data（發票主檔） */
 export interface Aps4023DetailDataByInvoiceNumberData {
   ID?: number;
@@ -1137,6 +1159,8 @@ export interface QueryGLS3003AbatAcctRequest {
   AccNo?: string | null;
   VouNo?: string | null;
   PTA?: string | null;
+  /** 廠商或員工代號（對應 GLS3002.DetailNo，模糊查詢） */
+  VEN_No?: string | null;
 }
 
 export interface QueryGLS3003AbatAcctResponse {
@@ -1149,6 +1173,7 @@ export interface QueryGLS3003AbatAcctResponse {
   VEN_No?: string | null;
   VEN_Uniform?: string | null;
   VEN_ShortName?: string | null;
+  USR_Name?: string | null;
 }
 
 export interface CheckGLS3003PtaLockedRequest {

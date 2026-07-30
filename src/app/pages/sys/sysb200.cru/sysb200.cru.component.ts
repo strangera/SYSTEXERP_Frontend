@@ -5,19 +5,19 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { Column } from '../../../others/component/table/table.model';
 import {
   validateMaxLength,
   validateNoChinese,
 } from '../../../others/component/table/validate-field.model';
+import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
@@ -101,8 +101,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
   remitFeeOptions = [
-    { value: '1', label: '廠商負擔' },
-    { value: '2', label: '公司負擔' }
+    { value: '0', label: '廠商負擔' },
+    { value: '1', label: '公司負擔' }
   ];
 
   payTypeOptions = [

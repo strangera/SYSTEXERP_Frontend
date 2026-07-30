@@ -1,11 +1,12 @@
-import { CommonModule, formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, CommonModule, formatDate } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { TLS31080Request, TLS31080Response, Tls31080Service } from '@service/api/tls/tls31080.service';
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
@@ -17,11 +18,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { combineLatest, debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
+import { filterHourColumns } from '../TLS30000/common/report-hour-columns.const';
 import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
+
 @Component({
   selector: 'app-tls31080',
   templateUrl: './tls31080.component.html',
@@ -29,6 +33,7 @@ import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
   imports: [
     MenubarComponent,
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,
@@ -42,36 +47,29 @@ import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
     MultiSelectComponent,
     ButtonModule,
     CheckboxModule,
+    CategorySelectComponent,
     Tls31080CRUComponent,
   ]
 })
-
-
-// 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TxnDate: [yesterday, [Validators.required]],//交易日期_起
-    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
-    TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
-    TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
-    TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
-    StoreNos: [this.authService.getUserInfo()?.SYS_StoreNo], //門市代號，多選以逗號分隔 (例: "001,002,003")
-    Floors: [[]], //樓層代號，多選以逗號分隔
-    Areas: [[]], //區域代號，多選以逗號分隔
-    CatLNos: [[] as string[]], //大分類代號，多選以逗號分隔
-    CatMNos: [[] as IDropdownItem[]], //中分類代號，多選以逗號分隔
-    CatSNos: [[] as IDropdownItem[]],//小分類
-    CabinetKinds: [[]], //櫃別類型，多選以逗號分隔 (TLTTALENT.tlt_kind)
-    OrgIds: [[]], //組織代號，多選以逗號分隔
-    CounterNos: [[]], //專櫃代號，多選以逗號分隔 (TLTTALENT.tlt_no)
-    ChargeTypes: [[]], //抽成別，多選以逗號分隔 (POS5007.TLT_ID)
-    Buildings: [[]], //館別代號，多選以逗號分隔 (TLTTALENT_LOCATION.tlt_building)
-    IncludeTax: [true], //是否含稅：1=含稅(預設)，0=未稅
-    BizInvFlag: ['A'], //是否開立業主發票：'A'=全部(預設)、'Y'=是、'N'=否
+    TxnDate: [yesterday, [Validators.required]],
+    TimeMode: ['A'],
+    TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],
+    TimeToHH: [null, [Validators.min(0), Validators.max(23)]],
+    StoreNos: [this.authService.getUserInfo()?.SYS_StoreNo],
+    Floors: [[]],
+    Areas: [[]],
+    category: [{ bus_type: [], bus_class: [], bus_sclass: [] }],
+    CabinetKinds: [[]],
+    OrgIds: [[]],
+    CounterNos: [[]],
+    ChargeTypes: [[]],
+    Buildings: [[]],
+    IncludeTax: [true],
+    BizInvFlag: ['A'],
     PreSale: [false],
     ConsumerNum: [false],
-
-    // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
 
   reportTypeOptions = [
@@ -82,61 +80,16 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   totalRecords = 0;
   data: TLS31080Response[] = [];
   footerData: TLS31080Response | null = null;
-  historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
+  historyRequestBody: TLS31080Request | null = null;
   dialogVisible = false;
   selectedRow: TLS31080Response | null = null;
-
   btnPDFLoading = false;
   btnExcelLoading = false;
 
-  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
-  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
-
-  // 時段column
-  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
-    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-  ];
-
-  //時段控制（stored property，避免每次 CD 產生新陣列）
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
-  // --- 動態欄位重構點 ---
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
-    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
-      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
-        return true;
-      }
-      const hourNum = parseInt(col.field.substring(1), 10);
-      if (TimeFromHH <= TimeToHH) {
-        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
-      } else {
-        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
-      }
-    });
-
+    const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH);
     const isPreSale = this.queryForm.get('PreSale')?.value === true;
     const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
 
@@ -153,16 +106,17 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     ];
   }
 
-  // --- 動態欄位重構點 ---
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
+      const cat = raw.category || {};
       const formValue = {
         ...raw,
         TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
-        CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-        CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
-        CatSNos: (raw.CatSNos || []).map((x: any) => x.No ?? x).join(','),
+        CatLNos: (cat.bus_type || []).join(','),
+        CatMNos: (cat.bus_class || []).map((x: any) => x.No ?? x).join(','),
+        CatSNos: (cat.bus_sclass || []).map((x: any) => x.No ?? x).join(','),
+        category: undefined,
         Floors: (raw.Floors || []).join(','),
         Areas: (raw.Areas || []).join(','),
         CabinetKinds: (raw.CabinetKinds || []).join(','),
@@ -172,48 +126,40 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         Buildings: (raw.Buildings || []).join(','),
       } as TLS31080Request;
 
-      this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.Data ?? [];
-        this.footerData = {
-          floor_desc: '營業實績',
-          TimeType: '',
-          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0,
-          Subtotal: res.Data.TotalData.TotalSales ?? 0,
-          Reentry: res.Data.TotalData.TotalReentry ?? 0,
-          PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
-          PrePerformance: res.Data.TotalData.TotalPrePerformance,
-          ConsumerNum: res.Data.TotalData.TotalConsumerNum,
-          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder,
+      this.tls31080Service.queryTLS31080(formValue)
+        .pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef))
+        .subscribe(res => {
+          // ★ 核心修正點：正確解構雙層 Data
+          // res 是 ApiResponse，res.Data 是 queryTLS31080Result 物件
+          const resultObj = res?.Data || {};
+          const resData = Array.isArray(resultObj.Data) ? resultObj.Data : []; // 確保一定是 Array
+          const totalData = resultObj.TotalData || {};
 
-          H00: res.Data.TotalData.TotalH00 ?? 0,
-          H01: res.Data.TotalData.TotalH01 ?? 0,
-          H02: res.Data.TotalData.TotalH02 ?? 0,
-          H03: res.Data.TotalData.TotalH03 ?? 0,
-          H04: res.Data.TotalData.TotalH04 ?? 0,
-          H05: res.Data.TotalData.TotalH05 ?? 0,
-          H06: res.Data.TotalData.TotalH06 ?? 0,
-          H07: res.Data.TotalData.TotalH07 ?? 0,
-          H08: res.Data.TotalData.TotalH08 ?? 0,
-          H09: res.Data.TotalData.TotalH09 ?? 0,
-          H10: res.Data.TotalData.TotalH10 ?? 0,
-          H11: res.Data.TotalData.TotalH11 ?? 0,
-          H12: res.Data.TotalData.TotalH12 ?? 0,
-          H13: res.Data.TotalData.TotalH13 ?? 0,
-          H14: res.Data.TotalData.TotalH14 ?? 0,
-          H15: res.Data.TotalData.TotalH15 ?? 0,
-          H16: res.Data.TotalData.TotalH16 ?? 0,
-          H17: res.Data.TotalData.TotalH17 ?? 0,
-          H18: res.Data.TotalData.TotalH18 ?? 0,
-          H19: res.Data.TotalData.TotalH19 ?? 0,
-          H20: res.Data.TotalData.TotalH20 ?? 0,
-          H21: res.Data.TotalData.TotalH21 ?? 0,
-          H22: res.Data.TotalData.TotalH22 ?? 0,
-          H23: res.Data.TotalData.TotalH23 ?? 0,
-        };
-        this.historyRequestBody = formValue;
-        this.totalRecords = res.Data.Data.length;
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      });
+          this.data = resData; // 賦予陣列給 [data]
+          this.footerData = {
+            floor_desc: '營業實績',
+            TimeType: '',
+            TotalCount: totalData.TotalTxnCount ?? 0,
+            Subtotal: totalData.TotalSales ?? 0,
+            Reentry: totalData.TotalReentry ?? 0,
+            PresaleCheckout: totalData.TotalPresaleCheckout ?? 0,
+            PrePerformance: totalData.TotalPrePerformance,
+            ConsumerNum: totalData.TotalConsumerNum,
+            ConsumerOrder: totalData.TotalConsumerOrder,
+            H00: totalData.TotalH00 ?? 0, H01: totalData.TotalH01 ?? 0, H02: totalData.TotalH02 ?? 0,
+            H03: totalData.TotalH03 ?? 0, H04: totalData.TotalH04 ?? 0, H05: totalData.TotalH05 ?? 0,
+            H06: totalData.TotalH06 ?? 0, H07: totalData.TotalH07 ?? 0, H08: totalData.TotalH08 ?? 0,
+            H09: totalData.TotalH09 ?? 0, H10: totalData.TotalH10 ?? 0, H11: totalData.TotalH11 ?? 0,
+            H12: totalData.TotalH12 ?? 0, H13: totalData.TotalH13 ?? 0, H14: totalData.TotalH14 ?? 0,
+            H15: totalData.TotalH15 ?? 0, H16: totalData.TotalH16 ?? 0, H17: totalData.TotalH17 ?? 0,
+            H18: totalData.TotalH18 ?? 0, H19: totalData.TotalH19 ?? 0, H20: totalData.TotalH20 ?? 0,
+            H21: totalData.TotalH21 ?? 0, H22: totalData.TotalH22 ?? 0, H23: totalData.TotalH23 ?? 0,
+          } as TLS31080Response;
+
+          this.historyRequestBody = formValue;
+          this.totalRecords = res.TotalCount ?? resData.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
     });
   }
 
@@ -224,202 +170,71 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'space', header: '營業坪效' },
     { field: 'temp', header: '臨時櫃' },
     { field: 'month', header: '月累計' },
-  ]
+  ];
+
   tlt_kind_Option = [
-    { value: "1", label: "正櫃" },
-    { value: "2", label: "臨時櫃" },
-    { value: "3", label: "特賣會" },
-    { value: "4", label: "虛擬櫃" },
-  ]
+    { value: "1", label: "正櫃" }, { value: "2", label: "臨時櫃" },
+    { value: "3", label: "特賣會" }, { value: "4", label: "虛擬櫃" },
+  ];
+
   tlt_term_type = [
-    { value: "1", label: "固定租金" },
-    { value: "2", label: "底租抽成取高者" },
-    { value: "3", label: "一般抽成" },
-    { value: "4", label: "包底抽成" },
-    { value: "5", label: "層級抽成" },
-    { value: "6", label: "包底加層級" },
-  ]
-  TaxType_Option = [ // 銷售金額是否含稅
+    { value: "1", label: "固定租金" }, { value: "2", label: "底租抽成取高者" },
+    { value: "3", label: "一般抽成" }, { value: "4", label: "包底抽成" },
+    { value: "5", label: "層級抽成" }, { value: "6", label: "包底加層級" },
+  ];
+
+  TaxType_Option = [
     { value: true, label: "是" },
     { value: false, label: "否" },
-  ]
-  BizInvFlag_Option = [ // 是否開立業主發票
+  ];
+
+  BizInvFlag_Option = [
     { value: "A", label: "全部" },
     { value: "Y", label: "是" },
     { value: "N", label: "否" },
-  ]
-  tlt_building_Option: IDropdownItem[] = []; // 館別
-  tlt_floor_Option: IDropdownItem[] = []; // 樓層
-  area_no_Option: IDropdownItem[] = []; // 區域
-  bus_type_Option: IDropdownItem[] = []; // 大分類
-  bus_class_Option: IDropdownItem[] = []; // 中分類
-  bus_sclass_Option: IDropdownItem[] = []; // 小分類
-  org_id_Option: IDropdownItem[] = []; // 組織
-  CounterNos_Option: IDropdownItem[] = []; // 專櫃代號
+  ];
 
-  constructor(
-    private readonly dropDownListService: DropDownListService,
-    public readonly tls31080Service: Tls31080Service,
-  ) { super(); }
+  private readonly dropdown = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  public readonly tls31080Service = inject(Tls31080Service);
+
+  tlt_building_Option = this.dropdown.querySys3800();
+  tlt_floor_Option = this.dropdown.querySys3900();
+  area_no_Option = this.dropdown.querySys3A00();
+  org_id_Option = this.dropdown.querySys3100();
+  CounterNos_Option = this.dropdown.queryTltTalent();
 
   ngOnInit(): void {
     this.initializePage('TLS31080', '', this.queryForm, (frm) => this.onSubmit(frm));
-
-    // 日期表單控制
     this.onTimeModeChange('A');
 
-    // 監聽時段相關欄位，更新 columns（避免用 getter 每次 CD 都產生新陣列）
     combineLatest([
       this.queryForm.controls.TimeMode.valueChanges,
       this.queryForm.controls.TimeFromHH.valueChanges,
       this.queryForm.controls.TimeToHH.valueChanges,
-    ]).pipe(debounceTime(50), untilDestroyed(this)).subscribe(([mode, from, to]) => {
+    ]).pipe(debounceTime(50), takeUntilDestroyed(this.destroyRef)).subscribe(([mode, from, to]) => {
       this.columns = this.buildColumns(mode, from, to);
     });
 
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_building_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_floor_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.area_no_Option = res.Data;
-    })
-    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    })
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.CounterNos_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    })
-    // 獲取大分類下拉選項
-    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    });
-    // 監聽大分類變化
-    this.queryForm.controls.CatLNos.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
-      if (value && value.length > 0) {
-        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
-          const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            const groupKey = currentItem.bus_type || '';
-            if (!accumulator[groupKey]) {
-              accumulator[groupKey] = {
-                label: currentItem.bus_type_name,
-                items: []
-              };
-            }
-
-            accumulator[groupKey].items.push({
-              ...currentItem,
-              label: `${currentItem.No} - ${currentItem.Name}`,
-            });
-
-            return accumulator;
-          }, {} as Record<string, any>);
-
-          // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
-          this.bus_class_Option = Object.values(groupedData);
-        });
-      } else {
-        this.bus_class_Option = [];
-        this.bus_sclass_Option = [];
-        this.queryForm.controls.CatSNos.setValue([]);
-        this.queryForm.controls.CatMNos.setValue([]);
-      }
-    });
-    // 監聽中分類變化，獲取小分類並分組
-    this.queryForm.controls.CatMNos.valueChanges.pipe(
-      debounceTime(300),
-      untilDestroyed(this),
-      map(selectedMValues => selectedMValues || []),
-
-      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-      switchMap((selectedMValues: IDropdownItem[]) => {
-        if (selectedMValues.length === 0) {
-          this.bus_sclass_Option = [];
-          this.queryForm.controls.CatSNos.setValue([]);
-          //  統一回傳型別，避免 TypeScript 推斷成 never[]
-          return of({ selectedMValues: [], data: [] });
-        }
-
-        //  組成符合新 API 的請求格式
-        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
-          .filter(v => v && v.bus_type) // 過濾 undefined
-          .map(v => ({
-            bus_type: v.bus_type!,   // 非空斷言
-            bus_class: v.No
-          }));
-
-        //  呼叫新 API（一次呼整包）
-        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
-          map(res => ({ selectedMValues, data: res.Data }))
-        );
-      }),
-
-      tap(result => {
-        console.log('所有 API 呼叫結果：', result);
-      })
-    ).subscribe(result => {
-
-      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-        const groupKey = `${mValue.bus_type}_${mValue.No}`;
-        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
-
-        //  過濾小分類資料對應到當前中分類
-        const items = result.data
-          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
-          .map(item => ({
-            ...item,
-            label: `${item.No} - ${item.Name}`,
-            bus_type: mValue.bus_type,
-            bus_type_name: mValue.bus_type_name,
-            CAT_MNo: mValue.No,
-            CAT_MName: mValue.Name
-          }));
-
-        //  去重
-        const uniqueItemsMap = new Map<string, typeof items[0]>();
-        items.forEach(item => {
-          if (!uniqueItemsMap.has(item.No)) {
-            uniqueItemsMap.set(item.No, item);
-          }
-        });
-
-
-        accumulator[groupKey] = {
-          label: groupLabel,
-          items: Array.from(uniqueItemsMap.values())
-        };
-
-        return accumulator;
-      }, {} as Record<string, any>);
-
-      this.bus_sclass_Option = Object.values(groupedData);
-      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
-    });
-
-    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+    this.queryForm.get('PreSale')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
     });
   }
 
   onReport(frm: FormGroup, isExcel: boolean) {
-    console.log('匯出Excel');
     const raw = frm.getRawValue();
+    const cat = raw.category || {};
     const formValue = {
       ...raw,
-      // 日期格式化
       TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
-
-      // 分類轉成編號
-      CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-      CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
-      CatSNos: (raw.CatSNos || []).map((x: any) => x.No ?? x).join(','),
-
-      // 多選陣列轉成逗號字串
+      CatLNos: (cat.bus_type || []).join(','),
+      CatMNos: (cat.bus_class || []).map((x: any) => x.No ?? x).join(','),
+      CatSNos: (cat.bus_sclass || []).map((x: any) => x.No ?? x).join(','),
+      category: undefined,
       Floors: (raw.Floors || []).join(','),
       Areas: (raw.Areas || []).join(','),
       CabinetKinds: (raw.CabinetKinds || []).join(','),
@@ -429,46 +244,45 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       Buildings: (raw.Buildings || []).join(','),
     } as TLS31080Request;
 
-    console.log('各時段之營業報表print請求(Excel)', JSON.stringify(formValue));
-
     if (isExcel) {
-      console.log('匯出Excel');
       this.btnExcelLoading = true;
-      this.tls31080Service.exportTLS31080(formValue).subscribe(blob => {
-        const url = globalThis.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '各時段之營業報表.xlsx';
-        a.click();
-        globalThis.URL.revokeObjectURL(url);
-        this.btnExcelLoading = false;
+      this.tls31080Service.exportTLS31080(formValue).subscribe({
+        next: (blob) => {
+          const url = globalThis.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '各時段之營業報表.xlsx';
+          a.click();
+          globalThis.URL.revokeObjectURL(url);
+          this.btnExcelLoading = false;
+        },
+        error: () => this.btnExcelLoading = false
       });
     } else {
-      console.log('匯出PDF');
       this.btnPDFLoading = true;
-      this.tls31080Service.exportTLS31080PDF(formValue).subscribe(blob => {
-        const url = globalThis.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '各時段之營業報表.pdf';
-        a.click();
-        globalThis.URL.revokeObjectURL(url);
-        this.btnPDFLoading = false;
+      this.tls31080Service.exportTLS31080PDF(formValue).subscribe({
+        next: (blob) => {
+          const url = globalThis.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '各時段之營業報表.pdf';
+          a.click();
+          globalThis.URL.revokeObjectURL(url);
+          this.btnPDFLoading = false;
+        },
+        error: () => this.btnPDFLoading = false
       });
     }
   }
 
-  //#region 日期表單控制
   onTimeModeChange(mode: 'A' | 'T') {
     const from = this.queryForm.get('TimeFromHH');
     const to = this.queryForm.get('TimeToHH');
-
     if (mode === 'A') {
       from?.disable();
       to?.disable();
-
-      from?.setValue(null); // 全時段重制為null
-      to?.setValue(null);   // 全時段重制為null
+      from?.setValue(null);
+      to?.setValue(null);
     } else {
       from?.enable();
       to?.enable();
@@ -481,15 +295,9 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   }
 
   setColumns() {
-    const visibleMap: Record<string, boolean> = {
-      PrePerformance: this.queryForm.get('PreSale')?.value === true,
-      ConsumerNum: this.queryForm.get('ConsumerNum')?.value === true,
-      ConsumerOrder: this.queryForm.get('ConsumerNum')?.value === true
-    };
-
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: visibleMap[col.field] ?? col.visible
-    }));
+    this.columns = applyDisplayStatusVisibility(this.columns, {
+      preSale: this.queryForm.get('PreSale')?.value === true,
+      consumerNum: this.queryForm.get('ConsumerNum')?.value === true,
+    });
   }
 }
