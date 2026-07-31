@@ -1,7 +1,25 @@
-<p-dialog [visible]="visible" (visibleChange)="visibleChange.emit($event)" [header]="rowData?.floor_desc ?? ''"
-  [modal]="true" [maximizable]="true" [style]="{ width: '95vw' }" [contentStyle]="{ overflow: 'auto', padding: '0' }">
-  <app-table-report tableKey="tls31080-detail" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [showDelete]="false" [showEdit]="false" [showManage]="false" [loading]="loading"
-    [footerData]="footerData" [queryFunction]="detailQueryFn" [exportContext]="{ apiUrl: 'queryTLS31080Detail' }">
-  </app-table-report>
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="rowData?.floor_desc ?? ''"
+  [modal]="true"
+  [maximizable]="true"
+  [style]="{ width: '95vw' }"
+  [contentStyle]="{ overflow: 'auto', padding: '0' }"
+>
+  <app-table-report
+    tableKey="tls31080-detail"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [showDelete]="false"
+    [showEdit]="false"
+    [showManage]="false"
+    [loading]="loading"
+    [footerData]="footerData"
+    [queryFunction]="detailQueryFn"
+    [exportContext]="{ apiUrl: 'queryTLS31080Detail' }"
+    [ItemSize]="25"
+  ></app-table-report>
 </p-dialog>
