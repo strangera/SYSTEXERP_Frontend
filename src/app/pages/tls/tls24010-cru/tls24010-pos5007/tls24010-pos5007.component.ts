@@ -46,6 +46,7 @@ export class Tls24010Pos5007Component implements OnChanges {
   POS5007SelectedItems: POS5007Data[] = [];
   POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
   tlt_idOptions: TltTalentChargeData[] = []; //下拉選單 類別
+  TXN_DiscCodeOptions: TltTalentChargeData[] = []; //下拉選單 折扣別
   TLT_NoOptions: IDropdownItem[] = [];
   taxTypeOptions: { label: string, value: string }[] = [
     { label: '應稅', value: '1' },
@@ -108,26 +109,37 @@ export class Tls24010Pos5007Component implements OnChanges {
             }
           ];
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            if (data.Data && data.Data.length > 0) {
-              // 1. 正常有資料：進行去重處理
-              const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
-                if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
-                  acc.push(current);
-                }
-                return acc;
-              }, []);
-              this.tlt_idOptions = uniqueData.map((item) => ({
-                ...item,
-                label: `${item.tlt_id} - ${item.tlt_id_desc}`,
-                tlt_id: item.tlt_id // 確保 optionValue 用的到
-              }));
-            } else {
-              // 2. ★ 沒資料時：直接賦予您要求的預設值
-              this.tlt_idOptions = [
-                { label: "0 - 應稅", tlt_id: "0", tlt_id_desc: "應稅", cag_taxtype: "1", cag_barcode: "000", cag_barcode_name: "正品" } as any,
-                { label: "1 - 免稅", tlt_id: "1", tlt_id_desc: "免稅", cag_taxtype: "0", cag_barcode: "000", cag_barcode_name: "正品" } as any
-              ];
-            }
+            const sourceData = (data.Data && data.Data.length > 0) ? data.Data : [
+              // ★ 沒資料時：直接賦予預設值
+              { tlt_id: "0", tlt_id_desc: "應稅", cag_taxtype: "1", cag_barcode: "000", cag_barcode_name: "正品" },
+              { tlt_id: "1", tlt_id_desc: "免稅", cag_taxtype: "0", cag_barcode: "000", cag_barcode_name: "正品" }
+            ];
+
+            // 類別下拉：依 tlt_id 去重
+            const uniqueTltId = sourceData.reduce((acc: TltTalentChargeData[], current) => {
+              if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
+                acc.push(current);
+              }
+              return acc;
+            }, []);
+            this.tlt_idOptions = uniqueTltId.map((item) => ({
+              ...item,
+              label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+              tlt_id: item.tlt_id // 確保 optionValue 用的到
+            }));
+
+            // 折扣別下拉：依 cag_barcode 去重，跟 tls24010-discode 同一套資料來源與去重邏輯
+            const seenBarcodes = new Set<string>();
+            const uniqueBarcode = sourceData.filter((item) => {
+              const isDuplicate = seenBarcodes.has(item.cag_barcode);
+              seenBarcodes.add(item.cag_barcode);
+              return !isDuplicate;
+            });
+            this.TXN_DiscCodeOptions = uniqueBarcode.map((item) => ({
+              ...item,
+              label: `${item.cag_barcode} - ${item.cag_barcode_name}`
+            }));
+
             if (this.isFormCreateable) {
               this.insertRow();
             }
@@ -196,6 +208,12 @@ export class Tls24010Pos5007Component implements OnChanges {
       rowData.tlt_id_desc = selected.tlt_id_desc;
       rowData.PLU_TaxType = selected.cag_taxtype;
       rowData.TXN_DiscCode = selected.cag_barcode;
+      rowData.TXN_DiscCode_Name = selected.cag_barcode_name;
+    }
+  }
+  onChangeTXN_DiscCode(rowData: POS5007Data) {
+    const selected = this.TXN_DiscCodeOptions.find((item) => item.cag_barcode === rowData.TXN_DiscCode);
+    if (selected) {
       rowData.TXN_DiscCode_Name = selected.cag_barcode_name;
     }
   }
