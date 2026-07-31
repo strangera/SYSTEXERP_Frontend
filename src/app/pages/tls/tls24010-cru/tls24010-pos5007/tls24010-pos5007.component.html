@@ -117,7 +117,14 @@
           {{ rowData.PLU_TaxType === '1' ? '應稅' : '免稅' }}
         </td>
         <td class="text-center">
-          {{ rowData.TXN_DiscCode_Name || rowData.TXN_DiscName }}
+          @if (isFormCreateable) {
+            <p-dropdown [(ngModel)]="rowData.TXN_DiscCode" styleClass="w-full"
+              [options]="TXN_DiscCodeOptions" optionLabel="label" optionValue="cag_barcode" appendTo="body"
+              (onChange)="onChangeTXN_DiscCode(rowData)" required />
+          }
+          @if (!isFormCreateable) {
+            <span>{{ rowData.TXN_DiscCode_Name || rowData.TXN_DiscName }}</span>
+          }
         </td>
       }
     </tr>
