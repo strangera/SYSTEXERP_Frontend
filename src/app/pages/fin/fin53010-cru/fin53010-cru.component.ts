@@ -5,8 +5,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
-import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { QueryGLS3003AbatAcctResponse } from '@pages/fin/fin53010/fin53010.model';
+import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
@@ -449,6 +449,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'sub_detail_no', header: '對象別編號', visible: true, align: 'left', width: '100px' },
     { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left', width: '100px' },
     { field: 'PTA', header: '立沖代號', visible: true, align: 'left', width: '100px' },
+    { field: 'ARS_No', header: '應收ID', visible: true, align: 'left', width: '120px' },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
@@ -476,6 +477,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'SubDetailNo', header: '對象別編號', visible: true, align: 'left', width: '100px' },
     { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left', width: '100px' },
     { field: 'PTA', header: '立沖代號', visible: true, align: 'left', width: '100px' },
+    { field: 'ACP_No', header: '應付ID', visible: true, align: 'left', width: '120px' },
   ];
 
   public readonly aps2002_CRelatedColumns: ReportColumn[] = [
@@ -923,6 +925,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'acc_no', header: '會計科目代號', textAlign: 'left', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, validate: [this.validateRequired] },
     { field: 'note_desc', header: '摘要', textAlign: 'left', type: 'input' },
     { field: 'PTA', header: '立沖代號', textAlign: 'left', type: 'input', disabled: () => true },
+    { field: 'ACP_No', header: '應付ID', textAlign: 'left', type: 'input', disabled: () => true },
   ];
 
   public readonly stepARColumns: EditColumn[] = [
@@ -935,6 +938,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'PTA', header: '立沖代號', type: 'input', disabled: () => true, textAlign: 'left' },
     { field: 'ACCT_KEY', header: '對帳KEY值', type: 'input', disabled: () => true, textAlign: 'left' },
+    { field: 'ARS_No', header: '應收ID', type: 'input', disabled: () => true, textAlign: 'left' },
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
@@ -971,6 +975,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'comb', header: '彙加註記', type: 'input', textAlign: 'left' },
     { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt], textAlign: 'right' },
   ];
+
+  // 步驟表新增列預設值：用穩定參考 class field，避免 template inline 物件字面每次變更偵測
+  // 都產生新參考 → app-table-edit ngOnChanges 每輪都觸發 updateCandidateRowDefaults + detectChanges。
+  public readonly stepPurchaseDefaultInsert = { tax_type: '1', invoice_usage: '1', deduction_code: '1' };
+  public readonly stepPurchaseAllowanceDefaultInsert = { voucher_type: '23', tax_type: '1' };
+  public readonly stepSalesAllowanceDefaultInsert = { invoice_type: '33', tax_type: '1' };
+
+  // Dialog 樣式：同上，穩定參考避免 template inline 物件字面每輪 CD 產生新參考
+  public readonly dialogStyle65vw = { width: '65vw' };
+  public readonly dialogStyle80vw = { width: '80vw' };
+  public readonly dialogInnerStyle280 = { width: '280px' };
+  public readonly dialogContentStyle = { 'min-height': '50vh', 'max-height': '75vh' };
 
   private validateRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
     if (value === '' || value === null || value === undefined) {
@@ -1539,7 +1555,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
    * 已快取者立即套用；未快取者非同步補查後再呼叫自己收斂（快取寫入後不會再排入 pending，故不會無限迴圈）。
    * 員工付款方式固定電匯('1')，票據抬頭一律帶員工名稱（員工不在廠商主檔，走 venOpt 路徑會是空白）。
    */
-  private reconcileEmployeeBankAccounts(): void {
+  // attempted：本條收斂鏈已補查過的員工代號。ensureEmployeeBankAccount 遇 API 失敗時
+  // 不寫快取（保留下次重試機會），若不記錄「本鏈已試過」，getCachedEmployeeBank 永遠是
+  // undefined → 每輪重新排入 pending → subscribe 回呼再打 API → 失敗 → 無限緊迴圈；
+  // 每按一次「載入傳票」再疊加一條，最終灌爆瀏覽器。故本鏈只補查一次，未果就停，
+  // 下次使用者重新載入時是全新的 attempted，仍可重試。
+  private reconcileEmployeeBankAccounts(attempted = new Set<string>()): void {
     const pending = new Set<string>();
 
     const apply = (r: FIN53010StepAP): FIN53010StepAP => {
@@ -1547,7 +1568,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (!venNo || !this.service.isEmployeePayee(venNo)) return r;
       if (r.ven_bnk_no || r.ven_bank_account) return r; // 已有銀行值 → 不覆蓋
       const cached = this.service.getCachedEmployeeBank(venNo);
-      if (cached === undefined) { pending.add(venNo); return r; } // 尚未查 → 排入補查
+      if (cached === undefined) { if (!attempted.has(venNo)) pending.add(venNo); return r; } // 尚未查且本鏈未試過 → 排入補查
       // 員工不在廠商主檔，票據抬頭一律帶員工名稱（銀行 API 的 UserName 優先，查無帳號時 fallback 員工下拉名稱）
       const empName = (cached?.UserName as string | undefined)
         ?? (this.service.usrMap().get(venNo)?.['user_Name'] as string | undefined)
@@ -1566,9 +1587,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepAPRows.update(rows => rows.map(apply));
 
     if (pending.size > 0) {
+      pending.forEach(v => attempted.add(v)); // 標記本鏈已試過，失敗也不再於同鏈重打
       forkJoin([...pending].map(u => this.service.ensureEmployeeBankAccount(u)))
-        .pipe(take(1))
-        .subscribe(() => this.reconcileEmployeeBankAccounts());
+        .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.reconcileEmployeeBankAccounts(attempted));
     }
   }
 
@@ -1668,7 +1690,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ...[...pendingHydrate].map(v => this.service.ensureFin53010VendorForSteps(v)),
     ];
     if (waits.length > 0) {
-      forkJoin(waits).pipe(take(1)).subscribe({
+      forkJoin(waits).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => applyOnce(),
         error: err => this.logger.error('補查預計付款/收款日失敗', err),
       });
@@ -2350,6 +2372,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.messageService.successBubble('已載入傳票');
       }),
       finalize(() => this.lookupVouLoading.set(!1)),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe();
   }
 
@@ -2396,7 +2419,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
     if (this.isFormEditable) {
-      this.service.queryFIN53010DetailDataByVouNoForUpdate({ VouNo: v }).subscribe({
+      this.service.queryFIN53010DetailDataByVouNoForUpdate({ VouNo: v }).pipe(
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe({
         next: res => {
           if (res.Status !== '0000' || !res.Data) {
             this.clearRelatedDetailTables();
@@ -2449,7 +2474,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       });
       return;
     }
-    this.service.queryFIN53010DetailDataByVouNo({ VouNo: v }).subscribe({
+    this.service.queryFIN53010DetailDataByVouNo({ VouNo: v }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: res => {
         if (res.Status !== '0000' || !res.Data) {
           this.clearRelatedDetailTables();
