@@ -173,25 +173,31 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
         )
         .subscribe({
           next: (res: any) => {
-            const wrapper = this.pickWrapper(res?.Data);
-            const details = this.pickDetails(wrapper);
+            const rows: any[] = Array.isArray(res?.Data) ? res.Data : [];
+            const split = this.splitReportRows(rows);
 
-            this.data = details.map((r: any, i: number) => ({
+            if (!split) {
+              this.data = [];
+              this.totalRecords = 0;
+              this.footerData = {};
+              return;
+            }
+
+            const { headerRow, detailRows, totalRow } = split;
+
+            // SP 動態產生支付別欄位(依 POS1006.exportsort)，欄位標題以本次查詢回傳的標題列為準
+            this.columns = this.buildDynamicColumns(headerRow, this.baseColumns, this.identityFields);
+
+            this.data = detailRows.map((r: any, i: number) => ({
               ...r,
-              _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+              _rowKey: `${r?.ECR_No ?? ''}|${r?.TLT_No ?? ''}|${i}`,
             }));
 
-            const apiTotal = typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
-            const hasPaging = apiTotal > this.data.length;
-            this.totalRecords = hasPaging ? apiTotal : this.data.length;
-            this.footerData = this.buildFooterFromPack(wrapper);
+            this.totalRecords = Number(res?.TotalCount ?? this.data.length);
+            this.footerData = this.buildFooterFromTotalRow(headerRow, totalRow, this.identityFields);
 
             if (this.historyRequestBody) {
-              this.historyRequestBody = {
-                ...this.historyRequestBody,
-                pageIndex: 1,
-                pageSize: hasPaging ? 1000 : 999999, // ⬅️ 滾動或一包載入機制同步 1000 基準
-              };
+              this.historyRequestBody = { ...this.historyRequestBody, pageIndex: 1, pageSize: 1000 };
             }
           },
           error: () => {
@@ -228,35 +234,35 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
       SortBy: sortBy,
     }).pipe(
       map((res: any) => {
-        const wrapper = this.pickWrapper(res?.Data);
-        const details = this.pickDetails(wrapper);
-        const rows = (details ?? []).map((r: any, i: number) => ({
+        const rows: any[] = Array.isArray(res?.Data) ? res.Data : [];
+        const split = this.splitReportRows(rows);
+        const totalCount = Number(res?.TotalCount ?? 0);
+
+        if (!split) {
+          this.totalRecords = totalCount;
+          this.footerData = {};
+          return { Data: [], TotalCount: totalCount, GrandTotal: {} };
+        }
+
+        const { headerRow, detailRows, totalRow } = split;
+
+        // 分頁/排序由 app-table-report 直接呼叫本函式，欄位仍須依當次標題列重新產生
+        this.columns = this.buildDynamicColumns(headerRow, this.baseColumns, this.identityFields);
+
+        const dataRows = detailRows.map((r: any, i: number) => ({
           ...r,
-          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          _rowKey: `${pageIndex}|${r?.ECR_No ?? ''}|${r?.TLT_No ?? ''}|${i}`,
         }));
 
-        const apiTotal = typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
-        const hasPaging = apiTotal > rows.length;
-        let totalCount = hasPaging ? apiTotal : rows.length;
-
-        if (pageIndex > 1 && rows.length === 0) {
-          totalCount = this.data.length;
-        }
-
-        const grand = this.buildFooterFromPack(wrapper);
+        const grand = this.buildFooterFromTotalRow(headerRow, totalRow, this.identityFields);
         this.footerData = grand;
+        this.totalRecords = totalCount;
 
         if (this.historyRequestBody) {
-          this.historyRequestBody = {
-            ...this.historyRequestBody,
-            ...basePayload,
-            SortBy: sortBy,
-            pageIndex: 1,
-            pageSize: hasPaging ? 1000 : 999999,
-          };
+          this.historyRequestBody = { ...this.historyRequestBody, ...basePayload, SortBy: sortBy, pageIndex: 1, pageSize: 1000 };
         }
 
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        return { Data: dataRows, TotalCount: totalCount, GrandTotal: grand };
       }),
     );
   };
@@ -276,13 +282,13 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
       TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
       rece_yn: formVal?.rece_yn ?? undefined,
       ECR_No: row?.ECR_No ?? undefined,
-      tlt_no: row?.tlt_no ?? undefined,
+      tlt_no: row?.TLT_No ?? undefined,
       tlt_building: formVal?.tlt_building ?? [],
       tlt_floor: Array.isArray(formVal?.tlt_floor) ? formVal.tlt_floor : [],
       org_id: Array.isArray(formVal?.org_id) ? formVal.org_id : [],
     };
 
-    this.dialogHistoryRequestBody = { ...body, pageIndex: 1, pageSize: 999999 };
+    this.dialogHistoryRequestBody = { ...body, pageIndex: 1, pageSize: 1000 };
     this.dialogLoading = true;
 
     this.queryTLS23060DetailForReport({ ...body, pageIndex: 1, pageSize: 1000 })
@@ -308,28 +314,40 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
       TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
       map((res: any) => {
-        const wrapper = this.pickWrapper(res?.Data);
-        const details = this.pickDetails(wrapper);
+        const rows: any[] = Array.isArray(res?.Data) ? res.Data : [];
+        const split = this.splitReportRows(rows);
 
-        const rows = details.map((r: any, i: number) => ({
+        if (!split) {
+          this.dialogFooterData = {};
+          this.dialogTotalRecords = 0;
+          this.dialogData = [];
+          return { Data: [], TotalCount: 0, GrandTotal: {} };
+        }
+
+        const { headerRow, detailRows, totalRow } = split;
+
+        // 明細表的支付別欄位同樣依當次回傳的標題列動態產生
+        this.detailColumns = this.buildDynamicColumns(headerRow, this.baseDetailColumns, this.detailIdentityFields);
+
+        const dataRows = detailRows.map((r: any, i: number) => ({
           ...r,
-          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.TLT_No ?? ''}|${i}`,
         }));
 
-        rows.sort((a, b) => (a.TXN_Date ?? '') > (b.TXN_Date ?? '') ? 1 : -1);
+        dataRows.sort((a, b) => (a.TXN_Date ?? '') > (b.TXN_Date ?? '') ? 1 : -1);
 
-        const totalCount = rows.length;
-        const grand = this.buildFooterFromPack(wrapper);
+        const totalCount = Number(res?.TotalCount ?? dataRows.length);
+        const grand = this.buildFooterFromTotalRow(headerRow, totalRow, this.detailIdentityFields);
 
         this.dialogFooterData = grand;
         this.dialogTotalRecords = totalCount;
-        this.dialogData = rows;
+        this.dialogData = dataRows;
 
         if (this.dialogHistoryRequestBody) {
-          this.dialogHistoryRequestBody = { ...this.dialogHistoryRequestBody, pageIndex: 1, pageSize: 999999 };
+          this.dialogHistoryRequestBody = { ...this.dialogHistoryRequestBody, pageIndex: 1, pageSize: 1000 };
         }
 
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        return { Data: dataRows, TotalCount: totalCount, GrandTotal: grand };
       }),
     );
 
@@ -419,9 +437,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
     return `download${defaultExtension}`;
   }
 
-  // ========= 輔助解包小工具 =========
-  private readonly pickWrapper = (data: any): any => Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
-  private readonly pickDetails = (wrapper: any): any[] => (wrapper?.tLS23060Details ?? wrapper?.TLS23060Details ?? wrapper?.tls23060Details ?? []) as any[];
+  // ========= 動態欄位輔助工具（比照 TLS23050：SP 回傳「第一列=標題列、最後一列=總計列」）=========
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = x instanceof Date ? x : new Date(x);
@@ -429,139 +445,76 @@ export class TLS23060Component extends BasicQueryPageComponent<any> implements O
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  /** 建立表尾總計（映射到欄位名） */
-  private buildFooterFromPack(first: any): Record<string, number> {
-    const n = (x: any) => Number(x ?? 0);
+  /**
+   * 將 SP 回傳的單一結果集(第一列=標題列、最後一列=總計列、其餘為明細列)拆分。
+   * 資料列數不足 2 列(缺標題或總計列)視為查無資料。
+   */
+  private splitReportRows(rows: any[]): { headerRow: any; detailRows: any[]; totalRow: any } | null {
+    if (!Array.isArray(rows) || rows.length < 2) return null;
     return {
-      TXN_TotPayAmt: n(first?.totalPayAmt), TXN_PayAmt10: n(first?.totalPayAmt10), TXN_PayAmt41: n(first?.totalPayAmt41),
-      TXN_PayAmt42: n(first?.totalPayAmt42), TXN_PayAmt12: n(first?.totalPayAmt12), TXN_PayAmt81: n(first?.totalPayAmt81),
-      TXN_PayAmt43: n(first?.totalPayAmt43), TXN_PayAmt44: n(first?.totalPayAmt44), TXN_PayAmt14: n(first?.totalPayAmt14),
-      TXN_PayAmt82: n(first?.totalPayAmt82), TXN_PayAmt52: n(first?.totalPayAmt52), TXN_PayAmt20: n(first?.totalPayAmt20),
-      TXN_PayAmt62: n(first?.totalPayAmt62), TXN_PayAmt77: n(first?.totalPayAmt77), TXN_PayAmt71: n(first?.totalPayAmt71),
-      TXN_PayAmt30: n(first?.totalPayAmt30), TXN_PayAmt73: n(first?.totalPayAmt73), TXN_PayAmt72: n(first?.totalPayAmt72),
-      TXN_PayAmt74: n(first?.totalPayAmt74), TXN_PayAmt75: n(first?.totalPayAmt75), TXN_PayAmt76: n(first?.totalPayAmt76),
-      TXN_PayAmt24: n(first?.totalPayAmt24), TXN_PayAmt25: n(first?.totalPayAmt25), TXN_PayAmt07: n(first?.totalPayAmt07),
-      TXN_PayAmt55: n(first?.totalPayAmt55), TXN_PayAmt83: n(first?.totalPayAmt83), TXN_PayAmt78: n(first?.totalPayAmt78),
-      TXN_PayAmt79: n(first?.totalPayAmt79), TXN_PayAmt21: n(first?.totalPayAmt21), TXN_PayAmt53: n(first?.totalPayAmt53),
-      TXN_PayAmt54: n(first?.totalPayAmt54), TXN_PayAmt84: n(first?.totalPayAmt84), TXN_PayAmt56: n(first?.totalPayAmt56),
-      TXN_PayAmt57: n(first?.totalPayAmt57), TXN_PayAmt58: n(first?.totalPayAmt58), TXN_PayAmt59: n(first?.totalPayAmt59),
-      TXN_PayAmt60: n(first?.totalPayAmt60), TXN_PayAmt22: n(first?.totalPayAmt22), TXN_PayAmt23: n(first?.totalPayAmt23),
-      TXN_PayAmt26: n(first?.totalPayAmt26), TXN_PayAmt27: n(first?.totalPayAmt27), TXN_PayAmt28: n(first?.totalPayAmt28),
-      TXN_PayAmt29: n(first?.totalPayAmt29), TXN_PayAmt61: n(first?.totalPayAmt61), TXN_PrePayAmt: n(first?.totalPrePayAmt),
-      TXN_OverAmt: n(first?.totalOverAmt), TXN_ReturnAmt: n(first?.totalReturnAmt), TXN_CancelAmt: n(first?.totalCancelAmt),
-      TXN_ExchgAmt: n(first?.totalExchgAmt),
+      headerRow: rows[0],
+      detailRows: rows.slice(1, rows.length - 1),
+      totalRow: rows[rows.length - 1],
     };
   }
 
-  // ===== 報表欄位結構定義 (採用共通 ReportColumn 規範且校正對齊) =====
-  columns: ReportColumn[] = [
+  /**
+   * 依標題列動態產生欄位設定：固定識別欄位 + 其餘動態欄位(支付別、預售/溢收/退貨/作廢/換貨)，
+   * 欄位標題文字取自標題列對應 key 的內容(即 POS1006.exportpayname)。
+   */
+  private buildDynamicColumns(headerRow: Record<string, unknown>, baseColumns: ReportColumn[], identityFields: Set<string>): ReportColumn[] {
+    const columns: ReportColumn[] = baseColumns.map((c) => ({ ...c }));
+
+    Object.keys(headerRow ?? {}).forEach((key) => {
+      if (identityFields.has(key.toLowerCase())) return;
+      const label = headerRow[key];
+      columns.push({
+        field: key,
+        header: label !== null && label !== undefined && label !== '' ? String(label) : key,
+        visible: true,
+        align: 'right',
+        format: formatAmount,
+        isTotal: true,
+      });
+    });
+
+    return columns;
+  }
+
+  /** 依標題列的動態欄位 key，從總計列組出表尾合計資料(SP 已算好金額，這裡只需轉為數字) */
+  private buildFooterFromTotalRow(headerRow: Record<string, unknown>, totalRow: Record<string, unknown>, identityFields: Set<string>): Record<string, number> {
+    const footer: Record<string, number> = {};
+    Object.keys(headerRow ?? {}).forEach((key) => {
+      if (identityFields.has(key.toLowerCase())) return;
+      footer[key] = Number(totalRow?.[key] ?? 0);
+    });
+    return footer;
+  }
+
+  // ===== 報表欄位結構定義 =====
+  // 後端 SP_TLS23060_Query / SP_TLS23060QueryDetail 已改為動態欄位(支付別依 POS1006.exportsort 動態產生，
+  // 欄位名稱固定為 TXN_PayAmt{PAY_No}，欄位數量/標題會隨 POS1006 維護內容變動)。
+  // 查詢結果第一列為標題列、最後一列為總計列，欄位結構與標題文字皆以當次回傳的
+  // 標題列為準，不再於前端寫死；初始(尚未查詢)時僅顯示固定識別欄位。
+  private readonly baseColumns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
-    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt10', header: '現金', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt20', header: '禮券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt75', header: '折價券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt76', header: '現抵', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt54', header: '一卡通非開', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt84', header: '電子支付非開', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt59', header: '即享券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt26', header: '品牌已開票券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt27', header: '品牌未開票券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt28', header: '外送平台', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt29', header: 'EC', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt61', header: 'PayEasy', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '櫃位名稱', visible: true, align: 'left' },
   ];
 
-  detailColumns: ReportColumn[] = [
+  private readonly baseDetailColumns: ReportColumn[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
-    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt10', header: '現金', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt20', header: '禮券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt75', header: '折價券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt76', header: '現抵', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt54', header: '一卡通非開', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt84', header: '電子支付非開', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt59', header: '即享券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt26', header: '品牌已開票券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt27', header: '品牌未開票券', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt28', header: '外送平台', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt29', header: 'EC', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PayAmt61', header: 'PayEasy', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_PrePayAmt', header: '預售金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_ExchgAmt', header: '換貨金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '櫃位名稱', visible: true, align: 'left' },
   ];
+
+  // 識別用途的固定欄位(不屬於動態產生的支付別/金額欄位)，命名比對與後端
+  // TLS23060Service.exportExcel/exportExcel_Detail/ExportPDF/ExportPDF_Detail 的
+  // excludedKeys 規則保持一致(忽略大小寫)
+  private readonly identityFields = new Set(['seq', 'ecr_no', 'tlt_no', 'tlt_name']);
+  private readonly detailIdentityFields = new Set(['seq', 'txn_date', 'ecr_no', 'tlt_no', 'tlt_name']);
+
+  columns: ReportColumn[] = [...this.baseColumns];
+  detailColumns: ReportColumn[] = [...this.baseDetailColumns];
 }
