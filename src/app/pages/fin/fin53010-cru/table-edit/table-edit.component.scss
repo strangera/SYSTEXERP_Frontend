@@ -1,3 +1,35 @@
+// 點擊才編輯（Excel 式）：純文字狀態的格子外觀
+.cell-display {
+  display: block;
+  width: 100%;
+  min-height: 2rem;
+  line-height: 1.5rem;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  // 唯讀格：淡灰純文字、無邊框，一眼看出不可編輯
+  &:not(.cell-editable) {
+    color: var(--text-color-secondary, #6c757d);
+    cursor: default;
+  }
+
+  // 可編輯格：永遠長得像輸入框（白底 + 邊框），不用 hover 就看得出來
+  &.cell-editable {
+    cursor: text;
+    border: 1px solid var(--surface-300, #dee2e6);
+    border-radius: 4px;
+    background: var(--surface-0, #ffffff);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: var(--primary-color, #3b82f6);
+      box-shadow: 0 0 0 1px var(--primary-color, #3b82f6);
+    }
+  }
+}
+
 :host ::ng-deep {
   &::-webkit-scrollbar {
     width: 8px;

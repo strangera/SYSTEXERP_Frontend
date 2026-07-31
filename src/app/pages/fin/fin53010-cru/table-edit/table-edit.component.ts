@@ -433,6 +433,83 @@ export class TableEditComponent implements OnChanges {
     if (typeof col.cellClass === 'function') return col.cellClass(rowData);
     return col.cellClass;
   }
+
+  // ===== 點擊才編輯（Excel 式）：大筆數表格避免一次建立數千個編輯元件 =====
+  /** 開啟後，有 type 的格子平常顯示純文字，雙擊該格才實體化編輯元件（每張表同時最多一格是重量級元件）。 */
+  @Input() cellEditOnClick = false;
+  /** 目前正在編輯的格子（dataKey 值 + 欄位）；null = 沒有任何格在編輯。 */
+  private activeCell: { key: unknown; field: string; } | null = null;
+
+  /** 該格此刻是否要渲染「編輯元件」（否則渲染純文字）。 */
+  public isCellEditing(rowData: any, col: EditColumn): boolean {
+    if (!this.cellEditOnClick) return true;              // 模式關閉：維持原本一律可編輯
+    if (rowData?._isAutoInsertCandidate) return true;    // 新增候選列直接可編輯，維持原新增體驗
+    return this.activeCell?.key === rowData?.[this.dataKey] && this.activeCell?.field === col.field;
+  }
+
+  /** 該格是否為禁用（唯讀）欄位——禁用格永遠只顯示文字，不進入編輯。 */
+  public isCellDisabled(rowData: any, col: EditColumn): boolean {
+    if (this.disabled || !!rowData?.isPOS4023) return true;
+    if (typeof col.disabled === 'function') return !!col.disabled(rowData?.[col.field], undefined, rowData);
+    return false;
+  }
+
+  /** 單擊格子 → 進入編輯並自動聚焦/展開（體感接近「本來就開著」，但同時最多一格是重量級元件）。 */
+  public onCellClick(rowData: any, col: EditColumn, rowIndex: number, event: MouseEvent): void {
+    if (col.type) event.stopPropagation();
+    if (!this.cellEditOnClick || !col.type) return;
+    if (this.isCellDisabled(rowData, col)) return;
+    const alreadyEditing = this.activeCell?.key === rowData?.[this.dataKey] && this.activeCell?.field === col.field;
+    if (alreadyEditing) return; // 已在編輯 → 讓這次點擊直接落到元件上
+    const td = event.currentTarget as HTMLElement;
+    this.activeCell = { key: rowData?.[this.dataKey], field: col.field };
+    this.cdr.detectChanges();
+    setTimeout(() => this.focusCellEditor(td)); // render 後聚焦：輸入框直接可打字、下拉自動展開
+  }
+
+  /** 雙擊格子 → 觸發該欄的 onDblClick（如挑發票 dialog），並確保已進入編輯。 */
+  public onCellDblClick(rowData: any, col: EditColumn, rowIndex: number): void {
+    if (!this.cellEditOnClick || !col.type || !col.onDblClick) return;
+    if (this.isCellDisabled(rowData, col)) return;
+    this.activeCell = { key: rowData?.[this.dataKey], field: col.field };
+    col.onDblClick(rowData, rowData?.[col.field], col, rowIndex);
+    this.cdr.detectChanges();
+  }
+
+  /** 進入編輯後把焦點放進該格的編輯元件：有輸入框就 focus（可直接打字/日曆自動開），純下拉就展開。 */
+  private focusCellEditor(td: HTMLElement): void {
+    const input = td.querySelector('input, textarea') as HTMLElement | null;
+    if (input) { input.focus(); return; }
+    const dropdown = td.querySelector('.p-dropdown') as HTMLElement | null;
+    dropdown?.click();
+  }
+
+  /** 純文字狀態要顯示的內容：下拉反查 label、日期格式化、template 用顯示欄位，其餘用 format/原值。 */
+  public displayText(rowData: any, col: EditColumn, rowIndex: number): string {
+    const value = rowData?.[col.field];
+    if (col.format) { const r = col.format(value, rowIndex, rowData); return r == null ? '' : String(r); }
+    if (value === null || value === undefined || value === '') return '';
+    switch (col.type) {
+      case 'dropdown': {
+        const opts = typeof col.options === 'function' ? col.options(rowData) : col.options;
+        if (!Array.isArray(opts)) return String(value);
+        const vKey = col.optionValue ?? 'value';
+        const lKey = col.optionLabel ?? 'label';
+        const found = opts.find((o: any) => String(o?.[vKey]) === String(value));
+        return found ? String(found[lKey] ?? value) : String(value);
+      }
+      case 'template':
+        return String(rowData?.[col.templateDisplayField ?? col.field] ?? value);
+      case 'date': {
+        const d = value instanceof Date ? value : new Date(value);
+        return isNaN(d.getTime())
+          ? String(value)
+          : `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+      }
+      default:
+        return String(value);
+    }
+  }
   /**
  * 根據設定的 columns 聚合屬性，計算表格底部總計資料 (Footer Data)。
  * @returns 包含計算結果的物件，例如: { Amount: 1234, Quantity: 50, ... }
