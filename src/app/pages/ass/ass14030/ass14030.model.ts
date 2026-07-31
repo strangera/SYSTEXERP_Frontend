@@ -87,6 +87,8 @@ export interface ASS14030DetailMaster {
   INV_YN?: string | null;
   /** 拋轉狀態 */
   Trans_Status?: string | null;
+  /** 拋轉狀態名稱（已拋轉/未拋轉） */
+  Trans_StatusName?: string | null;
   /** 拋轉後傳票編號 */
   TransVouNo?: string | null;
   MID?: number | null;
