@@ -502,9 +502,13 @@ export class TableEditComponent implements OnChanges {
         return String(rowData?.[col.templateDisplayField ?? col.field] ?? value);
       case 'date': {
         const d = value instanceof Date ? value : new Date(value);
-        return isNaN(d.getTime())
-          ? String(value)
-          : `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        if (isNaN(d.getTime())) return String(value);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        // 依 view 決定精度：月檢視（申報年月等）只到年月，避免多帶「日」；年檢視只到年。
+        if (col.view === 'month') return `${y}/${m}`;
+        if (col.view === 'year') return String(y);
+        return `${y}/${m}/${String(d.getDate()).padStart(2, '0')}`;
       }
       default:
         return String(value);

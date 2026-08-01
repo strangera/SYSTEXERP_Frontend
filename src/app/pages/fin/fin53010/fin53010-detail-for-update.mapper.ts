@@ -104,7 +104,7 @@ export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoice
     invoice_prefix: row.INV_GUITrack ?? undefined,
     invoice_no: row.INV_GUINumber ?? undefined,
     invoice_date: parseYmdToDate(row.TXN_Date ?? undefined),
-    declare_ym: parseYyyyMmToMonthDate(row.INV_YM ?? undefined),
+    declare_ym: parseYyyyMmToMonthDate(row.INV_DeclareYM ?? undefined),
     buyer_uniform: row.TXN_Uniform ?? undefined,
     inv_cancel: row.INV_Cancel ?? undefined,
     total_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_SaleAmt ?? undefined),

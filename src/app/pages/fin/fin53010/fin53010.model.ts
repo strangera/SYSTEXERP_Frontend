@@ -1008,6 +1008,7 @@ export interface Pos4023 {
   TXN_Uniform?: string | null;
   INV_Cancel?: string | null;
   INV_YM?: string | null;
+  INV_DeclareYM?: string | null;
   INV_GUITrack?: string | null;
   INV_GUINumber?: string | null;
   INV_GUIType?: string | null;
