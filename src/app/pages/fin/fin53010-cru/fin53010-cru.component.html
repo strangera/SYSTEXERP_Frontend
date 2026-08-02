@@ -239,6 +239,7 @@
           [tableRequired]="true"
           [columns]="effectiveColumns()"
           [scrollable]="true"
+          [cellEditOnClick]="true"
           [rowValidate]="validateRow"
         ></app-table-edit>
       </p-panel>
@@ -259,6 +260,8 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepAPRows()"
         [columns]="stepAPColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepAPRows().length >= 20"
         [tableKey]="'FIN53010_step_ap'"
         (dataChange)="onStepAPDataChange($event)"
         [footerData]="stepAPFooter()"
@@ -304,6 +307,8 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepARRows()"
         [columns]="stepARColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepARRows().length >= 20"
         [tableKey]="'FIN53010_step_ar'"
         (dataChange)="onStepARDataChange($event)"
         [footerData]="stepARFooter()"
@@ -346,12 +351,10 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepPurchaseRows()"
         [columns]="stepPurchaseColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepPurchaseRows().length >= 20"
         [tableKey]="'FIN53010_step_purchase'"
-        [defaultInsertData]="{
-          tax_type: '1',
-          invoice_usage: '1',
-          deduction_code: '1',
-        }"
+        [defaultInsertData]="stepPurchaseDefaultInsert"
         (dataChange)="onStepPurchaseDataChange($event)"
         (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"
         [footerData]="stepPurchaseFooter()"
@@ -393,6 +396,8 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepSalesRows()"
         [columns]="stepSalesColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepSalesRows().length >= 20"
         [tableKey]="'FIN53010_step_sales'"
         (dataChange)="onStepSalesDataChange($event)"
         (fieldChange)="onStepSalesInvoiceFieldChange($event)"
@@ -435,8 +440,10 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepPurchaseAllowanceRows()"
         [columns]="stepPurchaseAllowanceColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepPurchaseAllowanceRows().length >= 20"
         [tableKey]="'FIN53010_step_purchase_allowance'"
-        [defaultInsertData]="{ voucher_type: '23', tax_type: '1' }"
+        [defaultInsertData]="stepPurchaseAllowanceDefaultInsert"
         (dataChange)="onStepPurchaseAllowanceDataChange($event)"
         (fieldChange)="onStepPurchaseAllowanceFieldChange($event)"
         [footerData]="stepPurchaseAllowanceFooter()"
@@ -478,8 +485,10 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepSalesAllowanceRows()"
         [columns]="stepSalesAllowanceColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepSalesAllowanceRows().length >= 20"
         [tableKey]="'FIN53010_step_sales_allowance'"
-        [defaultInsertData]="{ invoice_type: '33', tax_type: '1' }"
+        [defaultInsertData]="stepSalesAllowanceDefaultInsert"
         (dataChange)="onStepSalesAllowanceDataChange($event)"
         (fieldChange)="onStepSalesAllowanceFieldChange($event)"
         [footerData]="stepSalesAllowanceFooter()"
@@ -522,6 +531,8 @@
         [disabled]="isFormReadable || isPostedEdit"
         [data]="stepBankRows()"
         [columns]="stepBankColumns"
+        [cellEditOnClick]="true"
+        [scrollable]="stepBankRows().length >= 20"
         [tableKey]="'FIN53010_step_bank'"
         (dataChange)="onStepBankDataChange($event)"
         [footerData]="stepBankFooter()"
@@ -807,11 +818,11 @@
   header="選取原始銷項發票"
   [(visible)]="showSalesAllowancePickerDialog"
   [modal]="true"
-  [style]="{ width: '65vw' }"
+  [style]="dialogStyle65vw"
 >
   <div class="flex gap-2 align-items-end mb-3">
     <app-input-text
-      [style]="{ width: '280px' }"
+      [style]="dialogInnerStyle280"
       label="發票號碼"
       controlName="salesAllowancePickerQuery"
       [control]="salesAllowancePickerQueryControl"
@@ -848,11 +859,11 @@
   header="選取銷項發票"
   [(visible)]="showSalesInvoicePickerDialog"
   [modal]="true"
-  [style]="{ width: '65vw' }"
+  [style]="dialogStyle65vw"
 >
   <div class="flex gap-2 align-items-end mb-3">
     <app-input-text
-      [style]="{ width: '280px' }"
+      [style]="dialogInnerStyle280"
       label="發票號碼"
       controlName="salesInvoicePickerQuery"
       [control]="salesInvoicePickerQueryControl"
@@ -889,11 +900,11 @@
   header="選取原始進項發票"
   [(visible)]="showPurchaseAllowancePickerDialog"
   [modal]="true"
-  [style]="{ width: '65vw' }"
+  [style]="dialogStyle65vw"
 >
   <div class="flex gap-2 align-items-end mb-3">
     <app-input-text
-      [style]="{ width: '280px' }"
+      [style]="dialogInnerStyle280"
       label="發票號碼"
       controlName="purchaseAllowancePickerQuery"
       [control]="purchaseAllowancePickerQueryControl"
@@ -930,7 +941,7 @@
   header="立沖代號查詢"
   [(visible)]="showPtaDialog"
   [modal]="true"
-  [style]="{ width: '80vw' }"
+  [style]="dialogStyle80vw"
   (onHide)="closePtaDialog()"
 >
   <!-- 篩選表單 -->
@@ -1027,7 +1038,7 @@
     ></app-input-text>
   </div>
 
-  <div [style]="{ 'min-height': '50vh', 'max-height': '75vh' }">
+  <div [style]="dialogContentStyle">
     <app-table
       [showReportMode]="!1"
       [showCaption]="!1"

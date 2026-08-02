@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,6 +11,7 @@ import { InputTextComponent } from '@shared/components/input-text/input-text.com
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { formatAmount } from '@shared/components/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
 import {
@@ -37,6 +38,8 @@ import {
   ],
 })
 export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow> implements OnInit {
+  @ViewChild('detailTable') detailTableComponent!: TableEditComponent;
+
   private readonly service = inject(ASS14030Service);
   private readonly dropdownApiService = inject(DropdownApiService);
   private readonly destroyRef = inject(DestroyRef);
@@ -48,7 +51,7 @@ export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow
     VouDate: [null as Date | null, [Validators.required]], // 傳票日期（可編輯）
     Remark: ['', [Validators.maxLength(200)]], // 傳票摘要（可編輯）
     ORI_SLIP: [{ value: '', disabled: true }], // 結帳單號
-    PostFlagName: [{ value: '', disabled: true }], // 傳票狀態
+    Trans_StatusName: [{ value: '', disabled: true }], // 傳票狀態
     CRT_USR_Name: [{ value: '', disabled: true }], // 建立者
     CRT_Date: [{ value: '', disabled: true }], // 建立日
     UPD_USR_Name: [{ value: '', disabled: true }], // 修改者
@@ -70,6 +73,7 @@ export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow
       optionLabel: 'label', optionValue: 'value',
       optionsAsync: true,
       options: () => this.accNoOptions,
+      validate: [validateRequired],
     },
     {
       field: 'DetailNo', header: '廠商代號', textAlign: 'center',
@@ -83,6 +87,7 @@ export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow
       optionLabel: 'label', optionValue: 'value',
       optionsAsync: true,
       options: () => this.orgIdOptions,
+      validate: [validateRequired],
     },
     { field: 'ProjectNo', header: '活動代號', textAlign: 'center' },
     { field: 'PTA', header: '立沖代號', textAlign: 'center' },
@@ -120,7 +125,7 @@ export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow
         VouDate: master.VouDate ? new Date(master.VouDate) : null,
         Remark: master.Remark,
         ORI_SLIP: master.ORI_SLIP,
-        PostFlagName: master.PostFlagName,
+        Trans_StatusName: master.Trans_StatusName,
         CRT_USR_Name: master.CRT_USR_No ? `${master.CRT_USR_No} ${master.CRT_USR_Name ?? ''}` : master.CRT_USR_Name,
         CRT_Date: master.CRT_Date,
         UPD_USR_Name: master.UPD_USR_No ? `${master.UPD_USR_No} ${master.UPD_USR_Name ?? ''}` : master.UPD_USR_Name,
@@ -135,6 +140,10 @@ export class ASS14030CRUComponent extends BasicCruPageComponent<ASS14030QueryRow
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      if (this.detailTableComponent?.validateAndShowErrors() === false) {
+        this.loading = false;
+        return;
+      }
       const raw = this.dataForm.getRawValue();
       const payload: UpdateASS14030Request = {
         RECEIPT_INS_ID: this.receiptInsId,

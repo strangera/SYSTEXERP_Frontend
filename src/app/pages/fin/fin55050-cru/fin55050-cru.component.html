@@ -40,7 +40,7 @@
 <div class="card">
   <app-table-report tableKey="FIN55050CRU" dataKey="__rowid" [data]="rows" [columns]="columns" [showCheckBox]="false"
     [showManage]="false" [showDelete]="false" [totalRecords]="rows.length || 0" [loading]="loading"
-    [showReportMode]="false" [showCaption]="false" [footerData]="footerData"></app-table-report>
+    [showReportMode]="false" [showCaption]="false" [footerData]="footerData" [ItemSize]="24.44"></app-table-report>
 
   <div *ngIf="!loading && rows.length === 0" class="mt-3 text-600">
     查無明細資料。請回列表重新查詢，或確認此傳票號碼是否包含明細。

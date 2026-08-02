@@ -1,7 +1,7 @@
 <p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
   [scrollHeight]="'1000px'" [(selection)]="selectedItems" sortMode="multiple"
   [multiSortMeta]="[{ field: 'ven_no', order: 1 }, { field: 'IN_TYPE', order: 1 }, { field: 'acp_DATE', order: 1 }]"
-  [selectionMode]="'multiple'" [rowTrackBy]="trackByFn" styleClass="p-datatable-sm p-datatable-gridlines"
+  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" styleClass="p-datatable-sm p-datatable-gridlines"
   [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)"
   (selectionChange)="onSelectionChange($event)" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{

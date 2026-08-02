@@ -10,7 +10,7 @@
   (onColReorder)="columns = tableUtilityService.onColReorder($event)"
   (onRowReorder)="onRowReorder(); rowReorderData.emit($event)" styleClass="p-datatable-sm p-datatable-gridlines "
   [rowSelectable]="rowSelectableWrapper" [loading]="loading" [scrollable]="scrollable || virtualScroll"
-  scrollHeight="867px" [virtualScroll]="virtualScroll"
+  scrollHeight="867px" [virtualScroll]="virtualScroll" [virtualScrollDelay]="0"
   [virtualScrollItemSize]="virtualScroll ? (virtualScrollItemSize ?? 46) : undefined" [paginator]="showPaginator"
   [rows]="20" [rowsPerPageOptions]="[20, 40, 60, 80, 100]" [showCurrentPageReport]="showPaginator"
   currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆">
@@ -160,14 +160,25 @@
             !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowData.isPOS4023
           " />
       </td>
-      <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
+      <td *ngFor="let col of columns" (click)="onCellClick(rowData, col, rowIndex, $event)"
+        (dblclick)="onCellDblClick(rowData, col, rowIndex)"
         (keydown)="$event.stopPropagation()" [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }"
         [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
-          <ng-container *ngComponentOutlet="
-              componentType;
-              inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
-            "></ng-container>
+          <ng-container *ngIf="isCellEditing(rowData, col); else cellText">
+            <ng-container *ngComponentOutlet="
+                componentType;
+                inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
+              "></ng-container>
+          </ng-container>
+          <ng-template #cellText>
+            <span class="cell-display" [class.cell-editable]="!isCellDisabled(rowData, col)"
+              [pTooltip]="isCellDisabled(rowData, col) ? '' : '點擊編輯'" tooltipPosition="bottom">
+              {{ displayText(rowData, col, rowIndex) }}
+              <i *ngIf="rowData._validationErrors?.[col.field]" class="pi pi-exclamation-circle text-red-500 ml-1"
+                [pTooltip]="rowData._validationErrors?.[col.field]" tooltipPosition="bottom"></i>
+            </span>
+          </ng-template>
         </ng-container>
         <span *ngIf="!col.type">
           {{

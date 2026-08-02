@@ -1008,6 +1008,7 @@ export interface Pos4023 {
   TXN_Uniform?: string | null;
   INV_Cancel?: string | null;
   INV_YM?: string | null;
+  INV_DeclareYM?: string | null;
   INV_GUITrack?: string | null;
   INV_GUINumber?: string | null;
   INV_GUIType?: string | null;
@@ -1058,6 +1059,8 @@ export interface FIN53010StepAP {
   acc_no?: string;
   note_desc?: string;
   PTA?: string | null;
+  /** 應付單號（唯讀顯示，編輯既有資料時帶入） */
+  ACP_No?: string | null;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */
@@ -1075,6 +1078,8 @@ export interface FIN53010StepAR {
   note_desc?: string;
   ACCT_KEY?: string | null;
   PTA?: string | null;
+  /** 應收單號（唯讀顯示，編輯既有資料時帶入） */
+  ARS_No?: string | null;
 }
 
 /** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */

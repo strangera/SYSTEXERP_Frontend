@@ -58,8 +58,8 @@
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="傳票狀態"
-            controlName="PostFlagName"
-            [control]="dataForm.controls.PostFlagName"
+            controlName="Trans_StatusName"
+            [control]="dataForm.controls.Trans_StatusName"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -98,6 +98,7 @@
       </div>
       <hr />
       <app-table-edit
+        #detailTable
         tableKey="ASS14030Detail"
         [columns]="detailColumns"
         [(data)]="data"

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CalendarModule } from 'primeng/calendar';
+import { Calendar, CalendarModule } from 'primeng/calendar';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
@@ -50,8 +50,16 @@ import { CellInput } from './table-edit-cell.model';
     TooltipModule
   ]
 })
-export class DateCellComponent {
+export class DateCellComponent implements AfterViewInit {
   @Input({ required: true }) cellInput!: CellInput;
+  @ViewChild(Calendar) private readonly calendar?: Calendar;
+
+  ngAfterViewInit(): void {
+    // p-calendar 動態建立（ngComponentOutlet）時，[dateFormat] 綁定可能晚於 PrimeNG 初次格式化輸入框，
+    // 使 view='month' 的欄位改用全域預設 'yy/mm/dd' 而多帶「日」（例：申報年月 2026/08 顯示成 2026/08/01）。
+    // view 就緒後 dateFormat 已確定套用，重跑一次格式化即可讓月份欄位正確顯示成 yy/mm。
+    this.calendar?.updateInputfield();
+  }
 
   isDisabled(): boolean {
     const col = this.cellInput.col;
@@ -69,7 +77,6 @@ export class DateCellComponent {
 
   handleBlur() {
     const val = this.cellInput.rowData[this.cellInput.col.field];
-    console.log('[DateCell handleBlur]', this.cellInput.col.field, val);
     this.cellInput.col.onBlur?.(
       this.cellInput.rowData,
       val,

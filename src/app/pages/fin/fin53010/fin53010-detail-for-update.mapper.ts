@@ -64,6 +64,7 @@ export function mapAps3001RowToStepAP(row: APS3001): FIN53010StepAP {
     acc_no: row.AccNo ?? undefined,
     note_desc: row.NoteDesc ?? undefined,
     PTA: row.PTA ?? null,
+    ACP_No: row.ACP_No ?? null,
   };
 }
 
@@ -88,6 +89,7 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
     note_desc: note || undefined,
     ACCT_KEY: row.ACCT_KEY ?? null,
     PTA: row.PTA ?? null,
+    ARS_No: row.ARS_No ?? null,
   };
 }
 
@@ -102,7 +104,7 @@ export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoice
     invoice_prefix: row.INV_GUITrack ?? undefined,
     invoice_no: row.INV_GUINumber ?? undefined,
     invoice_date: parseYmdToDate(row.TXN_Date ?? undefined),
-    declare_ym: parseYyyyMmToMonthDate(row.INV_YM ?? undefined),
+    declare_ym: parseYyyyMmToMonthDate(row.INV_DeclareYM ?? undefined),
     buyer_uniform: row.TXN_Uniform ?? undefined,
     inv_cancel: row.INV_Cancel ?? undefined,
     total_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_SaleAmt ?? undefined),
