@@ -11,13 +11,13 @@ import { environment } from 'src/environments/environment';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
 import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -80,6 +80,9 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   /** Edit/Read 模式下保存從 row 帶入的 Credit_Type，防止被各種計算邏輯清空 */
   private storedCreditType = '';
 
+  /** Edit/Read 模式下保存從 row 帶入的 Inv_Date，防止被 correspond API 查到的日期覆蓋 */
+  private storedInvDate: any = null;
+
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
 
@@ -133,6 +136,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
 
           GUI_Track: row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value,
+          Inv_Date: row.InvoiceDate ?? this.dataForm.get('Inv_Date')?.value,
           PUR_GUINo: this.normalizeInvoiceNumber(
             row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
             row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value
@@ -165,6 +169,8 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
       // 先存好 row 的 Credit_Type，syncPurAmtFromDetails 會把它清掉
       this.storedCreditType = row.Credit_Type ?? '';
+      // 先存好 row 的 Inv_Date，避免後續 correspond API 查到別筆資料的日期覆蓋掉
+      this.storedInvDate = row.InvoiceDate ?? null;
 
       this.syncPurAmtFromDetails();
 
@@ -209,6 +215,15 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       );
     }
 
+    if (this.crudstatus !== CRUDStatus.Create) {
+      // Edit/Read 進頁時字軌+發票號碼已由 row 直接帶入，不必再打 API 查整批清單，
+      // 直接用 row 的值組一筆選項，讓 app-dropdown 的 selectedOptionLabel 找得到對應項目
+      const initialNo = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+      if (initialNo) {
+        this.guiNumberOptions = [{ label: initialNo, value: initialNo }];
+      }
+    }
+
     if (this.crudstatus === CRUDStatus.Edit) {
       this.loadInvoiceInfoByCurrentGUINo();
     } else if (this.crudstatus === CRUDStatus.Read) {
@@ -217,45 +232,45 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   /* ----------------- 編輯/檢視：依目前 GUI_Track + PUR_GUINo 撈 FIN13020 ----------------- */
-private setupVoucherNoWatcher(): void {
-  this.dataForm.get('Voucher_No')?.valueChanges
-    .pipe(
-      debounceTime(500),
-      distinctUntilChanged()
-    )
-    .subscribe((voucherNo) => {
-      const vouNo = String(voucherNo ?? '').trim();
-      const ctrl = this.dataForm.get('Voucher_No');
+  private setupVoucherNoWatcher(): void {
+    this.dataForm.get('Voucher_No')?.valueChanges
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged()
+      )
+      .subscribe((voucherNo) => {
+        const vouNo = String(voucherNo ?? '').trim();
+        const ctrl = this.dataForm.get('Voucher_No');
 
-      if (!vouNo) {
-        const errors = { ...ctrl?.errors };
-        delete errors['voucherNotFound'];
-        ctrl?.setErrors(Object.keys(errors).length ? errors : null);
-        return;
-      }
+        if (!vouNo) {
+          const errors = { ...ctrl?.errors };
+          delete errors['voucherNotFound'];
+          ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+          return;
+        }
 
-      this.fin13020Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
-        next: (res: any) => {
-          const exists =
-            Array.isArray(res?.Data) &&
-            res.Data.some((x: any) => String(x.VouNo ?? '').trim() === vouNo);
+        this.fin13020Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
+          next: (res: any) => {
+            const exists =
+              Array.isArray(res?.Data) &&
+              res.Data.some((x: any) => String(x.VouNo ?? '').trim() === vouNo);
 
-          if (!exists) {
-            ctrl?.setErrors({ ...ctrl.errors, voucherNotFound: true });
-            ctrl?.markAsTouched();
-            this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
-          } else {
-            const errors = { ...ctrl?.errors };
-            delete errors['voucherNotFound'];
-            ctrl?.setErrors(Object.keys(errors).length ? errors : null);
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢傳票編號失敗');
-        },
+            if (!exists) {
+              ctrl?.setErrors({ ...ctrl.errors, voucherNotFound: true });
+              ctrl?.markAsTouched();
+              this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
+            } else {
+              const errors = { ...ctrl?.errors };
+              delete errors['voucherNotFound'];
+              ctrl?.setErrors(Object.keys(errors).length ? errors : null);
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('查詢傳票編號失敗');
+          },
+        });
       });
-    });
-}
+  }
   private loadInvoiceInfoByCurrentGUINo(): void {
     const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
     const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
@@ -273,12 +288,17 @@ private setupVoucherNoWatcher(): void {
       { emitEvent: false }
     );
 
-    // clearLoadedInvoiceFields 會清掉 Credit_Type，先保存
+    // clearLoadedInvoiceFields 會清掉 Credit_Type 和 Inv_Date，先保存
     const savedCreditType = this.storedCreditType || this.dataForm.getRawValue().Credit_Type;
+    const savedInvDate = this.storedInvDate ?? this.dataForm.getRawValue().Inv_Date;
     this.clearLoadedInvoiceFields(false);
     // 還原 Credit_Type
     if (savedCreditType) {
       this.dataForm.patchValue({ Credit_Type: savedCreditType }, { emitEvent: false });
+    }
+    // 還原 Inv_Date：Edit 模式一律信任 row 帶入的發票日期，不讓 correspond API 覆蓋
+    if (savedInvDate) {
+      this.dataForm.patchValue({ Inv_Date: savedInvDate }, { emitEvent: false });
     }
 
     // 呼叫 correspond API 才能取得原始發票的正確剩餘金額
@@ -377,7 +397,8 @@ private setupVoucherNoWatcher(): void {
       {
         GUI_Track: dto.InvoiceTrack ?? track,
         PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
-        Inv_Date: dto.InvoiceDate ?? null,
+        // Edit/Read 模式一律信任 row 帶入的發票日期，不讓 correspond API 查到的日期覆蓋
+        ...(isCreateMode ? { Inv_Date: dto.InvoiceDate ?? null } : {}),
         PUR_VoucherType: voucherType,
         PUR_TaxType: dto.PUR_TaxType ?? '',
         Inv_Net: dto.PUR_Net ?? null,
@@ -1204,7 +1225,7 @@ private setupVoucherNoWatcher(): void {
     return this.crudstatus === CRUDStatus.Read;
   }
 
-  private optionLabelOf(opts: Array<{ label: string; value: any }>, value: any): string {
+  private optionLabelOf(opts: { label: string; value: any }[], value: any): string {
     const hit = opts?.find((o) => String(o.value) === String(value));
     return hit?.label ?? (value ?? '');
   }
