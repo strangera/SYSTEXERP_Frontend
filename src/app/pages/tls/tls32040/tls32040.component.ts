@@ -23,7 +23,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
-import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { ColumnGroup, formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 import { Tls32040CRUComponent } from './tls32040-cru/tls32040-cru.component';
 
@@ -187,30 +187,37 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },
     { field: 'OrgId', header: '樓組代碼', visible: true, align: 'left' },
     { field: 'OrgName', header: '樓組名稱', visible: true, align: 'left' },
-    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_PreOrderAmt', header: '本期預售實績', visible: true, format: formatAmount, align: 'right' }, // 本期預售實績 放在本期客單價後面
+    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
+    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
+    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right', groupField: '本期' },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
+    { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
+    { field: 'Base_PreOrderAmt', header: '本期預售實績', visible: true, format: formatAmount, align: 'right', groupField: '本期' }, // 本期預售實績 放在本期客單價後面
 
-    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Comp_PreOrderAmt', header: '上期預售實績', visible: true, format: formatAmount, align: 'right' }, // 上期預售實績 放在上期客單價後面
-    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right', groupField: '上期' },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right', groupField: '上期' },
+    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right', groupField: '上期' },
+    { field: 'Comp_PreOrderAmt', header: '上期預售實績', visible: true, format: formatAmount, align: 'right', groupField: '上期' }, // 上期預售實績 放在上期客單價後面
+    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right', groupField: '差異' },
 
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Diff_PreOrderAmt', header: '預售差異', visible: true, format: formatAmount, align: 'right' }, // 預售差異 放在客單價差異後面
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right', groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right', groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right', groupField: '差異' },
+    { field: 'Diff_PreOrderAmt', header: '預售差異', visible: true, format: formatAmount, align: 'right', groupField: '差異' }, // 預售差異 放在客單價差異後面
 
-    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right', groupField: '坪效' },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right', groupField: '坪效' },
 
     { field: 'PrePerformance', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
+  ];
+  // 報表分組標頭：本期/上期/差異/坪效，基本資訊與預售/消費人數欄位維持無群組（比照 TLS31010 既有慣例）
+  columnGroup: ColumnGroup[] = [
+    { field: '本期', header: '本期' },
+    { field: '上期', header: '上期' },
+    { field: '差異', header: '差異' },
+    { field: '坪效', header: '坪效' },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },

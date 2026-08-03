@@ -5,12 +5,17 @@ import { ReportColumn } from './tls32020-report-table.model';
   providedIn: 'root'
 })
 export class TableReportUtilityService {
-  // 計算分組欄位跨度
+  // 計算分組欄位跨度 (第二層)
   getColumnSpan(columns: ReportColumn[], groupField: string): number {
     return columns.filter(col => col.groupField === groupField).length;
   }
 
-  // 判斷是否應該渲染分組標題
+  // 計算最外層群組欄位跨度 (第一層，例如：比較期/基準期/差異)
+  getTopGroupSpan(columns: ReportColumn[], topGroupField: string): number {
+    return columns.filter(col => col.topGroupField === topGroupField).length;
+  }
+
+  // 判斷是否應該渲染分組標題 (第二層)
   shouldRenderGroupHeader(col: ReportColumn, index: number, columns: ReportColumn[]): boolean {
     if (!col.groupField) {
       return false;
@@ -19,6 +24,21 @@ export class TableReportUtilityService {
     for (let i = 0; i < index; i++) {
       const prev = columns[i];
       if (prev.groupField === currentGroup) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // 判斷是否應該渲染最外層分組標題 (第一層)
+  shouldRenderTopGroupHeader(col: ReportColumn, index: number, columns: ReportColumn[]): boolean {
+    if (!col.topGroupField) {
+      return false;
+    }
+    const currentGroup = col.topGroupField;
+    for (let i = 0; i < index; i++) {
+      const prev = columns[i];
+      if (prev.topGroupField === currentGroup) {
         return false;
       }
     }
