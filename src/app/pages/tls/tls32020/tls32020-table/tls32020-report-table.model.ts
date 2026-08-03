@@ -3,7 +3,8 @@ export interface ReportColumn {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-  groupField?: string; //
+  groupField?: string; // 第二層群組標頭 (例如：營業額/客單價/坪效)
+  topGroupField?: string; // 第一層群組標頭 (例如：比較期/基準期/差異)
   isSubTotal?: boolean; // 是否為小計欄位
   align?: 'left' | 'center' | 'right';
 }

@@ -1,7 +1,7 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS32020Data, TLS32020QueryRequest, TLS32020Service } from '@service/api/tls/tls32020.service';
@@ -18,7 +18,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { finalize, startWith } from 'rxjs';
+import { startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { formatAmount, formatInt, ReportColumn } from './tls32020-table/tls32020-report-table.model';
 import { TableReportComponent } from './tls32020-table/tls32020-table.component';
@@ -28,7 +28,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
   templateUrl: './tls32020.component.html',
   standalone: true,
   imports: [
-    DropdownRangeComponent, NgIf,
+    DropdownRangeComponent,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
     MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
@@ -36,12 +36,13 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
-  // 注入 Service
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
   private readonly fileExportService = inject(FileExportService);
   public readonly tls32020Service = inject(TLS32020Service);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   queryForm = this.fb.group({// **變更**：預設為 '3' (月營業報表)
     DayType: ['3'],
     // 日期計算輔助欄位 (基準期 Base)
@@ -139,47 +140,50 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   ];
 
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
+  // 表頭三層群組：topGroupField (比較期/基準期/差異) > groupField (營業額/客單價/坪效/預售消費) > 個別欄位
+  // 註記：頁面查詢區塊「比較/基準」呈現字眼與內部欄位命名互換 (見上方查詢表單註記)，
+  //       此處 topGroupField 沿用同一套互換慣例，讓表頭與查詢區塊用語保持一致。
   columns: ReportColumn[] = [
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
     { field: 'BuildingName', header: '館別', align: 'left', visible: this.isShowBuilding },
 
     // ======================= 基準期 (Base) 欄位 =======================
-    { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv' },
-    { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv' },
-    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
-    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea' },
-    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer' },
-    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
-    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer' },
+    { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
+    { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
+    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
+    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
+    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     // ======================= 比較期 (Compare) 欄位 =======================
-    { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
-    { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
-    { field: 'CompareAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'compareRevenue' },
-    { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV' },
-    { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV' },
-    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
-    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea' },
-    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
-    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
-    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer' },
+    { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
+    { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
+    { field: 'CompareAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
+    { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
+    { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
+    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
+    { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
 
     // ======================= 差異 (Difference) 欄位 =======================
-    { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true },
-    { field: 'GrowthRate', header: '成長率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true },
-    { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true },
-    { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
-    { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true },
+    { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffRevenue', topGroupField: 'diff' },
+    { field: 'GrowthRate', header: '成長率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'diffRevenue', topGroupField: 'diff' },
+    { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
+    { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
+    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
+    { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
+    { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
 
     //先拿掉 { field: 'BasePreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isSubTotal: true },
   ];
-  // 報表分組標頭 (配合新增的欄位進行調整)
+  // 報表分組標頭 (第二層，配合新增的欄位進行調整)
   columnGroup = [
     { field: 'revenue', header: 'YYYY 營業額' },
     { field: 'atv', header: 'YYYY 客單價' },
@@ -189,23 +193,26 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'compareATV', header: 'XXXX 客單價' },
     { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
     { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 新增比較期群組
+    { field: 'diffRevenue', header: '營業額差異' },
+    { field: 'diffATV', header: '客單/交易差異' },
+    { field: 'diffSalesPerArea', header: '營業坪效差異' },
+    { field: 'diffPreSaleConsumer', header: '預售/消費差異' },
   ];
-  constructor() { super(); }
+  // 報表最外層分組標頭 (第一層)：沿用查詢區塊「比較/基準呈現字眼互換」慣例 (base 欄位 -> 顯示「比較期」)
+  columnTopGroup = [
+    { field: 'base', header: '比較期' },
+    { field: 'compare', header: '基準期' },
+    { field: 'diff', header: '差異' },
+  ];
 
   ngOnInit(): void {
     this.initializePage('TLS32020');
     this.setWeekOptions(this.queryForm.controls.year.value);// 初始化週次選項
     this.calculateInitialRanges('3');// 【保留】只在頁面初始化時執行一次完整的初始化
-    this.queryForm.controls.DayType.valueChanges.pipe(
-      startWith(this.queryForm.controls.DayType.value),
-      untilDestroyed(this)
-    ).subscribe(type => {
-
+    this.queryForm.controls.DayType.valueChanges.pipe(startWith(this.queryForm.controls.DayType.value), takeUntilDestroyed(this.destroyRef)).subscribe(type => {
       const today = new Date();
       const compareDefaultDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-
       // 1-1. 清除/設定輔助欄位（僅在初始化時會被覆蓋，後續手動切換 DayType 時會被清除）
-
       // 先清除不相關的輔助欄位
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
       this.queryForm.controls.weekTo.setValue(null, { emitEvent: false });
@@ -253,73 +260,106 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.updateYMColumnHeader(type);
     });
     // 2. 訂閱 Base 輔助欄位變化 (不變)
-    this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+    this.queryForm.controls.year.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setWeekOptions(this.queryForm.controls.year.value); // 年份變動時，更新週次選項
       this.calculateDateRanges(this.queryForm.controls.DayType.value)
     });
     this.calculateDateRanges(this.queryForm.controls.DayType.value);
-    this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.weekTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.yearTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+    this.queryForm.controls.week.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.weekTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.yearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setWeekOptions(this.queryForm.controls.year.value); // yearTo 變動時，同步檢查週次選項上限
       this.calculateDateRanges(this.queryForm.controls.DayType.value);
     });
-    this.queryForm.controls.month.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.monthTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.halfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.halfYearTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.month.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.monthTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.halfYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.halfYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
 
     // 3. 訂閱 Compare 輔助欄位變化 (不變)
-    this.queryForm.controls.CompareYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareWeek.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareYearTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareWeekTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareMonth.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareMonthTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareHalfYearTo.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareWeek.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareWeekTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareMonth.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareMonthTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareHalfYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+    this.queryForm.controls.CompareHalfYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
 
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);// 初始化時先設定一次正確的欄位標頭
 
-    this.queryForm.get('PreSale')?.valueChanges.subscribe(() => {
+    this.queryForm.get('PreSale')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
       this.updateHistoryRequestBody();
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => {
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
       this.updateHistoryRequestBody();
     });
-    this.queryForm.get('ShowBuilding')?.valueChanges.subscribe(() => {
+    this.queryForm.get('ShowBuilding')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
       this.updateHistoryRequestBody();
+    });
+    // 監聽實際 DatePicker 的變更，確保 Header 年份 100% 同步
+    this.queryForm.controls.BaseDateFrom.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.refreshHeadersFromActualDates();
+    });
+
+    this.queryForm.controls.CompareDateFrom.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.refreshHeadersFromActualDates();
     });
   }
-  // 【新增】更新欄位群組標頭的邏輯
   /**
-   * 根據實際選擇的年度動態更新欄位群組標頭 (YYYY/XXXX)
-   * @param baseYearNum 基準年度 (例如 2025)
-   * @param compareYearNum 比較年度 (例如 2024)
+   * 直接從實際查詢的 DatePicker 欄位取出年份並刷新 Header
    */
-  private updateColumnGroupHeader(baseYearNum: number, compareYearNum: number): void {
-    const baseYearStr = `${baseYearNum}年`;
-    const compareYearStr = `${compareYearNum}年`;
+  private refreshHeadersFromActualDates(): void {
+    const baseFrom = this.queryForm.controls.BaseDateFrom.value;
+    const baseTo = this.queryForm.controls.BaseDateTo.value;
+    const compareFrom = this.queryForm.controls.CompareDateFrom.value;
+    const compareTo = this.queryForm.controls.CompareDateTo.value;
 
-    this.columnGroup.forEach(group => {
-      switch (group.field) {
-        case 'revenue':
-        case 'atv':
-        case 'salesPerArea':
-        case 'preSaleConsumer': // <--- 加入此項
-          group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
-          break;
-        case 'compareRevenue':
-        case 'compareATV':
-        case 'compareSalesPerArea':
-        case 'comparePreSaleConsumer': // <--- 加入此項
-          group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
-          break;
+    const parseYear = (val: any): number | undefined => {
+      if (!val) return undefined;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? undefined : d.getFullYear();
+    };
+
+    const baseYear = parseYear(baseFrom) ?? new Date().getFullYear();
+    const compareYear = parseYear(compareFrom) ?? (baseYear - 1);
+    const baseYearTo = parseYear(baseTo) ?? baseYear;
+    const compareYearTo = parseYear(compareTo) ?? compareYear;
+
+    this.updateColumnGroupHeader(baseYear, compareYear, baseYearTo, compareYearTo);
+  }
+  /**
+ * 根據實際選擇的起訖年度動態更新欄位群組標頭 (YYYY/XXXX)
+ */
+  private updateColumnGroupHeader(
+    baseYearNum: number,
+    compareYearNum: number,
+    baseYearToNum?: number,
+    compareYearToNum?: number
+  ): void {
+    const baseYearStr = (baseYearToNum && baseYearToNum !== baseYearNum)
+      ? `${baseYearNum}~${baseYearToNum}年`
+      : `${baseYearNum}年`;
+
+    const compareYearStr = (compareYearToNum && compareYearToNum !== compareYearNum)
+      ? `${compareYearNum}~${compareYearToNum}年`
+      : `${compareYearNum}年`;
+
+    // 重新指派 Array reference 以確保 OnPush 變更偵測生效
+    this.columnGroup = this.columnGroup.map(group => {
+      if (group.field.startsWith('diff')) {
+        return group; // 差異群組標頭固定文字，不隨基準/比較年度變動
       }
+      const newHeader = this.getOriginHeader(group.field);
+      if (group.field.startsWith('compare') || group.field.startsWith('Comp')) {
+        return { ...group, header: `${compareYearStr} ${newHeader}` };
+      }
+      return { ...group, header: `${baseYearStr} ${newHeader}` };
     });
+    this.cdr.markForCheck();
   }
   // 輔助方法：保持標頭後半段字串一致
   private getOriginHeader(field: string): string {
@@ -337,7 +377,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     */
   calculateDateRanges(type: string | null): void {
     if (!type) return;
-
     let baseRange: { from: Date, to: Date } | null = null;
     let compareRange: { from: Date, to: Date } | null = null;
 
@@ -351,7 +390,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     const baseHalfYear = this.queryForm.controls.halfYear.value;
     const baseHalfYearTo = this.queryForm.controls.halfYearTo.value;
 
-    // 比較期參數 (使用新的控制項)
+    // 比較期參數
     const compareYear = this.queryForm.controls.CompareYear.value;
     const compareWeek = this.queryForm.controls.CompareWeek.value;
     const compareYearTo = this.queryForm.controls.CompareYearTo.value;
@@ -365,99 +404,72 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     const baseYearNum = baseYear.getFullYear();
     const compareYearNum = compareYear.getFullYear();
-    // 起訖年度可跨年：迄年度未填時沿用起始年度
     const baseYearToNum = baseYearTo ? baseYearTo.getFullYear() : baseYearNum;
     const compareYearToNum = compareYearTo ? compareYearTo.getFullYear() : compareYearNum;
 
-
     switch (type) {
-      case '1': // 日營業報表 (固定為今日 vs 昨日，不需輔助欄位)
+      case '1': // 日營業報表 (預設當天 vs 昨天)
         {
           const today = new Date();
           const yesterday = new Date(today);
           yesterday.setDate(today.getDate() - 1);
-
           baseRange = { from: today, to: today };
           compareRange = { from: yesterday, to: yesterday };
           break;
         }
-
-      case '2': // 週營業報表 (支援 年度/週次 起訖區間，起訖年度可跨年)
+      case '2': // 週營業報表
         {
           if (baseWeek) {
             const baseFromRange = this.getWeekRange(baseYearNum, baseWeek);
             const baseToRange = baseWeekTo ? this.getWeekRange(baseYearToNum, baseWeekTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareWeek
           if (compareWeek) {
             const compareFromRange = this.getWeekRange(compareYearNum, compareWeek);
             const compareToRange = compareWeekTo ? this.getWeekRange(compareYearToNum, compareWeekTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '3': // 月營業報表 (支援 年度/月份 起訖區間，起訖年度可跨年)
+      case '3': // 月營業報表
         {
           if (baseMonth) {
             const baseFromRange = this.getMonthRange(baseYearNum, baseMonth);
             const baseToRange = baseMonthTo ? this.getMonthRange(baseYearToNum, baseMonthTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareMonth
           if (compareMonth) {
             const compareFromRange = this.getMonthRange(compareYearNum, compareMonth);
             const compareToRange = compareMonthTo ? this.getMonthRange(compareYearToNum, compareMonthTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '4': // 半年營業報表 (支援 年度/半年別 起訖區間，起訖年度可跨年)
+      case '4': // 半年營業報表
         {
           if (baseHalfYear) {
             const baseFromRange = this.getHalfYearRange(baseYearNum, baseHalfYear);
             const baseToRange = baseHalfYearTo ? this.getHalfYearRange(baseYearToNum, baseHalfYearTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareHalfYear
           if (compareHalfYear) {
             const compareFromRange = this.getHalfYearRange(compareYearNum, compareHalfYear);
             const compareToRange = compareHalfYearTo ? this.getHalfYearRange(compareYearToNum, compareHalfYearTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '5': // 年營業報表 (支援 年度 起訖區間)
+      case '5': // 年營業報表
         {
           const baseFromRange = this.getYearRange(baseYearNum);
           const baseToRange = this.getYearRange(baseYearToNum);
-          if (baseFromRange && baseToRange) {
-            baseRange = { from: baseFromRange.from, to: baseToRange.to };
-          }
-          // 比較期使用 CompareYear
+          if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
+
           const compareFromRange = this.getYearRange(compareYearNum);
           const compareToRange = this.getYearRange(compareYearToNum);
-          if (compareFromRange && compareToRange) {
-            compareRange = { from: compareFromRange.from, to: compareToRange.to };
-          }
+          if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           break;
         }
-
       default:
         baseRange = null;
         compareRange = null;
@@ -471,21 +483,13 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       CompareDateTo: compareRange?.to || null
     }, { emitEvent: false });
 
-    // 3. 處理標頭顯示年份 (關鍵點)
-    let bYearNum: number;
-    let cYearNum: number;
-
-    if (type === '1') {
-      // 如果日報強制要比「今年」與「去年」
-      bYearNum = new Date().getFullYear();
-      cYearNum = bYearNum - 1;
-    } else {
-      // 其他類型則跟隨下拉選單選取的年份
-      bYearNum = baseYear.getFullYear();
-      cYearNum = compareYear.getFullYear();
-    }
-
-    this.updateColumnGroupHeader(bYearNum, cYearNum);
+    // 傳入完整的起訖年度進行 Header 更新
+    this.updateColumnGroupHeader(
+      baseRange?.from ? baseRange.from.getFullYear() : baseYearNum,
+      compareRange?.from ? compareRange.from.getFullYear() : compareYearNum,
+      baseRange?.to ? baseRange.to.getFullYear() : baseYearToNum,
+      compareRange?.to ? compareRange.to.getFullYear() : compareYearToNum
+    );
   }
 
   /**
@@ -675,37 +679,22 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     return { from: dateFrom, to: dateTo };
   }
 
-  /**
-    * 根據 DayType 動態更新 YM (日期/週別/月份/半年度/年份) 欄位標頭
-    */
   private updateYMColumnHeader(dayType: string | null): void {
     if (!dayType) return;
+    const headerMap: Record<string, string> = {
+      '1': '日期',
+      '2': '週別',
+      '3': '月份',
+      '4': '半年度',
+      '5': '年份'
+    };
 
-    let newHeader = '日期區間'; // 預設值
+    const newHeader = headerMap[dayType] || '日期區間';
 
-    switch (dayType) {
-      case '1': // 日營業報表
-        newHeader = '日期';
-        break;
-      case '2': // 週營業報表
-        newHeader = '週別';
-        break;
-      case '3': // 月營業報表
-        newHeader = '月份';
-        break;
-      case '4': // 半年營業報表
-        newHeader = '半年度';
-        break;
-      case '5': // 年營業報表
-        newHeader = '年份';
-        break;
-    }
-
-    // 找到 YM 欄位並更新標頭
-    const ymColumn = this.columns.find(col => col.field === 'YM');
-    if (ymColumn) {
-      ymColumn.header = newHeader;
-    }
+    // 產生新的陣列 Reference
+    this.columns = this.columns.map(col =>
+      col.field === 'YM' ? { ...col, header: newHeader } : col
+    );
   }
 
 
@@ -748,8 +737,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       } as TLS32020QueryRequest;
 
       this.tls32020Service.queryTLS32020(body).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
+        this.withLoading(),
+        takeUntilDestroyed(this.destroyRef),
       ).subscribe(response => {
         this.historyRequestBody = body;
         const allData = response.Data;
@@ -792,7 +781,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
       '.pdf',
       (isLoading) => this.pdfBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
@@ -807,7 +796,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     const export$ = this.tls32020Service.exportTLS32020Excel(this.historyRequestBody);
 
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
       '.xlsx',
       (isLoading) => this.excelBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();

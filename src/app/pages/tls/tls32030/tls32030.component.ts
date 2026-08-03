@@ -303,64 +303,68 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
     }
   }
+
   calculateDateRanges(type: string | null): void {
     if (!type) return;
-    let baseRange: { from: Date, to: Date } | null = null;
+
     let compareRange: { from: Date, to: Date } | null = null;
+    let baseRange: { from: Date, to: Date } | null = null;
+
+    // 1. 日營業報表 (DayType === '1')
     if (type === '1') {
-      // 日營業報表：單一比較日/基準日各自由使用者選擇，不需要年度輔助欄位，故獨立處理、不受下方年度檢查阻擋
-      const baseDay = this.queryForm.controls.day.value;
-      const compareDay = this.queryForm.controls.CompareDay.value;
-      if (baseDay) baseRange = { from: baseDay, to: baseDay };
+      const compareDay = this.queryForm.controls.day.value;          // 左邊UI: 比較
+      const baseDay = this.queryForm.controls.CompareDay.value;       // 右邊UI: 基準
+
       if (compareDay) compareRange = { from: compareDay, to: compareDay };
-      this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
-      this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
+      if (baseDay) baseRange = { from: baseDay, to: baseDay };
+
       this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
       this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
+      this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
+      this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
       return;
     }
 
-    const baseYear = this.queryForm.controls.year.value;
-    const baseWeek = this.queryForm.controls.week.value;
-    const baseMonth = this.queryForm.controls.month.value;
-    const baseHalfYear = this.queryForm.controls.halfYear.value;
+    // 2. 週/月/半年/年 營業報表 (DayType 2 ~ 5)
+    const compareYear = this.queryForm.controls.year.value;           // 左邊UI: 比較
+    const compareWeek = this.queryForm.controls.week.value;
+    const compareMonth = this.queryForm.controls.month.value;
+    const compareHalfYear = this.queryForm.controls.halfYear.value;
 
-    const compareYear = this.queryForm.controls.CompareYear.value;
-    const compareWeek = this.queryForm.controls.CompareWeek.value;
-    const compareMonth = this.queryForm.controls.CompareMonth.value;
-    const compareHalfYear = this.queryForm.controls.CompareHalfYear.value;
+    const baseYear = this.queryForm.controls.CompareYear.value;       // 右邊UI: 基準
+    const baseWeek = this.queryForm.controls.CompareWeek.value;
+    const baseMonth = this.queryForm.controls.CompareMonth.value;
+    const baseHalfYear = this.queryForm.controls.CompareHalfYear.value;
 
-    // 【修改】如果沒有選擇年份，就不進行區間計算，保持留空
-    if (!baseYear || !compareYear) return;
+    if (!compareYear || !baseYear) return;
 
-    const baseYearNum = baseYear.getFullYear();
     const compareYearNum = compareYear.getFullYear();
+    const baseYearNum = baseYear.getFullYear();
 
     switch (type) {
-      case '2':
-        if (baseWeek) baseRange = this.getWeekRange(baseYearNum, baseWeek);
+      case '2': // 週
         if (compareWeek) compareRange = this.getWeekRange(compareYearNum, compareWeek);
+        if (baseWeek) baseRange = this.getWeekRange(baseYearNum, baseWeek);
         break;
-      case '3':
-        if (baseMonth) baseRange = this.getMonthRange(baseYearNum, baseMonth);
+      case '3': // 月
         if (compareMonth) compareRange = this.getMonthRange(compareYearNum, compareMonth);
+        if (baseMonth) baseRange = this.getMonthRange(baseYearNum, baseMonth);
         break;
-      case '4':
-        if (baseHalfYear) baseRange = this.getHalfYearRange(baseYearNum, baseHalfYear);
+      case '4': // 半年
         if (compareHalfYear) compareRange = this.getHalfYearRange(compareYearNum, compareHalfYear);
+        if (baseHalfYear) baseRange = this.getHalfYearRange(baseYearNum, baseHalfYear);
         break;
-      case '5':
-        baseRange = this.getYearRange(baseYearNum);
+      case '5': // 年
         compareRange = this.getYearRange(compareYearNum);
+        baseRange = this.getYearRange(baseYearNum);
         break;
-      // case '6' 區間營業報表：BaseDateFrom/BaseDateTo/CompareDateFrom/CompareDateTo 由使用者直接輸入
-      // （app-calendar-range 直接綁定），不透過本函式計算，維持 baseRange/compareRange 為 null 即可。
     }
 
-    this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
-    this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
+    // 正確對齊賦值：左邊算出的塞給 Compare，右邊算出的塞給 Base
     this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
     this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
+    this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
+    this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
   }
 
   private getMonthRange(yearNum: number, month: number): { from: Date, to: Date } | null {

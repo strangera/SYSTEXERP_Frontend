@@ -234,8 +234,9 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls32060" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false" [showEdit]="false"
-    [showManage]="false" [queryFunction]="tls32060Service.queryTLS32060.bind(tls32060Service)" [loading]="loading">
+    [columnGroup]="columnGroup" [totalRecords]="totalRecords" (detail)="onDetail1($event)" [showDelete]="false"
+    [showEdit]="false" [showManage]="false" [queryFunction]="tls32060Service.queryTLS32060.bind(tls32060Service)"
+    [loading]="loading">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="各櫃業績報表.PDF" [loading]="btnPDFLoading" icon="pi pi-file"

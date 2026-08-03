@@ -34,7 +34,8 @@ export class TableReportComponent implements OnChanges {
   // tableKey預設給路由名稱
   @Input() loading = false;
   // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];           // table 群組欄位
+  @Input() columnGroup?: ColumnGroup[];           // table 群組欄位 (第二層)
+  @Input() columnTopGroup?: ColumnGroup[];        // table 最外層群組欄位 (第一層，例如：比較期/基準期/差異)
   // 管理 欄位
   @Input() footerData: any;     // (總計)頁尾資料
   @Input() groupRowsBy?: string;    // (小計)群組欄位
@@ -75,6 +76,9 @@ export class TableReportComponent implements OnChanges {
   }
   getGroupHeader(groupField: string): string {
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  }
+  getTopGroupHeader(topGroupField: string): string {
+    return this.columnTopGroup?.find(g => g.field === topGroupField)?.header ?? topGroupField;
   }
   hasSubtotalColumns(): boolean {
     return this.columns.some(col => col.isSubTotal && this.groupRowsBy);

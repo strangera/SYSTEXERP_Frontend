@@ -12,88 +12,108 @@
     </app-table-caption>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
-    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+    @if (columnGroup && columnGroup.length > 0) {
+      <!-- 第一層：最外層群組標頭 (比較期/基準期/差異) -->
       <tr>
-        <th class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
-        <ng-container *ngFor="let col of columns; let i = index">
-          <!-- 如果是第一次出現這個群組 -->
-          <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center">
-              {{ getGroupHeader(col.groupField!) }}
+        <th class="text-center group-header" style="white-space: nowrap; min-width: 3.5rem;" rowspan="3" pFrozenColumn>序號</th>
+        @for (col of columns; track col.field) {
+          @if (tableUtility.shouldRenderTopGroupHeader(col, $index, columns)) {
+            <th [attr.colspan]="tableUtility.getTopGroupSpan(columns, col.topGroupField!)" class="text-center group-header">
+              {{ getTopGroupHeader(col.topGroupField!) }}
             </th>
-          </ng-container>
-          <!-- 如果是沒群組的欄位 -->
-          <ng-container *ngIf="!col.groupField">
-            <th rowspan="2" class="text-center" pFrozenColumn [frozen]="!!col.frozen"
+          }
+          @if (!col.topGroupField) {
+            <th rowspan="3" class="text-center group-header" pFrozenColumn [frozen]="!!col.frozen"
               [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
             </th>
-          </ng-container>
-        </ng-container>
+          }
+        }
       </tr>
-      <!-- 第二層：實際欄位標題 -->
+      <!-- 第二層：分類群組標頭 (營業額/客單價/坪效/預售消費) -->
       <tr>
-        <ng-container *ngFor="let col of columns">
-          <th *ngIf="col.groupField" class="text-center" style="min-width: 55px">
-            {{ col.header }}
-          </th>
-        </ng-container>
+        @for (col of columns; track col.field) {
+          @if (tableUtility.shouldRenderGroupHeader(col, $index, columns)) {
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="text-center">
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          }
+        }
       </tr>
-    </ng-container>
+      <!-- 第三層：實際欄位標題 -->
+      <tr>
+        @for (col of columns; track col.field) {
+          @if (col.groupField) {
+            <th class="text-center" style="min-width: 55px">
+              {{ col.header }}
+            </th>
+          }
+        }
+      </tr>
+    }
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded" let-rowgroup="rowgroup" let-rowspan="rowspan">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [style]="{ height: '46px' }" [pSelectableRowIndex]="rowIndex">
+      [style.height.px]="46" [pSelectableRowIndex]="rowIndex">
       <td class="w-1rem text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
-      <ng-container *ngFor="let col of columns">
-        <td *ngIf="col.field === 'YM' && rowgroup" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [attr.rowspan]="rowspan" style="text-overflow: ellipsis; min-width: 55px">
-          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-        </td>
-        <td *ngIf="col.field !== 'YM'" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          style="text-overflow: ellipsis; min-width: 55px">
-          <span>
+      @for (col of columns; track col.field) {
+        @if (col.field === 'YM' && rowgroup) {
+          <td [style.text-align]="col.align ? col.align : 'center'"
+            [attr.rowspan]="rowspan" style="text-overflow: ellipsis; min-width: 55px">
             {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-          </span>
-        </td>
-      </ng-container>
+          </td>
+        }
+        @if (col.field !== 'YM') {
+          <td [style.text-align]="col.align ? col.align : 'center'"
+            style="text-overflow: ellipsis; min-width: 55px">
+            <span>
+              {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+            </span>
+          </td>
+        }
+      }
     </tr>
-    <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
-      class="font-bold text-sm bg-gray-200 text-primary">
-      <td class="w-1rem text-center">
-        <span class="font-bold">小計</span>
-      </td>
-      <ng-container *ngFor="let col of columns">
-        <!-- 套用與明細列相同的對齊邏輯 -->
-        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
-          <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
+    @if (rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()) {
+      <tr class="font-bold text-sm bg-gray-200 text-primary">
+        <td class="w-1rem text-center">
+          <span class="font-bold">小計</span>
         </td>
-      </ng-container>
-    </tr>
-    <ng-container *ngIf="data.length < totalRecords && rowIndex === data.length - 1">
-      <tr *ngFor="let i of [0, 1, 2, 3]" style="height:46px">
-        <td>
-          <p-skeleton />
-        </td>
-        <td *ngFor="let col of columns">
-          <p-skeleton />
-        </td>
+        @for (col of columns; track col.field) {
+          <td [style.text-align]="col.align ? col.align : 'center'">
+            <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
+          </td>
+        }
       </tr>
-    </ng-container>
+    }
+    @if (data.length < totalRecords && rowIndex === data.length - 1) {
+      @for (i of [0, 1, 2, 3]; track i) {
+        <tr style="height:46px">
+          <td>
+            <p-skeleton />
+          </td>
+          @for (col of columns; track col.field) {
+            <td>
+              <p-skeleton />
+            </td>
+          }
+        </tr>
+      }
+    }
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
-    <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
-      <td class="w-1rem text-center">
-        <span class="font-bold">總計</span>
-      </td>
-      <ng-container *ngFor="let col of columns">
-        <!-- 套用動態對齊 -->
-        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
-          <span class="font-bold"> {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }} </span>
+    @if (footerData) {
+      <tr class="font-bold text-sm bg-gray-200 text-primary">
+        <td class="w-1rem text-center">
+          <span class="font-bold">總計</span>
         </td>
-      </ng-container>
-    </tr>
+        @for (col of columns; track col.field) {
+          <td [style.text-align]="col.align ? col.align : 'center'">
+            <span class="font-bold"> {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }} </span>
+          </td>
+        }
+      </tr>
+    }
   </ng-template>
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-between p-2">
@@ -109,13 +129,15 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr *ngIf="hasSearched">
-      <td [attr.colspan]="1 + columns.length">
-        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
-          <i class="pi pi-search mr-2"></i>
-          查無資料
-        </div>
-      </td>
-    </tr>
+    @if (hasSearched) {
+      <tr>
+        <td [attr.colspan]="1 + columns.length">
+          <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+            <i class="pi pi-search mr-2"></i>
+            查無資料
+          </div>
+        </td>
+      </tr>
+    }
   </ng-template>
 </p-table>
