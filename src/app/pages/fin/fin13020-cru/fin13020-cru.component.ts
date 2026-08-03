@@ -130,8 +130,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         row.INV_DeclareYM ??
         this.dataForm.get('PUR_RepYYYYMM')?.value;
 
-      console.log('row', row);
-
       this.dataForm.patchValue(
         {
           id: masterId,
