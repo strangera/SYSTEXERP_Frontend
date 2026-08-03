@@ -1,5 +1,5 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -36,7 +36,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
-  // 注入 Service
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
   private readonly fileExportService = inject(FileExportService);
@@ -196,16 +196,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.initializePage('TLS32020');
     this.setWeekOptions(this.queryForm.controls.year.value);// 初始化週次選項
     this.calculateInitialRanges('3');// 【保留】只在頁面初始化時執行一次完整的初始化
-    this.queryForm.controls.DayType.valueChanges.pipe(
-      startWith(this.queryForm.controls.DayType.value),
-      untilDestroyed(this)
-    ).subscribe(type => {
-
+    this.queryForm.controls.DayType.valueChanges.pipe(startWith(this.queryForm.controls.DayType.value), untilDestroyed(this)).subscribe(type => {
       const today = new Date();
       const compareDefaultDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-
       // 1-1. 清除/設定輔助欄位（僅在初始化時會被覆蓋，後續手動切換 DayType 時會被清除）
-
       // 先清除不相關的輔助欄位
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
       this.queryForm.controls.weekTo.setValue(null, { emitEvent: false });
@@ -293,33 +287,63 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.setColumns();
       this.updateHistoryRequestBody();
     });
-  }
-  // 【新增】更新欄位群組標頭的邏輯
-  /**
-   * 根據實際選擇的年度動態更新欄位群組標頭 (YYYY/XXXX)
-   * @param baseYearNum 基準年度 (例如 2025)
-   * @param compareYearNum 比較年度 (例如 2024)
-   */
-  private updateColumnGroupHeader(baseYearNum: number, compareYearNum: number): void {
-    const baseYearStr = `${baseYearNum}年`;
-    const compareYearStr = `${compareYearNum}年`;
-
-    this.columnGroup.forEach(group => {
-      switch (group.field) {
-        case 'revenue':
-        case 'atv':
-        case 'salesPerArea':
-        case 'preSaleConsumer': // <--- 加入此項
-          group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
-          break;
-        case 'compareRevenue':
-        case 'compareATV':
-        case 'compareSalesPerArea':
-        case 'comparePreSaleConsumer': // <--- 加入此項
-          group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
-          break;
-      }
+    // 監聽實際 DatePicker 的變更，確保 Header 年份 100% 同步
+    this.queryForm.controls.BaseDateFrom.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.refreshHeadersFromActualDates();
     });
+
+    this.queryForm.controls.CompareDateFrom.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.refreshHeadersFromActualDates();
+    });
+  }
+  /**
+   * 直接從實際查詢的 DatePicker 欄位取出年份並刷新 Header
+   */
+  private refreshHeadersFromActualDates(): void {
+    const baseFrom = this.queryForm.controls.BaseDateFrom.value;
+    const baseTo = this.queryForm.controls.BaseDateTo.value;
+    const compareFrom = this.queryForm.controls.CompareDateFrom.value;
+    const compareTo = this.queryForm.controls.CompareDateTo.value;
+
+    const parseYear = (val: any): number | undefined => {
+      if (!val) return undefined;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? undefined : d.getFullYear();
+    };
+
+    const baseYear = parseYear(baseFrom) ?? new Date().getFullYear();
+    const compareYear = parseYear(compareFrom) ?? (baseYear - 1);
+    const baseYearTo = parseYear(baseTo) ?? baseYear;
+    const compareYearTo = parseYear(compareTo) ?? compareYear;
+
+    this.updateColumnGroupHeader(baseYear, compareYear, baseYearTo, compareYearTo);
+  }
+  /**
+ * 根據實際選擇的起訖年度動態更新欄位群組標頭 (YYYY/XXXX)
+ */
+  private updateColumnGroupHeader(
+    baseYearNum: number,
+    compareYearNum: number,
+    baseYearToNum?: number,
+    compareYearToNum?: number
+  ): void {
+    const baseYearStr = (baseYearToNum && baseYearToNum !== baseYearNum)
+      ? `${baseYearNum}~${baseYearToNum}年`
+      : `${baseYearNum}年`;
+
+    const compareYearStr = (compareYearToNum && compareYearToNum !== compareYearNum)
+      ? `${compareYearNum}~${compareYearToNum}年`
+      : `${compareYearNum}年`;
+
+    // 重新指派 Array reference 以確保 OnPush 變更偵測生效
+    this.columnGroup = this.columnGroup.map(group => {
+      const newHeader = this.getOriginHeader(group.field);
+      if (group.field.startsWith('compare') || group.field.startsWith('Comp')) {
+        return { ...group, header: `${compareYearStr} ${newHeader}` };
+      }
+      return { ...group, header: `${baseYearStr} ${newHeader}` };
+    });
+    this.cdr.markForCheck();
   }
   // 輔助方法：保持標頭後半段字串一致
   private getOriginHeader(field: string): string {
@@ -337,7 +361,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     */
   calculateDateRanges(type: string | null): void {
     if (!type) return;
-
     let baseRange: { from: Date, to: Date } | null = null;
     let compareRange: { from: Date, to: Date } | null = null;
 
@@ -351,7 +374,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     const baseHalfYear = this.queryForm.controls.halfYear.value;
     const baseHalfYearTo = this.queryForm.controls.halfYearTo.value;
 
-    // 比較期參數 (使用新的控制項)
+    // 比較期參數
     const compareYear = this.queryForm.controls.CompareYear.value;
     const compareWeek = this.queryForm.controls.CompareWeek.value;
     const compareYearTo = this.queryForm.controls.CompareYearTo.value;
@@ -365,99 +388,72 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     const baseYearNum = baseYear.getFullYear();
     const compareYearNum = compareYear.getFullYear();
-    // 起訖年度可跨年：迄年度未填時沿用起始年度
     const baseYearToNum = baseYearTo ? baseYearTo.getFullYear() : baseYearNum;
     const compareYearToNum = compareYearTo ? compareYearTo.getFullYear() : compareYearNum;
 
-
     switch (type) {
-      case '1': // 日營業報表 (固定為今日 vs 昨日，不需輔助欄位)
+      case '1': // 日營業報表 (預設當天 vs 昨天)
         {
           const today = new Date();
           const yesterday = new Date(today);
           yesterday.setDate(today.getDate() - 1);
-
           baseRange = { from: today, to: today };
           compareRange = { from: yesterday, to: yesterday };
           break;
         }
-
-      case '2': // 週營業報表 (支援 年度/週次 起訖區間，起訖年度可跨年)
+      case '2': // 週營業報表
         {
           if (baseWeek) {
             const baseFromRange = this.getWeekRange(baseYearNum, baseWeek);
             const baseToRange = baseWeekTo ? this.getWeekRange(baseYearToNum, baseWeekTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareWeek
           if (compareWeek) {
             const compareFromRange = this.getWeekRange(compareYearNum, compareWeek);
             const compareToRange = compareWeekTo ? this.getWeekRange(compareYearToNum, compareWeekTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '3': // 月營業報表 (支援 年度/月份 起訖區間，起訖年度可跨年)
+      case '3': // 月營業報表
         {
           if (baseMonth) {
             const baseFromRange = this.getMonthRange(baseYearNum, baseMonth);
             const baseToRange = baseMonthTo ? this.getMonthRange(baseYearToNum, baseMonthTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareMonth
           if (compareMonth) {
             const compareFromRange = this.getMonthRange(compareYearNum, compareMonth);
             const compareToRange = compareMonthTo ? this.getMonthRange(compareYearToNum, compareMonthTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '4': // 半年營業報表 (支援 年度/半年別 起訖區間，起訖年度可跨年)
+      case '4': // 半年營業報表
         {
           if (baseHalfYear) {
             const baseFromRange = this.getHalfYearRange(baseYearNum, baseHalfYear);
             const baseToRange = baseHalfYearTo ? this.getHalfYearRange(baseYearToNum, baseHalfYearTo) : baseFromRange;
-            if (baseFromRange && baseToRange) {
-              baseRange = { from: baseFromRange.from, to: baseToRange.to };
-            }
+            if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
-          // 比較期使用 CompareYear 和 CompareHalfYear
           if (compareHalfYear) {
             const compareFromRange = this.getHalfYearRange(compareYearNum, compareHalfYear);
             const compareToRange = compareHalfYearTo ? this.getHalfYearRange(compareYearToNum, compareHalfYearTo) : compareFromRange;
-            if (compareFromRange && compareToRange) {
-              compareRange = { from: compareFromRange.from, to: compareToRange.to };
-            }
+            if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
         }
-
-      case '5': // 年營業報表 (支援 年度 起訖區間)
+      case '5': // 年營業報表
         {
           const baseFromRange = this.getYearRange(baseYearNum);
           const baseToRange = this.getYearRange(baseYearToNum);
-          if (baseFromRange && baseToRange) {
-            baseRange = { from: baseFromRange.from, to: baseToRange.to };
-          }
-          // 比較期使用 CompareYear
+          if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
+
           const compareFromRange = this.getYearRange(compareYearNum);
           const compareToRange = this.getYearRange(compareYearToNum);
-          if (compareFromRange && compareToRange) {
-            compareRange = { from: compareFromRange.from, to: compareToRange.to };
-          }
+          if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           break;
         }
-
       default:
         baseRange = null;
         compareRange = null;
@@ -471,21 +467,13 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       CompareDateTo: compareRange?.to || null
     }, { emitEvent: false });
 
-    // 3. 處理標頭顯示年份 (關鍵點)
-    let bYearNum: number;
-    let cYearNum: number;
-
-    if (type === '1') {
-      // 如果日報強制要比「今年」與「去年」
-      bYearNum = new Date().getFullYear();
-      cYearNum = bYearNum - 1;
-    } else {
-      // 其他類型則跟隨下拉選單選取的年份
-      bYearNum = baseYear.getFullYear();
-      cYearNum = compareYear.getFullYear();
-    }
-
-    this.updateColumnGroupHeader(bYearNum, cYearNum);
+    // 傳入完整的起訖年度進行 Header 更新
+    this.updateColumnGroupHeader(
+      baseRange?.from ? baseRange.from.getFullYear() : baseYearNum,
+      compareRange?.from ? compareRange.from.getFullYear() : compareYearNum,
+      baseRange?.to ? baseRange.to.getFullYear() : baseYearToNum,
+      compareRange?.to ? compareRange.to.getFullYear() : compareYearToNum
+    );
   }
 
   /**
@@ -675,37 +663,22 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     return { from: dateFrom, to: dateTo };
   }
 
-  /**
-    * 根據 DayType 動態更新 YM (日期/週別/月份/半年度/年份) 欄位標頭
-    */
   private updateYMColumnHeader(dayType: string | null): void {
     if (!dayType) return;
+    const headerMap: Record<string, string> = {
+      '1': '日期',
+      '2': '週別',
+      '3': '月份',
+      '4': '半年度',
+      '5': '年份'
+    };
 
-    let newHeader = '日期區間'; // 預設值
+    const newHeader = headerMap[dayType] || '日期區間';
 
-    switch (dayType) {
-      case '1': // 日營業報表
-        newHeader = '日期';
-        break;
-      case '2': // 週營業報表
-        newHeader = '週別';
-        break;
-      case '3': // 月營業報表
-        newHeader = '月份';
-        break;
-      case '4': // 半年營業報表
-        newHeader = '半年度';
-        break;
-      case '5': // 年營業報表
-        newHeader = '年份';
-        break;
-    }
-
-    // 找到 YM 欄位並更新標頭
-    const ymColumn = this.columns.find(col => col.field === 'YM');
-    if (ymColumn) {
-      ymColumn.header = newHeader;
-    }
+    // 產生新的陣列 Reference
+    this.columns = this.columns.map(col =>
+      col.field === 'YM' ? { ...col, header: newHeader } : col
+    );
   }
 
 
