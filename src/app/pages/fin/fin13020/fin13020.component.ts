@@ -1,25 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // UI
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import type { AddButton } from '@shared/components/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { environment } from 'src/environments/environment';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '../../../shared/components/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
@@ -41,11 +42,8 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     TableReportComponent,
   ],
 })
-export class FIN13020Component extends BasicQueryPageComponent<any> {
-  PUR_VoucherTypeOptions: any[] = [
-    { value: '33', label: '33-銷項三聯式銷貨退回或折讓證明單' },
-    { value: '34', label: '34-銷項二聯式銷貨退回或折讓證明單' },
-  ];
+export class FIN13020Component extends BasicQueryPageComponent<any> implements OnInit {
+  PUR_VoucherTypeOptions: { label: string; value: string }[] = [];
 
   queryForm = this.formBuilder.group({
     TXN_Ret_NoStart: [null, [Validators.maxLength(20)]],
@@ -105,13 +103,15 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private fin13020Service: FIN13020Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN13020', '/FIN/FIN13020CRU');
+    this.loadDropdownOptions();
 
     const fromCru = !!(history.state && history.state['fromCru']);
     if (fromCru) {
@@ -119,6 +119,16 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     } else {
       this.setDefaultDeclareYMByToday();
     }
+  }
+
+  private loadDropdownOptions(): void {
+    // 載入發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe((r) => {
+      this.PUR_VoucherTypeOptions = r.Data.INV_GUITypes
+        .filter((item) => ['33', '34'].includes(item.INV_GUIType))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map((item) => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+    });
   }
 
   private setDefaultDeclareYMByToday(): void {

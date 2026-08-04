@@ -11,6 +11,7 @@ import { environment } from 'src/environments/environment';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
@@ -47,10 +48,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   readonly CRUD = CRUDStatus;
 
   guiNumberOptions: { label: string; value: string }[] = [];
-  voucherTypeOptions = [
-    { label: '33 - 三聯式收銀專用發票', value: '33' },
-    { label: '34 - 二聯式收銀專用發票', value: '34' },
-  ];
+  voucherTypeOptions: { label: string; value: string }[] = [];
 
   taxTypeOptions = [
     { label: '免稅', value: '0' },
@@ -109,13 +107,15 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private apiService: FIN13010Service,
     private fin13020Service: FIN13020Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN13020', this.dataForm);
+    this.loadDropdownOptions();
 
     const row: any = (this as any).rowdata;
 
@@ -126,8 +126,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         row.PUR_RepYYYYMM ??
         row.INV_DeclareYM ??
         this.dataForm.get('PUR_RepYYYYMM')?.value;
-
-      console.log('rowdata', row, 'repRaw', repRaw);
 
       this.dataForm.patchValue(
         {
@@ -226,6 +224,16 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     } else if (this.crudstatus === CRUDStatus.Read) {
       this.loadTotalAmtForRead();
     }
+  }
+
+  private loadDropdownOptions(): void {
+    // 載入發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe((r) => {
+      this.voucherTypeOptions = r.Data.INV_GUITypes
+        .filter((item) => ['33', '34'].includes(item.INV_GUIType))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map((item) => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+    });
   }
 
   /* ----------------- 編輯/檢視：依目前 GUI_Track + PUR_GUINo 撈 FIN13020 ----------------- */
