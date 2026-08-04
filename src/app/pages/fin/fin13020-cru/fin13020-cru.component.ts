@@ -11,6 +11,7 @@ import { environment } from 'src/environments/environment';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
@@ -47,10 +48,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   readonly CRUD = CRUDStatus;
 
   guiNumberOptions: { label: string; value: string }[] = [];
-  voucherTypeOptions = [
-    { label: '33 - 三聯式收銀專用發票', value: '33' },
-    { label: '34 - 二聯式收銀專用發票', value: '34' },
-  ];
+  voucherTypeOptions: { label: string; value: string }[] = [];
 
   taxTypeOptions = [
     { label: '免稅', value: '0' },
@@ -79,9 +77,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   /** Edit/Read 模式下保存從 row 帶入的 Credit_Type，防止被各種計算邏輯清空 */
   private storedCreditType = '';
-
-  /** Edit/Read 模式下保存從 row 帶入的 Inv_Date，防止被 correspond API 查到的日期覆蓋 */
-  private storedInvDate: any = null;
 
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
@@ -112,13 +107,15 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private apiService: FIN13010Service,
     private fin13020Service: FIN13020Service,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN13020', this.dataForm);
+    this.loadDropdownOptions();
 
     const row: any = (this as any).rowdata;
 
@@ -169,8 +166,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
       // 先存好 row 的 Credit_Type，syncPurAmtFromDetails 會把它清掉
       this.storedCreditType = row.Credit_Type ?? '';
-      // 先存好 row 的 Inv_Date，避免後續 correspond API 查到別筆資料的日期覆蓋掉
-      this.storedInvDate = row.InvoiceDate ?? null;
 
       this.syncPurAmtFromDetails();
 
@@ -231,6 +226,16 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
+  private loadDropdownOptions(): void {
+    // 載入發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe((r) => {
+      this.voucherTypeOptions = r.Data.INV_GUITypes
+        .filter((item) => ['33', '34'].includes(item.INV_GUIType))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map((item) => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+    });
+  }
+
   /* ----------------- 編輯/檢視：依目前 GUI_Track + PUR_GUINo 撈 FIN13020 ----------------- */
   private setupVoucherNoWatcher(): void {
     this.dataForm.get('Voucher_No')?.valueChanges
@@ -288,17 +293,12 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       { emitEvent: false }
     );
 
-    // clearLoadedInvoiceFields 會清掉 Credit_Type 和 Inv_Date，先保存
+    // clearLoadedInvoiceFields 會清掉 Credit_Type，先保存
     const savedCreditType = this.storedCreditType || this.dataForm.getRawValue().Credit_Type;
-    const savedInvDate = this.storedInvDate ?? this.dataForm.getRawValue().Inv_Date;
     this.clearLoadedInvoiceFields(false);
     // 還原 Credit_Type
     if (savedCreditType) {
       this.dataForm.patchValue({ Credit_Type: savedCreditType }, { emitEvent: false });
-    }
-    // 還原 Inv_Date：Edit 模式一律信任 row 帶入的發票日期，不讓 correspond API 覆蓋
-    if (savedInvDate) {
-      this.dataForm.patchValue({ Inv_Date: savedInvDate }, { emitEvent: false });
     }
 
     // 呼叫 correspond API 才能取得原始發票的正確剩餘金額
@@ -331,6 +331,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         const dto = res?.Data?.[0];
         if (!dto) return;
         this.dataForm.patchValue({
+          Inv_Date: dto.InvoiceDate ?? null,
           Inv_Net: dto.PUR_Net ?? null,
           Inv_Tax: dto.PUR_Tax ?? null,
           Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
@@ -397,8 +398,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       {
         GUI_Track: dto.InvoiceTrack ?? track,
         PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
-        // Edit/Read 模式一律信任 row 帶入的發票日期，不讓 correspond API 查到的日期覆蓋
-        ...(isCreateMode ? { Inv_Date: dto.InvoiceDate ?? null } : {}),
+        Inv_Date: dto.InvoiceDate ?? null,
         PUR_VoucherType: voucherType,
         PUR_TaxType: dto.PUR_TaxType ?? '',
         Inv_Net: dto.PUR_Net ?? null,
