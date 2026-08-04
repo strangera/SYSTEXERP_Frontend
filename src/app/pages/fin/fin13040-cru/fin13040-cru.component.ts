@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column } from '@others/component/table/table.model';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -17,16 +18,15 @@ import {
   FieldsConfig,
 } from '@shared/components/dropdown-table/dropdown-table.component';
 import { validateRequired } from '@shared/components/table-edit/validate-field.model';
-import { Column } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
@@ -57,8 +57,7 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 })
 export class FIN13040CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
     // InvoiceType hidden in UI; default to '35' so backend receives 35 when creating
@@ -232,15 +231,15 @@ export class FIN13040CRUComponent
       .get('SAL_Type')
       ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val) => {
-  if (this.isLoadingDetail) return;
-  if (!val) return;
+        if (this.isLoadingDetail) return;
+        if (!val) return;
 
-  console.log('[valueChanges] SAL_Type 改變:', val);
-  this.loadINVItemOptions();
-});
+        console.log('[valueChanges] SAL_Type 改變:', val);
+        this.loadINVItemOptions();
+      });
 
     // 初始若已有 SAL_Type
-  
+
 
     // 統編 free-text 輸入時，若剛好符合選項則帶入廠商資訊
     // （下拉選取的情境由 onBuyerSelect 處理）
@@ -249,6 +248,16 @@ export class FIN13040CRUComponent
       ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val: any) => {
         if (val && typeof val === 'object') return; // 選取事件由 onBuyerSelect 處理
+
+        // 使用者可能複製貼上下拉顯示的完整文字「代號 - 名稱」，只取 "-" 前的代號作為實際值
+        if (typeof val === 'string' && val.includes(' - ')) {
+          const code = val.split(' - ')[0].trim();
+          if (code !== val) {
+            this.dataForm.controls.Buyer_Uniform.setValue(code);
+            return;
+          }
+        }
+
         const selected = this.Buyer_Uniform_Options.find(
           (o) => o.value === val,
         );
@@ -341,63 +350,63 @@ export class FIN13040CRUComponent
 
   // ======================== 載入明細 ========================
   private loadDetail(rowData: any): void {
-  this.loading = true;
-  this.isLoadingDetail = true;
+    this.loading = true;
+    this.isLoadingDetail = true;
 
-  const payload = {
-    MID: 0,
-    STO_No: rowData.STO_No ?? '',
-    ID: rowData.ID ?? rowData.id ?? rowData.No,
-  };
+    const payload = {
+      MID: 0,
+      STO_No: rowData.STO_No ?? '',
+      ID: rowData.ID ?? rowData.id ?? rowData.No,
+    };
 
-  this.fin13040Service
-    .queryFIN13040Detail(payload)
-    .pipe(
-  untilDestroyed(this)
-)
-    .subscribe((res) => {
-      const data = res.Data;
-      if (!data) return;
+    this.fin13040Service
+      .queryFIN13040Detail(payload)
+      .pipe(
+        untilDestroyed(this)
+      )
+      .subscribe((res) => {
+        const data = res.Data;
+        if (!data) return;
 
-      const header = data.FIN13040Detail_APS4023;
-      const details = data.FIN13040Detail_APS40235 ?? [];
+        const header = data.FIN13040Detail_APS4023;
+        const details = data.FIN13040Detail_APS40235 ?? [];
 
-      this.currentDetailId = header?.ID ?? null;
+        this.currentDetailId = header?.ID ?? null;
 
-      if (header?.InvoiceType) {
-        this.fillHeaderData(header);
-      }
+        if (header?.InvoiceType) {
+          this.fillHeaderData(header);
+        }
 
-      const salType = header?.SAL_Type ?? '';
-      if (salType) {
-        this.dataForm.patchValue(
-          { SAL_Type: salType },
-          { emitEvent: false }
-        );
-      }
+        const salType = header?.SAL_Type ?? '';
+        if (salType) {
+          this.dataForm.patchValue(
+            { SAL_Type: salType },
+            { emitEvent: false }
+          );
+        }
 
-      this.loadINVItemOptions(() => {
-  this.fillDetailData(details);
+        this.loadINVItemOptions(() => {
+          this.fillDetailData(details);
 
-  if (this.formTitle === '編輯資料') {
-    this.lockEditModeFields();
+          if (this.formTitle === '編輯資料') {
+            this.lockEditModeFields();
+          }
+
+          // 全部完成後才解除 Loading
+          this.loading = false;
+          this.isLoadingDetail = false;
+        });
+      });
   }
-
-  // 全部完成後才解除 Loading
-  this.loading = false;
-  this.isLoadingDetail = false;
-});
+  private lockEditModeFields(): void {
+    Object.keys(this.dataForm.controls).forEach((key) => {
+      if (!['Voucher_No', 'INV_REMARK'].includes(key)) {
+        this.dataForm.get(key)?.disable({ emitEvent: false });
+      } else {
+        this.dataForm.get(key)?.enable({ emitEvent: false });
+      }
     });
-}
-private lockEditModeFields(): void {
-  Object.keys(this.dataForm.controls).forEach((key) => {
-    if (!['Voucher_No', 'INV_REMARK'].includes(key)) {
-      this.dataForm.get(key)?.disable({ emitEvent: false });
-    } else {
-      this.dataForm.get(key)?.enable({ emitEvent: false });
-    }
-  });
-}
+  }
 
   /** 將明細轉為 table-edit 可用格式 */
   private fillDetailData(details: any[]): void {
@@ -479,7 +488,11 @@ private lockEditModeFields(): void {
   // ======================== 下拉選單 ========================
   /** autocomplete 輸入時過濾建議（限50筆） */
   onBuyerInputChange(event: Record<string, string>): void {
-    const query = (Object.values(event)[0] ?? '').toLowerCase();
+    let query = (Object.values(event)[0] ?? '').toLowerCase();
+    // 使用者可能複製貼上下拉顯示的完整文字「代號 - 名稱」，過濾建議清單時也只取 "-" 前的代號比對
+    if (query.includes(' - ')) {
+      query = query.split(' - ')[0].trim();
+    }
     this.filteredBuyerOptions = this.Buyer_Uniform_Options.filter(
       (o) =>
         o.value.toLowerCase().includes(query) ||
@@ -538,13 +551,13 @@ private lockEditModeFields(): void {
   loadINVItemOptions(done?: () => void): void {
     const salType = this.dataForm.get('SAL_Type')?.value || '';
     if (!salType) {
-  this.INV_ItemName_Options = [];
-  this.loadAndSetupColumns();
+      this.INV_ItemName_Options = [];
+      this.loadAndSetupColumns();
 
-  done?.();
+      done?.();
 
-  return;
-}
+      return;
+    }
 
     this.dropDownListService
       .queryTDS1008_DropDownList([salType])
