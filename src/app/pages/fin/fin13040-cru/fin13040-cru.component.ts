@@ -76,7 +76,7 @@ export class FIN13040CRUComponent
     PUR_InvoiceTitle: ['', [Validators.maxLength(64)]],
     Buyer_VenNo: [''],
     Buyer_Name: [''],
-    PUR_Tax: [{ value: 0, disabled: true }],
+    PUR_Tax: [0],
     PUR_Amt: [{ value: 0, disabled: true }],
     PUR_Net: [{ value: 0, disabled: true }],
     Invoice_Cancel: [{ value: 'N', disabled: true }],
@@ -105,6 +105,8 @@ export class FIN13040CRUComponent
     { label: '否', value: 'N' },
   ];
   private isLoadingDetail = false;
+  /** 使用者是否已手動調整過稅額（明細表無稅額欄位可調整時，改由此header欄位手動輸入） */
+  private isTaxManuallyEdited = false;
   /** 明細資料表 */
   columns: EditColumn[] = [];
   data: any[] = [];
@@ -278,8 +280,36 @@ export class FIN13040CRUComponent
 
     // 稅類別改變時，重新載入稅率
     this.dataForm.get('PUR_TaxType')?.valueChanges.subscribe((taxType) => {
+      const isNoTax = this.isNoTaxType(taxType);
+      // 零稅/免稅：稅額一律歸0且不可手動調整；重算前先清除手動旗標，讓加總改回自動算出的0
+      if (isNoTax) this.isTaxManuallyEdited = false;
+
       this.recalculateAllDetailByTaxType(taxType);
+
+      if (isNoTax) {
+        this.dataForm.controls.PUR_Tax.disable({ emitEvent: false });
+      } else if (!this.isFormReadable && !this.isEditMode) {
+        this.dataForm.controls.PUR_Tax.enable({ emitEvent: false });
+      }
     });
+
+    // 明細表無稅額欄位，若使用者手動修改上方稅額，記錄為手動調整並重算未稅金額（未稅金額 = 含稅金額 - 稅額）
+    // 內部自動加總（updateMasterAmounts/recalculateMasterAmount）都以 emitEvent:false 寫回，不會觸發這裡
+    this.dataForm
+      .get('PUR_Tax')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.isTaxManuallyEdited = true;
+        const amt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
+        const tax = Number(this.dataForm.controls.PUR_Tax.value) || 0;
+        // 明細無稅額欄位可調整，改由最後一筆有效明細承接與自動加總的差額，
+        // 讓「下方銷售金額加總」自動跟上手動調整後的「上方未稅金額」，不用使用者自己手改明細湊數
+        this.redistributeTaxToDetail(tax);
+        this.dataForm.patchValue(
+          { PUR_Net: amt - tax },
+          { emitEvent: false },
+        );
+      });
   }
 
   loadGuiTrackOptions(event: any): void {
@@ -604,8 +634,35 @@ export class FIN13040CRUComponent
     return `${y}${m}`;
   }
 
+  // 手動調整上方稅額時，把差額回填到最後一筆有效明細，讓明細的含稅/銷售金額加總持續與上方表單一致
+  private redistributeTaxToDetail(manualTax: number): void {
+    const validRows = this.data.filter((d) => !d._isAutoInsertCandidate);
+    if (validRows.length === 0) return;
+
+    const lastRow = validRows[validRows.length - 1];
+    const otherTax = validRows.reduce(
+      (sum, r) => sum + (r === lastRow ? 0 : Number(r.TXN_Tax) || 0),
+      0,
+    );
+
+    const txnSaleAmt = Number(lastRow.TXN_SaleAmt) || 0;
+    const qty = Number(lastRow.TXN_Qty) || 0;
+    const newTax = manualTax - otherTax;
+    const newSaleAmt = txnSaleAmt - newTax;
+    const updatedLastRow = {
+      ...lastRow,
+      TXN_Tax: newTax,
+      SaleAmt: newSaleAmt,
+      PLU_SalePrc: qty > 0 ? Math.round(newSaleAmt / qty) : newSaleAmt,
+    };
+
+    this.data = this.data.map((row) =>
+      row === lastRow ? updatedLastRow : row,
+    );
+  }
+
   updateMasterAmounts(): void {
-    const totalTax = this.data.reduce(
+    const autoTax = this.data.reduce(
       (sum, r) => sum + (Number(r.TXN_Tax) || 0),
       0,
     );
@@ -613,12 +670,23 @@ export class FIN13040CRUComponent
       (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
       0,
     );
-    const net = totalAmt - totalTax;
-    this.dataForm.patchValue({
-      PUR_Tax: totalTax,
-      PUR_Amt: totalAmt,
-      PUR_Net: net,
-    });
+    this.applyMasterAmounts(totalAmt, autoTax);
+  }
+
+  // 明細總額寫回上方表單：稅額若使用者已手動調整過，維持手動值，未稅金額一律用「含稅金額-稅額」回推
+  private applyMasterAmounts(totalAmt: number, autoTax: number): void {
+    const tax = this.isTaxManuallyEdited
+      ? Number(this.dataForm.controls.PUR_Tax.value) || 0
+      : autoTax;
+    const net = totalAmt - tax;
+    this.dataForm.patchValue(
+      {
+        PUR_Tax: tax,
+        PUR_Amt: totalAmt,
+        PUR_Net: net,
+      },
+      { emitEvent: false },
+    );
   }
 
   private loadAndSetupColumns(): void {
@@ -681,10 +749,23 @@ export class FIN13040CRUComponent
           validateRequired,
         ],
         calculate: (rowData, value) => {
+          const qty = Number(rowData.TXN_Qty) || 0;
+
+          // 使用者已手動調整過稅額：稅額視為固定值，未稅金額直接用「含稅金額-稅額」回推，不再用公式重算稅額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const saleAmt = value - tax;
+            const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : saleAmt;
+            return {
+              TXN_SaleAmt: value,
+              TXN_Tax: tax,
+              PLU_SalePrc: unitPrice,
+              SaleAmt: saleAmt,
+            };
+          }
+
           const taxType = this.dataForm.get('PUR_TaxType')?.value;
           const isNoTax = this.isNoTaxType(taxType);
-
-          const qty = Number(rowData.TXN_Qty) || 0;
 
           const tax = isNoTax ? 0 : Math.round(value / 21);
 
@@ -710,10 +791,18 @@ export class FIN13040CRUComponent
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
-          const taxType = this.dataForm.get('PUR_TaxType')?.value;
-          const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Math.round(Number(value) * qty);
+
+          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const txnSaleAmt = saleAmt + tax;
+            return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
+          }
+
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
           const txnSaleAmt = isNoTax
             ? saleAmt
             : Math.round((saleAmt * 21) / 20);
@@ -728,15 +817,27 @@ export class FIN13040CRUComponent
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
-          const taxType = this.dataForm.get('PUR_TaxType')?.value;
-          const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Number(value);
+          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
+
+          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const txnSaleAmt = saleAmt + tax;
+            return {
+              TXN_SaleAmt: txnSaleAmt,
+              TXN_Tax: tax,
+              PLU_SalePrc: unitPrice,
+            };
+          }
+
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
           const txnSaleAmt = isNoTax
             ? saleAmt
             : Math.round((saleAmt * 21) / 20);
           const tax = txnSaleAmt - saleAmt;
-          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
           return {
             TXN_SaleAmt: txnSaleAmt,
             TXN_Tax: tax,
@@ -830,20 +931,11 @@ export class FIN13040CRUComponent
       return sum + (Number(row.TXN_SaleAmt) || 0);
     }, 0);
 
-    const purTax = this.data.reduce((sum, row) => {
+    const autoTax = this.data.reduce((sum, row) => {
       return sum + (Number(row.TXN_Tax) || 0);
     }, 0);
 
-    const purNet = purAmt - purTax;
-
-    this.dataForm.patchValue(
-      {
-        PUR_Amt: purAmt,
-        PUR_Tax: purTax,
-        PUR_Net: purNet,
-      },
-      { emitEvent: false },
-    );
+    this.applyMasterAmounts(purAmt, autoTax);
   }
 
   // ======================== 儲存 ========================
@@ -855,6 +947,33 @@ export class FIN13040CRUComponent
 
       this.loading = false;
       this.messageService.errorBubble(errorMessage);
+      return;
+    }
+
+    // 卡控：明細加總須與上方表單金額一致才可存檔
+    const detailTaxedTotal = this.data.reduce(
+      (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
+      0,
+    );
+    const detailUntaxedTotal = this.data.reduce(
+      (sum, r) => sum + (Number(r.SaleAmt) || 0),
+      0,
+    );
+    const headerAmt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
+    const headerNet = Number(this.dataForm.controls.PUR_Net.value) || 0;
+
+    if (Math.abs(detailTaxedTotal - headerAmt) > 0.5) {
+      this.loading = false;
+      this.messageService.errorBubble(
+        '列表含稅金額加總需等於總含稅金額，請確認',
+      );
+      return;
+    }
+    if (Math.abs(detailUntaxedTotal - headerNet) > 0.5) {
+      this.loading = false;
+      this.messageService.errorBubble(
+        '列表銷售金額加總需等於總未稅金額，請確認',
+      );
       return;
     }
 
