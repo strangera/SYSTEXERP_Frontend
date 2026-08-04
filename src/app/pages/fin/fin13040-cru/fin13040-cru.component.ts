@@ -280,6 +280,9 @@ export class FIN13040CRUComponent
 
     // 稅類別改變時，重新載入稅率
     this.dataForm.get('PUR_TaxType')?.valueChanges.subscribe((taxType) => {
+      // 載入既有資料（編輯/檢視）時是程式帶入既有稅別，不是使用者操作，金額一律照存檔值顯示，不重算
+      if (this.isLoadingDetail) return;
+
       const isNoTax = this.isNoTaxType(taxType);
       // 零稅/免稅：稅額一律歸0且不可手動調整；重算前先清除手動旗標，讓加總改回自動算出的0
       if (isNoTax) this.isTaxManuallyEdited = false;
@@ -299,6 +302,9 @@ export class FIN13040CRUComponent
       .get('PUR_Tax')
       ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe(() => {
+        // 載入既有資料（編輯/檢視）時是程式帶入既有稅額，不是使用者操作，金額一律照存檔值顯示，不重算
+        if (this.isLoadingDetail) return;
+
         this.isTaxManuallyEdited = true;
         const amt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
         const tax = Number(this.dataForm.controls.PUR_Tax.value) || 0;
@@ -447,20 +453,16 @@ export class FIN13040CRUComponent
       return;
     }
 
+    // 編輯/檢視：明細金額一律照存檔值直接顯示，不重算（避免跟公式反算出的值不一致）
     this.data = details.map((d) => {
       const saleAmt = Number(d.TXN_SaleAmt ?? 0);
       const tax = Number(d.TXN_Tax ?? 0);
       const qty = Number(d.TXN_Qty ?? 0);
-      // 重算未稅單價，確保顯示一致
-      const unitPrice =
-        qty > 0
-          ? Math.round(saleAmt / qty - saleAmt / qty / 21)
-          : Number(d.PLU_SalePrc ?? 0);
       return {
         PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
         PLU_Name: d.PLU_Name ?? '',
         TXN_Qty: qty,
-        PLU_SalePrc: unitPrice,
+        PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
         TXN_SaleAmt: saleAmt,
         TXN_Tax: tax,
         SaleAmt: saleAmt - tax,
@@ -505,14 +507,8 @@ export class FIN13040CRUComponent
         return row;
       });
     }
-
-    // 填完明細後，依課稅別重算（確保免稅/零稅時 TXN_Tax=0）
-    const taxType = this.dataForm.get('PUR_TaxType')?.value;
-    if (taxType) {
-      this.recalculateAllDetailByTaxType(taxType);
-    } else {
-      this.updateMasterAmounts();
-    }
+    // 編輯/檢視不重算金額：上方表單金額已由 fillHeaderData 直接帶入存檔值，這裡不再呼叫
+    // recalculateAllDetailByTaxType/updateMasterAmounts 覆蓋，確保畫面與存檔值一致
   }
 
   // ======================== 下拉選單 ========================
@@ -1043,9 +1039,9 @@ export class FIN13040CRUComponent
         InvoiceTime: new Date().toISOString(),
         Invoice_Cancel:
           v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
-        PUR_Net: this.dataForm.value.PUR_Net ?? 0,
-        PUR_Tax: this.dataForm.value.PUR_Tax ?? 0,
-        PUR_Amt: this.dataForm.value.PUR_Amt ?? 0,
+        PUR_Net: v.PUR_Net ?? 0,
+        PUR_Tax: v.PUR_Tax ?? 0,
+        PUR_Amt: v.PUR_Amt ?? 0,
         CRT_USR_No: 'admin',
         CRT_USR_Name: '系統管理員',
         CRT_Date: new Date().toISOString(),
