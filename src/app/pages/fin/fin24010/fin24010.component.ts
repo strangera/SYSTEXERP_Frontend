@@ -28,7 +28,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
   imports: [NgIf, ButtonModule, AsyncPipe, CalendarRangeComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Response> implements OnInit {
-  queryForm = this.formBuilder.nonNullable.group({
+  queryForm = this.formBuilder.group({
     ACP_No: [null, [Validators.maxLength(14)]], // 應付帳款編號 (varchar(14))
     Org_Id: [null, [Validators.maxLength(20)]], // 組織代碼 (varchar(20))
     ACP_YYYYMM: [null, [Validators.maxLength(6)]], // 應付帳款年月 (varchar(6), 必填)
