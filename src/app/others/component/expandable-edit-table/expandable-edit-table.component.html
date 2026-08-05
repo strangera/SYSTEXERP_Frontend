@@ -47,6 +47,8 @@
         <th *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
           style="text-align: center">
           {{ col.header }}
+          <i *ngIf="col.headerTooltip" class="pi pi-exclamation-circle ml-1 text-yellow-600"
+            style="cursor: help; font-size: 0.75rem" [pTooltip]="col.headerTooltip" tooltipPosition="top"></i>
         </th>
         <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">
           操作
@@ -64,6 +66,8 @@
         <th *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
           style="text-align: center">
           {{ col.header }}
+          <i *ngIf="col.headerTooltip" class="pi pi-exclamation-circle ml-1 text-yellow-600"
+            style="cursor: help; font-size: 0.75rem" [pTooltip]="col.headerTooltip" tooltipPosition="top"></i>
         </th>
         <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">操作</th>
       </tr>
@@ -146,6 +150,9 @@
                   getNumberInputConfig(col).maxFractionDigits
                 " [step]="getNumberInputConfig(col).step" [mode]="getNumberInputConfig(col).mode"
                 [useGrouping]="getNumberInputConfig(col).useGrouping"></p-inputNumber>
+              <i *ngIf="col.type === 'number' && hasCellError(rowData, col.field)"
+                class="pi pi-exclamation-circle error-icon" style="cursor: help"
+                [pTooltip]="getCellErrorMessage(rowData, col.field)" tooltipPosition="top"></i>
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(rowData, col.field)"
