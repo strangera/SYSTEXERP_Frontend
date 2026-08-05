@@ -12,7 +12,6 @@
             <app-radiobutton groupname="DayType" [control]="queryForm.controls.DayType" [submitted]="submitted"
               [options]="DayTypeOptions"></app-radiobutton>
           </div>
-          <!-- 註記: 比較日期基準日期呈現字眼互換，TS主邏輯皆無改動 -->
           <!-- 日營業報表 -->
           <div class="flex col-12" *ngIf="queryForm.controls.DayType.value === '1'">
             <div class="col-6 flex flex-column border-right-1 surface-border">
@@ -162,8 +161,8 @@
                 <B><u>比較資料查詢條件</u></B>
               </div>
               <div class="col-12">
-                <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.BaseDateFrom"
-                  [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
+                <app-calendar-range label="比較日期區間" [startControl]="queryForm.controls.CompareDateFrom"
+                  [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
               </div>
             </div>
             <div class="col-6 flex flex-column">
@@ -171,8 +170,8 @@
                 <B><u>基準資料查詢條件</u></B>
               </div>
               <div class="col-12">
-                <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.CompareDateFrom"
-                  [endControl]="queryForm.controls.CompareDateTo" [submitted]="submitted" />
+                <app-calendar-range label="基準日期區間" [startControl]="queryForm.controls.BaseDateFrom"
+                  [endControl]="queryForm.controls.BaseDateTo" [submitted]="submitted" />
               </div>
             </div>
           </div>
