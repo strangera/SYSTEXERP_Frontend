@@ -518,7 +518,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     // 從 query params 或 state 取得模式與資料
     const state = history.state;
     const now = new Date();
-    const today = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+    // 建立/修改時間統一呈現為 yyyymmddhhmm (24 時制)
+    const nowStamp = this.formatDateTimeToMinute(now);
     const userName = this.user?.user_Name ?? '';
 
     if (state?.mode === 'view') {
@@ -529,15 +530,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       this.crudstatus = CRUDStatus.Edit;
       this.wizardState.queryRowData = state.data;
       await this.loadContractData(state.data.talent_id);
-      // 編輯模式：覆蓋修改者與修改時間為當前登入者與今天
-      this.step1Form.patchValue({ upd_usr_name: userName, upd_date: today }, { emitEvent: false });
+      // 編輯模式：覆蓋修改者與修改時間為當前登入者與現在時間
+      this.step1Form.patchValue({ upd_usr_name: userName, upd_date: nowStamp }, { emitEvent: false });
     } else {
       // 新增模式
       this.crudstatus = CRUDStatus.Create;
       this.tlsBaseService.initializeEmptyForm(this.step1Form, 'TLS13010');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.step1Form);
-      // 新增模式：建立者與建立時間帶入當前登入者與今天
-      this.step1Form.patchValue({ crt_usr_name: userName, crt_date: today }, { emitEvent: false });
+      // 新增模式：建立者與建立時間帶入當前登入者與現在時間
+      this.step1Form.patchValue({ crt_usr_name: userName, crt_date: nowStamp }, { emitEvent: false });
     }
   }
 
@@ -568,6 +569,13 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           }
         }
         data['check_typeList'] = checkTypeList;
+
+        // 建立/修改/審核時間統一呈現為 yyyymmddhhmm (24 時制)
+        for (const field of ['crt_date', 'upd_date', 'app_date']) {
+          if (data[field]) {
+            data[field] = this.formatDateTimeToMinute(data[field]);
+          }
+        }
 
         // 填充 Step 1 表單
         this.step1Form.patchValue(data, { emitEvent: false });
@@ -2138,6 +2146,26 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   /**
    * 處理 API 回傳的資料，轉換日期欄位
    */
+  /**
+   * 將日期時間值格式化為 yyyy/MM/dd HH:mm (24 時制)，供建立/修改/審核時間顯示。
+   * 無法解析時原值回傳（避免顯示空白），空值回傳空字串。
+   */
+  private formatDateTimeToMinute(value: unknown): string {
+    if (!value) return '';
+    let raw: Date;
+    if (value instanceof Date) {
+      raw = value;
+    } else {
+      const s = String(value);
+      raw = new Date(s);
+      // 後端可能回傳 "2026-05-13 09:30:00"（帶空白、非標準 ISO），補上 T 再試一次
+      if (isNaN(raw.getTime())) raw = new Date(s.replace(' ', 'T'));
+    }
+    if (isNaN(raw.getTime())) return typeof value === 'string' ? value : '';
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${raw.getFullYear()}/${p(raw.getMonth() + 1)}/${p(raw.getDate())} ${p(raw.getHours())}:${p(raw.getMinutes())}`;
+  }
+
   private processDateFields(data: Record<string, unknown>): Record<string, unknown> {
     const processed = { ...data };
 

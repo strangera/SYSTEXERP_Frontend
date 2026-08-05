@@ -20,7 +20,14 @@ import { AddButton, Column, createPaginationConfig } from '@others/component/tab
 
 // Shared Services
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatApproveStatus } from '@others/constants/business.constants';
+import {
+  formatApproveStatus,
+  formatDecoType,
+  formatMoneyType,
+  formatTltTermType,
+  formatStoreWay,
+  formatOpenflagStatus,
+} from '@others/constants/business.constants';
 import { Actions } from '@shared/service/permission-guard.service';
 import { SharedDropdownService } from '@others/services/shared-dropdown.service';
 
@@ -237,16 +244,27 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   totalRecords = 0;
   selectedItems: ContractItem[] = [];
 
+  private readonly formatDate = (value: string): string => value ? new Date(value).toLocaleDateString() : '';
+
   columns: Column[] = [
+    { field: 'apply_no', header: '專櫃招募編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
-    { field: 'ven_uniform', header: '廠商統一編號', visible: true },
-    { field: 'ven_no', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
-    { field: 'contract_subno', header: '合約版次', visible: true },
-    { field: 'tlt_contract_bdate', header: '合約起始', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_contract_edate', header: '合約截止', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'ven_uniform', header: '廠商統編/名稱', visible: true, align: 'left', format: (value: string, _index?: number, rowData?: ContractItem) => [value, rowData?.VEN_Name].filter(Boolean).join(' / ') },
+    { field: 'contract_subno', header: '版本編號', visible: true },
+    { field: 'feedback_date', header: '回函日期', visible: true, format: this.formatDate },
+    { field: 'due_date', header: '回函截止日', visible: true, format: this.formatDate },
+    { field: 'bus_type', header: '大分類代號', visible: true },
+    { field: 'bus_type', header: '大分類名稱', visible: true, align: 'left', format: (value: string) => this.busTypeName(value) },
+    { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
+    { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
+    { field: 'tlt_term_type', header: '抽成別', visible: true, format: formatTltTermType },
+    { field: 'store_way', header: '配合方式', visible: true, format: formatStoreWay },
+    { field: 'contract_no', header: '合約種類', visible: true, format: () => '契約書' },
     { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
+    { field: 'tlt_openflag', header: '營運狀態', visible: true, format: formatOpenflagStatus },
+    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: this.formatDate },
+    { field: 'tlt_contract_edate', header: '營運截止日', visible: true, format: this.formatDate },
   ];
 
   // ========== 下拉選單選項 ==========
@@ -556,6 +574,17 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   editDisabled = (rowData: ContractItem): boolean => {
     return !this.canEditContract(rowData);
   };
+
+  /**
+   * 由已載入的大分類選項 (industryCodeOptions，label 格式 "代號 - 名稱") 取得大分類名稱
+   */
+  private busTypeName(code: string): string {
+    if (!code) return '';
+    const opt = this.industryCodeOptions.find(o => o.value === code);
+    if (!opt?.label) return code;
+    const idx = opt.label.indexOf(' - ');
+    return idx >= 0 ? opt.label.substring(idx + 3) : opt.label;
+  }
 
   canEditContract = (rowData: ContractItem): boolean => {
     if (rowData.CanEdit !== undefined) {
