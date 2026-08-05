@@ -108,7 +108,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
   private dropdownInit$?: Observable<any>;
 
   // 支付別以外的固定文字欄位；其餘欄位一律視為金額欄位（右靠、千分位格式化、列入合計）
-  private readonly textFields = new Set(['tlt_no', 'tlt_name', 'TXN_Date', 'ECR_No']);
+  private readonly textFields = new Set(['seq', 'tlt_no', 'tlt_name', 'txn_date', 'ecr_no']);
 
   constructor(
     public readonly tls23070Service: TLS23070Service,
@@ -208,18 +208,25 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
-
   // ========= 明細彈窗啟動器 =========
-  // 同樣無分頁機制，一次把全部資料打回來，故只呼叫一次 API。
   override onDetail(row: any): void {
     if (!row || this.detailLoading) return;
-
     this.selectedMainRow = row;
     this.dialogVisible = true;
 
+    // 1. 兼容大寫 TLT_No 與小寫 tlt_no 取值
+    const tltNoVal = row?.TLT_No ?? row?.tlt_no;
+
+    // 2. 處理 tlt_building，確保送出陣列以符合後端 List<string> 規格
+    let buildingVal = this.historyRequestBody?.tlt_building;
+    if (buildingVal && !Array.isArray(buildingVal)) {
+      buildingVal = [buildingVal];
+    }
+
     const body: any = {
       ...(this.historyRequestBody ?? {}),
-      tlt_no: row?.tlt_no ? [row.tlt_no] : undefined,
+      tlt_no: tltNoVal ? [String(tltNoVal)] : undefined, // 帶入點選該筆的專櫃編號 (陣列格式)
+      tlt_building: buildingVal,
       SortBy: [{ field: 'TXN_Date', order: 1 }],
     };
 
@@ -231,7 +238,12 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
     this.detailLoading = true;
 
     this.tls23070Service.queryTLS23070Detail(body)
-      .pipe(untilDestroyed(this), finalize(() => { this.detailLoading = false; }))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.detailLoading = false;
+        })
+      )
       .subscribe((res: any) => {
         const { columns, dataRows, totalRow } = this.parseReportRows(res?.Data);
         this.detailColumns = columns;
@@ -240,7 +252,6 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
         this.dialogFooterData = totalRow;
       });
   }
-
   onDialogClose(v: boolean): void {
     this.dialogVisible = v;
     if (!v) {
@@ -326,21 +337,21 @@ export class TLS23070Component extends BasicQueryPageComponent<any> implements O
     }));
     return { columns: this.buildColumnsFromHeaderRow(headerRow), dataRows, totalRow };
   }
-
   private buildColumnsFromHeaderRow(headerRow: Record<string, unknown>): ReportColumn[] {
     return Object.keys(headerRow ?? {}).map((field) => {
-      const isText = this.textFields.has(field);
+      const fieldLower = field.toLowerCase(); // ⬅️ 先轉成小寫
+      const isText = this.textFields.has(fieldLower);
+
       return {
         field,
         header: String(headerRow[field] ?? field),
         visible: true,
-        align: isText ? (field === 'tlt_name' ? 'left' : undefined) : 'right',
-        format: isText ? (field === 'TXN_Date' ? formatDate : undefined) : formatAmount,
+        align: isText ? (fieldLower.includes('name') ? 'left' : undefined) : 'right',
+        format: isText ? (fieldLower === 'txn_date' ? formatDate : undefined) : formatAmount,
         isTotal: !isText,
       } as ReportColumn;
     });
   }
-
   private getMonthRange(d: Date) {
     const year = d.getFullYear();
     const month = d.getMonth();

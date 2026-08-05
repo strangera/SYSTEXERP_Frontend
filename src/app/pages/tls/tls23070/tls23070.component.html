@@ -70,6 +70,6 @@
   <app-table-report *ngIf="detailTableVisible" [tableKey]="'TLS23070_DETAIL_' + detailRenderKey"
     [columns]="detailColumns" [data]="dialogData" [totalRecords]="dialogTotalRecords" [loading]="detailLoading"
     dataKey="_rowKey" [lazy]="false" [lastQueryBody]="dialogHistoryRequestBody" [showManage]="false"
-    [showDelete]="false" [showDetail]="false" [footerData]="dialogFooterData"
-    [showReportMode]="false"></app-table-report>
+    [showDelete]="false" [showDetail]="false" [footerData]="dialogFooterData" [showReportMode]="false"
+    [showReorder]="false"></app-table-report>
 </app-dialog>
