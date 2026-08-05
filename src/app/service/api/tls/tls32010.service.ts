@@ -12,6 +12,7 @@ export interface TLS32010QueryRequest extends ApiRequest {
   eventID?: string | null;  // 活動ID
 
   // 合約查詢條件：改為字串陣列以匹配前端 multi-select 與後端 List<string>
+  BuildingList?: string[] | null;
   FloorList?: string[] | null;
   AreaList?: string[] | null;
   BusTypeList?: string[] | null;

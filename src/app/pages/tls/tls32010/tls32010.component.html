@@ -132,6 +132,11 @@
         <!-- 合約查詢條件 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="館別" controlName="BuildingList" [options]="auditoriumOptions | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.BuildingList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" controlName="FloorList" [options]="floorOptions | async" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.FloorList" [submitted]="submitted"></app-multi-select>
           </div>
