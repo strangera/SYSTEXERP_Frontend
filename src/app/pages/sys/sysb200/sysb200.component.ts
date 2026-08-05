@@ -7,14 +7,14 @@ import { finalize, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
+import { AddButton, Column } from '../../../others/component/table/table.model';
 import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
-import { AddButton, Column } from '../../../others/component/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 
@@ -104,6 +104,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_Tel', header: '公司登記電話', visible: true },
     { field: 'VEN_Fax', header: '公司傳真', visible: false },
     { field: 'VEN_Email', header: '公司電子郵件', visible: true },
+    { field: 'VEN_GUIEmail', header: '公司發票電子郵件', visible: true },
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_PayType', header: '付款方式', visible: true },
     { field: 'VEN_BNK_No', header: '銀行代號', visible: false },

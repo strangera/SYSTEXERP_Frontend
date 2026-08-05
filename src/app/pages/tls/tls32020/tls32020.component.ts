@@ -709,7 +709,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       // 2. 組裝最終傳輸給後端的 Body
       const body: TLS32020QueryRequest = {
         ...formValue,
-        BuildingList: formValue.BuildingList || null, // 這裡 BuildingList
+        BuildingList: formValue.ShowBuilding === false ? null : (formValue.BuildingList || null), // 顯示狀態的館別未勾選時強制清空
         FloorList: formValue.FloorList || null,
         AreaList: formValue.AreaList || null,
         CounterKindList: formValue.CounterKindList || null,

@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column } from '@others/component/table/table.model';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -17,16 +18,15 @@ import {
   FieldsConfig,
 } from '@shared/components/dropdown-table/dropdown-table.component';
 import { validateRequired } from '@shared/components/table-edit/validate-field.model';
-import { Column } from '@others/component/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
@@ -57,8 +57,7 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 })
 export class FIN13040CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
     // InvoiceType hidden in UI; default to '35' so backend receives 35 when creating
@@ -77,7 +76,7 @@ export class FIN13040CRUComponent
     PUR_InvoiceTitle: ['', [Validators.maxLength(64)]],
     Buyer_VenNo: [''],
     Buyer_Name: [''],
-    PUR_Tax: [{ value: 0, disabled: true }],
+    PUR_Tax: [0],
     PUR_Amt: [{ value: 0, disabled: true }],
     PUR_Net: [{ value: 0, disabled: true }],
     Invoice_Cancel: [{ value: 'N', disabled: true }],
@@ -106,6 +105,8 @@ export class FIN13040CRUComponent
     { label: '否', value: 'N' },
   ];
   private isLoadingDetail = false;
+  /** 使用者是否已手動調整過稅額（明細表無稅額欄位可調整時，改由此header欄位手動輸入） */
+  private isTaxManuallyEdited = false;
   /** 明細資料表 */
   columns: EditColumn[] = [];
   data: any[] = [];
@@ -232,15 +233,15 @@ export class FIN13040CRUComponent
       .get('SAL_Type')
       ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val) => {
-  if (this.isLoadingDetail) return;
-  if (!val) return;
+        if (this.isLoadingDetail) return;
+        if (!val) return;
 
-  console.log('[valueChanges] SAL_Type 改變:', val);
-  this.loadINVItemOptions();
-});
+        console.log('[valueChanges] SAL_Type 改變:', val);
+        this.loadINVItemOptions();
+      });
 
     // 初始若已有 SAL_Type
-  
+
 
     // 統編 free-text 輸入時，若剛好符合選項則帶入廠商資訊
     // （下拉選取的情境由 onBuyerSelect 處理）
@@ -249,6 +250,16 @@ export class FIN13040CRUComponent
       ?.valueChanges.pipe(untilDestroyed(this))
       .subscribe((val: any) => {
         if (val && typeof val === 'object') return; // 選取事件由 onBuyerSelect 處理
+
+        // 使用者可能複製貼上下拉顯示的完整文字「代號 - 名稱」，只取 "-" 前的代號作為實際值
+        if (typeof val === 'string' && val.includes(' - ')) {
+          const code = val.split(' - ')[0].trim();
+          if (code !== val) {
+            this.dataForm.controls.Buyer_Uniform.setValue(code);
+            return;
+          }
+        }
+
         const selected = this.Buyer_Uniform_Options.find(
           (o) => o.value === val,
         );
@@ -269,8 +280,42 @@ export class FIN13040CRUComponent
 
     // 稅類別改變時，重新載入稅率
     this.dataForm.get('PUR_TaxType')?.valueChanges.subscribe((taxType) => {
+      // 載入既有資料（編輯/檢視）時是程式帶入既有稅別，不是使用者操作，金額一律照存檔值顯示，不重算
+      if (this.isLoadingDetail) return;
+
+      const isNoTax = this.isNoTaxType(taxType);
+      // 零稅/免稅：稅額一律歸0且不可手動調整；重算前先清除手動旗標，讓加總改回自動算出的0
+      if (isNoTax) this.isTaxManuallyEdited = false;
+
       this.recalculateAllDetailByTaxType(taxType);
+
+      if (isNoTax) {
+        this.dataForm.controls.PUR_Tax.disable({ emitEvent: false });
+      } else if (!this.isFormReadable && !this.isEditMode) {
+        this.dataForm.controls.PUR_Tax.enable({ emitEvent: false });
+      }
     });
+
+    // 明細表無稅額欄位，若使用者手動修改上方稅額，記錄為手動調整並重算未稅金額（未稅金額 = 含稅金額 - 稅額）
+    // 內部自動加總（updateMasterAmounts/recalculateMasterAmount）都以 emitEvent:false 寫回，不會觸發這裡
+    this.dataForm
+      .get('PUR_Tax')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe(() => {
+        // 載入既有資料（編輯/檢視）時是程式帶入既有稅額，不是使用者操作，金額一律照存檔值顯示，不重算
+        if (this.isLoadingDetail) return;
+
+        this.isTaxManuallyEdited = true;
+        const amt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
+        const tax = Number(this.dataForm.controls.PUR_Tax.value) || 0;
+        // 明細無稅額欄位可調整，改由最後一筆有效明細承接與自動加總的差額，
+        // 讓「下方銷售金額加總」自動跟上手動調整後的「上方未稅金額」，不用使用者自己手改明細湊數
+        this.redistributeTaxToDetail(tax);
+        this.dataForm.patchValue(
+          { PUR_Net: amt - tax },
+          { emitEvent: false },
+        );
+      });
   }
 
   loadGuiTrackOptions(event: any): void {
@@ -341,63 +386,63 @@ export class FIN13040CRUComponent
 
   // ======================== 載入明細 ========================
   private loadDetail(rowData: any): void {
-  this.loading = true;
-  this.isLoadingDetail = true;
+    this.loading = true;
+    this.isLoadingDetail = true;
 
-  const payload = {
-    MID: 0,
-    STO_No: rowData.STO_No ?? '',
-    ID: rowData.ID ?? rowData.id ?? rowData.No,
-  };
+    const payload = {
+      MID: 0,
+      STO_No: rowData.STO_No ?? '',
+      ID: rowData.ID ?? rowData.id ?? rowData.No,
+    };
 
-  this.fin13040Service
-    .queryFIN13040Detail(payload)
-    .pipe(
-  untilDestroyed(this)
-)
-    .subscribe((res) => {
-      const data = res.Data;
-      if (!data) return;
+    this.fin13040Service
+      .queryFIN13040Detail(payload)
+      .pipe(
+        untilDestroyed(this)
+      )
+      .subscribe((res) => {
+        const data = res.Data;
+        if (!data) return;
 
-      const header = data.FIN13040Detail_APS4023;
-      const details = data.FIN13040Detail_APS40235 ?? [];
+        const header = data.FIN13040Detail_APS4023;
+        const details = data.FIN13040Detail_APS40235 ?? [];
 
-      this.currentDetailId = header?.ID ?? null;
+        this.currentDetailId = header?.ID ?? null;
 
-      if (header?.InvoiceType) {
-        this.fillHeaderData(header);
-      }
+        if (header?.InvoiceType) {
+          this.fillHeaderData(header);
+        }
 
-      const salType = header?.SAL_Type ?? '';
-      if (salType) {
-        this.dataForm.patchValue(
-          { SAL_Type: salType },
-          { emitEvent: false }
-        );
-      }
+        const salType = header?.SAL_Type ?? '';
+        if (salType) {
+          this.dataForm.patchValue(
+            { SAL_Type: salType },
+            { emitEvent: false }
+          );
+        }
 
-      this.loadINVItemOptions(() => {
-  this.fillDetailData(details);
+        this.loadINVItemOptions(() => {
+          this.fillDetailData(details);
 
-  if (this.formTitle === '編輯資料') {
-    this.lockEditModeFields();
+          if (this.formTitle === '編輯資料') {
+            this.lockEditModeFields();
+          }
+
+          // 全部完成後才解除 Loading
+          this.loading = false;
+          this.isLoadingDetail = false;
+        });
+      });
   }
-
-  // 全部完成後才解除 Loading
-  this.loading = false;
-  this.isLoadingDetail = false;
-});
+  private lockEditModeFields(): void {
+    Object.keys(this.dataForm.controls).forEach((key) => {
+      if (!['Voucher_No', 'INV_REMARK'].includes(key)) {
+        this.dataForm.get(key)?.disable({ emitEvent: false });
+      } else {
+        this.dataForm.get(key)?.enable({ emitEvent: false });
+      }
     });
-}
-private lockEditModeFields(): void {
-  Object.keys(this.dataForm.controls).forEach((key) => {
-    if (!['Voucher_No', 'INV_REMARK'].includes(key)) {
-      this.dataForm.get(key)?.disable({ emitEvent: false });
-    } else {
-      this.dataForm.get(key)?.enable({ emitEvent: false });
-    }
-  });
-}
+  }
 
   /** 將明細轉為 table-edit 可用格式 */
   private fillDetailData(details: any[]): void {
@@ -408,20 +453,16 @@ private lockEditModeFields(): void {
       return;
     }
 
+    // 編輯/檢視：明細金額一律照存檔值直接顯示，不重算（避免跟公式反算出的值不一致）
     this.data = details.map((d) => {
       const saleAmt = Number(d.TXN_SaleAmt ?? 0);
       const tax = Number(d.TXN_Tax ?? 0);
       const qty = Number(d.TXN_Qty ?? 0);
-      // 重算未稅單價，確保顯示一致
-      const unitPrice =
-        qty > 0
-          ? Math.round(saleAmt / qty - saleAmt / qty / 21)
-          : Number(d.PLU_SalePrc ?? 0);
       return {
         PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
         PLU_Name: d.PLU_Name ?? '',
         TXN_Qty: qty,
-        PLU_SalePrc: unitPrice,
+        PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
         TXN_SaleAmt: saleAmt,
         TXN_Tax: tax,
         SaleAmt: saleAmt - tax,
@@ -466,20 +507,18 @@ private lockEditModeFields(): void {
         return row;
       });
     }
-
-    // 填完明細後，依課稅別重算（確保免稅/零稅時 TXN_Tax=0）
-    const taxType = this.dataForm.get('PUR_TaxType')?.value;
-    if (taxType) {
-      this.recalculateAllDetailByTaxType(taxType);
-    } else {
-      this.updateMasterAmounts();
-    }
+    // 編輯/檢視不重算金額：上方表單金額已由 fillHeaderData 直接帶入存檔值，這裡不再呼叫
+    // recalculateAllDetailByTaxType/updateMasterAmounts 覆蓋，確保畫面與存檔值一致
   }
 
   // ======================== 下拉選單 ========================
   /** autocomplete 輸入時過濾建議（限50筆） */
   onBuyerInputChange(event: Record<string, string>): void {
-    const query = (Object.values(event)[0] ?? '').toLowerCase();
+    let query = (Object.values(event)[0] ?? '').toLowerCase();
+    // 使用者可能複製貼上下拉顯示的完整文字「代號 - 名稱」，過濾建議清單時也只取 "-" 前的代號比對
+    if (query.includes(' - ')) {
+      query = query.split(' - ')[0].trim();
+    }
     this.filteredBuyerOptions = this.Buyer_Uniform_Options.filter(
       (o) =>
         o.value.toLowerCase().includes(query) ||
@@ -538,13 +577,13 @@ private lockEditModeFields(): void {
   loadINVItemOptions(done?: () => void): void {
     const salType = this.dataForm.get('SAL_Type')?.value || '';
     if (!salType) {
-  this.INV_ItemName_Options = [];
-  this.loadAndSetupColumns();
+      this.INV_ItemName_Options = [];
+      this.loadAndSetupColumns();
 
-  done?.();
+      done?.();
 
-  return;
-}
+      return;
+    }
 
     this.dropDownListService
       .queryTDS1008_DropDownList([salType])
@@ -591,8 +630,35 @@ private lockEditModeFields(): void {
     return `${y}${m}`;
   }
 
+  // 手動調整上方稅額時，把差額回填到最後一筆有效明細，讓明細的含稅/銷售金額加總持續與上方表單一致
+  private redistributeTaxToDetail(manualTax: number): void {
+    const validRows = this.data.filter((d) => !d._isAutoInsertCandidate);
+    if (validRows.length === 0) return;
+
+    const lastRow = validRows[validRows.length - 1];
+    const otherTax = validRows.reduce(
+      (sum, r) => sum + (r === lastRow ? 0 : Number(r.TXN_Tax) || 0),
+      0,
+    );
+
+    const txnSaleAmt = Number(lastRow.TXN_SaleAmt) || 0;
+    const qty = Number(lastRow.TXN_Qty) || 0;
+    const newTax = manualTax - otherTax;
+    const newSaleAmt = txnSaleAmt - newTax;
+    const updatedLastRow = {
+      ...lastRow,
+      TXN_Tax: newTax,
+      SaleAmt: newSaleAmt,
+      PLU_SalePrc: qty > 0 ? Math.round(newSaleAmt / qty) : newSaleAmt,
+    };
+
+    this.data = this.data.map((row) =>
+      row === lastRow ? updatedLastRow : row,
+    );
+  }
+
   updateMasterAmounts(): void {
-    const totalTax = this.data.reduce(
+    const autoTax = this.data.reduce(
       (sum, r) => sum + (Number(r.TXN_Tax) || 0),
       0,
     );
@@ -600,12 +666,23 @@ private lockEditModeFields(): void {
       (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
       0,
     );
-    const net = totalAmt - totalTax;
-    this.dataForm.patchValue({
-      PUR_Tax: totalTax,
-      PUR_Amt: totalAmt,
-      PUR_Net: net,
-    });
+    this.applyMasterAmounts(totalAmt, autoTax);
+  }
+
+  // 明細總額寫回上方表單：稅額若使用者已手動調整過，維持手動值，未稅金額一律用「含稅金額-稅額」回推
+  private applyMasterAmounts(totalAmt: number, autoTax: number): void {
+    const tax = this.isTaxManuallyEdited
+      ? Number(this.dataForm.controls.PUR_Tax.value) || 0
+      : autoTax;
+    const net = totalAmt - tax;
+    this.dataForm.patchValue(
+      {
+        PUR_Tax: tax,
+        PUR_Amt: totalAmt,
+        PUR_Net: net,
+      },
+      { emitEvent: false },
+    );
   }
 
   private loadAndSetupColumns(): void {
@@ -668,10 +745,23 @@ private lockEditModeFields(): void {
           validateRequired,
         ],
         calculate: (rowData, value) => {
+          const qty = Number(rowData.TXN_Qty) || 0;
+
+          // 使用者已手動調整過稅額：稅額視為固定值，未稅金額直接用「含稅金額-稅額」回推，不再用公式重算稅額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const saleAmt = value - tax;
+            const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : saleAmt;
+            return {
+              TXN_SaleAmt: value,
+              TXN_Tax: tax,
+              PLU_SalePrc: unitPrice,
+              SaleAmt: saleAmt,
+            };
+          }
+
           const taxType = this.dataForm.get('PUR_TaxType')?.value;
           const isNoTax = this.isNoTaxType(taxType);
-
-          const qty = Number(rowData.TXN_Qty) || 0;
 
           const tax = isNoTax ? 0 : Math.round(value / 21);
 
@@ -697,10 +787,18 @@ private lockEditModeFields(): void {
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
-          const taxType = this.dataForm.get('PUR_TaxType')?.value;
-          const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Math.round(Number(value) * qty);
+
+          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const txnSaleAmt = saleAmt + tax;
+            return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
+          }
+
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
           const txnSaleAmt = isNoTax
             ? saleAmt
             : Math.round((saleAmt * 21) / 20);
@@ -715,15 +813,27 @@ private lockEditModeFields(): void {
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
-          const taxType = this.dataForm.get('PUR_TaxType')?.value;
-          const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
           const saleAmt = Number(value);
+          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
+
+          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
+          if (this.isTaxManuallyEdited) {
+            const tax = Number(rowData.TXN_Tax) || 0;
+            const txnSaleAmt = saleAmt + tax;
+            return {
+              TXN_SaleAmt: txnSaleAmt,
+              TXN_Tax: tax,
+              PLU_SalePrc: unitPrice,
+            };
+          }
+
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
           const txnSaleAmt = isNoTax
             ? saleAmt
             : Math.round((saleAmt * 21) / 20);
           const tax = txnSaleAmt - saleAmt;
-          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
           return {
             TXN_SaleAmt: txnSaleAmt,
             TXN_Tax: tax,
@@ -817,20 +927,11 @@ private lockEditModeFields(): void {
       return sum + (Number(row.TXN_SaleAmt) || 0);
     }, 0);
 
-    const purTax = this.data.reduce((sum, row) => {
+    const autoTax = this.data.reduce((sum, row) => {
       return sum + (Number(row.TXN_Tax) || 0);
     }, 0);
 
-    const purNet = purAmt - purTax;
-
-    this.dataForm.patchValue(
-      {
-        PUR_Amt: purAmt,
-        PUR_Tax: purTax,
-        PUR_Net: purNet,
-      },
-      { emitEvent: false },
-    );
+    this.applyMasterAmounts(purAmt, autoTax);
   }
 
   // ======================== 儲存 ========================
@@ -842,6 +943,33 @@ private lockEditModeFields(): void {
 
       this.loading = false;
       this.messageService.errorBubble(errorMessage);
+      return;
+    }
+
+    // 卡控：明細加總須與上方表單金額一致才可存檔
+    const detailTaxedTotal = this.data.reduce(
+      (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
+      0,
+    );
+    const detailUntaxedTotal = this.data.reduce(
+      (sum, r) => sum + (Number(r.SaleAmt) || 0),
+      0,
+    );
+    const headerAmt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
+    const headerNet = Number(this.dataForm.controls.PUR_Net.value) || 0;
+
+    if (Math.abs(detailTaxedTotal - headerAmt) > 0.5) {
+      this.loading = false;
+      this.messageService.errorBubble(
+        '列表含稅金額加總需等於總含稅金額，請確認',
+      );
+      return;
+    }
+    if (Math.abs(detailUntaxedTotal - headerNet) > 0.5) {
+      this.loading = false;
+      this.messageService.errorBubble(
+        '列表銷售金額加總需等於總未稅金額，請確認',
+      );
       return;
     }
 
@@ -911,9 +1039,9 @@ private lockEditModeFields(): void {
         InvoiceTime: new Date().toISOString(),
         Invoice_Cancel:
           v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
-        PUR_Net: this.dataForm.value.PUR_Net ?? 0,
-        PUR_Tax: this.dataForm.value.PUR_Tax ?? 0,
-        PUR_Amt: this.dataForm.value.PUR_Amt ?? 0,
+        PUR_Net: v.PUR_Net ?? 0,
+        PUR_Tax: v.PUR_Tax ?? 0,
+        PUR_Amt: v.PUR_Amt ?? 0,
         CRT_USR_No: 'admin',
         CRT_USR_Name: '系統管理員',
         CRT_Date: new Date().toISOString(),

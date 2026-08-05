@@ -184,8 +184,9 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         INV_Data_YM_S: transform(v.INV_Data_YM_S, true),
         INV_Data_YM_E: transform(v.INV_Data_YM_E, true),
         InvoiceDateYM: transform(v.InvoiceDateYM, true),
+        Buyer_Uniform: transform(v.Buyer_Uniform),
         SAL_Type: v.SAL_Type ? [v.SAL_Type] : undefined,
-        AssetType: v.AssetType ? [v.AssetType] : undefined,
+        AssetType: v.AssetType?.length ? v.AssetType : undefined,
         InvoiceType: v.InvoiceType?.length ? v.InvoiceType : ['35'],
         PUR_TaxType: v.PUR_TaxType?.length ? v.PUR_TaxType : undefined,
       };
