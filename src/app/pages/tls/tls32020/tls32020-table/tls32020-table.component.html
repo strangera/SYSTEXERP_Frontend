@@ -1,7 +1,6 @@
-<p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
-  scrollHeight="flex" sortMode="multiple" [rowTrackBy]="trackByFn" [loading]="loading"
-  styleClass="p-datatable-sm p-datatable-gridlines " [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
-  [virtualScrollOptions]="{ inline: true,  trackBy: trackByFn,  autoSize: true }" rowGroupMode="rowspan"
+<p-table #dt [columns]="selectedColumns" [value]="data" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="70vh" sortMode="multiple" [rowTrackBy]="trackByFn" [loading]="loading"
+  styleClass="p-datatable-sm p-datatable-gridlines " rowGroupMode="rowspan"
   groupRowsBy="YM">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
@@ -85,20 +84,6 @@
           </td>
         }
       </tr>
-    }
-    @if (data.length < totalRecords && rowIndex === data.length - 1) {
-      @for (i of [0, 1, 2, 3]; track i) {
-        <tr style="height:46px">
-          <td>
-            <p-skeleton />
-          </td>
-          @for (col of columns; track col.field) {
-            <td>
-              <p-skeleton />
-            </td>
-          }
-        </tr>
-      }
     }
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>

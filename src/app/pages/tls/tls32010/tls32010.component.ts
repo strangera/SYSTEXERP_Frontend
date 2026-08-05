@@ -53,6 +53,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     DateFrom: [null as Date | null, [Validators.required]], // 區間開始日期
     DateTo: [null as Date | null, [Validators.required]], // 區間結束日期
     // 合約查詢條件
+    BuildingList: [null], // 館別
     FloorList: [null], // 樓層
     AreaList: [null], // 區域
     category: [null],
@@ -111,6 +112,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { value: '6', label: '區間營業報表' },
     { value: '7', label: '活動區間營業報表' }
   ];
+  auditoriumOptions = this.dropdown.querySys3800();
   organizationOptions = this.dropdown.querySys3100();
   regionOptions = this.dropdown.querySys3A00();
   floorOptions = this.dropdown.querySys3900();
@@ -400,6 +402,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
         BusTypeList: cat.bus_type,
         BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]),
         BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]),
+        BuildingList: formValue.BuildingList,
         FloorList: formValue.FloorList,
         AreaList: formValue.AreaList,
         CabinetKindList: formValue.CabinetKindList,

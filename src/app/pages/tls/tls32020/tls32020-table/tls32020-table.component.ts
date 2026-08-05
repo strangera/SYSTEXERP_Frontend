@@ -1,21 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { TableCaptionComponent } from '@others/component/table/table-caption/table-caption.component';
 import { ButtonModule } from 'primeng/button';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { Observable } from 'rxjs';
 import { ColumnGroup, ReportColumn } from './tls32020-report-table.model';
 import { TableReportUtilityService } from './tls32020-table-utility.service';
 
 @Component({
   selector: 'app-table-report',
   standalone: true,
-  imports: [SkeletonModule, TableModule, CommonModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [TableModule, ButtonModule, TooltipModule, TableCaptionComponent],
   templateUrl: './tls32020-table.component.html',
   styleUrls: ['./tls32020-table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,12 +21,8 @@ export class TableReportComponent implements OnChanges {
   @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
-  @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
-  virtualData: any = [];
-  @Input() lazy = true;
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
-  // tableKey預設給路由名稱
   @Input() loading = false;
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[];           // table 群組欄位 (第二層)
@@ -42,8 +33,7 @@ export class TableReportComponent implements OnChanges {
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   constructor(
-    public readonly tableUtility: TableReportUtilityService,
-    private readonly cdr: ChangeDetectorRef
+    public readonly tableUtility: TableReportUtilityService
   ) { }
   public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
@@ -51,24 +41,8 @@ export class TableReportComponent implements OnChanges {
       if (this.lastQueryBody) {
         this.hasSearched = true;
       }
-      this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data);
-      if (this.data.length !== 0) {
-        if (this.dt) { this.dt.virtualScroll = false; }
-        this.cdr.detectChanges();
-        if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-          this.dt.scrollHeight = '450px';
-        } else {
-          this.dt.virtualScroll = true;
-          this.dt.scrollHeight = '450px';
-          this.virtualData = Array.from({ length: this.data.length });
-          this.cdr.detectChanges();
-          this.virtualData = this.data;
-        }
-      }
     }
   }
   trackByFn(index: number, item: any) {
