@@ -709,11 +709,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
         const hasBuildingSelection = Array.isArray(formValue.BuildingList) && formValue.BuildingList.length > 0;
         const allBuildingNos = (buildingOptions ?? []).map(o => o.No);
+
         // 2. 組裝最終傳輸給後端的 Body
         const body: TLS32020QueryRequest = {
           ...formValue,
-          // 顯示狀態的館別未勾選 -> 強制清空 (比照 SP 註解：未傳值=全部館別彙整為同一筆)；
-          // 已勾選但下拉未選任何館別 -> 視為全選，帶入全部館別代碼 (SP 依 >=2 館別分組並顯示期間小計)
           BuildingList: formValue.ShowBuilding === false ? null : (hasBuildingSelection ? formValue.BuildingList : allBuildingNos),
           FloorList: formValue.FloorList || null,
           AreaList: formValue.AreaList || null,
@@ -724,12 +723,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           BusTypeList: cat.bus_type || null,
           BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]) || null,
           BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]) || null,
-          // **變更**：覆蓋四個日期欄位格式化
           BaseDateFrom: this.datePipe.transform(formValue.BaseDateFrom, 'yyyy-MM-dd'),
           BaseDateTo: this.datePipe.transform(formValue.BaseDateTo, 'yyyy-MM-dd'),
           CompareDateFrom: this.datePipe.transform(formValue.CompareDateFrom, 'yyyy-MM-dd'),
           CompareDateTo: this.datePipe.transform(formValue.CompareDateTo, 'yyyy-MM-dd'),
-          // 移除前端專用的日期計算控制項
           year: undefined,
           week: undefined,
           yearTo: undefined,
@@ -748,20 +745,26 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           this.historyRequestBody = body;
           const allData = response.Data;
 
-          // --- 數據分離與處理 (保留前次的修改) ---
-
-          // 1. 取得總計 (假設為最後一筆)
+          // --- 數據分離與處理 ---
+          // 1. 取得總計 (最後一筆)
           const grandTotal = allData.length > 0 ? allData[allData.length - 1] : null;
 
-          // 2. 篩選出所有期間小計 (BuildingName === '小計')
-          this.subFooterData = allData.filter(item => item.BuildingName === '小計');
+          // 2. 依據 ShowBuilding 判斷是否需要處理「期間小計」
+          const isShowBuilding = formValue.ShowBuilding !== false;
 
-          // 3. 取得明細數據 (排除總計和所有期間小計)
-          this.data = allData
-            .slice(0, allData.length - 1) // 移除最後一筆總計
-            .filter(item => item.BuildingName !== '小計'); // 移除期間小計
+          if (isShowBuilding) {
+            // 有勾選館別：篩選出小計列，並排除小計與總計
+            this.subFooterData = allData.filter(item => item.BuildingName === '小計');
+            this.data = allData
+              .slice(0, allData.length - 1) // 移除總計
+              .filter(item => item.BuildingName !== '小計'); // 移除期間小計
+          } else {
+            // 不勾選館別：不顯示小計列，明細只需排除最後一筆總計
+            this.subFooterData = [];
+            this.data = allData.slice(0, allData.length - 1);
+          }
 
-          // 4. 設置 Footer 數據 (使用總計數據)
+          // 3. 設置 Footer 數據 (使用總計數據)
           if (grandTotal) {
             this.footerData = {
               ...grandTotal,
@@ -771,6 +774,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           } else {
             this.footerData = null;
           }
+
           this.totalRecords = this.data.length;
         });
       });
