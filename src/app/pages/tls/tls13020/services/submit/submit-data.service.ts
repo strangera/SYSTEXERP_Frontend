@@ -84,6 +84,7 @@ export class SubmitDataService {
       tlt_floor: loc.tlt_floor || '',
       area_no: loc.area_no || '',
       tlt_space: loc.tlt_space || 0,
+      sale_rate: loc.sale_rate ?? 0,
       tlt_bdate: this.formatDateToString(loc.tlt_bdate),
       tlt_edate: this.formatDateToString(loc.tlt_edate),
       _status: loc._status || 'original'

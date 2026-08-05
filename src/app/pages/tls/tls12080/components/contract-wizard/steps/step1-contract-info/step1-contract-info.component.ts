@@ -113,9 +113,23 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     { field: 'tlt_space', header: '營業坪數', minWidth: '120px' },
     { field: 'tlt_bdate', header: '起始日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
     { field: 'tlt_edate', header: '截止日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
+    // TLS12080 暫不啟用業績分攤(%)（僅 TLS13010 / TLS13020 需要）
+    // {
+    //   field: 'sale_rate', header: '業績分攤(%)', type: 'inputNumber',
+    //   min: 0, max: 100, maxFractionDigits: 2, suffix: '%', minWidth: '130px',
+    //   validate: [
+    //     (value: unknown) => {
+    //       const num = Number(value);
+    //       const ok = value !== null && value !== undefined && value !== '' && !isNaN(num) && num > 0;
+    //       return { isValid: ok, errorMessage: ok ? [] : ['業績分攤(%) 必填且需大於 0'] };
+    //     }
+    //   ]
+    // },
   ];
 
   selectedLocationRows: LocationItem[] = [];
+  /** 上次分配業績分攤時的櫃位地點數量（TLS12080 暫停用） */
+  // private lastSaleRateCount = -1;
 
   locationDefaultInsertData = {
     location_no: '',
@@ -126,6 +140,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     area_no: '',
     area_desc: '',
     tlt_space: 0,
+    sale_rate: null,
     tlt_bdate: null,
     tlt_edate: null
   };
@@ -1056,8 +1071,32 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    * 更新顯示的位置資料（過濾已刪除項目）
    */
   updateDisplayLocationData(): void {
+    // this.applySaleRateDistribution(); // TLS12080 暫不啟用業績分攤
     this.displayLocationData = this.locationData.filter(item => item._status !== 'deleted');
   }
+
+  /**
+   * 依櫃位地點數量平均分配業績分攤(%)：1 個 = 100、2 個各 50，以此類推。
+   * TLS12080 暫不啟用（僅 TLS13010 / TLS13020 需要），保留供日後開啟。
+   */
+  // private applySaleRateDistribution(): void {
+  //   const active = this.locationData.filter(
+  //     loc => loc._status !== 'deleted' && String(loc.location_no || '').trim()
+  //   );
+  //   const n = active.length;
+  //   const anyMissing = active.some(loc => loc.sale_rate == null || Number(loc.sale_rate) <= 0);
+  //   const countChanged = this.lastSaleRateCount >= 0 && n !== this.lastSaleRateCount;
+  //   this.lastSaleRateCount = n;
+  //   if (n === 0) return;
+  //   if (!countChanged && !anyMissing) return;
+  //
+  //   const base = Math.floor((100 / n) * 100) / 100; // 取到小數 2 位
+  //   active.forEach((loc, i) => {
+  //     loc.sale_rate = i === n - 1
+  //       ? Math.round((100 - base * (n - 1)) * 100) / 100 // 最後一筆補足使總和 = 100
+  //       : base;
+  //   });
+  // }
 
   /** 移除未填入位置編號的新增空列，離開步驟前呼叫 */
   removeEmptyNewRows(): void {
@@ -1451,6 +1490,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    * 發送資料變更事件
    */
   private emitDataChange(): void {
+    // this.applySaleRateDistribution(); // TLS12080 暫不啟用業績分攤
     this.dataChange.emit({
       formValue: this.form.getRawValue(),
       locationData: this.locationData

@@ -117,6 +117,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   displayLocationData: LocationItem[] = [];
   selectedLocationRows: LocationItem[] = [];
   private isOwnEmit = false;
+  /** 上次分配業績分攤時的櫃位地點數量，用來判斷是否需要重新平均 */
+  private lastSaleRateCount = -1;
 
   locationEditColumns: EditColumn[] = [
     { field: 'location_no', header: '位置編號', type: 'custom', minWidth: '160px' },
@@ -126,6 +128,17 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     { field: 'tlt_space', header: '營業坪數', minWidth: '120px' },
     { field: 'tlt_bdate', header: '起始日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
     { field: 'tlt_edate', header: '截止日', type: 'date', dateFormat: 'yy/mm/dd', minWidth: '130px' },
+    {
+      field: 'sale_rate', header: '業績分攤(%)', type: 'inputNumber',
+      min: 0, max: 100, maxFractionDigits: 2, suffix: '%', minWidth: '130px',
+      validate: [
+        (value: unknown) => {
+          const num = Number(value);
+          const ok = value !== null && value !== undefined && value !== '' && !isNaN(num) && num > 0;
+          return { isValid: ok, errorMessage: ok ? [] : ['業績分攤(%) 必填且需大於 0'] };
+        }
+      ]
+    },
   ];
 
   locationPickerColumns: Column[] = [
@@ -155,6 +168,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     area_no: '',
     area_desc: '',
     tlt_space: 0,
+    sale_rate: null,
     tlt_bdate: null,
     tlt_edate: null
   };
@@ -235,6 +249,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
         this.isOwnEmit = false;
         return;
       }
+      // 載入既有資料時，若尚無業績分攤值則平均帶入（已有值則保留）
+      this.applySaleRateDistribution();
       if (!changes['locationData'].firstChange) {
         this.updateDisplayLocationData();
       }
@@ -494,6 +510,36 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.displayLocationData = this.locationData.filter(loc => loc._status !== 'deleted');
   }
 
+  /**
+   * 依櫃位地點數量平均分配業績分攤(%)：1 個 = 100、2 個各 50，以此類推。
+   * 只在「地點數量變動」或「有列尚未有分攤值」時重算，保留既有資料/使用者手動微調。
+   */
+  private applySaleRateDistribution(): void {
+    const active = this.locationData.filter(
+      loc => loc._status !== 'deleted' && String(loc.location_no || '').trim()
+    );
+    const n = active.length;
+    const anyMissing = active.some(loc => loc.sale_rate == null || Number(loc.sale_rate) <= 0);
+    const countChanged = this.lastSaleRateCount >= 0 && n !== this.lastSaleRateCount;
+    this.lastSaleRateCount = n;
+    if (n === 0) return;
+    if (!countChanged && !anyMissing) return;
+
+    const base = Math.floor((100 / n) * 100) / 100; // 取到小數 2 位
+    active.forEach((loc, i) => {
+      const newRate = i === n - 1
+        ? Math.round((100 - base * (n - 1)) * 100) / 100 // 最後一筆補足使總和 = 100
+        : base;
+      if (loc.sale_rate !== newRate) {
+        loc.sale_rate = newRate;
+        // 既有資料被自動分攤改動 → 標記為 modified，後端才會更新（original 會被略過不存）
+        if (loc._status === 'original') {
+          loc._status = 'modified';
+        }
+      }
+    });
+  }
+
   /** 移除未填入位置編號的新增空列，離開步驟前呼叫 */
   removeEmptyNewRows(): void {
     const cleaned = this.locationData.filter(
@@ -527,6 +573,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       if (!row.tlt_edate && contractEdate) row.tlt_edate = contractEdate;
     });
     this.locationData = [...prevDeleted, ...data] as LocationItem[];
+    this.applySaleRateDistribution();
     this.displayLocationData = data as LocationItem[];
     this.isOwnEmit = true;
     this.locationDataChange.emit(this.locationData);
@@ -627,6 +674,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
         _status: 'new'
       };
       this.locationData = [...this.locationData, newRow];
+      this.applySaleRateDistribution();
       this.displayLocationData = this.locationData.filter(l => l._status !== 'deleted');
       this.isOwnEmit = true;
       this.locationDataChange.emit(this.locationData);
@@ -668,6 +716,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
         _status: current._status === 'new' ? 'new' : 'modified'
       };
       this.locationData = [...this.locationData];
+      this.applySaleRateDistribution();
       this.updateDisplayLocationData();
       this.locationDataChange.emit(this.locationData);
     }

@@ -596,6 +596,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
             ...loc,
             // 轉換 tlt_space 為數值
             tlt_space: typeof loc.tlt_space === 'string' ? parseFloat(loc.tlt_space) : loc.tlt_space,
+            // 轉換 sale_rate 業績分攤(%) 為數值
+            sale_rate: loc.sale_rate == null ? undefined
+                     : (typeof loc.sale_rate === 'string' ? parseFloat(loc.sale_rate) : loc.sale_rate),
             // 轉換日期字串為 Date 物件；若地點本身無日期，fallback 到契約起訖日
             tlt_bdate: loc.tlt_bdate ? new Date(loc.tlt_bdate as string)
                      : (contractBdate ? new Date(contractBdate) : undefined),
