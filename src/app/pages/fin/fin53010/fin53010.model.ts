@@ -511,6 +511,8 @@ export interface QueryAps2002OriginalInvoicesForAllowanceRequest {
 /** queryAPS4023OriginalInvoices_ForAllowance Request */
 export interface QueryAps4023OriginalInvoicesForAllowanceRequest {
   InvoiceNumber?: string | null;
+  /** 折讓發票格式（33→查原始 31/35；34→查原始 32） */
+  AllowanceType?: string | null;
   PageSize?: number | null;
   PageIndex?: number | null;
 }

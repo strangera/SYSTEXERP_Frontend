@@ -2044,6 +2044,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.salesAllowancePickerLoading = true;
     this.service.queryAps4023OriginalInvoicesForAllowance({
       InvoiceNumber: this.salesAllowancePickerQueryControl.value?.trim() || null,
+      AllowanceType: String(this.salesAllowancePickerRowData?.invoice_type ?? '').trim() || null,
       PageIndex: 1,
       PageSize: 200,
     }).pipe(take(1)).subscribe({
@@ -2051,7 +2052,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.salesAllowancePickerLoading = false;
         if (res.Status === '0000') {
           this.salesAllowancePickerList = res.Data ?? [];
-          this.salesAllowancePickerTotalRecords = res.TotalCount ?? 0;
+          // 後端只回單頁(最多 200 筆)，此 picker 為前端分頁：totalRecords 需用實際載入筆數，
+          // 不能用 res.TotalCount(全表總數)，否則 paginator 會多出沒有資料的空白頁。
+          this.salesAllowancePickerTotalRecords = this.salesAllowancePickerList.length;
           const row = this.salesAllowancePickerRowData;
           const list = this.salesAllowancePickerList;
           if (row) {
@@ -2077,7 +2080,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const fullNo = String(item.InvoiceNumber ?? '').trim();
     const prefix = fullNo.length === 10 ? fullNo.slice(0, 2) : '';
     const srcType = String(item.InvoiceType ?? '').trim();
-    const allowanceType = srcType === '31' ? '33' : srcType === '32' ? '34' : srcType || undefined;
+    // 原始發票 31/35 → 折讓格式 33；32 → 34
+    const allowanceType = (srcType === '31' || srcType === '35') ? '33' : srcType === '32' ? '34' : srcType || undefined;
 
     // InvoiceDate 可能已是 Date 物件（HttpClient 或攔截器轉換），直接使用
     const rawDate = item.InvoiceDate as unknown;
@@ -2146,7 +2150,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.purchaseAllowancePickerLoading = false;
         if (res.Status === '0000') {
           this.purchaseAllowancePickerList = res.Data ?? [];
-          this.purchaseAllowancePickerTotalRecords = res.TotalCount ?? 0;
+          // 後端只回單頁(最多 200 筆)，此 picker 為前端分頁：totalRecords 需用實際載入筆數，
+          // 不能用 res.TotalCount(全表總數)，否則 paginator 會多出沒有資料的空白頁。
+          this.purchaseAllowancePickerTotalRecords = this.purchaseAllowancePickerList.length;
           const row = this.purchaseAllowancePickerRowData;
           const list = this.purchaseAllowancePickerList;
           if (row) {
