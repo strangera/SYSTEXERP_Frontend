@@ -596,6 +596,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             tlt_floor: item.tlt_floor || '',
             area_no: item.area_no || '',
             tlt_space: Number(item.tlt_space) || 0,
+            sale_rate: item.sale_rate == null ? undefined : Number(item.sale_rate),
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',

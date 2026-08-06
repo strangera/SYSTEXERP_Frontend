@@ -1,28 +1,56 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="年月" controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate" [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateMonthRange"
+              label="年月"
+              controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate"
+              [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="部門" controlName="OrgList" [options]="orgOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OrgList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="部門"
+              controlName="OrgList"
+              [options]="orgOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.OrgList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="科目大分類" controlName="MajorList" [options]="AccNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.MajorList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="科目大分類"
+              controlName="MajorList"
+              [options]="AccNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.MajorList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -33,17 +61,45 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report tableKey="FIN55110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      [queryFunction]="queryFunction" [lastQueryBody]="lastQueryBody" [loading]="loading" [showManage]="false"
-      [showReportMode]="false" [showDetail]="false" [showEdit]="false" [showDelete]="false" [showCaption]="true"
-      [showExcel]="false" [loading]="false" [showSort]="true" [footerData]="footerData"
-      [allowMultilineHeader]="true">
+    <app-table-report
+      tableKey="FIN55110"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      [queryFunction]="queryFunction"
+      [lastQueryBody]="lastQueryBody"
+      [loading]="loading"
+      [showManage]="false"
+      [showReportMode]="false"
+      [showDetail]="false"
+      [showEdit]="false"
+      [showDelete]="false"
+      [showCaption]="true"
+      [showExcel]="false"
+      [loading]="false"
+      [showSort]="true"
+      [footerData]="footerData"
+      [ItemSize]="25"
+      [allowMultilineHeader]="true"
+    >
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
-          <p-button styleClass="p-2" label="部門科目明細表.PDF" [loading]="btnLoading1" icon="pi pi-file"
-            (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
-          <p-button styleClass="p-2" label="部門科目明細表.XLSX" [loading]="btnLoading2" icon="pi pi-file"
-            (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
+          <p-button
+            styleClass="p-2"
+            label="部門科目明細表.PDF"
+            [loading]="btnLoading1"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="部門科目明細表.XLSX"
+            [loading]="btnLoading2"
+            icon="pi pi-file"
+            (click)="onExportXLSX()"
+            [disabled]="data.length === 0"
+          ></p-button>
         </div>
       </header>
     </app-table-report>

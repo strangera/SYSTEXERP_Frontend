@@ -116,6 +116,7 @@ export const DATE_FORMAT_CONFIG = {
 export interface ColumnDef {
   field: string;
   header: string;
+  headerTooltip?: string;  // 表頭旁小驚嘆號的提示文字
   type?: string;
   editable?: boolean;
   hidden?: boolean;
@@ -174,6 +175,8 @@ export interface ColumnDef {
   minLength?: number;  // 最小字元數（自動鉗制）
   maxValue?: number;  // 最大數值（自動鉗制）
   minValue?: number;  // 最小數值（自動鉗制）
+  validateMax?: number;      // 即時驗證上限（不鉗制，超過就把該格標紅並顯示驚嘆號）
+  validateMessage?: string;  // validateMax 觸發時的提示文字
 
   customCheckboxHandler?: (event: {
     rowData: any,
@@ -2393,6 +2396,16 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[fieldName];
     rowData[fieldName] = numericValue;
 
+    // 即時上限驗證：超過 validateMax 就把該格標紅（不鉗制數值）
+    if (column?.validateMax !== undefined) {
+      this.setCellValidation(
+        rowData,
+        fieldName,
+        numericValue > column.validateMax,
+        column.validateMessage || `數值不可大於 ${column.validateMax}`
+      );
+    }
+
     // 🔥 根據是否為 detail 項目觸發不同的事件
     if (isDetail) {
       // 找到父項目和索引
@@ -3014,6 +3027,33 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
    */
   hasCellError(rowData: any, field: string): boolean {
     return !!(rowData?._errorFields && Array.isArray(rowData._errorFields) && rowData._errorFields.includes(field));
+  }
+
+  /**
+   * 取得單格的錯誤提示文字（供欄位驚嘆號 tooltip 使用）
+   */
+  getCellErrorMessage(rowData: any, field: string): string {
+    return rowData?._errorMessages?.[field] || '';
+  }
+
+  /**
+   * 設定/清除單格驗證狀態（標紅 + 記錄提示文字）
+   */
+  private setCellValidation(rowData: any, field: string, hasError: boolean, message: string): void {
+    if (!Array.isArray(rowData._errorFields)) rowData._errorFields = [];
+    if (!rowData._errorMessages) rowData._errorMessages = {};
+
+    const idx = rowData._errorFields.indexOf(field);
+    if (hasError) {
+      if (idx === -1) rowData._errorFields.push(field);
+      rowData._errorMessages[field] = message;
+      rowData._hasValidationError = true;
+    } else {
+      if (idx !== -1) rowData._errorFields.splice(idx, 1);
+      delete rowData._errorMessages[field];
+      if (rowData._errorFields.length === 0) delete rowData._hasValidationError;
+    }
+    this.cdr.detectChanges();
   }
 
   /**

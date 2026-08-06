@@ -872,6 +872,17 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         // 為沒有日期的項目設定預設值 (契約起訖日期)
         this.applyDefaultDatesToItem(initializedItem, capType);
 
+        // 新增模式：自動勾選常用項目
+        if (
+          this.crudstatus === CRUDStatus.Create &&
+          initializedItem.is_commonly_used === 'Y' &&
+          !initializedItem.is_selected
+        ) {
+          initializedItem.is_selected = true;
+          const config = FARE_CHANGE_DETECTION_CONFIG[capType as keyof typeof FARE_CHANGE_DETECTION_CONFIG];
+          CrudTrackingService.updateSelectionStatus(initializedItem, config as ChangeDetectionConfig);
+        }
+
         // C 類型：根據日期重新計算期數和首期金額
         if (capType === 'C' && initializedItem.tpy_bdate && initializedItem.tpy_edate) {
           this.recalculateTypeCFields(initializedItem);
