@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Input, OnChanges, SimpleChanges, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { Dropdown, DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
@@ -83,7 +83,7 @@ import { CellInput } from './table-edit-cell.model';
 
 <ng-template #dropdownTpl>
  <p-iconField iconPosition="right">
-  <p-dropdown class="flex min-w-max" appendTo="body"
+  <p-dropdown #pdd class="flex min-w-max" appendTo="body"
               [(ngModel)]="cellInput.rowData[cellInput.col.field]"
               [ngModelOptions]="{ standalone: true }"
               [placeholder]="internalLoading ? '載入中...' : (dropdownDisabled ? '' : '請輸入' + cellInput.col.header)"
@@ -148,8 +148,10 @@ import { CellInput } from './table-edit-cell.model';
     TooltipModule
   ]
 })
-export class DropdownCellComponent implements OnChanges, DoCheck {
+export class DropdownCellComponent implements OnChanges, DoCheck, AfterViewInit {
   @Input({ required: true }) cellInput!: CellInput;
+
+  @ViewChild('pdd') private readonly pdd?: Dropdown;
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -215,6 +217,13 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['cellInput']) {
       this.syncDropdownDisabled();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // 點擊即編輯：這格是剛被單擊啟用的，直接展開下拉，省去第二次點擊
+    if (this.cellInput?.autoOpen && !this.dropdownDisabled) {
+      setTimeout(() => this.pdd?.show());
     }
   }
 

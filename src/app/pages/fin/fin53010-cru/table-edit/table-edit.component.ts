@@ -420,6 +420,10 @@ export class TableEditComponent implements OnChanges {
       index,
       disabled: this.disabled || !!rowData?.isPOS4023,
       onValueChange: this.onValueChange.bind(this),
+      // 點擊即編輯模式下，剛啟用的那一格自動展開下拉（單擊即開）
+      autoOpen: this.cellEditOnClick
+        && this.activeCell?.key === rowData?.[this.dataKey]
+        && this.activeCell?.field === col.field,
     };
   }
   /**
@@ -476,12 +480,10 @@ export class TableEditComponent implements OnChanges {
     this.cdr.detectChanges();
   }
 
-  /** 進入編輯後把焦點放進該格的編輯元件：有輸入框就 focus（可直接打字/日曆自動開），純下拉就展開。 */
+  /** 進入編輯後把焦點放進該格的編輯元件：有輸入框就 focus。純下拉的展開改由 dropdown cell 的 autoOpen 處理（單擊即開）。 */
   private focusCellEditor(td: HTMLElement): void {
     const input = td.querySelector('input, textarea') as HTMLElement | null;
-    if (input) { input.focus(); return; }
-    const dropdown = td.querySelector('.p-dropdown') as HTMLElement | null;
-    dropdown?.click();
+    input?.focus();
   }
 
   /** 純文字狀態要顯示的內容：下拉反查 label、日期格式化、template 用顯示欄位，其餘用 format/原值。 */

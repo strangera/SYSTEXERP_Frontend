@@ -144,7 +144,8 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
     ),
     declare_ym: parseYyyyMmToMonthDate(row.INV_DeclareYM ?? undefined),
     buyer_uniform: row.Buyer_Uniform ?? undefined,
-    total_amount: isVoid ? 0 : (row.PUR_Amt ?? undefined),
+    // 折讓列的「原發票總額」由後端 self-join 的 Orig_Amount 帶入（PUR_Amt 已改存折讓額）
+    total_amount: isVoid ? 0 : (isAllowance ? (row.Orig_Amount ?? undefined) : (row.PUR_Amt ?? undefined)),
     tax_type: row.PUR_TaxType ?? undefined,
     net_amount: isVoid ? 0 : (row.PUR_Net ?? undefined),
     tax_amount: isVoid ? 0 : (row.PUR_Tax ?? undefined),
@@ -152,7 +153,10 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
     summary_count: undefined,
     asset_flag: row.AssetType ?? undefined,
     inv_cancel: row.Invoice_Cancel ?? undefined,
-    ...(isAllowance ? { credit_type: row.Credit_Type ?? undefined } : {}),
+    ...(isAllowance ? {
+      credit_type: row.Credit_Type ?? undefined,
+      allowance_amount: isVoid ? 0 : ((row.PUR_Net ?? 0) + (row.PUR_Tax ?? 0)),
+    } : {}),
   };
 }
 
@@ -190,7 +194,8 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     vendor_tax_id: row.PUR_VenUniform ?? undefined,
     ven_no: row.PUR_VenNo ?? undefined,
     invoice_usage: row.PUR_DirectType ?? undefined,
-    invoice_amount: row.PUR_Amt ?? undefined,
+    // 折讓列的「原發票總額」由後端 self-join 的 Orig_Amount 帶入（PUR_Amt 已改存折讓額）
+    invoice_amount: isAllowance ? (row.Orig_Amount ?? undefined) : (row.PUR_Amt ?? undefined),
     tax_type: row.PUR_TaxType ?? undefined,
     net_amount: row.PUR_Net ?? undefined,
     tax_amount: row.PUR_Tax ?? undefined,
@@ -199,7 +204,10 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     source_doc_no: row.Source_Doc_No ?? undefined,
     comb: row.PUR_Comb ?? undefined,
     total_count: row.PUR_Comb_Cnt ?? undefined,
-    ...(isAllowance ? { credit_type: row.Credit_Type ?? undefined } : {}),
+    ...(isAllowance ? {
+      credit_type: row.Credit_Type ?? undefined,
+      allowance_amount: (row.PUR_Net ?? 0) + (row.PUR_Tax ?? 0),
+    } : {}),
   };
 }
 
