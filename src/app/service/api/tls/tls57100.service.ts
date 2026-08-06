@@ -38,6 +38,9 @@ export interface QueryTLS57100DetailResponse {
   PLU_Name?: string;
   ODD_SalePrc?: number;
   ODD_SaleAmt?: number;
+  ODD_BuyNet?: number;
+  ODD_BuyTax?: number;
+  ODD_BuyAmt?: number;
 }
 
 export interface QueryTLS57100SummaryResponse {
@@ -54,6 +57,9 @@ export interface QueryTLS57100SummaryResponse {
   ODD_ConfirmQty?: number;
   ODD_SalePrc?: number;
   ODM_TotalSaleAmt?: number;
+  ODM_TotalBuyNet?: number;
+  ODM_TotalBuyTax?: number;
+  ODM_TotalBuyAmt?: number;
 }
 
 export interface QueryTLS57100ApiResponse {
