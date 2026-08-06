@@ -3184,6 +3184,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const idx = event.index;
     if (typeof idx !== 'number' || idx < 0) return;
 
+    // 選「退出/折讓日期」自動帶申報年月（進位到雙數月）；手動改申報年月也修正為雙數月
+    if (f === 'credit_date' || f === 'declare_ym') {
+      const row = event.rowData as FIN53010StepSalesInvoiceRow;
+      const srcDate = f === 'credit_date'
+        ? (row.credit_date instanceof Date ? row.credit_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      this.applyAllowanceDeclareYm(event, srcDate);
+      return;
+    }
+
     if (f === 'net_amount' || f === 'tax_type' || f === 'tax_amount') {
       const row = event.rowData as FIN53010StepSalesInvoiceRow;
       const net = row.net_amount ?? 0;
@@ -3202,6 +3212,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (this.isFormReadable) return;
     const f = event.field;
 
+    // 選「退出/折讓日期」自動帶申報年月（進位到雙數月）；手動改申報年月也修正為雙數月
+    if (f === 'credit_date' || f === 'declare_ym') {
+      const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+      const srcDate = f === 'credit_date'
+        ? (row.credit_date instanceof Date ? row.credit_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      this.applyAllowanceDeclareYm(event, srcDate);
+      return;
+    }
+
     if (f === 'net_amount' || f === 'tax_type' || f === 'tax_amount') {
       const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
       const net = row.net_amount ?? 0;
@@ -3212,6 +3232,25 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
       event.rowData.allowance_amount = net + (event.rowData.tax_amount ?? 0);
       this.warnIfAllowanceRowOverLimit(event.rowData);
+    }
+  }
+
+  /** 折讓列共用：由來源日期算申報年月（一律進位到雙數月），並做結案檢查（比照正常進項/銷項） */
+  private applyAllowanceDeclareYm(event: StepFieldChangeEvent, srcDate: Date | null): void {
+    if (!srcDate) return;
+    const month = srcDate.getMonth();
+    const nextEvenMonth = month % 2 === 0
+      ? new Date(srcDate.getFullYear(), month + 1, 1)
+      : new Date(srcDate.getFullYear(), month, 1);
+    event.rowData.declare_ym = nextEvenMonth;
+    const ym = this.datePipe.transform(nextEvenMonth, 'yyyyMM');
+    if (ym) {
+      this.service.checkRepYYYYMMAudited(ym).pipe(take(1)).subscribe(isAudited => {
+        if (isAudited) {
+          this.messageService.errorBubble(`申報年月 ${ym} 已結束申報，不可新增`);
+          event.rowData.declare_ym = null;
+        }
+      });
     }
   }
 
