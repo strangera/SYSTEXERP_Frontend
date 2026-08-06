@@ -2138,6 +2138,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.purchaseAllowancePickerLoading = true;
     this.service.queryAps2002OriginalInvoicesForAllowance({
       InvoiceNo: this.purchaseAllowancePickerQueryControl.value?.trim() || null,
+      AllowanceType: String(this.purchaseAllowancePickerRowData?.voucher_type ?? '').trim() || null,
       PageIndex: 1,
       PageSize: 200,
     }).pipe(take(1)).subscribe({
@@ -2169,7 +2170,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const rowData = this.purchaseAllowancePickerRowData;
     if (!rowData) return;
     const srcType = String(item.PUR_VoucherType ?? '').trim();
-    const allowanceType = srcType === '21' ? '23' : srcType === '22' ? '24' : srcType || undefined;
+    // 原始發票 21/25 → 折讓格式 23；22 → 24
+    const allowanceType = (srcType === '21' || srcType === '25') ? '23' : srcType === '22' ? '24' : srcType || undefined;
 
     // PUR_GUIDate 可能已是 Date 物件（HttpClient 或攔截器轉換），直接使用
     const rawDate = item.PUR_GUIDate as unknown;

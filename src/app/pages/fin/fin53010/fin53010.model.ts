@@ -502,6 +502,8 @@ export interface Aps2002DetailDataByInvoiceNoData {
 /** queryAPS2002OriginalInvoices_ForAllowance Request */
 export interface QueryAps2002OriginalInvoicesForAllowanceRequest {
   InvoiceNo?: string | null;
+  /** 折讓發票格式（23→查原始 21/25；24→查原始 22） */
+  AllowanceType?: string | null;
   PageSize?: number | null;
   PageIndex?: number | null;
 }
