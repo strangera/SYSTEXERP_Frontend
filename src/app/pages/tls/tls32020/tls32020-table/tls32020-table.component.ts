@@ -31,6 +31,7 @@ export class TableReportComponent implements OnChanges {
   // 管理 欄位
   @Input() footerData: any;     // (總計)頁尾資料
   @Input() groupRowsBy?: string;    // (小計)群組欄位
+  @Input() showSubtotal = true;     // 是否顯示小計列（例如未勾選「館別」時，期間內僅剩單一彙總列，小計列無意義應隱藏）
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   constructor(
@@ -56,7 +57,7 @@ export class TableReportComponent implements OnChanges {
     return this.columnTopGroup?.find(g => g.field === topGroupField)?.header ?? topGroupField;
   }
   hasSubtotalColumns(): boolean {
-    return this.columns.some(col => col.isSubTotal && this.groupRowsBy);
+    return this.showSubtotal && this.columns.some(col => col.isSubTotal && this.groupRowsBy);
   }
   isGroupLastRow(rowData: any, rowIndex: number): boolean {
     if (!this.groupRowsBy || !this.data || rowIndex === this.data.length - 1) {
