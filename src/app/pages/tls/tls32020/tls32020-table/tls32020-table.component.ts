@@ -22,6 +22,7 @@ export class TableReportComponent implements OnChanges {
   @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
+  @Input() tableKey = 'tls32020';               // 欄位顯示設定存檔用的唯一標識，避免跟其他頁面共用同一把 key
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   @Input() loading = false;
   // 欄位群組
