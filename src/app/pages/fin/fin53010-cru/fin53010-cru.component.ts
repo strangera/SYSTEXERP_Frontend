@@ -3109,11 +3109,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
 
-    // 廠商統一編號變更 → 自動帶入廠商代號
+    // 廠商統一編號變更 → 自動帶入廠商代號；查無對應廠商則留空（不再給 '0'）
     if (f === 'vendor_tax_id') {
       const uniform = String(row.vendor_tax_id ?? '').trim();
       const venNo = uniform ? this.service.vendorUniformToVenNoMap().get(uniform) : undefined;
-      event.rowData.ven_no = venNo ?? '0';
+      event.rowData.ven_no = venNo ?? '';
       return;
     }
 
