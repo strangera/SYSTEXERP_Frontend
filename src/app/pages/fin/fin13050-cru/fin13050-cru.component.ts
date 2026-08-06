@@ -191,7 +191,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Type: [''],
 
     Source_Doc_No: ['', [alnumMax16IfFilled]],
-    Voucher_No: [{ value: '' }],
+    Voucher_No: [''],
     SYS_ORIGIN: ['G'],
     PUR_Remark: [''],
   });
