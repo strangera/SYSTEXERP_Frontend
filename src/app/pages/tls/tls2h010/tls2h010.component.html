@@ -30,7 +30,7 @@
   <app-table-report tableKey="tls2h010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [lastQueryBody]="lastQueryBody" [showDelete]="false" [showReportMode]="false" [showCheckBox]="true"
     [showDetail]="false" [showEdit]="false" [showManage]="false" [loading]="loading" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [queryFunction]="queryWithSort.bind(this)">
+    (selectionChange)="selectedItems = $event" [queryFunction]="queryWithSort.bind(this)" [ItemSize]="30">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
