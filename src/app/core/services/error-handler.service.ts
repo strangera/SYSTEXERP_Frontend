@@ -1,6 +1,6 @@
 import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { from, Observable, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../service/system/auth.service';
 import { NotificationService } from '../../shared/components/notification-message/notification.service';
@@ -24,24 +24,48 @@ export class ErrorHandlerService {
   }
 
   handleError(error: HttpErrorResponse): Observable<never> {
+    // responseType:'blob' 的匯出類 API（如 exportTLS32020Excel）失敗時，err.error 會是 Blob 而非解析好的 JSON，
+    // 必須先讀出文字內容再嘗試解析，不然後端 ValidateModel 等回傳的具體錯誤訊息會被吃掉，只看到通用訊息。
+    if (error.error instanceof Blob && error.error.type?.includes('json')) {
+      return from(this.parseBlobErrorBody(error.error)).pipe(
+        switchMap((parsedBody) => this.processError(error, parsedBody)),
+      );
+    }
+    return this.processError(error, error.error);
+  }
+
+  private async parseBlobErrorBody(blob: Blob): Promise<any> {
+    try {
+      return JSON.parse(await blob.text());
+    } catch {
+      return null;
+    }
+  }
+
+  private processError(error: HttpErrorResponse, errorBody: any): Observable<never> {
     let userFriendlyMessage: string;
     let notificationHeader: string | undefined; // 用於儲存彈出訊息的標題
     let notificationDetails: string;            // 用於儲存彈出訊息的詳細內容
 
     // 增加一個方法來安全地取得錯誤訊息
-    const getBackendMessage = (err: HttpErrorResponse): string | null => {
-      // 檢查是否為 JSON 物件且包含 Message
-      if (err.error && typeof err.error === 'object' && err.error.Message) {
-        return String(err.error.Message); // 確保是字串
+    const getBackendMessage = (body: any): string | null => {
+      if (body && typeof body === 'object') {
+        // ValidateModelAttribute 把逐欄位驗證錯誤放在 Data（字串陣列），比固定泛用文字的 Message 更有診斷價值，優先採用
+        if (Array.isArray(body.Data) && body.Data.length > 0 && body.Data.every((d: unknown) => typeof d === 'string')) {
+          return body.Data.join('; ');
+        }
+        if (body.Message) {
+          return String(body.Message); // 確保是字串
+        }
       }
       // 檢查是否為純字串錯誤
-      else if (typeof err.error === 'string') {
-        return err.error;
+      else if (typeof body === 'string') {
+        return body;
       }
       return null;
     };
 
-    const backendMessage = getBackendMessage(error);
+    const backendMessage = getBackendMessage(errorBody);
 
     switch (error.status) {
       case 0:

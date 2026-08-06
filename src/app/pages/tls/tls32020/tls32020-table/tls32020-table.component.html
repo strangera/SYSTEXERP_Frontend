@@ -3,7 +3,7 @@
   styleClass="p-datatable-sm p-datatable-gridlines " rowGroupMode="rowspan"
   groupRowsBy="YM">
   <ng-template pTemplate="caption">
-    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
+    <app-table-caption [tableKey]="tableKey" [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [showCaption]="true"
       [showFilter]="true" [showReportMode]="false" [showDelete]="false" [showPage]="false"
       [totalRecords]="dt.totalRecords">

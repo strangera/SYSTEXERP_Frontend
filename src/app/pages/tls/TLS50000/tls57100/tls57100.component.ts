@@ -106,6 +106,9 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount },
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount },
         { field: 'ODM_TotalSaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODM_TotalBuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODM_TotalBuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODM_TotalBuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount },
       ];
       this.footerTotal = null;
       this.data = [];
@@ -123,6 +126,9 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
+        { field: 'ODD_BuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
       ];
       this.footerTotal = null;
       this.data = [];

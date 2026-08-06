@@ -217,7 +217,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
         TltNo: raw.TltNo,
         GuiNoStart: raw.GuiNoStart,
         GuiNoEnd: raw.GuiNoEnd,
-        COMM_MONEY_TYPE: raw.COMM_MONEY_TYPE,
+        MoneyType: raw.COMM_MONEY_TYPE,
       };
 
       this.tls2h030Service.queryTLS2H030(body)
@@ -247,7 +247,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
       TltNo: formValue.TltNo,
       GuiNoStart: formValue.GuiNoStart,
       GuiNoEnd: formValue.GuiNoEnd,
-      COMM_MONEY_TYPE: formValue.COMM_MONEY_TYPE,
+      MoneyType: formValue.COMM_MONEY_TYPE,
     };
 
     this.tls2h030Service.queryTLS2H030(payload).pipe(untilDestroyed(this)).subscribe({
