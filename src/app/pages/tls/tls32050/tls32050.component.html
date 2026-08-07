@@ -209,11 +209,11 @@
               optionValue="No" [control]="queryForm.controls.TltNoList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="銷售金額是否含稅" controlName="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
+            <app-radiobutton label="銷售金額是否含稅" groupname="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
               [options]="TaxType_Option" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否開立業主發票" controlName="ReceFilter" [control]="queryForm.controls.ReceFilter"
+            <app-radiobutton label="是否開立業主發票" groupname="ReceFilter" [control]="queryForm.controls.ReceFilter"
               [options]="ReceFilter_Option" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

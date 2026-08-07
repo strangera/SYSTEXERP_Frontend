@@ -149,7 +149,8 @@ function mapStepSalesToInsert4023(row: FIN53010StepSalesInvoiceRow, deps: Fin530
       : (toYmd(row.invoice_date ?? undefined, deps.datePipe) ?? null),
     INV_DeclareYM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe) ?? null,
     Buyer_Uniform: row.buyer_uniform ?? null,
-    PUR_Amt: row.total_amount ?? null,
+    // 折讓(33/34)：PUR_Amt = 畫面算好的折讓總額(allowance_amount)，不是原發票總額；一般發票才用 total_amount
+    PUR_Amt: isAllowance ? (row.allowance_amount ?? ((row.net_amount ?? 0) + (row.tax_amount ?? 0))) : (row.total_amount ?? null),
     PUR_TaxType: row.tax_type ?? null,
     PUR_Net: row.net_amount ?? null,
     PUR_Tax: row.tax_amount ?? null,
@@ -188,7 +189,8 @@ function mapStepPurchaseToInsert2002(
     PUR_VenUniform: purVenUniform,
     PUR_Net: row.net_amount,
     PUR_Tax: row.tax_amount,
-    PUR_Amt: row.invoice_amount,
+    // 折讓(23/24)：PUR_Amt = 畫面算好的折讓總額(allowance_amount)，不是原發票總額；一般發票才用 invoice_amount
+    PUR_Amt: isAllowance ? (row.allowance_amount ?? ((row.net_amount ?? 0) + (row.tax_amount ?? 0))) : row.invoice_amount,
     // PUR_Uniform: row.vendor_tax_id,
     PUR_TaxType: row.tax_type,
     PUR_DiscNo: row.deduction_code,

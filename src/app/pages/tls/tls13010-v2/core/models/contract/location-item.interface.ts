@@ -13,6 +13,7 @@ export interface LocationItem {
   tlt_floor: string;
   area_no: string;
   tlt_space: number;
+  sale_rate?: number;   // 業績分攤(%)
   building_desc: string;
   floor_desc: string;
   area_desc: string;
@@ -36,6 +37,7 @@ export interface CleanLocationInfo {
   tlt_floor?: string;
   area_no?: string;
   tlt_space?: number;
+  sale_rate?: number;   // 業績分攤(%)
   tlt_bdate?: string;
   tlt_edate?: string;
   _status?: LocationStatus;

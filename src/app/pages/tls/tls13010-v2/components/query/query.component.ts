@@ -12,7 +12,6 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { Router } from '@angular/router';
 
 // 基礎組件
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   AddButton,
   Column,
@@ -20,6 +19,7 @@ import {
   formatDate,
   formatYN
 } from '@others/component/table/table.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
 
@@ -31,15 +31,15 @@ import { TooltipModule } from 'primeng/tooltip';
 
 // 共用組件
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { TableComponent } from '@others/component/table/table.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
-import { TableComponent } from '@others/component/table/table.component';
 
 // V2 服務與類型
 import { CommissionType, CommissionTypeLabels } from '../../core/constants';
@@ -231,10 +231,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     { field: 'contract_subno', header: '版本編號', visible: true },
     { field: 'feedback_date', header: '回函日期', visible: true, format: formatDate },
     { field: 'due_date', header: '回函截止日', visible: true, format: formatDate },
-    { field: 'tlt_contract_bdate', header: '契約起始日', visible: true, format: formatDate },
-    { field: 'tlt_contract_edate', header: '契約截止日', visible: true, format: formatDate },
-    { field: 'tlt_bdate', header: '營運起始日', visible: true, format: formatDate },
-    { field: 'tlt_edate', header: '營運截止日', visible: true, format: formatDate },
+    { field: 'tlt_bdate', header: '契約起始日', visible: true, format: formatDate },
+    { field: 'tlt_edate', header: '契約截止日', visible: true, format: formatDate },
+    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: formatDate },
+    { field: 'tlt_contract_edate', header: '營運截止日', visible: true, format: formatDate },
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
     { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },

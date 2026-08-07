@@ -112,6 +112,9 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   loading = false;
   shouldForceEdit = true;
 
+  /** 新增模式常用項目自動勾選只做一次，避免覆蓋使用者後續手動取消 */
+  private commonAutoSelected = false;
+
   // 計算對話框
   showCalculationDialog = false;
   calculationResult: CalculationResult | null = null;
@@ -279,11 +282,24 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   private groupFaresByType(): void {
     this.fareData = { A: [], B: [], C: [], D: [], E: [] };
 
+    // 新增模式首次載入時自動勾選常用項目（只做一次）
+    const autoSelectCommon =
+      this.crudstatus === CRUDStatus.Create &&
+      !this.commonAutoSelected &&
+      this.fareItems.length > 0;
+
     this.fareItems.forEach(item => {
       const type = item.cap_type as keyof FaresByType;
       if (this.fareData[type]) {
         // 套用預設合約起訖日期（如果項目沒有日期）
         this.applyDefaultDatesToItem(item, type);
+
+        // 新增模式：自動勾選常用項目
+        if (autoSelectCommon && item.is_commonly_used === 'Y' && !item.is_selected) {
+          item.is_selected = true;
+          const config = FARE_CHANGE_DETECTION_CONFIG[type as keyof typeof FARE_CHANGE_DETECTION_CONFIG];
+          CrudTrackingService.updateSelectionStatus(item as unknown as TrackableItem, config as ChangeDetectionConfig);
+        }
 
         // C 類型：根據日期計算期數和首期金額
         if (type === 'C' && item.tpy_bdate && item.tpy_edate) {
@@ -292,6 +308,11 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         this.fareData[type].push(item);
       }
     });
+
+    if (autoSelectCommon) {
+      this.commonAutoSelected = true;
+      this.emitDataChange();
+    }
   }
 
   /**

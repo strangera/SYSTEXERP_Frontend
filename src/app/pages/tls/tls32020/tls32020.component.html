@@ -248,8 +248,9 @@
 
 <div class="card">
   <app-table-report dataKey="talent_id" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [columnGroup]="columnGroup" [columnTopGroup]="columnTopGroup" [lazy]="false" [footerData]="footerData"
-    [subTotalData]="subFooterData" [lastQueryBody]="historyRequestBody" groupRowsBy="YM">
+    [loading]="loading" [columnGroup]="columnGroup" [columnTopGroup]="columnTopGroup" [footerData]="footerData"
+    [subTotalData]="subFooterData" [lastQueryBody]="historyRequestBody" groupRowsBy="YM"
+    [showSubtotal]="queryForm.get('ShowBuilding')?.value !== false">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="產出期間業績分析報表.PDF" [loading]="pdfBtnLoading" icon="pi pi-file"

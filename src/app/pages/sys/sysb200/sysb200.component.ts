@@ -6,6 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { AddButton, Column } from '../../../others/component/table/table.model';
 import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
@@ -64,6 +65,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_NoList: [[]],
     VEN_Status: [''],
     VEN_Uniform: ['', [Validators.maxLength(10)]],
+    VEN_Flag: [''],
     VEN_Name: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
     VEN_SName: [null, [Validators.maxLength(10)]],
@@ -88,10 +90,12 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { label: '未審核', value: '0' },
     { label: '已審核', value: '1' },
   ];
+  flagOptions: { label: string; value: string }[] = [];
   columns: Column[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Status', header: '審核狀態', visible: true, format: (v) => v === '0' ? '未審核' : '已審核' },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
+    { field: 'VEN_Flag', header: '系統別', visible: true, format: (v) => this.flagOptions.find(o => o.value === v)?.label ?? v },
     { field: 'VEN_Name', header: '廠商名稱(中文)', visible: true },
     { field: 'VEN_EngName', header: '廠商名稱(英文)', visible: true },
     { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
@@ -176,6 +180,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
 
   // ====== Options ======
   loadOptions() {
+    this.flagOptions = getSYS1000Options('VEN_Flag');
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
       this.venderOptions = (res.Data ?? []).map((item: any) => ({
         label: `${item.VEN_No} - ${item.ShortName}`,
@@ -205,6 +210,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         VEN_NoList: raw.VEN_NoList,
         VEN_Status: raw.VEN_Status,
         VEN_Uniform: raw.VEN_Uniform,
+        VEN_Flag: raw.VEN_Flag,
         VEN_Name: raw.VEN_Name,
         VEN_EngName: raw.VEN_EngName,
         VEN_ShortName: raw.VEN_ShortName,

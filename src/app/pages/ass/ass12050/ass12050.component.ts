@@ -2,21 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDate } from '@others/component/table/table.model';
 import { ASS12050QueryRow, QueryASS12050Request } from '@pages/ass/ass12050/ass12050.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatDate } from '@others/component/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
@@ -105,7 +105,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
     { field: 'APRV_DATE', header: '審核日期', visible: true, format: formatDate },
     { field: 'CHECK_DATE', header: '驗收日期', visible: true, format: formatDate },
     { field: 'DETAIL_COUNT', header: '明細筆數', visible: true },
-    { field: 'CHECK_COUNT', header: '驗收筆數', visible: true },
+    { field: 'CHECK_COUNT', header: '驗收筆數', visible: false },
   ];
 
   addButton: AddButton[] = [

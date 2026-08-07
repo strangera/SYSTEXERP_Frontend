@@ -502,6 +502,8 @@ export interface Aps2002DetailDataByInvoiceNoData {
 /** queryAPS2002OriginalInvoices_ForAllowance Request */
 export interface QueryAps2002OriginalInvoicesForAllowanceRequest {
   InvoiceNo?: string | null;
+  /** 折讓發票格式（23→查原始 21/25；24→查原始 22） */
+  AllowanceType?: string | null;
   PageSize?: number | null;
   PageIndex?: number | null;
 }
@@ -509,6 +511,8 @@ export interface QueryAps2002OriginalInvoicesForAllowanceRequest {
 /** queryAPS4023OriginalInvoices_ForAllowance Request */
 export interface QueryAps4023OriginalInvoicesForAllowanceRequest {
   InvoiceNumber?: string | null;
+  /** 折讓發票格式（33→查原始 31/35；34→查原始 32） */
+  AllowanceType?: string | null;
   PageSize?: number | null;
   PageIndex?: number | null;
 }
@@ -741,6 +745,8 @@ export interface APS2002 {
   PUR_Comb?: string | null;
   /** 原發票日期（後端 self-join：23/24 折讓列由 b.PUR_GUIDate 帶入，21/22/25 正常列為 null） */
   Orig_InvoiceDate?: string | null;
+  /** 原發票總金額（後端 self-join：23/24 折讓列由原始 21/22/25 帶入，其餘為 null） */
+  Orig_Amount?: number | null;
 }
 
 export interface ARS3001 {
@@ -822,6 +828,8 @@ export interface APS4023 {
   TXN_GUIRemark?: string | null;
   /** 原發票日期（後端 self-join：33/34 折讓列由 b.InvoiceDate 帶入，31/32/35 正常列為 null） */
   Orig_InvoiceDate?: string | null;
+  /** 原發票總金額（後端 self-join：33/34 折讓列由原始 31/32/35 帶入，其餘為 null） */
+  Orig_Amount?: number | null;
 }
 
 export interface APS4002 {
@@ -1111,6 +1119,12 @@ export interface FIN53010StepSalesInvoiceRow {
   credit_type?: string;
   /** 折讓用：退出/折讓日期（格式 33/34；invoice_date 仍為原發票日期） */
   credit_date?: Date | null;
+  /** 退回/折讓總金額（含稅，= 未稅 + 稅額，系統計算顯示用，不供輸入） */
+  allowance_amount?: number;
+  /** 折讓防呆用：挑原始發票當下帶入的原發票總金額（PUR_Amt），僅前端驗證用，不送 API */
+  orig_invoice_amount?: number;
+  /** 折讓防呆用：挑原始發票當下該發票「已退回/折讓金額」快照，僅前端驗證用，不送 API */
+  already_allowance_amt?: number;
 }
 
 /** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */
@@ -1143,6 +1157,12 @@ export interface FIN53010StepPurchaseInvoiceRow {
   credit_type?: string;
   /** 折讓用：退出/折讓日期（格式 23/24；invoice_date 仍為原發票日期） */
   credit_date?: Date | null;
+  /** 退回/折讓總金額（含稅，= 未稅 + 稅額，系統計算顯示用，不供輸入） */
+  allowance_amount?: number;
+  /** 折讓防呆用：挑原始發票當下帶入的原發票總金額（PUR_Amt），僅前端驗證用，不送 API */
+  orig_invoice_amount?: number;
+  /** 折讓防呆用：挑原始發票當下該發票「已退回/折讓金額」快照，僅前端驗證用，不送 API */
+  already_allowance_amt?: number;
 }
 
 /** FIN53010 新增多步驟：銀行存款（Voucher_Type=7） */

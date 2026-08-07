@@ -11,13 +11,13 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/components/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 //3.1.3.1 資產維護作業 CRU
@@ -432,13 +432,13 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     // 由於 ReactiveForms 的 disabled 欄位不參與 validation，因此鎖欄能避免 required 驗證誤擋送出。
     const allowedControls = new Set<string>(
       isAlreadyAmortized
-        ? ['purchasePrice', 'depreciationLife', 'keepingPerson', 'user', 'amortizationYearMonth']
+        ? ['purchasePrice', 'depreciationLife', 'keepingPerson', 'user', 'amortizationYearMonth', 'assetsStatus']
         : ['assetsStatus', 'purchaseDate', 'deviceCode', 'remark']
     );
 
     // `Object.keys()` 會回傳 `string[]`，但 `controls` 是強型別結構；
     // 這裡把 key 型別收斂回 `keyof controls` 以避免 TS7053。
-    for (const key of Object.keys(this.dataForm.controls) as Array<keyof typeof this.dataForm.controls>) {
+    for (const key of Object.keys(this.dataForm.controls) as (keyof typeof this.dataForm.controls)[]) {
       const ctrl = this.dataForm.controls[key];
       if (allowedControls.has(key as string)) {
         ctrl.enable({ emitEvent: false });

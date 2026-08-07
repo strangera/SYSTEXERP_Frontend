@@ -205,11 +205,11 @@
               optionValue="No" [control]="queryForm.controls.OrgList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號/名稱" controlName="TltNoList" [options]="tlt_no_id_Option" optionLabel="label"
+            <app-multi-select label="專櫃編號/名稱" groupname="TltNoList" [options]="tlt_no_id_Option" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.TltNoList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="銷售金額是否含稅" controlName="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
+            <app-radiobutton label="銷售金額是否含稅" groupname="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
               [options]="TaxType_Option" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

@@ -303,11 +303,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly stepPurchaseAllowanceFooter = computed(() => ({
     invoice_amount: this.stepPurchaseAllowanceRows().reduce((sum, r) => sum + (r.invoice_amount ?? 0), 0),
+    allowance_amount: this.stepPurchaseAllowanceRows().reduce((sum, r) => sum + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0),
     net_amount: this.stepPurchaseAllowanceRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
     tax_amount: this.stepPurchaseAllowanceRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
   }));
   public readonly stepSalesAllowanceFooter = computed(() => ({
     total_amount: this.stepSalesAllowanceRows().reduce((sum, r) => sum + (r.total_amount ?? 0), 0),
+    allowance_amount: this.stepSalesAllowanceRows().reduce((sum, r) => sum + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0),
     net_amount: this.stepSalesAllowanceRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
     tax_amount: this.stepSalesAllowanceRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
   }));
@@ -1093,6 +1095,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'credit_type', header: '區別', type: 'dropdown', options: () => this.creditTypeOptions, optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_amount', header: '原發票總金額', type: 'inputNumber', textAlign: 'right', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'vendor_tax_id', header: '銷受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, showClear: true, validate: [this.validateUniformNumber.bind(this)] },
+    { field: 'allowance_amount', header: '退回/折讓總金額', type: 'inputNumber', textAlign: 'right', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'net_amount', header: '退回/折讓未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'tax_amount', header: '退回/折讓稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
@@ -1108,6 +1111,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'credit_type', header: '區別', type: 'dropdown', options: () => this.creditTypeOptions, optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value', allowCustomValue: true, showClear: true, validate: [this.validateUniformNumber.bind(this)] },
     { field: 'total_amount', header: '原發票總金額', type: 'inputNumber', textAlign: 'right', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'allowance_amount', header: '退回/折讓總金額', type: 'inputNumber', textAlign: 'right', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'net_amount', header: '退回/折讓未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'tax_amount', header: '退回/折讓稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
@@ -2044,6 +2048,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.salesAllowancePickerLoading = true;
     this.service.queryAps4023OriginalInvoicesForAllowance({
       InvoiceNumber: this.salesAllowancePickerQueryControl.value?.trim() || null,
+      AllowanceType: String(this.salesAllowancePickerRowData?.invoice_type ?? '').trim() || null,
       PageIndex: 1,
       PageSize: 200,
     }).pipe(take(1)).subscribe({
@@ -2051,7 +2056,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.salesAllowancePickerLoading = false;
         if (res.Status === '0000') {
           this.salesAllowancePickerList = res.Data ?? [];
-          this.salesAllowancePickerTotalRecords = res.TotalCount ?? 0;
+          // 後端只回單頁(最多 200 筆)，此 picker 為前端分頁：totalRecords 需用實際載入筆數，
+          // 不能用 res.TotalCount(全表總數)，否則 paginator 會多出沒有資料的空白頁。
+          this.salesAllowancePickerTotalRecords = this.salesAllowancePickerList.length;
           const row = this.salesAllowancePickerRowData;
           const list = this.salesAllowancePickerList;
           if (row) {
@@ -2077,7 +2084,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const fullNo = String(item.InvoiceNumber ?? '').trim();
     const prefix = fullNo.length === 10 ? fullNo.slice(0, 2) : '';
     const srcType = String(item.InvoiceType ?? '').trim();
-    const allowanceType = srcType === '31' ? '33' : srcType === '32' ? '34' : srcType || undefined;
+    // 原始發票 31/35 → 折讓格式 33；32 → 34
+    const allowanceType = (srcType === '31' || srcType === '35') ? '33' : srcType === '32' ? '34' : srcType || undefined;
 
     // InvoiceDate 可能已是 Date 物件（HttpClient 或攔截器轉換），直接使用
     const rawDate = item.InvoiceDate as unknown;
@@ -2097,6 +2105,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       rowData.total_amount = item.PUR_Amt ?? rowData.total_amount;
       rowData.tax_type = item.PUR_TaxType ?? rowData.tax_type;
       rowData.buyer_uniform = item.Buyer_Uniform ?? rowData.buyer_uniform;
+      rowData.orig_invoice_amount = item.PUR_Amt ?? undefined;
+      rowData.already_allowance_amt = item.AlreadyAllowanceAmt ?? 0;
       this.stepSalesAllowanceRows.update(rows => [...rows, rowData]);
     } else {
       const idx = this.salesAllowancePickerRowIndex;
@@ -2138,6 +2148,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.purchaseAllowancePickerLoading = true;
     this.service.queryAps2002OriginalInvoicesForAllowance({
       InvoiceNo: this.purchaseAllowancePickerQueryControl.value?.trim() || null,
+      AllowanceType: String(this.purchaseAllowancePickerRowData?.voucher_type ?? '').trim() || null,
       PageIndex: 1,
       PageSize: 200,
     }).pipe(take(1)).subscribe({
@@ -2145,7 +2156,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.purchaseAllowancePickerLoading = false;
         if (res.Status === '0000') {
           this.purchaseAllowancePickerList = res.Data ?? [];
-          this.purchaseAllowancePickerTotalRecords = res.TotalCount ?? 0;
+          // 後端只回單頁(最多 200 筆)，此 picker 為前端分頁：totalRecords 需用實際載入筆數，
+          // 不能用 res.TotalCount(全表總數)，否則 paginator 會多出沒有資料的空白頁。
+          this.purchaseAllowancePickerTotalRecords = this.purchaseAllowancePickerList.length;
           const row = this.purchaseAllowancePickerRowData;
           const list = this.purchaseAllowancePickerList;
           if (row) {
@@ -2169,7 +2182,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const rowData = this.purchaseAllowancePickerRowData;
     if (!rowData) return;
     const srcType = String(item.PUR_VoucherType ?? '').trim();
-    const allowanceType = srcType === '21' ? '23' : srcType === '22' ? '24' : srcType || undefined;
+    // 原始發票 21/25 → 折讓格式 23；22 → 24
+    const allowanceType = (srcType === '21' || srcType === '25') ? '23' : srcType === '22' ? '24' : srcType || undefined;
 
     // PUR_GUIDate 可能已是 Date 物件（HttpClient 或攔截器轉換），直接使用
     const rawDate = item.PUR_GUIDate as unknown;
@@ -2188,6 +2202,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       rowData.invoice_amount = item.PUR_Amt ?? rowData.invoice_amount;
       rowData.vendor_tax_id = item.PUR_VenUniform ?? rowData.vendor_tax_id;
       rowData.tax_type = item.PUR_TaxType ?? rowData.tax_type;
+      rowData.orig_invoice_amount = item.PUR_Amt ?? undefined;
+      rowData.already_allowance_amt = item.AlreadyAllowanceAmt ?? 0;
       this.stepPurchaseAllowanceRows.update(rows => [...rows, rowData]);
     } else {
       const idx = this.purchaseAllowancePickerRowIndex;
@@ -2203,6 +2219,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           invoice_amount: item.PUR_Amt ?? next[idx].invoice_amount,
           vendor_tax_id: item.PUR_VenUniform ?? next[idx].vendor_tax_id,
           tax_type: item.PUR_TaxType ?? next[idx].tax_type,
+          orig_invoice_amount: item.PUR_Amt ?? undefined,
+          already_allowance_amt: item.AlreadyAllowanceAmt ?? 0,
         };
         return next;
       });
@@ -2594,6 +2612,36 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.messageService.errorBubble(`銷項發票第 ${serNos} 筆發票號碼在系統中查無資料，請確認字軌及發票號碼是否正確`);
         return;
       }
+    }
+
+    // 折讓彙總比對：折讓表「含稅總額」合計必須等於觸發折讓的傳票明細金額合計，否則不可存檔
+    if (this.stepPurchaseAllowanceRows().length > 0) {
+      const allowSum = this.stepPurchaseAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+      const triggerSum = this.purchaseAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtC ?? 0), 0);
+      if (Math.round(allowSum) !== Math.round(triggerSum)) {
+        this.messageService.errorBubble(`進項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+    if (this.stepSalesAllowanceRows().length > 0) {
+      const allowSum = this.stepSalesAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+      const triggerSum = this.salesAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtD ?? 0), 0);
+      if (Math.round(allowSum) !== Math.round(triggerSum)) {
+        this.messageService.errorBubble(`銷項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+
+    // 折讓金額防呆：同一原始發票「已折讓 + 本次折讓(未稅+稅額)」不可超過原發票總金額
+    const purAllowanceOver = this.findAllowanceOverLimit(this.stepPurchaseAllowanceRows());
+    if (purAllowanceOver.length > 0) {
+      this.messageService.errorBubble(`進項折讓：發票 ${purAllowanceOver.join('、')} 的「已折讓＋本次折讓」金額超過原發票總金額`);
+      return;
+    }
+    const salesAllowanceOver = this.findAllowanceOverLimit(this.stepSalesAllowanceRows());
+    if (salesAllowanceOver.length > 0) {
+      this.messageService.errorBubble(`銷項折讓：發票 ${salesAllowanceOver.join('、')} 的「已折讓＋本次折讓」金額超過原發票總金額`);
+      return;
     }
 
     const proceed = () => this.handleSubmit(this.dataForm, () => {
@@ -3061,11 +3109,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
 
-    // 廠商統一編號變更 → 自動帶入廠商代號
+    // 廠商統一編號變更 → 自動帶入廠商代號；查無對應廠商則留空（不再給 '0'）
     if (f === 'vendor_tax_id') {
       const uniform = String(row.vendor_tax_id ?? '').trim();
       const venNo = uniform ? this.service.vendorUniformToVenNoMap().get(uniform) : undefined;
-      event.rowData.ven_no = venNo ?? '0';
+      event.rowData.ven_no = venNo ?? '';
       return;
     }
 
@@ -3129,52 +3177,126 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepSalesAllowanceRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
   }
 
-  /** 銷項折讓步驟表 fieldChange：字軌 + 發票號碼齊備時帶入原發票資訊；金額/課稅別變更時計算稅額 */
+  /** 銷項折讓步驟表 fieldChange：使用者填「退回/折讓未稅金額」(net_amount)，應稅時反推稅額 = 未稅 × 5% */
   public onStepSalesAllowanceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
     const idx = event.index;
     if (typeof idx !== 'number' || idx < 0) return;
-    const row = event.rowData as FIN53010StepSalesInvoiceRow;
 
-    if (f === 'total_amount' || f === 'tax_type') {
-      const amount = row.total_amount;
-      if (amount != null && amount > 0) {
-        const taxType = String(row.tax_type ?? '').trim();
-        if (taxType === '1') {
-          const tax = Math.round(amount * 5 / 105);
-          event.rowData.tax_amount = tax;
-          event.rowData.net_amount = amount - tax;
-        } else {
-          event.rowData.tax_amount = 0;
-          event.rowData.net_amount = amount;
-        }
-      }
+    // 選「退出/折讓日期」自動帶申報年月（進位到雙數月）；手動改申報年月也修正為雙數月
+    if (f === 'credit_date' || f === 'declare_ym') {
+      const row = event.rowData as FIN53010StepSalesInvoiceRow;
+      const srcDate = f === 'credit_date'
+        ? (row.credit_date instanceof Date ? row.credit_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      this.applyAllowanceDeclareYm(event, srcDate);
+      return;
     }
 
+    if (f === 'net_amount' || f === 'tax_type' || f === 'tax_amount') {
+      const row = event.rowData as FIN53010StepSalesInvoiceRow;
+      const net = row.net_amount ?? 0;
+      // 手動改稅額(tax_amount)時保留使用者值；改未稅/課稅別才自動算稅
+      if (f !== 'tax_amount') {
+        const taxType = String(row.tax_type ?? '').trim();
+        event.rowData.tax_amount = taxType === '1' && net > 0 ? Math.round(net * 5 / 100) : 0;
+      }
+      event.rowData.allowance_amount = net + (event.rowData.tax_amount ?? 0);
+      this.warnIfAllowanceRowOverLimit(event.rowData);
+    }
   }
 
-  /** 進項折讓步驟表 fieldChange：invoice_no blur 帶入原發票資訊；金額/課稅別變更時計算稅額 */
+  /** 進項折讓步驟表 fieldChange：使用者填「退回/折讓未稅金額」(net_amount)，應稅時反推稅額 = 未稅 × 5% */
   public onStepPurchaseAllowanceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
-    const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
 
-    if (f === 'invoice_amount' || f === 'tax_type') {
-      const amount = row.invoice_amount;
-      if (amount != null && amount > 0) {
-        const taxType = String(row.tax_type ?? '').trim();
-        if (taxType === '1') {
-          const tax = Math.round(amount * 5 / 105);
-          event.rowData.tax_amount = tax;
-          event.rowData.net_amount = amount - tax;
-        } else {
-          event.rowData.tax_amount = 0;
-          event.rowData.net_amount = amount;
-        }
-      }
+    // 選「退出/折讓日期」自動帶申報年月（進位到雙數月）；手動改申報年月也修正為雙數月
+    if (f === 'credit_date' || f === 'declare_ym') {
+      const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+      const srcDate = f === 'credit_date'
+        ? (row.credit_date instanceof Date ? row.credit_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      this.applyAllowanceDeclareYm(event, srcDate);
+      return;
     }
 
+    if (f === 'net_amount' || f === 'tax_type' || f === 'tax_amount') {
+      const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+      const net = row.net_amount ?? 0;
+      // 手動改稅額(tax_amount)時保留使用者值；改未稅/課稅別才自動算稅
+      if (f !== 'tax_amount') {
+        const taxType = String(row.tax_type ?? '').trim();
+        event.rowData.tax_amount = taxType === '1' && net > 0 ? Math.round(net * 5 / 100) : 0;
+      }
+      event.rowData.allowance_amount = net + (event.rowData.tax_amount ?? 0);
+      this.warnIfAllowanceRowOverLimit(event.rowData);
+    }
+  }
+
+  /** 折讓列共用：由來源日期算申報年月（一律進位到雙數月），並做結案檢查（比照正常進項/銷項） */
+  private applyAllowanceDeclareYm(event: StepFieldChangeEvent, srcDate: Date | null): void {
+    if (!srcDate) return;
+    const month = srcDate.getMonth();
+    const nextEvenMonth = month % 2 === 0
+      ? new Date(srcDate.getFullYear(), month + 1, 1)
+      : new Date(srcDate.getFullYear(), month, 1);
+    event.rowData.declare_ym = nextEvenMonth;
+    const ym = this.datePipe.transform(nextEvenMonth, 'yyyyMM');
+    if (ym) {
+      this.service.checkRepYYYYMMAudited(ym).pipe(take(1)).subscribe(isAudited => {
+        if (isAudited) {
+          this.messageService.errorBubble(`申報年月 ${ym} 已結束申報，不可新增`);
+          event.rowData.declare_ym = null;
+        }
+      });
+    }
+  }
+
+  /** 折讓金額防呆型別（進項/銷項折讓列共用需要的欄位子集） */
+  private allowanceLimitFields(row: FIN53010StepPurchaseInvoiceRow | FIN53010StepSalesInvoiceRow): {
+    invoiceNo: string; net: number; tax: number; orig?: number; already: number;
+  } {
+    return {
+      invoiceNo: String(row.invoice_no ?? '').trim(),
+      net: row.net_amount ?? 0,
+      tax: row.tax_amount ?? 0,
+      orig: row.orig_invoice_amount,
+      already: row.already_allowance_amt ?? 0,
+    };
+  }
+
+  /** 單列即時提醒：該原始發票「已折讓 + 本次(未稅+稅額)」超過原發票總金額時跳提醒（未挑原始發票者略過，交後端把關） */
+  private warnIfAllowanceRowOverLimit(row: FIN53010StepPurchaseInvoiceRow | FIN53010StepSalesInvoiceRow): void {
+    const r = this.allowanceLimitFields(row);
+    if (r.orig == null) return;
+    const thisTotal = r.net + r.tax;
+    if (r.already + thisTotal > r.orig + 0.001) {
+      const remaining = r.orig - r.already;
+      this.messageService.warnBubble(
+        `本次折讓含稅 ${thisTotal.toLocaleString()} 超過可折讓餘額 ${remaining.toLocaleString()}（原發票 ${r.orig.toLocaleString()} − 已折讓 ${r.already.toLocaleString()}）`
+      );
+    }
+  }
+
+  /** 送出前彙總防呆：同一原始發票的「已折讓 + 本次所有折讓列(未稅+稅額)」不可超過原發票總金額；回傳超額發票號碼清單 */
+  private findAllowanceOverLimit(rows: (FIN53010StepPurchaseInvoiceRow | FIN53010StepSalesInvoiceRow)[]): string[] {
+    const groups = new Map<string, { orig: number; already: number; thisSum: number; }>();
+    for (const row of rows) {
+      const r = this.allowanceLimitFields(row);
+      if (!r.invoiceNo || r.orig == null) continue; // 未挑原始發票→無法前端驗證，交後端
+      const g = groups.get(r.invoiceNo) ?? { orig: r.orig, already: r.already, thisSum: 0 };
+      g.orig = r.orig;        // 同號碼原發票額一致
+      g.already = r.already;  // 同號碼已折讓快照一致
+      g.thisSum += r.net + r.tax;
+      groups.set(r.invoiceNo, g);
+    }
+    const over: string[] = [];
+    for (const [no, g] of groups) {
+      if (g.already + g.thisSum > g.orig + 0.001) over.push(no);
+    }
+    return over;
   }
 
   private mapAps4023ToPurchaseRow(

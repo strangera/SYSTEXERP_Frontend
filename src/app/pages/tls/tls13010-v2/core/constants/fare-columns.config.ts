@@ -450,11 +450,14 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
     {
       field: 'tpy_rate',
       header: '比率',
+      headerTooltip: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02',
       type: 'number',
       editable: true,
       required: true,
       allowDecimal: true,
       decimalPlaces: 3,
+      validateMax: 1,
+      validateMessage: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02',
       style: 'width: 70px; min-width: 70px; max-width: 80px; font-size: 0.65rem;'
     },
     {
@@ -517,11 +520,14 @@ export function getDeductionEColumns(contractDates?: { bdate?: string; edate?: s
     {
       field: 'tpy_rate',
       header: '比率',
+      headerTooltip: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02',
       type: 'number',
       editable: true,
       required: true,
       allowDecimal: true,
-      decimalPlaces: 3
+      decimalPlaces: 3,
+      validateMax: 1,
+      validateMessage: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02'
     },
     {
       field: 'pay_no',
