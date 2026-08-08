@@ -14,7 +14,7 @@
                 icon="pi pi-file-check"
                 label="驗收"
                 [loading]="loading"
-                [disabled]="canApprove"
+                [disabled]="!canConfirm"
                 (click)="onConfirm()"></app-button>
 
     <app-button btnType="default"
@@ -102,6 +102,13 @@
                             [control]="dataForm.controls.AMT"
                             [submitted]="submitted"
                             [disabled]="true"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4 flex align-items-center">      
+          <p-checkbox
+            label="是否整批計稅"
+            formControlName="IsAllTax"            
+            [binary]="true">
+          </p-checkbox>
         </div>
       </div>
 
