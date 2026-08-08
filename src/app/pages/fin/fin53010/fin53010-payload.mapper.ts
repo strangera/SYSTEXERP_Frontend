@@ -178,6 +178,7 @@ function mapStepPurchaseToInsert2002(
   const purVenUniform = row.vendor_tax_id ? String(row.vendor_tax_id).slice(0, 8) : undefined;
   const isAllowance = voucherType === '23' || voucherType === '24';
   return {
+    id: row.id ?? 0, // picker 選定既有發票(含彙開)帶回 id，後端用它綁定；0=新增/依號碼比對
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
     ACP_Type: '7',
@@ -214,6 +215,7 @@ function mapStepBankToInsert4002(row: FIN53010StepBankDeposit, deps: Fin53010Pay
     Remark: row.note_desc,
     Source_Date: toYmd(row.txn_date ?? undefined, deps.datePipe),
     Status: row.status,
+    Source_SerNo: row._detailSerNo ?? null,
   };
 }
 

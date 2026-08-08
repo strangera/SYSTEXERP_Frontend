@@ -399,6 +399,7 @@
         [cellEditOnClick]="true"
         [scrollable]="stepSalesRows().length >= 20"
         [tableKey]="'FIN53010_step_sales'"
+        [defaultInsertData]="stepSalesDefaultInsert"
         (dataChange)="onStepSalesDataChange($event)"
         (fieldChange)="onStepSalesInvoiceFieldChange($event)"
         [footerData]="stepSalesFooter()"
@@ -892,6 +893,47 @@
     dataKey="InvoiceNumber"
     [(selectedItems)]="salesInvoicePickerSelectedItem"
     (itemClick)="onSalesInvoicePick($event)"
+  />
+</p-dialog>
+
+<!-- 進項發票：雙擊挑既有發票 Picker Dialog（查 APS2002 一般進項 21/22/25） -->
+<p-dialog
+  header="選取進項發票"
+  [(visible)]="showPurchaseInvoicePickerDialog"
+  [modal]="true"
+  [style]="dialogStyle65vw"
+>
+  <div class="flex gap-2 align-items-end mb-3">
+    <app-input-text
+      [style]="dialogInnerStyle280"
+      label="發票號碼"
+      controlName="purchaseInvoicePickerQuery"
+      [control]="purchaseInvoicePickerQueryControl"
+      [customPlaceholder]="'輸入發票號碼（可留空查全部）'"
+      [alwaysShowPlaceholder]="true"
+      (keyup.enter)="loadPurchaseInvoicePickerList()"
+    />
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      [loading]="purchaseInvoicePickerLoading"
+      (click)="loadPurchaseInvoicePickerList()"
+    />
+  </div>
+  <app-table
+    tableKey="FIN53010_purchase_invoice_picker"
+    [columns]="purchaseInvoicePickerColumns"
+    [data]="purchaseInvoicePickerList"
+    [totalRecords]="purchaseInvoicePickerTotalRecords"
+    [loading]="purchaseInvoicePickerLoading"
+    [showDelete]="false"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [selectionMode]="'single'"
+    [showReportMode]="false"
+    dataKey="id"
+    [(selectedItems)]="purchaseInvoicePickerSelectedItem"
+    (itemClick)="onPurchaseInvoicePick($event)"
   />
 </p-dialog>
 

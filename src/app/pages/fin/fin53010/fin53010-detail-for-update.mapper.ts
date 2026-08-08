@@ -222,6 +222,7 @@ export function mapAps4002RowToStepBank(row: APS4002): FIN53010StepBankDeposit {
     status: row.Status ?? undefined,
     note_desc: row.Remark ?? undefined,
     txn_date: parseYmdToDate(row.Source_Date ?? undefined),
+    gls3002_id: row.gls3002_id ?? undefined,
   };
 }
 
