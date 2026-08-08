@@ -1,16 +1,16 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13050Service } from '@service/api/ass/ass13050.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
@@ -46,10 +46,10 @@ import { ASS13050QueryRow, DownloadASS13050Request, QueryASS13050Request } from 
 export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow> implements OnInit {
 
   readonly queryForm = this.formBuilder.nonNullable.group({
-    TRANSFER_DATE: new FormControl<Date | null>(null, [Validators.required]),
-    NEW_HOLD_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    TRANSFER_DATE: new FormControl<Date | null>(null),
+    NEW_HOLD_ORG_ID: new FormControl<string | null>(null),
     NEW_HOLD_EMP_ID: new FormControl<string | null>(null),
-    NEW_USE_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_USE_ORG_ID: new FormControl<string | null>(null),
     NEW_USE_EMP_ID: new FormControl<string | null>(null),
     DEPRE_YN: new FormControl<string | null>(null),
     B_CLASS_ID: new FormControl<string | null>(null),
