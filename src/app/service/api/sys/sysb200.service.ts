@@ -23,6 +23,7 @@ export interface QuerySYSB200Request {
   VEN_NoList?: string[];
   VEN_Status?: string;
   VEN_Uniform?: string;
+  VEN_Flag?: string;
   VEN_Name?: string;
   VEN_EngName?: string;
   VEN_ShortName?: string;

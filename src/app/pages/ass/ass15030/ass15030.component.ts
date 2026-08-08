@@ -10,12 +10,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { distinctUntilChanged, finalize, map, Observable, startWith } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { formatAmount2, formatDate } from '../../../shared/components/table-report/table-report.model';
@@ -65,7 +65,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
   exportExcelLoading = false;
-  private readonly defaultPageSize = 30;
+  private readonly defaultPageSize = 1000;
   lastQueryBody?: QueryASS15030Request & { pageIndex?: number; pageSize?: number };
   // 跨頁累計筆數：parent.data 不會被 table-report 的 loadMoreData 同步回來，
   // 所以末頁偵測必須自己累計，否則 pageIndex>=3 的末頁 TotalCount 會錯。
@@ -76,42 +76,42 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     this.isSubtotalRow(row?.SEQ) ? 'ass15030-subtotal-cell' : '';
 
   private readonly summaryColumns: any[] = [
-    { field: 'SEQ', header: '項次', visible: true },
-    { field: 'GOODS_ID', header: '品項編號', visible: true },
-    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
-    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true },
-    { field: 'GET_COST_TTL', header: '取得價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'FIX_AMT_TTL', header: '異動價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'AFT_AMT_TTL', header: '異動後價格\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'RESI_VALUE_TTL', header: '預留總值\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'PRE_DEPRE_TTL', header: '前期折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'CUR_DEPRE_TTL', header: '本期\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'ACC_DEPRE_TTL', header: '累計\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'UNDEPRE_TTL', header: '未折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
+    { field: 'SEQ', header: '項次', visible: true, width: '70px' },
+    { field: 'GOODS_ID', header: '品項編號', visible: true, width: '110px' },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true, width: '160px' },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true, width: '140px' },
+    { field: 'GET_COST_TTL', header: '取得價格\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'FIX_AMT_TTL', header: '異動價格\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'AFT_AMT_TTL', header: '異動後價格\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'RESI_VALUE_TTL', header: '預留總值\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'PRE_DEPRE_TTL', header: '前期折舊金額', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'CUR_DEPRE_TTL', header: '本期\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'ACC_DEPRE_TTL', header: '累計\n折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
+    { field: 'UNDEPRE_TTL', header: '未折舊金額\n合計', visible: true, isSubTotal: true, align: 'right', width: '120px', format: (v: number) => formatAmount2(v) },
   ];
 
   private readonly detailColumns: any[] = [
-    { field: 'SEQ', header: '項次', visible: true },
-    { field: 'ASSET_ID', header: '財產編號', visible: true },
-    { field: 'GOODS_NAME', header: '項目名稱', visible: true },
-    { field: 'GET_DATE', header: '購入\n日期', visible: true, format: (v: string) => formatDate(v) },
-    { field: 'BILL_DATE', header: '入帳\n日期', visible: true, format: (v: string) => formatDate(v) },
-    { field: 'HOLD_ORG_ID', header: '保管單位', visible: true },
-    { field: 'FIR_GET_COST', header: '取得價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'MODIFY_AMT', header: '異動價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'GET_COST', header: '異動後價格', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'RESI_VALUE', header: '預留\n殘值', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'FIR_EXP_YEAR', header: '耐用\n年數', visible: true, isSubTotal: true },
-    { field: 'MODIFY_YEAR', header: '異動\n耐用\n年數', visible: true, isSubTotal: true },
-    { field: 'EXP_YEAR', header: '異動後\n耐用\n年數', visible: true, isSubTotal: true },
-    { field: 'BUY_MONTHS', header: '已購入\n月數', visible: true, isSubTotal: true },
-    { field: 'BILL_MONTHS', header: '已入帳\n月數', visible: true, isSubTotal: true },
-    { field: 'DEPRE_MONTHS', header: '已攤提\n月數', visible: true, isSubTotal: true },
-    { field: 'DEPRE_AMOUNT', header: '本年\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'THIS_DEPRE_AMT', header: '本期\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'TAL_DEPRE_AMT', header: '累計\n折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'NO_DEPRE_AMT', header: '未折舊金額', visible: true, isSubTotal: true, align: 'right', format: (v: number) => formatAmount2(v) },
-    { field: 'NOTES', header: '財產註記', visible: true },
+    { field: 'SEQ', header: '項次', visible: true, width: '70px' },
+    { field: 'ASSET_ID', header: '財產編號', visible: true, width: '110px' },
+    { field: 'GOODS_NAME', header: '項目名稱', visible: true, width: '160px' },
+    { field: 'GET_DATE', header: '購入\n日期', visible: true, width: '100px', format: (v: string) => formatDate(v) },
+    { field: 'BILL_DATE', header: '入帳\n日期', visible: true, width: '100px', format: (v: string) => formatDate(v) },
+    { field: 'HOLD_ORG_ID', header: '保管單位', visible: true, width: '140px' },
+    { field: 'FIR_GET_COST', header: '取得價格', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'MODIFY_AMT', header: '異動價格', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'GET_COST', header: '異動後價格', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'RESI_VALUE', header: '預留\n殘值', visible: true, isSubTotal: true, align: 'right', width: '100px', format: (v: number) => formatAmount2(v) },
+    { field: 'FIR_EXP_YEAR', header: '耐用\n年數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'MODIFY_YEAR', header: '異動\n耐用\n年數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'EXP_YEAR', header: '異動後\n耐用\n年數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'BUY_MONTHS', header: '已購入\n月數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'BILL_MONTHS', header: '已入帳\n月數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'DEPRE_MONTHS', header: '已攤提\n月數', visible: true, isSubTotal: true, width: '80px' },
+    { field: 'DEPRE_AMOUNT', header: '本年\n折舊金額', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'THIS_DEPRE_AMT', header: '本期\n折舊金額', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'TAL_DEPRE_AMT', header: '累計\n折舊金額', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'NO_DEPRE_AMT', header: '未折舊金額', visible: true, isSubTotal: true, align: 'right', width: '110px', format: (v: number) => formatAmount2(v) },
+    { field: 'NOTES', header: '財產註記', visible: true, width: '160px' },
   ];
 
   columns: any[] = this.getColumnsByReportStyle('1');
@@ -222,17 +222,17 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
         // 末頁偵測：後端原始 row 數 < pageSize → 視為末頁，
         // 把 TotalCount 設為「append 後累計筆數」讓 table-report 停止再觸發
-        const isLastPage = rawCount < apiPageSize;
+        // const isLastPage = rawCount < apiPageSize;
         // 後端 TOTAL_COUNT 若缺漏/未正確填值，很容易剛好等於目前已載入筆數（甚至 0），
         // 導致 table-report 誤判「已載入=總筆數」而永久停止捲動載入。
         // 只有當後端回報的總數確實大於目前累計筆數時才採信，否則假設還有下一頁，
         // 交給上面 isLastPage（依實際回傳筆數 < pageSize）去真正判斷末頁。
-        const reliableTotal = totalCount > this.accumulatedRowCount ? totalCount : this.accumulatedRowCount + 1;
-        const adjustedTotal = isLastPage ? this.accumulatedRowCount : reliableTotal;
+        // const reliableTotal = totalCount > this.accumulatedRowCount ? totalCount : this.accumulatedRowCount + 1;
+        // const adjustedTotal = isLastPage ? this.accumulatedRowCount : reliableTotal;
 
         return {
           Data: rows,
-          TotalCount: adjustedTotal,
+          TotalCount: totalCount,
         };
       }),
     );
@@ -449,14 +449,14 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   private buildSumFooter(r: QueryASS15030SumResult): any {
     return {
-      GET_COST_TTL:   r.TOTAL_GET_COST_TTL   ?? 0,
-      FIX_AMT_TTL:    r.TOTAL_FIX_AMT_TTL    ?? 0,
-      AFT_AMT_TTL:    r.TOTAL_AFT_AMT_TTL    ?? 0,
+      GET_COST_TTL: r.TOTAL_GET_COST_TTL ?? 0,
+      FIX_AMT_TTL: r.TOTAL_FIX_AMT_TTL ?? 0,
+      AFT_AMT_TTL: r.TOTAL_AFT_AMT_TTL ?? 0,
       RESI_VALUE_TTL: r.TOTAL_RESI_VALUE_TTL ?? 0,
-      PRE_DEPRE_TTL:  r.TOTAL_PRE_DEPRE_TTL  ?? 0,
-      CUR_DEPRE_TTL:  r.TOTAL_CUR_DEPRE_TTL  ?? 0,
-      ACC_DEPRE_TTL:  r.TOTAL_ACC_DEPRE_TTL  ?? 0,
-      UNDEPRE_TTL:    r.TOTAL_UNDEPRE_TTL    ?? 0,
+      PRE_DEPRE_TTL: r.TOTAL_PRE_DEPRE_TTL ?? 0,
+      CUR_DEPRE_TTL: r.TOTAL_CUR_DEPRE_TTL ?? 0,
+      ACC_DEPRE_TTL: r.TOTAL_ACC_DEPRE_TTL ?? 0,
+      UNDEPRE_TTL: r.TOTAL_UNDEPRE_TTL ?? 0,
     };
   }
 
@@ -464,14 +464,14 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     // 年/月欄位 (FIR_EXP_YEAR / MODIFY_YEAR / EXP_YEAR / BUY_MONTHS / BILL_MONTHS / DEPRE_MONTHS)
     // 後端無對應 TOTAL_* 欄位，footer 該幾格留白即可。
     return {
-      FIR_GET_COST:   r.TOTAL_FIR_GET_COST   ?? 0,
-      MODIFY_AMT:     r.TOTAL_MODIFY_AMT     ?? 0,
-      GET_COST:       r.TOTAL_GET_COST       ?? 0,
-      RESI_VALUE:     r.TOTAL_RESI_VALUE     ?? 0,
-      DEPRE_AMOUNT:   r.TOTAL_DEPRE_AMOUNT   ?? 0,
+      FIR_GET_COST: r.TOTAL_FIR_GET_COST ?? 0,
+      MODIFY_AMT: r.TOTAL_MODIFY_AMT ?? 0,
+      GET_COST: r.TOTAL_GET_COST ?? 0,
+      RESI_VALUE: r.TOTAL_RESI_VALUE ?? 0,
+      DEPRE_AMOUNT: r.TOTAL_DEPRE_AMOUNT ?? 0,
       THIS_DEPRE_AMT: r.TOTAL_THIS_DEPRE_AMT ?? 0,
-      TAL_DEPRE_AMT:  r.TOTAL_TAL_DEPRE_AMT  ?? 0,
-      NO_DEPRE_AMT:   r.TOTAL_NO_DEPRE_AMT   ?? 0,
+      TAL_DEPRE_AMT: r.TOTAL_TAL_DEPRE_AMT ?? 0,
+      NO_DEPRE_AMT: r.TOTAL_NO_DEPRE_AMT ?? 0,
     };
   }
 
