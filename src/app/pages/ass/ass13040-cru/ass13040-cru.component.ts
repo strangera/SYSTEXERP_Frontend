@@ -351,7 +351,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
 
   private mapAndFilterAssetType(items: IDropdownItem[]): Option[] {
     return items
-      .filter(item => item.Name !== '耗材' && item.Name !== '其他資產(無形)')
+      .filter(item => item.Name !== '耗材')
       .map(item => ({
         value: item.No,
         label: `${item.No} - ${item.Name}`,
