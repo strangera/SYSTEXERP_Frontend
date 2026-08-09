@@ -6,13 +6,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ass14010detailData, Ass14010Items, Ass14010Service, Ass14010Supplier } from '@service/api/ass/ass14010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
@@ -116,9 +116,31 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   ngOnInit(): void {
     this.initializePage('ASS14010', this.dataForm);
+
     const { STO_NO, RECEIPT_NO } = this.dataForm.getRawValue();
+
     this.get14010Detail(STO_NO, RECEIPT_NO);
+
     this.loadOptions();
+
+    // 監聽供應商變更
+    this.dataForm.controls.SUPPLIER_ID.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(supplierId => {
+
+        // 更換供應商時，原本選擇的驗收單全部清除
+        this.itemData = [];
+
+        this.dataForm.patchValue({
+          TOKEN_NO: '',
+          NTX_AMT: 0,
+          TX_AMT: 0,
+          AMT: 0
+        });
+
+        // 根據供應商重新取得驗收單
+        this.loadTokenOptions(supplierId);
+      });
   }
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
@@ -264,50 +286,83 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     }
   }
 
-  // 讀取dopropdown選項
+  // 讀取 dropdown 選項
   loadOptions() {
-    // 定義所有 API 任務
     const supplier$ = this.dropDownListService.queryPOS2013_DropDownList({});
-    const token$ = this.ass14010Service.queryFAASSCHKM_DropDownList({});
     const invFormat$ = this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 });
     const reduCode$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DiscNo' });
 
-    // 同時發送，等待全部回傳
-    forkJoin([supplier$, token$, invFormat$, reduCode$])
+    forkJoin([supplier$, invFormat$, reduCode$])
       .pipe(untilDestroyed(this))
-      .subscribe(([resSup, resTok, resInv, resRedu]) => {
+      .subscribe(([resSup, resInv, resRedu]) => {
 
-        // 1. 處理供應商選項
+        // 1. 供應商
         this.SUPPLIER_ID_Options = (resSup.Data ?? []).map((item: any) => ({
           value: item.VEN_No ?? item.No ?? '',
           label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
 
-        // 2. 處理驗收單號
-        this.TOKEN_NO_Options = (resTok.Data ?? []).map((res: any) => ({
-          SUBCHECK_ID: res.SUBCHECK_ID,
-          TAX_AMT: res.TAX_AMT,
-          NTAX_AMT: res.NTAX_AMT,
-          AMT: res.AMT
-        }));
-
-        // 3. 處理發票格式
+        // 2. 發票格式
         this.INV_FORMAT_Options = (resInv.Data.INV_GUITypes ?? [])
           .filter(item => ['21', '22', '25'].includes(item.INV_GUIType))
           .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
-          .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+          .map(item => ({
+            label: `${item.INV_GUIType}-${item.INV_GUIName}`,
+            value: item.INV_GUIType
+          }));
 
-        // 4. 處理扣抵別
+        // 3. 扣抵別
         this.REDU_CODE_Options = (resRedu ?? []).map(res => ({
           label: res.No + '-' + res.Name,
           value: res.No,
         }));
 
-        // 5. 選項都到位後建立 supplierColumn
+        // 尚未選供應商，不載入驗收單
+        this.TOKEN_NO_Options = [];
+
         this.initSupplierColumns();
       });
   }
+  private loadTokenOptions(supplierId: string | null) {
 
+    // 尚未選擇供應商
+    if (!supplierId) {
+      this.TOKEN_NO_Options = [];
+
+      // 清空已選的單據資料
+      this.itemData = [];
+
+      this.dataForm.patchValue({
+        TOKEN_NO: '',
+        NTX_AMT: 0,
+        TX_AMT: 0,
+        AMT: 0
+      });
+
+      // 重新建立欄位，讓驗收單 dropdown Disabled
+      this.initSupplierColumns();
+
+      return;
+    }
+
+    this.ass14010Service
+      .queryFAASSCHKD_LIST_DropDownList({
+        SUPPLIER_ID: supplierId
+      })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+
+        this.TOKEN_NO_Options = (res.Data ?? []).map((item: any) => ({
+          SUBCHECK_ID: item.SUBCHECK_ID,
+          TAX_AMT: item.TAX_AMT,
+          NTAX_AMT: item.NTAX_AMT,
+          AMT: item.AMT
+        }));
+
+        // 重新建立欄位，更新 dropdown options
+        this.initSupplierColumns();
+      });
+  }
   //---發票明細---
 
   //欄位名稱初始化
@@ -328,7 +383,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID' },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID', disabled: () => !this.dataForm.get('SUPPLIER_ID')?.value },
       // { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
       { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
       { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
