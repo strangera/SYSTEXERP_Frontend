@@ -5,47 +5,58 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="true"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="小分類代碼/名稱"
-                        controlName="S_CLASS_ID"
-                        [options]="smallClassOptions()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="qf().S_CLASS_ID"
-                        [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="中分類代碼/名稱"
-                        controlName="M_CLASS_ID"
-                        [options]="midClassOptions()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="qf().M_CLASS_ID"
-                        [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4"
-                        label="大分類代碼/名稱"
-                        controlName="B_CLASS_ID"
-                        [options]="bigClassOptions()"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="qf().B_CLASS_ID"
-                        [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="大分類代碼/名稱"
+            controlName="B_CLASS_ID"
+            [options]="bigClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().B_CLASS_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="中分類代碼/名稱"
+            controlName="M_CLASS_ID"
+            [options]="midClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().M_CLASS_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="小分類代碼/名稱"
+            controlName="S_CLASS_ID"
+            [options]="smallClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().S_CLASS_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-input-textarea class="col-12"
-                              label="說明"
-                              controlName="NOTES_KEYWORD"
-                              [control]="qf().NOTES_KEYWORD"
-                              [submitted]="submitted"></app-input-textarea>
+          <app-input-textarea
+            class="col-12"
+            label="說明"
+            controlName="NOTES_KEYWORD"
+            [control]="qf().NOTES_KEYWORD"
+            [submitted]="submitted"
+          ></app-input-textarea>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -72,7 +83,7 @@
       [showCheckBox]="false"
       [lazy]="true"
       (edit)="onEdit($event)"
-      (detail)="onDetail($event)">
-    </app-table-report>
+      (detail)="onDetail($event)"
+    ></app-table-report>
   </div>
 </div>
