@@ -440,6 +440,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
     // 查詢POS2013廠商聯絡資訊自動帶入（新增/編輯皆可）
     if (this.crudstatus !== CRUDStatus.Read) {
+      this.checkVendorOccupied(selectedOption.VEN_No || selectedOption.value);
       this.loadVendorContactInfo(vendorVenNo);
     }
 
@@ -474,6 +475,20 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       },
       error: (err) => {
         console.error('查詢廠商聯絡資訊失敗:', err);
+      }
+    });
+  }
+
+  /** 選定廠商後即時檢查該廠編是否已被其他櫃號的未作廢合約使用 */
+  private checkVendorOccupied(venNo: string): void {
+    if (!venNo) return;
+    const tltNo = this.form.get('tlt_no')?.value ?? '';
+    this.tls13010Service.checkVendorOccupied(venNo, tltNo).subscribe({
+      next: (occupiedTltNo) => {
+        if (occupiedTltNo) {
+          this.messageService.errorBubble(`此廠編已被櫃號${occupiedTltNo}使用！不可選取！`);
+          this.onVendorChange('');
+        }
       }
     });
   }

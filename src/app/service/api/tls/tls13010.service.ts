@@ -280,6 +280,20 @@ export class TLS13010Service {
     );
   }
 
+  /**
+   * 檢查廠商編號是否已被其他櫃號的未作廢合約使用
+   * @returns 佔用中的專櫃編號（空字串=可用）
+   */
+  checkVendorOccupied(venNo: string, tltNo?: string | null): Observable<string> {
+    return this.http.post<any>(
+      `${this.apiUrl}/TLS0000/TLS1000/checkVendorOccupied`,
+      { ven_no: venNo, tlt_no: tltNo ?? '' }
+    ).pipe(
+      map((res) => (res?.Data as string) ?? ''),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
   /** 檢查指定專櫃編號是否存在尚未審核的合約版本 */
   checkUnapprovedVersion(tltNo: string): Observable<boolean> {
     return this.http.post<any>(
