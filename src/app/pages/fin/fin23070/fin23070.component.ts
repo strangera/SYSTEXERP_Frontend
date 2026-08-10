@@ -71,7 +71,6 @@ export class FIN23070Component extends BasicQueryPageComponent<Fin23070Data> imp
   detailData: Fin23070DetailData[] = [];
 
   columns: Column[] = [
-    { field: 'RowNum', header: '序號' },
     { field: 'PrepNo', header: '預支單號' },
     { field: 'VenNo', header: '廠商/員工代號' },
     { field: 'VenName', header: '廠商/員工名稱' },
@@ -89,6 +88,13 @@ export class FIN23070Component extends BasicQueryPageComponent<Fin23070Data> imp
     { field: 'PrepNo', header: '預支單號' },
     { field: 'VenNo', header: '廠商/員工代號' },
     { field: 'VenName', header: '廠商/員工名稱' },
+    { field: 'ApplyDate', header: '申請日期', format: formatDate },
+    { field: 'PlanCloseDate', header: '預計核銷日', format: formatDate },
+    { field: 'PlanPayDate', header: '預計付款日', format: formatDate },
+    { field: 'PrepAmt', header: '預支金額', format: formatAmount },
+    { field: 'PostedAmt', header: '已拋轉核銷金額', format: formatAmount },
+    { field: 'UnpostedAmt', header: '未拋轉核銷金額', format: formatAmount },
+    { field: 'DiffAmt', header: '差額', format: formatAmount },
     { field: 'RedeemNo', header: '核銷單號' },
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'RedeemAmt', header: '核銷金額', format: formatAmount },
@@ -155,10 +161,6 @@ export class FIN23070Component extends BasicQueryPageComponent<Fin23070Data> imp
 
   onSubmitQuery(frm: FormGroup) {
     this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset({ ShowDetail: 'N' });
   }
 
   queryFunction = (body: any) => {

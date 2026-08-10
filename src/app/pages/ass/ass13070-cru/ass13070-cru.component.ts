@@ -78,7 +78,7 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
     { field: 'USE_ORG_NAME', header: '原使用單位' },
     { field: 'USE_EMP_NAME', header: '原使用人' },
   ];
-
+selectedRows: ASS13070QueryRow[] = [];
   readonly columnsResult: ReportColumn[] = [
     {
       field: 'DEPRE_YN',
@@ -129,26 +129,39 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
     super();
   }
 
-  ngOnInit(): void {
-    const state = this.router.lastSuccessfulNavigation?.extras.state as
-      | { ass13070Rows?: ASS13070QueryRow[] }
-      | undefined;
-    const rows = state?.ass13070Rows ?? [];
-    if (rows.length === 0) {
-      this.messageService.warnBubble('未帶入查詢資料，請由查詢頁勾選後進入');
-      void this.router.navigate(['/account/ass/ass13070']);
-      return;
-    }
+ ngOnInit(): void {
+  const state = this.router.lastSuccessfulNavigation?.extras.state as
+    | { ass13070Rows?: ASS13070QueryRow[] }
+    | undefined;
 
-    this.initialRows = rows.map(r => ({ ...r }));
-    this.idList = rows.map(r => r.ID!).filter((id): id is number => id != null);
-    this.tableRows.set([...this.initialRows]);
-    this.displayColumns = [...this.columnsPreview];
-    this.transferCompleted.set(false);
+  const rows = state?.ass13070Rows ?? [];
 
-    this.initializePage('ASS13070', this.dataForm);
-    this.loadEmpOptions();
+  if (rows.length === 0) {
+    this.messageService.warnBubble('未帶入查詢資料，請由查詢頁勾選後進入');
+    void this.router.navigate(['/account/ass/ass13070']);
+    return;
   }
+
+  // 保存查詢頁帶進來的原始資料
+  this.initialRows = rows.map(r => ({ ...r }));
+
+  // 顯示資料
+  this.tableRows.set([...this.initialRows]);
+
+  // 預設全部勾選
+  this.selectedRows = [...this.initialRows];
+
+  // API 使用的 ID
+  this.idList = this.selectedRows
+    .map(r => r.ID)
+    .filter((id): id is number => id != null);
+
+  this.displayColumns = [...this.columnsPreview];
+  this.transferCompleted.set(false);
+
+  this.initializePage('ASS13070', this.dataForm);
+  this.loadEmpOptions();
+}
 
   private loadEmpOptions(): void {
     this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
@@ -163,41 +176,51 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
   }
 
   onConfirm(): void {
-    this.submitted = true;
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble('請填寫完整必填欄位');
-      return;
-    }
+  this.submitted = true;
 
-    const raw = this.dataForm.getRawValue();
-    const handleDateStr =
-      raw.TRANSFER_DATE != null
-        ? this.datePipe.transform(raw.TRANSFER_DATE, 'yyyy-MM-dd') ?? ''
-        : '';
-    const payload: ASS13070TransferRequest = {
-      ID_LIST: this.idList,
-      NEW_HOLD_ORG_ID: String(raw.NEW_HOLD_ORG_ID ?? ''),
-      NEW_HOLD_EMP_ID: String(raw.NEW_HOLD_EMP_ID ?? ''),
-      NEW_USE_ORG_ID: String(raw.NEW_USE_ORG_ID ?? ''),
-      NEW_USE_EMP_ID: String(raw.NEW_USE_EMP_ID ?? ''),
-      HANDLE_DATE: handleDateStr,
-    };
-
-    this.loading = true;
-    this.ass13070Service
-      .transferASS13070(payload)
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: res => {
-          if (res.Status !== '0000') {
-            this.messageService.errorBubble(res.Message ?? '轉移財產失敗');
-            return;
-          }
-          this.messageService.successBubble('轉移財產成功');
-          this.loadTransferResult();
-        },
-      });
+  if (this.dataForm.invalid) {
+    this.messageService.errorBubble('請填寫完整必填欄位');
+    return;
   }
+
+  if (this.idList.length === 0) {
+    this.messageService.warnBubble('請至少勾選一筆財產資料');
+    return;
+  }
+
+  const raw = this.dataForm.getRawValue();
+
+  const handleDateStr =
+    raw.TRANSFER_DATE != null
+      ? this.datePipe.transform(raw.TRANSFER_DATE, 'yyyy-MM-dd') ?? ''
+      : '';
+
+  const payload: ASS13070TransferRequest = {
+    ID_LIST: this.idList,
+    NEW_HOLD_ORG_ID: String(raw.NEW_HOLD_ORG_ID ?? ''),
+    NEW_HOLD_EMP_ID: String(raw.NEW_HOLD_EMP_ID ?? ''),
+    NEW_USE_ORG_ID: String(raw.NEW_USE_ORG_ID ?? ''),
+    NEW_USE_EMP_ID: String(raw.NEW_USE_EMP_ID ?? ''),
+    HANDLE_DATE: handleDateStr,
+  };
+
+  this.loading = true;
+
+  this.ass13070Service
+    .transferASS13070(payload)
+    .pipe(finalize(() => (this.loading = false)))
+    .subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ?? '轉移財產失敗');
+          return;
+        }
+
+        this.messageService.successBubble('轉移財產成功');
+        this.loadTransferResult();
+      },
+    });
+}
 
   private loadTransferResult(): void {
     this.tableLoading.set(true);
@@ -217,19 +240,32 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
       });
   }
 
-  onReset(): void {
-    this.submitted = false;
-    this.transferCompleted.set(false);
-    this.dataForm.reset({
-      NEW_HOLD_ORG_ID: null,
-      NEW_HOLD_EMP_ID: null,
-      NEW_USE_ORG_ID: null,
-      NEW_USE_EMP_ID: null,
-      TRANSFER_DATE: null,
-    });
-    this.displayColumns = [...this.columnsPreview];
-    this.tableRows.set(this.initialRows.map(r => ({ ...r })));
-  }
+ onReset(): void {
+  this.submitted = false;
+  this.transferCompleted.set(false);
+
+  this.dataForm.reset({
+    NEW_HOLD_ORG_ID: null,
+    NEW_HOLD_EMP_ID: null,
+    NEW_USE_ORG_ID: null,
+    NEW_USE_EMP_ID: null,
+    TRANSFER_DATE: null,
+  });
+
+  this.displayColumns = [...this.columnsPreview];
+
+  const rows = this.initialRows.map(r => ({ ...r }));
+
+  this.tableRows.set(rows);
+
+  // 重置後重新全部勾選
+  this.selectedRows = [...rows];
+
+  // ID_LIST 重新恢復
+  this.idList = rows
+    .map(r => r.ID)
+    .filter((id): id is number => id != null);
+}
 
   onExportPdf(): void {
     if (this.idList.length === 0) return;
@@ -246,4 +282,14 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
       .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
       .subscribe();
   }
+  onSelectionChange(rows: ASS13070QueryRow[]): void {
+  this.selectedRows = rows;
+
+  this.idList = rows
+    .map(row => row.ID)
+    .filter((id): id is number => id != null);
+
+  console.log('勾選資料：', this.selectedRows);
+  console.log('ID_LIST：', this.idList);
+}
 }

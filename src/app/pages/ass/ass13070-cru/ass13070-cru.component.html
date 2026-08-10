@@ -59,17 +59,21 @@
 
     <div class="col-12 pt-3">
       <app-table-report
-        [data]="tableRows()"
-        [dataKey]="transferCompleted() ? 'ASSET_ID' : 'ID'"
-        tableKey="ASS13070_CRU_Detail"
-        [columns]="displayColumns"
-        [totalRecords]="tableRows().length"
-        [loading]="tableLoading()"
-        [lazy]="false"
-        [showReportMode]="false"
-        [showCaption]="false"
-        [showManage]="false"
-      >
+  [data]="tableRows()"
+  [dataKey]="transferCompleted() ? 'ASSET_ID' : 'ID'"
+  tableKey="ASS13070_CRU_Detail"
+  [columns]="displayColumns"
+  [totalRecords]="tableRows().length"
+  [loading]="tableLoading()"
+  [lazy]="false"
+  [showReportMode]="false"
+  [showCaption]="false"
+  [showManage]="false"
+
+  [showCheckBox]="true"
+  [selectedItems]="selectedRows"
+  (selectionChange)="onSelectionChange($event)"
+>
         <header>
           <div class="flex justify-content-end gap-2 flex-wrap">
             <app-button

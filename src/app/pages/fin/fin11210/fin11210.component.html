@@ -43,7 +43,7 @@
       <header>
         <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
           pTooltip="下傳" tooltipPosition="top" icon="pi pi-upload rotate-180" severity="success"
-          class="p-button-rounded p-button-text" [disabled]="selectedItems.length !== 1" (click)="onUpload()"
+          class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpload()"
           [loading]="btnLoading" />
       </header>
     </app-table-report>
