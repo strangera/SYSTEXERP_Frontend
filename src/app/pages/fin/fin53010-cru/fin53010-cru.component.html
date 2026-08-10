@@ -129,7 +129,7 @@
               controlName="INVOptions"
               [showClear]="!1"
               [filter]="!1"
-              [disabled]="!isInvYnEditable || isRcRmVoucher()"
+              [disabled]="!isInvYnEditable || isSummaryOnlyVoucher()"
               [options]="service.INVOptions"
               optionLabel="label"
               optionValue="value"
@@ -223,10 +223,10 @@
     <div class="col-12">
       <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
         <app-table-edit
-          [showCheckBox]="!isFormReadable && !isPostedEdit && !isRcRmVoucher()"
+          [showCheckBox]="!isFormReadable && !isPostedEdit && !isSummaryOnlyVoucher()"
           [showReorder]="!isFormReadable && !isPostedEdit"
-          [showDelete]="!isRcRmVoucher()"
-          [canInsert]="!isRcRmVoucher()"
+          [showDelete]="!isSummaryOnlyVoucher()"
+          [canInsert]="!isSummaryOnlyVoucher()"
           [disabled]="isFormReadable || isPostedEdit"
           [beforeDelete]="ptaDeleteGuard"
           (fieldChange)="onFieldChange($event)"

@@ -408,10 +408,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   /** 追蹤實際傳票型態代碼（form 存 label，需另存 code 供判斷） */
   readonly voucherTypeCode = signal<string>('GL');
-  /** RC/RM 傳票類型：僅允許編輯摘要，不可新增或刪除明細列，其餘欄位鎖定 */
-  readonly isRcRmVoucher = computed(() => {
+  /** 非 GL 傳票（RC/RM 及其他拋轉型態）：僅允許編輯摘要，不可新增或刪除明細列，其餘欄位鎖定。空白/未知型態視為 GL 以免誤鎖 */
+  readonly isSummaryOnlyVoucher = computed(() => {
     const t = this.voucherTypeCode().trim().toUpperCase();
-    return t === 'RC' || t === 'RM';
+    return t !== '' && t !== 'GL';
   });
 
   /** 過帳後進入編輯模式：只允許修改摘要(Remark)，其餘欄位唯讀 */
@@ -920,10 +920,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     ];
   });
 
-  /** RC/RM 傳票：除摘要外其餘欄位全部鎖定 */
+  /** 非 GL 傳票：除摘要外其餘欄位全部鎖定 */
   public readonly effectiveColumns = computed(() => {
     const cols = this.columns();
-    if (!this.isRcRmVoucher()) return cols;
+    if (!this.isSummaryOnlyVoucher()) return cols;
     return cols.map(col => col.field === 'NoteDesc' ? col : { ...col, disabled: () => true });
   });
 
