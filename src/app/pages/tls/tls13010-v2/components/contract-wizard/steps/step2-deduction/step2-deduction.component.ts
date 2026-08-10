@@ -426,7 +426,13 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     rowData[fieldName] = newValue;
 
     // 當單位改為「坪數」(tpy_type = '01') 時，自動帶入坪數總和
-    if (fieldName === 'tpy_type' && newValue === '01' && this.totalLocationSpace > 0) {
+    // 僅在數量仍為預設值 (空/0/1) 時帶入，避免蓋掉使用者已填或已存的數量
+    if (
+      fieldName === 'tpy_type' &&
+      newValue === '01' &&
+      this.totalLocationSpace > 0 &&
+      (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1)
+    ) {
       rowData.tpy_qty = this.totalLocationSpace;
     }
 
@@ -543,9 +549,9 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 如果選擇坪數單位且數量為 0，使用總坪數
     if (rowData.tpy_type === '01' && qty === 0 && this.totalLocationSpace > 0) {
       rowData.tpy_qty = this.totalLocationSpace;
-      rowData.tpy_amount = Math.ceil(unitAmt * this.totalLocationSpace);  // 無條件進位取整數
+      rowData.tpy_amount = Math.round(unitAmt * this.totalLocationSpace);  // 四捨五入取整數
     } else {
-      rowData.tpy_amount = Math.ceil(unitAmt * qty);  // 無條件進位取整數
+      rowData.tpy_amount = Math.round(unitAmt * qty);  // 四捨五入取整數
     }
 
     // A 類型：結束日期 = 起始日期
@@ -561,9 +567,9 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 如果選擇坪數單位且數量為 0，使用總坪數
     if (rowData.tpy_type === '01' && qty === 0 && this.totalLocationSpace > 0) {
       rowData.tpy_qty = this.totalLocationSpace;
-      rowData.tpy_amount = Math.ceil(unitAmt * this.totalLocationSpace);  // 無條件進位取整數
+      rowData.tpy_amount = Math.round(unitAmt * this.totalLocationSpace);  // 四捨五入取整數
     } else {
-      rowData.tpy_amount = Math.ceil(unitAmt * qty);  // 無條件進位取整數
+      rowData.tpy_amount = Math.round(unitAmt * qty);  // 四捨五入取整數
     }
   }
 
@@ -577,15 +583,15 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
       // 輸入首期 → 算每月金額
       const downPayment = parseFloat(String(rowData.down_payment || 0));
       if (totalAmt > 0 && periods > 1) {
-        rowData.tpy_amount = Math.ceil((totalAmt - downPayment) / (periods - 1));
+        rowData.tpy_amount = Math.round((totalAmt - downPayment) / (periods - 1));
       }
     } else {
       // 輸入每月金額（或總金額、日期）→ 算首期金額
       const monthlyAmt = parseFloat(String(rowData.tpy_amount || 0));
       if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
-        rowData.down_payment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+        rowData.down_payment = Math.round(totalAmt - (monthlyAmt * (periods - 1)));
       } else {
-        rowData.down_payment = Math.ceil(monthlyAmt);
+        rowData.down_payment = Math.round(monthlyAmt);
       }
     }
   }
@@ -689,9 +695,9 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
     // 計算首期金額
     if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
-      rowData.down_payment = totalAmt - (monthlyAmt * (periods - 1));
+      rowData.down_payment = Math.round(totalAmt - (monthlyAmt * (periods - 1)));
     } else if (monthlyAmt > 0) {
-      rowData.down_payment = monthlyAmt;
+      rowData.down_payment = Math.round(monthlyAmt);
     }
   }
 
@@ -757,8 +763,8 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
     if (totalAmt <= 0 || periods < 1) return;
 
-    const monthlyAmt = Math.ceil(totalAmt / periods);
-    const downPayment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+    const monthlyAmt = Math.round(totalAmt / periods);
+    const downPayment = Math.round(totalAmt - (monthlyAmt * (periods - 1)));
 
     this.calculationResult = {
       totalAmount: totalAmt,
