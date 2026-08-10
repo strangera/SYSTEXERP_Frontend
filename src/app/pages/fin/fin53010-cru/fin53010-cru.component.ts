@@ -206,7 +206,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     /** 傳票種類(SYS1000.VoucherType) */
     VoucherType: new FormControl<string>('GL', [Validators.required]),
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
-    Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
+    Remark: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(100)]),
     INV_YN: new FormControl<'N' | 'Y'>('Y', [Validators.required]),
     /** ROC/IFRS 0:ROC 1:IFRS null:全部 */
     VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
@@ -806,6 +806,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '摘要',
         textAlign: 'left',
         type: 'input',
+        required: !0,
+        validate: [this.validateRequired],
         // 摘要即使立帳被沖帳仍可修改
       },
       {
@@ -2705,6 +2707,57 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
+    // 帳上應付總額（傳票明細 type=3、建立方向）需等於底下應付步驟表合計
+    if (this.activeVoucherSteps().includes(3)) {
+      const bookAP = this.payableDetailSourceRows()
+        .filter(r => this.isCreatingDirectionRow(r))
+        .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
+      const stepAP = this.stepAPFooter().acp_amt;
+      if (Math.round(bookAP) !== Math.round(stepAP)) {
+        this.messageService.errorBubble(`帳上應付帳款總金額 ${bookAP.toLocaleString()} 與應付帳款明細總金額 ${stepAP.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+
+    // 帳上應收總額（傳票明細 type=4、建立方向）需等於底下應收步驟表合計
+    if (this.activeVoucherSteps().includes(4)) {
+      const accVt = this.service.accVoucherTypeMap();
+      const bookAR = this.tableData()
+        .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '4' && this.isCreatingDirectionRow(r))
+        .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
+      const stepAR = this.stepARFooter().ars_amt;
+      if (Math.round(bookAR) !== Math.round(stepAR)) {
+        this.messageService.errorBubble(`帳上應收帳款總金額 ${bookAR.toLocaleString()} 與應收帳款明細總金額 ${stepAR.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+
+    // 帳上進項發票含稅總額（傳票明細 type=5、建立方向）需等於底下進項發票步驟表合計
+    if (this.activeVoucherSteps().includes(5)) {
+      const accVt = this.service.accVoucherTypeMap();
+      const bookPur = this.tableData()
+        .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '5' && this.isCreatingDirectionRow(r))
+        .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
+      const stepPur = this.stepPurchaseFooter().invoice_amount;
+      if (Math.round(bookPur) !== Math.round(stepPur)) {
+        this.messageService.errorBubble(`帳上進項發票總金額 ${bookPur.toLocaleString()} 與進項發票明細總金額 ${stepPur.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+
+    // 帳上銷項發票含稅總額（傳票明細 type=6、建立方向）需等於底下銷項發票步驟表合計
+    if (this.activeVoucherSteps().includes(6)) {
+      const accVt = this.service.accVoucherTypeMap();
+      const bookSal = this.tableData()
+        .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '6' && this.isCreatingDirectionRow(r))
+        .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
+      const stepSal = this.stepSalesFooter().total_amount;
+      if (Math.round(bookSal) !== Math.round(stepSal)) {
+        this.messageService.errorBubble(`帳上銷項發票總金額 ${bookSal.toLocaleString()} 與銷項發票明細總金額 ${stepSal.toLocaleString()} 不一致，無法存檔`);
+        return;
+      }
+    }
+
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
     const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
 
@@ -2787,6 +2840,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (this.tableData().length === 0) {
         this.messageService.errorBubble('明細至少要有一筆');
         this.loading = false
+        return;
+      }
+
+      // 表身摘要必填：每列 NoteDesc 不可空白
+      const noteInvalidRows = this.tableData().filter(row => !String(row.NoteDesc ?? '').trim());
+      if (noteInvalidRows.length > 0) {
+        const serNos = noteInvalidRows.map(r => r.SerNo).join('、');
+        this.messageService.errorBubble(`第 ${serNos} 列摘要必填`);
+        this.loading = false;
         return;
       }
 
