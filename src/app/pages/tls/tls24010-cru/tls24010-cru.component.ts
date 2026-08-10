@@ -108,6 +108,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUIEndNo: [''], //結束發票號碼
     TXN_TotGUI: [{ value: 0, disabled: true }],
     TXN_CustCnt: [1, [Validators.required, Validators.min(-99999999), Validators.max(99999999)]], //來客數
+    TXN_SaleCnt: [1, [Validators.required, Validators.min(0), Validators.max(99999999)]], //交易筆數
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     TXN_Time: [null as Date | null], //銷售時段今日的時間
