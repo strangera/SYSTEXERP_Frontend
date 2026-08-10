@@ -18,10 +18,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 /** 3.1.5.2 財產保管清冊 */
@@ -84,8 +84,8 @@ export class ASS15020Component
   private readonly defaultPageSize = 30;
 
   columns: ReportColumn[] = [
-    { field: 'ASSET_ID', header: '資產編號', visible: true },
-    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true, width: '100px' },
+    { field: 'GOODS_ID', header: '品項編號', visible: true, width: '100px' },
     { field: 'GOODS_NAME', header: '品項名稱', visible: true },
     { field: 'EQUIP_ID', header: '設備編號', visible: true },
     {
@@ -105,19 +105,40 @@ export class ASS15020Component
       visible: true,
       align: 'right',
       format: (v: number) => this.formatMoney(v),
+      width: '100px',
+    },
+    {
+      field: 'CHANGE_COST',
+      header: '異動金額', // (GET_COST - FIR_GET_COST)
+      visible: true,
+      align: 'right',
+      format: (v: number) => this.formatMoney(v),
+      width: '100px',
+    },
+    {
+      field: 'TOTAL_COST',
+      header: '合計金額', // 合計金額 / 最終資產金額 (SQL 已處理 ISNULL)
+      visible: true,
+      align: 'right',
+      format: (v: number) => this.formatMoney(v),
+      width: '100px',
     },
     { field: 'NOTES', header: '備註', visible: true },
   ];
 
-  get footerData(): { label: string; FIR_GET_COST: number } | null {
+  get footerData(): { label: string; FIR_GET_COST: number; CHANGE_COST: number; TOTAL_COST: number } | null {
     const rows = this.tableData();
     if (!rows.length) {
       return null;
     }
-    const total = rows.reduce((sum, row) => sum + this.toSafeNumber(row.FIR_GET_COST), 0);
+    const firGetCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.FIR_GET_COST), 0);
+    const changeCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.CHANGE_COST), 0);
+    const totalCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.TOTAL_COST), 0);
     return {
       label: '合計',
-      FIR_GET_COST: total,
+      FIR_GET_COST: firGetCostTotal,
+      CHANGE_COST: changeCostTotal,
+      TOTAL_COST: totalCostTotal,
     };
   }
 
