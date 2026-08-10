@@ -10,12 +10,12 @@ import {
 import { ASS15010Service } from '@service/api/ass/ass15010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn, formatDate } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -23,6 +23,11 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { distinctUntilChanged, finalize } from 'rxjs';
+
+type ExportAssetLabelRequest = QueryASS15010ApiRequest & {
+  /** 勾選的財產編號 */
+  ASSET_ID: string[];
+};
 
 /** 3.1.5.1 財產標籤列印作業 */
 @UntilDestroy()
@@ -68,6 +73,41 @@ export class ASS15010Component
   lastExportBody: QueryASS15010ApiRequest | null = null;
   exportTablePdfLoading = false;
   exportLabelPdfLoading = false;
+
+  /** table-report 勾選的資料 */
+  selectedItems: QueryASS15010Response[] = [];
+
+  /** 接收 app-table-report Checkbox 勾選結果 */
+  onSelectionChange(items: QueryASS15010Response[]): void {
+    this.selectedItems = items ?? [];
+  }
+
+  /** 取得目前勾選的財產編號 */
+  private getSelectedAssetIds(): string[] {
+    return (this.selectedItems ?? [])
+      .map((row) => row.ASSET_ID?.trim())
+      .filter((assetId): assetId is string => !!assetId);
+  }
+
+  /** 建立匯出 Request：保留原查詢條件，再加上勾選的 ASSET_ID */
+  private buildExportRequest(): ExportAssetLabelRequest | null {
+    if (!this.lastExportBody) {
+      this.messageService.warnBubble('請先執行查詢');
+      return null;
+    }
+
+    const selectedAssetIds = this.getSelectedAssetIds();
+
+    if (selectedAssetIds.length === 0) {
+      this.messageService.warnBubble('請至少勾選一筆財產');
+      return null;
+    }
+
+    return {
+      ...this.lastExportBody,
+      ASSET_ID: selectedAssetIds,
+    };
+  }
 
   readonly propertyTypeOptions: { value: string; label: string }[] = [
     { value: '1', label: '資產' },
@@ -237,6 +277,9 @@ export class ASS15010Component
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      /** 重新查詢時清除舊勾選 */
+      this.selectedItems = [];
+
       const payload = this.buildApiRequest();
       this.loading = true;
       this.ass15010Service
@@ -263,6 +306,7 @@ export class ASS15010Component
               this.data = [];
               this.totalRecords = 0;
               this.lastExportBody = null;
+              this.selectedItems = [];
               if (res.Status && res.Status !== '0000') {
                 this.messageService.warnBubble(res.Message || '查詢失敗');
               }
@@ -272,23 +316,21 @@ export class ASS15010Component
             this.data = [];
             this.totalRecords = 0;
             this.lastExportBody = null;
+            this.selectedItems = [];
           },
         });
     });
   }
 
   onExportLabelTablePdf(): void {
-    if (!this.lastExportBody) {
-      this.messageService.warnBubble('請先執行查詢');
-      return;
-    }
-    if (this.data.length === 0) {
-      this.messageService.warnBubble('無資料可匯出');
-      return;
-    }
+    const request = this.buildExportRequest();
+    if (!request) return;
+
     this.fileExportService
       .executeFileExport(
-        this.ass15010Service.exportLabelTablePDFASS15010(this.lastExportBody).pipe(untilDestroyed(this)),
+        this.ass15010Service
+          .exportLabelTablePDFASS15010(request)
+          .pipe(untilDestroyed(this)),
         '.pdf',
         (v) => (this.exportTablePdfLoading = v),
       )
@@ -296,17 +338,14 @@ export class ASS15010Component
   }
 
   onExportLabelPdf(): void {
-    if (!this.lastExportBody) {
-      this.messageService.warnBubble('請先執行查詢');
-      return;
-    }
-    if (this.data.length === 0) {
-      this.messageService.warnBubble('無資料可匯出');
-      return;
-    }
+    const request = this.buildExportRequest();
+    if (!request) return;
+
     this.fileExportService
       .executeFileExport(
-        this.ass15010Service.exportLabelPDFASS15010(this.lastExportBody).pipe(untilDestroyed(this)),
+        this.ass15010Service
+          .exportLabelPDFASS15010(request)
+          .pipe(untilDestroyed(this)),
         '.pdf',
         (v) => (this.exportLabelPdfLoading = v),
       )
