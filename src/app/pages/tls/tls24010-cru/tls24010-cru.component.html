@@ -80,6 +80,8 @@
             [submitted]="submitted" controlName="TXN_TotGUI" />
           <app-input-number class="col-12 md:col-6 lg:col-3" label="交易客次" [control]="dataForm.controls.TXN_CustCnt"
             [submitted]="submitted" [max]="9999" [useGrouping]="false" controlName="TXN_CustCnt" />
+          <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_SaleCnt"
+            [submitted]="submitted" [min]="0" [max]="9999" [useGrouping]="false" controlName="TXN_SaleCnt" />
           <app-input-text class="col-12 md:col-6 lg:col-3" label="會員編號" [control]="dataForm.controls.TXN_MemCard"
             [submitted]="submitted" controlName="TXN_MemCard" />
           <app-input-text class="col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"

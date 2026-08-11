@@ -438,16 +438,21 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       vendor_acct_name: selectedOption.Name || selectedOption.label || ''
     }, { emitEvent: false });
 
-    // 查詢POS2013廠商聯絡資訊自動帶入（新增/編輯皆可）
-    if (this.crudstatus !== CRUDStatus.Read) {
-      this.loadVendorContactInfo(vendorVenNo);
+    const venNo = selectedOption.VEN_No || selectedOption.value;
+    const vendorNo = selectedOption.No || '';
+
+    // 唯讀模式不需檢查佔用，直接帶入潛在客戶資料
+    if (this.crudstatus === CRUDStatus.Read) {
+      if (vendorNo) this.loadPotentialCustomerData(vendorNo);
+      return;
     }
 
-    // 載入潛在客戶資料
-    const vendorNo = selectedOption.No || '';
-    if (vendorNo) {
-      this.loadPotentialCustomerData(vendorNo);
-    }
+    // 先檢查廠編是否已被其他櫃號使用；已被使用就不帶任何資料，
+    // 避免多打廠商聯絡/潛在客戶兩隻 API，也不會跳出與失敗訊息矛盾的成功提示
+    this.checkVendorOccupied(venNo, () => {
+      this.loadVendorContactInfo(vendorVenNo);
+      if (vendorNo) this.loadPotentialCustomerData(vendorNo);
+    });
   }
 
   /** 根據廠商編號查詢POS2013廠商聯絡資訊並自動帶入 */
@@ -474,6 +479,25 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       },
       error: (err) => {
         console.error('查詢廠商聯絡資訊失敗:', err);
+      }
+    });
+  }
+
+  /**
+   * 選定廠商後即時檢查該廠編是否已被其他櫃號的未作廢合約使用。
+   * 未被使用時才呼叫 onAvailable（帶入聯絡/潛在客戶資料）；已被使用則清空選取。
+   */
+  private checkVendorOccupied(venNo: string, onAvailable: () => void): void {
+    if (!venNo) return;
+    const tltNo = this.form.get('tlt_no')?.value ?? '';
+    this.tls13010Service.checkVendorOccupied(venNo, tltNo).subscribe({
+      next: (occupiedTltNo) => {
+        if (occupiedTltNo) {
+          this.messageService.errorBubble(`此廠編已被櫃號${occupiedTltNo}使用！不可選取！`);
+          this.onVendorChange('');
+        } else {
+          onAvailable();
+        }
       }
     });
   }

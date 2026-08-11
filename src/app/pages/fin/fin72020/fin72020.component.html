@@ -62,12 +62,11 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table-report tableKey="FIN72020" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-      (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)" [showDelete]="false" [showCheckBox]="false" dataKey="id"
-      [totalRecords]="totalRecords()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="fin72020Service.queryFIN72020.bind(fin72020Service)" [lazy]="true" [loading]="loading"
-      [editDisabled]="editDisabled" [detailDisabled]="detailDisabled" [addButton]="addButton"></app-table-report>
+    <app-table-report tableKey="FIN72020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showDelete]="false"
+      [showCheckBox]="false" [showEdit]="false" [showDetail]="false" dataKey="id" [totalRecords]="totalRecords()"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="fin72020Service.queryFIN72020.bind(fin72020Service)"
+      [lazy]="true" [loading]="loading" [addButton]="addButton"></app-table-report>
   </div>
 </div>
 

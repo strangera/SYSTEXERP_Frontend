@@ -56,15 +56,27 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report tableKey="ASS15010_Data" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      dataKey="ROW_UID" [loading]="loading" [lazy]="false" [showSort]="true" [showManage]="false" [showDelete]="false"
+    <app-table-report
+      tableKey="ASS15010_Data"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      dataKey="ROW_UID"
+      [loading]="loading"
+      [lazy]="false"
+      [showSort]="true"
+      [showManage]="false"
+      [showDelete]="false"
+      [showCheckBox]="true"
+      [selectedItems]="selectedItems"
+      (selectionChange)="onSelectionChange($event)"
       [lastQueryBody]="lastExportBody">
       <header>
         <div class="flex justify-content-end gap-2 flex-wrap">
           <p-button label="匯出財產標籤表PDF" icon="pi pi-file-pdf" (click)="onExportLabelTablePdf()"
             [disabled]="loading || exportTablePdfLoading || exportLabelPdfLoading || data.length === 0"
             [loading]="exportTablePdfLoading"></p-button>
-          <p-button label="匯出財產標籤PDF" icon="pi pi-file-pdf" (click)="onExportLabelPdf()"
+          <p-button label="匯出財產標籤Word" icon="pi pi-file-pdf" (click)="onExportLabelPdf()"
             [disabled]="loading || exportTablePdfLoading || exportLabelPdfLoading || data.length === 0"
             [loading]="exportLabelPdfLoading"></p-button>
         </div>

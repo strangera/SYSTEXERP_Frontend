@@ -462,6 +462,11 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢會計科目設定檔(GLS1005) 依統制/明細篩選（'0'=統制、'1'=明細、不給=全部）。有參數不共用 queryGls1005() 的快取。 */
+  queryGls1005ByLedgerMD(ledgerMD?: '0' | '1'): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name', { Ledger_MD: ledgerMD ?? null });
+  }
+
   /**
    * 查詢資材攤提會計科目下拉（queryFASAccNoDropDownList / queryGLS1005_AccNo_DropDownList）
    * — 用於 ASS15040／ASS17110 等耗材會計科目報表查詢條件

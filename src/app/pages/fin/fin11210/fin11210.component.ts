@@ -13,7 +13,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { Button, ButtonDirective } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize } from 'rxjs';
+import { concatMap, finalize, from } from 'rxjs';
 import {
   FIN11210Data,
   FIN11210Service,
@@ -180,26 +180,43 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
           }));
       });
   }
-  // 下傳
+  // 下傳（逐筆依序呼叫，spCrtFileCode 一次只吃一組鍵值，比照 tls13010-v2 的多筆下傳寫法）
   onUpload() {
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-    const params = {
-      SYS_StoreNo: storeNo || '',
-      EXP_StoreNo: storeNo || '',
-      EXP_Type: 'POS1009',
-      EXP_DocNo: `${storeNo};${this.selectedItems[0].ECR_No};${this.selectedItems[0].ARG_No}`,
-      EXP_DataFlag: 'S2P',
-      EXP_Desc: ''
-    };
+    const itemsToUpload = this.selectedItems;
+    if (itemsToUpload.length === 0) return;
 
-    this.execSpFuncService.ExecSpFunc(params)
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        if (response.Success) {
-          this.messageService.successBubble('下傳成功');
+    this.btnLoading = true;
+    const failedItems: string[] = [];
+
+    from(itemsToUpload)
+      .pipe(
+        concatMap(item =>
+          this.execSpFuncService.ExecSpFunc({
+            SYS_StoreNo: storeNo || '',
+            EXP_StoreNo: storeNo || '',
+            EXP_Type: 'POS1009',
+            EXP_DocNo: `${storeNo};${item.ECR_No};${item.ARG_No}`,
+            EXP_DataFlag: 'S2P',
+            EXP_Desc: ''
+          })
+        ),
+        finalize(() => (this.btnLoading = false)),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: response => {
+          if (!response.Success) {
+            failedItems.push(`錯誤代碼：${response.ErrCode}，錯誤訊息：${response.ErrMsg}`);
+          }
+        },
+        complete: () => {
+          if (failedItems.length === 0) {
+            this.messageService.successBubble('下傳成功');
+          } else {
+            this.messageService.errorBubble(`下傳完成，${failedItems.length} 筆失敗：${failedItems.join('；')}`);
+          }
           this.selectedItems = [];
-        } else {
-          this.messageService.errorBubble(`下傳失敗，錯誤代碼：${response.ErrCode}，錯誤訊息：${response.ErrMsg}`);
         }
       });
   }

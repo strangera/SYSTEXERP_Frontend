@@ -49,8 +49,9 @@
         [control]="filterDialogForm.controls.User_No" [submitted]="submitted" [disabled]="false"></app-input-text>
       <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者名稱" controlName="User_Name"
         [control]="filterDialogForm.controls.User_Name" [submitted]="submitted" [disabled]="false"></app-input-text>
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="Org_Id"
-        [control]="filterDialogForm.controls.Org_Id" [submitted]="submitted" [disabled]="false"></app-input-text>
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="Org_IdList"
+        [options]="orgOptions | async" optionLabel="label" optionValue="value"
+        [control]="filterDialogForm.controls.Org_IdList" [submitted]="submitted"></app-multi-select>
     </div>
   </form>
   <app-table-report tableKey="SYS0230DialogTable" dataKey="ID" [showReportMode]="false" [data]="availableUsers"

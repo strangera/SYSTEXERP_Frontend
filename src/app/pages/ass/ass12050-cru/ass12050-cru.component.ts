@@ -27,9 +27,9 @@ import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { concat, finalize, last, tap } from 'rxjs';
-
 /** 3.1.2.5 採購單驗收作業 CRU */
 @UntilDestroy()
 @Component({
@@ -50,6 +50,7 @@ import { concat, finalize, last, tap } from 'rxjs';
     TableComponent,
     TableEditComponent,
     TranslateModule,
+    CheckboxModule,
   ],
 })
 export class ASS12050CRUComponent
@@ -66,7 +67,8 @@ export class ASS12050CRUComponent
     NTAX_AMT: [null as number | null],
     TAX_AMT: [null as number | null],
     AMT: [null as number | null],
-    IsCanArrpove: [null as boolean | null],
+    CHK_Status: [null as string | null],
+    IsAllTax: [false],
   });
 
   /** 明細資料（table-edit 綁定） */
@@ -136,6 +138,7 @@ export class ASS12050CRUComponent
       field: 'DIS_PRICE',
       header: '調整單價(未稅)',
       type: 'inputNumber',
+      maxFractionDigits: 2,
       placeholder: '輸入數字',
       disabled: () => false,
     },
@@ -206,7 +209,11 @@ export class ASS12050CRUComponent
   ngOnInit(): void {
     this.initializePage('ASS12050', this.dataForm);
     this.loadDropdownOptions();
-
+    this.dataForm.controls.IsAllTax.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.calculateHeaderAmounts();
+      });
     const navState = this.router.lastSuccessfulNavigation?.extras?.state;
 
     if (navState?.['subpoenaId']) {
@@ -224,16 +231,35 @@ export class ASS12050CRUComponent
   }
 
   /**
-   * 驗收單明細全部已寫入 APPLY_DATE 時，才可以執行審核。
+   * 是否可以執行驗收。
    *
-   * APPLY_DATE 來源為 FAASSCHKD_LIST.APPLY_DATE。
+   * CHK_Status：
+   * null / 其他未驗收狀態 = 可驗收
+   * 1 = 已驗收待審核，不可再次驗收
+   * 2 = 已審核，不可再次驗收
+   */
+  get canConfirm(): boolean {
+    if (!this.isFormEditable || this.loading) {
+      return false;
+    }
+
+    const status = this.dataForm.controls.CHK_Status.value;
+
+    return status !== '1' && status !== '2';
+  }
+
+  /**
+   * 是否可以執行審核。
+   *
+   * CHK_Status = 1 時，才可以執行審核。
+   * CHK_Status = 2 代表已審核，不可再次審核。
    */
   get canApprove(): boolean {
     if (!this.isFormEditable || this.loading) {
       return false;
     }
 
-    return this.dataForm.get('IsCanArrpove')?.value === true;
+    return this.dataForm.controls.CHK_Status.value === '1';
   }
 
   /** 覆寫：從編輯主檔進入時，返回編輯主檔而非查詢頁 */
@@ -299,7 +325,7 @@ export class ASS12050CRUComponent
             NTAX_AMT: detail?.NTAX_AMT ?? null,
             TAX_AMT: detail?.TAX_AMT ?? null,
             AMT: detail?.AMT ?? null,
-            IsCanArrpove: detail?.CHK_Status == '1' ? true : false,
+            CHK_Status: detail?.CHK_Status ?? null,
           });
 
           const details = (detail?.Details ?? []).map(item => ({
@@ -444,9 +470,7 @@ export class ASS12050CRUComponent
     const row = this.selectedTransferRow;
 
     if (!row?.SUBPOENA_ID) {
-      this.messageService.warnBubble(
-        '請選擇一筆採購單',
-      );
+      this.messageService.warnBubble('請選擇一筆採購單');
       return;
     }
 
@@ -457,9 +481,7 @@ export class ASS12050CRUComponent
         SUBPOENA_ID: row.SUBPOENA_ID,
       })
       .pipe(
-        finalize(
-          () => (this.transferListLoading = false),
-        ),
+        finalize(() => (this.transferListLoading = false)),
         untilDestroyed(this),
       )
       .subscribe({
@@ -468,34 +490,46 @@ export class ASS12050CRUComponent
             this.messageService.errorBubble(
               '轉入失敗：' + (res.Message ?? ''),
             );
+
             this.displayTransferDialog = false;
             return;
           }
 
-          this.sourceSubpoenaId = row.SUBPOENA_ID!;
+          const subcheckId = res.Data;
 
-          this.dataForm.patchValue({
-            EMP_ID:
-              row.EMP_ID ??
-              this.dataForm.get('EMP_ID')?.value ??
-              null,
-            SUPPLIER_ID:
-              row.SUPPLIER_ID ??
-              this.dataForm.get('SUPPLIER_ID')?.value ??
-              null,
-            NTAX_AMT: row.NTAX_AMT ?? null,
-            TAX_AMT: row.TAX_AMT ?? null,
-            AMT: row.AMT ?? null,
-          });
+          if (!subcheckId) {
+            this.messageService.errorBubble(
+              '轉入成功，但未取得驗收單號',
+            );
+            return;
+          }
+
+          this.subcheckId = subcheckId;
 
           this.displayTransferDialog = false;
+
           this.messageService.successBubble('轉入成功');
+
+          this.loadDetail(subcheckId);
+        },
+        error: error => {
+          this.messageService.errorBubble(
+            error?.error?.Message ??
+            error?.error?.message ??
+            error?.message ??
+            '轉入失敗',
+          );
         },
       });
   }
 
   /** 驗收 */
   onConfirm(): void {
+    if (!this.canConfirm) {
+      this.messageService.warnBubble('目前驗收單狀態不可執行驗收');
+      return;
+    }
+
     const subcheckId =
       this.subcheckId ??
       this.dataForm.get('SUBCHECK_ID')?.value;
@@ -548,6 +582,11 @@ export class ASS12050CRUComponent
   }
   /** 審核驗收單 */
   onApprove(): void {
+    if (!this.canApprove) {
+      this.messageService.warnBubble('目前驗收單狀態不可執行審核');
+      return;
+    }
+
     const subcheckId =
       this.subcheckId ??
       this.dataForm.get('SUBCHECK_ID')?.value;
@@ -862,22 +901,49 @@ export class ASS12050CRUComponent
   }
 
   /**
-   * 依明細重新計算主檔未稅總金額、稅額及含稅總金額。
-   */
+ * 依明細重新計算主檔未稅總金額、稅額及含稅總金額。
+ *
+ * 整批計稅：
+ *   稅額 = ROUND(未稅總額 × 5%)
+ *
+ * 非整批計稅：
+ *   維持原本逐筆計稅方式
+ */
   private calculateHeaderAmounts(): void {
+
+    // 未稅總額
     const ntaxAmount = this.data.reduce(
       (total, item) =>
         total + this.calculateDetailNtaxAmount(item),
       0,
     );
 
-    const amount = this.data.reduce(
-      (total, item) =>
-        total + Number(item.AMT ?? 0),
-      0,
-    );
+    const isAllTax =
+      this.dataForm.controls.IsAllTax.value === true;
 
-    const taxAmount = amount - ntaxAmount;
+    let taxAmount = 0;
+    let amount = 0;
+
+    if (isAllTax) {
+
+      // 整批計稅：
+      // 所有明細未稅金額加總後，再一次計算 5% 稅額
+      taxAmount = Math.round(ntaxAmount * 0.05);
+
+      amount = ntaxAmount + taxAmount;
+
+    } else {
+
+      // 非整批計稅：
+      // 維持原本每筆各自計算含稅金額，再加總
+      amount = this.data.reduce(
+        (total, item) =>
+          total + this.calculateDetailAmount(item),
+        0,
+      );
+
+      taxAmount = amount - ntaxAmount;
+    }
 
     this.dataForm.patchValue(
       {

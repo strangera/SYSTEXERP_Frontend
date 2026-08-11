@@ -65,7 +65,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_NoList: [[]],
     VEN_Status: [''],
     VEN_Uniform: ['', [Validators.maxLength(10)]],
-    VEN_Flag: [''],
+    VEN_Flag: [null],
     VEN_Name: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
     VEN_SName: [null, [Validators.maxLength(10)]],

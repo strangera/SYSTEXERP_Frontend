@@ -137,6 +137,8 @@ export interface InsertFIN53010DetailBody {
 
 /** Swagger insertAPS3001Data */
 export interface InsertAPS3001DataBody {
+  /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
+  Source_SerNo?: number | null;
   org_id?: string | null;
   ACP_YYYYMM?: string | null;
   ACP_Date?: string | null;
@@ -158,6 +160,8 @@ export interface InsertAPS3001DataBody {
 
 /** Swagger insertAPS2002Data */
 export interface InsertAPS2002DataBody {
+  /** APS2002 主鍵：picker 選定既有發票(含彙開)時帶回，後端用它綁定；0/未帶=新增或依號碼比對 */
+  id?: number | null;
   PUR_GUINo?: string | null;
   PUR_VoucherType?: string | null;
   ACP_Type?: string | null;
@@ -184,6 +188,8 @@ export interface InsertAPS2002DataBody {
 
 /** Swagger insertARS3001Data */
 export interface InsertARS3001DataBody {
+  /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
+  Source_SerNo?: number | null;
   ORG_ID?: string | null;
   ARS_Amt?: number | null;
   PTA_Date?: string | null;
@@ -225,6 +231,8 @@ export interface InsertAPS4002DataBody {
   Remark?: string | null;
   Source_Date?: string | null;
   Status?: string | null;
+  /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
+  Source_SerNo?: number | null;
 }
 
 /** Swagger insertFIN53010DetailData_NextRequest（五陣列一律送出，無資料為 []） */
@@ -483,6 +491,8 @@ export interface QueryAps2002DetailDataByInvoiceNoRequest {
 
 /** queryAPS2002DetailData_ByInvoiceNo Response Data（進項折讓原始發票查詢） */
 export interface Aps2002DetailDataByInvoiceNoData {
+  /** APS2002 主鍵（picker 唯一辨識用；彙開 0000000000 靠這個區分） */
+  id?: number | null;
   PUR_GUINo?: string | null;
   /** 原格式（21/22/25），前端轉換為 23/24 後寫入 voucher_type */
   PUR_VoucherType?: string | null;
@@ -497,6 +507,23 @@ export interface Aps2002DetailDataByInvoiceNoData {
   PUR_Tax?: number | null;
   /** 已退回/折讓金額（後端加總已有 23/24 records） */
   AlreadyAllowanceAmt?: number | null;
+  /** 以下為進項發票「自動帶入」用（後端 SELECT * 已回傳） */
+  PUR_RepYYYYMM?: string | null;
+  PUR_VenNo?: string | null;
+  PUR_DirectType?: string | null;
+  PUR_DiscNo?: string | null;
+  PUR_Type?: string | null;
+  Source_Doc_No?: string | null;
+  PUR_Comb_Cnt?: number | null;
+  /** 傳票編號（picker 顯示狀態用：有值=已被占用、空=可綁定） */
+  Voucher_No?: string | null;
+}
+
+/** queryAPS2002PurchaseInvoices_ForPicker Request */
+export interface QueryAps2002PurchaseInvoicesForPickerRequest {
+  InvoiceNo?: string | null;
+  PageSize?: number | null;
+  PageIndex?: number | null;
 }
 
 /** queryAPS2002OriginalInvoices_ForAllowance Request */
@@ -694,6 +721,8 @@ export interface APS3001 {
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
   PAM_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（一對一連動用） */
+  gls3002_id?: number | null;
 }
 
 export interface APS2002 {
@@ -782,6 +811,8 @@ export interface ARS3001 {
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
   PAM_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（一對一連動用） */
+  gls3002_id?: number | null;
 }
 
 /** #/components/schemas/APS4023 */
@@ -852,6 +883,8 @@ export interface APS4002 {
   UPD_Date?: string | null;
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
+  /** 對應的傳票明細 GLS3002.id（一對一連動用） */
+  gls3002_id?: number | null;
 }
 
 export type FIN53010Aps3001Row = APS3001 & { VEN_PayType_Name?: string | null };
@@ -1069,6 +1102,10 @@ export interface FIN53010StepAP {
   PTA?: string | null;
   /** 應付單號（唯讀顯示，編輯既有資料時帶入） */
   ACP_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（載入既有資料時帶回，一對一連動用） */
+  gls3002_id?: number | null;
+  /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
+  _detailSerNo?: number;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */
@@ -1088,6 +1125,10 @@ export interface FIN53010StepAR {
   PTA?: string | null;
   /** 應收單號（唯讀顯示，編輯既有資料時帶入） */
   ARS_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（載入既有資料時帶回，一對一連動用） */
+  gls3002_id?: number | null;
+  /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
+  _detailSerNo?: number;
 }
 
 /** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */
@@ -1178,6 +1219,10 @@ export interface FIN53010StepBankDeposit {
   status?: string;
   note_desc?: string;
   txn_date?: Date | null;
+  /** 對應的傳票明細 GLS3002.id（載入既有資料時帶回，一對一連動用） */
+  gls3002_id?: number | null;
+  /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
+  _detailSerNo?: number;
 }
 
 export interface QueryGLS3003AbatAcctRequest {

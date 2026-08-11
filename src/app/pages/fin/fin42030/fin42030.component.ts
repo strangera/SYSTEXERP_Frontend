@@ -15,13 +15,15 @@ import { ButtonModule } from 'primeng/button';
 import { finalize, map, shareReplay } from 'rxjs/operators';
 
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
+
 
 import {
   FIN42030Data,
@@ -84,23 +86,23 @@ export class FIN42030Component
 
   orgOptions: any[] = [];
 
-  columns = [
-    { field: 'SortNo', header: '排序', visible: false },
-    { field: 'LevelNo', header: '層級', visible: false },
-    { field: 'RowType', header: '列型態', visible: false },
+  columns: ReportColumn[] = [
+    // { field: 'SortNo', header: '排序', visible: false },
+    // { field: 'LevelNo', header: '層級', visible: false },
+    // { field: 'RowType', header: '列型態', visible: false },
 
     { field: 'AccountCode', header: '科目代號', visible: true },
     {
       field: 'AccountName',
       header: '科目名稱',
       visible: true,
-      style: 'text-left',
+      align: 'left',
     },
     {
       field: 'CurrentAmount',
       header: '本期金額',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
     },
@@ -108,14 +110,14 @@ export class FIN42030Component
       field: 'CurrentRatio',
       header: '本期佔比',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
     {
       field: 'BudgetSamePeriodAmount',
       header: '預算同期金額',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
     },
@@ -123,21 +125,21 @@ export class FIN42030Component
       field: 'BudgetSamePeriodRatio',
       header: '預算同期佔比',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
     {
       field: 'GrowthRate',
       header: '增減率',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
     {
       field: 'CurrentAccumAmount',
       header: '本期累計金額',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
     },
@@ -145,14 +147,14 @@ export class FIN42030Component
       field: 'CurrentAccumRatio',
       header: '本期累計佔比',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
     {
       field: 'BudgetAccumAmount',
       header: '預算累計金額',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
     },
@@ -160,14 +162,14 @@ export class FIN42030Component
       field: 'BudgetAccumRatio',
       header: '預算累計佔比',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
     {
       field: 'AccumGrowthRate',
       header: '累計增減率',
       visible: true,
-      style: 'text-right',
+      align: 'right',
       format: this.ratioFormat.bind(this),
     },
   ];
@@ -431,7 +433,7 @@ export class FIN42030Component
       BudgetAccumAmount: `預算累計金額(${unitText})`,
     };
 
-    this.columns = this.columns.map((col) => ({
+    this.columns = this.columns.map((col: any) => ({
       ...col,
       header: amountHeaderMap[col.field] ?? col.header,
     }));

@@ -153,7 +153,7 @@ export class Ass14010Service {
   }
 
   // 驗收單號
-  queryFAASSCHKM_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryFAASSCHKM_DropDownList`, body);
+  queryFAASSCHKD_LIST_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/QueryFAASSCHKD_LIST_DropDownList`, body);
   }
 }

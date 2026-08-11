@@ -65,6 +65,7 @@ export function mapAps3001RowToStepAP(row: APS3001): FIN53010StepAP {
     note_desc: row.NoteDesc ?? undefined,
     PTA: row.PTA ?? null,
     ACP_No: row.ACP_No ?? null,
+    gls3002_id: row.gls3002_id ?? undefined,
   };
 }
 
@@ -90,6 +91,7 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
     ACCT_KEY: row.ACCT_KEY ?? null,
     PTA: row.PTA ?? null,
     ARS_No: row.ARS_No ?? null,
+    gls3002_id: row.gls3002_id ?? undefined,
   };
 }
 
@@ -222,6 +224,7 @@ export function mapAps4002RowToStepBank(row: APS4002): FIN53010StepBankDeposit {
     status: row.Status ?? undefined,
     note_desc: row.Remark ?? undefined,
     txn_date: parseYmdToDate(row.Source_Date ?? undefined),
+    gls3002_id: row.gls3002_id ?? undefined,
   };
 }
 
