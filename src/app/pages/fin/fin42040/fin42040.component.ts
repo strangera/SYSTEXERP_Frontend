@@ -15,14 +15,15 @@ import { ButtonModule } from 'primeng/button';
 import { finalize, map, shareReplay } from 'rxjs/operators';
 
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
 
+import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import {
   FIN42040Data,
   FIN42040QueryRequest,
@@ -85,91 +86,102 @@ export class FIN42040Component
 
   orgOptions: any[] = [];
 
-  columns = [
-    { field: 'SortNo', header: '排序', visible: false },
-    { field: 'LevelNo', header: '層級', visible: false },
-    { field: 'RowType', header: '列型態', visible: false },
+  columns: ReportColumn[] = [
+    // { field: 'SortNo', header: '排序', visible: false, width: '0px' },
+    // { field: 'LevelNo', header: '層級', visible: false, width: '80px' },
+    // { field: 'RowType', header: '列型態', visible: false, width: '80px' },
 
-    { field: 'AccountCode', header: '科目代號', visible: true },
+    { field: 'AccountCode', header: '科目代號', visible: true, align: 'left', width: '80px' },
     {
       field: 'AccountName',
       header: '科目名稱',
       visible: true,
-      style: 'text-left',
+      align: 'left',
+      width: '120px'
     },
     {
       field: 'CurrentAmount',
       header: '本期金額',
       visible: true,
-      style: 'text-right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
+      align: 'right',
+      width: '100px'
     },
     {
       field: 'CurrentRatio',
       header: '本期佔比',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
     {
       field: 'CompareAmount',
       header: '去年同期金額',
       visible: true,
-      style: 'text-right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
+      align: 'right',
+      width: '100px'
     },
     {
       field: 'CompareRatio',
       header: '去年同期佔比',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
     {
       field: 'GrowthRate',
       header: '增減率',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
     {
       field: 'CurrentAccumAmount',
       header: '本期累計金額',
       visible: true,
-      style: 'text-right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
+      align: 'right',
+      width: '100px'
     },
     {
       field: 'CurrentAccumRatio',
       header: '本期累計佔比',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
     {
       field: 'CompareAccumAmount',
       header: '去年同期累計金額',
       visible: true,
-      style: 'text-right',
       format: this.moneyFormat.bind(this),
       isTotal: true,
+      align: 'right',
+      width: '100px'
     },
     {
       field: 'CompareAccumRatio',
       header: '去年同期累計佔比',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
     {
       field: 'AccumGrowthRate',
       header: '累計增減率',
       visible: true,
-      style: 'text-right',
       format: this.ratioFormat.bind(this),
+      align: 'right',
+      width: '80px'
     },
   ];
 
@@ -291,26 +303,30 @@ export class FIN42040Component
     });
   }
 
-  public queryFIN42040ForReport = (body: any) =>
-    this.fin42040Service
-      .queryFIN42040({
-        ...body,
-        YM: this.normalizeYM(body?.YM ?? this.queryForm.value?.YM),
-        CompareYM: this.normalizeYM(
-          body?.CompareYM ?? this.queryForm.value?.CompareYM
-        ),
-      })
-      .pipe(
-        map((resp: any) => ({
-          Data: Array.isArray(resp?.Data)
-            ? resp.Data
-            : Array.isArray(resp?.Data?.QueryData)
-              ? resp.Data.QueryData
-              : [],
-          TotalCount: Number(resp?.TotalCount ?? resp?.Data?.TotalCount ?? 0),
-          GrandTotal: null,
-        }))
-      );
+  public queryFIN42040ForReport = (body: any) => {
+    const { pageIndex, pageSize, PageIndex, PageSize, ...rest } = body ?? {};
+    const payload: FIN42040QueryRequest = {
+      ...rest,
+      YM: this.normalizeYM(body?.YM ?? this.queryForm.value?.YM),
+      CompareYM: this.normalizeYM(
+        body?.CompareYM ?? this.queryForm.value?.CompareYM
+      ),
+      PageSize: pageSize ?? PageSize,
+      PageIndex: pageIndex ?? PageIndex,
+    };
+
+    return this.fin42040Service.queryFIN42040(payload).pipe(
+      map((resp: any) => ({
+        Data: Array.isArray(resp?.Data)
+          ? resp.Data
+          : Array.isArray(resp?.Data?.QueryData)
+            ? resp.Data.QueryData
+            : [],
+        TotalCount: Number(resp?.TotalCount ?? resp?.Data?.TotalCount ?? 0),
+        GrandTotal: null,
+      }))
+    );
+  };
 
   onExportPDF(): void {
     if (!this.historyRequestBody) {
