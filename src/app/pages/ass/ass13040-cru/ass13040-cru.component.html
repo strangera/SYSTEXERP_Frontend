@@ -42,7 +42,7 @@
 
       <hr />
       <h5>報廢商品</h5>
-      <app-table-edit class="col-12" tableKey="ASS13040Detail" [columns]="editColumns" [data]="data"
+      <app-table-edit #detailTable class="col-12" tableKey="ASS13040Detail" [columns]="editColumns" [data]="data"
         (dataChange)="data = $event" (insert)="onTableInsert()" [tableRequired]="true" [disabled]="isFormReadable"
         [showInsert]="!isFormReadable" [showDelete]="!isFormReadable" [canInsert]="false"></app-table-edit>
 
