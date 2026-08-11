@@ -133,11 +133,11 @@ export class FIN52080Service {
     );
   };
 
-  /** 載入會計科目下拉（供 DEPRE_AccNo / ACCUDEPRE_AccNo 使用，queryGls1005 內建 shareReplay 快取不重打） */
+  /** 載入會計科目下拉（供 DEPRE_AccNo / ACCUDEPRE_AccNo 使用，限「明細」科目 Ledger_MD='1'） */
   public getAccNoOptions(): void {
     if (this.accNoOptions().length > 0) return;
     this.accNoLoading.set(!0);
-    this.dropdownApi.queryGls1005().pipe(
+    this.dropdownApi.queryGls1005ByLedgerMD('1').pipe(
       take(1),
       tap(opts => this.accNoOptions.set(opts ?? [])),
       finalize(() => this.accNoLoading.set(!1)),
