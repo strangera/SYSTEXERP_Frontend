@@ -60,7 +60,9 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
     EXP_YEAR: new FormControl<number | null>(null),
     /** 備註關鍵字 */
     NOTES_KW: new FormControl<string | null>(null),
-    PageSize: new FormControl<number>(30),
+    // 中分類會計科目對應表資料量有限（會計分類固定，不會像交易單據無限增長），
+    // 一次撈全部避免虛擬捲動分批載入時，畫面實際列數跟右下角總筆數（TotalCount）在還沒捲到底前不一致
+    PageSize: new FormControl<number>(1000),
     PageIndex: new FormControl<number>(1),
   });
   public readonly qf = computed(() => this.queryForm.controls);
