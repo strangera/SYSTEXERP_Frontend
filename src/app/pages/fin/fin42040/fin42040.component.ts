@@ -303,30 +303,26 @@ export class FIN42040Component
     });
   }
 
-  public queryFIN42040ForReport = (body: any) => {
-    const { pageIndex, pageSize, PageIndex, PageSize, ...rest } = body ?? {};
-    const payload: FIN42040QueryRequest = {
-      ...rest,
-      YM: this.normalizeYM(body?.YM ?? this.queryForm.value?.YM),
-      CompareYM: this.normalizeYM(
-        body?.CompareYM ?? this.queryForm.value?.CompareYM
-      ),
-      PageSize: pageSize ?? PageSize,
-      PageIndex: pageIndex ?? PageIndex,
-    };
-
-    return this.fin42040Service.queryFIN42040(payload).pipe(
-      map((resp: any) => ({
-        Data: Array.isArray(resp?.Data)
-          ? resp.Data
-          : Array.isArray(resp?.Data?.QueryData)
-            ? resp.Data.QueryData
-            : [],
-        TotalCount: Number(resp?.TotalCount ?? resp?.Data?.TotalCount ?? 0),
-        GrandTotal: null,
-      }))
-    );
-  };
+  public queryFIN42040ForReport = (body: any) =>
+    this.fin42040Service
+      .queryFIN42040({
+        ...body,
+        YM: this.normalizeYM(body?.YM ?? this.queryForm.value?.YM),
+        CompareYM: this.normalizeYM(
+          body?.CompareYM ?? this.queryForm.value?.CompareYM
+        ),
+      })
+      .pipe(
+        map((resp: any) => ({
+          Data: Array.isArray(resp?.Data)
+            ? resp.Data
+            : Array.isArray(resp?.Data?.QueryData)
+              ? resp.Data.QueryData
+              : [],
+          TotalCount: Number(resp?.TotalCount ?? resp?.Data?.TotalCount ?? 0),
+          GrandTotal: null,
+        }))
+      );
 
   onExportPDF(): void {
     if (!this.historyRequestBody) {
