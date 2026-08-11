@@ -82,9 +82,6 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     { No: '4', Name: '撥補', Label: '4 - 撥補' },
   ];
 
-  editDisabled = (_row: any): boolean => true;
-  detailDisabled = (_row: any): boolean => true;
-
   PCS_RqstNo_Options = signal<{ label: string; value: string }[]>([]);
   // 原始完整資料
   allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
@@ -151,7 +148,6 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
   }
 
   onSubmit(form: FormGroup) {
-    console.log('查詢條件', form.value);
     const req = {
       PCS_RqstNo: form.value.PCS_RqstNo,
       PCS_RqstDate: form.value.PCS_RqstDate,
@@ -159,10 +155,9 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       Keep_UsrNo: form.value.Keep_UsrNo,
       PCS_Status: form.value.PCS_Status,
       Keep_OrgID: form.value.Keep_OrgID,
-      SortColumn: 'PCS_RqstNo',
-      SortDirection: '1',
-      PageSize: 30,
-      PageIndex: 1,
+      SortBy: form.value.SortBy ?? [{ field: 'PCS_RqstNo', order: 1 }],
+      PageSize: form.value.pageSize ?? 30,
+      PageIndex: form.value.pageIndex ?? 1,
     };
     this.handleSubmit(form, () => {
       this.fin72020Service.queryFIN72020(req)

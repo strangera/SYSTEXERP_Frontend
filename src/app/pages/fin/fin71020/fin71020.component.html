@@ -70,19 +70,19 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-table-report
+      tableKey="FIN71020"
+      dataKey="ID"
       [data]="tableData()"
       [columns]="columns"
       [totalRecords]="totalRecords()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="service.loadFIN71020.bind(service)"
+      [loading]="tableLoading()"
+      [showCheckBox]="true"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
       (delete)="onDelete($event)"
-      [tableKey]="'FIN71020'"
-      [dataKey]="'ID'"
-      [showCheckBox]="true"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-      [lazy]="true"
-      [loading]="tableLoading()"
-    ></app-table>
+    ></app-table-report>
   </div>
 </div>

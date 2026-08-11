@@ -8,8 +8,9 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/components/input-number-range/input-number-range.component';
 import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
-import { TableComponent } from '@others/component/table/table.component';
-import { Column, createPaginationConfig } from '@others/component/table/table.model';
+import { createPaginationConfig } from '@others/component/table/table.model';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -29,7 +30,7 @@ import { FIN71020Data } from './fin71020.model';
     InputNumberRangeComponent,
     InputTextareaComponent,
     MenubarComponent,
-    TableComponent,
+    TableReportComponent,
   ]
 })
 export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> implements OnInit {
@@ -47,6 +48,7 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
   public readonly tableData = signal<FIN71020Data[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(!1);
+  public lastQueryBody: Record<string, unknown> | null = null;
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -54,7 +56,7 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
       || this.service.orgLoading();
   });
 
-  public readonly columns: Column[] = [
+  public readonly columns: ReportColumn[] = [
     { field: 'Keep_UsrNo', header: '保管人代碼' },
     { field: 'Keep_UsrName', header: '保管人名稱' },
     { field: 'Keep_QuotaAmt', header: '零用金額度' },
@@ -133,6 +135,7 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
           if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
+          this.lastQueryBody = payload;
         },
       });
     });

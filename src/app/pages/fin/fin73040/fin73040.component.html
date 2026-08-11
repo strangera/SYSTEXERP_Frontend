@@ -16,7 +16,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-table [control]="queryForm.controls.Keep_UsrNo" [submitted]="submitted" optionLabel="label"
-              optionValue="" templateLabel="templateLabel" [suggestions]="custodianSuggestions"
+              optionValue="value" templateLabel="templateLabel" [suggestions]="custodianSuggestions"
               [fieldsConfig]="custodianFieldsConfig" (inputValueChanged)="onCustodianAutoCompleteInputChange($event)"
               [formGroup]="custodianDialogForm" (formValueChanged)="onCustodianDialogFormValueChanged($event)"
               [dialogData]="custodianDialogData" [dialogColumns]="custodianDialogColumns"
@@ -34,7 +34,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-table [control]="queryForm.controls.Keep_OrgID" [submitted]="submitted" optionLabel="label"
-              optionValue="" templateLabel="templateLabel" [suggestions]="custodianDeptSuggestions"
+              optionValue="value" templateLabel="templateLabel" [suggestions]="custodianDeptSuggestions"
               [fieldsConfig]="custodianDeptFieldsConfig" (inputValueChanged)="
                 onCustodianDeptAutoCompleteInputChange($event)
               " [formGroup]="custodianDeptDialogForm"
