@@ -90,6 +90,8 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
 
   data: DetailRow[] = [];
   detailDisabled = false;
+  /** 核銷明細初始載入(或新增頁初始空表)後的原始快照，供「取消」按鈕還原編輯內容用 */
+  private originalData: DetailRow[] = [];
 
   private readonly requiredRule = (value: unknown, _rowData: unknown, _data: unknown[], _field: string, header: string) => {
     const isValid = value !== null && value !== undefined && value !== '';
@@ -233,6 +235,11 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     this.dataForm.controls.prepNo.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(prepNo => {
+      // btnType="cancel" 會呼叫 form.reset()，prepNo 被清空時不應再打 API（PREP_NO 為後端必填參數）
+      if (!prepNo) {
+        this.dataForm.patchValue({ prepAmt: null }, { emitEvent: false });
+        return;
+      }
       this.fin23040Service.queryFIN23040({ Type: 3, PREP_NO: prepNo }).subscribe(res => {
         const row = (res.Data ?? [])[0] as QueryFIN23040Type3Response | undefined;
         this.dataForm.patchValue({ prepAmt: row?.PREP_Amt ?? null });
@@ -298,6 +305,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       this.data = results
         .flatMap((res, idx) => (res.Data ?? []).map(d => this.toDetailRow(d, records[idx].REDEEM_NO)))
         .filter((r): r is DetailRow => r !== null);
+      this.originalData = this.data.map(row => ({ ...row }));
 
       this.detailDisabled = this.crudstatus === CRUDStatus.Read || !this.canEditRow;
       if (this.detailDisabled) {
@@ -328,6 +336,11 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       purType: d.PUR_Type,
       purCombCnt: d.PUR_Comb_Cnt,
     };
+  }
+
+  /** 「取消」按鈕：把核銷明細還原成初始載入(或新增頁初始空表)時的內容 */
+  onResetDetail(): void {
+    this.data = this.originalData.map(row => ({ ...row }));
   }
 
   onSubmit(frm: FormGroup): void {
