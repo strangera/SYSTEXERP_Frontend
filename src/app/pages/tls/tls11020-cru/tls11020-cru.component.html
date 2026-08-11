@@ -98,7 +98,7 @@
         ></app-input-text>
       </div>
 
-      <div class="col-12 md:col-6 lg:col-4">
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
         <app-input-text
           label="分攤比率"
           [control]="dataForm.controls.CAP_BaseRate"

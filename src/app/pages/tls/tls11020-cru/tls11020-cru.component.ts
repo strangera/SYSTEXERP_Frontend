@@ -68,7 +68,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     IsCommonlyUsed: ['Y', [Validators.required]],
     // ✅ 合約列印區分
     Print_Area: ['', [Validators.maxLength(100)]],
-    CAP_BaseRate: ['', [Validators.maxLength(5), Validators.required]],
+    // 只有 D 類才必填，必填 validator 於 CAP_Type 變動時動態套用
+    CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });
 
@@ -87,6 +88,12 @@ ngOnInit(): void {
   if (this.crudstatus === CRUDStatus.Edit) {
     this.dataForm.get('CAP_Type')?.disable();
   }
+
+  // 依扣款類別動態控制「分攤比率」：只有 D 類顯示且必填
+  this.dataForm.get('CAP_Type')?.valueChanges.subscribe((v) => {
+    this.applyBaseRateRule(v as string | null);
+  });
+  this.applyBaseRateRule(this.dataForm.get('CAP_Type')?.value ?? null);
 
   this.dropdownApiService.queryGls1005().subscribe((data) => {
     this.accountOptions = (data ?? []).map((x: any) => ({
@@ -110,6 +117,12 @@ ngOnInit(): void {
         this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
         return;
       }
+
+      // ✅ 分攤比率空字串轉 null（後端為 decimal?，空字串無法反序列化）
+      (raw as any).CAP_BaseRate =
+        raw.CAP_BaseRate === '' || raw.CAP_BaseRate == null
+          ? null
+          : raw.CAP_BaseRate;
 
       // === 新增 ===
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
@@ -174,6 +187,25 @@ onClear(): void {
   this.dataForm.markAsPristine();
   this.dataForm.markAsUntouched();
 }
+
+  // 只有 D 類顯示「分攤比率」欄位
+  get isBaseRateVisible(): boolean {
+    return String(this.dataForm.get('CAP_Type')?.value ?? '') === 'D';
+  }
+
+  // 依扣款類別套用「分攤比率」的必填規則；非 D 類清空數值
+  private applyBaseRateRule(capType: string | null): void {
+    const ctrl = this.dataForm.get('CAP_BaseRate');
+    if (!ctrl) return;
+
+    if (capType === 'D') {
+      ctrl.setValidators([Validators.maxLength(5), Validators.required]);
+    } else {
+      ctrl.setValidators([Validators.maxLength(5)]);
+      ctrl.setValue('', { emitEvent: false });
+    }
+    ctrl.updateValueAndValidity({ emitEvent: false });
+  }
 
 private initialFormSnapshot: any = null;
   private resetFormToDefault(): void {
