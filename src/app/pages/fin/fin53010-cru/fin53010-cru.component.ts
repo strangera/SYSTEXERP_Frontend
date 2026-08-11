@@ -980,7 +980,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 21 && +o.value <= 25), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => o.value === '21' || o.value === '22' || o.value === '25'), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validatePurchaseTrackNo.bind(this)] },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validatePurchaseInvoiceNo.bind(this)], onDblClick: (rowData, _v, _col, index) => this.openPurchaseInvoicePickerDialog(rowData as FIN53010StepPurchaseInvoiceRow, index ?? 0) },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateRequired.bind(this)] },
@@ -2761,28 +2761,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
-    // 帳上進項發票含稅總額（傳票明細 type=5、建立方向）需等於底下進項發票步驟表合計
-    if (this.activeVoucherSteps().includes(5)) {
+    // 補發票(INV_YN)=Y 才做發票/折讓的稅額彙總比對；=N 不檢核（與後端一致）
+    const invYn = this.dataForm.controls.INV_YN.value === 'Y';
+
+    // 傳票明細進項稅額（vt=5 進項稅額科目、建立方向）需等於進項發票稅額合計
+    if (invYn && this.activeVoucherSteps().includes(5)) {
       const accVt = this.service.accVoucherTypeMap();
       const bookPur = this.tableData()
         .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '5' && this.isCreatingDirectionRow(r))
         .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
-      const stepPur = this.stepPurchaseFooter().invoice_amount;
+      const stepPur = this.stepPurchaseFooter().tax_amount;
       if (Math.round(bookPur) !== Math.round(stepPur)) {
-        this.messageService.errorBubble(`帳上進項發票總金額 ${bookPur.toLocaleString()} 與進項發票明細總金額 ${stepPur.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`傳票明細進項稅額 ${bookPur.toLocaleString()} 與進項發票稅額合計 ${stepPur.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
 
-    // 帳上銷項發票含稅總額（傳票明細 type=6、建立方向）需等於底下銷項發票步驟表合計
-    if (this.activeVoucherSteps().includes(6)) {
+    // 傳票明細銷項稅額（vt=6 銷項稅額科目、建立方向）需等於銷項發票稅額合計
+    if (invYn && this.activeVoucherSteps().includes(6)) {
       const accVt = this.service.accVoucherTypeMap();
       const bookSal = this.tableData()
         .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '6' && this.isCreatingDirectionRow(r))
         .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
-      const stepSal = this.stepSalesFooter().total_amount;
+      const stepSal = this.stepSalesFooter().tax_amount;
       if (Math.round(bookSal) !== Math.round(stepSal)) {
-        this.messageService.errorBubble(`帳上銷項發票總金額 ${bookSal.toLocaleString()} 與銷項發票明細總金額 ${stepSal.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`傳票明細銷項稅額 ${bookSal.toLocaleString()} 與銷項發票稅額合計 ${stepSal.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
@@ -2815,20 +2818,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
-    // 折讓彙總比對：折讓表「含稅總額」合計必須等於觸發折讓的傳票明細金額合計，否則不可存檔
-    if (this.stepPurchaseAllowanceRows().length > 0) {
-      const allowSum = this.stepPurchaseAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+    // 折讓彙總比對：折讓表「稅額」合計必須等於觸發折讓的傳票明細(vt=5/6 稅額科目反向)稅額合計，否則不可存檔
+    if (invYn && this.stepPurchaseAllowanceRows().length > 0) {
+      const allowSum = this.stepPurchaseAllowanceRows().reduce((s, r) => s + (r.tax_amount ?? 0), 0);
       const triggerSum = this.purchaseAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtC ?? 0), 0);
       if (Math.round(allowSum) !== Math.round(triggerSum)) {
-        this.messageService.errorBubble(`進項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`進項折讓稅額 ${allowSum.toLocaleString()} 與傳票明細折讓稅額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
-    if (this.stepSalesAllowanceRows().length > 0) {
-      const allowSum = this.stepSalesAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+    if (invYn && this.stepSalesAllowanceRows().length > 0) {
+      const allowSum = this.stepSalesAllowanceRows().reduce((s, r) => s + (r.tax_amount ?? 0), 0);
       const triggerSum = this.salesAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtD ?? 0), 0);
       if (Math.round(allowSum) !== Math.round(triggerSum)) {
-        this.messageService.errorBubble(`銷項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`銷項折讓稅額 ${allowSum.toLocaleString()} 與傳票明細折讓稅額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
