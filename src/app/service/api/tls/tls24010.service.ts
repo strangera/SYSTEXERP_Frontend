@@ -39,6 +39,7 @@ export interface TLS24010Data {
   TXN_GUIBegNo: string, // 發票號碼起號
   TXN_GUIEndNo: string, // 發票號碼訖號
   TXN_CustCnt: number,
+  TXN_SaleCnt: number, // 交易筆數
   TXN_MemCard: string,
   TXN_Uniform: string,
   TXN_Time: string
@@ -126,6 +127,7 @@ export interface InsertTLS24010Payload {
   TXN_GUIBegNo: string;
   TXN_GUIEndNo: string;
   TXN_CustCnt: number;
+  TXN_SaleCnt: number; // 交易筆數
   TXN_MemCard: string;
   TXN_Uniform: string;
   TXN_Time: string;
