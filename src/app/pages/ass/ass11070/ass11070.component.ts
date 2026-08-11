@@ -61,7 +61,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     ticketPeriod: new FormControl<string | null>(null, [Validators.maxLength(30), Validators.pattern('^[0-9]+$')]),
     serviceItems: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
-    pageSize: new FormControl<number>(30),
+    pageSize: new FormControl<number>(10000),
     pageIndex: new FormControl<number>(1),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -128,8 +128,8 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
       next: res => {
         if (res.Status !== '0000') return;
         const options = (res.Data ?? []).map(item => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
+          label: `${item.VEN_No} - ${item.Name}`,
+          value: item.VEN_No ?? '',
         }));
         this.vendorOptions.set(options);
       },
@@ -153,7 +153,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     const pagingBody = body as QueryASS11070Request & { pageSize?: number; pageIndex?: number };
     const raw = this.queryForm.getRawValue();
     const hasLoadMorePaging = pagingBody.pageIndex !== undefined || pagingBody.pageSize !== undefined;
-    const pageSize = pagingBody.pageSize ?? pagingBody.PageSize ?? raw.pageSize ?? 30;
+    const pageSize = pagingBody.pageSize ?? pagingBody.PageSize ?? raw.pageSize ?? 10000;
     const pageIndex = pagingBody.pageIndex ?? pagingBody.PageIndex ?? raw.pageIndex ?? 1;
     const payload: QueryASS11070Request = {
       CRT_Date_S: this.toDateString(raw.crtDateS ?? null),
@@ -195,7 +195,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     this.handleSubmit(this.queryForm, () => {
       const raw = this.queryForm.getRawValue();
       this.lastQueryBody = this.buildQueryPayload({
-        PageSize: raw.pageSize ?? 30,
+        PageSize: raw.pageSize ?? 10000,
         PageIndex: raw.pageIndex ?? 1,
       });
 
