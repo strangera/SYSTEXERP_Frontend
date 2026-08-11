@@ -49,8 +49,8 @@ import { FIN73040Data, FIN73040Option, FIN73040Query } from './fin73040.model';
 export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> implements OnInit {
   public readonly queryForm = this.formBuilder.group({
     PCS_RqstNo: [null as string | null],
-    Keep_UsrNo: [null as Option | string | null],
-    Keep_OrgID: [null as Option | string | null],
+    Keep_UsrNo: [null as string | null],
+    Keep_OrgID: [null as string | null],
     PCS_Date_S: [null as Date | string | null],
     PCS_Date_E: [null as Date | string | null],
     PCS_RqstDate_S: [null as Date | string | null],
@@ -142,13 +142,11 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
       this.allCustodianOptions = (res ?? []).map((item) => this.normalizeCustodianOption(item));
       this.custodianDialogData = [...this.allCustodianOptions];
       this.custodianSuggestions = [...this.allCustodianOptions];
-      this.restoreQueryStateOption('Keep_UsrNo', this.allCustodianOptions);
     });
     this.dropdownApi.querySys3100().subscribe((res) => {
       this.allCustodianDeptOptions = (res ?? []).map((item) => this.normalizeOrgOption(item));
       this.custodianDeptDialogData = [...this.allCustodianDeptOptions];
       this.custodianDeptSuggestions = [...this.allCustodianDeptOptions];
-      this.restoreQueryStateOption('Keep_OrgID', this.allCustodianDeptOptions);
     });
   }
 
@@ -164,8 +162,8 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
     return {
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? undefined,
       PCS_RqstNo: (raw['PCS_RqstNo'] as string | null) ?? undefined,
-      Keep_UsrNo: this.resolveOptionCode(raw['Keep_UsrNo'] as Option | string | null),
-      Keep_OrgID: this.resolveOptionCode(raw['Keep_OrgID'] as Option | string | null),
+      Keep_UsrNo: (raw['Keep_UsrNo'] as string | null) ?? undefined,
+      Keep_OrgID: (raw['Keep_OrgID'] as string | null) ?? undefined,
       PCS_Date_S: this.formatDate(raw['PCS_Date_S'] as Date | string | null),
       PCS_Date_E: this.formatDate(raw['PCS_Date_E'] as Date | string | null),
       PCS_RqstDate_S: this.formatDate(raw['PCS_RqstDate_S'] as Date | string | null),
@@ -278,7 +276,7 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
   }
 
   onCustodianSelected(row: Option): void {
-    this.queryForm.controls.Keep_UsrNo.setValue(row);
+    this.queryForm.controls.Keep_UsrNo.setValue(this.extractText(row, ['value', 'No']) || null);
   }
 
   onCustodianDeptAutoCompleteInputChange(event: Record<string, string>): void {
@@ -296,12 +294,12 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
   }
 
   onCustodianDeptSelected(row: Option): void {
-    this.queryForm.controls.Keep_OrgID.setValue(row);
+    this.queryForm.controls.Keep_OrgID.setValue(this.extractText(row, ['value', 'No']) || null);
   }
 
   private normalizeCustodianOption(item: Option): Option {
     const no = this.extractText(item, ['No', 'value', 'user_No']);
-    const name = this.extractText(item, ['Name', 'label', 'user_Name']);
+    const name = this.extractText(item, ['Name', 'user_Name', 'label']);
     const orgNo = this.extractText(item, ['OrgNo', 'Org_ID', 'ORG_ID', 'OrgId']);
     const orgName = this.extractText(item, ['OrgName', 'Org_Name', 'ORG_NAME']);
     return {
@@ -327,30 +325,6 @@ export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> imp
       label: `${no} - ${name}`,
       templateLabel: `${no} - ${name}`,
     };
-  }
-
-  private resolveOptionCode(value: Option | string | null): string | undefined {
-    if (!value) {
-      return undefined;
-    }
-    if (typeof value === 'string') {
-      return value || undefined;
-    }
-    return this.extractText(value, ['value', 'No', 'user_No']) || undefined;
-  }
-
-  private restoreQueryStateOption(
-    controlName: 'Keep_UsrNo' | 'Keep_OrgID',
-    options: Option[],
-  ): void {
-    const currentValue = this.queryForm.controls[controlName].value;
-    if (!currentValue || typeof currentValue === 'object') {
-      return;
-    }
-    const matched = options.find((item) => String(item['value']) === currentValue || String(item['No']) === currentValue);
-    if (matched) {
-      this.queryForm.controls[controlName].setValue(matched, { emitEvent: false });
-    }
   }
 
   private includesText(source: string, keyword?: string): boolean {
