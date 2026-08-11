@@ -75,7 +75,7 @@
   <div class="col-12">
     <app-table-report [data]="tableData()" dataKey="ID" tableKey="ASS11040_Data" [columns]="columns"
       [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction" [showCheckBox]="false" [selectedItems]="selectedRows"
+      [queryFunction]="queryFunction" [lazy]="false" [showCheckBox]="false" [selectedItems]="selectedRows"
       (selectionChange)="selectedRows = $event" [showDelete]="false" [showReportMode]="false" (edit)="onEdit($event)"
       (detail)="onDetail($event)"></app-table-report>
   </div>

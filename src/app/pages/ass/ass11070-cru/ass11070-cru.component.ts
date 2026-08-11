@@ -114,8 +114,8 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
       next: res => {
         if (res.Status !== '0000') return;
         const options = (res.Data ?? []).map(item => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
+          label: `${item.VEN_No} - ${item.Name}`,
+          value: item.VEN_No ?? '',
         }));
         this.vendorOptions.set(options);
       },

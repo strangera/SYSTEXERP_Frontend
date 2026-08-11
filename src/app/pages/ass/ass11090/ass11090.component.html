@@ -76,7 +76,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()" dataKey="B_CLASS_ID" tableKey="ASS11090_Data" [columns]="columns"
+    <app-table-report [data]="tableData()" dataKey="_rowKey" tableKey="ASS11090_Data" [columns]="columns"
       [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
       [queryFunction]="service.queryASS11090.bind(service)" [showDelete]="false" [showReportMode]="false"
       (edit)="onEdit($event)" (detail)="onDetail($event)">
