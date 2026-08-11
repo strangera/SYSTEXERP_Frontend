@@ -137,6 +137,8 @@ export interface InsertFIN53010DetailBody {
 
 /** Swagger insertAPS3001Data */
 export interface InsertAPS3001DataBody {
+  /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
+  Source_SerNo?: number | null;
   org_id?: string | null;
   ACP_YYYYMM?: string | null;
   ACP_Date?: string | null;
@@ -186,6 +188,8 @@ export interface InsertAPS2002DataBody {
 
 /** Swagger insertARS3001Data */
 export interface InsertARS3001DataBody {
+  /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
+  Source_SerNo?: number | null;
   ORG_ID?: string | null;
   ARS_Amt?: number | null;
   PTA_Date?: string | null;
@@ -717,6 +721,8 @@ export interface APS3001 {
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
   PAM_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（一對一連動用） */
+  gls3002_id?: number | null;
 }
 
 export interface APS2002 {
@@ -805,6 +811,8 @@ export interface ARS3001 {
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
   PAM_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（一對一連動用） */
+  gls3002_id?: number | null;
 }
 
 /** #/components/schemas/APS4023 */
@@ -1094,6 +1102,10 @@ export interface FIN53010StepAP {
   PTA?: string | null;
   /** 應付單號（唯讀顯示，編輯既有資料時帶入） */
   ACP_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（載入既有資料時帶回，一對一連動用） */
+  gls3002_id?: number | null;
+  /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
+  _detailSerNo?: number;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */
@@ -1113,6 +1125,10 @@ export interface FIN53010StepAR {
   PTA?: string | null;
   /** 應收單號（唯讀顯示，編輯既有資料時帶入） */
   ARS_No?: string | null;
+  /** 對應的傳票明細 GLS3002.id（載入既有資料時帶回，一對一連動用） */
+  gls3002_id?: number | null;
+  /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
+  _detailSerNo?: number;
 }
 
 /** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */

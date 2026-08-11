@@ -1414,7 +1414,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             // 應付帳款：方向對齊（貸方科目放貸方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應付列是否產生
             if (!this.isCreatingDirectionRow(row)) continue;
-            ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
+            ap.push({ ...this.buildStepApRowFromDetailTableRow(row, vouDate), _detailSerNo: row.SerNo });
           } else if (vt === '4') {
             // 應收帳款：方向對齊（借方科目放借方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應收列是否產生
@@ -1429,6 +1429,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               acc_no: row.AccNo,
               note_desc: noteDesc,
               PTA: row.PTA ?? null,
+              _detailSerNo: row.SerNo,
             });
           } else if (vt === '7') {
             bk.push({
@@ -1513,23 +1514,51 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
           }
 
-          // 編輯模式：既有（DB 載入）銀行存款列的金額一對一連動明細
-          // 以 gls3002_id ↔ 明細 id 對應，改明細借/貸金額 → 對應銀行列存款/提款跟著改
-          const bankDetailById = new Map<number, FIN53010DetailTable>();
+          // 編輯模式：既有（DB 載入）步驟列的金額一對一連動明細
+          // 主鍵：gls3002_id ↔ 明細 id。舊資料 gls3002_id 為 null 時：
+          //   - 立帳列（有 PTA）→ 再用 PTA 反查立帳明細當 fallback，並順手補回 gls3002_id
+          //   - 無 PTA（含銀行、非立帳應收付）→ 認不出誰是誰，放生不動
+          const detailById = new Map<number, FIN53010DetailTable>();
+          const detailByPta = new Map<string, FIN53010DetailTable>();
           for (const row of table) {
-            if (typeof row.id === 'number') bankDetailById.set(row.id, row);
+            if (typeof row.id === 'number') detailById.set(row.id, row);
+            const pta = (row.PTA ?? '').trim();
+            if (pta && this.isCreatingDirectionRow(row)) detailByPta.set(pta, row);
           }
-          this.stepBankRows.update(rows => rows.map(r => {
-            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r; // 新列由上方 merge 處理
-            if (r.gls3002_id == null) return r;                                     // 舊資料無對應鍵，維持原值
-            const d = bankDetailById.get(r.gls3002_id);
-            if (!d) return r;                                                        // 明細已不存在，維持原值
-            return {
-              ...r,
-              deposit_amt: d.AccAmtD ?? undefined,
-              withdraw_amt: d.AccAmtC ?? undefined,
-              _detailSerNo: d.SerNo, // 存檔回送，後端重解析 gls3002_id
-            };
+          const detailAmt = (d: FIN53010DetailTable) => ((d.AccAmtD ?? 0) + (d.AccAmtC ?? 0)) || undefined;
+          const resolveStepDetail = (gls3002Id: number | null | undefined, pta: string | null | undefined): FIN53010DetailTable | undefined => {
+            if (gls3002Id != null) return detailById.get(gls3002Id);
+            const p = (pta ?? '').trim();
+            return p ? detailByPta.get(p) : undefined; // 無鍵又無 PTA → 放生
+          };
+          // 一對一刪除：非 new 列，若「有對應鍵(gls3002_id 或立帳 PTA)但明細已不存在」→ 該明細被刪 → 移除此步驟列
+          // （移除後存檔時，後端 !reqIds.Contains(id) 會刪除/解綁對應的 APS3001/ARS3001/APS4002）
+          // 無鍵又無 PTA 的舊資料 → 認不出對應明細，不刪(放生)
+          const isDanglingStep = (r: FIN53010StepBankDeposit | FIN53010StepAP | FIN53010StepAR): boolean => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return false;
+            const gid = (r as { gls3002_id?: number | null }).gls3002_id;
+            if (gid != null) return !detailById.has(gid);
+            const p = ((r as { PTA?: string | null }).PTA ?? '').trim();
+            return p ? !detailByPta.has(p) : false;
+          };
+          this.stepBankRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            if (r.gls3002_id == null) return r; // 銀行無 PTA，舊資料無鍵一律放生
+            const d = detailById.get(r.gls3002_id);
+            if (!d) return r;
+            return { ...r, deposit_amt: d.AccAmtD ?? undefined, withdraw_amt: d.AccAmtC ?? undefined, _detailSerNo: d.SerNo };
+          }));
+          this.stepAPRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            const d = resolveStepDetail(r.gls3002_id, r.PTA);
+            if (!d) return r;
+            return { ...r, acp_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+          }));
+          this.stepARRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            const d = resolveStepDetail(r.gls3002_id, r.PTA);
+            if (!d) return r;
+            return { ...r, ars_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
           }));
 
           // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
