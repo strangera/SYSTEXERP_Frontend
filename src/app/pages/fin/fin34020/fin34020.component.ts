@@ -49,6 +49,10 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   lastQueryBody: any;
   footerData: any;
+  /** 原本固定 2 行(立帳 1 行 + 沖銷 1 行)時的單行高度，動態列高以此為基準換算 */
+  private readonly baseLineHeight = 24.44 / 2;
+  /** 虛擬滾動要求固定列高，依當頁資料實際的最大沖銷筆數動態撐大/縮小 */
+  ItemSize = 24.44;
   venNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
   accNoOptions = this.dropDown.queryGls1005();
   readonly defaultSort: SortItem[] = [
@@ -70,8 +74,8 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
     { field: 'NoteDesc', header: '摘要', align: 'left', width: '200px' },
     { field: 'RefNo', header: '收/電/開/調整 單號', width: '150px' },
     { field: 'RCV_Date', header: '收款日期', format: formatDate, width: '80px' },
-    { field: 'VouNo', header: '傳票號碼', width: '100px' }, // 同欄位第二行顯示 Pay_VouNo
-    { field: 'RcvOrAdjAmt', header: '收款 / 調整金額', format: formatAmount, width: '120px', align: 'right' },// 同欄位第二行顯示 Pay_Amt
+    { field: 'VouNo', header: '傳票號碼', width: '100px' }, // 多筆以 | 分隔，逐行顯示
+    { field: 'RcvOrAdjAmt', header: '收款 / 調整金額', format: formatAmount, width: '120px', align: 'right' }, // 多筆以 | 分隔，逐行顯示
     { field: 'UnpaidBalanceAmt', header: '未沖餘額', format: formatAmount, width: '120px', align: 'right' }, //（立帳金額 - 調整/收款金額
   ];
   showFlagOptions = [{ value: '1', label: '顯示' }, { value: '0', label: '不顯示' },];
@@ -101,9 +105,11 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
     this.fin34020Service.queryFIN34020(this.buildPayload(body ?? {})).pipe(
       map((res: ApiResponse<any>) => {
         const dataAny = res?.Data;
+        const rows = dataAny?.QueryData ?? [];
         this.setFooter(dataAny?.TotalSummary);
+        this.updateItemSize(rows);
         return {
-          Data: dataAny?.QueryData ?? [],
+          Data: rows,
           TotalCount: res?.TotalCount ?? 0,
           GrandTotal: dataAny?.TotalSummary,
         };
@@ -133,6 +139,37 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
       ShowZeroBalance: body.ShowZeroBalance ?? undefined,
     };
   }
+  /** 依 | 拆分多筆資料，index 0 為應收/付本身那一行的值（可能是空字串），不可過濾空字串，否則會跟其他欄位的 index 對不齊 */
+  splitMultiValue(value?: string | null): string[] {
+    return (value ?? '').split('|');
+  }
+  /** 該筆總行數（應收/付本身 1 行 + 沖銷明細），以 RefNo/RCV_Date/VouNo/RcvOrAdjAmt 中拆分出最多筆數者為準，防止個別欄位筆數不齊 */
+  private getTotalLineCount(rowData: QueryFIN34020Row): number {
+    return Math.max(
+      this.splitMultiValue(rowData?.RefNo).length,
+      this.splitMultiValue(rowData?.RCV_Date).length,
+      this.splitMultiValue(rowData?.VouNo).length,
+      this.splitMultiValue(rowData?.RcvOrAdjAmt).length,
+    );
+  }
+  /** 該筆立帳實際被拆成的沖銷筆數，該筆總行數 = 此值 + 1（應收/付本身佔第 1 行） */
+  getExtraLineCount(rowData: QueryFIN34020Row): number {
+    return this.getTotalLineCount(rowData) - 1;
+  }
+  /** multiLineTemplate 用：取某欄位逐行的值，筆數不足時補空字串，確保跟其他欄位行數一致 */
+  getColumnLines(rowData: QueryFIN34020Row, field: string): string[] {
+    const values = this.splitMultiValue((rowData as Record<string, unknown>)?.[field] as string | null);
+    const totalLines = this.getTotalLineCount(rowData);
+    while (values.length < totalLines) values.push('');
+    return values;
+  }
+  range(n: number): number[] {
+    return Array.from({ length: n }, (_, i) => i);
+  }
+  private updateItemSize(rows: QueryFIN34020Row[]): void {
+    const maxExtraLines = rows.reduce((max, row) => Math.max(max, this.getExtraLineCount(row)), 0);
+    this.ItemSize = this.baseLineHeight * (maxExtraLines + 1);
+  }
   private setFooter(summary: any): void {
     this.footerData = {
       ARS_Amt: summary?.Total_ARS_Amt ?? 0,
@@ -148,6 +185,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> implements O
         const dataAny = response?.Data as any;
         this.data = dataAny?.QueryData ?? [];
         this.setFooter(dataAny?.TotalSummary);
+        this.updateItemSize(this.data);
         this.totalRecords = response?.TotalCount ?? this.data.length;
         this.lastQueryBody = raw;
         this.queryStateService.setQueryState(this.ProgNo, raw);
