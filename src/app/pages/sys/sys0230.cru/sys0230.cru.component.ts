@@ -1,10 +1,13 @@
+import { AsyncPipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
@@ -35,9 +38,11 @@ export interface UserOption {
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
+    MultiSelectComponent,
     TableReportComponent,
     TranslateModule,
     DialogComponent,
+    AsyncPipe,
   ],
 })
 export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implements OnInit {
@@ -57,10 +62,12 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
 
   dialogVisible = false;
 
+  orgOptions = this.dropdown.queryTblUserOrgidAsOrg();
+
   filterDialogForm = this.formBuilder.nonNullable.group({
     User_No: [''],
     User_Name: [''],
-    Org_Id: [''],
+    Org_IdList: [[] as string[]],
   });
 
   assignedUsersColumns: ReportColumn[] = [
@@ -77,6 +84,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
 
   constructor(
     private readonly sys0230Service: Sys0230Service,
+    private readonly dropdown: DropdownApiService,
     private readonly cdr: ChangeDetectorRef
   ) {
     super();
@@ -144,7 +152,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
   }
 
   filterAvailableUsers(): void {
-    const { User_No, User_Name, Org_Id } = this.filterDialogForm.value;
+    const { User_No, User_Name, Org_IdList } = this.filterDialogForm.value;
 
     let filteredData = [...this.allUsersFromServer];
 
@@ -154,8 +162,8 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser> implemen
     if (User_Name) {
       filteredData = filteredData.filter((user) => user.User_Name.includes(User_Name));
     }
-    if (Org_Id) {
-      filteredData = filteredData.filter((user) => user.Org_Id?.includes(Org_Id));
+    if (Org_IdList?.length) {
+      filteredData = filteredData.filter((user) => !!user.Org_Id && Org_IdList.includes(user.Org_Id));
     }
 
     this.availableUsers = filteredData.filter(
