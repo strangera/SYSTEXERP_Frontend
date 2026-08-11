@@ -64,6 +64,8 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
 
   data: PostingLine[] = [];
   initTable = false;
+  /** 傳票明細初始載入後的原始快照，供「取消」按鈕還原編輯內容用 */
+  private originalData: PostingLine[] = [];
   private readonly orgOptions$ = this.dropdown.querySys3100();
 
   columns: EditColumn[] = [
@@ -137,8 +139,14 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
         });
       });
       this.data = lines;
+      this.originalData = lines.map(line => ({ ...line }));
       this.initTable = this.data.length > 0;
     });
+  }
+
+  /** 「取消」按鈕：把傳票明細還原成初始載入時的內容 */
+  onResetDetail(): void {
+    this.data = this.originalData.map(line => ({ ...line }));
   }
 
   /**

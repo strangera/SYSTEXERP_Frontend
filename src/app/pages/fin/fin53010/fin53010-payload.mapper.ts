@@ -93,6 +93,7 @@ function mapStepApToInsert(
   const ven = deps.getVendorOption(row.ven_no);
   const bank = splitVenBankAccount(row.ven_bank_account);
   return {
+    Source_SerNo: row._detailSerNo ?? null,
     org_id: row.org_id,
     ACP_YYYYMM: vouYyyyMm(deps.vouDate, deps.datePipe),
     ACP_Date: toYmd(row.acp_date ?? undefined, deps.datePipe),
@@ -116,6 +117,7 @@ function mapStepApToInsert(
 function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou): InsertARS3001DataBody {
   const ven = deps.getVendorOption(row.ven_no);
   return {
+    Source_SerNo: row._detailSerNo ?? null,
     ORG_ID: row.org_id,
     ARS_Amt: row.ars_amt,
     PTA_Date: toYmd(row.pta_date ?? undefined, deps.datePipe),

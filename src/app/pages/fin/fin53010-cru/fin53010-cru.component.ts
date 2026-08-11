@@ -980,7 +980,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => +o.value >= 21 && +o.value <= 25), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions().filter(o => o.value === '21' || o.value === '22' || o.value === '25'), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left', validate: [this.validatePurchaseTrackNo.bind(this)] },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left', validate: [this.validatePurchaseInvoiceNo.bind(this)], onDblClick: (rowData, _v, _col, index) => this.openPurchaseInvoicePickerDialog(rowData as FIN53010StepPurchaseInvoiceRow, index ?? 0) },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date', validate: [this.validateRequired.bind(this)] },
@@ -1414,7 +1414,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             // 應付帳款：方向對齊（貸方科目放貸方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應付列是否產生
             if (!this.isCreatingDirectionRow(row)) continue;
-            ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
+            ap.push({ ...this.buildStepApRowFromDetailTableRow(row, vouDate), _detailSerNo: row.SerNo });
           } else if (vt === '4') {
             // 應收帳款：方向對齊（借方科目放借方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應收列是否產生
@@ -1429,6 +1429,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               acc_no: row.AccNo,
               note_desc: noteDesc,
               PTA: row.PTA ?? null,
+              _detailSerNo: row.SerNo,
             });
           } else if (vt === '7') {
             bk.push({
@@ -1513,23 +1514,51 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             this.stepBankRows.set(mergeStepRows(this.stepBankRows(), bk));
           }
 
-          // 編輯模式：既有（DB 載入）銀行存款列的金額一對一連動明細
-          // 以 gls3002_id ↔ 明細 id 對應，改明細借/貸金額 → 對應銀行列存款/提款跟著改
-          const bankDetailById = new Map<number, FIN53010DetailTable>();
+          // 編輯模式：既有（DB 載入）步驟列的金額一對一連動明細
+          // 主鍵：gls3002_id ↔ 明細 id。舊資料 gls3002_id 為 null 時：
+          //   - 立帳列（有 PTA）→ 再用 PTA 反查立帳明細當 fallback，並順手補回 gls3002_id
+          //   - 無 PTA（含銀行、非立帳應收付）→ 認不出誰是誰，放生不動
+          const detailById = new Map<number, FIN53010DetailTable>();
+          const detailByPta = new Map<string, FIN53010DetailTable>();
           for (const row of table) {
-            if (typeof row.id === 'number') bankDetailById.set(row.id, row);
+            if (typeof row.id === 'number') detailById.set(row.id, row);
+            const pta = (row.PTA ?? '').trim();
+            if (pta && this.isCreatingDirectionRow(row)) detailByPta.set(pta, row);
           }
-          this.stepBankRows.update(rows => rows.map(r => {
-            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r; // 新列由上方 merge 處理
-            if (r.gls3002_id == null) return r;                                     // 舊資料無對應鍵，維持原值
-            const d = bankDetailById.get(r.gls3002_id);
-            if (!d) return r;                                                        // 明細已不存在，維持原值
-            return {
-              ...r,
-              deposit_amt: d.AccAmtD ?? undefined,
-              withdraw_amt: d.AccAmtC ?? undefined,
-              _detailSerNo: d.SerNo, // 存檔回送，後端重解析 gls3002_id
-            };
+          const detailAmt = (d: FIN53010DetailTable) => ((d.AccAmtD ?? 0) + (d.AccAmtC ?? 0)) || undefined;
+          const resolveStepDetail = (gls3002Id: number | null | undefined, pta: string | null | undefined): FIN53010DetailTable | undefined => {
+            if (gls3002Id != null) return detailById.get(gls3002Id);
+            const p = (pta ?? '').trim();
+            return p ? detailByPta.get(p) : undefined; // 無鍵又無 PTA → 放生
+          };
+          // 一對一刪除：非 new 列，若「有對應鍵(gls3002_id 或立帳 PTA)但明細已不存在」→ 該明細被刪 → 移除此步驟列
+          // （移除後存檔時，後端 !reqIds.Contains(id) 會刪除/解綁對應的 APS3001/ARS3001/APS4002）
+          // 無鍵又無 PTA 的舊資料 → 認不出對應明細，不刪(放生)
+          const isDanglingStep = (r: FIN53010StepBankDeposit | FIN53010StepAP | FIN53010StepAR): boolean => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return false;
+            const gid = (r as { gls3002_id?: number | null }).gls3002_id;
+            if (gid != null) return !detailById.has(gid);
+            const p = ((r as { PTA?: string | null }).PTA ?? '').trim();
+            return p ? !detailByPta.has(p) : false;
+          };
+          this.stepBankRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            if (r.gls3002_id == null) return r; // 銀行無 PTA，舊資料無鍵一律放生
+            const d = detailById.get(r.gls3002_id);
+            if (!d) return r;
+            return { ...r, deposit_amt: d.AccAmtD ?? undefined, withdraw_amt: d.AccAmtC ?? undefined, _detailSerNo: d.SerNo };
+          }));
+          this.stepAPRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            const d = resolveStepDetail(r.gls3002_id, r.PTA);
+            if (!d) return r;
+            return { ...r, acp_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+          }));
+          this.stepARRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
+            if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
+            const d = resolveStepDetail(r.gls3002_id, r.PTA);
+            if (!d) return r;
+            return { ...r, ars_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
           }));
 
           // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
@@ -2732,28 +2761,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
-    // 帳上進項發票含稅總額（傳票明細 type=5、建立方向）需等於底下進項發票步驟表合計
-    if (this.activeVoucherSteps().includes(5)) {
+    // 補發票(INV_YN)=Y 才做發票/折讓的稅額彙總比對；=N 不檢核（與後端一致）
+    const invYn = this.dataForm.controls.INV_YN.value === 'Y';
+
+    // 傳票明細進項稅額（vt=5 進項稅額科目、建立方向）需等於進項發票稅額合計
+    if (invYn && this.activeVoucherSteps().includes(5)) {
       const accVt = this.service.accVoucherTypeMap();
       const bookPur = this.tableData()
         .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '5' && this.isCreatingDirectionRow(r))
         .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
-      const stepPur = this.stepPurchaseFooter().invoice_amount;
+      const stepPur = this.stepPurchaseFooter().tax_amount;
       if (Math.round(bookPur) !== Math.round(stepPur)) {
-        this.messageService.errorBubble(`帳上進項發票總金額 ${bookPur.toLocaleString()} 與進項發票明細總金額 ${stepPur.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`傳票明細進項稅額 ${bookPur.toLocaleString()} 與進項發票稅額合計 ${stepPur.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
 
-    // 帳上銷項發票含稅總額（傳票明細 type=6、建立方向）需等於底下銷項發票步驟表合計
-    if (this.activeVoucherSteps().includes(6)) {
+    // 傳票明細銷項稅額（vt=6 銷項稅額科目、建立方向）需等於銷項發票稅額合計
+    if (invYn && this.activeVoucherSteps().includes(6)) {
       const accVt = this.service.accVoucherTypeMap();
       const bookSal = this.tableData()
         .filter(r => String(accVt.get(String(r.AccNo ?? ''))) === '6' && this.isCreatingDirectionRow(r))
         .reduce((s, r) => s + (r.AccAmtD ?? 0) + (r.AccAmtC ?? 0), 0);
-      const stepSal = this.stepSalesFooter().total_amount;
+      const stepSal = this.stepSalesFooter().tax_amount;
       if (Math.round(bookSal) !== Math.round(stepSal)) {
-        this.messageService.errorBubble(`帳上銷項發票總金額 ${bookSal.toLocaleString()} 與銷項發票明細總金額 ${stepSal.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`傳票明細銷項稅額 ${bookSal.toLocaleString()} 與銷項發票稅額合計 ${stepSal.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
@@ -2786,20 +2818,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
-    // 折讓彙總比對：折讓表「含稅總額」合計必須等於觸發折讓的傳票明細金額合計，否則不可存檔
-    if (this.stepPurchaseAllowanceRows().length > 0) {
-      const allowSum = this.stepPurchaseAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+    // 折讓彙總比對：折讓表「稅額」合計必須等於觸發折讓的傳票明細(vt=5/6 稅額科目反向)稅額合計，否則不可存檔
+    if (invYn && this.stepPurchaseAllowanceRows().length > 0) {
+      const allowSum = this.stepPurchaseAllowanceRows().reduce((s, r) => s + (r.tax_amount ?? 0), 0);
       const triggerSum = this.purchaseAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtC ?? 0), 0);
       if (Math.round(allowSum) !== Math.round(triggerSum)) {
-        this.messageService.errorBubble(`進項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`進項折讓稅額 ${allowSum.toLocaleString()} 與傳票明細折讓稅額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
-    if (this.stepSalesAllowanceRows().length > 0) {
-      const allowSum = this.stepSalesAllowanceRows().reduce((s, r) => s + (r.allowance_amount ?? ((r.net_amount ?? 0) + (r.tax_amount ?? 0))), 0);
+    if (invYn && this.stepSalesAllowanceRows().length > 0) {
+      const allowSum = this.stepSalesAllowanceRows().reduce((s, r) => s + (r.tax_amount ?? 0), 0);
       const triggerSum = this.salesAllowanceTriggerRows().reduce((s, r) => s + (r.AccAmtD ?? 0), 0);
       if (Math.round(allowSum) !== Math.round(triggerSum)) {
-        this.messageService.errorBubble(`銷項折讓總金額 ${allowSum.toLocaleString()} 與傳票明細折讓金額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
+        this.messageService.errorBubble(`銷項折讓稅額 ${allowSum.toLocaleString()} 與傳票明細折讓稅額 ${triggerSum.toLocaleString()} 不一致，無法存檔`);
         return;
       }
     }
