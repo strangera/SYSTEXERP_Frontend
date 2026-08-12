@@ -130,9 +130,11 @@ export class ASS11080Component extends BasicCruPageComponent<ASS11080Data> imple
     tagData?: ASS11080QueryDataItem
   ): ASS11080UpdateItem {
     if (this.isBooleanField(field)) {
+      // PS/PC 為是否啟用開關，本身無會計科目概念，AccNo 一律不帶值，
+      // 避免延續舊資料殘留的 'Y'/'N'（非合法科目代號）觸發後端 GLS1005 存在性檢查失敗
       return {
         TAG: field,
-        AccNo: tagData?.AccNo || '',
+        AccNo: '',
         NOTES: tagData?.Notes || '',
         IsActive: formValue === 'Y',
         Sort: tagData?.SortNo ?? 0

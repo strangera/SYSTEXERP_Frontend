@@ -241,7 +241,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
         MT_MODE: rawFormValue.warrantyMethod || undefined,
         IVN_MODE: rawFormValue.maintenanceMethod || undefined,
         NOTES_KW: rawFormValue.illustrate || undefined,
-        PageSize: 30,
+        PageSize: 99999,
         PageIndex: 1,
         SortBy: currentSort,
       } as QueryASS11040Request;

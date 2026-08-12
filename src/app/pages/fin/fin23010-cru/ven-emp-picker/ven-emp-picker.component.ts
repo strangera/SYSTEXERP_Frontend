@@ -7,7 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TableModule } from 'primeng/table';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, switchMap } from 'rxjs/operators';
 
 /** 1=廠商 2=員工 (依回傳列資料的 VenFlag 即時判斷：VenFlag==='2' 為員工，其餘為廠商) */
 export enum VenEmpPickedType {
@@ -65,7 +65,6 @@ export class VenEmpPickerComponent {
   constructor() {
     this.keyword$.pipe(
       debounceTime(300),
-      distinctUntilChanged(),
       switchMap(keyword => {
         this.loading = true;
         return this.finService.queryVenEmpFIN23010({

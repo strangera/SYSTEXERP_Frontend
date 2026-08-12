@@ -142,7 +142,7 @@
     [footerData]="footerData"
     [queryFunction]="queryFIN34020ForReport"
     [lastQueryBody]="lastQueryBody"
-    [ItemSize]="24.44"
+    [ItemSize]="ItemSize"
     [showDelete]="false"
     [customTemplates]="{
       VEN_No: firstLineTemplate,
@@ -155,10 +155,10 @@
       PTA_Date: firstLineTemplate,
       ARS_Amt: firstLineTemplate,
       NoteDesc: firstLineTemplate,
-      RefNo: secondLineTemplate,
-      RCV_Date: secondLineTemplate,
-      VouNo: voucherNoTemplate,
-      RcvOrAdjAmt: amountTemplate,
+      RefNo: multiLineTemplate,
+      RCV_Date: multiLineTemplate,
+      VouNo: multiLineTemplate,
+      RcvOrAdjAmt: multiLineTemplate,
       UnpaidBalanceAmt: firstLineTemplate,
     }"
   >
@@ -185,28 +185,7 @@
   </app-table-report>
 </div>
 
-<ng-template
-  #secondLineTemplate
-  let-rowData
-  let-column="column"
-  let-index="index"
->
-  <div>&nbsp;</div>
-  @if (
-    rowData[column.field] !== null &&
-    rowData[column.field] !== undefined &&
-    rowData[column.field] !== ""
-  ) {
-    <div>
-      {{
-        column.format
-          ? column.format(rowData[column.field], index, rowData)
-          : rowData[column.field]
-      }}
-    </div>
-  }
-</ng-template>
-
+<!-- 立帳本身固定佔第 1 行，其後依 getExtraLineCount(rowData) 補對應筆數的空白行，維持跟 multiLineTemplate 同步的列高 -->
 <ng-template
   #firstLineTemplate
   let-rowData
@@ -220,30 +199,21 @@
         : rowData[column.field]
     }}
   </div>
-  <div>&nbsp;</div>
+  @for (i of range(getExtraLineCount(rowData)); track i) {
+    <div>&nbsp;</div>
+  }
 </ng-template>
 
-<ng-template #voucherNoTemplate let-rowData>
-  <div>{{ rowData.VouNo }}</div>
-  <div>{{ rowData.Pay_VouNo || " " }}</div>
-</ng-template>
-<ng-template #amountTemplate let-rowData let-column="column" let-index="index">
-  <div>
-    {{
-      column.format
-        ? column.format(rowData[column.field], index, rowData)
-        : rowData[column.field]
-    }}
-  </div>
-  <div>
-    {{
-      rowData.Pay_Amt !== null &&
-      rowData.Pay_Amt !== undefined &&
-      rowData.Pay_Amt !== ""
-        ? column.format
-          ? column.format(rowData.Pay_Amt, index, rowData)
-          : rowData.Pay_Amt
-        : " "
-    }}
-  </div>
+<!-- 收/電/開/調整單號、收款日期、傳票號碼、收款/調整金額：後端以 | 分隔多筆，index 0 為應收/付本身那一行(可能是空字串)，逐行對齊渲染 -->
+<ng-template
+  #multiLineTemplate
+  let-rowData
+  let-column="column"
+  let-index="index"
+>
+  @for (val of getColumnLines(rowData, column.field); track $index) {
+    <div>
+      {{ val !== "" ? (column.format ? column.format(val, index, rowData) : val) : " " }}
+    </div>
+  }
 </ng-template>

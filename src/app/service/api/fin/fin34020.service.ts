@@ -67,16 +67,16 @@ export interface QueryFIN34020Row {
 
   NoteDesc?: string;
 
+  /** 收/電/開/調整 單號，一筆立帳可能對應多筆沖銷單號，以 | 分隔 */
   RefNo?: string;
-  RCV_Date?: string | null; // date
-  VouNo?: string; // 第一行的傳票號碼
+  /** 收款日期，多筆以 | 分隔，筆數與順序需與 RefNo 對齊 */
+  RCV_Date?: string | null;
+  /** 傳票號碼，多筆以 | 分隔，筆數與順序需與 RefNo 對齊 */
+  VouNo?: string;
 
-  RcvOrAdjAmt?: number | null;
+  /** 收款 / 調整金額，多筆以 | 分隔，筆數與順序需與 RefNo 對齊 */
+  RcvOrAdjAmt?: string | null;
   UnpaidBalanceAmt?: number | null;
-
-  // 新增第二行欄位
-  Pay_VouNo?: string; // 第二行的傳票號碼
-  Pay_Amt?: number | null; // 調整/收款金額
 }
 
 @Injectable({ providedIn: 'root' })

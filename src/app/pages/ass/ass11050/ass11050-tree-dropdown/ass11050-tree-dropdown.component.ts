@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, input, viewChild } from '@angular/core';
 import { TreeNode } from 'primeng/api';
-import { TreeModule } from 'primeng/tree';
+import { Tree, TreeModule } from 'primeng/tree';
 
 type Column = { value: string; label: string; };
 
@@ -15,6 +15,9 @@ type Column = { value: string; label: string; };
   ],
 })
 export class ASS11050TreeDropdownComponent {
+  private readonly treeComponent = viewChild(Tree);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   readonly members = input<any[]>([], { alias: 'members' }); // 允許外部傳入成員資料
   columns = input<Column[]>([], { alias: 'Columns' }); //Columns前兩欄是父節點，最後一個是末端葉節點
   columnsLength = computed(() => this.columns().length - 1); // 欄位數量
@@ -96,5 +99,17 @@ export class ASS11050TreeDropdownComponent {
       event.preventDefault();
       this.expandToLevel(level);
     }
+  }
+
+  // 清除：還原篩選文字與展開狀態至初始（全部收合）
+  resetFilter(): void {
+    this.treeComponent()?.resetFilter();
+    this.treeData().forEach(node => this.collapseRecursive(node));
+    this.cdr.markForCheck(); // OnPush：清除動作發生在父層事件，需手動標記才會重繪樹狀畫面
+  }
+
+  private collapseRecursive(node: TreeNode): void {
+    node.expanded = false;
+    node.children?.forEach(child => this.collapseRecursive(child));
   }
 }

@@ -108,7 +108,7 @@
   <div class="col-12">
     <app-table-report [data]="tableData()" [dataKey]="'ID'" [tableKey]="'ASS11070_Data'" [columns]="columns"
       [totalRecords]="totalRecords()" [showCheckBox]="true" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [showDelete]="false" [lazy]="true"
+      (selectionChange)="selectedItems = $event" [showDelete]="false" [lazy]="false"
       [loading]="tableLoading()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" (edit)="onEdit($event)"
       (detail)="onDetail($event)">
       <header>

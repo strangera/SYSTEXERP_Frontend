@@ -42,6 +42,8 @@ export interface ASS11090Data {
   NOTES?: string;
   /** 明細資料 */
   VouAccDetails?: VouAccDetail[];
+  /** 前端合成鍵：B_CLASS_ID-M_CLASS_ID，供 app-table-report dataKey 用（B_CLASS_ID 本身非唯一） */
+  _rowKey?: string;
 }
 
 /** API 回傳的明細項目 */

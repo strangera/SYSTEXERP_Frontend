@@ -25,9 +25,15 @@ export class ASS11090Service {
       .pipe(
         map(res => {
           // res.TotalCount 已在根層級，...res 會自動帶入，只需覆蓋 Data
+          // B_CLASS_ID 在同一大分類下會對應多筆中分類，非唯一鍵；補一個組合鍵給 app-table-report 的 dataKey 用，
+          // 避免虛擬捲動(virtualScrollOptions.trackBy)拿重複的 B_CLASS_ID 辨識列，導致畫面實際渲染筆數少於總筆數。
+          const list = (res.Data.QueryData ?? []).map(row => ({
+            ...row,
+            _rowKey: `${row.B_CLASS_ID}-${row.M_CLASS_ID}`,
+          }));
           return {
             ...res,
-            Data: res.Data.QueryData,
+            Data: list,
           } as ApiResponse<ASS11090Data[]>;
         })
       );
