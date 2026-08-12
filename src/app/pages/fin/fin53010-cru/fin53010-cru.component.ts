@@ -816,6 +816,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         textAlign: 'right',
         type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+        validate: [this.validateAmtEither.bind(this)],
         // DB 已存列：貸方有值時禁止輸入借方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
           (!!rowData?.id && (rowData.AccAmtC ?? 0) > 0) || this.isRowLocked(rowData),
@@ -835,6 +836,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         textAlign: 'right',
         type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+        validate: [this.validateAmtEither.bind(this)],
         // DB 已存列：借方有值時禁止輸入貸方（方向鎖定，避免切換後 PTA 無法復原）
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) =>
           (!!rowData?.id && (rowData.AccAmtD ?? 0) > 0) || this.isRowLocked(rowData),
@@ -1014,6 +1016,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private validateRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
     if (value === '' || value === null || value === undefined) {
       return { isValid: false, errorMessage: [`${header}不可為空`] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
+  /** 借方/貸方二擇一：同一列只要其中一個有值即通過 */
+  private validateAmtEither(_value: unknown, rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string[] } {
+    const debit = rowData?.AccAmtD;
+    const credit = rowData?.AccAmtC;
+    const hasDebit = debit !== null && debit !== undefined;
+    const hasCredit = credit !== null && credit !== undefined;
+    if (!hasDebit && !hasCredit) {
+      return { isValid: false, errorMessage: ['借方金額、貸方金額請至少填一個'] };
     }
     return { isValid: true, errorMessage: [] };
   }
@@ -2880,6 +2894,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (noteInvalidRows.length > 0) {
         const serNos = noteInvalidRows.map(r => r.SerNo).join('、');
         this.messageService.errorBubble(`第 ${serNos} 列摘要必填`);
+        this.loading = false;
+        return;
+      }
+
+      // 借貸方金額防呆：每列至少填借方或貸方其一
+      const amtInvalidRows = this.tableData().filter(row =>
+        (row.AccAmtD === null || row.AccAmtD === undefined) &&
+        (row.AccAmtC === null || row.AccAmtC === undefined)
+      );
+      if (amtInvalidRows.length > 0) {
+        const serNos = amtInvalidRows.map(r => r.SerNo).join('、');
+        this.messageService.errorBubble(`第 ${serNos} 列借方金額、貸方金額請至少填一個`);
         this.loading = false;
         return;
       }

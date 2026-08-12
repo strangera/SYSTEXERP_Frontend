@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { SortMeta } from 'primeng/api';
@@ -60,7 +60,7 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
   ],
   providers: [TableEditDataService, TableValidationService]
 })
-export class TableEditComponent implements OnChanges {
+export class TableEditComponent implements OnChanges, AfterViewInit {
   @ViewChild('dt') private readonly table!: Table;
   // 基本設置
   @Input() title: string | undefined = undefined;       // table 標題
@@ -420,8 +420,10 @@ export class TableEditComponent implements OnChanges {
       index,
       disabled: this.disabled || !!rowData?.isPOS4023,
       onValueChange: this.onValueChange.bind(this),
-      // 點擊即編輯模式下，剛啟用的那一格自動展開下拉（單擊即開）
+      // 點擊即編輯模式下，剛啟用的那一格自動展開下拉（單擊即開）；
+      // Tab 換格進來的格子 autoOpen=false，讓下拉維持關閉，才不會把後續 Tab 卡在 body overlay 內。
       autoOpen: this.cellEditOnClick
+        && !!this.activeCell?.autoOpen
         && this.activeCell?.key === rowData?.[this.dataKey]
         && this.activeCell?.field === col.field,
     };
@@ -441,8 +443,8 @@ export class TableEditComponent implements OnChanges {
   // ===== 點擊才編輯（Excel 式）：大筆數表格避免一次建立數千個編輯元件 =====
   /** 開啟後，有 type 的格子平常顯示純文字，雙擊該格才實體化編輯元件（每張表同時最多一格是重量級元件）。 */
   @Input() cellEditOnClick = false;
-  /** 目前正在編輯的格子（dataKey 值 + 欄位）；null = 沒有任何格在編輯。 */
-  private activeCell: { key: unknown; field: string; } | null = null;
+  /** 目前正在編輯的格子（dataKey 值 + 欄位）；null = 沒有任何格在編輯。autoOpen：下拉是否自動展開（僅單擊進入時 true）。 */
+  private activeCell: { key: unknown; field: string; autoOpen: boolean; } | null = null;
 
   /** 該格此刻是否要渲染「編輯元件」（否則渲染純文字）。 */
   public isCellEditing(rowData: any, col: EditColumn): boolean {
@@ -466,7 +468,7 @@ export class TableEditComponent implements OnChanges {
     const alreadyEditing = this.activeCell?.key === rowData?.[this.dataKey] && this.activeCell?.field === col.field;
     if (alreadyEditing) return; // 已在編輯 → 讓這次點擊直接落到元件上
     const td = event.currentTarget as HTMLElement;
-    this.activeCell = { key: rowData?.[this.dataKey], field: col.field };
+    this.activeCell = { key: rowData?.[this.dataKey], field: col.field, autoOpen: true };
     this.cdr.detectChanges();
     setTimeout(() => this.focusCellEditor(td)); // render 後聚焦：輸入框直接可打字、下拉自動展開
   }
@@ -475,15 +477,85 @@ export class TableEditComponent implements OnChanges {
   public onCellDblClick(rowData: any, col: EditColumn, rowIndex: number): void {
     if (!this.cellEditOnClick || !col.type || !col.onDblClick) return;
     if (this.isCellDisabled(rowData, col)) return;
-    this.activeCell = { key: rowData?.[this.dataKey], field: col.field };
+    this.activeCell = { key: rowData?.[this.dataKey], field: col.field, autoOpen: false };
     col.onDblClick(rowData, rowData?.[col.field], col, rowIndex);
     this.cdr.detectChanges();
   }
 
-  /** 進入編輯後把焦點放進該格的編輯元件：有輸入框就 focus。純下拉的展開改由 dropdown cell 的 autoOpen 處理（單擊即開）。 */
+  /** 進入編輯後把焦點放進該格的編輯元件：優先聚焦輸入框，否則聚焦下拉本體（role=combobox）讓後續 Tab 仍被接管。 */
   private focusCellEditor(td: HTMLElement): void {
-    const input = td.querySelector('input, textarea') as HTMLElement | null;
-    input?.focus();
+    const focusable = td.querySelector(
+      'input:not([type=hidden]), textarea, [role="combobox"], [tabindex]:not([tabindex="-1"])',
+    ) as HTMLElement | null;
+    focusable?.focus();
+  }
+
+  /**
+   * Tab / Shift+Tab 換格用的 capture 監聽。
+   * 為什麼一定要用 capture：PrimeNG p-dropdown 的 onTabKey 最後會 stopPropagation()，
+   * 下拉格的 Tab 根本傳不到 <td> 的 bubble 監聽，導致原生 Tab 直接跳進「永遠是編輯狀態」的
+   * 新增候選列，看起來就像跳到第二行。改在 table 元素上 capture，於目標處理前先攔截。
+   */
+  ngAfterViewInit(): void {
+    const host = this.table?.el?.nativeElement as HTMLElement | undefined;
+    host?.addEventListener('keydown', this.onTableTabCapture, true);
+  }
+
+  private readonly onTableTabCapture = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || !this.cellEditOnClick) return;
+    const target = event.target as HTMLElement | null;
+    const td = target?.closest('td[data-field]') as HTMLElement | null;
+    const tr = td?.closest('tr[data-key]') as HTMLElement | null;
+    if (!td || !tr) return;
+    const field = td.getAttribute('data-field');
+    const key = tr.getAttribute('data-key');
+    if (field == null || key == null) return;
+    const rowIndex = this._tableData.findIndex(r => String(r?.[this.dataKey]) === key);
+    if (rowIndex < 0) return;
+    const next = this.findAdjacentEditableCell(rowIndex, field, event.shiftKey);
+    if (!next) return; // 已到頭尾 → 交還瀏覽器，焦點自然離開表格
+    event.preventDefault();
+    event.stopPropagation(); // 阻止 PrimeNG 的 onKeyDown 接手
+    this.activeCell = { key: next.rowData[this.dataKey], field: next.col.field, autoOpen: false };
+    this.cdr.detectChanges();
+    setTimeout(() => this.focusCellByKey(next.rowData[this.dataKey], next.col.field)); // render 後聚焦
+  };
+
+  /** 該格是否可用 Tab 停留：有編輯型別、未隱藏、未禁用。 */
+  private isTabbableCell(rowData: any, col: EditColumn): boolean {
+    return !!col.type && !(col as { hidden?: boolean; }).hidden && !this.isCellDisabled(rowData, col);
+  }
+
+  /** 從指定格往前/後找下一個可編輯格（跨列環繞），找不到回 null。 */
+  private findAdjacentEditableCell(rowIndex: number, field: string, backward: boolean): { rowData: any; col: EditColumn; } | null {
+    const rows = this._tableData;
+    const cols = this.columns;
+    const startCol = cols.findIndex(c => c.field === field);
+    if (startCol < 0) return null;
+    const step = backward ? -1 : 1;
+    let r = rowIndex;
+    let c = startCol + step;
+    while (r >= 0 && r < rows.length) {
+      while (c >= 0 && c < cols.length) {
+        if (this.isTabbableCell(rows[r], cols[c])) return { rowData: rows[r], col: cols[c] };
+        c += step;
+      }
+      r += step;
+      c = backward ? cols.length - 1 : 0;
+    }
+    return null;
+  }
+
+  /** 依 dataKey + 欄位定位 <td> 並聚焦其編輯元件（純下拉靠 autoOpen 自行展開）。 */
+  private focusCellByKey(key: unknown, field: string): void {
+    const host = this.table?.el?.nativeElement as HTMLElement | undefined;
+    if (!host) return;
+    const td = host.querySelector(
+      `tr[data-key="${CSS.escape(String(key))}"] td[data-field="${CSS.escape(field)}"]`,
+    ) as HTMLElement | null;
+    if (!td) return;
+    td.scrollIntoView({ block: 'nearest' });
+    this.focusCellEditor(td);
   }
 
   /** 純文字狀態要顯示的內容：下拉反查 label、日期格式化、template 用顯示欄位，其餘用 format/原值。 */

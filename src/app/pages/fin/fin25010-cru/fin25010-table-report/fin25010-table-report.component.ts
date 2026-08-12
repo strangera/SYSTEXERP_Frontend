@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TableCaptionComponent } from '@others/component/table/import-table';
 import { ButtonModule } from 'primeng/button';
@@ -22,7 +22,7 @@ import { ReportColumn } from './fin25010-table-report.model';
   styleUrls: ['./fin25010-table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableReportComponent extends BasicPrintDataComponent implements OnChanges, OnDestroy {
   @ViewChild('dt') public dt!: Table;
   @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
   @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
@@ -31,7 +31,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() ItemSize = 46;
   @Input() numToleratedItems?: number;
   get computedNumToleratedItems(): number {
-    return this.numToleratedItems ?? Math.ceil(1000 / this.ItemSize) * 2;
+    return this.numToleratedItems ?? Math.ceil(1000 / this.ItemSize * 0.3);
   }
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
@@ -123,13 +123,25 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
     return result;
   }
+  private scrollSelectionRefreshTimer?: ReturnType<typeof setTimeout>;
+  /**
+   * 虛擬滾動把候補區的列換成新資料時，PrimeNG 的 checkbox 元件不會自動重新比對是否選取，
+   * 需要靠 selectedItems 換一個新陣列參考去觸發重新比對。但每次 scroll 事件都立刻換陣列
+   * 會讓候補區所有 checkbox 一路狂閃，所以延遲到滾動停下來才做一次即可，兩者取平衡。
+   */
   onScroll(event: any) {
     if (this._loading) return;
-    if (this.selectedItems && this.selectedItems.length > 0) {
-      this.selectedItems = [...this.selectedItems];
-      this.cdr.detectChanges();
-    }
+    if (this.scrollSelectionRefreshTimer) clearTimeout(this.scrollSelectionRefreshTimer);
+    this.scrollSelectionRefreshTimer = setTimeout(() => {
+      if (this.selectedItems && this.selectedItems.length > 0) {
+        this.selectedItems = [...this.selectedItems];
+        this.cdr.detectChanges();
+      }
+    }, 150);
     this.cdr.markForCheck();
+  }
+  ngOnDestroy(): void {
+    if (this.scrollSelectionRefreshTimer) clearTimeout(this.scrollSelectionRefreshTimer);
   }
   // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
   onSelectionChange(event: any[]) {
@@ -143,6 +155,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   onSelectAllChange(event: TableSelectAllChangeEvent) {
     const checked = event.checked;
     if (checked) {
+      this.selectedItems = [...this.data];
       // 如果過濾完發現根本沒資料可選，則全選按鈕不應亮起
       this.isAllSelected = this.selectedItems.length > 0;
     } else {
