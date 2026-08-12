@@ -150,7 +150,9 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       PAM_No: this.rowdata.PAM_No,
       PageIndex: 1,
       PageSize: 9999, // 檢視模式通常一次全列出
-      SortBy: [{ field: 'id', order: 1 }]
+      // 需與 fin25010-table-report.component.html 的 multiSortMeta 順序一致，
+      // 否則原始資料順序跟 PrimeNG 前端排序後的順序不同，會導致同廠商分組被拆散、序號錯位
+      SortBy: [{ field: 'ven_no', order: 1 }, { field: 'IN_TYPE', order: 1 }, { field: 'acp_DATE', order: 1 }]
     };
 
     this.loading = true;
