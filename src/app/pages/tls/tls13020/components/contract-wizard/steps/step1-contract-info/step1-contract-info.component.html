@@ -39,7 +39,7 @@
             optionValue="value"
             [control]="$any(form.controls['vendor_ven_no'])"
             [submitted]="submitted"
-            [readonly]="isViewMode"
+            [readonly]="true"
             (valueChange)="onVendorChange($event)"
           ></app-dropdown>
         </div>
