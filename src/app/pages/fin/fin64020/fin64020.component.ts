@@ -146,4 +146,23 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
       })
     });
   }
+  onClear(): void {
+  this.queryForm.reset(
+    {
+      CompanyAccNoList: null,
+      ExpireDateFrom: null,
+      ExpireDateTo: null,
+      ChkNo: null,
+      VouNoExpire: null,
+      ChkStatus: null,
+      pageSize: 30,
+      pageIndex: 1,
+    },
+    {
+      emitEvent: false,
+    }
+  );
+
+  this.submitted = false;
+}
 }

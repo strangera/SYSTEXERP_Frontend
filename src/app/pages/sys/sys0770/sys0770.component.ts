@@ -139,4 +139,19 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
         });
     });
   }
+  onClear(): void {
+  this.queryForm.reset(
+    {
+      authType: AuthorizationType.User,
+      pageSize: 1000,
+      pageIndex: 1,
+      SortBy: [{ field: 'User_No', order: 1 }],
+    },
+    {
+      emitEvent: false,
+    }
+  );
+
+  this.submitted = false;
+}
 }
