@@ -27,7 +27,7 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="clear" [form]="queryForm" (clickEvent)="onClear()"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>

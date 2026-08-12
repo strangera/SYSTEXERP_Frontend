@@ -106,6 +106,7 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       optionLabel: 'label',
       optionValue: 'value',
       options: () => this.itemUnitOptions,
+      validate: [validateRequired],
     },
     { field: 'TOTAL_AMT', header: '總金額', type: 'inputNumber', disabled: () => true, validate: [validateRequired] },
     { field: 'EXPIRE_LIMIT', header: '保存期限(月)', type: 'inputNumber', placeholder: '輸入數字' },

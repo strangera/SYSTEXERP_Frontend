@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, viewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -35,6 +35,8 @@ export interface ASS11050Tree {
   ]
 })
 export class ASS11050Component extends BasicQueryPageComponent<any> implements OnInit {
+  private readonly treeDropdown = viewChild(ASS11050TreeDropdownComponent);
+
   queryForm = this.formBuilder.group({});
 
   ASS11050Tree = signal<ASS11050Tree[]>([]);
@@ -72,4 +74,8 @@ export class ASS11050Component extends BasicQueryPageComponent<any> implements O
         .subscribe(res => this.ASS11050Tree.set(res));
     });
   };
+
+  onClear(): void {
+    this.treeDropdown()?.resetFilter();
+  }
 }

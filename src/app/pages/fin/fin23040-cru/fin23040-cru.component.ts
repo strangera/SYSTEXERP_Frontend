@@ -76,9 +76,9 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     prepAmt: [{ value: null as number | null, disabled: true }],  // 預支金額
   });
 
-  readonly accNoOptions$ = this.dropdown.queryFasAccNoDropdown();
+  readonly accNoOptions$ = this.dropdown.queryGls1005_ledgerMD();
   readonly acpTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PCS_DtlType');
-  readonly purVoucherTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_VoucherType');
+  readonly purVoucherTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_VoucherType').pipe(map(options => options.filter(x => ['21', '22', '25', '26', '27'].includes(x.value))));
   readonly purVenUniformOptions$ = this.dropdown.queryPos2013VenUniform();
   readonly purDirectTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_DirectType');
   readonly purTaxTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_TaxType');

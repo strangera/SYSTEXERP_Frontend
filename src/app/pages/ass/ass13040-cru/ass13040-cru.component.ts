@@ -68,6 +68,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   @ViewChild('fileUpload1') fileUpload1!: FileUpload;
   @ViewChild('fileUpload2') fileUpload2!: FileUpload;
   @ViewChild('fileUpload3') fileUpload3!: FileUpload;
+  @ViewChild('detailTable') detailTable!: TableEditComponent;
 
   dataForm = this.formBuilder.nonNullable.group({
     scrapCode: [{ value: '系統自動產生', disabled: true }],
@@ -213,6 +214,11 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
     this.handleSubmit(this.dataForm, () => {
       if (this.data.length === 0) {
         this.messageService.warnBubble('請至少選取一筆報廢商品');
+        this.loading = false;
+        return;
+      }
+
+      if (!this.detailTable.validateAndShowErrors()) {
         this.loading = false;
         return;
       }

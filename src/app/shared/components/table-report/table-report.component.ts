@@ -543,9 +543,13 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
     this.dt.multiSortMeta = meta.map(m => ({ field: m.field || m.Field, order: m.order || m.Order }));
     setTimeout(() => {
-      this.dt.tableService.onSort(this.dt.multiSortMeta || []);
-      this.cdr.detectChanges();
-      this.isSyncingSort = false;
+      try {
+        this.dt.tableService.onSort(this.dt.multiSortMeta || []);
+        this.cdr.detectChanges();
+      } finally {
+        // 這裡萬一丟例外沒接住，isSyncingSort 會永久卡 true，導致後續所有排序點擊都被 onSort() 開頭的 guard 擋掉
+        this.isSyncingSort = false;
+      }
     }, 0);
   }
   getBtnLabel(btn: any, rowData: any): string {
