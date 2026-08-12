@@ -47,10 +47,14 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     //---
     //採購資訊
     //---
-    purchaseNumber: [, [Validators.maxLength(11)]], // 採購單號
-    purchaseDate: [], // 購入日期
-    purchasePrice: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 購入金額
-    supplierCode: [], // 供應商編號
+    purchaseNumber: [, [Validators.maxLength(11)]],
+    purchaseDate: [],
+    purchasePrice: [, [this.validationService.numberValidator, Validators.maxLength(8)]],
+
+    // 異動金額，SP 計算欄位，只供顯示
+    changeAmount: [{ value: null, disabled: true }],
+
+    supplierCode: [],
     accounting_Borrow: [, [Validators.required]], // 會計科目(借)
     accounting_Credit: [, [Validators.required]], // 會計科目(貸)
     entryDate: [, [Validators.required]], // 入帳日期
@@ -60,18 +64,22 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     //---
     depreciation: [, [Validators.required]], // 折舊會計科目
     totalDepreciation: [, [Validators.required]], // 累計折舊科目
-    depreciationLife: [, [Validators.required, Validators.maxLength(8)]], // 折舊年限(年)
-    residual: [, [Validators.required, Validators.maxLength(8)]], // 預留殘值
-    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]], // 原折舊年限(月)
+    depreciationLife: [, [Validators.required, Validators.maxLength(8)]],
+
+    // 異動折舊年限，SP 計算欄位，只供顯示
+    changeExpYear: [{ value: null, disabled: true }],
+
+    residual: [, [Validators.required, Validators.maxLength(8)]],
+    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]],
     amortizedAmount: [, [Validators.maxLength(8)]], // 已攤提金額
     amortizedMonth: [, [Validators.maxLength(8)]], // 已攤提月數
     //---
     //保管資訊
     //---
-    keepingPerson: [, [Validators.required]], // 保管人
-    keepingUnit: [], // 保管單位
-    user: [], // 使用人
-    userUnit: [], // 使用單位
+    keepingPerson: [null as string | null, [Validators.required]], // 保管人
+    keepingUnit: [null as string | null], // 保管單位
+    user: [null as string | null], // 使用人
+    userUnit: [null as string | null], // 使用單位
     locationCode: [], // 位置編號
     maintenanceCode: [, [Validators.maxLength(11)]], // 維修合約編號
     //---
@@ -86,8 +94,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     //---
     //其他
     //---
-    disposeRemark: [,], // 處份說明(變賣或報廢)
-    remark: [,], // 說明
+    disposeRemark: [,], // 處分說明(變賣或報廢)
+    remark: [,],        // 採購說明
+    assetNotes: [,],    // 資產註記說明 NOTES
   });
   // ----------------------------------------------------------------
   // 下拉選單（來源同 ass13010，見註解）
@@ -133,7 +142,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       const unitVal = this.dataForm.controls.keepingUnit.value;
       const allowed = this.keepingPersonOptions.some(o => o.value === this.dataForm.controls.keepingPerson.value);
       if (unitVal != null && unitVal !== '' && !allowed) {
-        this.dataForm.patchValue({ keepingPerson: undefined }, { emitEvent: false });
+        this.dataForm.patchValue(
+  { keepingPerson: null },
+  { emitEvent: false }
+);
         this.dataForm.controls.keepingPerson.markAsPristine({ onlySelf: true });
       }
     });
@@ -145,7 +157,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       const unitVal = this.dataForm.controls.userUnit.value;
       const allowed = this.userOptions.some(o => o.value === this.dataForm.controls.user.value);
       if (unitVal != null && unitVal !== '' && !allowed) {
-        this.dataForm.patchValue({ user: undefined }, { emitEvent: false });
+       this.dataForm.patchValue(
+  { user: null },
+  { emitEvent: false }
+);
         this.dataForm.controls.user.markAsPristine({ onlySelf: true });
       }
     });
@@ -193,6 +208,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 purchaseNumber: data.SUBPOENA_ID ?? null,
                 purchaseDate: data.GET_DATE ?? null,
                 purchasePrice: data.GET_COST ?? null,
+
+                // 異動金額
+                changeAmount: data.CHANGE_AMT ?? null,
+
                 supplierCode: data.SUPPLIER_ID ?? null,
                 accounting_Borrow: data.STYPE_D ?? null,
                 accounting_Credit: data.STYPE_C ?? null,
@@ -201,7 +220,13 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 depreciation: data.STYPE_ID ?? null,
                 totalDepreciation: data.STYPE_ID2 ?? null,
                 depreciationLife: data.EXP_YEAR ?? null,
+
+                // 異動折舊年限(年)
+                changeExpYear: data.CHANGE_EXP_YEAR ?? null,
+
                 residual: data.RESI_VALUE ?? null,
+
+                // SP 已經 FIR_EXP_YEAR * 12，所以前端不用再乘 12
                 depreciationLifeMM: data.FIR_EXP_YEAR ?? null,
                 amortizedAmount: data.TAL_DEPRE_AMT ?? null,
                 amortizedMonth: data.TAL_DEPRE_MON ?? null,
@@ -215,9 +240,16 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 soldAmount,
                 warrantyDays: data.Warranty_YEAR ?? null,
                 disposeRemark: data.HANDLE_NOTE ?? null,
-                // 畫面 `remark` 對應採購說明（PURCHASE_NOTES）
+
+                // 採購說明
                 remark: data.PURCHASE_NOTES ?? null,
-                amortizationYearMonth: data.DEPRE_SDATE ? new Date(data.DEPRE_SDATE) : null, // 與後端同為日期時間字串
+
+                // 資產註記說明
+                assetNotes: data.NOTES ?? null,
+
+                amortizationYearMonth: data.DEPRE_SDATE
+                  ? new Date(data.DEPRE_SDATE)
+                  : null,
               };
 
               // detail 初始化帶值時不觸發 valueChanges，避免保管人/使用人被清空
@@ -273,15 +305,26 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private updateKeepingPersonOptions(): void {
-    const unitVal = this.dataForm.controls.keepingUnit.value;
-    if (unitVal == null || unitVal === '') {
-      this.keepingPersonOptions = [...this.allUserOptionsWithOrg];
-    } else {
-      this.keepingPersonOptions = this.allUserOptionsWithOrg.filter(
-        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal
-      );
-    }
+  const unitVal = String(
+    this.dataForm.controls.keepingUnit.value ?? ''
+  ).trim();
+
+  if (!unitVal) {
+    this.keepingPersonOptions = [
+      ...this.allUserOptionsWithOrg
+    ];
+    return;
   }
+
+  this.keepingPersonOptions =
+    this.allUserOptionsWithOrg.filter(option => {
+      const orgId = String(
+        (option as Option & { Org_ID?: string }).Org_ID ?? ''
+      ).trim();
+
+      return orgId === unitVal;
+    });
+}
 
   private updateUserOptions(): void {
     const unitVal = this.dataForm.controls.userUnit.value;
@@ -295,25 +338,105 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private applyPendingEmployeeSelection(): void {
-    if (!this.pendingEmployeeSelection || !this.allUserOptionsWithOrg.length) {
-      return;
+  if (
+    !this.pendingEmployeeSelection ||
+    !this.allUserOptionsWithOrg.length
+  ) {
+    return;
+  }
+
+  const { keepingPerson, user } =
+    this.pendingEmployeeSelection;
+
+  // 先依單位建立正常 options
+  this.updateKeepingPersonOptions();
+  this.updateUserOptions();
+
+  // ==============================
+  // 保管人
+  // ==============================
+  if (keepingPerson) {
+    const targetValue =
+      String(keepingPerson).trim();
+
+    let exists =
+      this.keepingPersonOptions.some(option =>
+        String(option.value ?? '').trim() === targetValue
+      );
+
+    // 如果因為歷史單位等原因被過濾掉，
+    // 從完整人員清單補回
+    if (!exists) {
+      const employee =
+        this.allUserOptionsWithOrg.find(option =>
+          String(option.value ?? '').trim() === targetValue
+        );
+
+      if (employee) {
+        this.keepingPersonOptions = [
+          ...this.keepingPersonOptions,
+          employee,
+        ];
+
+        exists = true;
+      }
     }
 
-    this.updateKeepingPersonOptions();
-    this.updateUserOptions();
+    console.log(
+      'HOLD_EMP_ID:',
+      keepingPerson,
+      '保管人是否存在 options:',
+      exists
+    );
+  }
 
-    const nextPatch: Record<string, string | null> = {};
-    const { keepingPerson, user } = this.pendingEmployeeSelection;
+  // ==============================
+  // 使用人
+  // ==============================
+  if (user) {
+    const targetValue =
+      String(user).trim();
 
-    // 不補臨時選項；直接回填值，讓 dropdown 以「找不到項目」樣式顯示文字
-    nextPatch['keepingPerson'] = keepingPerson;
-    nextPatch['user'] = user;
+    const exists =
+      this.userOptions.some(option =>
+        String(option.value ?? '').trim() === targetValue
+      );
 
-    if (Object.keys(nextPatch).length > 0) {
-      this.dataForm.patchValue(nextPatch, { emitEvent: false });
-      this.pendingEmployeeSelection = null;
+    if (!exists) {
+      const employee =
+        this.allUserOptionsWithOrg.find(option =>
+          String(option.value ?? '').trim() === targetValue
+        );
+
+      if (employee) {
+        this.userOptions = [
+          ...this.userOptions,
+          employee,
+        ];
+      }
     }
   }
+
+  // 最後才 patch 人員 ID
+  this.dataForm.patchValue(
+    {
+      keepingPerson:
+        keepingPerson != null
+          ? String(keepingPerson).trim()
+          : null,
+
+      user:
+        user != null
+          ? String(user).trim()
+          : null,
+    },
+    {
+      emitEvent: false,
+    }
+  );
+
+  this.pendingEmployeeSelection = null;
+}
 
   private loadDropdownOptions(): void {
     this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
@@ -421,6 +544,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       Warranty_YEAR: raw['warrantyDays'] != null && raw['warrantyDays'] !== '' ? Number(raw['warrantyDays']) : null,
       DEPRE_SDATE: this.depreciationDateForApi(raw['amortizationYearMonth']),
       HANDLE_NOTE: raw['disposeRemark'] != null && raw['disposeRemark'] !== '' ? String(raw['disposeRemark']) : null,
+
       // 畫面 `remark` 僅對應採購說明
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       CRT_USR_No: this.user?.user_No ?? null,
@@ -455,6 +579,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       GET_COST: raw['purchasePrice'] != null && raw['purchasePrice'] !== '' ? Number(raw['purchasePrice']) : null,
       ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
       EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
+
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       // API：RESI_VALUE = 預留殘值（residual）
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,

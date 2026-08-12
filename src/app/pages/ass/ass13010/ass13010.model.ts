@@ -211,6 +211,12 @@ export interface DetailASS13010Response {
   DAMAGEM_ID: string | null;
   /** 保固年限(日) */
   Warranty_YEAR: number | null;
+
+/** 異動金額 = 購入金額 - 原始購入金額 */
+CHANGE_AMT: number | null;
+
+/** 異動折舊年限(年) = 折舊年限 - 原始折舊年限 */
+CHANGE_EXP_YEAR: number | null;
 }
 
 // ==================== 匯出 PDF ====================
