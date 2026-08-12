@@ -67,7 +67,7 @@
       </div>
       <hr>
     </form>
-    <app-table-report [apiUrl]="apiUrl" [data]="data" [columns]="columns" [showCheckBox]="isFormCreateable"
+    <app-table-report [apiUrl]="apiUrl" [data]="data" [columns]="columns" dataKey="UniqueKey" [showCheckBox]="isFormCreateable"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
       [totalRecords]="totalRecords" [loading]="loading" groupRowsBy="ven_no" [subTotalData]="subTotalData"
       [footerData]="footerData" [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
