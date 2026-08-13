@@ -12,13 +12,13 @@ import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../others/component/table/table.component';
 import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
 
 @Component({
@@ -45,7 +45,7 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
   queryForm = this.formBuilder.group({
     BudgetVersion: [null, [Validators.required]], //版本
     BudgetYear: [null, [Validators.required]], //年
-    OrgId: [null, [Validators.required]], //部門
+    OrgId: [null], //部門
     AmtUnit: [1, [Validators.required]], // 金額單位表示
   });
 
