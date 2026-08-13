@@ -160,9 +160,11 @@
             !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowData.isPOS4023
           " />
       </td>
-      <td *ngFor="let col of columns" (click)="onCellClick(rowData, col, rowIndex, $event)"
+      <td *ngFor="let col of columns" [attr.data-field]="col.field"
+        (click)="onCellClick(rowData, col, rowIndex, $event)"
         (dblclick)="onCellDblClick(rowData, col, rowIndex)"
-        (keydown)="$event.stopPropagation()" [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }"
+        (keydown)="$event.stopPropagation()"
+        [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }"
         [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
           <ng-container *ngIf="isCellEditing(rowData, col); else cellText">

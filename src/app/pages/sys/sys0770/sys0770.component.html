@@ -3,17 +3,34 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 授權型態下拉選單 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="授權型態" controlName="authType"
-            [control]="queryForm.controls.authType" [options]="authTypeOptions" optionLabel="label" optionValue="value"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="授權型態"
+            controlName="authType"
+            [control]="queryForm.controls.authType"
+            [options]="authTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"  (click)="onClear()"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -21,16 +38,27 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report [exportContext]="{
+  <app-table-report
+    [exportContext]="{
       apiUrl:
         queryForm.value.authType === 'User'
           ? 'querySYS0770AllUsers'
           : 'querySYS0770UserRoles',
-    }" tableKey="sys0770" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
-    [showDetail]="false" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="
+    }"
+    tableKey="sys0770"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    [showManage]="false"
+    [showDetail]="false"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showDelete]="false"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="
       queryForm.value.authType === 'User'
         ? sys0770Service.queryAllUsers.bind(sys0770Service)
         : sys0770Service.queryUserRoles.bind(sys0770Service)
-    "></app-table-report>
+    "
+  ></app-table-report>
 </div>

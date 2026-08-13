@@ -74,6 +74,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   selectedItems: QueryAddFIN25010Response[] = [];
   subTotalData: any[] = []; // 用於存放各廠商小計
   footerData: QueryAddFIN25010Response | null = null;
+  allVenNos: string[] = []; // 當前查詢結果的廠商代號集合(查詢後算一次，供 calculateFooter 建立零元底圖用，避免每次勾選都重掃全部資料)
   totalRecords = 0;
   lastQueryBody: QueryAddFIN25010Request | null = null
   columns: ReportColumn[] = [
@@ -149,7 +150,9 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       PAM_No: this.rowdata.PAM_No,
       PageIndex: 1,
       PageSize: 9999, // 檢視模式通常一次全列出
-      SortBy: [{ field: 'id', order: 1 }]
+      // 需與 fin25010-table-report.component.html 的 multiSortMeta 順序一致，
+      // 否則原始資料順序跟 PrimeNG 前端排序後的順序不同，會導致同廠商分組被拆散、序號錯位
+      SortBy: [{ field: 'ven_no', order: 1 }, { field: 'IN_TYPE', order: 1 }, { field: 'acp_DATE', order: 1 }]
     };
 
     this.loading = true;
@@ -163,6 +166,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
         this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
         this.totalRecords = response.TotalCount;
         this.apiUrl = 'query_detailFIN25010'; // 切換 API URL 以供匯出使用
+        this.refreshVenNoBaseline();
 
         // 在檢視模式下，我們可能希望預設「全選」來顯示統計金額
         // 或者根據業務邏輯計算 footer，這裡強制計算一次
@@ -193,6 +197,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
           this.data = response.Data || [];
           this.data.forEach(item => item.OriginalACP_Amt = item.ACP_Amt);
           this.totalRecords = response.TotalCount;
+          this.refreshVenNoBaseline();
 
           // 查詢後重設勾選與小計
           this.selectedItems = [];
@@ -274,14 +279,17 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     this.calculateFooter();
   }
 
+  // 查詢結果變動時算一次廠商代號集合，避免 calculateFooter 每次勾選都重掃全部資料
+  private refreshVenNoBaseline(): void {
+    this.allVenNos = [...new Set(this.data.map(item => item.ven_no).filter((v): v is string => !!v))];
+  }
+
   // 1. 新增計算小計的方法
   calculateFooter(): void {
     // 建立當下所有廠商的「零元底圖」
     const groupMap = new Map<string, number>();
-    for (const item of this.data) {
-      if (item.ven_no && !groupMap.has(item.ven_no)) {
-        groupMap.set(item.ven_no, 0);
-      }
+    for (const venNo of this.allVenNos) {
+      groupMap.set(venNo, 0);
     }
 
     // 累加已勾選

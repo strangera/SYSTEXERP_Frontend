@@ -13,7 +13,6 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { ReportColumn, formatDate } from '@shared/components/table-report/table-report.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { removeEmptyValues } from '@shared/utils/object-utils';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -78,6 +77,14 @@ export class ASS15020Component
 
   readonly tableData = signal<ASS15020QueryRow[]>([]);
   readonly totalRecords = signal<number>(0);
+
+  // API Data.Total：全部查詢資料總計
+  readonly totalSummary = signal({
+    TtlOriPurchaseAmt: 0,
+    TtlChangeAmt: 0,
+    TtlTotalAmt: 0,
+  });
+
   readonly tableLoading = signal<boolean>(false);
   exportExcelLoading = false;
   lastQueryBody?: ASS15020QueryRequest;
@@ -127,18 +134,17 @@ export class ASS15020Component
   ];
 
   get footerData(): { label: string; FIR_GET_COST: number; CHANGE_COST: number; TOTAL_COST: number } | null {
-    const rows = this.tableData();
-    if (!rows.length) {
+    if (this.totalRecords() <= 0) {
       return null;
     }
-    const firGetCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.FIR_GET_COST), 0);
-    const changeCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.CHANGE_COST), 0);
-    const totalCostTotal = rows.reduce((sum, row) => sum + this.toSafeNumber(row.TOTAL_COST), 0);
+
+    const total = this.totalSummary();
+
     return {
       label: '合計',
-      FIR_GET_COST: firGetCostTotal,
-      CHANGE_COST: changeCostTotal,
-      TOTAL_COST: totalCostTotal,
+      FIR_GET_COST: this.toSafeNumber(total.TtlOriPurchaseAmt),
+      CHANGE_COST: this.toSafeNumber(total.TtlChangeAmt),
+      TOTAL_COST: this.toSafeNumber(total.TtlTotalAmt),
     };
   }
 
@@ -269,17 +275,41 @@ export class ASS15020Component
   }) => {
     const request = this.buildRequest(body);
     this.lastQueryBody = request;
+
     return this.ass15020Service.queryASS15020(request).pipe(
-      map((res: ApiResponse<ASS15020QueryRow[]>) => {
-        const list = res.Status === '0000' ? (res.Data ?? []) : [];
+      map((res: any) => {
+        // API 實際結構：
+        // Data.Details   -> 明細
+        // Data.Total     -> 全部資料總計
+        // Data.TotalRows -> 總筆數
+        // Data.TotalPages-> 總頁數
+        const responseData = res?.Status === '0000' ? res?.Data : null;
+
+        const list: ASS15020QueryRow[] = Array.isArray(responseData?.Details)
+          ? responseData.Details
+          : [];
+
         const mapped = list.map((row, idx) => ({
           ...row,
           RowNum: row.RowNum ?? idx + 1,
           ID: row.ID ?? row.ASSET_ID ?? `row-${idx}`,
         }));
+
         return {
           Data: mapped,
-          TotalCount: res.TotalCount ?? mapped.length,
+          TotalCount: responseData?.TotalRows ?? res?.TotalCount ?? mapped.length,
+          TotalPages: responseData?.TotalPages ?? res?.TotalPage ?? 0,
+          Total: {
+            TtlOriPurchaseAmt: this.toSafeNumber(
+              responseData?.Total?.TtlOriPurchaseAmt
+            ),
+            TtlChangeAmt: this.toSafeNumber(
+              responseData?.Total?.TtlChangeAmt
+            ),
+            TtlTotalAmt: this.toSafeNumber(
+              responseData?.Total?.TtlTotalAmt
+            ),
+          },
         };
       })
     );
@@ -305,10 +335,22 @@ export class ASS15020Component
           next: (res) => {
             this.tableData.set(res.Data ?? []);
             this.totalRecords.set(res.TotalCount ?? 0);
+            this.totalSummary.set(
+              res.Total ?? {
+                TtlOriPurchaseAmt: 0,
+                TtlChangeAmt: 0,
+                TtlTotalAmt: 0,
+              }
+            );
           },
           error: () => {
             this.tableData.set([]);
             this.totalRecords.set(0);
+            this.totalSummary.set({
+              TtlOriPurchaseAmt: 0,
+              TtlChangeAmt: 0,
+              TtlTotalAmt: 0,
+            });
           },
         });
     });

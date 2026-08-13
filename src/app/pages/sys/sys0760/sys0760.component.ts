@@ -58,7 +58,7 @@ export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResp
   data: userLoginErrorResponse[] = [];
   columns: ReportColumn[] = [
     { field: 'User_No', header: '使用者編號', visible: true },
-    { field: 'Description', header: '使用者名稱', visible: true },
+    { field: 'Description', header: '事件代碼', visible: true },
     { field: 'From_IP', header: '登入者位址', visible: true },
     { field: 'Login_time', header: '登入時間', visible: true, format: formatDateTime },
   ];

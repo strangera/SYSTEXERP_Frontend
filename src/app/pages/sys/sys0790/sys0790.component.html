@@ -1,51 +1,208 @@
 <div class="card">
+
+  <!-- 上方選單 -->
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+
+    <app-menubar
+      [ProgNo]="ProgNo"
+      class="flex-1">
+    </app-menubar>
+
   </div>
 
-  <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+
+  <!-- 查詢條件 -->
+  <p-accordion [activeIndex]="0">
+
+    <p-accordionTab header="查詢條件">
+
+      <form
+        [formGroup]="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+
         <div class="grid p-fluid">
+
+          <!-- 使用者 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="使用者代碼/名稱" controlName="UserNo" [options]="userOptions()" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.UserNo" [submitted]="submitted"></app-dropdown>
+
+            <app-dropdown
+              label="使用者"
+              controlName="UserNo"
+
+              [options]="userOptions()"
+
+              optionLabel="label"
+              optionValue="value"
+
+              [control]="queryForm.controls.UserNo"
+              [submitted]="submitted"
+            >
+            </app-dropdown>
+
           </div>
 
+
+          <!-- LOG時間 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="LOG時間" [showTime]="true" [startControl]="queryForm.controls.LogTime_S"
-              [endControl]="queryForm.controls.LogTime_E" [submitted]="submitted" />
+
+            <app-calendar-range
+              label="LOG時間"
+
+              [showTime]="true"
+
+              [startControl]="queryForm.controls.LogTime_S"
+              [endControl]="queryForm.controls.LogTime_E"
+
+              [submitted]="submitted"
+            >
+            </app-calendar-range>
+
           </div>
 
+
+          <!-- 作業代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="作業代碼" controlName="FunctionCodeList" [options]="functionCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.FunctionCodeList"
-              [submitted]="submitted"></app-multi-select>
+
+            <app-multi-select
+              label="作業代碼"
+
+              controlName="FunctionCodeList"
+
+              [options]="functionCodeOptions"
+
+              optionLabel="label"
+              optionValue="value"
+
+              [control]="queryForm.controls.FunctionCodeList"
+
+              [submitted]="submitted"
+            >
+            </app-multi-select>
+
           </div>
+
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+
+        <!-- 查詢按鈕區 -->
+        <div
+          class="
+            grid
+            justify-content-end
+            gap-2
+            m-0
+            mt-2
+            border-top-1
+            surface-border
+            pt-3
+          "
+        >
+
+          <app-button
+            btnType="clear"
+            [form]="queryForm"
+            (click)="onClear()"
+          >
+          </app-button>
+
+          <app-button
+            btnType="query"
+            [loading]="loading"
+          >
+          </app-button>
+
         </div>
+
       </form>
-    </p-accordionTab>
-  </p-accordion>
-</div>
 
-<div class="card">
-  <app-table-report tableKey="SYS0790" [data]="data" [columns]="columns" [totalRecords]="totalRecords()"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="sys0790Service.querySYS0790.bind(sys0790Service)" [lazy]="true"
-    [loading]="loading" [showManage]="false" [showReportMode]="false">
-    <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="列印PDF" icon="pi pi-file-pdf" [loading]="btnLoading" (click)="onExportPDF()"
-          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.Print)"></p-button>
-        <p-button styleClass="p-2" label="匯出Excel" icon="pi pi-file-excel" [loading]="btnLoading"
-          (click)="onExportExcel()"
-          [disabled]="!lastQueryBody || data.length === 0 || !hasPermission(Actions.ExportExcel)"></p-button>
-      </div>
-    </header>
-  </app-table-report>
+    </p-accordionTab>
+
+  </p-accordion>
+
+
+  <!-- 表格 -->
+  <div class="mt-3">
+
+    <app-table-report
+      [data]="data"
+
+      [columns]="columns"
+
+      [totalRecords]="totalRecords()"
+
+      tableKey="SYS0790"
+
+      [loading]="loading"
+
+      [lastQueryBody]="lastQueryBody"
+
+      [queryFunction]="queryFunction"
+
+      (dataChange)="onDataChange($event)"
+
+      [lazy]="true"
+
+      [showManage]="false"
+
+      [showDelete]="false"
+
+      [showEdit]="false"
+
+      [showDetail]="false"
+
+      [showInsert]="false"
+
+      [showCheckBox]="false"
+
+      [showReportMode]="false"
+
+      [showCaption]="true"
+    >
+
+      <!-- 表格上方 -->
+      <header>
+
+        <div
+          class="
+            flex
+            justify-content-end
+            gap-2
+            flex-wrap
+          "
+        >
+
+          <app-button
+            icon="pi pi-file-pdf"
+            label="匯出 PDF"
+
+            [loading]="btnLoading"
+
+            [disabled]="!lastQueryBody"
+
+            (click)="onExportPDF()"
+          >
+          </app-button>
+
+
+          <app-button
+            icon="pi pi-file-excel"
+            label="匯出 Excel"
+
+            [loading]="btnLoading"
+
+            [disabled]="!lastQueryBody"
+
+            (click)="onExportExcel()"
+          >
+          </app-button>
+
+        </div>
+
+      </header>
+
+    </app-table-report>
+
+  </div>
+
 </div>
