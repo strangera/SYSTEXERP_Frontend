@@ -94,8 +94,12 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
   /** 核銷明細初始載入(或新增頁初始空表)後的原始快照，供「取消」按鈕還原編輯內容用 */
   private originalData: DetailRow[] = [];
 
-  /** 明細類別(acpType)="0"不扣抵憑證時，發票/收據號碼不需填寫(設計方式同FIN72010零用金維護作業) */
-  private readonly guiNoRequiredRule = (value: unknown, rowData: DetailRow, _data: unknown[], _field: string, header: string) => {
+  /**
+   * 明細類別(acpType)="0"不扣抵憑證時，發票/收據相關欄位(號碼/日期/申報年月/課稅別/未稅金額)不需填寫，
+   * 只有選「發票」(1)或「收據」(2)才強制必填(設計方式同FIN72010零用金維護作業的validateGUINoRequired，
+   * 本頁因為有多個發票相關欄位而擴大套用同一條規則)。
+   */
+  private readonly requiredWhenInvoiceOrReceipt = (value: unknown, rowData: DetailRow, _data: unknown[], _field: string, header: string) => {
     const needRequired = rowData?.acpType === '1' || rowData?.acpType === '2';
     if (!needRequired) return { isValid: true, errorMessage: [] };
     const isValid = value !== null && value !== undefined && value !== '';
@@ -137,10 +141,19 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
           const net = Math.round(amt / 1.05);
           return { purTaxType: '1', purNet: net, purTax: amt - net };
         }
-        if (String(value) === '2') {
+        if (String(value) === '2' || String(value) === '0') {
           return { purTaxType: '0', purNet: amt, purTax: 0 };
         }
         return {};
+      },
+      // 切成「不扣抵憑證」時，table-edit 只會重新驗證被改動的 acpType 欄位本身，
+      // 之前殘留在發票號碼/日期/申報年月/課稅別/未稅金額上的必填錯誤提示不會自動消失，
+      // 這裡手動清掉，避免畫面看起來「明細類別改了但錯誤還在」。
+      onChange: (value: unknown, rowData: DetailRow & { _validationErrors?: Record<string, string> }) => {
+        if (String(value) !== '0' || !rowData._validationErrors) return;
+        for (const field of ['purGUINo', 'purGUIDate', 'purExpGLDate', 'purTaxType', 'purNet']) {
+          delete rowData._validationErrors[field];
+        }
       },
     },
     {
@@ -150,10 +163,10 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     },
     {
       field: 'purGUINo', header: '發票/收據號碼', width: '140px', type: 'input', textAlign: 'left',
-      validate: [this.guiNoRequiredRule, this.guiNoRule, this.maxLengthRule(10)],
+      validate: [this.requiredWhenInvoiceOrReceipt, this.guiNoRule, this.maxLengthRule(10)],
     },
-    { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [validateRequired] },
-    { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [validateRequired] },
+    { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [this.requiredWhenInvoiceOrReceipt] },
+    { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [this.requiredWhenInvoiceOrReceipt] },
     {
       field: 'purVenUniform', header: '廠商統一編號', width: '150px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purVenUniformOptions$, optionLabel: 'label', optionValue: 'value',
@@ -178,7 +191,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     {
       field: 'purTaxType', header: '課稅別', width: '100px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purTaxTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [validateRequired],
+      templateLabel: 'label', validate: [this.requiredWhenInvoiceOrReceipt],
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
         if (String(value) === '1') {
@@ -189,7 +202,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purNet', header: '發票未稅金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum', validate: [validateRequired],
+      field: 'purNet', header: '發票未稅金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum', validate: [this.requiredWhenInvoiceOrReceipt],
       calculate: (_rowData: DetailRow, value: unknown) => {
         const net = Number(value) || 0;
         const tax = Math.round(net * 0.05);
