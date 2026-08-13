@@ -9,10 +9,10 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin41020',
@@ -116,8 +116,8 @@ export class FIN41020Component extends BasicQueryPageComponent<FIN41020Data> imp
       },
     });
 
-    // 會計科目
-    this.fin41020Service.queryGLS1005_DropDownList().subscribe({
+    // 會計科目 (1=明細)
+    this.fin41020Service.queryGLS1005_DropDownList('1').subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
@@ -129,5 +129,4 @@ export class FIN41020Component extends BasicQueryPageComponent<FIN41020Data> imp
     });
 
   }
-
 }
