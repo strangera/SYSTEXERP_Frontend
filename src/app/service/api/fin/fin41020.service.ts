@@ -112,8 +112,8 @@ export class FIN41020Service {
         return this.http.post<ApiResponse<IDropdownItem[]>>(`${environment.ApiUrl}/querySYS3100_DropDownList`, {});
     }
 
-    // 查詢會計科目下拉選單
-    queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
-        return this.http.post<ApiResponse<IDropdownItem[]>>(`${environment.ApiUrl}/queryGLS1005_DropDownList`, {});
+    // 查詢會計科目下拉選單 (移除統制科目)
+    queryGLS1005_DropDownList(Ledger_MD: string): Observable<ApiResponse<IDropdownItem[]>> {
+        return this.http.post<ApiResponse<IDropdownItem[]>>(`${environment.ApiUrl}/queryGLS1005_DropDownList`, { Ledger_MD });
     }
 }
