@@ -26,6 +26,7 @@ import { InputNumberComponent } from '../../../shared/components/input-number/in
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
 import { EditColumn } from '../../../shared/components/table-edit/table-edit.model';
+import { validateRequired } from '../../../shared/components/table-edit/validate-field.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 /**
@@ -93,7 +94,10 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
   /** 核銷明細初始載入(或新增頁初始空表)後的原始快照，供「取消」按鈕還原編輯內容用 */
   private originalData: DetailRow[] = [];
 
-  private readonly requiredRule = (value: unknown, _rowData: unknown, _data: unknown[], _field: string, header: string) => {
+  /** 明細類別(acpType)="0"不扣抵憑證時，發票/收據號碼不需填寫(設計方式同FIN72010零用金維護作業) */
+  private readonly guiNoRequiredRule = (value: unknown, rowData: DetailRow, _data: unknown[], _field: string, header: string) => {
+    const needRequired = rowData?.acpType === '1' || rowData?.acpType === '2';
+    if (!needRequired) return { isValid: true, errorMessage: [] };
     const isValid = value !== null && value !== undefined && value !== '';
     return { isValid, errorMessage: isValid ? [] : [`${header}為必填`] };
   };
@@ -120,13 +124,13 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     {
       field: 'accNo', header: '費用會計科目', width: '200px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.accNoOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.requiredRule],
+      templateLabel: 'label', validate: [validateRequired],
     },
-    { field: 'purRemark', header: '項目摘要', width: '160px', type: 'input', textAlign: 'left', validate: [this.requiredRule, this.maxLengthRule(100)] },
+    { field: 'purRemark', header: '項目摘要', width: '160px', type: 'input', textAlign: 'left', validate: [validateRequired, this.maxLengthRule(100)] },
     {
       field: 'acpType', header: '明細類別', width: '120px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.acpTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.requiredRule],
+      templateLabel: 'label', validate: [validateRequired],
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
         if (String(value) === '1') {
@@ -146,10 +150,10 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     },
     {
       field: 'purGUINo', header: '發票/收據號碼', width: '140px', type: 'input', textAlign: 'left',
-      validate: [this.requiredRule, this.guiNoRule, this.maxLengthRule(10)],
+      validate: [this.guiNoRequiredRule, this.guiNoRule, this.maxLengthRule(10)],
     },
-    { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [this.requiredRule] },
-    { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [this.requiredRule] },
+    { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [validateRequired] },
+    { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [validateRequired] },
     {
       field: 'purVenUniform', header: '廠商統一編號', width: '150px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purVenUniformOptions$, optionLabel: 'label', optionValue: 'value',
@@ -174,7 +178,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     {
       field: 'purTaxType', header: '課稅別', width: '100px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purTaxTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.requiredRule],
+      templateLabel: 'label', validate: [validateRequired],
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
         if (String(value) === '1') {
@@ -185,7 +189,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purNet', header: '發票未稅金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum', validate: [this.requiredRule],
+      field: 'purNet', header: '發票未稅金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum', validate: [validateRequired],
       calculate: (_rowData: DetailRow, value: unknown) => {
         const net = Number(value) || 0;
         const tax = Math.round(net * 0.05);
