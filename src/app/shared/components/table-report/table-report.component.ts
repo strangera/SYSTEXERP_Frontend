@@ -378,10 +378,14 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     const currentSort = this.dt?.multiSortMeta;
     if (currentSort) this.lastQueryBody.SortBy = currentSort;
 
+    const nextPageIndex = Math.floor(this.data.length / pageSize) + 1;
     const body = {
       ...this.lastQueryBody,
-      pageIndex: Math.floor(this.data.length / pageSize) + 1,
+      pageIndex: nextPageIndex,
       pageSize,
+      // 呼叫端可能只認大寫欄位（見 ASS13070 等頁面的 queryFunction），兩種大小寫都要同步更新，否則會一直打回第一頁
+      PageIndex: nextPageIndex,
+      PageSize: pageSize,
       SortBy: currentSort && currentSort.length > 0 ? currentSort : (this.lastQueryBody.SortBy || undefined)
     };
     this._loading = true;
@@ -452,8 +456,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     const { pageSize } = this.lastQueryBody;
     if (!this.queryFunction || !this.lastQueryBody || !this.showSort) return;
 
-    this.lastQueryBody = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta };
-    const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
+    this.lastQueryBody = { ...this.lastQueryBody, pageIndex: 1, pageSize, PageIndex: 1, PageSize: pageSize, SortBy: this.dt.multiSortMeta };
+    const body = { ...this.lastQueryBody, pageIndex: 1, pageSize, PageIndex: 1, PageSize: pageSize, SortBy: this.dt.multiSortMeta ?? undefined };
     this.loading = true;
     this.isNextPagePreloaded = true; // 排序期間防止 scroll 觸發 loadMore
     this.cdr.detectChanges(); // 立即顯示 loading overlay

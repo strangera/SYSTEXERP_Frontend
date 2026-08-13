@@ -5,105 +5,34 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onConfirm()">
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="新保管單位"
-          controlName="NEW_HOLD_ORG_ID"
-          [options]="(orgOptions$ | async) ?? []"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.NEW_HOLD_ORG_ID"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="新保管人"
-          controlName="NEW_HOLD_EMP_ID"
-          [options]="empOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.NEW_HOLD_EMP_ID"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="移轉生效日"
-          [control]="dataForm.controls.TRANSFER_DATE"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="新使用單位"
-          controlName="NEW_USE_ORG_ID"
-          [options]="(orgOptions$ | async) ?? []"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.NEW_USE_ORG_ID"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="新使用人"
-          controlName="NEW_USE_EMP_ID"
-          [options]="empOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.NEW_USE_EMP_ID"
-          [submitted]="submitted"
-        ></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="新保管單位" controlName="NEW_HOLD_ORG_ID"
+          [options]="(orgOptions$ | async) ?? []" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.NEW_HOLD_ORG_ID" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="新保管人" controlName="NEW_HOLD_EMP_ID" [options]="empOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.NEW_HOLD_EMP_ID"
+          [submitted]="submitted"></app-dropdown>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="移轉生效日"
+          [control]="dataForm.controls.TRANSFER_DATE" [submitted]="submitted"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="新使用單位" controlName="NEW_USE_ORG_ID"
+          [options]="(orgOptions$ | async) ?? []" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.NEW_USE_ORG_ID" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="新使用人" controlName="NEW_USE_EMP_ID" [options]="empOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.NEW_USE_EMP_ID"
+          [submitted]="submitted"></app-dropdown>
+      </div>
+      <div class="col-12 pt-3">
+        <app-table-report [data]="tableRows()" [dataKey]="transferCompleted() ? 'ASSET_ID' : 'ID'" [ItemSize]="24.44"
+          tableKey="ASS13070_CRU_Detail" [columns]="columnsPreview" [totalRecords]="tableRows().length"
+          [loading]="tableLoading()" [lazy]="false" [showReportMode]="false" [showCaption]="false" [showManage]="false"
+          [showCheckBox]="true" [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event">
+        </app-table-report>
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
-
-    <div class="col-12 pt-3">
-      <app-table-report
-  [data]="tableRows()"
-  [dataKey]="transferCompleted() ? 'ASSET_ID' : 'ID'"
-  tableKey="ASS13070_CRU_Detail"
-  [columns]="displayColumns"
-  [totalRecords]="tableRows().length"
-  [loading]="tableLoading()"
-  [lazy]="false"
-  [showReportMode]="false"
-  [showCaption]="false"
-  [showManage]="false"
-
-  [showCheckBox]="true"
-  [selectedItems]="selectedRows"
-  (selectionChange)="onSelectionChange($event)"
->
-        <header>
-          <div class="flex justify-content-end gap-2 flex-wrap">
-            <app-button
-              icon="pi pi-file-pdf"
-              label="匯出 PDF"
-              [loading]="exportPdfLoading"
-              [disabled]="idList.length === 0"
-              (click)="onExportPdf()"
-            ></app-button>
-            <app-button
-              icon="pi pi-file-excel"
-              label="匯出 Excel"
-              [loading]="exportExcelLoading"
-              [disabled]="idList.length === 0"
-              (click)="onExportExcel()"
-            ></app-button>
-          </div>
-        </header>
-      </app-table-report>
-    </div>
-
-    <div
-      class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
-    >
-      <app-button label="取消" (click)="onReset()"></app-button>
-      <app-button
-        label="確認"
-        [loading]="loading"
-        (click)="onConfirm()"
-      ></app-button>
-    </div>
   </p-panel>
 </div>

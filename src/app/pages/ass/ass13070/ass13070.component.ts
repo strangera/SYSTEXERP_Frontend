@@ -54,7 +54,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
     HOLD_ORG_ID: new FormControl<string | null>(null),
     HOLD_EMP_ID: new FormControl<string | null>(null),
     USE_ORG_ID: new FormControl<string | null>(null),
-    PageSize: new FormControl<number>(30),
+    PageSize: new FormControl<number>(10000),
     PageIndex: new FormControl<number>(1),
   });
 
@@ -284,7 +284,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
       HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
       HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
       USE_ORG_ID: raw.USE_ORG_ID || undefined,
-      PageSize: body.PageSize ?? (body as { pageSize?: number }).pageSize ?? 30,
+      PageSize: body.PageSize ?? (body as { pageSize?: number }).pageSize ?? 100,
       PageIndex: body.PageIndex ?? (body as { pageIndex?: number }).pageIndex ?? 1,
       SortBy: body.SortBy,
     };
@@ -307,7 +307,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
         HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
         HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
         USE_ORG_ID: raw.USE_ORG_ID || undefined,
-        PageSize: raw.PageSize ?? 30,
+        PageSize: raw.PageSize ?? 100,
         PageIndex: raw.PageIndex ?? 1,
       } as ASS13070QueryRequest;
 
