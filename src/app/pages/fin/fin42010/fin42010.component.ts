@@ -65,19 +65,19 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     // { field: 'LevelNo', header: 'LevelNo', visible: true },
     { field: '科目代號', header: '科目代號', visible: true },
     { field: '科目名稱', header: '科目名稱', visible: true },
-    { field: '1月', header: '1月', visible: true },
-    { field: '2月', header: '2月', visible: true },
-    { field: '3月', header: '3月', visible: true },
-    { field: '4月', header: '4月', visible: true },
-    { field: '5月', header: '5月', visible: true },
-    { field: '6月', header: '6月', visible: true },
-    { field: '7月', header: '7月', visible: true },
-    { field: '8月', header: '8月', visible: true },
-    { field: '9月', header: '9月', visible: true },
-    { field: '10月', header: '10月', visible: true },
-    { field: '11月', header: '11月', visible: true },
-    { field: '12月', header: '12月', visible: true },
-    { field: '預算總金額', header: '預算總金額', visible: true }
+    { field: '1月', header: '1月', format: formatAmount, visible: true },
+    { field: '2月', header: '2月', format: formatAmount, visible: true },
+    { field: '3月', header: '3月', format: formatAmount, visible: true },
+    { field: '4月', header: '4月', format: formatAmount, visible: true },
+    { field: '5月', header: '5月', format: formatAmount, visible: true },
+    { field: '6月', header: '6月', format: formatAmount, visible: true },
+    { field: '7月', header: '7月', format: formatAmount, visible: true },
+    { field: '8月', header: '8月', format: formatAmount, visible: true },
+    { field: '9月', header: '9月', format: formatAmount, visible: true },
+    { field: '10月', header: '10月', format: formatAmount, visible: true },
+    { field: '11月', header: '11月', format: formatAmount, visible: true },
+    { field: '12月', header: '12月', format: formatAmount, visible: true },
+    { field: '預算總金額', header: '預算總金額', format: formatAmount, visible: true }
   ];
 
   // 控制變數
@@ -157,3 +157,24 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     URL.revokeObjectURL(url);
   }
 }
+/**
+ * 格式化金額。
+ *
+ * 功能：
+ * 1. null / undefined / 空字串 顯示空白
+ * 2. 可以轉成數字時，加上千分位
+ * 3. 不能轉成數字時，直接顯示原值
+ */
+const formatAmount = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const num = Number(value);
+
+  if (Number.isNaN(num)) {
+    return String(value);
+  }
+
+  return num.toLocaleString();
+};
