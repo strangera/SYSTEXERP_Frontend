@@ -161,6 +161,21 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         return row.VEN_Status === '0'
       }
     },
+    {
+      label: '複製',
+      icon: 'pi pi-copy text-blue-500',
+      action: (row: VendorData) => {
+        if (this.actionLoadingId) return;
+        if (!this.hasPermission(this.Actions.Create)) return;
+        this.messageService.confirm({
+          message: `確定要複製廠商編號 ${row.VEN_No} 的資料嗎？將依原資料產生一筆未審核的新廠商資料（含聯絡人明細）。`,
+          header: '複製確認',
+          icon: 'pi pi-question-circle',
+          accept: () => this.copyRow(row),
+        });
+      },
+      disabled: () => !this.hasPermission(this.Actions.Create),
+    },
   ];
 
   constructor(
@@ -322,5 +337,23 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       complete: () => (this.actionLoadingId = null),
     });
 
+  }
+
+  copyRow(row: VendorData) {
+    const id = row.pos2013_id ?? row.id;
+    if (id == null || Number.isNaN(Number(id))) {
+      this.messageService.errorBubble('找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）');
+      return;
+    }
+
+    this.actionLoadingId = id;
+    this.sysb200Service.copySYSB200({ id: Number(id) }).pipe(
+      finalize(() => (this.actionLoadingId = null))
+    ).subscribe({
+      next: (res) => {
+        this.messageService.successBubble(`複製成功，廠商編號${res.Data}請確認`);
+        this.onSubmit(this.queryForm);
+      },
+    });
   }
 }
