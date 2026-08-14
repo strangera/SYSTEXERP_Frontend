@@ -101,7 +101,16 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   // ----------------------------------------------------------------
   // 下拉選單（來源同 ass13010，見註解）
   itemCodeOptions: Option[] = []; // queryASS11040_DropDownList
-  assetsStatusOptions: Option[] = []; // querySYS1000_DropDownList SYS_Type='ASSET_STATUS'
+  assetsStatusOptions: Option[] = []; // querySYS1000_DropDownList SYS_Type='ASSET_STATUS'（Edit 模式下依 applyAssetsStatusEditRule 動態替換為 assetsStatusEditableOptions）
+  /** Edit 模式下資產狀態僅允許在「使用中」「庫存中未使用」之間切換，其餘狀態鎖定不可編輯 */
+  assetsStatusEditableOptions: Option[] = [
+    { value: '1', label: '使用中' },
+    { value: '7', label: '庫存中未使用' },
+  ];
+  /** querySYS1000 完整清單快取，供資產狀態鎖定時仍能正確顯示原狀態名稱 */
+  private assetsStatusFullOptions: Option[] = [];
+  /** 目前資產狀態是否落於可編輯範圍（1:使用中 / 7:庫存中未使用），控制 assetsStatusOptions 要用完整清單還是限縮清單 */
+  private isAssetsStatusEditableMode = false;
   assetsTypeOptions: Option[] = [
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' }
@@ -125,6 +134,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
    * 編輯頁明細由 API 較晚帶入，初值會錯，導致 reset 變成清空。改由明細就緒後自行保存。
    */
   private formBaseline: Record<string, unknown> | null = null;
+
+  /** 明細載入時的原始資產狀態，供「取消」還原後重新判斷欄位是否鎖定用 */
+  private originalAssetsStatus: string | null = null;
 
   constructor() {
     super();
@@ -264,6 +276,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
               const isAlreadyAmortized = (data.TAL_DEPRE_AMT ?? 0) > 0;
               if (this.crudstatus === CRUDStatus.Edit) {
                 this.applyEditLock(isAlreadyAmortized);
+                this.originalAssetsStatus = data.ASSET_STATUS ?? null;
+                this.applyAssetsStatusEditRule(this.originalAssetsStatus);
               }
 
               if (this.crudstatus === CRUDStatus.Read) {
@@ -301,6 +315,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       const raw = this.dataForm.getRawValue() as Record<string, unknown>;
       const isAlreadyAmortized = Number(raw['amortizedAmount'] ?? 0) > 0;
       this.applyEditLock(isAlreadyAmortized);
+      this.applyAssetsStatusEditRule(this.originalAssetsStatus);
     }
   }
 
@@ -446,7 +461,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       this.purchaseNumberOptions = res ?? [];
     });
     this.dropdownApiService.querySys1000({ SYS_Type: 'ASSET_STATUS' }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.assetsStatusOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));
+      this.assetsStatusFullOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));
+      if (!this.isAssetsStatusEditableMode) {
+        this.assetsStatusOptions = this.assetsStatusFullOptions;
+      }
     });
     this.dropdownApiService.queryPos2013({ VEN_Flag: '' }).pipe(untilDestroyed(this)).subscribe(res => {
       this.supplierCodeOptions = res ?? [];
@@ -569,6 +587,18 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       } else {
         ctrl.disable({ emitEvent: false });
       }
+    }
+  }
+
+  /** Edit 模式下：資產狀態僅「使用中(1)」「庫存中未使用(7)」可編輯，其餘狀態鎖定不可改 */
+  private applyAssetsStatusEditRule(currentStatus: string | null): void {
+    this.isAssetsStatusEditableMode = currentStatus === '1' || currentStatus === '7';
+    if (this.isAssetsStatusEditableMode) {
+      this.assetsStatusOptions = this.assetsStatusEditableOptions;
+      this.dataForm.controls.assetsStatus.enable({ emitEvent: false });
+    } else {
+      this.assetsStatusOptions = this.assetsStatusFullOptions;
+      this.dataForm.controls.assetsStatus.disable({ emitEvent: false });
     }
   }
 

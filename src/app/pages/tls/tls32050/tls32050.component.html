@@ -162,6 +162,30 @@
               </div>
             </div>
           </div>
+          <!-- 區間營業報表 -->
+          <div class="flex col-12" *ngIf="dateForm.controls.reportType.value === '6'">
+            <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
+              <!-- 比較日期範圍 -->
+              <div class="col-12">
+                <app-calendar-range label="比較日期範圍" [startControl]="dateForm.controls.sad_startdate"
+                  [endControl]="dateForm.controls.sad_enddate" [submitted]="submitted" />
+              </div>
+            </div>
+            <!--基準表單-->
+            <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
+              <!-- 基準日期範圍 -->
+              <div class="col-12">
+                <app-calendar-range label="基準日期範圍" [startControl]="c_dateForm.controls.sad_startdate"
+                  [endControl]="c_dateForm.controls.sad_enddate" [submitted]="submitted" />
+              </div>
+            </div>
+          </div>
         </div>
         <hr />
         <div class="grid p-fluid">
