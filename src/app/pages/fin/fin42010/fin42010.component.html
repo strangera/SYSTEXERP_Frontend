@@ -54,6 +54,15 @@
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              label="是否顯示整年度預算為0的會科"
+              groupname="systemzeroradio"
+              [control]="queryForm.controls.ShowZero"
+              [options]="Zero_Options"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
         </div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
@@ -71,9 +80,9 @@
       tableKey="FIN42010"
       [data]="data"
       [columns]="columns"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [expansionRowsPerPageOptions]="[100, 300, 500, 600]"
+      [rows]="600"
+      [rowsPerPageOptions]="[100, 300, 500, 600]"
       [showDelete]="false"
       [showManage]="false"
       [showCheckBox]="false"
