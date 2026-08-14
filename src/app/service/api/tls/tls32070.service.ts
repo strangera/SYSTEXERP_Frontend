@@ -1,6 +1,6 @@
-import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -28,7 +28,7 @@ export interface TLS32070Request extends ApiRequest {
   OrgList: string; // 組織 → TLTTALENT.org_id (多選)
   TltNoList: string; // 專櫃編號 → TLTTALENT.tlt_no (多選)
   TermTypeList: string; // 抽成別 → TLTTALENT.tlt_term_type (多選)
-  TltIdList: string; // 抽成類別 → TLTTALENT_CHARGEM.tlt_id (多選)
+  TltIdList: string; // 抽成類別 → TLTTALENT_CHARGEM.tlt_id (多选)
 }
 
 // 查詢 response
@@ -43,18 +43,34 @@ export interface TLS32070Response extends ApiRequest {
   TltName: string; // 櫃位名稱
   TltId: string; // 抽成類別代號
   TltIdDesc: string; // 抽成類別名稱
+
+  // 本期 (Base)
   Base_LocationNo: string; // 本期位置編號
   Base_Space: number; // 本期坪數
   Base_SaleAmt: number; // 本期銷售金額
+  Base_TxnCnt: number; // 本期交易筆數
+  Base_AvgTicket: number; // 本期客單價
+
+  // 比較期 (Comp)
   Comp_LocationNo: string; // 比較期位置編號
   Comp_Space: number; // 比較期坪數
   Comp_SaleAmt: number; // 比較期銷售金額
-  Growth_SaleAmtPct: number; // 成長率
-  Diff_SaleAmt: number; // 差異
+  Comp_TxnCnt: number; // 比較期交易筆數
+  Comp_AvgTicket: number; // 比較期客單價
+
+  // 成長率 (Growth %)
+  Growth_SaleAmtPct: number; // 銷售金額成長率
+  Growth_TxnCntPct: number; // 交易筆數成長率
+  Growth_AvgTicketPct: number; // 客單價成長率
+
+  // 差異 (Diff)
+  Diff_SaleAmt: number; // 銷售金額差異
+  Diff_TxnCnt: number; // 交易筆數差異
+  Diff_AvgTicket: number; // 客單價差異
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TLS32070Service {
   private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
@@ -68,15 +84,11 @@ export class TLS32070Service {
 
   // 匯出抽成類別分析報表 PDF
   exportTLS32070PDF(data: TLS32070Request): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportTLS32070PDF`, data, {
-      responseType: 'blob'
-    });
+    return this.http.post(`${this.apiUrl}/exportTLS32070PDF`, data, { responseType: 'blob' });
   }
 
   // 匯出抽成類別分析報表 Excel
   exportTLS32070Excel(data: TLS32070Request): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportTLS32070Excel`, data, {
-      responseType: 'blob'
-    });
+    return this.http.post(`${this.apiUrl}/exportTLS32070Excel`, data, { responseType: 'blob' });
   }
 }

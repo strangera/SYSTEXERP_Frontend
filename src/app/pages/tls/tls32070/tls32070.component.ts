@@ -4,23 +4,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { TLS32070Request, TLS32070Response, TLS32070Service } from '@service/api/tls/tls32070.service';
 import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CategorySelectComponent } from '@shared/biz-components/category-select/category-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
-import { formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
-import { TLS32070Request, TLS32070Response, TLS32070Service } from '@service/api/tls/tls32070.service';
 
 const today = new Date();
 const yesterday = new Date(today);
@@ -61,7 +61,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     BaseDateTo: [today],
     CompareDateFrom: [yesterday as Date | null],
     CompareDateTo: [yesterday as Date | null],
-
     BuildingList: [[] as string[]],
     FloorList: [[] as string[]],
     AreaList: [[] as string[]],
@@ -71,12 +70,10 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     TltNoList: [[] as string[]],
     TermTypeList: [[] as string[]],
     TltIdList: [[] as string[]],
-
     pageSize: [1000],
     pageIndex: [1],
   });
 
-  // 基準日期表單：使用者直接操作的一側，reportType 為主控制項
   dateForm = this.formBuilder.nonNullable.group({
     reportType: ['DAY'],
     onedatedd: [today],
@@ -92,7 +89,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     sad_enddate: [null as Date | null],
   });
 
-  // 比較日期表單：依基準表單自動連動換算，SAD（自訂區間）以外的類型也允許使用者手動覆寫
   c_dateForm = this.formBuilder.nonNullable.group({
     onedatedd: [yesterday as Date | null],
     onedateyy: [new Date()],
@@ -108,12 +104,12 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
   });
 
   reportTypeOptions = [
-    { value: 'DAY', label: '日報表' },
-    { value: 'WEEK', label: '週報表' },
-    { value: 'MONTH', label: '月報表' },
-    { value: 'HALFYEAR', label: '半年報表' },
-    { value: 'YEAR', label: '年報表' },
-    { value: 'SAD', label: '自訂區間' },
+    { value: 'DAY', label: '日營業報表' },
+    { value: 'WEEK', label: '週營業報表' },
+    { value: 'MONTH', label: '月營業報表' },
+    { value: 'HALFYEAR', label: '半年營業報表' },
+    { value: 'YEAR', label: '年營業報表' },
+    { value: 'SAD', label: '自訂區間營業報表' },
   ];
 
   halfyearOptions = [
@@ -125,11 +121,12 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
   data: TLS32070Response[] = [];
   footerTotal: TLS32070Response | null = null;
   lastQueryBody: TLS32070Request | null = null;
-
   btnPDFLoading = false;
   btnExcelLoading = false;
 
+  // 對照 PM 截圖設定報表欄位
   columns: ReportColumn[] = [
+    // 基本資訊
     { field: 'BuildingName', header: '館別', align: 'left' },
     { field: 'OrgName', header: '組織名稱', align: 'left' },
     { field: 'TltKind', header: '櫃別', align: 'left', format: (v) => this.tlt_kind_Option.find(o => o.value === v)?.label ?? v },
@@ -137,24 +134,42 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'TltName', header: '櫃位名稱', align: 'left' },
     { field: 'TltId', header: '抽成類別代號', align: 'left' },
     { field: 'TltIdDesc', header: '抽成類別名稱', align: 'left' },
-    { field: 'Base_LocationNo', header: '本期位置編號', align: 'left', groupField: '本期' },
-    { field: 'Base_Space', header: '本期坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '本期' },
-    { field: 'Base_SaleAmt', header: '本期銷售金額', align: 'right', format: formatAmount, groupField: '本期' },
-    { field: 'Comp_LocationNo', header: '比較期位置編號', align: 'left', groupField: '比較期' },
-    { field: 'Comp_Space', header: '比較期坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '比較期' },
-    { field: 'Comp_SaleAmt', header: '比較期銷售金額', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Growth_SaleAmtPct', header: '成長率', align: 'right', format: (v) => formatPercentage(v) },
-    { field: 'Diff_SaleAmt', header: '差異', align: 'right', format: formatAmount },
+
+    // 比較期 (依 PM 截圖，比較期放在前)
+    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較期' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '比較期' },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '比較期' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '比較期' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '比較期' },
+
+    // 基準期 (本期)
+    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
+    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '基準期' },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '基準期' },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '基準期' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '基準期' },
+
+    // 成長率 Group
+    { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
+    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
+
+    // 差異 Group
+    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '差異' },
   ];
 
+  // 跨欄 Group 表頭
   columnGroup = [
-    { field: '本期', header: '本期' },
     { field: '比較期', header: '比較期' },
+    { field: '基準期', header: '基準期' },
+    { field: '成長率', header: '成長率' },
+    { field: '差異', header: '差異' },
   ];
 
   tlt_kind_Option$ = getSYS1000Options$(this.systemDataService, 'TLT_Kind');
   tlt_kind_Option: { value: string; label: string }[] = [];
-
   tlt_term_type_Option = [
     { value: '1', label: '固定租金' },
     { value: '2', label: '底租抽成取高者' },
@@ -176,11 +191,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     this.tlt_kind_Option$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((options) => {
       this.tlt_kind_Option = options;
     });
-
     this.onReportTypeChange('DAY');
     this.setReadOnlyFields();
     this.syncDateToQueryForm();
-
     this.dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncDateToQueryForm());
     this.c_dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncCDateToQueryForm());
   }
@@ -209,11 +222,12 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
       this.messageService.errorBubble('查詢結果為空，請先查詢後再匯出');
       return;
     }
-
     if (isExcel) {
       this.btnExcelLoading = true;
       this.service.exportTLS32070Excel(this.lastQueryBody).pipe(
-        this.withLoading(() => { this.btnExcelLoading = false; }),
+        this.withLoading(() => {
+          this.btnExcelLoading = false;
+        }),
         takeUntilDestroyed(this.destroyRef),
       ).subscribe((blob) => {
         const blobUrl = URL.createObjectURL(blob);
@@ -226,7 +240,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     } else {
       this.btnPDFLoading = true;
       this.service.exportTLS32070PDF(this.lastQueryBody).pipe(
-        this.withLoading(() => { this.btnPDFLoading = false; }),
+        this.withLoading(() => {
+          this.btnPDFLoading = false;
+        }),
         takeUntilDestroyed(this.destroyRef),
       ).subscribe((blob) => {
         const blobUrl = URL.createObjectURL(blob);
@@ -237,7 +253,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
 
   private buildRequestBody(rawValue: any): TLS32070Request {
     const cat = rawValue.category || {};
-
     return {
       ReportType: this.dateForm.get('reportType')?.value,
       BaseDateFrom: formatDate(rawValue.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -258,13 +273,10 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     } as TLS32070Request;
   }
 
-  // #region 報表類型切換 / 日期連動（基準表單 dateForm 為主控，比較表單 c_dateForm 允許手動覆寫）
-
   onReportTypeChange(reportType: string): void {
     Object.keys(this.dateForm.controls).forEach((key) => {
       if (key !== 'reportType') this.dateForm.get(key)?.clearValidators();
     });
-
     switch (reportType) {
       case 'DAY':
         this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
@@ -289,38 +301,31 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
         break;
     }
-
     Object.keys(this.dateForm.controls).forEach((key) => {
       this.dateForm.get(key)?.updateValueAndValidity();
     });
   }
 
-  // 週報表的日期範圍是查表帶出來的計算欄位，不給使用者直接輸入
   setReadOnlyFields(): void {
     this.dateForm.controls.startdate.disable();
     this.dateForm.controls.enddate.disable();
   }
 
-  // 基準週數查詢（呼叫 TLS26050Service 依年度+週數換算起訖日）
   queryWeek(weeks: string): void {
     const control = this.dateForm.controls.onedateyy;
     if (!control.value) return;
-
     const payload = {
       onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
       weeks,
     };
-
     this.tls26050Service.queryTLS26050Week(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((response) => {
       this.dateForm.controls.startdate.setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
       this.dateForm.controls.enddate.setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
     });
   }
 
-  // 依 reportType 與 dateForm 的值，算出本期日期，並自動連動換算比較期日期寫回 c_dateForm 供使用者查看/覆寫
   private syncDateToQueryForm(): void {
     const reportType = this.dateForm.get('reportType')?.value;
-
     let start: Date | null = null;
     let end: Date | null = null;
     let compareStart: Date | null = null;
@@ -339,7 +344,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'WEEK': {
         start = this.dateForm.get('startdate')?.value ?? null;
         end = this.dateForm.get('enddate')?.value ?? null;
@@ -348,10 +352,8 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
           compareStart.setDate(compareStart.getDate() - 7);
           compareEnd = new Date(compareStart);
           compareEnd.setDate(compareStart.getDate() + 6);
-
           const compareYearDate = new Date(compareEnd.getFullYear(), 0, 1);
           const compareWeek = this.getWeekNumber(compareEnd);
-
           this.c_dateForm.controls.onedateyy.setValue(compareYearDate, { emitEvent: false });
           this.c_dateForm.controls.weeks.setValue(compareWeek, { emitEvent: false });
           this.c_dateForm.controls.startdate.setValue(compareStart, { emitEvent: false });
@@ -359,27 +361,22 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'MONTH': {
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
           end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
-
           const compareMonth = new Date(onedatemm.getFullYear(), onedatemm.getMonth() - 1, 1);
           compareStart = new Date(compareMonth.getFullYear(), compareMonth.getMonth(), 1);
           compareEnd = new Date(compareMonth.getFullYear(), compareMonth.getMonth() + 1, 0);
-
           this.c_dateForm.controls.onedatemm.setValue(compareStart, { emitEvent: false });
         }
         break;
       }
-
       case 'HALFYEAR': {
         const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
         const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
         const half = String(this.dateForm.get('halfyear')?.value);
-
         if (year) {
           if (half === '1') {
             start = new Date(year, 0, 1);
@@ -399,11 +396,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'YEAR': {
         const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
         const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
-
         if (year) {
           start = new Date(year, 0, 1);
           end = new Date(year, 11, 31);
@@ -413,25 +408,21 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
-      case 'SAD': // 自訂區間：基準/比較起訖日各自手動指定，不自動連動
+      case 'SAD':
         start = this.dateForm.get('sad_startdate')?.value as Date | null;
         end = this.dateForm.get('sad_enddate')?.value as Date | null;
         compareStart = this.c_dateForm.get('sad_startdate')?.value as Date | null;
         compareEnd = this.c_dateForm.get('sad_enddate')?.value as Date | null;
         break;
     }
-
     if (start) this.queryForm.controls.BaseDateFrom.setValue(start);
     if (end) this.queryForm.controls.BaseDateTo.setValue(end);
     this.queryForm.controls.CompareDateFrom.setValue(compareStart);
     this.queryForm.controls.CompareDateTo.setValue(compareEnd);
   }
 
-  // 使用者手動調整比較表單（c_dateForm）時，只回寫比較期日期到 queryForm，不動 dateForm/本期日期
   private syncCDateToQueryForm(): void {
     const reportType = this.dateForm.get('reportType')?.value;
-
     let compareStart: Date | null = null;
     let compareEnd: Date | null = null;
 
@@ -442,7 +433,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         compareEnd = d;
         break;
       }
-
       case 'WEEK': {
         const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
         const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
@@ -454,7 +444,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'MONTH': {
         const m = this.c_dateForm.controls.onedatemm.value;
         if (m) {
@@ -464,7 +453,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'HALFYEAR': {
         const yearValue = this.c_dateForm.controls.halfyear_onedateyy.value;
         const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
@@ -480,7 +468,6 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'YEAR': {
         const yearValue = this.c_dateForm.controls.year_onedateyy.value;
         const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
@@ -490,14 +477,12 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }
         break;
       }
-
       case 'SAD': {
         compareStart = this.c_dateForm.controls.sad_startdate.value;
         compareEnd = this.c_dateForm.controls.sad_enddate.value;
         break;
       }
     }
-
     this.queryForm.controls.CompareDateFrom.setValue(compareStart);
     this.queryForm.controls.CompareDateTo.setValue(compareEnd);
   }
@@ -527,14 +512,10 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     const dayOfWeek = simple.getDay() || 7;
     const firstWeekMonday = new Date(simple);
     firstWeekMonday.setDate(simple.getDate() - dayOfWeek + 1);
-
     const weekStart = new Date(firstWeekMonday);
     weekStart.setDate(firstWeekMonday.getDate() + (week - 1) * 7);
-
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-
     return { weekStart, weekEnd };
   }
-  // #endregion
 }
