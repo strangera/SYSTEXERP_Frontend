@@ -40,7 +40,7 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
     Audit_Status: [null as string | null],
     ...createPaginationConfig(),
   });
-
+  private readonly defaultPageSize = 100;
   orgIdOptions: IDropdownItem[] = [];
 
   auditStatusOptions = [
@@ -54,11 +54,11 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
   queryFIN41060Fn = (body: QueryFIN41060Request) => this.fin41060Service.queryFIN41060(body);
 
   columns: ReportColumn[] = [
-    { field: 'Org_ID', header: '部門代號', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true },
-    { field: 'Budget_Year', header: '年度', visible: true },
-    { field: 'Budget_Version', header: '版本', visible: true },
-    { field: 'Audit_Status_NM', header: '審核狀態', visible: true },
+    { field: 'Org_ID', header: '部門代號', visible: true, width: '200px' },
+    { field: 'Org_Name', header: '部門名稱', visible: true, width: '200px' },
+    { field: 'Budget_Year', header: '年度', visible: true, width: '150px' },
+    { field: 'Budget_Version', header: '版本', visible: true, width: '150px' },
+    { field: 'Audit_Status_NM', header: '審核狀態', visible: true, width: '150px' },
   ];
 
   btnLoading = false;
@@ -69,13 +69,13 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
       label: '審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: FIN41060QueryRow) => this.onApprove(rowData),
-      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM === '已審核',
+      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM === '是',
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: FIN41060QueryRow) => this.onAntiApprove(rowData),
-      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM !== '已審核',
+      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM !== '是',
     },
   ];
 
@@ -107,12 +107,13 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
+      console.log('onSubmit raw:', raw);
       const payload: QueryFIN41060Request = {
         Org_ID: raw.Org_ID ?? null,
         Budget_Version: raw.Budget_Version ?? null,
         Budget_Year: raw.Budget_Year ?? null,
         Audit_Status: raw.Audit_Status ?? null,
-        PageSize: raw.PageSize,
+        PageSize: this.defaultPageSize,
         PageIndex: raw.PageIndex,
         SortBy: raw.SortBy,
       };
