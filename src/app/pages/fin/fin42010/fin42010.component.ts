@@ -47,6 +47,7 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     BudgetYear: [null, [Validators.required]], //年
     OrgId: [null], //部門
     AmtUnit: [1, [Validators.required]], // 金額單位表示
+    ShowZero: [1, [Validators.required]] //是否顯示整年度預算為0的會科
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -57,6 +58,10 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     { value: 1, label: '元' },
     { value: 2, label: '千' },
     { value: 3, label: '萬' }];
+
+  Zero_Options = [
+    { value: 1, label: '是' },
+    { value: 0, label: '否' }];
 
   data: fin42010DetailData[] = [];
   filteredData = [...this.data];

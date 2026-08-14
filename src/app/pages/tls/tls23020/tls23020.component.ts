@@ -19,13 +19,13 @@ import { formatAmount, formatDate, ReportColumn } from 'src/app/shared/component
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -225,7 +225,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   }
 
   private executeSummaryQuery(payload: any): void {
-    this.tls23020Service.queryTLS23020Summary(payload)
+    this.tls23020Service.queryTLS23020_Summary(payload)
       .pipe(
         untilDestroyed(this),
         finalize(() => {
@@ -243,11 +243,20 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = this.summaryData.length;
 
           const total = res?.Data?.TotalSummary ?? {};
+
           this.summaryFooter = {
             TXN_Date: '總計',
             TXN_TotSaleAmt: Number(total?.Total_TXN_TotSaleAmt ?? 0),
             TXN_TotNet: Number(total?.Total_TXN_TotNet ?? 0),
             TXN_TotTax: Number(total?.Total_TXN_TotTax ?? 0),
+            // SAD_Pre
+            SAD_Pre_TotSaleAmt: Number(total?.Total_SAD_Pre_TotSaleAmt ?? 0),
+            SAD_Pre_TotNet: Number(total?.Total_SAD_Pre_TotNet ?? 0),
+            SAD_Pre_TotTax: Number(total?.Total_SAD_Pre_TotTax ?? 0),
+            // Pre
+            Pre_TotSaleAmt: Number(total?.Total_Pre_TotSaleAmt ?? 0),
+            Pre_TotNet: Number(total?.Total_Pre_TotNet ?? 0),
+            Pre_TotTax: Number(total?.Total_Pre_TotTax ?? 0),
           };
 
           this.data = [];
@@ -362,7 +371,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
 
   // ========= <app-table-report> 報表封裝調用（彙總） =========
   public queryTLS23020SummaryForReport = (body: any) =>
-    this.tls23020Service.queryTLS23020Summary({
+    this.tls23020Service.queryTLS23020_Summary({
       ...(body || {}),
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
       TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
@@ -546,7 +555,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_SaleAmt', header: '單項售價', visible: true, align: 'right', format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, align: 'right', format: formatAmount, isTotal: true, isSubTotal: true },
+    { field: 'TXN_Net', header: '未稅金額', visible: true, align: 'right', format: formatAmount, isTotal: true, isSubTotal: true },
     { field: 'TXN_Tax', header: '稅額', visible: true, align: 'right', format: formatAmount, isTotal: true, isSubTotal: true },
     { field: 'TXN_Disc', header: '折扣金額', visible: true, align: 'right', format: formatAmount, isTotal: true, isSubTotal: true },
     { field: 'tlt_id', header: '抽成別代號', visible: true },
@@ -562,9 +571,16 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
-    { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, align: 'right', format: formatAmount },
-    { field: 'TXN_TotNet', header: '未稅(免稅)金額', visible: true, align: 'right', format: formatAmount },
-    { field: 'TXN_TotTax', header: '稅額', visible: true, align: 'right', format: formatAmount, isTotal: true },
+    { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, align: 'right', format: formatAmount }, // 總銷售金額=總應稅銷售金額+總免稅銷售金額
+    { field: 'TXN_TotNet', header: '未稅金額', visible: true, align: 'right', format: formatAmount }, // 總未稅銷售金額
+    { field: 'TXN_TotTax', header: '稅額', visible: true, align: 'right', format: formatAmount, isTotal: true }, // 總稅額
+    // 新增
+    { field: 'SAD_Pre_TotSaleAmt', header: '結帳金額', visible: true, align: 'right', format: formatAmount },
+    { field: 'SAD_Pre_TotNet', header: '結帳未稅', visible: true, align: 'right', format: formatAmount },
+    { field: 'SAD_Pre_TotTax', header: '結帳稅額', visible: true, align: 'right', format: formatAmount },
+    { field: 'Pre_TotSaleAmt', header: '預購金額', visible: true, align: 'right', format: formatAmount }, // (預購)總銷售金額=總應稅銷售金額+總免稅銷售金額
+    { field: 'Pre_TotNet', header: '預購未稅', visible: true, align: 'right', format: formatAmount }, // (預購)總未稅銷售金額
+    { field: 'Pre_TotTax', header: '預購稅額', visible: true, align: 'right', format: formatAmount }
   ];
 
   detailTotals: Record<string, number> = {};

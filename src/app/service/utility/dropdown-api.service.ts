@@ -234,6 +234,13 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢抽成類別(TLTTALENT_CHARGEM.tlt_id/tlt_id_desc)下拉選單，供 TLS32070 篩選條件使用 */
+  queryTltTalentChargeM(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_CHARGEM_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   /** 查詢用途代碼(SYS3F00)資料表下拉選單 */
   querySys3F00(): Observable<IDropdownItem[] | null> {
     return this.queryDropdown<IDropdownItem>('/querySYS3F00_DropDownList').pipe(

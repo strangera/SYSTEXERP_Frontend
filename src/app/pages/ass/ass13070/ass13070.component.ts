@@ -323,31 +323,47 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
         )
         .subscribe({
           next: res => {
-            if (res.Status !== '0000') return;
-            this.tableData.set(res.Data ?? []);
-            this.totalRecords.set(res.TotalCount ?? 0);
-          },
+  if (res.Status !== '0000') return;
+
+  this.tableData.set(res.Data ?? []);
+  this.totalRecords.set(res.TotalCount ?? 0);
+
+  // 每次重新查詢清空勾選
+  this.selectedItems = [];
+},
         });
     });
   }
 
   /** 進入移轉頁（需勾選至少一筆） */
-  public onGoTransfer(): void {
-    // if (this.selectedItems.length === 0) {
-    //   this.messageService.warnBubble('請至少勾選一筆資料');
-    //   return;
-    // }
-    // const missingId = this.selectedItems.some(r => r.ID == null);
-    // if (missingId) {
-    //   this.messageService.warnBubble('勾選資料缺少主鍵 ID，無法移轉');
-    //   return;
-    // }
-    this.router.navigate([`account/ass/ass13070cru`], {
-      state: {
-        crudstatus: CRUDStatus.Create,
-        fromRoute: this.router.url,
-        ass13070Rows: this.tableData(),
-      },
-    });
+/** 進入移轉頁（需先查詢並勾選至少一筆） */
+public onGoTransfer(): void {
+
+  // 尚未查詢，或查詢後沒有資料
+  if (this.tableData().length === 0) {
+    this.messageService.warnBubble('請先查詢並勾選一筆資料');
+    return;
   }
+
+  // 有查詢資料，但尚未勾選
+  if (this.selectedItems.length === 0) {
+    this.messageService.warnBubble('請至少勾選一筆資料');
+    return;
+  }
+
+  const missingId = this.selectedItems.some(r => r.ID == null);
+
+  if (missingId) {
+    this.messageService.warnBubble('勾選資料缺少主鍵 ID，無法移轉');
+    return;
+  }
+
+  this.router.navigate(['account/ass/ass13070cru'], {
+    state: {
+      crudstatus: CRUDStatus.Create,
+      fromRoute: this.router.url,
+      ass13070Rows: this.selectedItems,
+    },
+  });
+}
 }

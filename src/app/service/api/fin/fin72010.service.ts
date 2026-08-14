@@ -122,6 +122,7 @@ export interface QueryFIN72010DetailDetailResponse {
   PUR_DirectTypeName: string;   // 發票用途名稱
   COLLECT_NUM: string;   // 彙總張數
   PCS_Remark: string;   // 備註說明
+  RECON_Key: string;   // 對帳KEY值（明細類別=0 不扣抵憑證時不寫入）
   CRT_Date: string;   // 建立日期
   CRT_USR_No: string;   // 建立人員代碼
   CRT_USR_Name: string;   // 建立人員姓名
@@ -211,6 +212,7 @@ export interface FIN72010SaveDetailItem {
   PUR_DirectType?: string;   // 發票用途：1=專供課稅, 2=共同使用
   COLLECT_NUM?: string;   // 彙總張數 (預設 0)
   PCS_Remark?: string;   // 備註說明
+  RECON_Key?: string;   // 對帳KEY值：明細類別=0(不扣抵憑證)時不寫入
 }
 
 export interface POS2064MPCS_NoDropDownListResponse {

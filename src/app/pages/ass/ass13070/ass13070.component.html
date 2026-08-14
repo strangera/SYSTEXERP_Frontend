@@ -1,46 +1,132 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="新增移轉" [disabled]="this.tableData().length === 0"
-      (click)="onGoTransfer()"></app-button>
+    <app-button
+      btnType="create"
+      label="新增移轉"
+      (click)="onGoTransfer()"
+    ></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="進貨類型" controlName="DEPRE_YN" [options]="depreYnOptions"
-            optionLabel="label" optionValue="value" [control]="qf().DEPRE_YN" [submitted]="submitted"
-            [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="進貨單號" controlName="SUBPOENA_ID"
-            [options]="subpoenaOptions()" optionLabel="label" optionValue="value" [control]="qf().SUBPOENA_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="購入日期" [startControl]="qf().GET_DATE_S"
-            [endControl]="qf().GET_DATE_E" [submitted]="submitted"></app-calendar-range>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="大分類編號" controlName="B_CLASS_ID"
-            [options]="bigClassOptions()" optionLabel="label" optionValue="value" [control]="qf().B_CLASS_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="中分類編號" controlName="M_CLASS_ID"
-            [options]="midClassOptions()" optionLabel="label" optionValue="value" [control]="qf().M_CLASS_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="小分類編號" controlName="S_CLASS_ID"
-            [options]="smallClassOptions()" optionLabel="label" optionValue="value" [control]="qf().S_CLASS_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="財產編號" controlName="ASSET_ID"
-            [options]="(assetOptions$ | async) ?? []" optionLabel="label" optionValue="value" [control]="qf().ASSET_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管單位" controlName="HOLD_ORG_ID"
-            [options]="(orgOptions$ | async) ?? []" optionLabel="label" optionValue="value" [control]="qf().HOLD_ORG_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管人" controlName="HOLD_EMP_ID"
-            [options]="(holdEmpOptions$ | async) ?? []" optionLabel="label" optionValue="value"
-            [control]="qf().HOLD_EMP_ID" [submitted]="submitted" [showClear]="true"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用單位" controlName="USE_ORG_ID"
-            [options]="(orgOptions$ | async) ?? []" optionLabel="label" optionValue="value" [control]="qf().USE_ORG_ID"
-            [submitted]="submitted" [showClear]="true"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="進貨類型"
+            controlName="DEPRE_YN"
+            [options]="depreYnOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().DEPRE_YN"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="進貨單號"
+            controlName="SUBPOENA_ID"
+            [options]="subpoenaOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().SUBPOENA_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="購入日期"
+            [startControl]="qf().GET_DATE_S"
+            [endControl]="qf().GET_DATE_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="大分類編號"
+            controlName="B_CLASS_ID"
+            [options]="bigClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().B_CLASS_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="中分類編號"
+            controlName="M_CLASS_ID"
+            [options]="midClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().M_CLASS_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="小分類編號"
+            controlName="S_CLASS_ID"
+            [options]="smallClassOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().S_CLASS_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="財產編號"
+            controlName="ASSET_ID"
+            [options]="(assetOptions$ | async) ?? []"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().ASSET_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="保管單位"
+            controlName="HOLD_ORG_ID"
+            [options]="(orgOptions$ | async) ?? []"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().HOLD_ORG_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="保管人"
+            controlName="HOLD_EMP_ID"
+            [options]="(holdEmpOptions$ | async) ?? []"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().HOLD_EMP_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="使用單位"
+            controlName="USE_ORG_ID"
+            [options]="(orgOptions$ | async) ?? []"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().USE_ORG_ID"
+            [submitted]="submitted"
+            [showClear]="true"
+          ></app-dropdown>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -51,10 +137,23 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()" dataKey="ID" tableKey="ASS13070_Query" [columns]="columns"
-      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction" [showReportMode]="false" [showCheckBox]="false" [showDelete]="false"
-      [showEdit]="false" [showManage]="false" [selectedItems]="selectedItems" [ItemSize]="24.44"
-      (selectionChange)="selectedItems = $event"></app-table-report>
+    <app-table-report
+      [data]="tableData()"
+      dataKey="ID"
+      tableKey="ASS13070_Query"
+      [columns]="columns"
+      [totalRecords]="totalRecords()"
+      [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
+      [showReportMode]="false"
+      [showCheckBox]="true"
+      [showDelete]="false"
+      [showEdit]="false"
+      [showManage]="false"
+      [selectedItems]="selectedItems"
+      [ItemSize]="24.44"
+      (selectionChange)="selectedItems = $event"
+    ></app-table-report>
   </div>
 </div>

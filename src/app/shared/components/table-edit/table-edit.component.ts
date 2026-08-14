@@ -463,7 +463,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.keepDeletedData, this.canInsert, this.rowValidate, this.defaultInsertData
     );
     // 3. 執行驗證 (計算完後驗證才準確)
-    this.validationService.validateField(rowData, col, value, this._tableData);
+    this.validationService.validateField(rowData, col, value, this._tableData, index);
     // 確保空表時也能插入新增行（這是舊邏輯，保持在 Component 端）
     if (this._tableData.length === 0 && this.canInsert) {
       this.insertRow();

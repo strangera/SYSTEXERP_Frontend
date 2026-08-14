@@ -92,6 +92,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     halfyear_onedateyy: [new Date()],
     halfyear: ['1' as string | null],
     year_onedateyy: [new Date()],
+    sad_startdate: [null as Date | null],
+    sad_enddate: [null as Date | null],
   });
 
   halfyearOptions = [
@@ -110,6 +112,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
+    { value: '6', label: '區間營業報表' },
   ];
 
   totalRecords = 0;
@@ -592,6 +595,12 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         }
         break;
       }
+      case '6': // 區間報：直接分別取用 dateForm / c_dateForm 的日期，不鎖定也不自動帶入
+        start = this.dateForm.get('sad_startdate')?.value as Date | null;
+        end = this.dateForm.get('sad_enddate')?.value as Date | null;
+        compareStart = this.c_dateForm.get('sad_startdate')?.value as Date | null;
+        compareEnd = this.c_dateForm.get('sad_enddate')?.value as Date | null;
+        break;
     }
 
     if (start) this.queryForm.get('BaseDateFrom')?.setValue(start);
@@ -653,6 +662,11 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
           compareStart = new Date(year, 0, 1);
           compareEnd = new Date(year, 11, 31);
         }
+        break;
+      }
+      case '6': { // 區間報
+        compareStart = this.c_dateForm.controls.sad_startdate.value;
+        compareEnd = this.c_dateForm.controls.sad_enddate.value;
         break;
       }
     }
