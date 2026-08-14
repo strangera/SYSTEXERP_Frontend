@@ -185,8 +185,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       { field: 'AccNo', header: '費用會計科目', type: 'dropdown', width: '12rem', options: this.AccNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'NOTeDesc', header: '項目摘要', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'ORG_ID', header: '組織代號', type: 'dropdown', width: '12rem', options: this.keepingUnit_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '12rem', options: this.PUR_VoucherType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read, onChange: this.onDtlTypeChange },
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '12rem', options: (rowData: QueryFIN72010DetailDetailResponse) => this.getVoucherTypeOptions(rowData?.PCS_DtlType), optionLabel: 'label', optionValue: 'value', validate: [this.validateVoucherTypeRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'PCS_GUINo', header: '發票/收據號碼', type: 'input', width: '12rem', validate: [this.validateGUINoRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'PUR_Date', header: '發票日期', type: 'date', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read }, // 不確定欄位
       { field: 'DEC_YM_Date', header: '申報年月', type: 'date', dateFormat: 'yy-mm', view: 'month', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
@@ -246,7 +246,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: this.formatDateToApi(item.PUR_Date),
+                  PUR_Date: item.PUR_Date ? this.formatDateToApi(item.PUR_Date) : null, // 空日期送 null，不可送 '' 否則後端 DateTime? 反序列化失敗
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
@@ -308,7 +308,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: this.formatDateToApi(item.PUR_Date),
+                  PUR_Date: item.PUR_Date ? this.formatDateToApi(item.PUR_Date) : null, // 空日期送 null，不可送 '' 否則後端 DateTime? 反序列化失敗
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
@@ -539,12 +539,15 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   // #region 明細檔 驗證
   validateDetailRow = (rowData: QueryFIN72010DetailDetailResponse): { isValid: boolean; errorMessage: string } => {
     // const accNo = rowData.AccNo?.trim(); // 取得目前這一列的費用會計科目，並去除前後空白
+    // 發票格式僅在明細類別為發票(1)或收據(2)時必填，0(不扣抵憑證)免填
+    const voucherTypeRequired = rowData.PCS_DtlType === '1' || rowData.PCS_DtlType === '2';
+
     const requiredFields = [
       { value: rowData.AccNo?.trim(), name: '費用會計科目' },
       { value: rowData.NOTeDesc?.trim(), name: '項目摘要' },
       { value: rowData.ORG_ID?.trim(), name: '組織代號' },
       { value: rowData.PCS_DtlType?.trim(), name: '明細類別' },
-      { value: rowData.PUR_VoucherType?.trim(), name: '發票格式' },
+      ...(voucherTypeRequired ? [{ value: rowData.PUR_VoucherType?.trim(), name: '發票格式' }] : []),
       { value: rowData.PUR_Date, name: '發票日期' },
       { value: rowData.DEC_YM_Date, name: '申報年月' },
       { value: rowData.PUR_DirectType?.trim(), name: '發票用途' },
@@ -665,6 +668,49 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     this.selectedUser = null;
     this.currentUserTarget = null;
   }
+
+  // 各明細類別允許顯示的發票格式代碼
+  // 0(不扣抵憑證)：不顯示且免填；1(發票)：21/22/25/26/27；2(收據)：22/27
+  private readonly voucherTypeByDtlType: Record<string, string[]> = {
+    '1': ['21', '22', '25', '26', '27'],
+    '2': ['22', '27'],
+  };
+
+  // 依明細類別過濾發票格式選項，0 或未選時回傳空陣列
+  private getVoucherTypeOptions(dtlType?: string | null): { label: string; value: string }[] {
+    const allowed = this.voucherTypeByDtlType[dtlType ?? ''];
+    if (!allowed) {
+      return [];
+    }
+    return this.PUR_VoucherType_Options().filter(opt => allowed.includes(opt.value));
+  }
+
+  // 明細類別改變後，若目前發票格式不在新允許清單內就清空
+  private onDtlTypeChange = (
+    _value: unknown,
+    rowData: QueryFIN72010DetailDetailResponse
+  ): void => {
+    const allowed = this.voucherTypeByDtlType[rowData.PCS_DtlType ?? ''];
+    if (!allowed || !allowed.includes(rowData.PUR_VoucherType ?? '')) {
+      rowData.PUR_VoucherType = '';
+    }
+  };
+
+  // 發票格式：明細類別為發票(1)或收據(2)時必填；不扣抵憑證(0)時免填
+  validateVoucherTypeRequired = (
+    value: unknown,
+    rowData?: QueryFIN72010DetailDetailResponse
+  ): { isValid: boolean; errorMessage: string[] } => {
+    const dtlType = rowData?.PCS_DtlType;
+    const needRequired = dtlType === '1' || dtlType === '2';
+    const isEmpty = value === null || value === undefined || value.toString().trim() === '';
+
+    if (needRequired && isEmpty) {
+      return { isValid: false, errorMessage: ['必填'] };
+    }
+
+    return { isValid: true, errorMessage: [] };
+  };
 
   // 根據明細類別決定是否驗證發票/收據號碼為必填
   validateGUINoRequired = (

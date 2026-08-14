@@ -199,7 +199,7 @@ export interface FIN72010SaveDetailItem {
   ORG_ID: string;   // 組織代碼 (必填)
   PCS_DtlType: string;   // 明細類別：0=不扣抵憑證, 1=發票, 2=收據 (必填)
   PCS_GUINo?: string;   // 發票/收據號碼：發票或收據模式時必填
-  PUR_Date: string;   // 憑證日期 (必填)
+  PUR_Date: string | null;   // 憑證日期：空值送 null（後端 DateTime? 無法反序列化空字串）
   DATA_YM?: string;   // 資料年月 (格式：YYYYMM)
   DEC_YM: string;   // 申報年月 (格式：YYYYMM，通常為雙數月，必填)
   PCS_Net: number;   // 申請淨額 (未稅金額，必填)
