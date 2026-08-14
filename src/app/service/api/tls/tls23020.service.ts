@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
@@ -22,7 +22,7 @@ export class TLS23020Service {
   }
 
   /** 彙總查詢（不分頁） */
-  queryTLS23020Summary(body: any): Observable<any> {
+  queryTLS23020_Summary(body: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23020_Summary`;
     return this.http.post<any>(url, body).pipe(
       tap(r => console.log('🎯 TLS23020 Summary 結果:', r)),
