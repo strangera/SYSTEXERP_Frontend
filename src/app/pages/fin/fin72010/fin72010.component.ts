@@ -19,11 +19,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
 export interface sample72010 {
@@ -118,7 +118,7 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     { field: 'AccNo', header: '費用會計科目', visible: true },
     { field: 'AccName', header: '費用科目組織', visible: true },
     { field: 'NOTeDesc', header: '項目摘要', visible: true },
-    { field: 'PCS_DtlType', header: '明細類別', visible: true },
+    { field: 'PCS_DtlTypeName', header: '明細類別', visible: true },
     { field: 'PCS_GUINo', header: '發票/收據號碼', visible: true },
     { field: 'PUR_Date', header: '日期', visible: true, format: formatDate },
     { field: 'PCS_Net', header: '未稅金額', visible: true },
