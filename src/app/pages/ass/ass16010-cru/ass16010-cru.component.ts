@@ -1,11 +1,13 @@
-import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16010Data, ASS16010Service, InsertASS16010Request, QueryASS11020Request, QueryASS11100Request } from '@service/api/ass/ass16010.service';
+import { ASS16010Data, ASS16010Service, InsertASS16010Request, QueryASS11020Request, QueryASS11100Request, QueryASS16010DetailResponse } from '@service/api/ass/ass16010.service';
 import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -17,13 +19,25 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
   templateUrl: './ass16010-cru.component.html',
   styleUrl: './ass16010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule, TableModule]
 })
 export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> implements OnInit {
+
+  // 盤點單明細（僅「查看」模式使用）
+  detailData = signal<QueryASS16010DetailResponse[]>([]);
+
+  // 給 template 用：INV_DATE 格式化（跟查詢頁 columns 的 formatDate 一致）
+  readonly formatDate = formatDate;
 
   ngOnInit(): void {
     // 初始化
     this.initializePage('ASS16010', this.dataForm);
+
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.loadInventoryDetail();
+      return;
+    }
+
     this.loadDropdownOptions();
 
     // 先初始值跑一次
@@ -33,6 +47,24 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
     this.dataForm.controls.invType.valueChanges.subscribe(value => {
       this.updateDynamicValidators(value ?? 0);
     });
+  }
+
+  private loadInventoryDetail(): void {
+    const invId = this.rowdata?.INV_ID;
+    if (!invId) {
+      this.notification.warnBubble('缺少盤點單號，無法載入明細資料。');
+      return;
+    }
+
+    this.loading = true;
+    this.ass16010Service.queryASS16010Detail({ INV_ID: invId })
+      .pipe(finalize(() => { this.loading = false; }))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.detailData.set(res.Data ?? []);
+        },
+      });
   }
 
   //非動態新增 ----------------------------------------------------------
@@ -90,6 +122,13 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
           .subscribe({
             next: res => {
               if (res.Status !== '0000') return;
+
+              // SP 端會逐倉別檢查：所選分類在該倉別完全無庫存時會直接跳過、不建立盤點單，
+              // 但仍回傳成功狀態，Data 會是空陣列 → 必須用這個判斷才知道有沒有真的產生任何盤點單
+              if (!res.Data || res.Data.length === 0) {
+                this.notification.warnBubble('所選倉別在此分類下皆無庫存資料，未建立任何盤點單');
+                return;
+              }
 
               this.notification.successBubble('新增成功');
               this.onCancel();

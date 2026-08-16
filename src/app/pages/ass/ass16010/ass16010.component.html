@@ -47,9 +47,9 @@
       [addButton]="addButton"
       [loading]="exportPdfLoading"
       [totalRecords]="totalRecords()"
-      [editDisabled]="isEditDisabled"
+      [showDelete]="false"
+      [showEdit]="false"
       [detailDisabled]="isDetailDisabled"
-      (edit)="onEdit($event)"
       (detail)="onDetail($event)"
     ></app-table-report>
   </div>
