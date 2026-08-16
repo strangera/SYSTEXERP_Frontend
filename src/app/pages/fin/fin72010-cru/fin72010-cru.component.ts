@@ -194,8 +194,10 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       {
         field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
         disabled: () => this.crudstatus === CRUDStatus.Read,
-        // 明細類別改變後，只清空「發票格式」（type 0 一律清空；1↔2 切換避免殘留無效格式）。
-        // 其餘欄位(發票日期/申報年月/發票用途/課稅別/扣抵代號/對帳KEY) type 0 時仍可自行填寫，不自動清空或強制帶值。
+        // 明細類別=0(不扣抵憑證)時，比照 SP_FIN72010Save 的覆蓋規則(不論前端傳什麼，SP 都會強制改寫)，
+        // 前端主動代入同樣的值並鎖定欄位，避免畫面跟實際存檔結果不一致：
+        //   發票格式→清空、扣抵代號→'3'、課稅別→'0'(連動重算未稅/稅額)、對帳KEY值→清空。
+        // 發票日期/申報年月/發票用途 SP 仍保留使用者輸入，不受影響。
         onChange: this.onDtlTypeChange,
       },
       { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '12rem', options: (rowData: QueryFIN72010DetailDetailResponse) => this.getVoucherTypeOptions(rowData?.PCS_DtlType), optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: (value, index, rowData) => this.crudstatus === CRUDStatus.Read || rowData?.PCS_DtlType === '0' },
@@ -211,15 +213,15 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       },
       {
         field: 'PCS_TaxType', header: '課稅別', type: 'dropdown', width: '12rem', options: this.PCS_TaxType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
-        disabled: () => this.crudstatus === CRUDStatus.Read,
+        disabled: (value, index, rowData) => this.crudstatus === CRUDStatus.Read || rowData?.PCS_DtlType === '0',
         // 課稅別變動時，依目前總金額即時試算未稅/稅額(應稅事後仍可手動覆寫未稅金額)
         calculate: (rowData, value) => this.calcNetTax(value, rowData.PCS_Amt),
       },
       { field: 'PCS_Net', header: '發票未稅金額', type: 'inputNumber', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'PCS_Tax', header: '發票稅額', type: 'inputNumber', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', width: '12rem', options: this.PUR_DiscNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', width: '12rem', options: this.PUR_DiscNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: (value, index, rowData) => this.crudstatus === CRUDStatus.Read || rowData?.PCS_DtlType === '0' },
       { field: 'COLLECT_NUM', header: '彙總張數', type: 'input', width: '12rem', disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'RECON_Key', header: '對帳KEY值', type: 'input', width: '12rem', disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'RECON_Key', header: '對帳KEY值', type: 'input', width: '12rem', disabled: (value, index, rowData) => this.crudstatus === CRUDStatus.Read || rowData?.PCS_DtlType === '0' },
     ];
 
     this.loadDropdownOptions();
@@ -724,13 +726,34 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   }
 
   // 明細類別改變後，若目前發票格式不在新允許清單內就清空（1↔2 切換避免殘留無效格式；切到 0 一律清空）
+  //
+  // 切到「不扣抵憑證(0)」時，比照 SP_FIN72010Save 的覆蓋規則主動代入同樣的值並鎖定欄位：
+  //   扣抵代號 -> '3'；課稅別 -> '0'(免稅，連動重算未稅/稅額)；對帳KEY值 -> 清空。
+  // SP 不論前端傳什麼都會覆蓋成這些值，前端提早代入只是讓畫面跟實際存檔結果一致，避免使用者誤填。
   private onDtlTypeChange = (
     _value: unknown,
-    rowData: QueryFIN72010DetailDetailResponse
+    rowData: QueryFIN72010DetailDetailResponse & { _validationErrors?: Record<string, string> }
   ): void => {
     const allowed = this.voucherTypeByDtlType[rowData.PCS_DtlType ?? ''];
     if (!allowed || !allowed.includes(rowData.PUR_VoucherType ?? '')) {
       rowData.PUR_VoucherType = '';
+    }
+
+    if (rowData.PCS_DtlType === '0') {
+      rowData.PUR_DiscNo = '3';
+      rowData.RECON_Key = '';
+      rowData.PCS_TaxType = '0';
+      const { PCS_Net, PCS_Tax } = this.calcNetTax('0', rowData.PCS_Amt);
+      rowData.PCS_Net = PCS_Net;
+      rowData.PCS_Tax = PCS_Tax;
+    }
+
+    // table-edit 只會重新驗證被改動的 PCS_DtlType 欄位本身，被這裡連動改掉/鎖住的欄位
+    // 若之前殘留必填錯誤提示不會自動消失，手動清掉避免畫面錯誤訊息卡住不消失。
+    if (rowData._validationErrors) {
+      for (const field of ['PUR_VoucherType', 'PUR_DiscNo', 'RECON_Key', 'PCS_TaxType', 'PCS_Net', 'PCS_Tax']) {
+        delete rowData._validationErrors[field];
+      }
     }
   };
 
