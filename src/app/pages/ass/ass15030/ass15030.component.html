@@ -8,159 +8,77 @@
         </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="報表型態"
-              groupname="paperType"
-              [control]="queryForm.controls.paperType"
-              [options]="paperTypeOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="報表型態" groupname="paperType" [control]="queryForm.controls.paperType"
+              [options]="paperTypeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="會計科目代碼"
-              controlName="accountCode"
-              [options]="accountCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accountCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="會計科目代碼" controlName="accountCode" [options]="accountCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.accountCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保管單位"
-              controlName="keeperUnit"
-              [options]="keeperUnitOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.keeperUnit"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="保管單位" controlName="keeperUnit" [options]="keeperUnitOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.keeperUnit" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="購入日期"
-              descLabel="(起訖)"
-              [startControl]="queryForm.controls.purchaseDateFrom"
-              [endControl]="queryForm.controls.purchaseDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="購入日期" descLabel="(起訖)"
+              [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類編號"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類編號" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.bigCategoryCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類編號"
-              controlName="midCategoryCode"
-              [options]="midCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="中分類編號" controlName="midCategoryCode" [options]="midCategoryCodeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.midCategoryCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類編號"
-              controlName="smlCategoryCode"
-              [options]="smlCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.smlCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="小分類編號" controlName="smlCategoryCode" [options]="smlCategoryCodeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.smlCategoryCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="入帳日期"
-              descLabel="(起訖)"
-              [startControl]="queryForm.controls.entryDateFrom"
-              [endControl]="queryForm.controls.entryDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="入帳日期" descLabel="(起訖)"
+              [startControl]="queryForm.controls.entryDateFrom" [endControl]="queryForm.controls.entryDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編號"
-              controlName="itemCode"
-              [options]="itemCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.itemCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.itemCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="基準日"
-              controlName="baseYYMM"
-              [control]="queryForm.controls.baseYYMM"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateMonthOne" label="基準日" controlName="baseYYMM"
+              [control]="queryForm.controls.baseYYMM" [submitted]="submitted"></app-calendar>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-4 lg:col-4">
-            <p-checkbox
-              label="是否顯示取得金額為0"
-              [binary]="true"
-              formControlName="showReceiveAmount"
-            ></p-checkbox>
+            <p-checkbox label="是否顯示取得金額為0" [binary]="true" formControlName="showReceiveAmount"></p-checkbox>
           </div>
           <div class="col-12 md:col-4 lg:col-4">
-            <p-checkbox
-              label="是否顯示當期報廢、變賣資料"
-              [binary]="true"
-              formControlName="showScrapData"
-            ></p-checkbox>
+            <p-checkbox label="是否顯示當期報廢、變賣資料" [binary]="true" formControlName="showScrapData"></p-checkbox>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="報表樣式"
-              controlName="reportStyle"
-              [options]="reportStyleOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.reportStyle"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="報表樣式" controlName="reportStyle" [options]="reportStyleOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.reportStyle" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div>
@@ -175,52 +93,24 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table-report
-      [data]="data"
-      [columns]="columns"
-      [totalRecords]="totalRecords"
-      [loading]="tableLoading()"
-      [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction"
-      tableKey="ASS15030_Data"
-      [allowMultilineHeader]="true"
-      [showReorder]="false"
-      [showManage]="false"
-      [showSummary]="true"
-      [showDelete]="false"
-      [showReportMode]="false"
-      [lazy]="true"
-      [showSort]="false"
-      [footerData]="footerData"
-      footerLabel="總合計"
-      [ItemSize]="24.44"
-    >
+    <app-table-report [data]="data" [columns]="columns" [totalRecords]="totalRecords" [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" tableKey="ASS15030_Data"
+      [allowMultilineHeader]="true" [showReorder]="false" [showManage]="false" [showSummary]="true" [showDelete]="false"
+      [showReportMode]="false" [lazy]="false" [showSort]="false" [footerData]="footerData" footerLabel="總合計" [ItemSize]="24.44">
       <header>
         <div class="flex justify-content-end gap-2">
-          <p-button
-            label="匯出 PDF"
-            icon="pi pi-file-pdf"
-            (click)="onExportPdf()"
-            [disabled]="
+          <p-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPdf()" [disabled]="
               tableLoading() ||
               exportPdfLoading ||
               exportExcelLoading ||
               data.length === 0
-            "
-            [loading]="exportPdfLoading"
-          ></p-button>
-          <p-button
-            label="匯出 Excel"
-            icon="pi pi-file-excel"
-            (click)="onExportExcel()"
-            [disabled]="
+            " [loading]="exportPdfLoading"></p-button>
+          <p-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportExcel()" [disabled]="
               tableLoading() ||
               exportExcelLoading ||
               exportPdfLoading ||
               data.length === 0
-            "
-            [loading]="exportExcelLoading"
-          ></p-button>
+            " [loading]="exportExcelLoading"></p-button>
         </div>
       </header>
     </app-table-report>
