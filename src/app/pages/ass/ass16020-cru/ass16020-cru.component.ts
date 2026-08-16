@@ -95,7 +95,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         { field: 'MClassName', header: '中分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
         { field: 'S_CLASS_ID', header: '小分類編號', type: 'dropdown', disabled: () => true, validate: [validateMaxLength(100)] },
         { field: 'SClassName', header: '小分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'FASITEM_ID', header: '品項編號/名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'FASITEM_DISPLAY', header: '品項編號/名稱', type: 'input', disabled: () => true, validate: [validateMaxLength(100)] },
         { field: 'NOTES', header: '說明', type: 'autoComplete', disabled: () => this.isReadOnly(), validate: [validateMaxLength(100)] },
     ];
 
@@ -169,7 +169,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                         // EMP_NAME2: response.Data.EMP_NAME2,
                         NOTES: response.Data.NOTES
                     });
-                    this.data = response.Data.Details;
+                    this.data = this.mapDetailsForDisplay(response.Data.Details);
                 });
         }
         else if (this.crudstatus === CRUDStatus.Edit) {
@@ -193,7 +193,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                         // EMP_NAME2: response.Data.EMP_NAME2,
                         NOTES: response.Data.NOTES
                     });
-                    this.data = response.Data.Details;
+                    this.data = this.mapDetailsForDisplay(response.Data.Details);
                 });
         }
         else if (this.crudstatus === CRUDStatus.Read) {
@@ -265,7 +265,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                             // EMP_NAME2: response.Data.EMP_NAME2,
                             NOTES: response.Data.NOTES
                         });
-                        this.data = response.Data.Details;
+                        this.data = this.mapDetailsForDisplay(response.Data.Details);
                     });
             }
 
@@ -424,6 +424,14 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
             .subscribe();
     }
 
+
+    // 組合「品項編號/名稱」顯示欄位，比照報表格式
+    private mapDetailsForDisplay(details: QueryDetailASS16020Detail[]): QueryDetailASS16020Detail[] {
+        return details.map(item => ({
+            ...item,
+            FASITEM_DISPLAY: `${item.FASITEM_ID} / ${item.GOODS_NAME}`,
+        }));
+    }
 
     // 篩選員工的方法，根據選擇的組織 ID 來過濾員工列表
     private filterEmployeesByOrg(orgId: string | null): { label: string; value: string }[] {
