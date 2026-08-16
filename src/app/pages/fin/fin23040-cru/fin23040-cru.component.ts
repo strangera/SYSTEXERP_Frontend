@@ -141,17 +141,24 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
           const net = Math.round(amt / 1.05);
           return { purTaxType: '1', purNet: net, purTax: amt - net };
         }
-        if (String(value) === '2' || String(value) === '0') {
+        if (String(value) === '2') {
           return { purTaxType: '0', purNet: amt, purTax: 0 };
+        }
+        if (String(value) === '0') {
+          // 明細類別=不扣抵憑證時，比照FIN72010零用金維護作業的設計主動代入固定值並鎖定欄位(見下方
+          // purVoucherType/purDiscNo/purTaxType 的 disabled)。FIN23040 沒有 SP_FIN23040Save 那種 SP
+          // 端覆蓋保底(SP完全不做驗證/覆蓋，單純把TVP資料原樣寫入)，這幾個欄位必須由前端自己做對。
+          // 扣抵代號'3'＝SYS1000 PUR_DiscNo 代碼表「進項不可扣抵之進貨及費用」。
+          return { purTaxType: '0', purNet: amt, purTax: 0, purDiscNo: '3', purVoucherType: null };
         }
         return {};
       },
       // 切成「不扣抵憑證」時，table-edit 只會重新驗證被改動的 acpType 欄位本身，
-      // 之前殘留在發票號碼/日期/申報年月/課稅別/未稅金額上的必填錯誤提示不會自動消失，
+      // 之前殘留在發票格式/發票號碼/日期/申報年月/課稅別/未稅金額/扣抵代號上的必填錯誤提示不會自動消失，
       // 這裡手動清掉，避免畫面看起來「明細類別改了但錯誤還在」。
       onChange: (value: unknown, rowData: DetailRow & { _validationErrors?: Record<string, string> }) => {
         if (String(value) !== '0' || !rowData._validationErrors) return;
-        for (const field of ['purGUINo', 'purGUIDate', 'purExpGLDate', 'purTaxType', 'purNet']) {
+        for (const field of ['purVoucherType', 'purGUINo', 'purGUIDate', 'purExpGLDate', 'purTaxType', 'purNet', 'purDiscNo']) {
           delete rowData._validationErrors[field];
         }
       },
@@ -159,7 +166,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     {
       field: 'purVoucherType', header: '發票格式', width: '110px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purVoucherTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label',
+      templateLabel: 'label', validate: [validateRequired], disabled: (value, index, rowData) => rowData?.acpType === '0',
     },
     {
       field: 'purGUINo', header: '發票/收據號碼', width: '140px', type: 'input', textAlign: 'left',
@@ -192,6 +199,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       field: 'purTaxType', header: '課稅別', width: '100px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purTaxTypeOptions$, optionLabel: 'label', optionValue: 'value',
       templateLabel: 'label', validate: [this.requiredWhenInvoiceOrReceipt],
+      disabled: (value, index, rowData) => rowData?.acpType === '0',
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
         if (String(value) === '1') {
@@ -225,7 +233,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     {
       field: 'purDiscNo', header: '扣抵代號', width: '180px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.purDiscNoOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label',
+      templateLabel: 'label', validate: [validateRequired], disabled: (value, index, rowData) => rowData?.acpType === '0',
     },
     {
       field: 'purType', header: '類別區分', width: '120px', type: 'dropdown', textAlign: 'left',
