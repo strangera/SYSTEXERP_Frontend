@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN23050Detail, Fin23050Service, PostFIN23050DetailInput, QueryFIN23050Response } from '@service/api/fin/fin23050.service';
+import { DetailFIN23050Response, Fin23050Service, PostFIN23050DetailInput, QueryFIN23050Response } from '@service/api/fin/fin23050.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
@@ -11,7 +11,7 @@ import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { formatAmount } from '@shared/components/table-report/table-report.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
-import { finalize, firstValueFrom, forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
 import { CalendarComponent } from 'src/app/shared/components/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
@@ -23,23 +23,22 @@ interface Fin23050CruState {
   VouDate?: string | null;
 }
 
-/** 攤平後的傳票明細列，額外帶原始來源核銷單號/預支單號，方便按來源重組拋轉請求 */
-interface PostingLine extends FIN23050Detail {
-  _sourceRedeemNo: string;
-  _sourcePrepNo: string;
-}
-
 /**
  * 1.2.3.5 暫付款核銷傳票拋轉作業 - 拋轉預覽頁
  *
- * 查詢頁勾選多筆核銷單號後按「預覽傳票」導進這頁，這頁對每一筆勾選的核銷單號各自呼叫一次
- * SP_FIN23050Detail 取得預覽(傳票主檔+明細)，攤平成一張表讓使用者編輯摘要，最後按「確定拋轉」
- * 才會對每一筆各自呼叫一次 SP_FIN23050Posting —— 比照 FIN23020-cru 的 forkJoin 做法。
+ * 查詢頁勾選多筆核銷單號後按「預覽傳票」導進這頁，這頁把整批勾選的核銷單號一次送進
+ * SP_FIN23050Detail(@ItemList TVP)，SP 內部會把所有項目的明細合併＋統一重新編序號(10,20,30...)，
+ * 回傳一張扁平表(每列自帶 REDEEM_NO/PREP_NO/VouNo 等表頭欄位)，前端直接當成表格資料用。
+ * 最後按「確定拋轉」時再依每列自帶的 REDEEM_NO/PREP_NO 分組，對每一組各自呼叫一次
+ * SP_FIN23050Posting —— 比照 FIN23020-cru 的 forkJoin 做法。
  *
- * 注意(跟 FIN23020 不同的地方，先老實記下來)：FIN23020 是把多筆暫付款「合併成一張全新傳票」，
- * 所以取第一筆表頭當樣板合理。但 FIN23050 每一筆核銷單號在 FIN23040 核銷當下就已經各自產生了
- * 獨立的既有傳票(各自的 VouNo/VouDate)，理論上不是同一張——這裡先比照 FIN23020 的寫法只用第一筆
- * 表頭填頭部欄位，只是「畫面呈現」的簡化，明細分組送出時還是按各自來源正確對應各自的核銷單號。
+ * 注意：SP 回傳的明細列會多一筆虛擬列(Detail_ID=999999999，AccNo=123304)，那是 SP 算出來給畫面看的
+ * 「暫付款核銷轉列」沖銷分錄，GLS6002 沒有對應的實體列——SP_FIN23050Posting 目前還是舊版(只 UPDATE
+ * 既有列，靠 SerNo 比對，且序號規則跟新版 Detail 不同步)，這筆虛擬列送出去 Posting 也不會真的被寫入，
+ * 這是已知的後端落差，還沒有解法，先如實顯示，不要自己在前端硬吃掉這筆虛擬列。
+ *
+ * 表頭「畫面呈現」的簡化跟舊版一樣：FIN23050 每一筆核銷單號各自對應各自的既有傳票，理論上不是同一張，
+ * 這裡仍是取第一筆的表頭欄位填頭部顯示，明細分組送出時按各自列自帶的 REDEEM_NO/PREP_NO 正確對應。
  */
 @Component({
   selector: 'app-fin23050-cru',
@@ -50,6 +49,7 @@ interface PostingLine extends FIN23050Detail {
 export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState> implements OnInit {
   private readonly fin23050Service = inject(Fin23050Service);
   private readonly dropdown = inject(DropdownApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** 傳票主檔(對應 SP_FIN23050Detail 表頭)：Remark(傳票摘要)可編輯，其餘唯讀 */
   dataForm = this.formBuilder.group({
@@ -62,15 +62,25 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     CRT_Date: [{ value: null as Date | null, disabled: true }],
   });
 
-  data: PostingLine[] = [];
+  data: DetailFIN23050Response[] = [];
   initTable = false;
   /** 傳票明細初始載入後的原始快照，供「取消」按鈕還原編輯內容用 */
-  private originalData: PostingLine[] = [];
+  private originalData: DetailFIN23050Response[] = [];
   private readonly orgOptions$ = this.dropdown.querySys3100();
+  private readonly accNoOptions$ = this.dropdown.queryGls1005();
 
   columns: EditColumn[] = [
     { field: 'SerNo', header: '序號', width: '60px', textAlign: 'center', disabled: () => true },
-    { field: 'AccNo', header: '科目代號', width: '110px', textAlign: 'left', disabled: () => true },
+    {
+      field: 'AccNo', header: '科目代號', width: '160px', type: 'dropdown', textAlign: 'left',
+      optionsAsync: true, options: () => this.accNoOptions$, optionLabel: 'value', optionValue: 'value',
+      templateLabel: 'label', showClear: false,
+      calculate: async (rowData: DetailFIN23050Response, value: any) => {
+        const options = await firstValueFrom(this.accNoOptions$);
+        const selected = options?.find(opt => opt.value === rowData.AccNo);
+        return { AccCName: (selected as any)?.Name ?? '' };
+      }
+    },
     { field: 'AccCName', header: '科目名稱', width: '160px', textAlign: 'left', disabled: () => true },
     { field: 'VenNo', header: '廠商代號', width: '110px', textAlign: 'left', disabled: () => true },
     { field: 'NoteDesc', header: '摘要', type: 'input', width: '220px', textAlign: 'left' },
@@ -80,7 +90,7 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
       field: 'Org_ID', header: '組織代號', width: '110px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.orgOptions$, optionLabel: 'value', optionValue: 'value',
       templateLabel: 'label', showClear: false,
-      calculate: async (rowData: PostingLine, value: any) => {
+      calculate: async (rowData: DetailFIN23050Response, value: any) => {
         const targetOrgId = rowData.Org_ID;
         if (targetOrgId) {
           try {
@@ -107,14 +117,15 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     if (items.length === 0) return;
 
     this.loading = true;
-    const requests = items.map(item =>
-      this.fin23050Service.detailFIN23050({ REDEEM_NO: item.REDEEM_NO, PREP_NO: item.PREP_NO })
-    );
-    forkJoin(requests).pipe(
-      finalize(() => { this.loading = false; }),
-      untilDestroyed(this),
-    ).subscribe(results => {
-      const firstHeader = results[0]?.Data?.FIN23050Data;
+    this.fin23050Service.detailFIN23050({
+      Items: items.map(item => ({ REDEEM_NO: item.REDEEM_NO, PREP_NO: item.PREP_NO })),
+    }).pipe(
+      this.withLoading(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      const lines = (res.Data ?? []).filter(line => line.AccCName !== '合計');
+
+      const firstHeader = lines[0];
       if (firstHeader) {
         this.dataForm.patchValue({
           ...firstHeader,
@@ -124,20 +135,7 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
 
         this.dataForm.controls.VouNo.setValue('系統自動產生');
       }
-      const lines: PostingLine[] = [];
-      results.forEach((res, idx) => {
-        const item = items[idx];
-        const details = res.Data?.FIN23050DetailData ?? [];
-        const validDetails = details.filter(line => line.AccCName !== '合計');
 
-        validDetails.forEach(line => {
-          lines.push({
-            ...line,
-            _sourceRedeemNo: item.REDEEM_NO,
-            _sourcePrepNo: item.PREP_NO,
-          });
-        });
-      });
       this.data = lines;
       this.originalData = lines.map(line => ({ ...line }));
       this.initTable = this.data.length > 0;
@@ -150,15 +148,15 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
   }
 
   /**
-   * 確定拋轉：把攤平表格依 _sourceRedeemNo/_sourcePrepNo 分組還原成「每筆核銷單號各自一組明細」，
+   * 確定拋轉：把攤平表格依每列自帶的 REDEEM_NO/PREP_NO 分組還原成「每筆核銷單號各自一組明細」，
    * 對每一組各自呼叫一次 postFIN23050(對應 SP_FIN23050Posting)，一筆核銷單號＝一張既有傳票。
    */
   onConfirmPosting() {
     if (!this.isFormCreateable || this.data.length === 0) return;
 
-    const grouped = new Map<string, PostingLine[]>();
+    const grouped = new Map<string, DetailFIN23050Response[]>();
     this.data.forEach(line => {
-      const key = `${line._sourceRedeemNo}|${line._sourcePrepNo}`;
+      const key = `${line.REDEEM_NO}|${line.PREP_NO}`;
       const arr = grouped.get(key) ?? [];
       arr.push(line);
       grouped.set(key, arr);
@@ -184,8 +182,8 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
         });
 
         forkJoin(requests).pipe(
-          finalize(() => this.loading = false),
-          untilDestroyed(this),
+          this.withLoading(),
+          takeUntilDestroyed(this.destroyRef),
         ).subscribe(results => {
           const failMessages: string[] = [];
           let successCount = 0;
