@@ -14,10 +14,10 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable, tap } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { formatAmount2, ReportColumn } from '../../../shared/components/table-report/table-report.model';
@@ -60,7 +60,7 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
   lastQueryBody?: ASS17090QueryRequest;
   exportExcelLoading = false;
 
-  private readonly defaultPageSize = 30;
+  private readonly defaultPageSize = 3000;
 
   queryTypeOptions = [
     { value: 0, label: '全部' },
@@ -74,7 +74,8 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
 
   columns: ReportColumn[] = [
     { field: 'GoodsID', header: '品項編號', visible: true },
-    { field: 'GoodsName', header: '品項名稱', visible: true },
+    // width 明確指定，避開 TableReportWidthService 對未指定 width 欄位的 200px 自動寬度上限，理由同 ASS17080
+    { field: 'GoodsName', header: '品項名稱', visible: true, width: '220px' },
     {
       field: 'StocksQty',
       header: '目前庫存數量',
