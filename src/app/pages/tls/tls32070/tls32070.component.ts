@@ -19,6 +19,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
@@ -46,6 +47,7 @@ yesterday.setDate(yesterday.getDate() - 1);
     CategorySelectComponent,
     ButtonComponent,
     ButtonModule,
+    CheckboxModule,
     TableReportComponent,
   ],
 })
@@ -70,6 +72,10 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     TltNoList: [[] as string[]],
     TermTypeList: [[] as string[]],
     TltIdList: [[] as string[]],
+    AmtTaxMode: ['G'],
+    ReceFilter: ['A'],
+    PreSale: [false],           // 顯示預售欄位開關
+    ConsumerNum: [false],       // 顯示消費人數/客單開關
     pageSize: [1000],
     pageIndex: [1],
   });
@@ -124,6 +130,19 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
   btnPDFLoading = false;
   btnExcelLoading = false;
 
+  TaxType_Option = [
+    { value: 'G', label: '是' },
+    { value: 'N', label: '否' },
+  ];
+  ReceFilter_Option = [
+    { value: 'A', label: '全部' },
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+  ];
+
+  isPreSale = this.queryForm.get('PreSale')?.value ?? false;
+  isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
+
   // 對照 PM 截圖設定報表欄位
   columns: ReportColumn[] = [
     // 基本資訊
@@ -141,6 +160,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '比較期' },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '比較期' },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '比較期' },
+    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
 
     // 基準期 (本期)
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
@@ -148,6 +170,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '基準期' },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '基準期' },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '基準期' },
+    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
 
     // 成長率 Group
     { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
@@ -158,6 +183,9 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '差異' },
     { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '差異' },
     { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '差異' },
+    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '差異', visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
   ];
 
   // 跨欄 Group 表頭
@@ -196,6 +224,32 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     this.syncDateToQueryForm();
     this.dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncDateToQueryForm());
     this.c_dateForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncCDateToQueryForm());
+    this.queryForm.get('PreSale')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => { this.setColumns(); });
+    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => { this.setColumns(); });
+  }
+
+  setColumns(): void {
+    const isPreSale = this.queryForm.get('PreSale')?.value === true;
+    const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
+
+    const visibleMap: Record<string, boolean> = {
+      Base_PreOrderAmt: isPreSale,
+      Comp_PreOrderAmt: isPreSale,
+      Diff_PreOrderAmt: isPreSale,
+
+      Base_ConsumerNum: isConsumerNum,
+      Comp_ConsumerNum: isConsumerNum,
+      Diff_ConsumerNum: isConsumerNum,
+
+      Base_ConsumerOrder: isConsumerNum,
+      Comp_ConsumerOrder: isConsumerNum,
+      Diff_ConsumerOrder: isConsumerNum,
+    };
+
+    this.columns = this.columns.map((col) => ({
+      ...col,
+      visible: visibleMap[col.field] ?? col.visible,
+    }));
   }
 
   onSubmit(frm: FormGroup): void {
@@ -270,6 +324,10 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
       TltNoList: (rawValue.TltNoList || []).join(','),
       TermTypeList: (rawValue.TermTypeList || []).join(','),
       TltIdList: (rawValue.TltIdList || []).join(','),
+      AmtTaxMode: rawValue.AmtTaxMode,
+      ReceFilter: rawValue.ReceFilter,
+      PreSale: rawValue.PreSale,
+      ConsumerNum: rawValue.ConsumerNum,
     } as TLS32070Request;
   }
 

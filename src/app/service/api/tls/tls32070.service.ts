@@ -29,6 +29,10 @@ export interface TLS32070Request extends ApiRequest {
   TltNoList: string; // 專櫃編號 → TLTTALENT.tlt_no (多選)
   TermTypeList: string; // 抽成別 → TLTTALENT.tlt_term_type (多選)
   TltIdList: string; // 抽成類別 → TLTTALENT_CHARGEM.tlt_id (多选)
+  AmtTaxMode: string; // 銷售金額是否含稅：G=含稅(預設), N=未稅
+  ReceFilter: string; // 是否開立業主發票：A=全部(預設), Y=是, N=否
+  PreSale: boolean; // 是否顯示預售欄位（純前端顯示控制）
+  ConsumerNum: boolean; // 是否顯示消費人數/消費客單欄位（純前端顯示控制）
 }
 
 // 查詢 response
@@ -50,6 +54,9 @@ export interface TLS32070Response extends ApiRequest {
   Base_SaleAmt: number; // 本期銷售金額
   Base_TxnCnt: number; // 本期交易筆數
   Base_AvgTicket: number; // 本期客單價
+  Base_PreOrderAmt: number; // 本期預售金額
+  Base_ConsumerNum: number; // 本期消費人數
+  Base_ConsumerOrder: number; // 本期消費客單
 
   // 比較期 (Comp)
   Comp_LocationNo: string; // 比較期位置編號
@@ -57,6 +64,9 @@ export interface TLS32070Response extends ApiRequest {
   Comp_SaleAmt: number; // 比較期銷售金額
   Comp_TxnCnt: number; // 比較期交易筆數
   Comp_AvgTicket: number; // 比較期客單價
+  Comp_PreOrderAmt: number; // 比較期預售金額
+  Comp_ConsumerNum: number; // 比較期消費人數
+  Comp_ConsumerOrder: number; // 比較期消費客單
 
   // 成長率 (Growth %)
   Growth_SaleAmtPct: number; // 銷售金額成長率
@@ -67,6 +77,9 @@ export interface TLS32070Response extends ApiRequest {
   Diff_SaleAmt: number; // 銷售金額差異
   Diff_TxnCnt: number; // 交易筆數差異
   Diff_AvgTicket: number; // 客單價差異
+  Diff_PreOrderAmt: number; // 預售金額差異
+  Diff_ConsumerNum: number; // 消費人數差異
+  Diff_ConsumerOrder: number; // 消費客單差異
 }
 
 @Injectable({

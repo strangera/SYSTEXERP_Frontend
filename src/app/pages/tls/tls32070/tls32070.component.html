@@ -214,6 +214,21 @@
             <app-multi-select label="抽成類別" controlName="TltIdList" [options]="tlt_id_Option | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.TltIdList" [submitted]="submitted"></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="銷售金額是否含稅" groupname="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
+              [options]="TaxType_Option" [submitted]="submitted"></app-radiobutton>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="是否開立業主發票" groupname="ReceFilter" [control]="queryForm.controls.ReceFilter"
+              [options]="ReceFilter_Option" [submitted]="submitted"></app-radiobutton>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="flex flex-wrap gap-3 p-2">
+              <label for="displayStatus">顯示狀態</label>
+              <p-checkbox label="預售" [binary]="true" formControlName="PreSale"></p-checkbox>
+              <p-checkbox label="消費人數" [binary]="true" formControlName="ConsumerNum"></p-checkbox>
+            </div>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
