@@ -63,7 +63,7 @@
     [totalRecords]="totalRecords"
     [loading]="loading"
     [lazy]="true"
-    [showManage]="true"
+    [showEdit]="false"
     [showCheckBox]="false"
     [showDelete]="false"
     [lastQueryBody]="lastQueryBody"
@@ -71,5 +71,6 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (dataChange)="data = $event"
+    [addButton]="addButton"
   ></app-table-report>
 </div>

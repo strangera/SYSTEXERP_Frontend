@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { AddButton, Column, createPaginationConfig } from '@others/component/table/table.model';
 import { FIN41030Service } from '@service/api/fin/fin41030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { FIN41030QueryRow, QueryFIN41030Request } from './fin41030.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { FIN41030ApproveData, FIN41030QueryRow, QueryFIN41030Request } from './fin41030.model';
 
 @Component({
   selector: 'app-fin41030',
@@ -59,6 +59,25 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
     },
   ];
 
+  // 功能說明：若需要完成部門審核則按下【審核】鍵，若是已經審核的預算需要還原，則可按下【反審核】鍵
+  addButton: AddButton[] = [
+    {
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: FIN41030QueryRow) => this.onApprove(rowData),
+      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus === 'Y',
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: FIN41030QueryRow) => this.onAntiApprove(rowData),
+      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus !== 'Y',
+    },
+  ];
+
+  // 審核按鈕
+  btnLoading = false;
+
   constructor(public readonly fin41030Service: FIN41030Service) {
     super();
   }
@@ -93,4 +112,44 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
         });
     });
   }
+
+  onApprove(rowData: FIN41030QueryRow): void {
+    this.runAudit(rowData, 'A', '審核');
+  }
+
+  onAntiApprove(rowData: FIN41030QueryRow): void {
+    this.runAudit(rowData, 'U', '反審核');
+  }
+
+  private runAudit(rowData: FIN41030QueryRow, action: 'A' | 'U', label: string): void {
+    this.messageService.confirm({
+      header: `確認${label}`,
+      message: `是否確認${label}此筆資料？`,
+      accept: () => {
+        this.loading = true;
+        this.fin41030Service
+          .approveFIN41030({
+            Action: action,
+            MID: rowData.MID,
+            BudgetYear: rowData.BudgetYear,
+            BudgetVersion: rowData.BudgetVersion,
+          })
+          .pipe(
+            finalize(() => (this.loading = false)),
+            untilDestroyed(this),
+          )
+          .subscribe({
+            next: (res: { Status: string; Message?: string; Data: FIN41030ApproveData }) => {
+              if (res.Status === '0000') {
+                // const msg = res.Message ?? res.Data?.ResultMessage ?? `${label}成功`;
+                const msg = `${label}成功`;
+                this.messageService.successBubble(msg);
+                this.onSubmit(this.queryForm);
+              }
+            },
+          });
+      },
+    });
+  }
+
 }
