@@ -745,23 +745,27 @@ export class ASS12050CRUComponent
   }
 
   /**
-   * 儲存按鈕統一入口。
-   *
-   * 新增模式：執行原本 onSubmit()。
-   * 編輯模式：逐筆更新驗收明細。
-   */
+  * 儲存按鈕統一入口。
+  *
+  * 尚未建立驗收單：執行新增 INSERT。
+  * 已經有 SUBCHECK_ID（包含 TRANSFER 成功後）：執行 UPDATE。
+  */
   onUpdate(): void {
-    // 新增模式仍走原本新增流程
-    if (this.crudstatus === CRUDStatus.Create) {
+    const subcheckId =
+      this.subcheckId ??
+      this.dataForm.controls.SUBCHECK_ID.value;
+
+    // 還沒有驗收單號，才是真的新增
+    if (
+      this.crudstatus === CRUDStatus.Create &&
+      !subcheckId
+    ) {
       this.onSubmit();
       return;
     }
 
-    if (!this.isFormEditable) {
-      this.messageService.warnBubble('目前狀態不可執行儲存');
-      return;
-    }
-
+    // 有 SUBCHECK_ID 代表資料已經存在
+    // 即使原本是 Create 模式，TRANSFER 成功後也要走 UPDATE
     this.handleSubmit(this.dataForm, () => {
       const valid =
         this.tableEditComponent?.validateAndShowErrors();
@@ -775,23 +779,15 @@ export class ASS12050CRUComponent
       }
 
       if (!this.data || this.data.length === 0) {
-        this.messageService.warnBubble('沒有可更新的驗收明細');
+        this.messageService.warnBubble(
+          '沒有可更新的驗收明細',
+        );
         return;
       }
 
-      /*
-       * 更新 Request 需要 DETAIL_ID，
-       * 因此查詢明細 API 必須回傳 DETAIL_ID。
-       */
-      const missingDetailId = this.data.some(item => {
-        const detailId = (
-          item as ASS12050DetailItem & {
-            DETAIL_ID?: string | null;
-          }
-        ).DETAIL_ID;
-
-        return !detailId;
-      });
+      const missingDetailId = this.data.some(
+        item => !item.DETAIL_ID,
+      );
 
       if (missingDetailId) {
         this.messageService.errorBubble(
@@ -808,19 +804,17 @@ export class ASS12050CRUComponent
       this.calculateHeaderAmounts();
 
       const updateCalls = this.data.map(item => {
-        const detail = item as ASS12050DetailItem & {
-          DETAIL_ID: string;
-        };
-
         const body: ASS12050UpdateRequest = {
-          DETAIL_ID: detail.DETAIL_ID,
+          DETAIL_ID: item.DETAIL_ID!,
           CHECK_QTY: item.CHECK_QTY ?? null,
           DIS_PRICE: item.DIS_PRICE ?? null,
           AMT: this.calculateDetailAmount(item),
           NOTES: item.NOTES ?? null,
         };
 
-        return this.ass12050Service.updateASS12050(body);
+        return this.ass12050Service.updateASS12050(
+          body,
+        );
       });
 
       this.loading = true;
@@ -837,19 +831,22 @@ export class ASS12050CRUComponent
           next: res => {
             if (res.Status !== '0000') {
               this.messageService.errorBubble(
-                '儲存失敗：' + (res.Message ?? ''),
+                '儲存失敗：' +
+                (res.Message ?? ''),
               );
               return;
             }
 
-            this.messageService.successBubble('儲存成功');
+            this.messageService.successBubble(
+              '儲存成功',
+            );
 
-            const subcheckId =
+            const currentSubcheckId =
               this.subcheckId ??
               this.dataForm.controls.SUBCHECK_ID.value;
 
-            if (subcheckId) {
-              this.loadDetail(subcheckId);
+            if (currentSubcheckId) {
+              this.loadDetail(currentSubcheckId);
             }
           },
           error: error => {
