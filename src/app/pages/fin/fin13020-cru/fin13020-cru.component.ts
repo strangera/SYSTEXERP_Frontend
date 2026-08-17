@@ -2,16 +2,20 @@
 import { NgIf } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column, LazyLoadEvent } from '../../../others/component/table/table.model';
 import { debounceTime, distinctUntilChanged, finalize, map, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
@@ -42,12 +46,25 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     TableEditComponent,
     TranslateModule,
     YearMonthComponent,
+    ButtonModule,
+    DialogModule,
+    TableComponent,
   ],
 })
 export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
 
   guiNumberOptions: { label: string; value: string }[] = [];
+
+  // 發票號碼選取 dialog
+  showInvoiceDialog = false;
+  invoiceDialogData: { InvoiceNumber: string }[] = [];
+  invoiceDialogTotal = 0;
+  invoiceDialogFilterControl = new FormControl('');
+  invoiceDialogLoading = false;
+  invoiceDialogColumns: Column[] = [
+    { field: 'InvoiceNumber', header: '發票號碼' },
+  ];
   voucherTypeOptions: { label: string; value: string }[] = [];
 
   taxTypeOptions = [
@@ -106,7 +123,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private apiService: FIN13010Service,
-    private fin13020Service: FIN13020Service,
+    public readonly fin13020Service: FIN13020Service,
     private validationService: ValidationService,
     private dropDownListService: DropDownListService
   ) {
@@ -182,6 +199,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.setupVoucherNoWatcher();
 
     this.dataForm.get('TXN_Ret_No')?.disable();
+    this.dataForm.get('PUR_GUINo')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
     this.dataForm.get('Inv_Net')?.disable();
@@ -484,42 +502,14 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     const trackControl = this.dataForm.get('GUI_Track');
     if (!trackControl) return;
 
-    trackControl.valueChanges.subscribe((trackNo) => {
-      const track = typeof trackNo === 'string' ? trackNo.trim() : '';
-
+    trackControl.valueChanges.subscribe(() => {
       this.lastLoadedInvoiceKey = '';
-
-      if (track.length >= 2) {
-        this.fin13020Service.queryINV1000List({ GUI_Track: track }).subscribe((res) => {
-          this.guiNumberOptions = (res.Data || []).map((item: any) => {
-            const pureNo = this.normalizeInvoiceNumber(item.InvoiceNumber, track);
-            return {
-              label: pureNo,
-              value: pureNo,
-            };
-          });
-
-          this.dataForm.patchValue(
-            {
-              PUR_GUINo: '',
-              InvoiceNumber_Correspond: '',
-            },
-            { emitEvent: false }
-          );
-
-          this.clearLoadedInvoiceFields();
-        });
-      } else {
-        this.guiNumberOptions = [];
-        this.dataForm.patchValue(
-          {
-            PUR_GUINo: '',
-            InvoiceNumber_Correspond: '',
-          },
-          { emitEvent: false }
-        );
-        this.clearLoadedInvoiceFields();
-      }
+      this.guiNumberOptions = [];
+      this.dataForm.patchValue(
+        { PUR_GUINo: '', InvoiceNumber_Correspond: '' },
+        { emitEvent: false }
+      );
+      this.clearLoadedInvoiceFields();
     });
   }
 
@@ -605,6 +595,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     this.dataForm.get('TXN_Ret_No')?.disable();
+    this.dataForm.get('PUR_GUINo')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
     this.dataForm.get('Inv_Net')?.disable();
@@ -1138,6 +1129,57 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     return str.trim();
+  }
+
+  openInvoiceDialog(): void {
+    const track = (this.dataForm.get('GUI_Track')?.value as string || '').trim();
+    if (!track) {
+      this.messageService.warnBubble('請先輸入字軌');
+      return;
+    }
+    this.invoiceDialogFilterControl.setValue('');
+    this.invoiceDialogData = [];
+    this.invoiceDialogTotal = 0;
+    this.showInvoiceDialog = true;
+    this.runInvoiceDialogQuery(1);
+  }
+
+  onInvoiceDialogSearch(): void {
+    this.runInvoiceDialogQuery(1);
+  }
+
+  onInvoiceDialogLazyLoad(event: LazyLoadEvent): void {
+    this.runInvoiceDialogQuery(event.pageIndex);
+  }
+
+  private runInvoiceDialogQuery(pageIndex: number): void {
+    const track = (this.dataForm.get('GUI_Track')?.value as string || '').trim();
+    if (!track) return;
+
+    this.invoiceDialogLoading = true;
+    this.fin13020Service.queryINV1000List({
+      GUI_Track: track,
+      InvoiceNumber: this.invoiceDialogFilterControl.value || undefined,
+      PageIndex: pageIndex,
+      PageSize: 30,
+    }).subscribe({
+      next: (res: any) => {
+        this.invoiceDialogData = res.Data || [];
+        this.invoiceDialogTotal = res.TotalCount ?? 0;
+        this.invoiceDialogLoading = false;
+      },
+      error: () => { this.invoiceDialogLoading = false; },
+    });
+  }
+
+  selectInvoiceNumber(rowData: { InvoiceNumber: string }): void {
+    this.lastLoadedInvoiceKey = '';
+    this.guiNumberOptions = [{ label: rowData.InvoiceNumber, value: rowData.InvoiceNumber }];
+    this.dataForm.patchValue({ PUR_GUINo: rowData.InvoiceNumber }, { emitEvent: false });
+    this.showInvoiceDialog = false;
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.loadCorrespondInvoiceInfo();
+    }
   }
 
   clearFormExcept(): void {

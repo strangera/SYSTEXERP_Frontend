@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -12,8 +14,8 @@
             label="退出/折讓單號"
             controlName="TXN_Ret_No"
             [control]="dataForm.controls.TXN_Ret_No"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -21,20 +23,27 @@
             label="字軌"
             controlName="GUI_Track"
             [control]="dataForm.controls.GUI_Track"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
+        <div class="col-12 md:col-6 lg:col-4" style="position: relative">
+          <app-input-text
             label="發票號碼"
             controlName="PUR_GUINo"
             [control]="dataForm.controls.PUR_GUINo"
-            optionLabel="label"
-            optionValue="value"
-            [options]="guiNumberOptions"
-            [submitted]="submitted">
-          </app-dropdown>
+            [customPlaceholder]="'點擊選擇發票號碼'"
+            [alwaysShowPlaceholder]="true"
+            [submitted]="submitted"
+          ></app-input-text>
+          @if (crudstatus === CRUD.Create) {
+            <div
+              style="position: absolute; inset: 0; cursor: pointer"
+              (click)="openInvoiceDialog()"
+              (keydown.enter)="openInvoiceDialog()"
+              tabindex="0"
+            ></div>
+          }
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -42,8 +51,8 @@
             label="發票日期"
             controlName="Inv_Date"
             [control]="dataForm.controls.Inv_Date"
-            [submitted]="submitted">
-          </app-calendar>
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -51,8 +60,8 @@
             label="退出/折讓日期"
             controlName="PUR_GUIDate"
             [control]="dataForm.controls.PUR_GUIDate"
-            [submitted]="submitted">
-          </app-calendar>
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-8">
@@ -63,8 +72,8 @@
             optionLabel="label"
             optionValue="value"
             [options]="voucherTypeOptions"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -72,8 +81,8 @@
             label="申報年月"
             [control]="dataForm.controls.PUR_RepYYYYMM"
             [submitted]="submitted"
-            [evenMonth]="true">
-          </app-year-month>
+            [evenMonth]="true"
+          ></app-year-month>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -84,8 +93,8 @@
             optionValue="value"
             [control]="dataForm.controls.Credit_Type"
             [options]="creditTypeOptions"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -96,8 +105,8 @@
             optionValue="value"
             [control]="dataForm.controls.PUR_TaxType"
             [options]="taxTypeOptions"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -105,8 +114,8 @@
             label="銷售額"
             controlName="Inv_Net"
             [control]="dataForm.controls.Inv_Net"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -114,8 +123,8 @@
             label="稅額"
             controlName="Inv_Tax"
             [control]="dataForm.controls.Inv_Tax"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -123,8 +132,8 @@
             label="退出/折讓金額"
             controlName="PUR_Net"
             [control]="dataForm.controls.PUR_Net"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -132,8 +141,8 @@
             label="退出/折讓稅額"
             controlName="PUR_Tax"
             [control]="dataForm.controls.PUR_Tax"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -141,8 +150,8 @@
             label="退回/折讓總金額"
             controlName="PUR_Amt"
             [control]="dataForm.controls.PUR_Amt"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -150,8 +159,8 @@
             label="已退出/折讓歷史總金額"
             controlName="Total_hitory_PUR_Amt"
             [control]="dataForm.controls.Total_hitory_PUR_Amt"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -159,8 +168,8 @@
             label="剩餘總金額"
             controlName="Total_Amt"
             [control]="dataForm.controls.Total_Amt"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -168,8 +177,8 @@
             label="憑證單號"
             controlName="Source_Doc_No"
             [control]="dataForm.controls.Source_Doc_No"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -177,14 +186,15 @@
             label="傳票編號"
             controlName="Voucher_No"
             [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable">
+        *ngIf="!isFormReadable"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
@@ -204,8 +214,61 @@
     [showCheckBox]="!isRead"
     [showInsert]="false"
     [enableTabInsert]="!isRead"
-    [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
+    [defaultInsertData]="{
+      PLU_Name: '',
+      TXN_Qty: null,
+      PLU_SalePrc: null,
+      TXN_SaleAmt: null,
+    }"
     [showPaginator]="false"
-    [showReorder]="!isRead">
-  </app-table-edit>
+    [showReorder]="!isRead"
+  ></app-table-edit>
 </div>
+
+<!-- 發票號碼選取 Dialog -->
+<p-dialog
+  header="選擇發票號碼"
+  [(visible)]="showInvoiceDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '80vw' }"
+>
+  <div class="flex gap-2 mb-3 align-items-end">
+    <app-input-text
+      class="flex-1"
+      label="發票號碼篩選"
+      [control]="invoiceDialogFilterControl"
+      (keydown.enter)="onInvoiceDialogSearch()"
+    ></app-input-text>
+    <app-button
+      btnType="query"
+      [loading]="invoiceDialogLoading"
+      (click)="onInvoiceDialogSearch()"
+    ></app-button>
+  </div>
+
+  <app-table
+    [data]="invoiceDialogData"
+    [columns]="invoiceDialogColumns"
+    [loading]="invoiceDialogLoading"
+    [lazy]="true"
+    [totalRecords]="invoiceDialogTotal"
+    [rows]="30"
+    [showDelete]="false"
+    [showManage]="false"
+    [showCaption]="false"
+    (lazyLoadData)="onInvoiceDialogLazyLoad($event)"
+    (itemClick)="selectInvoiceNumber($event)"
+  ></app-table>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end">
+      <p-button
+        label="取消"
+        severity="secondary"
+        (onClick)="showInvoiceDialog = false"
+      ></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
