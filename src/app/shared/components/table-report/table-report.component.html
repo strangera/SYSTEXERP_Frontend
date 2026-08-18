@@ -30,7 +30,7 @@
   </ng-template>
 
   <ng-template pTemplate="header" let-columns>
-    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0 && !(topColumnGroup && topColumnGroup.length > 0)">
       <tr>
         <th *ngIf="showReorder" scope="col" class="text-center" rowspan="2" pFrozenColumn
           [style.min-width]="serialColumnWidth" [style.width]="serialColumnWidth">
@@ -73,6 +73,80 @@
       </tr>
 
       <!-- 分組子列 -->
+      <tr>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <th *ngIf="col.groupField" scope="col" class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
+            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
+            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
+            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+            {{ col.header }}
+            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+
+    <!-- 選用的第三層表頭分組：columnGroup 之上再多一層 (例如 TLS32020 的「比較期/基準期/差異」) -->
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0 && topColumnGroup && topColumnGroup.length > 0">
+      <tr>
+        <th *ngIf="showReorder" scope="col" class="text-center" rowspan="3" pFrozenColumn
+          [style.min-width]="serialColumnWidth" [style.width]="serialColumnWidth">
+          序號
+        </th>
+        <th *ngIf="showCheckBox" scope="col" class="w-1rem group-header text-center" rowspan="3">
+          <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
+          <span *ngIf="tableHeaderCheckboxLabel"> {{ tableHeaderCheckboxLabel }} </span>
+        </th>
+        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem group-header" rowspan="3"> 收合/展開 </th>
+
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 第三層分組 Header -->
+          <th *ngIf="tableUtility.shouldRenderTopGroupHeader(col, i, columns)" scope="col"
+            [attr.colspan]=" tableUtility.getTopGroupColumnSpan(columns, col.topGroupField!) " class="group-header text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
+            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
+            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
+            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+            {{ getTopGroupHeader(col.topGroupField!) }}
+          </th>
+
+          <!-- 無第三層分組欄位 (跨三列) -->
+          <th *ngIf="!col.topGroupField" scope="col" rowspan="3" class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
+            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
+            [pSortableColumnDisabled]=" col.showSort === false || showSort === false " pFrozenColumn
+            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="col.width || '55px'"
+            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+            {{ col.header }}
+            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
+              [field]="col.sortField ?? col.field" />
+          </th>
+        </ng-container>
+
+        <th [hidden]="!showManage" scope="col" rowspan="3" class="w-1rem text-center group-header" alignFrozen="right"
+          pFrozenColumn [frozen]="true"> 管理 </th>
+      </tr>
+
+      <!-- 第二層分組 Header -->
+      <tr>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" scope="col"
+            [attr.colspan]=" tableUtility.getColumnSpan(columns, col.groupField!) " class="group-header text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
+            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
+            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
+            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+            {{ getGroupHeader(col.groupField!) }}
+          </th>
+        </ng-container>
+      </tr>
+
+      <!-- 分組子列 (個別欄位) -->
       <tr>
         <ng-container *ngFor="let col of columns; let i = index">
           <th *ngIf="col.groupField" scope="col" class="text-center"

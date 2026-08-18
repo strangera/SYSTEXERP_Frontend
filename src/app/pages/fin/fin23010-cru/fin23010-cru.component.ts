@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 
 import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -19,20 +19,13 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { VenEmpPicked, VenEmpPickerComponent } from './ven-emp-picker/ven-emp-picker.component';
-
-/** 票據禁止背書轉讓 是/否 (單純Y/N旗標，非SYS1000代碼表) */
-const CTRLYN_OPTIONS = [
-  { label: '是', value: 'Y' },
-  { label: '否', value: 'N' },
-];
 
 //1.2.3.1 暫付款申請作業 CRU
 @Component({
   selector: 'app-fin23010-cru',
   templateUrl: './fin23010-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, ButtonModule, InputTextModule, VenEmpPickerComponent, NgIf, AsyncPipe, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, ButtonModule, InputTextModule, NgIf, AsyncPipe, TranslateModule]
 })
 export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> implements OnInit {
   private readonly finService = inject(FIN23010Service);
@@ -45,38 +38,39 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     requestDate: [new Date(), [Validators.required]], //申請日期
     advanceAmount: [null as number | null, [Validators.required, this.validationService.numberValidator]], // 預支金額
     writeOffDate: [new Date(), [Validators.required]], //預計核銷日
-    requsetEmployee: ['', [Validators.required]], //申請廠商/員工(VEN_No)
-    payoutMethod: [{ value: null as string | null, disabled: true }], //付款方式
-    transferAccount: [{ value: '', disabled: true }, [Validators.maxLength(10)]], //匯款銀行代號
-    bankAccount: [{ value: '', disabled: true }, [Validators.maxLength(20)]], // 銀行帳號
-    accountName: [{ value: '', disabled: true }, [Validators.maxLength(80)]], // 帳戶名稱
-    ticketTransfer: [null as string | null], // 票據禁止背書轉讓
-    ticketTitle: [{ value: '', disabled: true }, [Validators.maxLength(100)]], // 票據抬頭
+    requsetEmployee: [{ value: '', disabled: true }, [Validators.required]], //申請員工(VEN_No，固定為登入帳號，鎖定不可改)
+    payoutMethod: [null as string | null], //付款方式
+    transferAccount: ['', [Validators.maxLength(10)]], //匯款銀行代號
+    bankAccount: ['', [Validators.maxLength(20)]], // 銀行帳號
+    accountName: ['', [Validators.maxLength(80)]], // 帳戶名稱
+    ticketTitle: ['', [Validators.maxLength(100)]], // 統一編號/身分證字號(原票據抬頭欄位改用途)
     eExpectPayDate: [null as Date | null, [Validators.required]], //預計付款日
     organization: [null as string | null, [Validators.required]], //費用組織
     summary: ['', [Validators.maxLength(160)]], // 摘要
   });
 
   readonly CRUDStatus = CRUDStatus;
-  readonly ctrlYNOptions = CTRLYN_OPTIONS;
-  readonly payoutMethodOptions$ = getSYS1000Options$(this.systemDataService, 'VEN_PayType');
+  /** 付款方式：SP端目前僅允許1(電匯)/3(現金)，2(開票)已停用，故濾掉 */
+  readonly payoutMethodOptions$ = getSYS1000Options$(this.systemDataService, 'VEN_PayType').pipe(
+    map(options => options.filter(o => o.value === '1' || o.value === '3')),
+  );
   readonly organizationOptions$ = this.dropdown.querySys3100();
 
   /** 目前選定的廠商/員工名稱(顯示用) */
   venName = '';
-  /** 目前選定的廠商/員工統一編號或身分證字號(顯示用；由 ven-emp-picker 直接帶出，不需另外呼叫API) */
-  venUniform = '';
   /** 目前資料 id(修改時使用) */
   private currentId: number | null = null;
-  /** 目前狀態(0作廢/1建立/2已付款)，供畫面顯示 */
-  status: string | null = null;
   prepNo = '';
   vouNo = '';
   redeemNo = '';
+  /** 狀態(中文名稱，供畫面顯示) */
+  statusName = '';
+  /** 結案狀態(中文名稱) */
+  closeStatusName = '';
+  /** 簽核結果(中文名稱) */
+  eipApproveYNName = '';
 
-  pickerVisible = false;
-
-  /** 「申請廠商/員工」欄位顯示用文字 (代號 - 名稱) */
+  /** 「申請員工」欄位顯示用文字 (代號 - 名稱) */
   get venDisplayValue(): string {
     const code = this.dataForm.controls.requsetEmployee.value;
     if (!code) return '';
@@ -97,6 +91,9 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         // 申請日期/預計核銷日 預設帶系統日期(已在 dataForm 初始值設定)
+        // 申請員工固定預帶登入帳號，欄位鎖定不可改(已在 dataForm 設 disabled: true)
+        this.dataForm.controls.requsetEmployee.setValue(this.user.user_No);
+        this.venName = this.user.user_Name;
         break;
       case CRUDStatus.Edit:
       case CRUDStatus.Read:
@@ -123,12 +120,12 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
           return;
         }
         this.prepNo = d.PREP_NO ?? '';
-        this.status = d.Status ?? null;
         this.vouNo = d.VouNo ?? '';
         this.redeemNo = d.REDEEM_NO ?? '';
         this.venName = d.VenName ?? '';
-        // getByIdFIN23010 不含統一編號/身分證字號欄位，此欄位僅在本次挑選(picker)當下有值
-        this.venUniform = '';
+        this.statusName = d.StatusName ?? '';
+        this.closeStatusName = d.CloseStatusName ?? '';
+        this.eipApproveYNName = d.EipApproveYNName ?? '';
         this.dataForm.patchValue({
           advanceSheetNumber: d.PREP_NO,
           requestDate: d.APPY_Date ? new Date(d.APPY_Date) : null,
@@ -139,7 +136,6 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
           transferAccount: d.BNK_No,
           bankAccount: d.BNK_AccNo,
           accountName: d.BNK_AccountName,
-          ticketTransfer: d.VEN_CTRLYN,
           ticketTitle: d.VEN_CheckTitle,
           eExpectPayDate: d.PAY_Date ? new Date(d.PAY_Date) : null,
           organization: d.CostOrg,
@@ -153,30 +149,6 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
       error: () => {
         this.messageService.errorBubble('載入暫付款申請資料失敗，請稍後再試。', '載入失敗');
       },
-    });
-  }
-
-  // ----------------------------------------------------------------
-  openPicker(): void {
-    if (this.dataForm.disabled) return;
-    this.pickerVisible = true;
-  }
-
-  /**
-   * ven-emp-picker 選定後直接帶出完整回填欄位(queryVenEmpFIN23010一支API查完，不需再呼叫
-   * queryVenFIN23010/queryEmpFIN23010)。注意：POS2013無費用組織欄位，選擇員工時費用組織
-   * 不會自動帶入(與舊版queryEmpFIN23010行為不同)，需由使用者自行於下拉選擇。
-   */
-  onPickerSelected(picked: VenEmpPicked): void {
-    this.venName = picked.venName;
-    this.venUniform = picked.venUniform ?? '';
-    this.dataForm.patchValue({
-      requsetEmployee: picked.code,
-      payoutMethod: picked.payType,
-      transferAccount: picked.bnkNo,
-      bankAccount: picked.bnkAccNo,
-      accountName: picked.bnkAccountName,
-      ticketTitle: picked.checkTitle,
     });
   }
 
@@ -200,7 +172,6 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
       BNK_AccNo: v.bankAccount || null,
       BNK_AccountName: v.accountName || null,
       VEN_CheckTitle: v.ticketTitle || null,
-      VEN_CTRLYN: v.ticketTransfer,
       CostOrg: v.organization ?? '',
       Summary: v.summary || null,
     };

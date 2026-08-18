@@ -1,5 +1,5 @@
 import { CommonModule, NgIf } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -72,6 +72,8 @@ interface LoginUserInfo {
   ]
 })
 export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service> implements OnInit {
+  @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
+
   isRefreshing = false; // 是否是重製表單狀態(預設為false)
   orgdataForm: any;
   dataForm = this.formBuilder.group({
@@ -146,6 +148,10 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   keepDeptResultData: any[] = [];
   selectedKeepDept: any = null;
 
+  // 新增成功彈跳視窗(顯示零用金單號)的變數
+  saveSuccessDialogVisible = false;
+  saveSuccessMessage = '';
+
   constructor(
     private fb: FormBuilder,
     private fin72010Service: FIN72010Service,
@@ -185,19 +191,39 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       { field: 'AccNo', header: '費用會計科目', type: 'dropdown', width: '12rem', options: this.AccNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'NOTeDesc', header: '項目摘要', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'ORG_ID', header: '組織代號', type: 'dropdown', width: '12rem', options: this.keepingUnit_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '12rem', options: this.PUR_VoucherType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_GUINo', header: '發票/收據號碼', type: 'input', width: '12rem', validate: [this.validateGUINoRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PUR_Date', header: '發票日期', type: 'date', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read }, // 不確定欄位
-      { field: 'DEC_YM_Date', header: '申報年月', type: 'date', dateFormat: 'yy-mm', view: 'month', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      {
+        field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
+        disabled: () => this.crudstatus === CRUDStatus.Read,
+        // 明細類別=0(不扣抵憑證)時，比照 SP_FIN72010Save 的覆蓋規則(不論前端傳什麼，SP 都會強制改寫)，
+        // 前端主動代入同樣的值並鎖定欄位，避免畫面跟實際存檔結果不一致：
+        //   發票格式→清空、扣抵代號→'3'、課稅別→'0'(連動重算未稅/稅額)、對帳KEY值→清空。
+        // 發票日期/申報年月/發票用途 SP 仍保留使用者輸入，不受影響。
+        onChange: this.onDtlTypeChange,
+      },
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', width: '12rem', options: (rowData: QueryFIN72010DetailDetailResponse) => this.getVoucherTypeOptions(rowData?.PCS_DtlType), optionLabel: 'label', optionValue: 'value', validate: [this.requiredVoucherType], required: () => this.isVoucherTypeRequired(), disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'PCS_GUINo', header: '發票/收據號碼', type: 'input', width: '12rem', maxLength: 10, validate: [this.validateGUINoRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      // 選發票日期後自動帶出申報年月（奇數月進位到偶數月申報期）
+      { field: 'PUR_Date', header: '發票日期', type: 'date', width: '12rem', validate: [this.requiredUnlessNonDeductible], disabled: () => this.crudstatus === CRUDStatus.Read, calculate: (rowData, value) => this.deriveRepYm(rowData, value) },
+      // 自己手選申報年月時，若選到奇數月一律自動進位成偶數月（1→2、3→4…）
+      { field: 'DEC_YM_Date', header: '申報年月', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [this.requiredUnlessNonDeductible, this.evenMonthValidator], disabled: () => this.crudstatus === CRUDStatus.Read, calculate: (rowData, value) => this.deriveRepYm(rowData, value) },
       { field: 'VEN_Uniform', header: '廠商統一編號', type: 'input', width: '12rem', disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', width: '12rem', options: this.PUR_DirectType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_Amt', header: '發票總金額', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_TaxType', header: '課稅別', type: 'dropdown', width: '12rem', options: this.PCS_TaxType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_Net', header: '發票未稅金額', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
-      { field: 'PCS_Tax', header: '發票稅額', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', width: '12rem', options: this.PUR_DirectType_Options, optionLabel: 'label', optionValue: 'value', disabled: () => this.crudstatus === CRUDStatus.Read },
+      {
+        field: 'PCS_Amt', header: '發票總金額', type: 'inputNumber', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read,
+        // 總金額變動時，依目前課稅別即時回算未稅/稅額
+        calculate: (rowData, value) => this.calcNetTax(rowData.PCS_TaxType, value),
+      },
+      {
+        field: 'PCS_TaxType', header: '課稅別', type: 'dropdown', width: '12rem', options: this.PCS_TaxType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
+        disabled: () => this.crudstatus === CRUDStatus.Read,
+        // 課稅別變動時，依目前總金額即時試算未稅/稅額(應稅事後仍可手動覆寫未稅金額)
+        calculate: (rowData, value) => this.calcNetTax(value, rowData.PCS_Amt),
+      },
+      { field: 'PCS_Net', header: '發票未稅金額', type: 'inputNumber', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'PCS_Tax', header: '發票稅額', type: 'inputNumber', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', width: '12rem', options: this.PUR_DiscNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'COLLECT_NUM', header: '彙總張數', type: 'input', width: '12rem', disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'RECON_Key', header: '對帳KEY值', type: 'input', width: '12rem', disabled: () => this.crudstatus === CRUDStatus.Read },
     ];
 
     this.loadDropdownOptions();
@@ -223,6 +249,12 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     this.submitted = true;
 
     this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent?.validateAndShowErrors();
+      if (valid !== true) {
+        this.loading = false;
+        return;
+      }
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
@@ -246,7 +278,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: this.formatDateToApi(item.PUR_Date),
+                  PUR_Date: item.PUR_Date ? this.formatDateToApi(item.PUR_Date) : null, // 空日期送 null，不可送 '' 否則後端 DateTime? 反序列化失敗
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
@@ -255,7 +287,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_TaxType: item.PCS_TaxType,
                   PUR_DirectType: item.PUR_DirectType,
                   COLLECT_NUM: item.COLLECT_NUM,
-                  PCS_Remark: item.PCS_Remark
+                  PCS_Remark: item.PCS_Remark,
+                  RECON_Key: item.RECON_Key
                 }))
             };
             this.fin72010Service.saveFIN72010(updateRequest)
@@ -265,8 +298,9 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   this.messageService.errorBubble(response.Data.ValidationErrors[0].ErrReason || '新增失敗');
                 }
                 else {
-                  this.messageService.successBubble(response.Data.Summary.Message || '新增成功');
-                  this.onCancel();  // 返回查詢頁
+                  // 新增成功以彈跳視窗顯示零用金單號(SP Message 已內含單號)，而非 toast，關閉後才返回查詢頁
+                  this.saveSuccessMessage = response.Data.Summary.Message || '新增成功';
+                  this.saveSuccessDialogVisible = true;
                 }
               })
           }
@@ -308,7 +342,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_DtlType: item.PCS_DtlType,
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
-                  PUR_Date: this.formatDateToApi(item.PUR_Date),
+                  PUR_Date: item.PUR_Date ? this.formatDateToApi(item.PUR_Date) : null, // 空日期送 null，不可送 '' 否則後端 DateTime? 反序列化失敗
                   DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
@@ -317,7 +351,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_TaxType: item.PCS_TaxType,
                   PUR_DirectType: item.PUR_DirectType,
                   COLLECT_NUM: item.COLLECT_NUM,
-                  PCS_Remark: item.PCS_Remark
+                  PCS_Remark: item.PCS_Remark,
+                  RECON_Key: item.RECON_Key
                 }))
             };
             this.fin72010Service.saveFIN72010(editRequest)
@@ -404,6 +439,12 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
+  }
+
+  // 關閉新增成功彈跳視窗，並返回查詢頁
+  confirmSaveSuccess(): void {
+    this.saveSuccessDialogVisible = false;
+    this.onCancel();
   }
 
   /** 將 Date 或日期字串轉為後端需要的 YYYY-MM-DD */
@@ -539,15 +580,19 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   // #region 明細檔 驗證
   validateDetailRow = (rowData: QueryFIN72010DetailDetailResponse): { isValid: boolean; errorMessage: string } => {
     // const accNo = rowData.AccNo?.trim(); // 取得目前這一列的費用會計科目，並去除前後空白
+    // 必填規則已對照實際 SP_FIN72010Save 的 #ValidationErrors 規則核對(VPN 已開，2026-08-14 直接查 sys.sql_modules 確認)：
+    // 規則5 PUR_VoucherType 只有 PCS_DtlType='1'(發票) 才必填(='2'收據不用)；規則7/8 PUR_Date/DEC_YM 是 PCS_DtlType<>'0' 才必填；
+    // PUR_DirectType(發票用途) SP 完全沒有必填規則，因此不列入前端必填檢核(欄位仍保留可填)
+    const isNonDeductible = rowData.PCS_DtlType === '0';
+
     const requiredFields = [
       { value: rowData.AccNo?.trim(), name: '費用會計科目' },
       { value: rowData.NOTeDesc?.trim(), name: '項目摘要' },
       { value: rowData.ORG_ID?.trim(), name: '組織代號' },
       { value: rowData.PCS_DtlType?.trim(), name: '明細類別' },
-      { value: rowData.PUR_VoucherType?.trim(), name: '發票格式' },
-      { value: rowData.PUR_Date, name: '發票日期' },
-      { value: rowData.DEC_YM_Date, name: '申報年月' },
-      { value: rowData.PUR_DirectType?.trim(), name: '發票用途' },
+      ...(rowData.PCS_DtlType === '1' ? [{ value: rowData.PUR_VoucherType?.trim(), name: '發票格式' }] : []),
+      ...(isNonDeductible ? [] : [{ value: rowData.PUR_Date, name: '發票日期' }]),
+      ...(isNonDeductible ? [] : [{ value: rowData.DEC_YM_Date, name: '申報年月' }]),
       { value: rowData.PCS_Amt, name: '發票總金額' },
       { value: rowData.PCS_TaxType?.trim(), name: '課稅別' },
       { value: rowData.PCS_Net, name: '發票未稅金額' },
@@ -666,7 +711,104 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     this.currentUserTarget = null;
   }
 
-  // 根據明細類別決定是否驗證發票/收據號碼為必填
+  // 各明細類別允許顯示的發票格式代碼
+  // 1(發票)：21/22/25/26/27；2(收據)：22/27；0(不扣抵憑證)：不顯示
+  private readonly voucherTypeByDtlType: Record<string, string[]> = {
+    '1': ['21', '22', '25', '26', '27'],
+    '2': ['22', '27'],
+  };
+
+  // 依明細類別過濾發票格式選項，0 或未選時回傳空陣列
+  private getVoucherTypeOptions(dtlType?: string | null): { label: string; value: string }[] {
+    const allowed = this.voucherTypeByDtlType[dtlType ?? ''];
+    if (!allowed) {
+      return [];
+    }
+    return this.PUR_VoucherType_Options().filter(opt => allowed.includes(opt.value));
+  }
+
+  // 明細類別改變後，若目前發票格式不在新允許清單內就清空（1↔2 切換避免殘留無效格式；切到 0 一律清空）
+  //
+  // 切到「不扣抵憑證(0)」時，比照 SP_FIN72010Save 的覆蓋規則主動代入同樣的值並鎖定欄位：
+  //   扣抵代號 -> '3'；課稅別 -> '0'(免稅，連動重算未稅/稅額)；對帳KEY值 -> 清空。
+  // SP 不論前端傳什麼都會覆蓋成這些值，前端提早代入只是讓畫面跟實際存檔結果一致，避免使用者誤填。
+  private onDtlTypeChange = (
+    _value: unknown,
+    rowData: QueryFIN72010DetailDetailResponse & { _validationErrors?: Record<string, string> }
+  ): void => {
+    const allowed = this.voucherTypeByDtlType[rowData.PCS_DtlType ?? ''];
+    if (!allowed || !allowed.includes(rowData.PUR_VoucherType ?? '')) {
+      rowData.PUR_VoucherType = '';
+    }
+
+    if (rowData.PCS_DtlType === '0') {
+      rowData.PUR_DiscNo = '3';
+      rowData.RECON_Key = '';
+      rowData.PCS_TaxType = '0';
+      const { PCS_Net, PCS_Tax } = this.calcNetTax('0', rowData.PCS_Amt);
+      rowData.PCS_Net = PCS_Net;
+      rowData.PCS_Tax = PCS_Tax;
+    }
+
+    // table-edit 只會重新驗證被改動的 PCS_DtlType 欄位本身，被這裡連動改掉/鎖住的欄位
+    // 若之前殘留必填錯誤提示不會自動消失，手動清掉避免畫面錯誤訊息卡住不消失。
+    if (rowData._validationErrors) {
+      for (const field of ['PUR_VoucherType', 'PUR_DiscNo', 'RECON_Key', 'PCS_TaxType', 'PCS_Net', 'PCS_Tax']) {
+        delete rowData._validationErrors[field];
+      }
+    }
+  };
+
+  // 只要有任一明細列的明細類別為非 0(即發票/收據)，發票格式標頭就顯示紅色 * 必填星號；
+  // 全部為 0(不扣抵憑證) 時不顯示。純顯示用，實際必填仍由 requiredVoucherType 逐列判斷。
+  private isVoucherTypeRequired(): boolean {
+    return this.Detaildata?.some(row => !!row.PCS_DtlType && row.PCS_DtlType !== '0') ?? false;
+  }
+
+  // 發票格式：明細類別為 0(不扣抵憑證) 時免必填，其餘類別維持必填
+  // （對應 SP_FIN72010Save 規則5，與 validateDetailRow 一致）
+  private requiredVoucherType = (
+    value: unknown,
+    rowData?: QueryFIN72010DetailDetailResponse
+  ): { isValid: boolean; errorMessage: string[] } => {
+    if (rowData?.PCS_DtlType === '0') {
+      return { isValid: true, errorMessage: [] };
+    }
+    const val = value === null || value === undefined ? '' : value.toString().trim();
+    return val !== ''
+      ? { isValid: true, errorMessage: [] }
+      : { isValid: false, errorMessage: ['必填'] };
+  };
+
+  // 發票日期/申報年月：非不扣抵憑證(type 0) 時才必填；type 0 可自行填寫但不強制
+  // （對應 SP_FIN72010Save 規則7/8：PCS_DtlType<>'0' 才卡必填，與 validateDetailRow 一致）
+  private requiredUnlessNonDeductible = (
+    value: unknown,
+    rowData?: QueryFIN72010DetailDetailResponse
+  ): { isValid: boolean; errorMessage: string[] } => {
+    if (rowData?.PCS_DtlType === '0') {
+      return { isValid: true, errorMessage: [] };
+    }
+    const isEmpty = value === null || value === undefined || value.toString().trim() === '';
+    return isEmpty ? { isValid: false, errorMessage: ['必填'] } : { isValid: true, errorMessage: [] };
+  };
+
+  // 依課稅別＋總金額試算未稅金額/稅額（規則與 SP_FIN72010Save 一致：應稅 未稅=ROUND(總額/1.05, 0)、稅額=ROUND(未稅*0.05, 0)；免稅/零稅 未稅=總額、稅額=0）
+  // 四捨五入到整數，不是小數點兩位——SP 端 CAL_Net/CAL_Tax 都是 ROUND(x, 0)，且 SP 對非 NULL 的 PCS_Net/PCS_Tax 是直接採用前端傳入值(COALESCE)不會再修正，前端算法必須跟 SP 一致
+  private calcNetTax(taxType: string | null | undefined, amt: number): { PCS_Net: number; PCS_Tax: number } {
+    const amount = Number(amt) || 0;
+
+    if (taxType === '1') {
+      const net = Math.round(amount / 1.05);
+      const tax = Math.round(net * 0.05);
+      return { PCS_Net: net, PCS_Tax: tax };
+    }
+
+    return { PCS_Net: amount, PCS_Tax: 0 };
+  }
+
+
+  // 根據明細類別決定是否驗證發票/收據號碼為必填、並卡控發票號碼長度
   validateGUINoRequired = (
     value: any,
     rowData?: any
@@ -675,11 +817,20 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
 
     // 1 = 發票 2 = 收據
     const needRequired = dtlType === '1' || dtlType === '2';
+    const str = (value ?? '').toString().trim();
 
-    if (needRequired && !value) {
+    if (needRequired && !str) {
       return {
         isValid: false,
         errorMessage: ['發票/收據號碼為必填']
+      };
+    }
+
+    // 發票號碼固定 10 碼（2 碼字軌 + 8 碼流水號）
+    if (dtlType === '1' && str && str.length !== 10) {
+      return {
+        isValid: false,
+        errorMessage: ['發票號碼須為 10 碼']
       };
     }
 
@@ -687,6 +838,50 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       isValid: true,
       errorMessage: []
     };
+  };
+
+  // 由日期換算申報年月：抓所屬的偶數月申報期（奇數月一律進位到下一個偶數月）
+  // 用於：選發票日期自動帶出申報年月、以及自己手選申報年月時把奇數月修正為偶數月
+  private deriveRepYm = (
+    rowData: QueryFIN72010DetailDetailResponse & { _validationErrors?: Record<string, string> },
+    value: Date | string | null | undefined
+  ): Record<string, unknown> => {
+    const d = value instanceof Date ? value : (value ? new Date(value) : null);
+    if (!d || isNaN(d.getTime())) {
+      return {};
+    }
+
+    const year = d.getFullYear();
+    let monthNo = d.getMonth() + 1;
+    if (monthNo % 2 !== 0) {
+      monthNo += 1; // 奇數月進位到偶數月申報期
+    }
+
+    // 自動帶出的申報年月必為偶數月，清掉可能殘留的申報年月錯誤提示
+    if (rowData._validationErrors) {
+      delete rowData._validationErrors['DEC_YM_Date'];
+    }
+
+    return { DEC_YM_Date: new Date(year, monthNo - 1, 1) };
+  };
+
+  // 申報年月僅接受偶數月（02/04/06/08/10/12）；空值交給 requiredUnlessNonDeductible 判斷
+  private evenMonthValidator = (
+    value: unknown
+  ): { isValid: boolean; errorMessage: string[] } => {
+    if (value === null || value === undefined || value === '') {
+      return { isValid: true, errorMessage: [] };
+    }
+
+    const d = value instanceof Date ? value : new Date(value as string);
+    if (isNaN(d.getTime())) {
+      return { isValid: false, errorMessage: ['申報年月格式錯誤'] };
+    }
+
+    const monthNo = d.getMonth() + 1;
+    return monthNo % 2 === 0
+      ? { isValid: true, errorMessage: [] }
+      : { isValid: false, errorMessage: ['申報年月僅接受偶數月（02/04/06/08/10/12）'] };
   };
 
   // 清除使用者選擇的資料

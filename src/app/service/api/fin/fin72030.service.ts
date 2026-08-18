@@ -7,11 +7,21 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/utils/rxjs-operators/validate-api-response';
 // 零用金拋轉作業 (FIN72030) 資料模型
 
+export interface FIN72030Detail1NoteDescItem {
+  PCS_No: string;
+  PCS_SeqNo: number;
+  NoteDesc: string;
+}
+
 export interface FIN72030QueryRequest {
   SYS_StoreNo: string;
   PCS_RqstNo: string;
   LoginUsrNo: string;
   LoginUsrName: string;
+  VouDate?: string | null;
+  Detail1NoteDescList?: FIN72030Detail1NoteDescItem[];
+  Detail2NoteDesc?: string | null;
+  Detail3NoteDesc?: string | null;
 }
 
 export interface FIN72030MasterResult {
@@ -52,6 +62,10 @@ export interface FIN72030QueryResult {
 export interface FIN72030PostingRequest {
   PCS_RqstNo: string;
   CreditOrgID?: string;
+  VouDate?: string | null;
+  Detail1NoteDescList?: FIN72030Detail1NoteDescItem[];
+  Detail2NoteDesc?: string | null;
+  Detail3NoteDesc?: string | null;
 }
 
 export interface FIN72030PostingResult {

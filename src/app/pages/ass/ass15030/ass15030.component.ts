@@ -65,7 +65,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
   exportExcelLoading = false;
-  private readonly defaultPageSize = 1000;
+  private readonly defaultPageSize = 100000;
   lastQueryBody?: QueryASS15030Request & { pageIndex?: number; pageSize?: number };
   // 跨頁累計筆數：parent.data 不會被 table-report 的 loadMoreData 同步回來，
   // 所以末頁偵測必須自己累計，否則 pageIndex>=3 的末頁 TotalCount 會錯。

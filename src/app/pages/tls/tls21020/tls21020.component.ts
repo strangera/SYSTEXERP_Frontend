@@ -56,7 +56,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   /** 欄位級別驗證 */
   private readonly validator = (value: unknown, rowData: TLS21020Data, _data: TLS21020Data[], field: keyof TLS21020Data) => {
     const { Voucher_Type, ENTRY_TYPE } = rowData;
-    if (Voucher_Type === '4' && ENTRY_TYPE?.trim() !== 'GF') {
+    if (Voucher_Type === '4' && ENTRY_TYPE?.trim() === 'SD') {
       if (field === 'VEN_No' && this.isEmpty(value)) {
         return { isValid: false, errorMessage: ['應收廠商必須填寫'] };
       }
@@ -221,8 +221,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       case EntryType['WD自營日結傳票']:
         this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true });
         break;
-      default:
+      case EntryType['SD銷售日傳票']:
         this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true, ObjectNo: true, RelatedPartyAccNo: true, VEN_No: true, PAY_days: true });
+        break;
+      default:
+        this.columnsKeys.set({ AccDC: true, ItemDesc: true, AccNo: true, Org_ID: true, AccNotes: true, ObjectNo: true, RelatedPartyAccNo: true });
     }
   }
 
@@ -271,7 +274,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public validateRow = (rowData: TLS21020Data): { isValid: boolean; errorMessage: string } => {
     const { VEN_No, PAY_days, Voucher_Type, ENTRY_TYPE } = rowData;
-    if (Voucher_Type === '4' && ENTRY_TYPE?.trim() !== 'GF') {
+    if (Voucher_Type === '4' && ENTRY_TYPE?.trim() === 'SD') {
       if (this.isEmpty(VEN_No)) return this.fail('應收廠商必須填寫');
       if (this.validateValue(PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
       if (this.isEmpty(PAY_days)) return this.warn('付款天數建議填寫');

@@ -21,12 +21,6 @@ import { TableReportComponent } from '../../../shared/components/table-report/ta
 import { ReportColumn, formatAmount } from '../../../shared/components/table-report/table-report.model';
 import { VenEmpPicked, VenEmpPickerComponent } from '../fin23010-cru/ven-emp-picker/ven-emp-picker.component';
 
-/** 票據禁止背書轉讓 是/否 (單純Y/N旗標，非SYS1000代碼表) */
-const CTRLYN_OPTIONS = [
-  { label: '是', value: 'Y' },
-  { label: '否', value: 'N' },
-];
-
 //1.2.3.1 暫付款申請作業
 @Component({
   selector: 'app-fin23010',
@@ -52,14 +46,12 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
     transferAccount: [null as string | null], //匯款銀行代號
     bankAccount: [''], // 銀行帳號
     accountName: [''], // 帳戶名稱
-    ticketTransfer: [null as string | null], // 票據禁止背書轉讓
-    ticketTitle: [''], // 票據抬頭
+    ticketTitle: [''], // 統一編號/身分證字號
     startExpectPayDate: [null as Date | null], //預計付款日
     endExpectPayfDate: [null as Date | null], //預計付款日
     summary: [''], // 摘要
   });
 
-  readonly ctrlYNOptions = CTRLYN_OPTIONS;
   readonly payoutMethodOptions$ = getSYS1000Options$(this.systemDataService, 'VEN_PayType');
   readonly bankOptions$ = this.dropdown.queryAps1001NoBranch();
 
@@ -71,16 +63,14 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   readonly tableQueryFunction = (body: QueryFIN23010Request) => this.finService.queryFIN23010(body);
 
-  isRowSelectable(row: FIN23010Data): boolean { return !!row.VouNo && row.CanVoid !== '1' };
+  isRowSelectable(row: FIN23010Data): boolean { return row.CanVoid === '1' };
 
-  editDisabled = (row: FIN23010Data): boolean => {
-    if (!row.VouNo) return true;
-    if (row.CanVoid === '1') return true;
-    return false;
-  }
+  /** 僅「建立中」(StatusCode='1') 可編輯，比照 SP_FIN23010GetById 的 CanEdit 規則 */
+  editDisabled = (row: FIN23010Data): boolean => row.StatusCode !== '1';
 
   columns: ReportColumn[] = [
     { field: 'PrepNo', header: '預支單號' },
+    { field: 'StatusName', header: '狀態' },
     { field: 'PrepAmt', header: '預支金額', align: 'right', format: formatAmount },
     { field: 'ApplyDate', header: '申請日期' },
     { field: 'PlanCloseDate', header: '預計核銷日' },
@@ -90,10 +80,11 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
     { field: 'BnkNo', header: '匯款銀行代號' },
     { field: 'BnkAccNo', header: '銀行帳號' },
     { field: 'BnkAccountName', header: '帳戶名稱' },
-    { field: 'VenCtrlYNName', header: '票據禁止背書轉讓' },
-    { field: 'VenCheckTitle', header: '票據抬頭' },
+    { field: 'VenCheckTitle', header: '統一編號/身分證字號' },
     { field: 'Summary', header: '摘要' },
     { field: 'PlanPayDate', header: '預計付款日' },
+    { field: 'EipApproveYNName', header: '簽核結果' },
+    { field: 'CloseStatusName', header: '結案狀態' },
   ];
 
   pickerVisible = false;
@@ -176,7 +167,6 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
       BNK_No: raw.transferAccount || undefined,
       BNK_AccNo: raw.bankAccount || undefined,
       BNK_AccountName: raw.accountName || undefined,
-      VEN_CTRLYN: raw.ticketTransfer || undefined,
       VEN_CheckTitle: raw.ticketTitle || undefined,
       PAY_DateS: toDateStr(raw.startExpectPayDate),
       PAY_DateE: toDateStr(raw.endExpectPayfDate),

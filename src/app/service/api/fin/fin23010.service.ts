@@ -18,7 +18,7 @@ export interface QueryFIN23010Request extends ApiRequest {
   BNK_No?: string | null;
   BNK_AccNo?: string | null;
   BNK_AccountName?: string | null;
-  VEN_CTRLYN?: string | null;
+  /** 統一編號/身分證字號(模糊查詢；原票據抬頭欄位改用途) */
   VEN_CheckTitle?: string | null;
   PAY_DateS?: string | null;
   PAY_DateE?: string | null;
@@ -41,12 +41,24 @@ export interface FIN23010Data {
   BnkNo: string | null;
   BnkAccNo: string | null;
   BnkAccountName: string | null;
-  VenCtrlYN: string | null;
-  VenCtrlYNName: string | null;
+  /** 統一編號/身分證字號(原票據抬頭欄位改用途) */
   VenCheckTitle: string | null;
   Summary: string | null;
   PlanPayDate: string | null;
   VouNo: string | null;
+  /** 結案狀態(Y/N) */
+  CloseStatus: string | null;
+  /** 結案狀態(中文名稱) */
+  CloseStatusName: string | null;
+  /** 狀態代碼(原始值 0作廢/1建立中/2已付款/3已抽單) */
+  StatusCode: string | null;
+  /** 狀態(中文名稱，建立中時依簽核結果細分審核中/已審核/已駁回) */
+  StatusName: string | null;
+  /** 簽核結果(NULL=尚無結果/Y=通過/N=駁回) */
+  EipApproveYN: string | null;
+  /** 簽核結果(中文名稱) */
+  EipApproveYNName: string | null;
+  /** 是否可刪除('1'=可刪除) */
   CanVoid: string | null;
 }
 
@@ -63,7 +75,16 @@ export interface FIN23010Detail {
   PAY_Date: string;
   CLOSE_Date: string;
   CLOSE_Status: string | null;
+  /** 結案狀態(中文名稱) */
+  CloseStatusName: string | null;
+  /** 狀態(0作廢/1建立中/2已付款/3已抽單) */
   Status: string | null;
+  /** 狀態(中文名稱，建立中時依簽核結果細分審核中/已審核/已駁回) */
+  StatusName: string | null;
+  /** 簽核結果(NULL=尚無結果/Y=通過/N=駁回) */
+  EIP_ApproveYN: string | null;
+  /** 簽核結果(中文名稱) */
+  EipApproveYNName: string | null;
   VEN_PayType: string | null;
   PayTypeName: string | null;
   BNK_id: string | null;
@@ -71,8 +92,8 @@ export interface FIN23010Detail {
   BNK_BranchNo: string | null;
   BNK_AccNo: string | null;
   BNK_AccountName: string | null;
+  /** 統一編號/身分證字號(原票據抬頭欄位改用途) */
   VEN_CheckTitle: string | null;
-  VEN_CTRLYN: string | null;
   CostOrg: string | null;
   CostOrgName: string | null;
   Summary: string | null;
@@ -101,8 +122,8 @@ export interface SaveFIN23010Request {
   BNK_BranchNo?: string | null;
   BNK_AccNo?: string | null;
   BNK_AccountName?: string | null;
+  /** 統一編號/身分證字號(原票據抬頭欄位改用途) */
   VEN_CheckTitle?: string | null;
-  VEN_CTRLYN?: string | null;
   CostOrg: string;
   Summary?: string | null;
 }

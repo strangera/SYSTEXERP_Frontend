@@ -148,6 +148,7 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
     this.fileList = [];
     this.searchFileName = '';
     this.selectedFiles = [];
+    this.onSearch();
   }
 
   onSearch() {

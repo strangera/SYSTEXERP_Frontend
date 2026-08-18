@@ -29,6 +29,34 @@ import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 @Component({
   selector: 'app-tls32050',
   templateUrl: './tls32050.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+      .bg-group-growth {
+        background-color: #f3e9f7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-growth {
+        background-color: #ebd9f2 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CommonModule,
@@ -92,6 +120,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     halfyear_onedateyy: [new Date()],
     halfyear: ['1' as string | null],
     year_onedateyy: [new Date()],
+    sad_startdate: [null as Date | null],
+    sad_enddate: [null as Date | null],
   });
 
   halfyearOptions = [
@@ -110,6 +140,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
+    { value: '6', label: '區間營業報表' },
   ];
 
   totalRecords = 0;
@@ -222,6 +253,18 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
   ngOnInit(): void {
     this.initializePage('TLS32050', 'TLS/TLS32050cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.groupField) {
+          case '本期': return 'bg-group-base';
+          case '上期': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '坪效': return 'bg-group-growth';
+          default: return '';
+        }
+      },
+    }));
 
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
@@ -592,6 +635,12 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         }
         break;
       }
+      case '6': // 區間報：直接分別取用 dateForm / c_dateForm 的日期，不鎖定也不自動帶入
+        start = this.dateForm.get('sad_startdate')?.value as Date | null;
+        end = this.dateForm.get('sad_enddate')?.value as Date | null;
+        compareStart = this.c_dateForm.get('sad_startdate')?.value as Date | null;
+        compareEnd = this.c_dateForm.get('sad_enddate')?.value as Date | null;
+        break;
     }
 
     if (start) this.queryForm.get('BaseDateFrom')?.setValue(start);
@@ -653,6 +702,11 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
           compareStart = new Date(year, 0, 1);
           compareEnd = new Date(year, 11, 31);
         }
+        break;
+      }
+      case '6': { // 區間報
+        compareStart = this.c_dateForm.controls.sad_startdate.value;
+        compareEnd = this.c_dateForm.controls.sad_enddate.value;
         break;
       }
     }

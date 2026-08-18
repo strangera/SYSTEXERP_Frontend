@@ -5,45 +5,95 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="清點單號"
-            [startControl]="queryForm.controls.CHK_ID_S" [endControl]="queryForm.controls.CHK_ID_E"
-            [submitted]="submitted"></app-input-text-range>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="清點單號"
+            [startControl]="queryForm.controls.CHK_ID_S"
+            [endControl]="queryForm.controls.CHK_ID_E"
+            [submitted]="submitted"
+          ></app-input-text-range>
 
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="清點日期"
-            [startControl]="queryForm.controls.CHK_DATE_S" [endControl]="queryForm.controls.CHK_DATE_E"
-            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="清點日期"
+            [startControl]="queryForm.controls.CHK_DATE_S"
+            [endControl]="queryForm.controls.CHK_DATE_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="清點人代碼" controlName="CHK_EMP_ID"
-            [options]="inventoryPersonOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.CHK_EMP_ID" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點人代碼"
+            controlName="CHK_EMP_ID"
+            [options]="inventoryPersonOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.CHK_EMP_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="位置代碼" controlName="LOCATION_ID"
-            [options]="locationOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.LOCATION_ID" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="位置代碼"
+            controlName="LOCATION_ID"
+            [options]="locationOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.LOCATION_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="清點單狀態" controlName="STATUS"
-            [options]="inventoryStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.STATUS" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點單狀態"
+            controlName="STATUS"
+            [options]="inventoryStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.STATUS"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="清點狀態(資料)" controlName="CHK_STATUS"
-            [options]="inventoryDataStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.CHK_STATUS" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點狀態(資料)"
+            controlName="CHK_STATUS"
+            [options]="inventoryDataStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.CHK_STATUS"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="說明" controlName="NOTES" [control]="queryForm.controls.NOTES"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="說明"
+              controlName="NOTES"
+              [control]="queryForm.controls.NOTES"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -54,32 +104,92 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report tableKey="ASS13100_Data" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      dataKey="ID" [queryFunction]="service.queryASS13100.bind(service)" [lastQueryBody]="lastQueryBody"
-      [loading]="loading" [showCheckBox]="true" [showSort]="false" [isRowSelectable]="isRowSelectable"
-      [showDelete]="true" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    <app-table-report
+      tableKey="ASS13100_Data"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      dataKey="ID"
+      [queryFunction]="service.queryASS13100.bind(service)"
+      [lastQueryBody]="lastQueryBody"
+      [loading]="loading"
+      [showCheckBox]="true"
+      [showSort]="false"
+      [isRowSelectable]="isRowSelectable"
+      [showDelete]="true"
+      [selectedItems]="selectedItems"
+      (dataChange)="data = $event"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    >
       <header>
         <div class="flex justify-content-end gap-2">
-          <p-button label="上傳盤點機檔案" icon="pi pi-upload" (click)="openUploadDialog()" [disabled]="loading"></p-button>
-          <p-button label="列印盤點表" icon="pi pi-file" (click)="onPrintInventoryReport()" [disabled]="loading"></p-button>
+          <p-button
+            label="下載上傳範例"
+            icon="pi pi-download"
+            severity="secondary"
+            (click)="downloadCsvTemplate()"
+            [disabled]="loading"
+          ></p-button>
+
+          <p-button
+            label="上傳盤點機檔案"
+            icon="pi pi-upload"
+            (click)="openUploadDialog()"
+            [disabled]="loading"
+          ></p-button>
+
+          <p-button
+            label="列印盤點表"
+            icon="pi pi-file"
+            (click)="onPrintInventoryReport()"
+            [disabled]="loading"
+          ></p-button>
         </div>
       </header>
     </app-table-report>
   </div>
 </div>
 
-<app-dialog [visible]="uploadDialogVisible" (visibleChange)="uploadDialogVisible = $event" header="上傳盤點機檔案"
-  [loading]="uploading" [disable]="uploading" [showFooter]="false">
+<app-dialog
+  [visible]="uploadDialogVisible"
+  (visibleChange)="uploadDialogVisible = $event"
+  header="上傳盤點機檔案"
+  [loading]="uploading"
+  [disable]="uploading"
+  [showFooter]="false"
+>
   <form>
     <div class="grid p-fluid">
-      <app-input-text class="col-12" label="清點單號" [control]="uploadChkIdControl"></app-input-text>
+      <app-input-text
+        class="col-12"
+        label="清點單號"
+        [control]="uploadChkIdControl"
+        [disabled]="true"
+      ></app-input-text>
 
-      <app-file-upload #fileUpload class="col-12" name="file" [multiple]="false" [fileLimit]="1" accept=".txt"
-        [customUpload]="true" [auto]="false" mode="advanced" chooseLabel="選擇檔案" uploadLabel="上傳" cancelLabel="清除"
-        [disabled]="uploading || !uploadChkIdControl.value.trim()" [loading]="uploading" [showUploadButton]="true"
-        [showCancelButton]="true" (select)="onUploadFileSelect($event)"
-        (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+      <app-file-upload
+        #fileUpload
+        class="col-12"
+        name="file"
+        [multiple]="false"
+        [fileLimit]="1"
+        accept=".csv"
+        [customUpload]="true"
+        [auto]="false"
+        mode="advanced"
+        chooseLabel="選擇檔案"
+        uploadLabel="上傳"
+        cancelLabel="清除"
+        [disabled]="uploading || !uploadChkIdControl.value.trim()"
+        [loading]="uploading"
+        [showUploadButton]="true"
+        [showCancelButton]="true"
+        (select)="onUploadFileSelect($event)"
+        (uploadHandler)="handleCustomUpload($event)"
+      ></app-file-upload>
     </div>
   </form>
 </app-dialog>

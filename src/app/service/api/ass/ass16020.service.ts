@@ -64,6 +64,7 @@ export interface QueryDetailASS16020Detail {
     KEYIN_NO: number;   // 登錄序號
     FASITEM_ID: number;   // 品項編號
     GOODS_NAME: string;   // 品項名稱
+    FASITEM_DISPLAY?: string;   // 品項編號/名稱 (前端組合顯示用，比照報表 "編號 / 名稱" 格式)
     B_CLASS_ID: string;   // 大分類代碼
     BClassName: string;   // 大分類名稱
     M_CLASS_ID: string;   // 中分類代碼

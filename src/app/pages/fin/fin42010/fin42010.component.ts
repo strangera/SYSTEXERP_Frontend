@@ -12,13 +12,13 @@ import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../others/component/table/table.component';
 import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
 
 @Component({
@@ -45,8 +45,9 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
   queryForm = this.formBuilder.group({
     BudgetVersion: [null, [Validators.required]], //版本
     BudgetYear: [null, [Validators.required]], //年
-    OrgId: [null, [Validators.required]], //部門
+    OrgId: [null], //部門
     AmtUnit: [1, [Validators.required]], // 金額單位表示
+    ShowZero: [1, [Validators.required]] //是否顯示整年度預算為0的會科
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -58,6 +59,10 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     { value: 2, label: '千' },
     { value: 3, label: '萬' }];
 
+  Zero_Options = [
+    { value: 1, label: '是' },
+    { value: 0, label: '否' }];
+
   data: fin42010DetailData[] = [];
   filteredData = [...this.data];
   columns = [
@@ -65,19 +70,19 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     // { field: 'LevelNo', header: 'LevelNo', visible: true },
     { field: '科目代號', header: '科目代號', visible: true },
     { field: '科目名稱', header: '科目名稱', visible: true },
-    { field: '1月', header: '1月', visible: true },
-    { field: '2月', header: '2月', visible: true },
-    { field: '3月', header: '3月', visible: true },
-    { field: '4月', header: '4月', visible: true },
-    { field: '5月', header: '5月', visible: true },
-    { field: '6月', header: '6月', visible: true },
-    { field: '7月', header: '7月', visible: true },
-    { field: '8月', header: '8月', visible: true },
-    { field: '9月', header: '9月', visible: true },
-    { field: '10月', header: '10月', visible: true },
-    { field: '11月', header: '11月', visible: true },
-    { field: '12月', header: '12月', visible: true },
-    { field: '預算總金額', header: '預算總金額', visible: true }
+    { field: '1月', header: '1月', format: formatAmount, visible: true },
+    { field: '2月', header: '2月', format: formatAmount, visible: true },
+    { field: '3月', header: '3月', format: formatAmount, visible: true },
+    { field: '4月', header: '4月', format: formatAmount, visible: true },
+    { field: '5月', header: '5月', format: formatAmount, visible: true },
+    { field: '6月', header: '6月', format: formatAmount, visible: true },
+    { field: '7月', header: '7月', format: formatAmount, visible: true },
+    { field: '8月', header: '8月', format: formatAmount, visible: true },
+    { field: '9月', header: '9月', format: formatAmount, visible: true },
+    { field: '10月', header: '10月', format: formatAmount, visible: true },
+    { field: '11月', header: '11月', format: formatAmount, visible: true },
+    { field: '12月', header: '12月', format: formatAmount, visible: true },
+    { field: '預算總金額', header: '預算總金額', format: formatAmount, visible: true }
   ];
 
   // 控制變數
@@ -157,3 +162,24 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     URL.revokeObjectURL(url);
   }
 }
+/**
+ * 格式化金額。
+ *
+ * 功能：
+ * 1. null / undefined / 空字串 顯示空白
+ * 2. 可以轉成數字時，加上千分位
+ * 3. 不能轉成數字時，直接顯示原值
+ */
+const formatAmount = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const num = Number(value);
+
+  if (Number.isNaN(num)) {
+    return String(value);
+  }
+
+  return num.toLocaleString();
+};

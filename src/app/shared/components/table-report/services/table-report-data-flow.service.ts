@@ -10,8 +10,9 @@ export class TableReportDataFlowService {
     if (!body) return body;
     const pageSize = body.pageSize ?? body.PageSize ?? 30;
     const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
-    const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
+    const { PageSize, PageIndex, pageSize: _pageSize, pageIndex: _pageIndex, ...rest } = body;
+    // 大小寫兩種欄位都同步成同一組值，避免呼叫端只認其中一種大小寫時拿到沒更新過的舊值（見 loadMoreData/onSort 一直重打第一頁）
+    return { ...rest, pageSize, pageIndex, PageSize: pageSize, PageIndex: pageIndex };
   }
 
   /**

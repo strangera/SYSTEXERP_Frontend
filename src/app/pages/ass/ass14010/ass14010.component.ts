@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { AddButton, formatAmount } from '@others/component/table/table.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
-import { AddButton, formatAmount } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
@@ -192,27 +192,34 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
       .map((item) => item.RECEIPT_INS_ID)
       .join(',');
 
-    const deleteBody = {
-      RECEIPT_INS_IDs: RECEIPT_INS_IDs, // 符合 API 的 idList 格式
-    };
-    console.log('deleteBody', deleteBody)
-    this.ass14010Service.deleteASS14010(deleteBody).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.onSubmit(this.queryForm);
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      }
-    });
 
-    this.selectedItems = [];
+    this.messageService.confirm({
+      header: `確認刪除`,
+      message: `是否確認刪除發票${RECEIPT_INS_IDs}`,
+      accept: () => {
+        const deleteBody = {
+          RECEIPT_INS_IDs: RECEIPT_INS_IDs,
+        };
+        console.log('deleteBody', deleteBody)
+        this.ass14010Service.deleteASS14010(deleteBody).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          }
+        });
+
+        this.selectedItems = [];
+      },
+    });
   }
 
   loadOptions() {

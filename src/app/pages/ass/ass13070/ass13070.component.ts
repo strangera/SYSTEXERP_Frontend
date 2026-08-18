@@ -54,7 +54,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
     HOLD_ORG_ID: new FormControl<string | null>(null),
     HOLD_EMP_ID: new FormControl<string | null>(null),
     USE_ORG_ID: new FormControl<string | null>(null),
-    PageSize: new FormControl<number>(30),
+    PageSize: new FormControl<number>(10000),
     PageIndex: new FormControl<number>(1),
   });
 
@@ -284,7 +284,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
       HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
       HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
       USE_ORG_ID: raw.USE_ORG_ID || undefined,
-      PageSize: body.PageSize ?? (body as { pageSize?: number }).pageSize ?? 30,
+      PageSize: body.PageSize ?? (body as { pageSize?: number }).pageSize ?? 100,
       PageIndex: body.PageIndex ?? (body as { pageIndex?: number }).pageIndex ?? 1,
       SortBy: body.SortBy,
     };
@@ -307,7 +307,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
         HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
         HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
         USE_ORG_ID: raw.USE_ORG_ID || undefined,
-        PageSize: raw.PageSize ?? 30,
+        PageSize: raw.PageSize ?? 100,
         PageIndex: raw.PageIndex ?? 1,
       } as ASS13070QueryRequest;
 
@@ -323,31 +323,47 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
         )
         .subscribe({
           next: res => {
-            if (res.Status !== '0000') return;
-            this.tableData.set(res.Data ?? []);
-            this.totalRecords.set(res.TotalCount ?? 0);
-          },
+  if (res.Status !== '0000') return;
+
+  this.tableData.set(res.Data ?? []);
+  this.totalRecords.set(res.TotalCount ?? 0);
+
+  // 每次重新查詢清空勾選
+  this.selectedItems = [];
+},
         });
     });
   }
 
   /** 進入移轉頁（需勾選至少一筆） */
-  public onGoTransfer(): void {
-    // if (this.selectedItems.length === 0) {
-    //   this.messageService.warnBubble('請至少勾選一筆資料');
-    //   return;
-    // }
-    // const missingId = this.selectedItems.some(r => r.ID == null);
-    // if (missingId) {
-    //   this.messageService.warnBubble('勾選資料缺少主鍵 ID，無法移轉');
-    //   return;
-    // }
-    this.router.navigate([`account/ass/ass13070cru`], {
-      state: {
-        crudstatus: CRUDStatus.Create,
-        fromRoute: this.router.url,
-        ass13070Rows: this.tableData(),
-      },
-    });
+/** 進入移轉頁（需先查詢並勾選至少一筆） */
+public onGoTransfer(): void {
+
+  // 尚未查詢，或查詢後沒有資料
+  if (this.tableData().length === 0) {
+    this.messageService.warnBubble('請先查詢並勾選一筆資料');
+    return;
   }
+
+  // 有查詢資料，但尚未勾選
+  if (this.selectedItems.length === 0) {
+    this.messageService.warnBubble('請至少勾選一筆資料');
+    return;
+  }
+
+  const missingId = this.selectedItems.some(r => r.ID == null);
+
+  if (missingId) {
+    this.messageService.warnBubble('勾選資料缺少主鍵 ID，無法移轉');
+    return;
+  }
+
+  this.router.navigate(['account/ass/ass13070cru'], {
+    state: {
+      crudstatus: CRUDStatus.Create,
+      fromRoute: this.router.url,
+      ass13070Rows: this.selectedItems,
+    },
+  });
+}
 }

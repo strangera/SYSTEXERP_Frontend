@@ -75,6 +75,30 @@ export interface ASS16010Data {
     INV_DATE: string;   // 盤點日期
 }
 
+// 新增 Response：每個成功建立盤點單的倉別與單號
+export interface InsertASS16010Response {
+    WH_ID: string;
+    NewINV_ID: string;
+}
+
+// 查看盤點單明細 Response
+export interface QueryASS16010DetailResponse {
+    RowNo: number;
+    INV_ID: string;
+    INV_DATE: string;
+    B_CLASS_ID: string;
+    BClassName: string;
+    M_CLASS_ID: string;
+    MClassName: string;
+    S_CLASS_ID: string;
+    SClassName: string;
+    KEYIN_NO: number;
+    FASITEM_ID: string;
+    GOODS_NAME: string;
+    FINE_QTY: number | null;
+    BAD_QTY: number | null;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -88,8 +112,13 @@ export class ASS16010Service {
     }
 
     // 新增
-    insertASS16010(payload: InsertASS16010Request): Observable<ApiResponse<null>> {
-        return this.http.post<ApiResponse<null>>(`${this.apiUrl}/insertASS16010`, payload);
+    insertASS16010(payload: InsertASS16010Request): Observable<ApiResponse<InsertASS16010Response[]>> {
+        return this.http.post<ApiResponse<InsertASS16010Response[]>>(`${this.apiUrl}/insertASS16010`, payload);
+    }
+
+    // 查看盤點單明細
+    queryASS16010Detail(req: QueryASS16010Request): Observable<ApiResponse<QueryASS16010DetailResponse[]>> {
+        return this.http.post<ApiResponse<QueryASS16010DetailResponse[]>>(`${this.apiUrl}/queryASS16010Detail`, req);
     }
 
     /** 匯出 PDF */

@@ -38,14 +38,14 @@ export class FIN13020Service {
       .pipe(tap((res) => console.log('刪除結果:', res)));
   }
 
-  queryINV1000List(param: { GUI_Track: string }) {
+  queryINV1000List(param: { GUI_Track: string; InvoiceNumber?: string; PageIndex?: number; PageSize?: number }) {
     return this.http.post<ApiResponse<any[]>>(
       `${this.apiUrl}/FIN0000/INV1000/queryFIN13020_InvoiceNumber`,
       param,
     );
   }
 queryFIN13100ByVoucherNo(voucherNo: string) {
-  return this.http.post<any>('/FIN0000/INV1000/queryFIN13100', {
+  return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13100`, {
     PageSize: 10,
     PageIndex: 1,
     VouNoStart: voucherNo,

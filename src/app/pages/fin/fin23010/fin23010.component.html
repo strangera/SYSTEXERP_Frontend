@@ -59,12 +59,7 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="票據禁止背書轉讓" controlName="ticketTransfer" optionLabel="label" optionValue="value"
-              [options]="ctrlYNOptions" [control]="queryForm.controls.ticketTransfer"
-              [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="queryForm.controls.ticketTitle"
+            <app-input-text label="統一編號/身分證字號" controlName="ticketTitle" [control]="queryForm.controls.ticketTitle"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -72,8 +67,6 @@
               [startControl]="queryForm.controls.startExpectPayDate" [endControl]="queryForm.controls.endExpectPayfDate"
               [submitted]="submitted"></app-calendar-range>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="摘要" controlName="summary" [control]="queryForm.controls.summary"
               [submitted]="submitted"></app-input-text>

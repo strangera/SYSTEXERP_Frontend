@@ -60,6 +60,9 @@ export interface BankBranchItem {
 export interface DeleteSYSB200Request {
   idList: number[];
 }
+export interface CopySYSB200Request {
+  id: number;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -96,5 +99,12 @@ export class Sysb200Service {
    */
   deleteSYSB200(body: DeleteSYSB200Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/deleteSYSB200`, body);
+  }
+
+  /**
+   * 複製廠商資料 (含聯絡人明細)，回傳新產生的廠商編號
+   */
+  copySYSB200(body: CopySYSB200Request): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${API_URL}/copySYSB200`, body);
   }
 }

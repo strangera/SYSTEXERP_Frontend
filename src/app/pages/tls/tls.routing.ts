@@ -312,6 +312,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls32050cru', loadComponent: () => import('./tls32050-cru/tls32050-cru.component').then(m => m.Tls32050CRUComponent), data: { progNo: 'Tls32050' } },
   // 各櫃業績報表
   { path: 'tls32060', loadComponent: () => import('./tls32060/tls32060.component').then(m => m.TLS32060Component), data: { progNo: 'TLS32060' } },
+  // 抽成類別分析報表
+  { path: 'tls32070', loadComponent: () => import('./tls32070/tls32070.component').then(m => m.TLS32070Component), data: { progNo: 'TLS32070' } },
   // 收銀機基本資料維護
   { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },
   // 收銀機EDC資料維護

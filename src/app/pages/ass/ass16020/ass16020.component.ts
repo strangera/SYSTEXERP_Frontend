@@ -16,6 +16,7 @@ import { CalendarRangeComponent } from '../../../shared/components/calendar-rang
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-ass16020',
@@ -174,9 +175,18 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
     });
   }
 
-  onAdjust() {
-    // 清除盤點單號欄位的驗證
-    this.clearInvIdValidator();
+  onAdjust(form: FormGroup) {
+    if (!this.checkInvIdRequired()) return;
+    if (!this.checkInvStatusForAdjust(form.get('INV_STATUS')?.getRawValue())) return;
+
+    this.ass16020Service.queryDetailASS16020(form.value)
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(response => {
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        if (this.hasPermission(this.Actions.Edit)) {
+          this.navigateWithState(CRUDStatus.Edit, response.Data);
+        }
+      });
   }
 
   /** 打開應收未收查詢 Dialog */
@@ -300,6 +310,16 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
   private checkInvStatusForCreate(status: string[] | null | undefined): boolean {
     if (!status || !status.includes('1')) {
       this.notification.errorBubble('此盤點單狀態不可登錄,請重新選擇盤點單');
+      return false;
+    }
+
+    return true;
+  }
+
+  // 檢查盤點單狀態是否為「登錄完成」，若不是則顯示錯誤訊息
+  private checkInvStatusForAdjust(status: string[] | null | undefined): boolean {
+    if (!status || !status.includes('2')) {
+      this.notification.errorBubble('此盤點單狀態不可調整,請重新選擇盤點單');
       return false;
     }
 

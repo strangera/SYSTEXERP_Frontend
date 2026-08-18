@@ -4,44 +4,81 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
-      <div class="grid p-fluid">
+    @if (isFormReadable) {
+      <div class="grid p-fluid mb-2">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="倉別"
-            controlName="whCategory"
-            [options]="whCategory()"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.whCategory"
-          ></app-dropdown>
+          <strong>盤點單號：</strong>{{ rowdata?.INV_ID }}
         </div>
-        <div class="col-12 md:col-6 lg:col-4 no-radio-label-margin">
-          <app-radiobutton
-            label="盤點類型"
-            [control]="dataForm.controls.invType"
-            [options]="invType"
-          ></app-radiobutton>
+        <div class="col-12 md:col-6 lg:col-4">
+          <strong>盤點日期：</strong>{{ formatDate(rowdata?.INV_DATE ?? '') }}
         </div>
+      </div>
+      <p-table [value]="detailData()" [loading]="loading" [rows]="20" [paginator]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>序號</th>
+            <th>大分類</th>
+            <th>中分類</th>
+            <th>小分類</th>
+            <th>品項代號</th>
+            <th>品項名稱</th>
+            <th>初盤良品數量</th>
+            <th>覆盤不良品數量</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>{{ item.RowNo }}</td>
+            <td>{{ item.B_CLASS_ID }} - {{ item.BClassName }}</td>
+            <td>{{ item.M_CLASS_ID }} - {{ item.MClassName }}</td>
+            <td>{{ item.S_CLASS_ID }} - {{ item.SClassName }}</td>
+            <td>{{ item.FASITEM_ID }}</td>
+            <td>{{ item.GOODS_NAME }}</td>
+            <td>{{ item.FINE_QTY }}</td>
+            <td>{{ item.BAD_QTY }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8">查無明細資料</td></tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="倉別"
+              controlName="whCategory"
+              [options]="whCategory()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.whCategory"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4 no-radio-label-margin">
+            <app-radiobutton
+              label="盤點類型"
+              [control]="dataForm.controls.invType"
+              [options]="invType"
+            ></app-radiobutton>
+          </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="中分類"
-            controlName="categoryOptions "
-            [options]="categoryOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.categoryOptions"
-          ></app-dropdown>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="中分類"
+              controlName="categoryOptions"
+              [options]="categoryOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.categoryOptions"
+            ></app-dropdown>
+          </div>
         </div>
-      </div>
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
-      </div>
-    </form>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
+        </div>
+      </form>
+    }
   </p-panel>
 </div>

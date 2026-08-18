@@ -44,15 +44,24 @@ export interface QueryFIN23050Response {
   NoteDesc: string;
 }
 
-/** 預覽傳票 Request (對應 SP_FIN23050Detail) */
-export interface DetailFIN23050Request {
+/** 預覽傳票 Request 單筆(核銷單號+預支單號) */
+export interface DetailFIN23050Item {
   REDEEM_NO: string;
   PREP_NO: string;
 }
 
-/** 預覽傳票-主檔 */
-export interface FIN23050Data {
-  ID: number;
+/** 預覽傳票 Request (對應 SP_FIN23050Detail，Items 一次可帶多筆，由 SP 統一重新編序號) */
+export interface DetailFIN23050Request {
+  Items: DetailFIN23050Item[];
+}
+
+/**
+ * 預覽傳票-明細單筆(扁平化，含所屬傳票表頭欄位)。
+ * SP 內部已把 Items 全部項目的明細合併＋重新編序號，不再是「一個表頭+一組明細」的巢狀結構。
+ */
+export interface DetailFIN23050Response {
+  REDEEM_NO: string;
+  PREP_NO: string;
   VouNo: string;
   Voucher_Name: string;
   VoucherType: string;
@@ -60,11 +69,9 @@ export interface FIN23050Data {
   Remark: string;
   CRT_USR_Name: string;
   CRT_Date: string;
-}
-
-/** 預覽傳票-明細單筆 */
-export interface FIN23050Detail {
+  /** 999999999 = SP 自動產生的123304轉列虛擬明細，GLS6002 無對應實體列 */
   Detail_ID: string;
+  /** SP 依 Items 全部項目合併後重新編號，非 GLS6002 原始序號 */
   SerNo: number;
   AccNo: string;
   AccCName: string;
@@ -75,12 +82,6 @@ export interface FIN23050Detail {
   Org_ID: string;
   Org_Name: string;
   ProjectNo: string;
-}
-
-/** 預覽傳票 Response */
-export interface DetailFIN23050Response {
-  FIN23050Data: FIN23050Data;
-  FIN23050DetailData: FIN23050Detail[];
 }
 
 /** 拋轉傳票明細單筆 (對應 Table Type: FIN23050Details) */
@@ -124,9 +125,9 @@ export class Fin23050Service {
     );
   }
 
-  /** 預覽拋轉傳票(表頭+明細) (呼叫 SP_FIN23050Detail) */
-  detailFIN23050(body: DetailFIN23050Request): Observable<ApiResponse<DetailFIN23050Response>> {
-    return this.http.post<ApiResponse<DetailFIN23050Response>>(
+  /** 預覽拋轉傳票明細(扁平化，一次可帶多筆核銷單號) (呼叫 SP_FIN23050Detail) */
+  detailFIN23050(body: DetailFIN23050Request): Observable<ApiResponse<DetailFIN23050Response[]>> {
+    return this.http.post<ApiResponse<DetailFIN23050Response[]>>(
       `${this.apiUrl}/FIN0000/APS1000/detailFIN23050`,
       body
     );

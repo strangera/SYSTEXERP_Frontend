@@ -18,9 +18,10 @@ export class TableValidationService {
    * @param col 欄位配置
    * @param value 變更後的值
    * @param allData 完整的表格資料 (用於跨行驗證)
+   * @param index 該列在表格中的索引 (用於 col.disabled 判斷)
    * @returns 欄位是否有效 (boolean)
    */
-  public validateField(rowData: any, col: EditColumn, value: any, allData: any[]): boolean {
+  public validateField(rowData: any, col: EditColumn, value: any, allData: any[], index?: number): boolean {
     if (rowData._isAutoInsertCandidate) {
       // 如果是新增候選行，確保沒有任何錯誤狀態被設定
       if (rowData._validationErrors) {
@@ -34,8 +35,11 @@ export class TableValidationService {
     let isValidField = true;
     let errorMessage = '';
 
+    // 該欄位對這一列本來就是 disabled：值本來就不可能由使用者填寫，直接視為驗證通過，不執行 col.validate
+    const isFieldDisabled = col.disabled && col.disabled(value, index, rowData);
+
     // 執行該欄位的所有驗證規則
-    if (col.validate) {
+    if (col.validate && !isFieldDisabled) {
       for (const validateFn of col.validate) {
         // 將完整的 allData 陣列傳遞給驗證函數
         const validationResult = validateFn(value, rowData, allData, col.field, col.header);
@@ -129,7 +133,7 @@ export class TableValidationService {
       // --- 欄位驗證 (Field Validation) ---
       for (const col of columns) {
         // 使用 service 的 validateField 方法執行驗證並更新 rowData
-        const isValidField = this.validateField(rowData, col, rowData[col.field], data); // data 是 _tableData
+        const isValidField = this.validateField(rowData, col, rowData[col.field], data, i); // data 是 _tableData
 
         if (!isValidField) {
           // 發現錯誤時，發出錯誤訊息，並返回失敗
@@ -180,6 +184,11 @@ export class TableValidationService {
    * @returns 是否必填
    */
   public isRequired(col: EditColumn): boolean {
+    // 顯示用 required 旗標（支援布林或函式，給條件式必填欄位動態顯示星號）
+    const req = typeof col.required === 'function' ? col.required() : col.required;
+    if (req === true) {
+      return true;
+    }
     // 直接比對函式引用，不受壓縮混淆影響
     return col.validate?.some(validate => validate === validateRequired) ?? false;
   }

@@ -11,11 +11,11 @@ import { ASS17080Service } from '@service/api/ass/ass17080.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
@@ -54,7 +54,7 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
     mClassId: [null as string | null],
     sClassId: [null as string | null],
     goodsId: [null as string | null],
-    pageSize: [30],
+    pageSize: [3000],
     pageIndex: [1],
   });
 
@@ -72,7 +72,10 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
   exportExcelLoading = false;
   columns: ReportColumn[] = [
     { field: 'GoodsID', header: '品項編號', visible: true },
-    { field: 'GoodName', header: '品項名稱', visible: true },
+    // width 明確指定，避開 TableReportWidthService 對未指定 width 欄位的 200px 自動寬度上限——
+    // 品項名稱字串常超過 200px，撞到上限會被 CSS 強制斷行成兩行，跟虛擬捲動假設「每列固定 ItemSize 高度」衝突，
+    // 導致捲動計算錯亂、載入到一半就卡住（實測現象：總筆數正確但捲不到底）
+    { field: 'GoodName', header: '品項名稱', visible: true, width: '220px' },
     { field: 'StocksQty', header: '目前庫存數量', visible: true },
     { field: 'SafeQty', header: '安全庫存數量', visible: true },
     { field: 'ProjectQty', header: '請購數量', visible: true },

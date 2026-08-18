@@ -6,11 +6,13 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import {
+  FIN72030Detail1NoteDescItem,
   FIN72030DetailResult,
   FIN72030QueryResult,
   Fin72030Service,
   PCS_RqstNoDropdownItem,
 } from '@service/api/fin/fin72030.service';
+import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { catchError, distinctUntilChanged, finalize, of } from 'rxjs';
@@ -21,23 +23,27 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { TableComponent } from '../../../others/component/table/table.component';
-import { Column, formatAmountNo0 } from '../../../others/component/table/table.model';
+import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
+import { formatAmountNo0, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 
-const DETAIL_COLUMNS: Column[] = [
-  { field: 'SeqNo', header: '序號', visible: true, align: 'center' },
-  { field: 'PCS_No', header: '編號', visible: true },
-  { field: 'AccNo', header: '科目編號', visible: true },
-  { field: 'AccCName', header: '科目名稱', visible: true },
-  { field: 'VEN_No', header: '廠商編號', visible: true },
-  { field: 'VEN_Name', header: '廠商名稱', visible: true },
-  { field: 'NOTeDesc', header: '摘要', visible: true },
-  { field: 'DebitAmt', header: '借方金額', visible: true, align: 'right', format: formatAmountNo0, isTotal: true },
-  { field: 'CreditAmt', header: '貸方金額', visible: true, align: 'right', format: formatAmountNo0, isTotal: true },
-  { field: 'ORG_ID', header: '組織代碼', visible: true },
-  { field: 'ORG_Name', header: '組織名稱', visible: true },
-  { field: 'PTA', header: '立沖代號', visible: true, align: 'center' },
-  { field: 'ProjectNo', header: '活動代號', visible: true },
+/** 進項稅額 123203 / 應付費用-現金 216104 為 SP_FIN72030VouDetail 自動產生筆，摘要走 Detail2/Detail3NoteDesc；其餘為費用明細逐筆摘要，走 Detail1NoteDescList */
+const TAX_ACC_NO = '123203';
+const CASH_ACC_NO = '216104';
+
+const DETAIL_COLUMNS: EditColumn[] = [
+  { field: 'SeqNo', header: '序號', textAlign: 'center', disabled: () => true },
+  { field: 'PCS_No', header: '編號', disabled: () => true },
+  { field: 'AccNo', header: '科目編號', disabled: () => true },
+  { field: 'AccCName', header: '科目名稱', disabled: () => true },
+  { field: 'VEN_No', header: '廠商編號', disabled: () => true },
+  { field: 'VEN_Name', header: '廠商名稱', disabled: () => true },
+  { field: 'NOTeDesc', header: '摘要', type: 'input' },
+  { field: 'DebitAmt', header: '借方金額', textAlign: 'right', format: formatAmountNo0, aggregate: 'sum', disabled: () => true },
+  { field: 'CreditAmt', header: '貸方金額', textAlign: 'right', format: formatAmountNo0, aggregate: 'sum', disabled: () => true },
+  { field: 'ORG_ID', header: '組織代碼', disabled: () => true },
+  { field: 'ORG_Name', header: '組織名稱', disabled: () => true },
+  { field: 'PTA', header: '立沖代號', textAlign: 'center', disabled: () => true },
+  { field: 'ProjectNo', header: '活動代號', disabled: () => true },
 ];
 
 @UntilDestroy()
@@ -57,7 +63,7 @@ const DETAIL_COLUMNS: Column[] = [
     CalendarComponent,
     DropdownComponent,
     InputTextComponent,
-    TableComponent,
+    TableEditComponent,
   ],
 })
 export class FIN72030Component
@@ -67,15 +73,15 @@ export class FIN72030Component
     PCS_RqstNo: ['', Validators.required],
   });
 
-  // 主檔顯示用唯讀 form（disable 後 app-input-text / app-calendar 會以唯讀樣式呈現）
+  // 主檔顯示用 form：Voucher_Date 開放使用者修改（PM 需求），其餘欄位 disable 後以唯讀樣式呈現
   masterForm = this.formBuilder.group({
-    Voucher_No: [''],
-    Voucher_Type: [''],
-    Voucher_Class: [''],
+    Voucher_No: [{ value: '', disabled: true }],
+    Voucher_Type: [{ value: '', disabled: true }],
+    Voucher_Class: [{ value: '', disabled: true }],
     Voucher_Date: [null as Date | null],
-    Voucher_Desc: [''],
-    CRT_Date: [null as Date | null],
-    CRT_USR: [''],
+    Voucher_Desc: [{ value: '', disabled: true }],
+    CRT_Date: [{ value: null as Date | null, disabled: true }],
+    CRT_USR: [{ value: '', disabled: true }],
   });
 
   rqstNoOptions: PCS_RqstNoDropdownItem[] = [];
@@ -91,7 +97,6 @@ export class FIN72030Component
 
   ngOnInit(): void {
     this.initializePage('FIN72030', undefined, this.queryForm, (form) => this.onSubmit(form));
-    this.masterForm.disable();
     this.loadDropdownOptions();
 
     this.queryForm.controls.PCS_RqstNo.valueChanges
@@ -136,10 +141,16 @@ export class FIN72030Component
 
     this.postingLoading = true;
 
+    const { detail1, detail2, detail3 } = this.buildNoteDescOverrides();
+
     // CreditOrgID 未送，後端會以預設 100000 (全公司) 處理
     this.fin72030Service
       .postingFIN72030({
         PCS_RqstNo: this.queryForm.value.PCS_RqstNo!,
+        VouDate: formatDateToYYYY_MM_DD(this.masterForm.getRawValue().Voucher_Date ?? ''),
+        Detail1NoteDescList: detail1,
+        Detail2NoteDesc: detail2,
+        Detail3NoteDesc: detail3,
       })
       .pipe(
         untilDestroyed(this),
@@ -166,6 +177,29 @@ export class FIN72030Component
       .subscribe((res) => {
         this.rqstNoOptions = res?.Data ?? [];
       });
+  }
+
+  /** 把畫面上使用者編輯後的明細摘要，依科目編號拆成 SP_FIN72030Posting 對應的三種覆寫參數 */
+  private buildNoteDescOverrides(): {
+    detail1: FIN72030Detail1NoteDescItem[];
+    detail2: string | null;
+    detail3: string | null;
+  } {
+    const detail1: FIN72030Detail1NoteDescItem[] = [];
+    let detail2: string | null = null;
+    let detail3: string | null = null;
+
+    for (const row of this.detailData) {
+      if (row.AccNo === TAX_ACC_NO) {
+        detail2 = row.NOTeDesc;
+      } else if (row.AccNo === CASH_ACC_NO) {
+        detail3 = row.NOTeDesc;
+      } else if (row.PCS_No) {
+        detail1.push({ PCS_No: row.PCS_No, PCS_SeqNo: row.PCS_SeqNo ?? 0, NoteDesc: row.NOTeDesc });
+      }
+    }
+
+    return { detail1, detail2, detail3 };
   }
 
   resetResult(): void {

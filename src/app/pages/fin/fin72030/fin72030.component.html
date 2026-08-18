@@ -75,22 +75,20 @@
     </form>
   </p-panel>
 
-  <app-table
-    tableKey="FIN72030"
+  <app-table-edit
+    tableKey="FIN72030Detail"
     title="傳票明細"
     [data]="detailData"
     [columns]="columns"
     [loading]="loading"
-    [showSerialNo]="false"
-    [showEdit]="false"
-    [showDelete]="false"
-    [showDetail]="false"
+    (dataChange)="detailData = $event"
     [showCheckBox]="false"
-    [lazy]="false"
-    [showReportMode]="false"
-    [showManage]="false"
+    [showDelete]="false"
+    [showInsert]="false"
+    [canInsert]="false"
+    [showReorder]="false"
     [showSort]="false"
-  ></app-table>
+  ></app-table-edit>
 
   <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
     <app-button

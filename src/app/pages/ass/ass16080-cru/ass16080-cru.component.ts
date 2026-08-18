@@ -230,20 +230,19 @@ export class ASS16080CRUComponent
           })
         );
       });
-
+ const toOpt = (items: { No?: string; Name?: string }[]) =>
+      (items ?? []).map(item => ({
+        label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        value: item.No ?? '',
+      }));
     this.dropDownListService
-      .queryPOS2013_DropDownList({})
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        const list = res.Data ?? [];
-        this.orgIdOptions = list.map(
-          (item: { No?: string; Name?: string }) => ({
-            value: item.No ?? '',
-            label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-          })
-        );
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.orgIdOptions = toOpt(res.Data ?? []);
       });
-  }
+    }
 
   private patchFromDetail(data: QueryDetailASS16080Result): void {
     const master = data?.Master;

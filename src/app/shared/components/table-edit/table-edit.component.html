@@ -99,15 +99,7 @@
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
         <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
-        <th [attr.colspan]="
-            canInsert &&
-            !disabled &&
-            _tableData.length > 0 &&
-            _tableData[_tableData.length - 1]._isAutoInsertCandidate &&
-            !showCheckBox
-              ? 2
-              : 1
-          " class="w-1rem text-center">
+        <th class="w-1rem text-center">
           {{ serialName }}
         </th>
         <th *ngIf="showCheckBox && !disabled && data.length" class="w-1rem text-center">

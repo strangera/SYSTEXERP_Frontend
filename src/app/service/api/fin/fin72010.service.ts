@@ -122,6 +122,7 @@ export interface QueryFIN72010DetailDetailResponse {
   PUR_DirectTypeName: string;   // 發票用途名稱
   COLLECT_NUM: string;   // 彙總張數
   PCS_Remark: string;   // 備註說明
+  RECON_Key: string;   // 對帳KEY值（明細類別=0 不扣抵憑證時不寫入）
   CRT_Date: string;   // 建立日期
   CRT_USR_No: string;   // 建立人員代碼
   CRT_USR_Name: string;   // 建立人員姓名
@@ -199,7 +200,7 @@ export interface FIN72010SaveDetailItem {
   ORG_ID: string;   // 組織代碼 (必填)
   PCS_DtlType: string;   // 明細類別：0=不扣抵憑證, 1=發票, 2=收據 (必填)
   PCS_GUINo?: string;   // 發票/收據號碼：發票或收據模式時必填
-  PUR_Date: string;   // 憑證日期 (必填)
+  PUR_Date: string | null;   // 憑證日期：空值送 null（後端 DateTime? 無法反序列化空字串）
   DATA_YM?: string;   // 資料年月 (格式：YYYYMM)
   DEC_YM: string;   // 申報年月 (格式：YYYYMM，通常為雙數月，必填)
   PCS_Net: number;   // 申請淨額 (未稅金額，必填)
@@ -211,6 +212,7 @@ export interface FIN72010SaveDetailItem {
   PUR_DirectType?: string;   // 發票用途：1=專供課稅, 2=共同使用
   COLLECT_NUM?: string;   // 彙總張數 (預設 0)
   PCS_Remark?: string;   // 備註說明
+  RECON_Key?: string;   // 對帳KEY值：明細類別=0(不扣抵憑證)時不寫入
 }
 
 export interface POS2064MPCS_NoDropDownListResponse {

@@ -35,28 +35,6 @@
           ></app-dropdown>
         </div>
       </div>
-
-      @if (isFormEditable) {
-        <div
-          class="flex flex-wrap justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            label="審核"
-            icon="pi pi-check-circle"
-            [loading]="loading"
-            [disabled]="false"
-            (clickEvent)="onApprove()"
-          ></app-button>
-          <app-button
-            label="反審核"
-            icon="pi pi-undo"
-            severity="danger"
-            [loading]="loading"
-            [disabled]="false"
-            (clickEvent)="onAntiApprove()"
-          ></app-button>
-        </div>
-      }
     </form>
   </p-panel>
 </div>
