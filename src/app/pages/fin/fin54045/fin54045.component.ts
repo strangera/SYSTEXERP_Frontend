@@ -90,7 +90,8 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
     }
 
     const yearValue = this.queryForm.get('vendorSName')?.value;
-    const closeYear = (yearValue ?? '').toString().trim();
+    // calendar 回傳 Date（年選擇器），只送 YYYY 給後端
+    const closeYear = yearValue ? (this.datePipe.transform(yearValue, 'yyyy') ?? '') : '';
 
     if (!closeYear) {
       this.messageService.warnBubble('請輸入年分');
