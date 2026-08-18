@@ -24,7 +24,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
@@ -75,8 +75,9 @@ import {
 })
 export class SYS0790Component
   extends BasicQueryPageComponent<SYS0790QueryData>
-  implements OnInit
-{
+  implements OnInit {
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
   // ─────────────────────────────────────────────
   // 查詢表單
   // ─────────────────────────────────────────────
@@ -87,15 +88,15 @@ export class SYS0790Component
       null as string | null,
     ],
 
-    /** LOG時間（起） */
+    /** LOG時間（起）- 預設今天 00:00:00 */
     LogTime_S: [
-      null as Date | string | null,
+      this.getTodayStart(),
       Validators.required,
     ],
 
-    /** LOG時間（迄） */
+    /** LOG時間（迄）- 預設今天 23:59:59 */
     LogTime_E: [
-      null as Date | string | null,
+      this.getTodayEnd(),
       Validators.required,
     ],
 
@@ -173,6 +174,7 @@ export class SYS0790Component
       field: 'LinkUrl',
       header: '連結網址',
       visible: true,
+      width: '150px',
     },
   ];
 
@@ -224,20 +226,22 @@ export class SYS0790Component
   // ─────────────────────────────────────────────
   // 查詢
   // ─────────────────────────────────────────────
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(
-    form,
-    () => {
-      const body = this.buildQueryBody(form);
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(
+      form,
+      () => {
+        const body = this.buildQueryBody(form);
 
-      // 每次重新按查詢，一律從第 1 頁開始
-      body.pageIndex = 1;
-      body.pageSize = 30;
+        body.pageIndex = Number(
+          form.get('pageIndex')?.value ?? 1
+        );
 
-      this.lastQueryBody = body;
+        body.pageSize = 30;
 
-      this.sys0790Service
-        .querySYS0790(body)
+        this.lastQueryBody = body;
+
+        this.sys0790Service
+          .querySYS0790(body)
           .pipe(
             untilDestroyed(this),
 
@@ -298,25 +302,9 @@ onSubmit(form: FormGroup): void {
    * pageIndex = 4
    * ...
    */
- readonly queryFunction = (
-  body: QuerySYS0790Request,
-) => {
-  const pageIndex = Number(body.pageIndex ?? 1);
-
-  return this.sys0790Service
-    .querySYS0790({
-      ...body,
-      pageIndex,
-      pageSize: 30, // 每次固定只取 30 筆
-    })
-    .pipe(
-      tap(res => {
-        console.log(
-          `SYS0790 LazyLoad：第 ${pageIndex} 頁，每頁 30 筆`
-        );
-      }),
-    );
-};
+  readonly querySYS0790Fn = (
+    body: QuerySYS0790Request
+  ) => this.sys0790Service.querySYS0790(body);
 
   /**
    * TableReport loadMoreData() 完成後：
@@ -340,11 +328,8 @@ onSubmit(form: FormGroup): void {
     this.queryForm.reset();
 
     this.submitted = false;
-
     this.data = [];
-
     this.totalRecords.set(0);
-
     this.lastQueryBody = null;
   }
 
@@ -552,5 +537,110 @@ onSubmit(form: FormGroup): void {
           );
         },
       });
+  }
+  override onLazyLoadData(
+    event: any,
+    form: FormGroup
+  ): void {
+
+    const evPageIndex =
+      Number.isFinite(event?.pageIndex)
+        ? Number(event.pageIndex)
+        : Number.isFinite(event?.first) &&
+          Number.isFinite(event?.rows)
+          ? Math.floor(
+            Number(event.first) /
+            Number(event.rows)
+          ) + 1
+          : undefined;
+
+    const evPageSize =
+      Number.isFinite(event?.pageSize)
+        ? Number(event.pageSize)
+        : Number.isFinite(event?.rows)
+          ? Number(event.rows)
+          : undefined;
+
+    const nextSort =
+      Array.isArray(event?.SortBy)
+        ? event.SortBy
+        : Array.isArray(event?.multiSortMeta)
+          ? event.multiSortMeta
+          : form.value?.SortBy ?? [];
+
+    const currSortSig =
+      JSON.stringify(
+        form.value?.SortBy ?? []
+      );
+
+    const nextSortSig =
+      JSON.stringify(
+        nextSort ?? []
+      );
+
+    // 排序變更時回第 1 頁
+    const nextPageIndex =
+      currSortSig !== nextSortSig
+        ? 1
+        : (
+          evPageIndex ??
+          form.value?.pageIndex ??
+          1
+        );
+
+    const nextPageSize =
+      evPageSize ??
+      form.value?.pageSize ??
+      20;
+
+    form.patchValue(
+      {
+        pageIndex: nextPageIndex,
+        pageSize: nextPageSize,
+        SortBy: nextSort ?? [],
+      },
+      {
+        emitEvent: false,
+      }
+    );
+
+    const sig = JSON.stringify({
+      pageIndex: form.value?.pageIndex,
+      pageSize: form.value?.pageSize,
+      SortBy: form.value?.SortBy,
+    });
+
+    if (sig === this.lastQuerySig) {
+      return;
+    }
+
+    this.lastQuerySig = sig;
+
+    if (this.lazyTimer) {
+      clearTimeout(this.lazyTimer);
+    }
+
+    this.lazyTimer = setTimeout(
+      () => this.onSubmit(form),
+      0
+    );
+  }
+
+  /**
+ * 今天 00:00:00
+ */
+  private getTodayStart(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+
+  /**
+   * 今天 23:59:59
+   */
+  private getTodayEnd(): Date {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return today;
   }
 }

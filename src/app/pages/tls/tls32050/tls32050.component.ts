@@ -29,6 +29,34 @@ import { Tls32050CRUComponent } from './tls32050-cru/tls32050-cru.component';
 @Component({
   selector: 'app-tls32050',
   templateUrl: './tls32050.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+      .bg-group-growth {
+        background-color: #f3e9f7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-growth {
+        background-color: #ebd9f2 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CommonModule,
@@ -225,6 +253,18 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
   ngOnInit(): void {
     this.initializePage('TLS32050', 'TLS/TLS32050cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.groupField) {
+          case '本期': return 'bg-group-base';
+          case '上期': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '坪效': return 'bg-group-growth';
+          default: return '';
+        }
+      },
+    }));
 
     this.onReportTypeChange('1');
     this.setReadOnlyFields();

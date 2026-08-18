@@ -14,18 +14,47 @@ import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdo
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/components/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { startWith, take } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
-import { formatAmount, formatInt, ReportColumn } from './tls32020-table/tls32020-report-table.model';
-import { TableReportComponent } from './tls32020-table/tls32020-table.component';
+
+// 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位 (eg. 4335615.16 -> "4,335,615")
+const formatInt = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return Math.round(num).toLocaleString();
+};
 
 @Component({
   selector: 'app-tls32020',
   templateUrl: './tls32020.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     DropdownRangeComponent,
@@ -207,6 +236,18 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS32020');
+    // 底色依「頂層分組」(比較期/基準期/差異) 套用，子分組(營業額/客單價/坪效/預售消費)只影響表頭文字分層、不影響底色
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.topGroupField) {
+          case 'base': return 'bg-group-base';
+          case 'compare': return 'bg-group-compare';
+          case 'diff': return 'bg-group-diff';
+          default: return '';
+        }
+      },
+    }));
     this.setWeekOptions(this.queryForm.controls.year.value);// 初始化週次選項
     this.calculateInitialRanges('3');// 【保留】只在頁面初始化時執行一次完整的初始化
     this.queryForm.controls.DayType.valueChanges.pipe(startWith(this.queryForm.controls.DayType.value), takeUntilDestroyed(this.destroyRef)).subscribe(type => {
