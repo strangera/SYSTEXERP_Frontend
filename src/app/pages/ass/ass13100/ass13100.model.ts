@@ -114,10 +114,15 @@ export interface ASS13100GenerateUnitRow {
 /**
  * 查詢明細 Request（queryDetailASS13100）
  */
-export interface QueryDetailASS13100Request {
+export interface QueryDetailASS13100Request extends ApiRequest {
   ID: number;
-}
 
+  /** 頁碼，預設 1 */
+  PageIndex?: number;
+
+  /** 每頁筆數，預設 30 */
+  PageSize?: number;
+}
 /**
  * 查詢明細回傳主檔（queryDetailASS13100）
  */
@@ -181,8 +186,13 @@ export interface ASS13100DetailRow extends ASS13100DetailItem {
 export interface QueryDetailASS13100ResponseData {
   Master: ASS13100DetailMaster;
   Details: ASS13100DetailItem[];
-}
 
+  /** 明細總筆數 */
+  TotalCount: number;
+
+  /** 明細總頁數 */
+  TotalPage: number;
+}
 /**
  * 上傳盤點檔回傳 Data（uploadASS13100）
  */

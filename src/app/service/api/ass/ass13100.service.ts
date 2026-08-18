@@ -89,4 +89,12 @@ export class ASS13100Service {
 
     return this.http.post<ApiResponse<UploadASS13100ResponseData>>(`${this.apiUrl}/uploadASS13100`, formData);
   }
+  downloadASS13100CsvTemplate() {
+  return this.http.get(
+    `${this.apiUrl}/downloadASS13100CsvTemplate`,
+    {
+      responseType: 'blob',
+    }
+  );
+}
 }
