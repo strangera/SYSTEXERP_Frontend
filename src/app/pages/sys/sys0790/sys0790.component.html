@@ -122,43 +122,32 @@
 
 
   <!-- 表格 -->
-  <div class="mt-3">
+<div class="card">
 
-    <app-table-report
-      [data]="data"
+   <app-table-report
+  [data]="data"
+  [columns]="columns"
+  [totalRecords]="totalRecords()"
+  tableKey="SYS0790"
 
-      [columns]="columns"
+  [loading]="loading"
+  [lazy]="true"
 
-      [totalRecords]="totalRecords()"
+  [lastQueryBody]="lastQueryBody"
+  [queryFunction]="querySYS0790Fn"
 
-      tableKey="SYS0790"
+  (dataChange)="onDataChange($event)"
+  (lazyLoadData)="onLazyLoadData($event, queryForm)"
 
-      [loading]="loading"
-
-      [lastQueryBody]="lastQueryBody"
-
-      [queryFunction]="queryFunction"
-
-      (dataChange)="onDataChange($event)"
-
-      [lazy]="true"
-
-      [showManage]="false"
-
-      [showDelete]="false"
-
-      [showEdit]="false"
-
-      [showDetail]="false"
-
-      [showInsert]="false"
-
-      [showCheckBox]="false"
-
-      [showReportMode]="false"
-
-      [showCaption]="true"
-    >
+  [showManage]="false"
+  [showDelete]="false"
+  [showEdit]="false"
+  [showDetail]="false"
+  [showInsert]="false"
+  [showCheckBox]="false"
+  [showReportMode]="false"
+  [showCaption]="true"
+>
 
       <!-- 表格上方 -->
       <header>
