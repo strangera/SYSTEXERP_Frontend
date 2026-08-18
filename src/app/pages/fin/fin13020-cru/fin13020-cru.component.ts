@@ -688,6 +688,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           PUR_Tax: intTax,
           PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
+          Voucher_No: formValue.Voucher_No,
           APS40235List: this.detailRows.map((row) => ({
             ID: typeof row.ID === 'number' ? row.ID : 0,
             PLU_Name: row.PLU_Name,
@@ -730,6 +731,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           PUR_Tax: intTax,
           PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
+          Voucher_No: formValue.Voucher_No,
           APS40235List: this.detailRows.map((row) => ({
             PLU_Name: row.PLU_Name,
             TXN_Qty: row.TXN_Qty,

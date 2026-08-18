@@ -45,7 +45,7 @@ export class FIN13020Service {
     );
   }
 queryFIN13100ByVoucherNo(voucherNo: string) {
-  return this.http.post<any>('/FIN0000/INV1000/queryFIN13100', {
+  return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13100`, {
     PageSize: 10,
     PageIndex: 1,
     VouNoStart: voucherNo,
