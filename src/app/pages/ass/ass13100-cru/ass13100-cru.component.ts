@@ -18,6 +18,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize } from 'rxjs/operators';
+import { PaginatorModule } from 'primeng/paginator';
 import {
   ASS13100DetailRow,
   ASS13100GenerateUnitRow,
@@ -44,10 +45,17 @@ import {
     DropdownComponent,
     CalendarComponent,
     RadioButtonModule,
+    PaginatorModule,
     CheckboxModule,
   ],
 })
 export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRow> implements OnInit {
+
+
+  detailPageIndex = 1;
+detailPageSize = 30;
+detailFirst = 0;
+detailTotalRecords = 0;
   /** 編輯/明細用主檔 Form（清點單號、清點日期、狀態，供更新 API 使用） */
   readonly dataForm = this.formBuilder.group({
     CHK_ID: new FormControl<string | null>({ value: null, disabled: true }),
@@ -419,39 +427,86 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
   }
 
   /** 載入清點單明細 */
-  private loadDetail(id: number): void {
-    this.loading = true;
-    this.mainIdFromDetail = null;
-    this.service
-      .queryDetailASS13100({ ID: id })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe(res => {
-        if (res?.Status === '0000' && res.Data) {
-          const details = res.Data.Details ?? [];
-          this.detailRows = details.map(detail => ({
-            ...detail,
-            CHK_STATUS: detail.CHK_STATUS ?? null,
-            LOCATION_ID: detail.LOCATION_ID ?? null,
-            NOTES: detail.NOTES ?? null,
-          }));
+ private loadDetail(
+  id: number,
+  pageIndex: number = 1,
+  pageSize: number = 30
+): void {
+  this.loading = true;
 
-          const master = res.Data.Master;
-          this.dataForm.patchValue({
-            CHK_ID: master?.CHK_ID ?? this.dataForm.getRawValue().CHK_ID,
-            CHK_DATE: master?.CHK_DATE ? new Date(master.CHK_DATE) : this.dataForm.getRawValue().CHK_DATE,
-            STATUS: master?.STATUS ?? this.dataForm.getRawValue().STATUS,
-          });
-          if (master?.ID != null) {
-            this.mainIdFromDetail = master.ID;
-          }
-          this.originalDetailRows = JSON.parse(JSON.stringify(this.detailRows));
-        } else {
-          this.detailRows = [];
-          this.originalDetailRows = [];
+  this.service
+    .queryDetailASS13100({
+      ID: id,
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+    })
+    .pipe(finalize(() => (this.loading = false)))
+    .subscribe(res => {
+      if (res?.Status === '0000' && res.Data) {
+        const details = res.Data.Details ?? [];
+
+        this.detailRows = details.map(detail => ({
+          ...detail,
+          CHK_STATUS: detail.CHK_STATUS ?? null,
+          LOCATION_ID: detail.LOCATION_ID ?? null,
+          NOTES: detail.NOTES ?? null,
+        }));
+
+        this.detailPageIndex = pageIndex;
+        this.detailPageSize = pageSize;
+        this.detailFirst = (pageIndex - 1) * pageSize;
+
+        this.detailTotalRecords =
+          res.Data.TotalCount ??
+          res.TotalCount ??
+          0;
+
+        const master = res.Data.Master;
+
+        this.dataForm.patchValue({
+          CHK_ID:
+            master?.CHK_ID ??
+            this.dataForm.getRawValue().CHK_ID,
+
+          CHK_DATE:
+            master?.CHK_DATE
+              ? new Date(master.CHK_DATE)
+              : this.dataForm.getRawValue().CHK_DATE,
+
+          STATUS:
+            master?.STATUS ??
+            this.dataForm.getRawValue().STATUS,
+        });
+
+        if (master?.ID != null) {
+          this.mainIdFromDetail = master.ID;
         }
-      });
+
+        this.originalDetailRows =
+          JSON.parse(JSON.stringify(this.detailRows));
+      } else {
+        this.detailRows = [];
+        this.originalDetailRows = [];
+        this.detailTotalRecords = 0;
+      }
+    });
+}
+onDetailPageChange(event: any): void {
+  const id = this.mainId;
+
+  if (id == null) {
+    return;
   }
 
+  const pageSize = event.rows ?? 30;
+  const pageIndex = Math.floor((event.first ?? 0) / pageSize) + 1;
+
+  this.detailFirst = event.first ?? 0;
+  this.detailPageSize = pageSize;
+  this.detailPageIndex = pageIndex;
+
+  this.loadDetail(id, pageIndex, pageSize);
+}
   /** 取消：恢復進入頁面時資料 */
   onCancelDetail(): void {
     this.detailRows = JSON.parse(JSON.stringify(this.originalDetailRows));

@@ -158,12 +158,17 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     });
 
     // 位置代碼：queryPOS2002_Location_DropDownList
-    this.dropdownApi.queryPos2002Location()?.subscribe((options: Pos2002LocationItem[] | null) => {
-      this.locationOptions = (options ?? []).map(x => ({
-        label: x.location_no + '-' + x.tlt_floor,
-        value: x.location_no ?? '',
-      }));
-    });
+    // 位置代碼：queryPOS2002_Location_DropDownList
+    this.dropdownApi
+      .queryPos2002Location()
+      ?.subscribe((options: Pos2002LocationItem[] | null) => {
+        this.locationOptions = (options ?? [])
+          .filter((x: Pos2002LocationItem) => !!x.location_no)
+          .map((x: Pos2002LocationItem) => ({
+            label: `${x.location_no} - ${x.building_desc ?? ''} ${x.floor_desc ?? ''} ${x.area_desc ?? ''}`.trim(),
+            value: x.location_no!,
+          }));
+      });
 
     // 清點單狀態：SYS1000.SYS_TYPE = 'ASSET_CHK_STATUS'
     this.dropDownListService
@@ -194,7 +199,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
       const raw = frm.getRawValue();
       const body: QueryASS13100Request = {
         PageSize: raw.pageSize ?? 30,
-        PageIndex: raw.pageIndex ?? 1,
+        PageIndex: 1,
+
         CHK_ID_S: raw.CHK_ID_S ?? null,
         CHK_ID_E: raw.CHK_ID_E ?? null,
         CHK_DATE_S: raw.CHK_DATE_S ? raw.CHK_DATE_S.toISOString() : null,
@@ -261,10 +267,35 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   }
 
   /** 開啟上傳盤點機檔案視窗 */
+  /** 開啟上傳盤點機檔案視窗 */
   openUploadDialog(): void {
+    // 未勾選
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選一筆清點單');
+      return;
+    }
+
+    // 僅允許單筆上傳
+    if (this.selectedItems.length > 1) {
+      this.messageService.warnBubble('上傳盤點機檔案一次只能選擇一筆清點單');
+      return;
+    }
+
+    const selectedRow = this.selectedItems[0];
+    const chkId = selectedRow.CHK_ID?.trim();
+
+    if (!chkId) {
+      this.messageService.warnBubble('選取的資料沒有清點單號');
+      return;
+    }
+
     this.selectedUploadFile = null;
-    this.uploadChkIdControl.setValue('');
+
+    // 自動帶入勾選資料的清點單號
+    this.uploadChkIdControl.setValue(chkId);
+
     this.fileUpload?.clearFiles();
+
     this.uploadDialogVisible = true;
   }
 
@@ -287,8 +318,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     }
 
     const file = event.files[0];
-    if (!file?.name.toLowerCase().endsWith('.txt')) {
-      this.messageService.errorBubble('僅允許上傳 .txt 檔案');
+    if (!file?.name.toLowerCase().endsWith('.csv')) {
+      this.messageService.errorBubble('僅允許上傳 .csv 檔案');
       return;
     }
 
@@ -322,37 +353,61 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
 
   /** 匯出資產清點作業 PDF */
   onPrintInventoryReport(): void {
-    const raw = this.queryForm.getRawValue();
-    const chkIdS = (raw.CHK_ID_S ?? '').toString().trim();
-    const chkIdE = (raw.CHK_ID_E ?? '').toString().trim();
+    // 未勾選
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選一筆清點單');
+      return;
+    }
 
-    if (!chkIdS || !chkIdE) {
-      this.messageService.warnBubble('請先輸入清點單號起迄');
+    // 僅允許單筆列印
+    if (this.selectedItems.length > 1) {
+      this.messageService.warnBubble('列印盤點表一次只能選擇一筆清點單');
+      return;
+    }
+
+    const selectedRow = this.selectedItems[0];
+    const chkId = selectedRow.CHK_ID?.trim();
+
+    if (!chkId) {
+      this.messageService.warnBubble('選取的資料沒有清點單號');
       return;
     }
 
     const body: ASS13100ExportPDFRequest = {
-      CHK_ID_S: chkIdS,
-      CHK_ID_E: chkIdE,
+      CHK_ID_S: chkId,
+      CHK_ID_E: chkId,
     };
 
     this.loading = true;
+
     this.service
       .exportPDFASS13100(body)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (response: HttpResponse<Blob>) => {
-          const contentDisposition = response.headers.get('Content-Disposition');
-          const filename = this.getFilenameFromHeader(contentDisposition, '.pdf');
+          const contentDisposition =
+            response.headers.get('Content-Disposition');
+
+          const filename =
+            this.getFilenameFromHeader(
+              contentDisposition,
+              '.pdf'
+            );
+
           const blob = response.body;
 
           if (blob && blob.size > 0) {
-            const url = globalThis.URL.createObjectURL(blob);
+            const url =
+              globalThis.URL.createObjectURL(blob);
+
             const a = document.createElement('a');
+
             a.href = url;
             a.download = filename;
+
             document.body.appendChild(a);
             a.click();
+
             globalThis.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           }
@@ -387,4 +442,30 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
 
     return `download${defaultExtension}`;
   }
+
+  /** 下載盤點機上傳 CSV 範例 */
+  downloadCsvTemplate(): void {
+    const csvContent =
+      '\uFEFF財產編號,數量\r\n' +
+      'A000001,1\r\n' +
+      'A000002,1\r\n';
+
+    const blob = new Blob(
+      [csvContent],
+      { type: 'text/csv;charset=utf-8;' }
+    );
+
+    const url = globalThis.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ASS13100_盤點機上傳範例.csv';
+
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    globalThis.URL.revokeObjectURL(url);
+  }
+
 }

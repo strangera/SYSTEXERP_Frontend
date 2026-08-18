@@ -156,18 +156,29 @@
 
         <!-- 清點明細表格 -->
         <hr />
-        <app-table-edit
-          tableKey="ASS13100_Detail"
-          [data]="detailRows"
-          [columns]="detailColumns"
-          [canInsert]="false"
-          [showInsert]="false"
-          [showDelete]="false"
-          [showCheckBox]="false"
-          [showReorder]="!isFormReadable"
-          [disabled]="isFormReadable"
-          (dataChange)="detailRows = $event"
-        ></app-table-edit>
+       <app-table-edit
+  tableKey="ASS13100_Detail"
+  [data]="detailRows"
+  [columns]="detailColumns"
+  [canInsert]="false"
+  [showInsert]="false"
+  [showDelete]="false"
+  [showCheckBox]="false"
+  [showReorder]="false"
+  [disabled]="isFormReadable"
+  (dataChange)="detailRows = $event"
+></app-table-edit>
+
+<p-paginator
+  *ngIf="detailTotalRecords > 0"
+  [first]="detailFirst"
+  [rows]="detailPageSize"
+  [totalRecords]="detailTotalRecords"
+  [rowsPerPageOptions]="[30, 50, 100]"
+  [showCurrentPageReport]="true"
+  currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆"
+  (onPageChange)="onDetailPageChange($event)"
+></p-paginator>
 
         <!-- 下方按鈕 -->
         @if (!isFormReadable) {
