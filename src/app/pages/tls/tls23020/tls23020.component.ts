@@ -225,6 +225,30 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   }
 
   private executeSummaryQuery(payload: any): void {
+    const test = {
+      TXN_DateStart: payload.TXN_DateStart,
+      TXN_DateEnd: payload.TXN_DateEnd,
+      ECR_No: payload.ECR_No || null,
+      TXN_No_Start: payload.TXN_No_Start || null,
+      TXN_No_End: payload.TXN_No_End || null,
+      TLT_No: payload.TLT_No || null,
+
+      TXN_GUINo: payload.TXN_GUINo || null,
+      TXN_SaleAmt_Start: payload.TXN_SaleAmt_Start || null,
+      TXN_SaleAmt_End: payload.TXN_SaleAmt_End || null,
+      TXN_TaxType: payload.PLU_TaxType || null,
+      TXN_DiscCode: payload.TXN_DiscCode || null,
+      tlt_id: payload.tlt_id || null,
+
+      PLU_MagNo: payload.PLU_MagNo || null,
+      IsNoPLU_No: payload.IsNoPLU_No || null,
+      rece_yn: payload.rece_yn || null,
+      cash_yn: payload.cash_yn || null,
+      tlt_building: payload.tlt_building || null,
+      tlt_floor: payload.tlt_floor || null,
+      org_id: payload.org_id || null
+    }
+    console.log('executeSummaryQuery payload:', test);
     this.tls23020Service.queryTLS23020_Summary(payload)
       .pipe(
         untilDestroyed(this),
@@ -568,7 +592,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   ];
 
   summaryColumns: ReportColumn[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
+    { field: 'TXN_Date', header: '銷售日期', visible: true }, // 回傳日期區間
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
     { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, align: 'right', format: formatAmount }, // 總銷售金額=總應稅銷售金額+總免稅銷售金額
