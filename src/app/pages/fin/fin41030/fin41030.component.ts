@@ -65,13 +65,13 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
       label: '審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: FIN41030QueryRow) => this.onApprove(rowData),
-      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus === 'Y',
+      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus === 'Y' || !this.hasPermission(this.Actions.Audit),
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: FIN41030QueryRow) => this.onAntiApprove(rowData),
-      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus !== 'Y',
+      disabled: (rowData: FIN41030QueryRow) => rowData.BudgetStatus !== 'Y' || !this.hasPermission(this.Actions.AntiAudit),
     },
   ];
 
