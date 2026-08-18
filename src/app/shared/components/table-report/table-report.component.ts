@@ -159,6 +159,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() exportExcelLoading = false;
   @Output() importExcel = new EventEmitter<FileSelectEvent>();
   @Input() columnGroup?: ColumnGroup[];
+  /** 選用的第三層表頭分組（在 columnGroup 之上再多一層），對應 ReportColumn.topGroupField；不傳時表頭層次與現況完全一致 */
+  @Input() topColumnGroup?: ColumnGroup[];
   @Input() showManage = true;
   @Input() showDetail = true;
   @Output() detail = new EventEmitter<any>();
@@ -528,6 +530,10 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
 
   getGroupHeader(groupField: string): string {
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  }
+
+  getTopGroupHeader(topGroupField: string): string {
+    return this.topColumnGroup?.find(g => g.field === topGroupField)?.header ?? topGroupField;
   }
 
   onColReorder(event: TableColumnReorderEvent) {

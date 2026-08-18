@@ -33,6 +33,34 @@ const yesterday = new Date(today);
 @Component({
   selector: 'app-tls32040',
   templateUrl: './tls32040.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+      .bg-group-growth {
+        background-color: #f3e9f7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-growth {
+        background-color: #ebd9f2 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -264,13 +292,25 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32040Service: TLS32040Service,
-    private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
-    private datePipe: DatePipe,
-    private cd: ChangeDetectorRef
+    private readonly tls26050Service: TLS26050Service, // 日期的api，套用現有模式
+    private readonly datePipe: DatePipe,
+    private readonly cd: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.groupField) {
+          case '本期': return 'bg-group-base';
+          case '上期': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '坪效': return 'bg-group-growth';
+          default: return '';
+        }
+      },
+    }));
     // 1. 初始化 UI 狀態與驗證器
     this.onReportTypeChange('DAY');
     this.setReadOnlyFields();

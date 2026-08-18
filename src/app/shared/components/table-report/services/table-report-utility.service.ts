@@ -41,6 +41,26 @@ export class TableReportUtilityService {
     return true;
   }
 
+  // 計算第三層（topGroupField）分組跨度
+  getTopGroupColumnSpan(columns: ReportColumn[], topGroupField: string): number {
+    return columns.filter(col => col.topGroupField === topGroupField && this.isColumnVisible(col)).length;
+  }
+
+  // 判斷是否應該渲染第三層分組標題
+  shouldRenderTopGroupHeader(col: ReportColumn, index: number, columns: ReportColumn[]): boolean {
+    if (!col.topGroupField || !this.isColumnVisible(col)) {
+      return false;
+    }
+    const currentGroup = col.topGroupField;
+    for (let i = 0; i < index; i++) {
+      const prev = columns[i];
+      if (prev.topGroupField === currentGroup && this.isColumnVisible(prev)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private readonly safeUrlCache = new Map<string, SafeUrl>();
 
   getImage(url: any): SafeUrl | string {

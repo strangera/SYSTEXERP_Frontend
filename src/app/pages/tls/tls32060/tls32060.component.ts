@@ -33,6 +33,34 @@ dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
 @Component({
   selector: 'app-tls32060',
   templateUrl: './tls32060.component.html',
+  styles: [`
+    :host ::ng-deep {
+      .bg-group-base {
+        background-color: #e3edf4 !important;
+      }
+      .bg-group-compare {
+        background-color: #e2f2e5 !important;
+      }
+      .bg-group-diff {
+        background-color: #fff1e0 !important;
+      }
+      .bg-group-growth {
+        background-color: #f3e9f7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-base {
+        background-color: #d4e3ee !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-compare {
+        background-color: #d3e9d8 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-diff {
+        background-color: #ffe6c7 !important;
+      }
+      .p-datatable-tbody > tr:hover > td.bg-group-growth {
+        background-color: #ebd9f2 !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CommonModule,
@@ -223,14 +251,26 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32060Service: TLS32060Service,
-    private tls26050Service: TLS26050Service,
-    private datePipe: DatePipe,
+    private readonly tls26050Service: TLS26050Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS32060', 'TLS/TLS32060cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.columns = this.columns.map((col): ReportColumn => ({
+      ...col,
+      cellClass: () => {
+        switch (col.groupField) {
+          case '本期': return 'bg-group-base';
+          case '上期': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '坪效': return 'bg-group-growth';
+          default: return '';
+        }
+      },
+    }));
 
     this.onReportTypeChange('1');
     this.setReadOnlyFields();

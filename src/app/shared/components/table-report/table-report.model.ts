@@ -8,6 +8,7 @@ export interface ReportColumn {
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: 'percentage' | 'decimal2' | Record<string, string>[];
   groupField?: string; //
+  topGroupField?: string; // 選用的第三層表頭分組（在 groupField 之上再包一層，例如「比較期/基準期/差異」），需搭配 [topColumnGroup] 一起使用
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
