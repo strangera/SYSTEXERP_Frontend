@@ -98,7 +98,11 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('details', this.rowdata);
 
     if (this.rowdata) {
-      this.dataForm.patchValue(this.rowdata);
+      this.dataForm.patchValue({
+        ...this.rowdata,
+        VEN_DiscYN: this.toYN(this.rowdata.VEN_DiscYN),
+        VEN_CTRLYN: this.toYN(this.rowdata.VEN_CTRLYN),
+      });
       this.dataForm.get('VEN_No')?.setValue(
         `${this.rowdata.VEN_No} - ${this.rowdata.VEN_Name}`
 
@@ -112,6 +116,11 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
   }
+  private toYN(v: unknown): string {
+    const s = Array.isArray(v) ? v[0] : v;
+    return s === '是' || s === 'Y' ? 'Y' : s === '否' || s === 'N' ? 'N' : '';
+  }
+
   onSubmit(frm: FormGroup) {
     if (frm.valid) {
       const raw = frm.getRawValue();
@@ -120,8 +129,8 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
         id: this.rowdata?.id ?? 0,
         VEN_No: this.rowdata?.VEN_No ?? '',
         VEN_Post: raw.VEN_Post || '',
-        VEN_DiscYN: Array.isArray(raw.VEN_DiscYN) ? raw.VEN_DiscYN[0] || '' : raw.VEN_DiscYN || '',
-        VEN_CTRLYN: Array.isArray(raw.VEN_CTRLYN) ? raw.VEN_CTRLYN[0] || '' : raw.VEN_CTRLYN || '',
+        VEN_DiscYN: this.toYN(raw.VEN_DiscYN),
+        VEN_CTRLYN: this.toYN(raw.VEN_CTRLYN),
         VEN_DiscDateB: this.datePipe.transform(raw.VEN_DiscDateB, 'yyyy-MM-dd'),
         VEN_DiscDateE: this.datePipe.transform(raw.VEN_DiscDateE, 'yyyy-MM-dd'),
         GUI_ID_WIRE: raw.GUI_ID_WIRE || '',
