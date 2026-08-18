@@ -69,13 +69,13 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
       label: '審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: FIN41060QueryRow) => this.onApprove(rowData),
-      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM === '是',
+      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM === '是' || !this.hasPermission(this.Actions.Audit),
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: FIN41060QueryRow) => this.onAntiApprove(rowData),
-      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM !== '是',
+      disabled: (rowData: FIN41060QueryRow) => rowData.Audit_Status_NM !== '是' || !this.hasPermission(this.Actions.AntiAudit),
     },
   ];
 
@@ -89,6 +89,8 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
   ngOnInit(): void {
     this.initializePage('FIN41060', 'fin/fin41060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOrgIdOptions();
+
+    console.log('權限', this.hasPermission(this.Actions.Query), this.hasPermission(this.Actions.AntiAudit));
   }
 
   private loadOrgIdOptions(): void {
