@@ -8,6 +8,8 @@ export interface EditColumn {
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   hidden?: boolean | ((rowData: any, index?: number) => boolean); // 是否隱藏 (是否為隱藏欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
+  /** 標頭紅色 * 顯示控制：validate 使用非 validateRequired 的條件式必填時，用這個補上/動態顯示必填星號（純顯示，不影響實際驗證） */
+  required?: boolean | (() => boolean);
   type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'autoComplete' | 'date' | 'template' | 'checkbox' | 'dropdownTable' | 'custom';
   groupField?: string;
   maxWidth?: string;

@@ -184,6 +184,11 @@ export class TableValidationService {
    * @returns 是否必填
    */
   public isRequired(col: EditColumn): boolean {
+    // 顯示用 required 旗標（支援布林或函式，給條件式必填欄位動態顯示星號）
+    const req = typeof col.required === 'function' ? col.required() : col.required;
+    if (req === true) {
+      return true;
+    }
     // 直接比對函式引用，不受壓縮混淆影響
     return col.validate?.some(validate => validate === validateRequired) ?? false;
   }
