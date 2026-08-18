@@ -213,25 +213,36 @@ this.patchFromListRowIfNeeded();
 
 
 
-       this.fin64010Service.queryAPS1002_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
-          const list = Array.isArray(res?.Data) ? res.Data : [];
+   this.fin64010Service.queryAPS1002_DropDownList()
+  .pipe(untilDestroyed(this))
+  .subscribe({
+    next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
+      const list = Array.isArray(res?.Data) ? res.Data : [];
 
-          this.colBankAccOptions = list
-            .filter((x: any) => String(x?.BNK_AccType ?? '') === '1')
-            .map((x: any) => ({
-              label: `${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
-              value: x.BNK_DepositAccNo,
-              raw: x,
-            }))
-            .filter((x: any) => x.value);
-        },
-        error: () => {
-          this.colBankAccOptions = [];
-        },
-      });
+      this.colBankAccOptions = list
+        .filter((x: any) => {
+          const accType = String(x?.BNK_AccType ?? '').trim();
+          const bnkId = String(x?.BNK_id ?? '').trim();
+          const depositAccNo = String(x?.BNK_DepositAccNo ?? '').trim();
+
+          return (
+            accType !== '1' &&
+            !!bnkId &&
+            !!depositAccNo
+          );
+        })
+        .map((x: any) => ({
+          label: `${x.BNK_id} - ${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
+          value: String(x.BNK_id).trim(),
+          raw: x,
+        }));
+
+    },
+    error: () => {
+      this.colBankAccOptions = [];
+    },
+  });
+
 
     // ✅ 最後載明細（避免 patch 時 options 未就緒）
     this.loadDetailByRoute();
