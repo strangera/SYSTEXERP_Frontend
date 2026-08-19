@@ -3,32 +3,67 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-3">
-            <app-calendar calendarType="dateMonthOne" label="基準年月" controlName="BaseYM"
-              [control]="queryForm.controls.BaseYM" [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="基準年月"
+              controlName="BaseYM"
+              [control]="queryForm.controls.BaseYM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-calendar calendarType="dateMonthOne" label="比較年月" controlName="CompareYM"
-              [control]="queryForm.controls.CompareYM" [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="比較年月"
+              controlName="CompareYM"
+              [control]="queryForm.controls.CompareYM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-3">
-            <app-radiobutton label="類別" controlName="Category" [control]="queryForm.controls.Category"
-              [options]="CategoryOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="類別"
+              controlName="Category"
+              [control]="queryForm.controls.Category"
+              [options]="CategoryOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-3 mt-4">
-            <p-checkbox inputId="PrintSign" label="列印簽核欄" formControlName="PrintSign" [binary]="true"></p-checkbox>
+            <p-checkbox
+              inputId="PrintSign"
+              label="列印簽核欄"
+              formControlName="PrintSign"
+              [binary]="true"
+            ></p-checkbox>
           </div>
 
           <div class="col-12 md:col-6 lg:col-3 mt-4">
-            <p-checkbox inputId="ShowZero" label="顯示零餘額科目" formControlName="ShowZero" [binary]="true"></p-checkbox>
+            <p-checkbox
+              inputId="ShowZero"
+              label="顯示零餘額科目"
+              formControlName="ShowZero"
+              [binary]="true"
+            ></p-checkbox>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -38,24 +73,62 @@
 </div>
 <div class="card">
   <div class="flex justify-content-end align-items-center gap-2 p-2">
-    <p-button styleClass="p-2" label="資產負債表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
-      [disabled]="A_data.length === 0 || L_data.length === 0 || !hasPermission(Actions.Print)"
-      [loading]="btnLoading"></p-button>
-    <p-button styleClass="p-2" label="資產負債表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
-      [disabled]="A_data.length === 0 || L_data.length === 0 || !hasPermission(Actions.ExportExcel)"
-      [loading]="btnLoading"></p-button>
+    <p-button
+      styleClass="p-2"
+      label="資產負債表.PDF"
+      [loading]="btnLoading"
+      icon="pi pi-file"
+      (click)="onExportPDF()"
+      [disabled]="
+        A_data.length === 0 ||
+        L_data.length === 0 ||
+        !hasPermission(Actions.Print)
+      "
+      [loading]="btnLoading"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
+      label="資產負債表.XLSX"
+      [loading]="btnLoading"
+      icon="pi pi-file"
+      (click)="onExportXLSX()"
+      [disabled]="
+        A_data.length === 0 ||
+        L_data.length === 0 ||
+        !hasPermission(Actions.ExportExcel)
+      "
+      [loading]="btnLoading"
+    ></p-button>
   </div>
   <div class="w-full overflow-x-auto">
-    <div class="flex" style="min-width: 1200px;">
-      <app-table-report class="w-full" [data]="A_data" [columns]="columns" [totalRecords]="totalRecords"
-        [loading]="loading" [subData]="subData" [footerData]="A_TotalData" groupRowsBy="ItemTitle"
-        [subTotalData]="subData" [YM]="YM" [columnGroup]="columnGroup">
-      </app-table-report>
+    <div class="flex" style="min-width: 1200px">
+      <app-table-report
+        class="w-full"
+        [data]="A_data"
+        [columns]="columns"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        [subData]="subData"
+        [footerData]="A_TotalData"
+        groupRowsBy="ItemTitle"
+        [subTotalData]="subData"
+        [YM]="YM"
+        [columnGroup]="columnGroup"
+      ></app-table-report>
       <div class="mx-1"></div>
-      <app-table-report class="w-full" [data]="L_data" [columns]="columns" [totalRecords]="totalRecords"
-        [loading]="loading" [subData]="subData" [footerData]="L_TotalData" groupRowsBy="ItemTitle"
-        [subTotalData]="subData" [YM]="YM" [columnGroup]="columnGroup">
-      </app-table-report>
+      <app-table-report
+        class="w-full"
+        [data]="L_data"
+        [columns]="columns"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        [subData]="subData"
+        [footerData]="L_TotalData"
+        groupRowsBy="groupNo"
+        [subTotalData]="subData"
+        [YM]="YM"
+        [columnGroup]="columnGroup"
+      ></app-table-report>
     </div>
   </div>
 </div>
