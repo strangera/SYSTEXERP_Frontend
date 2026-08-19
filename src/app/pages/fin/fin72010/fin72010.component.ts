@@ -144,8 +144,11 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
 
   // 原始完整資料
   allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  // 零用金保管人原始完整資料
+  allKeeperUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
   // 畫面目前顯示資料
   userResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+
 
   selectedUser: any = null;
   selectedUserName = '';
@@ -236,7 +239,11 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     const orgId = (raw.Org_ID ?? '').trim().toLowerCase();
     const orgName = (raw.Org_Name ?? '').trim().toLowerCase();
 
-    const filteredData = this.allUserResultData().filter(item => {
+    const sourceData = this.currentUserTarget === 'Keep_UsrNo'
+      ? this.allKeeperUserResultData()
+      : this.allUserResultData();
+
+    const filteredData = sourceData.filter(item => {
       return (
         (!userNo || item.user_No.toLowerCase().includes(userNo)) &&
         (!userName || item.user_Name.toLowerCase().includes(userName)) &&
@@ -261,11 +268,9 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       Org_Name: ''
     });
 
-    this.userResultData.set(this.allUserResultData());
-    // this.allUserResultData  = [];
+    this.userResultData.set(target === 'Keep_UsrNo' ? this.allKeeperUserResultData() : this.allUserResultData());
     this.selectedUser = null;
   }
-
   clearUserQuery(): void {
     this.userQueryForm.reset({
       user_No: '',
@@ -274,7 +279,8 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       Org_Name: ''
     });
 
-    this.userResultData.set(this.allUserResultData());
+    this.userResultData.set(this.currentUserTarget === 'Keep_UsrNo' ? this.allKeeperUserResultData() : this.allUserResultData());
+
     this.selectedUser = null;
   }
 
@@ -340,7 +346,7 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       },
     });
 
-    // 零用金申請人、零用金保管人
+    // 零用金申請人
     this.fin72010Service.queryTBLUSER_Orgid_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
@@ -353,6 +359,21 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
 
         this.allUserResultData.set(options); // 原始完整資料
         this.userResultData.set(options);   // 畫面顯示資料
+      },
+    });
+
+    // 零用金保管人
+    this.fin72010Service.queryTBLUSER_PCS_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          user_No: item.user_No ?? '',
+          user_Name: item.user_Name ?? '',
+          Org_ID: item.Org_ID ?? '',
+          Org_Name: item.Org_Name ?? '',
+        }));
+
+        this.allKeeperUserResultData.set(options);
       },
     });
 
