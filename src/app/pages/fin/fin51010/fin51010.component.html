@@ -11,58 +11,46 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="傳票型態" controlName="SrcSheetType" [options]="SrcSheetTypeOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.SrcSheetType"
               [submitted]="submitted">
             </app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="傳票日期" [startControl]="queryForm.controls.VouDate_From"
               [endControl]="queryForm.controls.VouDate_To" [submitted]="submitted"></app-calendar-range>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="傳票拋轉狀態" controlName="Trans_Status" [options]="TransStatusOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.Trans_Status"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="PostFlagOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.PostFlag"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="傳票編號" controlName="VouNo" [control]="queryForm.controls.VouNo"></app-input-text>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="傳票摘要" controlName="Remark" [control]="queryForm.controls.Remark"></app-input-text>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="會計科目" controlName="AccNo" [options]="AccNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.AccNo"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商編號" controlName="DetailNo" [options]="DetailNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.DetailNo"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="摘要" controlName="NoteDesc" [control]="queryForm.controls.NoteDesc"></app-input-text>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="對象別編號" controlName="SubDetailNo" [options]="SubDetailNoOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.SubDetailNo"></app-dropdown>
           </div>
-
         </div>
-
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -70,82 +58,74 @@
       </form>
     </p-accordionTab>
   </p-accordion>
-  <!-- 快速篩選未拋轉傳票區塊 -->
-  <div class="p-3 border-round-xl mt-3 border-1 surface-border surface-card shadow-1">
-    <!-- 頂部標題列與總數統計 -->
-    <div class="flex align-items-center justify-content-between mb-3 pb-2 border-bottom-1 surface-border">
-      <div class="flex align-items-center gap-2">
-        <div
-          class="w-2rem h-2rem border-circle flex align-items-center justify-content-center bg-primary-100 text-primary">
-          <i class="pi pi-bolt text-lg"></i>
-        </div>
-        <div>
-          <span class="text-base font-bold surface-900 mr-2">快速篩選未拋轉傳票</span>
-          <span class="text-xs text-500 font-normal hidden sm:inline">(點擊下方型態可自動帶入條件並查詢)</span>
-        </div>
+
+  <!-- 依據原本風格打造的分組快速篩選區 -->
+  <div class="p-2 border-round mt-3 border-1"
+    style="background-color: var(--table-header-bg-group); border-color: var(--table-header-bg-group);">
+    <!-- 頂部標題與全域總計 -->
+    <div class="flex align-items-center justify-content-between mb-2 ml-1">
+      <div class="text-sm font-bold flex align-items-center" style="color: var(--surface-700);">
+        <i class="pi pi-bolt mr-1"></i>快速篩選未拋轉傳票
       </div>
-      <div class="flex align-items-center gap-2">
-        <span class="text-xs text-500 font-medium">總未拋轉：</span>
-        <span class="px-2.5 py-1 border-round-pill text-xs font-bold bg-primary text-primary-inverse shadow-1">
-          {{ totalUnTransferredCount }} 筆
+      <div class="text-xs font-semibold" style="color: var(--text-color-secondary);">
+        總未拋轉數量：
+        <span class="px-2 py-0.5 border-round-pill text-xs font-bold"
+          style="background-color: var(--primary-color); color: var(--primary-color-text);">
+          {{ totalUnTransferredCount }}
         </span>
       </div>
     </div>
 
-    <!-- 分組系統別 Grid 網格區域 -->
-    <div class="grid grid-nogutter gap-3">
+    <!-- 系統分組網格區塊 -->
+    <div class="grid grid-nogutter gap-3 mt-2">
       <div class="col-12 md:col-6 lg:col-4 xl:col-3 flex flex-column" *ngFor="let group of groupedCountData">
-        <!-- 系統別獨立卡片外框 -->
-        <div
-          class="border-1 surface-border border-round-lg surface-50 p-2.5 flex-1 flex flex-column gap-2 transition-duration-200 hover:border-primary-300">
-
-          <!-- 系統別表頭 Header -->
-          <div
-            class="flex align-items-center justify-content-between px-2.5 py-1.5 surface-card border-round border-1 surface-border shadow-1">
+        <!-- 系統別外框區塊 (Box) -->
+        <div class="p-2 border-round border-1 flex-1 flex flex-column gap-2"
+          style="background-color: var(--surface-card); border-color: var(--surface-border);">
+          <!-- 系統表頭 (Header) -->
+          <div class="flex align-items-center justify-content-between px-2 py-1 border-round"
+            style="background-color: var(--surface-100);">
             <div class="flex align-items-center gap-2 overflow-hidden">
-              <i [class]="group.icon + ' text-primary text-sm'"></i>
-              <span class="font-bold text-xs surface-800 text-overflow-ellipsis overflow-hidden white-space-nowrap">
+              <i [class]="group.icon + ' text-xs'" style="color: var(--primary-color);"></i>
+              <span class="font-bold text-xs white-space-nowrap overflow-hidden text-overflow-ellipsis"
+                style="color: var(--text-color);">
                 {{ group.name }}
               </span>
             </div>
-            <span class="text-xs px-2 py-0.5 border-round-pill font-semibold flex-shrink-0"
-              [ngClass]="group.totalCnt > 0 ? 'bg-primary-100 text-primary-700' : 'bg-surface-200 text-500'">
-              未拋轉: {{ group.totalCnt }}
+            <span class="text-xs px-2 py-0.5 border-round-pill font-bold"
+              style="background-color: var(--surface-200); color: var(--text-color-secondary);">
+              小計: {{ group.totalCnt }}
             </span>
           </div>
 
-          <!-- 該系統下的傳票型態列表 -->
-          <div class="flex flex-column gap-1.5">
+          <!-- 系統內部傳票卡片列表 (原本樣式) -->
+          <div class="flex flex-column gap-1">
             <div *ngFor="let item of group.items"
-              class="flex align-items-center justify-content-between p-2 border-round cursor-pointer transition-all transition-duration-150 border-1 outline-none select-none"
+              class="flex align-items-center p-2 px-3 gap-3 cursor-pointer border-round transition-duration-150 outline-none border-1"
               [style.background-color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--highlight-bg)' : 'var(--surface-card)'"
               [style.border-color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--primary-color)' : 'var(--surface-border)'"
-              [ngClass]="{
-                 'shadow-1 font-bold': queryForm.get('SrcSheetType')?.value === item.SrcSheetType,
-                 'hover:surface-hover': queryForm.get('SrcSheetType')?.value !== item.SrcSheetType
-               }" role="button" tabindex="0" (click)="onSelectType(item)" (keydown.enter)="onSelectType(item)">
-
-              <!-- 傳票名稱與代號 -->
+              [ngClass]="{'shadow-1': queryForm.get('SrcSheetType')?.value === item.SrcSheetType}" role="button"
+              tabindex="0" (click)="onSelectType(item)" (keydown.enter)="onSelectType(item)">
               <div class="flex align-items-center gap-2 flex-1 overflow-hidden">
-                <i class="pi pi-file-import text-xs"
+                <i class="pi pi-file-import"
                   [style.color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--primary-color)' : 'var(--text-color-secondary)'">
                 </i>
-                <span class="text-xs text-overflow-ellipsis overflow-hidden white-space-nowrap"
+                <span class="font-medium text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis"
                   style="color: var(--text-color);">
                   {{ item.Voucher_Name }}
                 </span>
-                <span class="text-xs text-500 font-normal">({{ item.SrcSheetType }})</span>
+                <span class="text-xs" style="color: var(--text-color-secondary);">({{ item.SrcSheetType }})</span>
               </div>
-
-              <!-- 未拋轉數量 Badge -->
-              <span class="px-2 py-0.5 border-round-pill text-xs font-semibold flex-shrink-0"
-                [style.background-color]="item.CNT > 0 ? 'var(--primary-color)' : 'var(--surface-200)'"
-                [style.color]="item.CNT > 0 ? 'var(--primary-color-text)' : 'var(--text-color-secondary)'">
-                {{ item.CNT }}
-              </span>
+              <div class="flex align-items-center flex-shrink-0">
+                <span class="px-2 py-1 border-round-pill text-xs font-bold"
+                  [style.background-color]="item.CNT > 0 ? 'var(--primary-color)' : 'var(--surface-200)'"
+                  [style.color]="item.CNT > 0 ? 'var(--primary-color-text)' : 'var(--text-color-secondary)'">
+                  未拋轉數量： {{ item.CNT }}
+                </span>
+                <i class="pi pi-chevron-right ml-2 text-xs" style="color: var(--surface-400);"></i>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -160,10 +140,11 @@
     <header>
       <div class="flex align-items-center gap-2">
         <p-button styleClass="p-button-sm p-button-primary" label="拋轉傳票" [rounded]="true" [loading]="btnLoading"
-          icon="pi pi-send" (click)="onTransfer()" [disabled]="isTransferDisabled"> </p-button>
-
+          icon="pi pi-send" (click)="onTransfer()" [disabled]="isTransferDisabled">
+        </p-button>
         <p-button styleClass="p-button-sm p-button-danger" label="作廢" [rounded]="true" [loading]="btnLoading"
-          icon="pi pi-trash" (click)="onVoid()" [disabled]="isVoidDisabled"> </p-button>
+          icon="pi pi-trash" (click)="onVoid()" [disabled]="isVoidDisabled">
+        </p-button>
       </div>
     </header>
   </app-table-report>

@@ -129,46 +129,17 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   /** 將統計數據依系統別規則進行分組與排序 */
   private processGroupedCountData(data: QueryFIN51010CountResponse[]) {
     const groupsConfig = [
-      {
-        key: 'HR',
-        name: '人資系統',
-        icon: 'pi pi-users',
-        match: (type: string) => type.startsWith('H')
-      },
-      {
-        key: 'COUNTER',
-        name: '專櫃系統',
-        icon: 'pi pi-shopping-bag',
-        match: (type: string) => ['SD', 'MR', 'MD', 'PR', 'PN', 'PT'].includes(type)
-      },
-      {
-        key: 'SELF',
-        name: '自營系統',
-        icon: 'pi pi-store',
-        match: (type: string) => type.startsWith('W')
-      },
-      {
-        key: 'EC',
-        name: '電子商務系統',
-        icon: 'pi pi-shopping-cart',
-        match: (type: string) => type.startsWith('E')
-      },
-      {
-        key: 'TICKET',
-        name: '禮券系統',
-        icon: 'pi pi-ticket',
-        match: (type: string) => type === 'GF'
-      },
-      {
-        key: 'MATERIAL',
-        name: '資材系統',
-        icon: 'pi pi-box',
-        match: (type: string) => ['PC', 'PD', 'PM', 'PS', 'PU'].includes(type)
-      },
+      { key: 'HR', name: '人資系統', icon: 'pi pi-users', match: (type: string) => type.startsWith('H') },
+      { key: 'COUNTER', name: '專櫃系統', icon: 'pi pi-shopping-bag', match: (type: string) => ['SD', 'MR', 'MD', 'PR', 'PN', 'PT'].includes(type) },
+      { key: 'SELF', name: '自營系統', icon: 'pi pi-store', match: (type: string) => type.startsWith('W') },
+      { key: 'EC', name: '電子商務系統', icon: 'pi pi-shopping-cart', match: (type: string) => type.startsWith('E') },
+      { key: 'TICKET', name: '禮券系統', icon: 'pi pi-ticket', match: (type: string) => type === 'GF' },
+      { key: 'MATERIAL', name: '資材系統', icon: 'pi pi-box', match: (type: string) => ['PC', 'PD', 'PM', 'PS', 'PU'].includes(type) },
     ];
 
     const groupMap = new Map<string, QueryFIN51010CountResponse[]>();
     groupsConfig.forEach(g => groupMap.set(g.key, []));
+
     const otherItems: QueryFIN51010CountResponse[] = [];
 
     data.forEach(item => {
@@ -273,9 +244,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         const body = { GLS6001_IDList: idList };
         this.btnLoading = true;
         this.fin51010Service.transferFIN51010(body).pipe(
-          finalize(() => {
-            this.btnLoading = false;
-          }),
+          finalize(() => { this.btnLoading = false; }),
           untilDestroyed(this)
         ).subscribe(res => {
           const msg = res.Data.ErrMsg || '';
@@ -314,6 +283,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
   onVoid() {
     if (this.selectedItems.length === 0) return;
+
     this.messageService.confirm({
       header: '作廢確認',
       message: '是否作廢所選項目?',
@@ -322,9 +292,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         const body = { GLS6001_IDList: idList };
         this.btnLoading = true;
         this.fin51010Service.voidFIN51010(body).pipe(
-          finalize(() => {
-            this.btnLoading = false;
-          }),
+          finalize(() => { this.btnLoading = false; }),
           untilDestroyed(this)
         ).subscribe(res => {
           setTimeout(() => {
@@ -378,9 +346,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
       if (res.Data?.ErrCode === 0) {
         this.messageService.successBubble(res.Data.ErrMsg);
         this.loadSheetTypeCount();
-        this.queryForm.patchValue({
-          SrcSheetType: 'HR',
-        });
+        this.queryForm.patchValue({ SrcSheetType: 'HR' });
         this.onSubmit(this.queryForm);
       } else {
         this.messageService.errorBubble(res.Data?.ErrMsg);
