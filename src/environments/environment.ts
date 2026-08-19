@@ -8,13 +8,24 @@ export const environment = {
   production: false,
   version: '2025/01/15_V1 09:30', // 手動設定的預設值
   showDebugToggleInMenu: true,
-  // BaseUrl: `http://${devApiHost}:5142`,
-  // ApiUrl: `http://${devApiHost}:5142`,
-  BaseUrl: 'https://localhost:7271',
-  ApiUrl: 'https://localhost:7271',
+  BaseUrl: `http://${devApiHost}:5142`,
+  ApiUrl: `http://${devApiHost}:5142`,
+  // BaseUrl: 'https://localhost:7271',
+  // ApiUrl: 'https://localhost:7271',
 
   // BaseUrl: 'https://10.3.11.6/TSRD_WEBAPI',
   // ApiUrl: 'https://10.3.11.6/TSRD_WEBAPI',
+
+  // 品牌設定（南紡）。精誠版走 environment.systex.ts，兩版差異集中在這個物件。
+  brand: {
+    companyFullName: '南紡流通事業股份有限公司(南紡購物中心)',
+    companyName: '南紡流通事業股份有限公司',
+    title: '南紡管理平台',
+    documentTitle: '南紡購物中心 | 商場管理系統',
+    logo: 'assets/layout/images/logo.webp',
+    loginLogo: 'assets/layout/images/login_logo.webp',
+    walletName: '南紡錢包',
+  },
 
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
