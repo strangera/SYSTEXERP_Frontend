@@ -146,7 +146,9 @@
       <app-button
         btnType="default"
         label="攤提"
-        [disabled]="!selectedRows.length"
+        [disabled]="
+          !selectedRows.length || selectedRows.length >= 1000 || tableLoading()
+        "
         (clickEvent)="onBatchAmortize()"
       ></app-button>
     </div>
@@ -161,10 +163,7 @@
       [queryFunction]="queryASS13090ForReport"
       [lazy]="true"
       [showDelete]="false"
-      [showManage]="!isUnamortizedResultLayout"
-      [tableHeaderCheckboxLabel]="
-        isUnamortizedResultLayout ? '是否攤提' : undefined
-      "
+      [showEdit]="!isUnamortizedResultLayout"
       [showCheckBox]="isUnamortizedResultLayout"
       [selectedItems]="selectedRows"
       (selectionChange)="onSelectionChange($event)"
