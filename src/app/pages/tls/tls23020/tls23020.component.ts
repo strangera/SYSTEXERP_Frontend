@@ -249,7 +249,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
       org_id: payload.org_id || null
     }
     console.log('executeSummaryQuery payload:', test);
-    this.tls23020Service.queryTLS23020_Summary(payload)
+    this.tls23020Service.queryTLS23020_Summary(test)
       .pipe(
         untilDestroyed(this),
         finalize(() => {
@@ -397,6 +397,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
   public queryTLS23020SummaryForReport = (body: any) =>
     this.tls23020Service.queryTLS23020_Summary({
       ...(body || {}),
+      TXN_TaxType: body.PLU_TaxType || null,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
       TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
@@ -426,11 +427,22 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     return body;
   }
 
+  // ========= 匯出報表最佳實踐 =========
+  private buildSummaryExportBody(): any {
+    const { pageIndex, pageSize, ...body } = this.historyRequestBody ?? {};
+    return {
+      ...body,
+      TXN_TaxType: body.PLU_TaxType ?? null,
+    };
+  }
+
   onExportPDF(): void {
     if (!this.historyRequestBody) return this.showExportWarn();
     this.btnLoading = true;
     const body = this.buildExportBody();
-    const obs$ = this.queryForm.get('showSummary')?.value ? this.tls23020Service.exportTLS23020SummaryPDF(body) : this.tls23020Service.exportTLS23020PDF(body);
+    const summaryBody = this.buildSummaryExportBody();
+
+    const obs$ = this.queryForm.get('showSummary')?.value ? this.tls23020Service.exportTLS23020SummaryPDF(summaryBody) : this.tls23020Service.exportTLS23020PDF(body);
 
     obs$.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
       .subscribe({ next: (res) => this.handleFileExport(res, '.pdf') });
@@ -440,7 +452,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> implements O
     if (!this.historyRequestBody) return this.showExportWarn();
     this.btnLoading = true;
     const body = this.buildExportBody();
-    const obs$ = this.queryForm.get('showSummary')?.value ? this.tls23020Service.exportTLS23020SummaryExcel(body) : this.tls23020Service.exportTLS23020Excel(body);
+    const summaryBody = this.buildSummaryExportBody();
+    const obs$ = this.queryForm.get('showSummary')?.value ? this.tls23020Service.exportTLS23020SummaryExcel(summaryBody) : this.tls23020Service.exportTLS23020Excel(body);
 
     obs$.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
       .subscribe({ next: (res) => this.handleFileExport(res, '.xlsx') });
