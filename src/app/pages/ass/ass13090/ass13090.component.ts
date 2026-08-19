@@ -11,7 +11,6 @@ import { ButtonModule } from 'primeng/button';
 import { Observable, catchError, finalize, map, of } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
@@ -19,6 +18,7 @@ import { CalendarComponent } from '../../../shared/components/calendar/calendar.
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
@@ -112,7 +112,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     purchaseNo: [null as string | null], // 採購單號 → SUBPOENA_ID
     amortYearMonth: [null as DateOrString], // 攤提年月
     conditionFilter: [], // 1:已設定攤提 → DEPRE_STATUS Y；0:未設定 → N
-    pageSize: [30],
+    pageSize: [1000],
     pageIndex: [1],
   });
 
@@ -254,6 +254,21 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
               }
               this.data = res.Data ?? [];
               this.totalRecords = res.TotalCount ?? this.data.length;
+
+              // 2. 預設查詢的項目全部勾選
+              if (layoutMode === ResultLayoutMode.AmortizationSetting) {
+                if (this.data.length > 1000) {
+                  // 超過 1000 筆不預設勾選，避免出現第二頁的內容沒有勾選到
+                  this.selectedRows = [];
+                } else {
+                  setTimeout(() => {
+                    this.selectedRows = [...(this.data as QueryASS13090QueryDataRow[])];
+                    console.log('selectedRows length', this.selectedRows.length);
+                  }, 0);
+                }
+              } else {
+                this.selectedRows = [];
+              }
             },
             error: err => {
               this.data = [];
@@ -522,7 +537,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       return null;
     }
     const q = this.lastQueryBody;
-    const sortBy = Array.isArray(q['SortBy']) ? (q['SortBy'] as Array<Record<string, unknown>>) : [];
+    const sortBy = Array.isArray(q['SortBy']) ? (q['SortBy'] as Record<string, unknown>[]) : [];
     const firstSort = sortBy[0] ?? null;
     const sortField = firstSort?.['field'] != null ? String(firstSort['field']) : null;
     const sortOrderRaw = firstSort?.['order'];
@@ -587,5 +602,4 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       .pipe(untilDestroyed(this))
       .subscribe(opts => (this.purchaseNoOptions = opts ?? []));
   }
-
 }
