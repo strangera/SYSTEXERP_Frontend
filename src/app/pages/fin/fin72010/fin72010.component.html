@@ -69,7 +69,7 @@
   <div class="col-13">
     <app-table-report tableKey="FIN72010" [data]="data" [columns]="columns" (edit)="onEdit($event)"
       (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)" [showDelete]="false" [showCheckBox]="false" dataKey="id"
+      (delete)="onDelete($event)" [showDelete]="false"  [showEdit]="false"  [showDetail]="false" [showCheckBox]="false" dataKey="id"
       [totalRecords]="totalRecords()" [lastQueryBody]="lastQueryBody"
       [queryFunction]="fin72010Service.queryFIN72010.bind(fin72010Service)" [lazy]="true" [loading]="loading"
       [isRowSelectable]="isRowSelectable" [addButton]="addButton"></app-table-report>

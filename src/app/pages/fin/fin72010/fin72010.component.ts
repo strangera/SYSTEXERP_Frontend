@@ -74,7 +74,7 @@ export interface sample72010 {
   ],
   providers: [ConfirmationService]
 })
-export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> implements OnInit {
+export class FIN72010Component extends BasicQueryPageComponent<FIN72010Data> implements OnInit {
 
   // 查詢
   queryForm = this.formBuilder.group({
@@ -134,12 +134,25 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
 
   addButton: AddButton[] = [
     {
+      label: '編輯',
+      icon: 'pi pi-pencil',
+      action: (data: FIN72010Data) => this.onEdit(data),
+      disabled: (data: FIN72010Data) =>
+        !this.hasPermission(this.Actions.Edit) ||
+        ['拋轉', '撥補', '作廢'].includes(String(data.PCS_Status)),
+    },
+    {
+      label: '查看',
+      icon: 'pi pi-eye',
+      action: (data: FIN72010Data) => this.onDetail(data),
+    },
+    {
       label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72010Data) => this.onDelete(rowData),
       disabled: (rowData: FIN72010Data) =>
         !this.hasPermission(this.Actions.Delete) ||
-        rowData.PCS_Status == '作廢',
+        ['拋轉', '撥補', '作廢'].includes(String(rowData.PCS_Status)),
     }
   ];
 
@@ -389,7 +402,9 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
      */
     this.keepingUnit_Options.set([]);
   }
-
+  onEditData(row: FIN72010Data): void {
+    this.onEdit(row, this.queryForm.value);
+  }
   // 根據狀態代碼回傳狀態名稱
   getPCSStatusName(status?: string | number | null): string {
     const statusMap: Record<string, string> = {
