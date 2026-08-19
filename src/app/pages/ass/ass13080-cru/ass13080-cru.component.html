@@ -8,378 +8,133 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm">
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="變賣單號"
-          controlName="soldNo"
-          [control]="df().soldNo"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="資產編號"
-          controlName="assetNo"
-          [options]="assetsOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().assetNo"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="品項編號/名稱"
-          controlName="goodsId"
-          [options]="goodsOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().goodsId"
-          [submitted]="submitted"
-        ></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="變賣單號" controlName="soldNo" [control]="df().soldNo"
+          [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產編號" controlName="assetNo" [options]="assetsOptions"
+          optionLabel="label" optionValue="value" [control]="df().assetNo" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品項編號/名稱" controlName="goodsId" [options]="goodsOptions"
+          optionLabel="label" optionValue="value" [control]="df().goodsId" [submitted]="submitted"></app-dropdown>
       </div>
 
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="資產狀態"
-          controlName="assetStatus"
-          [options]="assetStatusOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().assetStatus"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="資產類型"
-          controlName="assetType"
-          [options]="assetTypeOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().assetType"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="攤提代號"
-          controlName="acpNo"
-          [control]="df().acpNo"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產狀態" controlName="assetStatus"
+          [options]="assetStatusOptions" optionLabel="label" optionValue="value" [control]="df().assetStatus"
+          [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產類型" controlName="assetType" [options]="assetTypeOptions"
+          optionLabel="label" optionValue="value" [control]="df().assetType" [submitted]="submitted"></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="攤提代號" controlName="acpNo" [control]="df().acpNo"
+          [submitted]="submitted"></app-input-text>
       </div>
 
       <hr />
       <h5>採購資訊</h5>
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="採購單號"
-          controlName="poNo"
-          [control]="df().poNo"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="購入日期"
-          controlName="buyDate"
-          [control]="df().buyDate"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="購入金額"
-          controlName="buyAmt"
-          [control]="df().buyAmt"
-          [submitted]="submitted"
-        ></app-input-number>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="poNo" [control]="df().poNo"
+          [submitted]="submitted"></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="購入日期" controlName="buyDate"
+          [control]="df().buyDate" [submitted]="submitted"></app-calendar>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="購入金額" controlName="buyAmt"
+          [control]="df().buyAmt" [submitted]="submitted"></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="異動金額"
-          controlName="chgAmt"
-          [control]="df().chgAmt"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="供應商編號"
-          controlName="vendorNo"
-          [control]="df().vendorNo"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="設備編號"
-          controlName="deviceNo"
-          [control]="df().deviceNo"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="異動金額" controlName="chgAmt"
+          [control]="df().chgAmt" [submitted]="submitted"></app-input-number>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="供應商編號" controlName="vendorNo" [control]="df().vendorNo"
+          [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="設備編號" controlName="deviceNo" [control]="df().deviceNo"
+          [submitted]="submitted"></app-input-text>
       </div>
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="會計科目(借)"
-          controlName="accNoDr"
-          [options]="accOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().accNoDr"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="會計科目(貸)"
-          controlName="accNoCr"
-          [options]="accOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().accNoCr"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="入帳日期"
-          controlName="txnDate"
-          [control]="df().txnDate"
-          [submitted]="submitted"
-        ></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="會計科目(借)" controlName="accNoDr" [options]="accOptions"
+          optionLabel="label" optionValue="value" [control]="df().accNoDr" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="會計科目(貸)" controlName="accNoCr" [options]="accOptions"
+          optionLabel="label" optionValue="value" [control]="df().accNoCr" [submitted]="submitted"></app-dropdown>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="入帳日期" controlName="txnDate"
+          [control]="df().txnDate" [submitted]="submitted"></app-calendar>
       </div>
 
       <hr />
       <h5>折舊資訊</h5>
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="折舊會計科目"
-          controlName="deprAccNo"
-          [options]="accOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().deprAccNo"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="累計折舊科目"
-          controlName="accuDeprAccNo"
-          [options]="accOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().accuDeprAccNo"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="折舊年限"
-          controlName="deprYears"
-          [control]="df().deprYears"
-          [submitted]="submitted"
-        ></app-input-number>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="折舊會計科目" controlName="deprAccNo" [options]="accOptions"
+          optionLabel="label" optionValue="value" [control]="df().deprAccNo" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="累計折舊科目" controlName="accuDeprAccNo" [options]="accOptions"
+          optionLabel="label" optionValue="value" [control]="df().accuDeprAccNo" [submitted]="submitted"></app-dropdown>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折舊年限" controlName="deprYears"
+          [control]="df().deprYears" [submitted]="submitted"></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="異動年限"
-          controlName="chgYears"
-          [control]="df().chgYears"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="預留殘值"
-          controlName="residualAmt"
-          [control]="df().residualAmt"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="折舊到期"
-          controlName="deprDue"
-          [control]="df().deprDue"
-          [submitted]="submitted"
-        ></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="異動年限" controlName="chgYears"
+          [control]="df().chgYears" [submitted]="submitted"></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="預留殘值" controlName="residualAmt"
+          [control]="df().residualAmt" [submitted]="submitted"></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折舊到期" controlName="deprDue"
+          [control]="df().deprDue" [submitted]="submitted"></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="未攤提金額"
-          controlName="unamortAmt"
-          [control]="df().unamortAmt"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="已攤提金額"
-          controlName="amortAmt"
-          [control]="df().amortAmt"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="已攤提月數"
-          controlName="amortMonths"
-          [control]="df().amortMonths"
-          [submitted]="submitted"
-        ></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="未攤提金額" controlName="unamortAmt"
+          [control]="df().unamortAmt" [submitted]="submitted"></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="已攤提金額" controlName="amortAmt"
+          [control]="df().amortAmt" [submitted]="submitted"></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="已攤提月數" controlName="amortMonths"
+          [control]="df().amortMonths" [submitted]="submitted"></app-input-number>
       </div>
 
       <hr />
       <h5>保管資訊</h5>
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="保管單位"
-          controlName="keepOrgId"
-          [options]="orgOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().keepOrgId"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="保管人"
-          controlName="keepUserNo"
-          [options]="userOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().keepUserNo"
-          [submitted]="submitted"
-        ></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管單位" controlName="keepOrgId" [options]="orgOptions"
+          optionLabel="label" optionValue="value" [control]="df().keepOrgId" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="保管人" controlName="keepUserNo" [options]="userOptions"
+          optionLabel="label" optionValue="value" [control]="df().keepUserNo" [submitted]="submitted"></app-dropdown>
       </div>
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="使用單位"
-          controlName="useOrgId"
-          [options]="orgOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().useOrgId"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="使用人"
-          controlName="useUserNo"
-          [options]="userOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().useUserNo"
-          [submitted]="submitted"
-        ></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用單位" controlName="useOrgId" [options]="orgOptions"
+          optionLabel="label" optionValue="value" [control]="df().useOrgId" [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用人" controlName="useUserNo" [options]="userOptions"
+          optionLabel="label" optionValue="value" [control]="df().useUserNo" [submitted]="submitted"></app-dropdown>
       </div>
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="位置編號"
-          controlName="locNo"
-          [control]="df().locNo"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="維修合約編號"
-          controlName="maintContractNo"
-          [control]="df().maintContractNo"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="locNo" [control]="df().locNo"
+          [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="維修合約編號" controlName="maintContractNo"
+          [control]="df().maintContractNo" [submitted]="submitted"></app-input-text>
       </div>
 
       <hr />
       <h5>處分資訊</h5>
       <div class="grid p-fluid">
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="變賣日期"
-          controlName="soldDate"
-          [control]="df().soldDate"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="變賣廠商"
-          controlName="soldVendorNo"
-          [options]="vendorOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().soldVendorNo"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="入帳傳票編號"
-          controlName="soldVoucherNo"
-          [control]="df().soldVoucherNo"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="變賣日期" controlName="soldDate"
+          [control]="df().soldDate" [submitted]="submitted"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="變賣廠商" controlName="soldVendorNo" [options]="vendorOptions"
+          optionLabel="label" optionValue="value" [control]="df().soldVendorNo" [submitted]="submitted"></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="原始購入傳票編號" controlName="soldVoucherNo"
+          [control]="df().soldVoucherNo" [submitted]="submitted"></app-input-text>
       </div>
       <div class="grid p-fluid">
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          [useGrouping]="false"
-          label="變賣金額(含稅)"
-          controlName="soldAmtTax"
-          [control]="df().soldAmtTax"
-          [submitted]="submitted"
-        ></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="變賣金額(含稅)"
+          controlName="soldAmtTax" [control]="df().soldAmtTax" [submitted]="submitted"></app-input-number>
       </div>
 
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12"
-          label="變賣說明"
-          controlName="soldRemark"
-          [control]="df().soldRemark"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text class="col-12" label="變賣說明" controlName="soldRemark" [control]="df().soldRemark"
+          [submitted]="submitted"></app-input-text>
       </div>
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12"
-          label="資產註記"
-          controlName="assetRemark"
-          [control]="df().assetRemark"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text class="col-12" label="資產註記" controlName="assetRemark" [control]="df().assetRemark"
+          [submitted]="submitted"></app-input-text>
       </div>
 
-      <div
-        *ngIf="crudstatus === CRUDStatus.Create || crudstatus === CRUDStatus.Edit"
-        class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          *ngIf="crudstatus === CRUDStatus.Create"
-          label="確認變賣"
-          (click)="onCreateSold()"
-          [disabled]="!isFormCreateable"
-        ></app-button>
+      <div *ngIf="crudstatus === CRUDStatus.Create || crudstatus === CRUDStatus.Edit"
+        class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3">
+        <app-button *ngIf="crudstatus === CRUDStatus.Create" label="確認變賣" (click)="onCreateSold()"
+          [disabled]="!isFormCreateable"></app-button>
 
-        <app-button
-          *ngIf="crudstatus === CRUDStatus.Edit"
-          label="取消變賣"
-          (click)="onCancelSold()"
-          [disabled]="!hasPermission(Actions.Edit)"
-        ></app-button>
+        <app-button *ngIf="crudstatus === CRUDStatus.Edit" label="取消變賣" (click)="onCancelSold()"
+          [disabled]="!hasPermission(Actions.Edit)"></app-button>
 
-        <app-button
-          *ngIf="crudstatus === CRUDStatus.Edit"
-          label="變賣審核"
-          (click)="onApproveSold()"
-          [disabled]="!hasPermission(Actions.Audit)"
-        ></app-button>
+        <app-button *ngIf="crudstatus === CRUDStatus.Edit" label="變賣審核" (click)="onApproveSold()"
+          [disabled]="!hasPermission(Actions.Audit)"></app-button>
       </div>
     </form>
   </p-panel>

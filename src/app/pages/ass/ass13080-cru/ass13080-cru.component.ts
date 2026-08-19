@@ -126,7 +126,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     soldDate: new FormControl<Date | null>(null, [Validators.required]),
     /** 變賣廠商 */
     soldVendorNo: new FormControl<string | null>(null, [Validators.required]),
-    /** 入帳傳票編號 */
+    /** 原始購入傳票編號 */
     soldVoucherNo: new FormControl<string | null>(null),
     /** 變賣金額(含稅) */
     soldAmtTax: new FormControl<number | null>(null, [Validators.required]),
@@ -405,7 +405,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     soldDate: Date | null;
     /** 變賣廠商 */
     soldVendorNo: string | null;
-    /** 入帳傳票編號 */
+    /** 原始購入傳票編號 */
     soldVoucherNo: string | null;
     /** 變賣金額(含稅) */
     soldAmtTax: number | null;
