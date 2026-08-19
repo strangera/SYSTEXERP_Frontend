@@ -45,16 +45,15 @@
                 (click)="openUserDialog('Keep_UsrNo')"></button>
             </p-inputGroup>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="狀態" controlName="PCS_Status" [options]="status_Options" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.PCS_Status" [submitted]="submitted"></app-dropdown>
-          </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="保管單位" controlName="Keep_OrgID" [options]="keepingUnit_Options()" optionLabel="label"
+                optionValue="value" [control]="queryForm.controls.Keep_OrgID" [submitted]="submitted"></app-dropdown>
+            </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="保管單位" controlName="Keep_OrgID" [options]="keepingUnit_Options()" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Keep_OrgID" [submitted]="submitted"></app-dropdown>
+            <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="狀態" controlName="PCS_Status" [options]="status_Options" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.PCS_Status" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 

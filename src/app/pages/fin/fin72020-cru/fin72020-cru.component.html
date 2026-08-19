@@ -3,44 +3,231 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
+
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range label="申請日期" [startControl]="dataForm.controls.DateFrom"
-            [endControl]="dataForm.controls.DateTo" [submitted]="submitted" />
+          <app-calendar-range
+            label="申請日期"
+            [startControl]="dataForm.controls.DateFrom"
+            [endControl]="dataForm.controls.DateTo"
+            [submitted]="submitted">
+          </app-calendar-range>
         </div>
+
+        <!-- 保管人 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保管單位" controlName="Keep_OrgID" [options]="KeepOrgID_Options()" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Keep_OrgID" [submitted]="submitted"></app-dropdown>
+          <label for="keepUsrDisplay" class="block">保管人</label>
+
+          <p-inputGroup>
+            <input
+              id="keepUsrDisplay"
+              type="text"
+              pInputText
+              formControlName="Keep_UsrDisplay"
+              placeholder="請選擇"
+              class="user-display-input"
+              readonly />
+
+            <button
+              *ngIf="dataForm.get('Keep_UsrDisplay')?.value"
+              type="button"
+              aria-label="清除"
+              pButton
+              icon="pi pi-times"
+              class="clear-user-button"
+              (click)="clearKeepUser()">
+            </button>
+
+            <button
+              type="button"
+              aria-label="搜尋"
+              pButton
+              icon="pi pi-angle-down"
+              (click)="openUserDialog()">
+            </button>
+          </p-inputGroup>
         </div>
+
+        <!-- 保管單位 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保管人" controlName="Keep_UsrNo" [options]="KeepUsrNo_Options()" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Keep_UsrNo" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="保管單位"
+            controlName="Keep_OrgID"
+            [options]="KeepOrgID_Options()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Keep_OrgID"
+            [submitted]="submitted">
+          </app-dropdown>
         </div>
+
       </div>
+
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear" [form]="dataForm"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
     </form>
-    <app-table-report tableKey="fin11200DetailTable" dataKey="PCS_No" title="新增請款" class="col-12" [data]="data"
-      [totalRecords]="data.length" [columns]="columns" [showManage]="false" [showCheckBox]="true"
-      (insert)="dialogVisible = true; this.selectedItemsDialog = []" (delete)="onDelete($event)"
-      [selectedItems]="selectedData" (selectionChange)="selectedData = $event"
-      [showReportMode]="false"></app-table-report>
 
-    <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
-      <app-button btnType="submit" [loading]="loading" (clickEvent)="onClaim()"></app-button>
+    <app-table-report
+      tableKey="fin11200DetailTable"
+      dataKey="PCS_No"
+      title="新增請款"
+      class="col-12"
+      [data]="data"
+      [totalRecords]="data.length"
+      [columns]="columns"
+      [showManage]="false"
+      [showCheckBox]="true"
+      (insert)="dialogVisible = true; this.selectedItemsDialog = []"
+      (delete)="onDelete($event)"
+      [selectedItems]="selectedData"
+      (selectionChange)="selectedData = $event"
+      [showReportMode]="false">
+    </app-table-report>
+
+    <div
+      *ngIf="!isFormReadable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+
+      <app-button
+        btnType="cancel"
+        [form]="dataForm"
+        (clickEvent)="resetTable()">
+      </app-button>
+
+      <app-button
+        btnType="submit"
+        [loading]="loading"
+        (clickEvent)="onClaim()">
+      </app-button>
+
     </div>
   </p-panel>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="零用金申請單據" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+
+<!-- 零用金申請單據 -->
+<app-dialog
+  [visible]="dialogVisible"
+  header="零用金申請單據"
+  (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
-  <app-table-report tableKey="fin11200DialogTable" dataKey="PCS_No" [data]="dialogData" [columns]="columns"
-    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showManage]="false"
-    [showCheckBox]="true" [emptyMessage]="'無可選擇的單據'" [isRowSelectable]="isRowSelectable.bind(this)" scrollHeight="350px"
-    [showCaption]="false" [totalRecords]="totalDialogRecords()"></app-table-report>
+
+  <app-table-report
+    tableKey="fin11200DialogTable"
+    dataKey="PCS_No"
+    [data]="dialogData"
+    [columns]="columns"
+    [selectedItems]="selectedItemsDialog"
+    (selectionChange)="selectedItemsDialog = $event"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [emptyMessage]="'無可選擇的單據'"
+    [isRowSelectable]="isRowSelectable.bind(this)"
+    scrollHeight="350px"
+    [showCaption]="false"
+    [totalRecords]="totalDialogRecords()">
+  </app-table-report>
 </app-dialog>
+
+
+<!-- 保管人選擇 -->
+<p-dialog
+  header="使用者代碼"
+  [(visible)]="userDialogVisible"
+  [modal]="true"
+  [style]="{ width: '70vw' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <form [formGroup]="userQueryForm">
+    <div class="grid p-fluid">
+
+      <div class="col-12 md:col-6">
+        <label for="user_No" class="block mb-2">使用者代碼</label>
+        <input
+          id="user_No"
+          pInputText
+          formControlName="user_No" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="user_Name" class="block mb-2">使用者名稱</label>
+        <input
+          id="user_Name"
+          pInputText
+          formControlName="user_Name" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="Org_ID" class="block mb-2">組織代碼</label>
+        <input
+          id="Org_ID"
+          pInputText
+          formControlName="Org_ID" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="Org_Name" class="block mb-2">組織名稱</label>
+        <input
+          id="Org_Name"
+          pInputText
+          formControlName="Org_Name" />
+      </div>
+
+    </div>
+
+    <div class="flex gap-2 mb-3">
+      <p-button
+        type="button"
+        label="查詢"
+        icon="pi pi-search"
+        (click)="queryUserData()">
+      </p-button>
+
+      <p-button
+        type="button"
+        label="清除"
+        icon="pi pi-times"
+        (click)="clearUserQuery()">
+      </p-button>
+    </div>
+  </form>
+
+  <p-table
+    [value]="userResultData()"
+    [scrollable]="true"
+    scrollHeight="350px"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    selectionMode="single"
+    [(selection)]="selectedUser"
+    (onRowSelect)="onSelectUser($event.data)">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>使用者代碼</th>
+        <th>使用者名稱</th>
+        <th>組織代碼</th>
+        <th>組織名稱</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr
+        [pSelectableRow]="row"
+        style="cursor: pointer">
+
+        <td>{{ row.user_No }}</td>
+        <td>{{ row.user_Name }}</td>
+        <td>{{ row.Org_ID }}</td>
+        <td>{{ row.Org_Name }}</td>
+      </tr>
+    </ng-template>
+
+  </p-table>
+</p-dialog>

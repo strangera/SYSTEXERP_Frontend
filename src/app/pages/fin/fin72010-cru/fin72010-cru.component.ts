@@ -108,6 +108,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   // 基本資料dropdown
   PCS_No_Options = signal<{ label: string; value: string }[]>([]);
   keepingUnit_Options = signal<{ label: string; value: string }[]>([]);
+  keeperUnit_Options = signal<{ label: string; value: string }[]>([]); // 保管人可選保管單位
   PCS_DtlType_Options = signal<{ label: string; value: string }[]>([]);
   PUR_VoucherType_Options = signal<{ label: string; value: string }[]>([]);
   PUR_DirectType_Options = signal<{ label: string; value: string }[]>([]);
@@ -546,6 +547,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       this.Detaildata = [];
       this.orgDetaildata = [];
       this.selectedPOS2064Items = [];
+      this.keeperUnit_Options.set([]);
 
       this.setDefaultApplicant();
 
@@ -615,27 +617,6 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       };
     }
 
-    // // 找出目前這一列在 Detaildata 陣列中的位置，避免檢查重複時，把自己也判斷成重複
-    // const currentIndex = this.Detaildata.indexOf(rowData);
-    // // 檢查是否有其他列的 AccNo 跟目前這列相同
-    // const isDuplicate = this.Detaildata.some((item, index) => {
-
-    //   if (index === currentIndex) {
-    //     return false; // 如果目前的是自己這一列，就跳過不檢查
-    //   }
-
-    //   // 比對其他列的 AccNo 是否與目前這列的 accNo 相同，有相同就代表重複
-    //   return item.AccNo?.trim() === accNo;
-    // });
-
-    // // 如果有找到重複的費用會計科目，回傳驗證失敗
-    // if (isDuplicate) {
-    //   return {
-    //     isValid: false,
-    //     errorMessage: `費用會計科目編號 ${accNo} 已存在，請使用其他編號。`
-    //   };
-    // }
-
     // 沒有空白，也沒有重複，驗證通過
     return { isValid: true, errorMessage: '' };
   };
@@ -653,7 +634,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       ? this.allKeeperUserResultData()
       : this.allUserResultData();
 
-    const filteredData = this.allUserResultData().filter(item => {
+    const filteredData = sourceData.filter(item => {
       return (
         (!userNo || item.user_No.toLowerCase().includes(userNo)) &&
         (!userName || item.user_Name.toLowerCase().includes(userName)) &&
@@ -710,9 +691,14 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       this.dataForm.patchValue({
         Keep_UsrNo: row.user_No ?? '',
         Keep_UsrName: row.user_Name ?? '',
-        Keep_UsrDisplay: this.getUserDisplay(row),
-        Keep_OrgID: row.Org_ID ?? ''
+        Keep_UsrDisplay: this.getUserDisplay(row)
       });
+
+      // 選擇零用金保管人後，重新取得該保管人的保管單位
+      this.loadKeepingUnitByUser(
+        row.user_No,
+        row.Org_ID
+      );
     }
 
     this.userDialogVisible = false;
@@ -911,6 +897,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       Keep_UsrDisplay: '',
       Keep_OrgID: null
     });
+
+    this.keeperUnit_Options.set([]);
   }
 
   private getUserDisplay(user: UserOrgOption): string {
@@ -1009,6 +997,49 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     return option.user_Name;
   }
 
+
+  /** 依保管人取得可選保管單位 */
+  private loadKeepingUnitByUser(
+    userNo: string,
+    selectedOrgId?: string
+  ): void {
+    if (!userNo) {
+      this.keeperUnit_Options.set([]);
+      this.dataForm.patchValue({
+        Keep_OrgID: null
+      });
+      return;
+    }
+
+    this.fin72010Service
+      .queryTBLUSER_PCS_DropDownList(userNo)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+
+          const options = res.Data.map(item => ({
+            label: `${item.Org_ID ?? ''} - ${item.Org_Name ?? ''}`,
+            value: item.Org_ID ?? '',
+          }));
+
+          this.keeperUnit_Options.set(options);
+
+          // 優先帶入選擇保管人時的組織；若不在可選清單中，預設第一筆
+          const defaultOrg = options.some(
+            item => item.value === selectedOrgId
+          )
+            ? selectedOrgId
+            : options.length > 0
+              ? options[0].value
+              : null;
+
+          this.dataForm.patchValue({
+            Keep_OrgID: defaultOrg ?? null
+          });
+        }
+      });
+  }
 
   /** 載入下拉選單選項 */
   private loadDropdownOptions(): void {
