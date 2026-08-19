@@ -208,6 +208,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     this.initUserInfo();
     this.handleRowData();
     this.handleQueryParams();
+    this.handleHandoff();
     this.loadAllDropdowns();
     this.setupVendorSync();
     this.setupAmountRelations();
@@ -243,44 +244,69 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
   private handleQueryParams(): void {
     this.route.queryParams.pipe(untilDestroyed(this)).subscribe((params) => {
-      const guiNo = (
-        params['GUI_No'] ??
-        params['gui_no'] ??
-        params['invoiceNo'] ??
-        ''
-      ).toString().trim().toUpperCase();
-
-      if (!guiNo) return;
-
-      const body = {
-        pageSize: 30,
-        pageIndex: 1,
-        PUR_GUINo: guiNo,
-        SortBy: [
-          { field: 'PUR_GUINo', order: 1 },
-          { field: 'PUR_GUIDate', order: 1 }
-        ]
-      };
-
-      this.fin13050Service.queryFIN13050(body)
-        .pipe(untilDestroyed(this))
-        .subscribe({
-          next: (res: any) => {
-            const row = Array.isArray(res?.Data) ? res.Data[0] : null;
-            if (!row) {
-              this.messageService.errorBubble(`查無發票資料（PUR_GUINo=${guiNo}）`);
-              return;
-            }
-
-            this.patchForm(row);
-            this.crudstatus = CRUDStatus.Read;
-            this.updateDisabledState();
-          },
-          error: () => {
-            this.messageService.errorBubble('查詢發票資料失敗');
-          },
-        });
+      const guiNo = (params['GUI_No'] ?? params['gui_no'] ?? params['invoiceNo'] ?? '').toString();
+      this.loadByGuiNo(guiNo);
     });
+  }
+
+  // FIN29120 → 新分頁：ID 走 localStorage handoff（與 FIN34030/FIN24010 同套），URL 乾淨
+  private handleHandoff(): void {
+    if (this.rowdata) return;
+    try {
+      const raw = localStorage.getItem('FIN13050_CRU_HANDOFF');
+      if (!raw) return;
+      const guiNo = JSON.parse(raw)?.guiNo;
+      if (!guiNo) { localStorage.removeItem('FIN13050_CRU_HANDOFF'); return; }
+      // key 只在查詢真正完成後才移除（同 FIN24010 路徑二做法）：
+      // PreloadAllModules + guard 可能讓 CRU 元件初始化兩次，第一個實例會被 redirect 銷毀，
+      // 若在此提早移除，被銷毀實例的查詢被 takeUntilDestroyed 取消，真正的實例就撈不到 handoff。
+      this.loadByGuiNo(String(guiNo), () => localStorage.removeItem('FIN13050_CRU_HANDOFF'));
+    } catch {
+      /* 讀取/解析失敗略過 */
+    }
+  }
+
+  private loadByGuiNo(guiNoRaw: string, onDone?: () => void): void {
+    const guiNo = (guiNoRaw ?? '').toString().trim().toUpperCase();
+    if (!guiNo) { onDone?.(); return; }
+
+    const body = {
+      pageSize: 30,
+      pageIndex: 1,
+      PUR_GUINo: guiNo,
+      SortBy: [
+        { field: 'PUR_GUINo', order: 1 },
+        { field: 'PUR_GUIDate', order: 1 }
+      ]
+    };
+
+    this.fin13050Service.queryFIN13050(body)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          const row = Array.isArray(res?.Data) ? res.Data[0] : null;
+          if (!row) {
+            this.messageService.errorBubble(`查無發票資料（PUR_GUINo=${guiNo}）`);
+            onDone?.();
+            return;
+          }
+
+          this.patchForm(row);
+          // patchForm 用 emitEvent:false，非同步載入（handoff/query param）時子元件已先以 null 完成
+          // ngOnInit，YearMonthComponent 只靠 valueChanges 或自身 ngOnInit 同步，故申報年月不會回填。
+          // patchForm 已把值寫入該控件，這裡把同一個值原封再 emit 一次（emitEvent 預設 true），
+          // 觸發 YearMonthComponent 的 valueChanges 讓年/月子控件重新對映。
+          const repCtrl = this.dataForm.controls.PUR_RepYYYYMM;
+          repCtrl.setValue(repCtrl.value);
+          this.crudstatus = CRUDStatus.Read;
+          this.updateDisabledState();
+          onDone?.();
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢發票資料失敗');
+          onDone?.();
+        },
+      });
   }
 
   private patchForm(row: any): void {

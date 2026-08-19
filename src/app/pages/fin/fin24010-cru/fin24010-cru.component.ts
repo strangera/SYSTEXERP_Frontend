@@ -136,7 +136,10 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     }
 
     // 路徑三：FIN29120 → 新分頁，使用 query param ?acpId=
-    const acpNoFromQuery: string | undefined = this.route.snapshot.queryParams['acpId'];
+    // 全域 LowerCaseUrlSerializer 會把整個 URL（含 query key/value）轉小寫，
+    // 故 key 需容錯小寫、value 需轉回大寫（與 fin13050-cru 的 handleQueryParams 同套處理）。
+    const acpNoRaw = this.route.snapshot.queryParams['acpId'] ?? this.route.snapshot.queryParams['acpid'];
+    const acpNoFromQuery = acpNoRaw ? String(acpNoRaw).trim().toUpperCase() : '';
     if (acpNoFromQuery) {
       this.loading = true;
       this.fin24010Service.queryFIN24010({ ACP_No: acpNoFromQuery })
