@@ -16,10 +16,10 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize, map } from 'rxjs';
 import { Fin64030Service, Fin64030UpdateRequest, QueryFIN64030Request, QueryFIN64030Row } from '../../../service/api/fin/fin64030.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin64030',
@@ -76,7 +76,7 @@ export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row>
   ];
 
   companyAccOptions$ = this.dropDown.queryAps1002().pipe(
-    map(options => options ? options.filter(opt => opt['BNK_AccType'] === '1') : null)
+    map(options => options ? options : null)
   );
 
   chkStatusOptions = [
@@ -86,6 +86,7 @@ export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row>
     { value: '3', label: '兌現' },
     { value: '4', label: '撤票' },
     { value: '5', label: '退票' },
+    { value: 'R', label: '僅記錄' },
   ];
 
   constructor(

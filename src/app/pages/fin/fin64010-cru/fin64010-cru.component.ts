@@ -8,10 +8,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -80,6 +80,7 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '3', label: '兌現' },
     { value: '4', label: '撤票' },
     { value: '5', label: '退票' },
+    { value: 'R', label: '僅記錄' },
   ];
 
   /** ✅ 對齊後端 updateFIN64010Request 必填 */
@@ -120,7 +121,7 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     ProjectNo: ['' as string],
 
     CHK_Status: ['' as string, Validators.required],
- TranStatus: ['' as string],
+    TranStatus: ['' as string],
     // 顯示用
     Tran_Status: ['' as string],
     AccName: ['' as string],
@@ -142,17 +143,17 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN64010', this.dataForm);
-      // ✅ 先補 Id（避免 raw.Id 是 null）
-  const routeId = this.getRouteId();
-  const listRow: any = (history as any)?.state?.rowdata;
-  const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
+    // ✅ 先補 Id（避免 raw.Id 是 null）
+    const routeId = this.getRouteId();
+    const listRow: any = (history as any)?.state?.rowdata;
+    const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
 
-  const finalId = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
-  if (finalId) {
-    this.dataForm.get('Id')?.setValue(finalId, { emitEvent: false });
-  }
+    const finalId = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
+    if (finalId) {
+      this.dataForm.get('Id')?.setValue(finalId, { emitEvent: false });
+    }
 
-this.patchFromListRowIfNeeded();
+    this.patchFromListRowIfNeeded();
     // 1) 廠客
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
@@ -213,35 +214,35 @@ this.patchFromListRowIfNeeded();
 
 
 
-   this.fin64010Service.queryAPS1002_DropDownList()
-  .pipe(untilDestroyed(this))
-  .subscribe({
-    next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
-      const list = Array.isArray(res?.Data) ? res.Data : [];
+    this.fin64010Service.queryAPS1002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
 
-      this.colBankAccOptions = list
-        .filter((x: any) => {
-          const accType = String(x?.BNK_AccType ?? '').trim();
-          const bnkId = String(x?.BNK_id ?? '').trim();
-          const depositAccNo = String(x?.BNK_DepositAccNo ?? '').trim();
+          this.colBankAccOptions = list
+            .filter((x: any) => {
+              const accType = String(x?.BNK_AccType ?? '').trim();
+              const bnkId = String(x?.BNK_id ?? '').trim();
+              const depositAccNo = String(x?.BNK_DepositAccNo ?? '').trim();
 
-          return (
-            accType !== '1' &&
-            !!bnkId &&
-            !!depositAccNo
-          );
-        })
-        .map((x: any) => ({
-          label: `${x.BNK_id} - ${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
-          value: String(x.BNK_id).trim(),
-          raw: x,
-        }));
+              return (
+                accType !== '1' &&
+                !!bnkId &&
+                !!depositAccNo
+              );
+            })
+            .map((x: any) => ({
+              label: `${x.BNK_id} - ${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
+              value: String(x.BNK_id).trim(),
+              raw: x,
+            }));
 
-    },
-    error: () => {
-      this.colBankAccOptions = [];
-    },
-  });
+        },
+        error: () => {
+          this.colBankAccOptions = [];
+        },
+      });
 
 
     // ✅ 最後載明細（避免 patch 時 options 未就緒）
@@ -260,51 +261,51 @@ this.patchFromListRowIfNeeded();
     return looksLikeDetail ? (row as FIN64010DetailRow) : null;
   }
 
-private loadDetailByRoute(): void {
-  const routeId = this.getRouteId();
-  const listRow: any = (history as any)?.state?.rowdata;
-  const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
+  private loadDetailByRoute(): void {
+    const routeId = this.getRouteId();
+    const listRow: any = (history as any)?.state?.rowdata;
+    const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
 
-  const id = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
-  if (!id) {
-    console.warn('[FIN64010] missing Id (route/state both empty)');
-    this.applyReadonlyRules();
-    return;
-  }
+    const id = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
+    if (!id) {
+      console.warn('[FIN64010] missing Id (route/state both empty)');
+      this.applyReadonlyRules();
+      return;
+    }
 
-  this.loading = true;
+    this.loading = true;
 
-  this.fin64010Service.queryFIN64010Detail({ Id: id })
-    .pipe(untilDestroyed(this))
-    .subscribe({
-      next: (res: ApiResponse<any>) => {
-        const row = this.normalizeDetailRow(res);
-        if (!row) {
+    this.fin64010Service.queryFIN64010Detail({ Id: id })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<any>) => {
+          const row = this.normalizeDetailRow(res);
+          if (!row) {
+            this.applyReadonlyRules();
+            this.loading = false;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          // ✅ 保證 Id 一定有值
+          this.dataForm.patchValue({
+            Id: Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id ?? id),
+
+            CHK_Status: String((row as any)?.CHK_Status ?? ''),
+            // ...其他欄位照你原本 patch
+          }, { emitEvent: false });
+
           this.applyReadonlyRules();
           this.loading = false;
           this.cdr.detectChanges();
-          return;
+        },
+        error: (err) => {
+          console.error('FIN64010 detail error:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
         }
-
-        // ✅ 保證 Id 一定有值
-        this.dataForm.patchValue({
-          Id: Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id ?? id),
-          
-  CHK_Status: String((row as any)?.CHK_Status ?? ''),
-          // ...其他欄位照你原本 patch
-        }, { emitEvent: false });
-
-        this.applyReadonlyRules();
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('FIN64010 detail error:', err);
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
-    });
-}
+      });
+  }
   tranStatusOptions = [
     { value: '0', label: '建立' },
     { value: '1', label: '確認' },
@@ -346,24 +347,24 @@ private loadDetailByRoute(): void {
     return `${y}-${m}-${day}`;
   }
 
- onSubmit(_frm: any): void {
-  this.submitted = true;
+  onSubmit(_frm: any): void {
+    this.submitted = true;
 
-  if (this.dataForm.invalid) {
-    this.dataForm.markAllAsTouched();
-    return;
-  }
-  if (!this.isEditable) return;
+    if (this.dataForm.invalid) {
+      this.dataForm.markAllAsTouched();
+      return;
+    }
+    if (!this.isEditable) return;
 
-  const raw = this.dataForm.getRawValue();
+    const raw = this.dataForm.getRawValue();
 
-  // ✅ 安全取 Id（避免 Number(null)=0）
-  const idVal = this.dataForm.get('Id')?.value ?? this.getRouteId();
-  const id = Number(idVal);
-  if (!Number.isFinite(id) || id <= 0) {
-    console.warn('[FIN64010] submit blocked: invalid Id', idVal, raw);
-    return;
-  }
+    // ✅ 安全取 Id（避免 Number(null)=0）
+    const idVal = this.dataForm.get('Id')?.value ?? this.getRouteId();
+    const id = Number(idVal);
+    if (!Number.isFinite(id) || id <= 0) {
+      console.warn('[FIN64010] submit blocked: invalid Id', idVal, raw);
+      return;
+    }
 
     // 狀態=託收/兌現/退票 時日期必填（對齊後端 controller）
     const chkStatus = String(raw.CHK_Status ?? '');
@@ -424,41 +425,41 @@ private loadDetailByRoute(): void {
       });
   }
   private patchFromListRowIfNeeded(): void {
-  const listRow: any = (history as any)?.state?.rowdata;
-  if (!listRow) return;
+    const listRow: any = (history as any)?.state?.rowdata;
+    if (!listRow) return;
 
-  // 只在「目前表單還是空」時才補（避免覆蓋使用者已輸入的內容）
-  const curBank = String(this.dataForm.controls.BNK_Key.value ?? '').trim();
-  if (!curBank) {
-    const bnk = String(listRow.BNK_Key ?? listRow.BNK_No ?? '').trim();
-    if (bnk) this.dataForm.controls.BNK_Key.patchValue(bnk, { emitEvent: false });
-  }
+    // 只在「目前表單還是空」時才補（避免覆蓋使用者已輸入的內容）
+    const curBank = String(this.dataForm.controls.BNK_Key.value ?? '').trim();
+    if (!curBank) {
+      const bnk = String(listRow.BNK_Key ?? listRow.BNK_No ?? '').trim();
+      if (bnk) this.dataForm.controls.BNK_Key.patchValue(bnk, { emitEvent: false });
+    }
 
-  const curVen = String(this.dataForm.controls.VEN_No.value ?? '').trim();
-  if (!curVen) {
-    const ven = String(listRow.VEN_No ?? '').trim();
-    if (ven) this.dataForm.controls.VEN_No.patchValue(ven, { emitEvent: false });
+    const curVen = String(this.dataForm.controls.VEN_No.value ?? '').trim();
+    if (!curVen) {
+      const ven = String(listRow.VEN_No ?? '').trim();
+      if (ven) this.dataForm.controls.VEN_No.patchValue(ven, { emitEvent: false });
+    }
+    const curTran = String(this.dataForm.controls.TranStatus.value ?? '').trim();
+    if (!curTran) {
+      const tran = String(listRow.Tran_Status ?? listRow.TranStatus ?? '').trim();
+      if (tran) this.dataForm.controls.TranStatus.patchValue(tran, { emitEvent: false });
+    }
+    const curChk = String(this.dataForm.controls.CHK_No.value ?? '').trim();
+    if (!curChk) {
+      const chk = String(listRow.CheckNo ?? listRow.CHK_No ?? '').trim();
+      if (chk) this.dataForm.controls.CHK_No.patchValue(chk, { emitEvent: false });
+    }
   }
-const curTran = String(this.dataForm.controls.TranStatus.value ?? '').trim();
-if (!curTran) {
-  const tran = String(listRow.Tran_Status ?? listRow.TranStatus ?? '').trim();
-  if (tran) this.dataForm.controls.TranStatus.patchValue(tran, { emitEvent: false });
-}
-  const curChk = String(this.dataForm.controls.CHK_No.value ?? '').trim();
-  if (!curChk) {
-    const chk = String(listRow.CheckNo ?? listRow.CHK_No ?? '').trim();
-    if (chk) this.dataForm.controls.CHK_No.patchValue(chk, { emitEvent: false });
+  private getRouteId(): number | null {
+    const qp = this.activatedRoute.snapshot.queryParamMap;
+    const v = qp.get('Id') || qp.get('ID') || qp.get('id'); // ✅ 同時支援
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
   }
-}
-private getRouteId(): number | null {
-  const qp = this.activatedRoute.snapshot.queryParamMap;
-  const v = qp.get('Id') || qp.get('ID') || qp.get('id'); // ✅ 同時支援
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-override onCancel(): void {
-  this.router.navigate(['/account/fin', 'fin64010'], {
-    state: { fromCru: true },
-  });
-}
+  override onCancel(): void {
+    this.router.navigate(['/account/fin', 'fin64010'], {
+      state: { fromCru: true },
+    });
+  }
 }
