@@ -67,15 +67,13 @@
         <div class="grid p-fluid">
           <!-- 活動代碼 (ProjectNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+      
+                  <app-input-text
               label="對帳 Key 值"
               controlName="ProjectNo"
-              [options]="ProjectNoOptions | async"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.ProjectNo"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
 
           <!-- 是否顯示餘額為零的科目 (ShowZero) -->

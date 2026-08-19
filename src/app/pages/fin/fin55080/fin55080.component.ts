@@ -17,6 +17,7 @@ import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component'; // 假設路徑
 import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
 import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table.component';
+import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-fin55080',
@@ -27,7 +28,7 @@ import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table
     TableSubheaderGroupingComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,
-    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
+    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule, InputTextComponent,
   ],
   providers: [DatePipe] // DatePipe 需要加入 providers
 })
