@@ -70,49 +70,85 @@
       </form>
     </p-accordionTab>
   </p-accordion>
-  <div class="p-2 border-round mt-3 border-1"
-    style="background-color: var(--table-header-bg-group); border-color: var(--table-header-bg-group);">
-
-    <div class="text-sm font-bold mb-2 ml-2 flex align-items-center" style="color: var(--surface-700);">
-      <i class="pi pi-bolt mr-1"></i>快速篩選未拋轉傳票
+  <!-- 快速篩選未拋轉傳票區塊 -->
+  <div class="p-3 border-round-xl mt-3 border-1 surface-border surface-card shadow-1">
+    <!-- 頂部標題列與總數統計 -->
+    <div class="flex align-items-center justify-content-between mb-3 pb-2 border-bottom-1 surface-border">
+      <div class="flex align-items-center gap-2">
+        <div
+          class="w-2rem h-2rem border-circle flex align-items-center justify-content-center bg-primary-100 text-primary">
+          <i class="pi pi-bolt text-lg"></i>
+        </div>
+        <div>
+          <span class="text-base font-bold surface-900 mr-2">快速篩選未拋轉傳票</span>
+          <span class="text-xs text-500 font-normal hidden sm:inline">(點擊下方型態可自動帶入條件並查詢)</span>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <span class="text-xs text-500 font-medium">總未拋轉：</span>
+        <span class="px-2.5 py-1 border-round-pill text-xs font-bold bg-primary text-primary-inverse shadow-1">
+          {{ totalUnTransferredCount }} 筆
+        </span>
+      </div>
     </div>
 
-    <p-dataView #dv [value]="countData" layout="list" emptyMessage="無未拋轉的傳票型態">
-      <ng-template pTemplate="list" let-items>
-        <div class="grid grid-nogutter">
-          <div class="col-12 md:col-4 p-1" *ngFor="let item of items">
-            <div
-              class="flex align-items-center p-2 px-3 gap-3 cursor-pointer border-round transition-duration-150 outline-none border-1"
+    <!-- 分組系統別 Grid 網格區域 -->
+    <div class="grid grid-nogutter gap-3">
+      <div class="col-12 md:col-6 lg:col-4 xl:col-3 flex flex-column" *ngFor="let group of groupedCountData">
+        <!-- 系統別獨立卡片外框 -->
+        <div
+          class="border-1 surface-border border-round-lg surface-50 p-2.5 flex-1 flex flex-column gap-2 transition-duration-200 hover:border-primary-300">
+
+          <!-- 系統別表頭 Header -->
+          <div
+            class="flex align-items-center justify-content-between px-2.5 py-1.5 surface-card border-round border-1 surface-border shadow-1">
+            <div class="flex align-items-center gap-2 overflow-hidden">
+              <i [class]="group.icon + ' text-primary text-sm'"></i>
+              <span class="font-bold text-xs surface-800 text-overflow-ellipsis overflow-hidden white-space-nowrap">
+                {{ group.name }}
+              </span>
+            </div>
+            <span class="text-xs px-2 py-0.5 border-round-pill font-semibold flex-shrink-0"
+              [ngClass]="group.totalCnt > 0 ? 'bg-primary-100 text-primary-700' : 'bg-surface-200 text-500'">
+              未拋轉: {{ group.totalCnt }}
+            </span>
+          </div>
+
+          <!-- 該系統下的傳票型態列表 -->
+          <div class="flex flex-column gap-1.5">
+            <div *ngFor="let item of group.items"
+              class="flex align-items-center justify-content-between p-2 border-round cursor-pointer transition-all transition-duration-150 border-1 outline-none select-none"
               [style.background-color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--highlight-bg)' : 'var(--surface-card)'"
               [style.border-color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--primary-color)' : 'var(--surface-border)'"
-              [ngClass]="{'shadow-1': queryForm.get('SrcSheetType')?.value === item.SrcSheetType}" role="button"
-              tabindex="0" (click)="onSelectType(item)" (keydown.enter)="onSelectType(item)">
+              [ngClass]="{
+                 'shadow-1 font-bold': queryForm.get('SrcSheetType')?.value === item.SrcSheetType,
+                 'hover:surface-hover': queryForm.get('SrcSheetType')?.value !== item.SrcSheetType
+               }" role="button" tabindex="0" (click)="onSelectType(item)" (keydown.enter)="onSelectType(item)">
 
+              <!-- 傳票名稱與代號 -->
               <div class="flex align-items-center gap-2 flex-1 overflow-hidden">
-                <i class="pi pi-file-import"
+                <i class="pi pi-file-import text-xs"
                   [style.color]="queryForm.get('SrcSheetType')?.value === item.SrcSheetType ? 'var(--primary-color)' : 'var(--text-color-secondary)'">
                 </i>
-                <span class="font-medium text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis"
+                <span class="text-xs text-overflow-ellipsis overflow-hidden white-space-nowrap"
                   style="color: var(--text-color);">
                   {{ item.Voucher_Name }}
                 </span>
-                <span class="text-xs" style="color: var(--text-color-secondary);">({{ item.SrcSheetType }})</span>
+                <span class="text-xs text-500 font-normal">({{ item.SrcSheetType }})</span>
               </div>
 
-              <div class="flex align-items-center flex-shrink-0">
-                <span class="px-2 py-1 border-round-pill text-xs font-bold"
-                  [style.background-color]="item.CNT > 0 ? 'var(--primary-color)' : 'var(--surface-200)'"
-                  [style.color]="item.CNT > 0 ? 'var(--primary-color-text)' : 'var(--text-color-secondary)'">
-                  未拋轉數量： {{ item.CNT }}
-                </span>
-                <i class="pi pi-chevron-right ml-2 text-xs" style="color: var(--surface-400);"></i>
-              </div>
-
+              <!-- 未拋轉數量 Badge -->
+              <span class="px-2 py-0.5 border-round-pill text-xs font-semibold flex-shrink-0"
+                [style.background-color]="item.CNT > 0 ? 'var(--primary-color)' : 'var(--surface-200)'"
+                [style.color]="item.CNT > 0 ? 'var(--primary-color-text)' : 'var(--text-color-secondary)'">
+                {{ item.CNT }}
+              </span>
             </div>
           </div>
+
         </div>
-      </ng-template>
-    </p-dataView>
+      </div>
+    </div>
   </div>
 </div>
 
