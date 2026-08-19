@@ -17,11 +17,18 @@ const targetProdFile = path.join(
   "environment.prod.ts",
 );
 
+const targetSystexFile = path.join(
+  __dirname,
+  "src",
+  "environments",
+  "environment.systex.ts",
+);
+
 const versionPlaceholder = "@@BUILD_VERSION@@";
 let newVersion = `${formattedDate}`;
 newVersion = `${formattedDate}-v${commitHash}`; // 如果使用 Git Commit Hash 來作為版本號
 try {
-  const filesToUpdate = [targetProdFile];
+  const filesToUpdate = [targetProdFile, targetSystexFile];
   filesToUpdate.forEach((filePath) => {
     let content = fs.readFileSync(filePath, "utf8");
     // 替換佔位符

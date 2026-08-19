@@ -10,6 +10,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, switchMap, tap } from 'rxjs';
 import { TableSubheaderComponent } from './table-subheader/table-subheader.component';
+import { environment } from 'src/environments/environment';
 
 @UntilDestroy()
 @Component({
@@ -25,6 +26,7 @@ import { TableSubheaderComponent } from './table-subheader/table-subheader.compo
   providers: [DatePipe]
 })
 export class FIN55080ReportComponent implements OnInit {
+  readonly brand = environment.brand;
   private readonly fin55050Service = inject(FIN55050Service);
   private readonly dropDownListService = inject(DropDownListService);
   private readonly route = inject(ActivatedRoute);

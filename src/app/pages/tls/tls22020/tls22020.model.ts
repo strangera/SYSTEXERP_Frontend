@@ -1,4 +1,5 @@
 import { ReportColumn, ColumnGroup, formatAmount } from "@shared/components/table-report/table-report.model";
+import { environment } from "src/environments/environment";
 export interface TLS22020Data {
   ECR_No: string;
   tlt_no: string;
@@ -26,7 +27,7 @@ export const payNoDataList = [
   { Pay_No: "55", Pay_Name: "LINE Pay" },
   { Pay_No: "56", Pay_Name: "iPASS MONEY" },
   { Pay_No: "57", Pay_Name: "台灣Pay" },
-  { Pay_No: "58", Pay_Name: "南紡錢包" },
+  { Pay_No: "58", Pay_Name: environment.brand.walletName },
   { Pay_No: "59", Pay_Name: "即享券" },
   { Pay_No: "60", Pay_Name: "喜客券" },
   { Pay_No: "79", Pay_Name: "APP提貨單" },

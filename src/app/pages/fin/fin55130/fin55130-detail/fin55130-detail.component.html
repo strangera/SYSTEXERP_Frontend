@@ -7,7 +7,7 @@
     <app-button label="列印" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="PDFBtnLoading"></app-button>
     <div class="flex flex-column align-items-center mb-3">
       <div class="col-12 text-2xl font-bold mb-1 text-center">
-        南紡流通事業股份有限公司(南紡購物中心)
+        {{ brand.companyFullName }}
       </div>
       <div class="col-12 text-xl font-bold text-center">轉帳傳票</div>
     </div>
