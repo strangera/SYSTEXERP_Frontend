@@ -11,6 +11,15 @@
         (click)="getVocherTemplate()"
       ></app-button>
     }
+    @if (isFormCreateable || isFormEditable) {
+      <app-button
+        btnType="default"
+        label="儲存為常用傳票"
+        icon="pi pi-star"
+        [loading]="savingTemplate()"
+        (click)="openSaveTemplateDialog()"
+      ></app-button>
+    }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   @if (isFormCreateable || isFormEditable) {
@@ -1096,6 +1105,31 @@
       (selectionChange)="selectedDetail.set($event)"
     ></app-table>
   </div>
+</app-dialog>
+
+<app-dialog
+  [(visible)]="showSaveTemplateDialog"
+  header="儲存為常用傳票"
+  width="600px"
+  [loading]="savingTemplate()"
+  (save)="onSaveTemplate()"
+>
+  <form [formGroup]="saveTemplateForm" class="grid p-fluid mt-3 mb-3">
+    <app-input-text
+      class="col-12 md:col-6"
+      label="常用傳票代號"
+      controlName="TempNo"
+      [control]="saveTemplateForm.controls.TempNo"
+      [submitted]="saveTemplateSubmitted()"
+    ></app-input-text>
+    <app-input-text
+      class="col-12 md:col-6"
+      label="常用傳票名稱"
+      controlName="TempName"
+      [control]="saveTemplateForm.controls.TempName"
+      [submitted]="saveTemplateSubmitted()"
+    ></app-input-text>
+  </form>
 </app-dialog>
 
 <p-confirmDialog />

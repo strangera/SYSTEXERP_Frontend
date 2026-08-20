@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
-import { finalize, of, switchMap } from 'rxjs';
+import { combineLatest, finalize, map, of, switchMap } from 'rxjs';
 import { transformOptionsForExport } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -59,8 +59,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     D_Date: [null],  // 收/付款日
     WSLIP_NO: [null],  // 匯款單號
   });
-  // 廠客代號選項
-  venNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
+  // 廠客代號選項：合併廠商(POS2013) + 員工(tblUser)，起訖可選廠商或員工（後端 ven_no 已 join 兩張表）
+  venNoOptions = combineLatest([
+    this.dropDown.queryPos2013({ VEN_Flag: '' }),
+    this.dropDown.queryTblUserOrgid(),
+  ]).pipe(
+    map(([vendors, users]) => [...(vendors ?? []), ...(users ?? [])]),
+  );
   // 傳票型態選項
   voucherKindOptions = this.dropDown.queryGls1010();
   // 付款方式選項
