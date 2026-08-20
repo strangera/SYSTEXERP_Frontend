@@ -439,9 +439,16 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           const data = res?.Data ?? [];
           const mains = data.flatMap((item: any) => item?.Mains ?? []);
           const details = data.flatMap((item: any) => item?.Details ?? []);
+          const receYn = data[0]?.rece_yn ?? null;
           const prevTalentId = this.selectedMain?.talent_id ?? null;
           this.changeEditData = mains;
           this.sourceInvoiceData = details;
+
+          if (receYn === 'N') {
+            this.messageService.warnBubble(`(${params.tlt_no})為非業主發票廠商，不需登入發票`);
+          } else if (mains.length === 0) {
+            this.messageService.warnBubble(`${params.tlt_no}-查無此專櫃請款資料！！`);
+          }
 
           const firstDetail = details[0] ?? null;
           const firstMain = mains[0] ?? null;
@@ -493,7 +500,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             this.footer2 = null;
           }
 
-          if (mains.length > 0 || details.length > 0) {
+          if (mains.length > 0 && receYn === 'Y') {
             this.showQueryArea = false;
             this.showResultTables = true;
           }
