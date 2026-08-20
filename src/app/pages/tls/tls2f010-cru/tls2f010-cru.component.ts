@@ -651,6 +651,18 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     const oldDetails = (this.sourceInvoiceData ?? []).filter((d: any) => d?.talent_id === talentId);
     const allInvoices = [...details, ...oldDetails];
 
+    const guinoCounts = new Map<string, number>();
+    allInvoices.forEach(d => {
+      const no = String(d?.PUR_GUINO ?? '').trim();
+      if (!no) return;
+      guinoCounts.set(no, (guinoCounts.get(no) ?? 0) + 1);
+    });
+    const duplicateGuinos = Array.from(guinoCounts.entries()).filter(([, count]) => count > 1).map(([no]) => no);
+    if (duplicateGuinos.length > 0) {
+      this.messageService.warnBubble(`發票/收據編號(${duplicateGuinos.join('、')})重複，請檢查單據資料`);
+      this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
+    }
+
     const noTaxInvoices = allInvoices.filter(d => getTaxLabel(d).includes('免稅'));
     const taxableInvoices = allInvoices.filter(d => getTaxLabel(d).includes('應稅'));
 
@@ -661,25 +673,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
     const noTaxPayable = Number(selectedMain?.sam_ap_notaxamt ?? 0);
     if (sumNoTaxAmt > noTaxPayable) {
-      this.messageService.errorBubble(`免稅單據加總 (${sumNoTaxAmt}) 不可大於該筆應付貨款(免稅)合計 (${noTaxPayable})`);
+      this.messageService.warnBubble(`免稅單據加總 (${sumNoTaxAmt}) 不可大於該筆應付貨款(免稅)合計 (${noTaxPayable})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const namt = Number(selectedMain?.sam_ap_namt ?? 0);
     if (sumTaxableNet > namt) {
-      this.messageService.errorBubble(`應稅單據未稅金額加總 (${sumTaxableNet}) 不可大於該筆廠商應開立發票額(收據)合計 (${namt})`);
+      this.messageService.warnBubble(`應稅單據未稅金額加總 (${sumTaxableNet}) 不可大於該筆廠商應開立發票額(收據)合計 (${namt})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const taxLimit = Number(selectedMain?.sam_ap_tax ?? 0);
     if (sumTax > taxLimit) {
-      this.messageService.errorBubble(`稅額加總 (${sumTax}) 不可大於該筆營業稅合計 (${taxLimit})`);
+      this.messageService.warnBubble(`稅額加總 (${sumTax}) 不可大於該筆營業稅合計 (${taxLimit})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const totalLimit = Number(selectedMain?.sam_ap_amt ?? 0);
     if (sumAmt > totalLimit) {
-      this.messageService.errorBubble(`應稅金額加總 (${sumAmt}) 不可大於該筆總額合計 (${totalLimit})`);
+      this.messageService.warnBubble(`應稅金額加總 (${sumAmt}) 不可大於該筆總額合計 (${totalLimit})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
