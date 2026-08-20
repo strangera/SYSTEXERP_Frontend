@@ -11,7 +11,7 @@ import { ErrorReportService } from '@shared/service/error-report.service';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
@@ -42,8 +42,15 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
     orgId: [null as string | null, [Validators.required]],
   });
 
-  orgOptions = this.dropdownApi.querySys3100();
 
+
+orgOptionList: any[] = [];
+
+orgOptions = this.dropdownApi.querySys3100().pipe(
+  tap((options) => {
+    this.orgOptionList = options ?? [];
+  }),
+);
   files: File[] = [];
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
 
@@ -74,24 +81,35 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onDownloadTemplate(): void {
-    this.handleSubmit(this.queryForm, () => {
-      const { year, version, orgId } = this.queryForm.getRawValue();
-      this.loading = true;
-      this.fileExportService
-        .executeFileExport(
-          this.fin41010Service
-            .exportYearBudget({
-              BudgetYear: year!,
-              BudgetVersion: version!,
-              OrgId: orgId!,
-            })
-            .pipe(untilDestroyed(this)),
-          '.xlsx',
-          (isLoading) => (this.loading = isLoading),
-        )
-        .subscribe();
-    });
-  }
+  this.handleSubmit(this.queryForm, () => {
+    const { year, version, orgId } = this.queryForm.getRawValue();
+
+    const selectedOrg = this.orgOptionList.find(
+      (item) => item.value === orgId,
+    );
+
+    const orgName = selectedOrg?.label ?? '';
+
+    const filename = `BudgetSample_${year}_${orgId}_${orgName}.xlsx`;
+
+    this.loading = true;
+
+    this.fileExportService
+      .executeFileExport(
+        this.fin41010Service
+          .exportYearBudget({
+            BudgetYear: year!,
+            BudgetVersion: version!,
+            OrgId: orgId!,
+          })
+          .pipe(untilDestroyed(this)),
+        '.xlsx',
+        (isLoading) => (this.loading = isLoading),
+        filename,
+      )
+      .subscribe();
+  });
+}
 
   onConvert(): void {
     const currentFiles = this.getSelectedFiles();

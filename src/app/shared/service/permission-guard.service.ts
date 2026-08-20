@@ -61,7 +61,8 @@ export enum Actions {
   AUTOMAIL = '490',                // AUTOMAIL
   CloseAccount = '510',             // 關帳
   Connect = '520',             // 連線
-  Control = '530'             // 控制
+  Control = '530',            // 控制
+  ReturnApplyAmt = '540'//反請款
 }
 
 @Injectable({

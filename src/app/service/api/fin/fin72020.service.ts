@@ -83,7 +83,13 @@ export interface voidFIN72020Request {
   VoidUsrNo?: string;   // 作廢人代碼 (必填)
   VoidUsrName?: string; // 作廢人姓名 (必填)
 }
-
+// 作廢 Request
+export interface returnFIN72020Request {
+  SYS_StoreNo?: string;   // 公司編號/店號 (必填)
+  PCS_No: string;   // 零用金單號 (必填)
+  ReturnUsrNo?: string;   // 作廢人代碼 (必填)
+  ReturnUsrName?: string; // 作廢人姓名 (必填)
+}
 // 作廢 Response
 export interface FIN72020VoidResponse {
   SYS_StoreNo: string;   // 公司編號/店號
@@ -95,7 +101,11 @@ export interface FIN72020VoidResponse {
   VoidUsrName: string; // 作廢人姓名
   Message: string;   // 執行結果訊息
 }
-
+export interface FIN72020ReturnResponse {
+  SYS_StoreNo: string;   // 公司編號/店號
+  PCS_No: string;   // 零用金單號
+  Message: string;   // 執行結果訊息
+}
 
 export interface FIN72020SaveDetailItem {
   id: number | null;    // 資料庫自動編號 ID：新增傳 null，修改/刪除傳原始 ID
@@ -180,6 +190,9 @@ export class FIN72020Service {
   // 作廢
   voidFIN72020(payload: voidFIN72020Request): Observable<ApiResponse<FIN72020VoidResponse>> {
     return this.http.post<ApiResponse<FIN72020VoidResponse>>(`${this.apiUrl}/voidFIN72020`, payload);
+  }
+  returnIN72020(payload: returnFIN72020Request): Observable<ApiResponse<FIN72020ReturnResponse>> {
+    return this.http.post<ApiResponse<FIN72020ReturnResponse>>(`${this.apiUrl}/returnFIN72020`, payload);
   }
 
 

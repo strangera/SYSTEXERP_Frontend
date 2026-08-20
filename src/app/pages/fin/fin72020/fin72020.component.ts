@@ -109,7 +109,15 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72020Data) => this.onDelete(rowData),
-      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.Delete) || rowData.PCS_Status == '9',
+      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.Delete) ||
+        ['2', '3', '4', '9'].includes(String(rowData.PCS_Status)),
+    },
+    {
+      label: '反請款',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: FIN72020Data) => this.onReturnApplyAmt(rowData),
+      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.ReturnApplyAmt) ||
+        rowData.PCS_Status != '2',
     }
   ];
 
@@ -209,7 +217,31 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       }
     });
   }
+  //反請款
+  onReturnApplyAmt(data: FIN72020Data): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
+    this.messageService.confirm({
+      header: '零用金反請款',
+      message: `是否確認反請款 零用金單號: ${data.PCS_No} 的資料？`,
+      accept: () => {
+        const deleteRequest: voidFIN72020Request = {
+          PCS_No: data.PCS_No
+        }
+        this.fin72020Service.returnIN72020(deleteRequest)
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            if (response.Status !== "0000") {
+              this.messageService.errorBubble(response.Data.Message || '反請款失敗');
+            }
+            else {
+              this.messageService.successBubble(response.Data.Message || '反請款成功');
+            }
+            this.onSubmit(this.queryForm);
+          })
+      }
+    });
+  }
   openUserDialog(target: 'PCS_UsrNo' | 'Keep_UsrNo'): void {
     this.currentUserTarget = target;
 
