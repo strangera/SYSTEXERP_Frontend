@@ -60,7 +60,7 @@
   </p-accordion>
 
   <!-- 依據原本風格打造的分組快速篩選區 -->
-  <div class="p-2 border-round mt-3 border-1"
+  <div class="p-2 pb-0 border-round mt-3 border-1"
     style="background-color: var(--table-header-bg-group); border-color: var(--table-header-bg-group);">
     <!-- 頂部標題與全域總計 -->
     <div class="flex align-items-center justify-content-between mb-2 ml-1">
@@ -77,7 +77,7 @@
     </div>
 
     <!-- 系統分組網格區塊 -->
-    <div class="grid grid-nogutter gap-3 mt-2">
+    <div class="grid mt-2">
       <div class="col-12 md:col-6 lg:col-4 xl:col-3 flex flex-column" *ngFor="let group of groupedCountData">
         <!-- 系統別外框區塊 (Box) -->
         <div class="p-2 border-round border-1 flex-1 flex flex-column gap-2"
