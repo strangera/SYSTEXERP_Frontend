@@ -32,7 +32,7 @@ export class ASS16030Service {
   ): Observable<ApiResponse<ASS16030QueryData[]>> {
     return this.http
       .post<ApiResponse<ASS16030QueryResultWrapper<ASS16030QueryData>>>(
-        `${this.apiUrl}/queryASS16030M`,
+        `${this.apiUrl}/queryASS16030`,
         req,
       )
       .pipe(
@@ -57,7 +57,7 @@ export class ASS16030Service {
   ): Observable<ApiResponse<ASS16030DetailQueryData[]>> {
     return this.http
       .post<ApiResponse<ASS16030QueryResultWrapper<ASS16030DetailQueryData>>>(
-        `${this.apiUrl}/queryASS16030`,
+        `${this.apiUrl}/queryASS16030D`,
         req,
       )
       .pipe(

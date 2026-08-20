@@ -1,7 +1,14 @@
 <div class="card">
+
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- 列印申請單 PDF — Edit/Read 模式下才允許列印 -->
+
+    <app-menubar
+      [ProgNo]="ProgNo"
+      class="flex-1"
+    ></app-menubar>
+
+
+    <!-- 列印申請單 -->
     <app-button
       *ngIf="hasPermission('60') && !isFormCreateable"
       btnType="report"
@@ -9,112 +16,219 @@
       [loading]="printLoading"
       (click)="onPrint()"
     ></app-button>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+
+
+    <app-button
+      btnType="back"
+      (click)="onCancel()"
+    ></app-button>
+
   </div>
 
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
+  <p-panel
+    [header]="formTitle | translate"
+    class="line-height-3 m-0"
+  >
+
+    <form
+      [formGroup]="dataForm"
+      id="dataForm"
+      (ngSubmit)="onSubmit(dataForm)"
+    >
+
       <div class="grid p-fluid">
-        <!-- 申請人代碼/名稱 -->
+
+
+        <!-- 申請人 -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
+
           label="申請人代碼/名稱"
+
           controlName="EMP_ID"
+
           [options]="userOptions"
+
           optionLabel="label"
           optionValue="value"
+
           [control]="dataForm.controls.EMP_ID"
+
           [submitted]="submitted"
+
           [disabled]="isFormReadable"
         ></app-dropdown>
 
-        <!-- 部門代碼/名稱 -->
+
+        <!-- 部門 -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
+
           label="部門代碼/名稱"
+
           controlName="ORG_ID"
+
           [options]="orgOptions"
+
           optionLabel="label"
           optionValue="value"
+
           [control]="dataForm.controls.ORG_ID"
+
           [submitted]="submitted"
+
           [disabled]="isFormReadable"
         ></app-dropdown>
+
 
         <!-- 申請日期 -->
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
+
           label="申請日期"
+
           controlName="APPLY_DATE"
+
           calendarType="dateOne"
+
           [control]="dataForm.controls.APPLY_DATE"
+
           [submitted]="submitted"
+
           [disabled]="isFormReadable"
         ></app-calendar>
 
-        <!-- 建議需求(日) — 對應 API REQUIRE_DAYS (int32) -->
+
+        <!-- 建議需求(日) -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
+
           label="建議需求(日)"
-          controlName="REQUIRE_DAYS"
-          [control]="dataForm.controls.REQUIRE_DAYS"
+
+          controlName="REQUIRE_DATE"
+
+          [control]="dataForm.controls.REQUIRE_DATE"
+
           [submitted]="submitted"
+
           keyFilter="pint"
+
           [disabled]="isFormReadable"
         ></app-input-text>
 
-        <!-- 倉別代碼/名稱 -->
+
+        <!-- 倉別 -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
+
           label="倉別代碼/名稱"
+
           controlName="WH_ID"
+
           [options]="whOptions"
+
           optionLabel="label"
           optionValue="value"
+
           [control]="dataForm.controls.WH_ID"
+
           [submitted]="submitted"
+
           [disabled]="isFormReadable"
         ></app-dropdown>
 
-        <!-- 說明 -->
+
+        <!--
+          主檔說明
+          MASTER_NOTES
+          ↓
+          FACONSUMEM.NOTES
+        -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
+
           label="說明"
-          controlName="NOTES"
-          [control]="dataForm.controls.NOTES"
+
+          controlName="MASTER_NOTES"
+
+          [control]="dataForm.controls.MASTER_NOTES"
+
           [submitted]="submitted"
+
           [disabled]="isFormReadable"
         ></app-input-text>
 
-        <!-- 品項明細表格 -->
+
+        <!--
+          明細表格
+          NOTES = 每筆明細說明
+          ↓
+          FACONSUMED.NOTES
+        -->
         <app-table-edit
           tableKey="ASS16030Detail"
+
           class="col-12"
+
           [data]="detailData"
+
           [columns]="columns"
+
           [showCheckBox]="!isFormReadable"
+
           [showReorder]="false"
+
           [selectedItems]="selectedRows"
+
           [disabled]="isFormReadable"
+
           [tableRequired]="true"
+
           (delete)="onDeleteDetail($event)"
+
           (selectionChange)="selectedRows = $event"
+
           (dataChange)="detailData = $event"
         ></app-table-edit>
+
       </div>
 
-      <!-- 送出按鈕：唯讀模式不顯示 -->
+
+      <!-- 送出 -->
       <div
         *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        class="
+          grid
+          justify-content-end
+          gap-2
+          m-0
+          mt-2
+          border-top-1
+          surface-border
+          pt-3
+        "
       >
+
         <app-button
           btnType="cancel"
+
           [form]="dataForm"
+
           (click)="onCancelReset()"
         ></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+
+
+        <app-button
+          btnType="submit"
+
+          [loading]="loading"
+        ></app-button>
+
       </div>
+
     </form>
+
   </p-panel>
+
 </div>
