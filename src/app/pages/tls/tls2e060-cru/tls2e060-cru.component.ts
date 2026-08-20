@@ -104,12 +104,18 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
 
         // 編輯模式回填
         if (!this.isFormCreateable && this.rowdata) {
-          const targetOption = this.tlt_noOptions.find(opt => opt.tlt_no === this.rowdata?.tlt_no);
+          const targetOption = this.tlt_noOptions.find(
+            opt => opt.tlt_no === this.rowdata?.tlt_no
+          );
+
           if (targetOption) {
             this.dataForm.controls.tlt_no.setValue(targetOption);
+
             this.dataForm.patchValue({
+              talent_id: targetOption.talent_id,
               contract_no: targetOption.contract_no,
-              contract_subno: targetOption.contract_subno
+              contract_subno: targetOption.contract_subno,
+              sam_termno: targetOption.sam_termno
             });
           }
         }
