@@ -14,6 +14,7 @@ import { InputNumberComponent } from '@shared/components/input-number/input-numb
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
+import { validateRequired } from '@shared/components/table-edit/validate-field.model';
 import { formatDate } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -184,14 +185,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   private originalDetailSnapshot: any[] | null = null;
 
   columns3: EditColumn[] = [
-    { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
+    { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true, required: true, validate: [validateRequired] },
     { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '200px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'PUR_GUINO', header: '發票/收據編號', type: 'input', width: '140px' },
-    { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '120px', dateFormat: 'yy-mm-dd', view: 'date' },
-    { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
-    { field: 'ven_uniform', header: '廠商統一編號', type: 'dropdown', width: '200px', options: () => this.ven_noOptions, optionLabel: 'label', optionValue: 'value', showClear: true, optionsAsync: true, },
+    { field: 'PUR_GUINO', header: '發票/收據編號', type: 'input', width: '140px', required: true, validate: [validateRequired] },
+    { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '120px', dateFormat: 'yy-mm-dd', view: 'date', required: true, validate: [validateRequired] },
+    { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month', required: true, validate: [validateRequired] },
+    { field: 'ven_uniform', header: '廠商統一編號', type: 'dropdown', width: '200px', options: () => this.ven_noOptions, optionLabel: 'label', optionValue: 'value', showClear: true, optionsAsync: true, required: true, validate: [validateRequired] },
     {
-      field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '120px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true, disabled: (_v, _i, row) => {
+      field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '120px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true, required: true, validate: [validateRequired], disabled: (_v, _i, row) => {
         const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
         return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
       }
@@ -202,7 +203,10 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
       }
     },
-    { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '12rem', textAlign: 'right' },
+    {
+      field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '12rem', textAlign: 'right',
+      required: true, validate: [validateRequired],
+    },
     {
       field: 'GUITax', header: '稅額', type: 'inputNumber', width: '12rem', textAlign: 'right', minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12, disabled: (_v, _i, row) => {
         const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
@@ -232,7 +236,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       ],
     },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '14rem', textAlign: 'right', disabled: () => true, minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12 },
-    { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
+    {
+      field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true, required: true, validate: [validateRequired], disabled: (_v, _i, row) => {
+        const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
+        return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
+      }
+    },
     { field: 'INV_UseType', header: '發票用途', type: 'dropdown', width: '120px', options: this.InvWayOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
   ];
 
@@ -741,6 +750,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.TAX_TYPE = taxVal ?? row.TAX_TYPE;
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
         row.GUITax = 0;
+        row.PUR_GUIPaper = '22';
         const netVal = Number(row.GUINet ?? 0);
         row.GUIAmt = (Number.isNaN(netVal) ? 0 : netVal);
       }
