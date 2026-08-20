@@ -1,6 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { environment } from 'src/environments/environment';
 import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { PRIMENG_ZH_TW } from './core/config/primeng-i18n.config';
@@ -41,9 +43,11 @@ export class AppComponent implements OnInit {
   private readonly operationLogService = inject(OperationLogService);
   private readonly currentPageService = inject(CurrentPageService);
   private readonly systemDataService = inject(SystemDataService);
+  private readonly titleService = inject(Title);
   constructor() {
     this.translate.setDefaultLang('zh-tw');
     this.translate.use('zh-tw');
+    this.titleService.setTitle(environment.brand.documentTitle);
     this.appInitService.initialize();
   }
   ngOnInit(): void {

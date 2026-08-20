@@ -1,34 +1,60 @@
-﻿import { AsyncPipe, NgClass, NgFor } from '@angular/common';
+﻿import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { createPaginationConfig } from '@others/component/table/table.model';
 import { Fin51010Service, QueryFIN51010CountResponse, QueryFIN51010Request, QueryFIN51010Response } from '@service/api/fin/fin51010.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { createPaginationConfig } from '@others/component/table/table.model';
 import { toLocalDateTimeString } from '@shared/utils/object-utils';
 import { Accordion, AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+
+export interface SystemGroup {
+  key: string;
+  name: string;
+  icon: string;
+  items: QueryFIN51010CountResponse[];
+  totalCnt: number;
+}
 
 @Component({
   selector: 'app-fin51010',
   templateUrl: './fin51010.component.html',
   standalone: true,
-  imports: [ButtonModule, NgClass, DataViewModule, NgFor, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [
+    ButtonModule,
+    NgClass,
+    NgIf,
+    DataViewModule,
+    NgFor,
+    AsyncPipe,
+    TableReportComponent,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    ButtonComponent,
+    TranslateModule
+  ]
 })
 export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Response> implements OnInit {
   @ViewChild('queryAccordion') queryAccordion!: Accordion;
+
   queryForm = this.formBuilder.group({
     SrcSheetType: [null as string | null, [Validators.required]],
     VouDate_From: [null],
@@ -41,22 +67,21 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     DetailNo: [null, [Validators.maxLength(20)]],
     NoteDesc: [null, [Validators.maxLength(160)]],
     SubDetailNo: [null, [Validators.maxLength(30)]],
-    ...createPaginationConfig([{ field: 'VouDate', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'VouDate', order: 1 }]),
   });
 
   // 下拉選單 Options
   SrcSheetTypeOptions = this.dropDown.queryGls1010();
-  TransStatusOptions = getSYS1000Options('Trans_Status'); // 拋轉狀態
-  PostFlagOptions = getSYS1000Options('PostFlag').filter(({ value }) => value !== '2');; // 過帳狀態 //查詢條件移除2:確認
-  AccNoOptions = this.dropDown.queryGls1005_ledgerMD(); // 會計科目
-  DetailNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商/明細編號
-  SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
+  TransStatusOptions = getSYS1000Options('Trans_Status');
+  PostFlagOptions = getSYS1000Options('PostFlag').filter(({ value }) => value !== '2');
+  AccNoOptions = this.dropDown.queryGls1005_ledgerMD();
+  DetailNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
+  SubDetailNoOptions = this.dropDown.queryGLS1016();
 
   data: QueryFIN51010Response[] = [];
   selectedItems: QueryFIN51010Response[] = [];
   totalRecords = 0;
   lastQuery: QueryFIN51010Request | null = null;
-
   btnLoading = false;
 
   columns: ReportColumn[] = [
@@ -72,6 +97,12 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   ];
 
   countData: QueryFIN51010CountResponse[] = [];
+  groupedCountData: SystemGroup[] = [];
+
+  /** 計算所有未拋轉總筆數 */
+  get totalUnTransferredCount(): number {
+    return this.countData.reduce((sum, item) => sum + (item.CNT || 0), 0);
+  }
 
   constructor(
     public readonly fin51010Service: Fin51010Service,
@@ -89,12 +120,72 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   loadSheetTypeCount() {
     this.fin51010Service.queryFIN51010Count('1').pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data) {
-        this.countData = res.Data; // 儲存原始統計資料供頂部儀表板使用
+        this.countData = res.Data;
+        this.processGroupedCountData(res.Data);
       }
     });
   }
 
-  /** 2. 儀表板點擊事件：帶入種類並自動查詢 */
+  /** 將統計數據依系統別規則進行分組與排序 */
+  private processGroupedCountData(data: QueryFIN51010CountResponse[]) {
+    const groupsConfig = [
+      { key: 'HR', name: '人資系統', icon: 'pi pi-users', match: (type: string) => type.startsWith('H') },
+      { key: 'COUNTER', name: '專櫃系統', icon: 'pi pi-shopping-bag', match: (type: string) => ['SD', 'MR', 'MD', 'PR', 'PN', 'PT'].includes(type) },
+      { key: 'SELF', name: '自營系統', icon: 'pi pi-store', match: (type: string) => type.startsWith('W') },
+      { key: 'EC', name: '電子商務系統', icon: 'pi pi-shopping-cart', match: (type: string) => type.startsWith('E') },
+      { key: 'TICKET', name: '禮券系統', icon: 'pi pi-ticket', match: (type: string) => type === 'GF' },
+      { key: 'MATERIAL', name: '資材系統', icon: 'pi pi-box', match: (type: string) => ['PC', 'PD', 'PM', 'PS', 'PU'].includes(type) },
+    ];
+
+    const groupMap = new Map<string, QueryFIN51010CountResponse[]>();
+    groupsConfig.forEach(g => groupMap.set(g.key, []));
+
+    const otherItems: QueryFIN51010CountResponse[] = [];
+
+    data.forEach(item => {
+      const type = (item.SrcSheetType || '').toUpperCase();
+      let matched = false;
+
+      for (const config of groupsConfig) {
+        if (config.match(type)) {
+          groupMap.get(config.key)!.push(item);
+          matched = true;
+          break;
+        }
+      }
+
+      if (!matched) {
+        otherItems.push(item);
+      }
+    });
+
+    const result: SystemGroup[] = groupsConfig
+      .map(config => {
+        const items = groupMap.get(config.key) || [];
+        return {
+          key: config.key,
+          name: config.name,
+          icon: config.icon,
+          items,
+          totalCnt: items.reduce((sum, i) => sum + (i.CNT || 0), 0)
+        };
+      })
+      .filter(g => g.items.length > 0);
+
+    if (otherItems.length > 0) {
+      result.push({
+        key: 'OTHER',
+        name: '其他系統',
+        icon: 'pi pi-th-large',
+        items: otherItems,
+        totalCnt: otherItems.reduce((sum, i) => sum + (i.CNT || 0), 0)
+      });
+    }
+
+    this.groupedCountData = result;
+  }
+
+  /** 儀表板點擊事件：帶入種類並自動查詢 */
   onSelectType(item: QueryFIN51010CountResponse) {
     this.queryForm.patchValue({
       SrcSheetType: item.SrcSheetType,
@@ -103,7 +194,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
       VouNo: null,
       NoteDesc: null
     });
-    // 自動收合查詢區塊，讓表格往上提
+
     if (this.queryAccordion) {
       this.queryAccordion.tabs[0].selected = false;
     }
@@ -130,12 +221,9 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   onTransfer() {
     if (this.selectedItems.length === 0) return;
 
-    // 前端先攔截借貸不平衡的傳票，不進入確認流程
     const imbalanced = this.selectedItems.filter(item => item.Debit_Amt !== item.Credit_Amt);
     if (imbalanced.length > 0) {
-      const details = imbalanced.map(item =>
-        `${formatDate(item.VouDate)}／${item.SrcSheetType}／${item.Remark}`
-      ).join('<br>');
+      const details = imbalanced.map(item => `${formatDate(item.VouDate)}／${item.SrcSheetType}／${item.Remark}`).join('<br>');
       setTimeout(() => {
         this.messageService.confirm({
           header: '借貸不平衡，無法拋轉',
@@ -155,19 +243,13 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         const idList = this.selectedItems.map(item => item.id).join(',');
         const body = { GLS6001_IDList: idList };
         this.btnLoading = true;
-
         this.fin51010Service.transferFIN51010(body).pipe(
           finalize(() => { this.btnLoading = false; }),
           untilDestroyed(this)
         ).subscribe(res => {
-          // 取得訊息內容
           const msg = res.Data.ErrMsg || '';
-
-          // 【優化判定】：即便 ErrCode 是 0，但如果沒抓到傳票編號，也視為失敗
           const isSuccess = res.Data.ErrCode === 0 && msg.includes('傳票編號');
-
           if (isSuccess) {
-            // 換行處理
             const formattedMsg = msg.replaceAll('\n', '<br>');
             setTimeout(() => {
               this.messageService.confirm({
@@ -184,11 +266,9 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
               });
             }, 200);
           } else {
-            // 顯示失敗：可能是 ErrCode != 0，或者是 ErrCode 為 0 但其實沒產生單號
             setTimeout(() => {
               this.messageService.confirm({
                 header: '拋轉失敗',
-                // 如果 Code 是 0 但沒單號，提示「未產生傳票編號」
                 message: res.Data.ErrCode === 0 ? '拋轉異常：未產生傳票編號。' : msg,
                 icon: 'pi pi-exclamation-triangle',
                 acceptLabel: '關閉',
@@ -200,8 +280,10 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
       }
     });
   }
+
   onVoid() {
     if (this.selectedItems.length === 0) return;
+
     this.messageService.confirm({
       header: '作廢確認',
       message: '是否作廢所選項目?',
@@ -209,7 +291,10 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         const idList = this.selectedItems.map(item => item.id).join(',');
         const body = { GLS6001_IDList: idList };
         this.btnLoading = true;
-        this.fin51010Service.voidFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
+        this.fin51010Service.voidFIN51010(body).pipe(
+          finalize(() => { this.btnLoading = false; }),
+          untilDestroyed(this)
+        ).subscribe(res => {
           setTimeout(() => {
             this.messageService.confirm({
               header: '作廢成功',
@@ -222,61 +307,50 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
                 this.onSubmit(this.queryForm);
                 this.loadSheetTypeCount();
               }
-            }
-            );
-          }, 200); // 延遲 200 毫秒
+            });
+          }, 200);
         });
       }
     });
   }
+
   /** 判斷是否「拋轉傳票」按鈕應禁用 */
   get isTransferDisabled(): boolean {
-    // 1. 沒資料時禁用
     if (this.data.length === 0 || this.selectedItems.length === 0) {
       return true;
     }
-    // 2. 選中的項目中，若包含「已拋轉」(Trans_Status === '1') 則禁用
     return this.selectedItems.some(item => item.Trans_Status === '1');
   }
 
   /** 判斷是否「作廢」按鈕應禁用 */
   get isVoidDisabled(): boolean {
-    // 1. 沒資料時禁用
     if (this.data.length === 0 || this.selectedItems.length === 0) {
       return true;
     }
-    // 2. 選中的項目中，若包含「未過帳」(PostFlag === '0') 則禁用 (依據您的邏輯)
     return this.selectedItems.some(item => item.PostFlag === '0');
   }
 
   /** 判斷單筆資料是否禁用編輯（用於表格內的操作列） */
   isEditDisabled = (rowData: QueryFIN51010Response): boolean => {
-    // 當傳票拋轉狀態為 '1' (已拋轉) 時，回傳 true 禁用編輯
     return rowData?.Trans_Status === '1';
   };
 
   /** 讀取HR傳票資料 */
   hrLoading = false;
   onReadHR() {
-    // this.messageService.confirm({
-    //   header: '匯入確認',
-    //   message: '是否執行轉入雇主負擔保費項目？',
-    //   icon: 'pi pi-question-circle',
-    //   accept: () => {
-    this.hrLoading = true; // 鎖定 UI 防止重複點擊
-    this.fin51010Service.importHRVouFIN51010().pipe(finalize(() => this.hrLoading = false), untilDestroyed(this)).subscribe((res) => {
+    this.hrLoading = true;
+    this.fin51010Service.importHRVouFIN51010().pipe(
+      finalize(() => this.hrLoading = false),
+      untilDestroyed(this)
+    ).subscribe((res) => {
       if (res.Data?.ErrCode === 0) {
         this.messageService.successBubble(res.Data.ErrMsg);
         this.loadSheetTypeCount();
-        this.queryForm.patchValue({
-          SrcSheetType: 'HR', // 假設 HR 是代表 HR 傳票的類型
-        });
+        this.queryForm.patchValue({ SrcSheetType: 'HR' });
         this.onSubmit(this.queryForm);
       } else {
         this.messageService.errorBubble(res.Data?.ErrMsg);
       }
     });
-    //   }
-    // });
   }
 }

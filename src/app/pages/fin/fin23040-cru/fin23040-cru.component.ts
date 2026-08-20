@@ -3,13 +3,12 @@ import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-import { Observable, finalize, forkJoin, map, of, shareReplay } from 'rxjs';
-
 import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { PanelModule } from 'primeng/panel';
+import { Observable, finalize, forkJoin, map, of, shareReplay } from 'rxjs';
 import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
 import {
   DetailFIN23040Response,
@@ -60,15 +59,16 @@ interface DetailRow {
   selector: 'app-fin23040-cru',
   templateUrl: './fin23040-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent,
-    ButtonComponent, TableEditComponent, AsyncPipe, TranslateModule, InputTextComponent]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, ButtonComponent, TableEditComponent, AsyncPipe, TranslateModule, InputTextComponent]
 })
 export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Type1Response> implements OnInit {
   private readonly fin23040Service = inject(Fin23040Service);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
   private readonly destroyRef = inject(DestroyRef);
+
   readonly CRUDStatus = CRUDStatus;
+
   @ViewChild(TableEditComponent) private readonly tableEditComponent!: TableEditComponent;
 
   dataForm = this.formBuilder.group({
@@ -79,7 +79,10 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
 
   readonly accNoOptions$ = this.dropdown.queryGls1005_ledgerMD();
   readonly acpTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PCS_DtlType');
-  readonly purVoucherTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_VoucherType').pipe(map(options => options.filter(x => ['21', '22', '25', '26', '27'].includes(x.value))));
+  // 發票格式原始選項串流（加上 shareReplay 避免重複請求 API）
+  readonly purVoucherTypeBaseOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_VoucherType').pipe(
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
   readonly purVenUniformOptions$ = this.dropdown.queryPos2013VenUniform();
   readonly purDirectTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_DirectType');
   readonly purTaxTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_TaxType');
@@ -88,16 +91,15 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
   readonly purTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_Type');
 
   prepNoOptions$: Observable<Option[] | null> = of(null);
-
   data: DetailRow[] = [];
   detailDisabled = false;
+
   /** 核銷明細初始載入(或新增頁初始空表)後的原始快照，供「取消」按鈕還原編輯內容用 */
   private originalData: DetailRow[] = [];
 
   /**
-   * 明細類別(acpType)="0"不扣抵憑證時，發票/收據相關欄位(號碼/日期/申報年月/課稅別/未稅金額)不需填寫，
-   * 只有選「發票」(1)或「收據」(2)才強制必填(設計方式同FIN72010零用金維護作業的validateGUINoRequired，
-   * 本頁因為有多個發票相關欄位而擴大套用同一條規則)。
+   * 明細類別(acpType)="0"不扣抵憑證時，發票/收據相關欄位不需填寫，
+   * 只有選「發票」(1)或「收據」(2)才強制必填。
    */
   private readonly requiredWhenInvoiceOrReceipt = (value: unknown, rowData: DetailRow, _data: unknown[], _field: string, header: string) => {
     const needRequired = rowData?.acpType === '1' || rowData?.acpType === '2';
@@ -105,12 +107,14 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     const isValid = value !== null && value !== undefined && value !== '';
     return { isValid, errorMessage: isValid ? [] : [`${header}為必填`] };
   };
+
   private maxLengthRule(max: number) {
     return (value: unknown, _rowData: unknown, _data: unknown[], _field: string, header: string) => {
       const len = value ? String(value).length : 0;
       return { isValid: len <= max, errorMessage: len <= max ? [] : [`${header}長度不可超過${max}字`] };
     };
   }
+
   private readonly guiNoRule = (value: unknown, _rowData: unknown, _data: unknown[], _field: string, header: string) => {
     if (value === null || value === undefined || value === '') {
       return { isValid: true, errorMessage: [] };
@@ -123,39 +127,56 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     };
   };
 
-  // 💡 表格欄位已移除「核銷單號 (redeemNo)」
   columns: EditColumn[] = [
     {
-      field: 'accNo', header: '費用會計科目', width: '200px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.accNoOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [validateRequired],
+      field: 'accNo',
+      header: '費用會計科目',
+      width: '200px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.accNoOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [validateRequired],
     },
-    { field: 'purRemark', header: '項目摘要', width: '160px', type: 'input', textAlign: 'left', validate: [validateRequired, this.maxLengthRule(100)] },
     {
-      field: 'acpType', header: '明細類別', width: '120px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.acpTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [validateRequired],
+      field: 'purRemark',
+      header: '項目摘要',
+      width: '160px',
+      type: 'input',
+      textAlign: 'left',
+      validate: [validateRequired, this.maxLengthRule(100)]
+    },
+    {
+      field: 'acpType',
+      header: '明細類別',
+      width: '120px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.acpTypeOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [validateRequired],
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
-        if (String(value) === '1') {
+        const acpTypeStr = String(value);
+
+        if (acpTypeStr === '1') {
           const net = Math.round(amt / 1.05);
           return { purTaxType: '1', purNet: net, purTax: amt - net };
         }
-        if (String(value) === '2') {
-          return { purTaxType: '0', purNet: amt, purTax: 0 };
+        if (acpTypeStr === '2') {
+          return { purTaxType: '0', purNet: amt, purTax: 0, purVoucherType: null };
         }
-        if (String(value) === '0') {
-          // 明細類別=不扣抵憑證時，比照FIN72010零用金維護作業的設計主動代入固定值並鎖定欄位(見下方
-          // purVoucherType/purDiscNo/purTaxType 的 disabled)。FIN23040 沒有 SP_FIN23040Save 那種 SP
-          // 端覆蓋保底(SP完全不做驗證/覆蓋，單純把TVP資料原樣寫入)，這幾個欄位必須由前端自己做對。
-          // 扣抵代號'3'＝SYS1000 PUR_DiscNo 代碼表「進項不可扣抵之進貨及費用」。
+        if (acpTypeStr === '0') {
           return { purTaxType: '0', purNet: amt, purTax: 0, purDiscNo: '3', purVoucherType: null };
         }
-        return {};
+        return { purVoucherType: null };
       },
-      // 切成「不扣抵憑證」時，table-edit 只會重新驗證被改動的 acpType 欄位本身，
-      // 之前殘留在發票格式/發票號碼/日期/申報年月/課稅別/未稅金額/扣抵代號上的必填錯誤提示不會自動消失，
-      // 這裡手動清掉，避免畫面看起來「明細類別改了但錯誤還在」。
       onChange: (value: unknown, rowData: DetailRow & { _validationErrors?: Record<string, string> }) => {
         if (String(value) !== '0' || !rowData._validationErrors) return;
         for (const field of ['purVoucherType', 'purGUINo', 'purGUIDate', 'purExpGLDate', 'purTaxType', 'purNet', 'purDiscNo']) {
@@ -164,28 +185,96 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purVoucherType', header: '發票格式', width: '110px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purVoucherTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [validateRequired], disabled: (value, index, rowData) => rowData?.acpType === '0',
+      field: 'purVoucherType',
+      header: '發票格式',
+      width: '70px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      triggerFields: ['acpType'], // 💡 關鍵：告知 DropdownCellComponent 監聽 acpType 變更以重新抓取/過濾選項
+      options: (rowData?: DetailRow) => {
+        return this.purVoucherTypeBaseOptions$.pipe(
+          map(options => {
+            const acpType = rowData?.acpType;
+            let excludeList: string[] = [];
+
+            if (acpType === '1') {
+              // 1. 選發票：篩選掉 23, 24, 29, 28
+              excludeList = ['23', '24', '29', '28'];
+            } else if (acpType === '2') {
+              // 2. 選收據：篩選掉 23, 24, 29, 28, 21, 26, 25
+              excludeList = ['23', '24', '29', '28', '21', '26', '25'];
+            } else if (acpType === '0') {
+              // 3. 選不扣抵憑證：篩選掉 23, 24, 29, 28, 21, 26, 25, 22, 27
+              excludeList = ['23', '24', '29', '28', '21', '26', '25', '22', '27'];
+            }
+
+            return options.filter(opt => !excludeList.includes(String(opt.value)));
+          })
+        );
+      },
+      optionLabel: 'value',
+      optionValue: 'value',
+      templateLabel: 'displayText',
+      disabled: (value, index, rowData) => rowData?.acpType === '0',
     },
     {
-      field: 'purGUINo', header: '發票/收據號碼', width: '140px', type: 'input', textAlign: 'left',
+      field: 'purGUINo',
+      header: '發票/收據號碼',
+      width: '140px',
+      type: 'input',
+      textAlign: 'left',
       validate: [this.requiredWhenInvoiceOrReceipt, this.guiNoRule, this.maxLengthRule(10)],
     },
-    { field: 'purGUIDate', header: '發票日期', width: '130px', type: 'date', dateFormat: 'yy/mm/dd', validate: [this.requiredWhenInvoiceOrReceipt] },
-    { field: 'purExpGLDate', header: '申報年月', width: '110px', type: 'date', dateFormat: 'yy/mm', view: 'month', validate: [this.requiredWhenInvoiceOrReceipt] },
     {
-      field: 'purVenUniform', header: '廠商統一編號', width: '150px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purVenUniformOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.maxLengthRule(8)],
+      field: 'purGUIDate',
+      header: '發票日期',
+      width: '130px',
+      type: 'date',
+      dateFormat: 'yy/mm/dd',
+      validate: [validateRequired, this.requiredWhenInvoiceOrReceipt]
     },
     {
-      field: 'purDirectType', header: '發票用途', width: '120px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purDirectTypeOptions$, optionLabel: 'label', optionValue: 'value',
+      field: 'purExpGLDate',
+      header: '申報年月',
+      width: '110px',
+      type: 'date',
+      dateFormat: 'yy/mm',
+      view: 'month',
+      validate: [validateRequired, this.requiredWhenInvoiceOrReceipt]
+    },
+    {
+      field: 'purVenUniform',
+      header: '廠商統一編號',
+      width: '150px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.purVenUniformOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [this.maxLengthRule(8)],
+    },
+    {
+      field: 'purDirectType',
+      header: '發票用途',
+      width: '120px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.purDirectTypeOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
       templateLabel: 'label',
     },
     {
-      field: 'purAmt', header: '發票總金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum',
+      field: 'purAmt',
+      header: '發票總金額',
+      width: '120px',
+      type: 'inputNumber',
+      textAlign: 'right',
+      aggregate: 'sum',
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(value) || 0;
         if (String(rowData.purTaxType) === '1') {
@@ -196,9 +285,17 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purTaxType', header: '課稅別', width: '100px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purTaxTypeOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.requiredWhenInvoiceOrReceipt],
+      field: 'purTaxType',
+      header: '課稅別',
+      width: '70px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.purTaxTypeOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [validateRequired, this.requiredWhenInvoiceOrReceipt],
       disabled: (value, index, rowData) => rowData?.acpType === '0',
       calculate: (rowData: DetailRow, value: unknown) => {
         const amt = Number(rowData.purAmt) || 0;
@@ -210,7 +307,13 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purNet', header: '發票未稅金額', width: '120px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum', validate: [this.requiredWhenInvoiceOrReceipt],
+      field: 'purNet',
+      header: '發票未稅金額',
+      width: '120px',
+      type: 'inputNumber',
+      textAlign: 'right',
+      aggregate: 'sum',
+      validate: [validateRequired, this.requiredWhenInvoiceOrReceipt],
       calculate: (_rowData: DetailRow, value: unknown) => {
         const net = Number(value) || 0;
         const tax = Math.round(net * 0.05);
@@ -218,7 +321,12 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'purTax', header: '發票稅額', width: '110px', type: 'inputNumber', textAlign: 'right', aggregate: 'sum',
+      field: 'purTax',
+      header: '發票稅額',
+      width: '110px',
+      type: 'inputNumber',
+      textAlign: 'right',
+      aggregate: 'sum',
       calculate: (rowData: DetailRow, value: unknown) => {
         const tax = Number(value) || 0;
         const net = Number(rowData.purNet) || 0;
@@ -226,18 +334,42 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'projectNo', header: '活動代碼', width: '160px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.projectNoOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [this.maxLengthRule(20)],
+      field: 'projectNo',
+      header: '活動代碼',
+      width: '160px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.projectNoOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [this.maxLengthRule(20)],
     },
     {
-      field: 'purDiscNo', header: '扣抵代號', width: '180px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purDiscNoOptions$, optionLabel: 'label', optionValue: 'value',
-      templateLabel: 'label', validate: [validateRequired], disabled: (value, index, rowData) => rowData?.acpType === '0',
+      field: 'purDiscNo',
+      header: '扣抵代號',
+      width: '180px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.purDiscNoOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      validate: [validateRequired],
+      disabled: (value, index, rowData) => rowData?.acpType === '0',
     },
     {
-      field: 'purType', header: '類別區分', width: '120px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true, options: () => this.purTypeOptions$, optionLabel: 'label', optionValue: 'value',
+      field: 'purType',
+      header: '類別區分',
+      width: '120px',
+      type: 'dropdown',
+      textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.purTypeOptions$,
+      optionLabel: 'label',
+      optionValue: 'value',
       templateLabel: 'label',
     },
     { field: 'purCombCnt', header: '彙總張數', width: '100px', type: 'inputNumber' },
@@ -252,15 +384,16 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     purDiscNo: '1',
     purType: '1',
   };
+
   private canEditRow = true;
 
   ngOnInit(): void {
     this.initializePage('FIN23040');
     this.prepNoOptions$ = this.loadPendingPrepNoOptions$();
+
     this.dataForm.controls.prepNo.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(prepNo => {
-      // btnType="cancel" 會呼叫 form.reset()，prepNo 被清空時不應再打 API（PREP_NO 為後端必填參數）
       if (!prepNo) {
         this.dataForm.patchValue({ prepAmt: null }, { emitEvent: false });
         return;
@@ -270,6 +403,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
         this.dataForm.patchValue({ prepAmt: row?.PREP_Amt ?? null });
       });
     });
+
     if (!this.isFormCreateable) {
       this.loadDetail();
     }
@@ -290,11 +424,13 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
 
   private loadDetail(): void {
     const prepNo = this.rowdata?.PREP_NO;
-    const redeemNo = this.rowdata?.REDEEM_NO; // 點擊修改時清單帶入的核銷單號
+    const redeemNo = this.rowdata?.REDEEM_NO;
+
     if (!prepNo) {
       this.messageService.warnBubble('缺少預支單號，無法載入資料。');
       return;
     }
+
     this.prepNoOptions$ = of([{ label: prepNo, value: prepNo }]);
     this.dataForm.patchValue({ prepNo, redeemNo: redeemNo || null });
     this.dataForm.controls.prepNo.disable();
@@ -309,13 +445,13 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       const records = (list.Data ?? []) as QueryFIN23040Type1Response[];
       const amtRow = (amt.Data ?? [])[0] as QueryFIN23040Type3Response | undefined;
       this.dataForm.patchValue({ prepAmt: amtRow?.PREP_Amt ?? null });
+
       if (records.length === 0) {
         this.messageService.warnBubble('查無此預支單號的核銷紀錄。');
         return;
       }
-      this.canEditRow = records.every(r => r.YN !== 'N');
 
-      // 若有指定 redeemNo，僅載入該張單的明細；若無則預設抓第一筆或全部
+      this.canEditRow = records.every(r => r.YN !== 'N');
       const targetRecords = redeemNo ? records.filter(r => r.REDEEM_NO === redeemNo) : records;
       this.loadAllDetails(targetRecords, prepNo);
     });
@@ -324,6 +460,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
   private loadAllDetails(records: QueryFIN23040Type1Response[], prepNo: string): void {
     this.loading = true;
     const requests = records.map(r => this.fin23040Service.detailFIN23040({ REDEEM_NO: r.REDEEM_NO, PREP_NO: prepNo }));
+
     forkJoin(requests).pipe(
       finalize(() => (this.loading = false)),
     ).subscribe(results => {
@@ -363,29 +500,24 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     };
   }
 
-  /** 「取消」按鈕：把核銷明細還原成初始載入(或新增頁初始空表)時的內容 */
   onResetDetail(): void {
     this.data = this.originalData.map(row => ({ ...row }));
   }
 
   onSubmit(frm: FormGroup): void {
-    if (!this.tableEditComponent.validateAndShowErrors()) {
+    const valid = this.tableEditComponent.validateAndShowErrors();
+    if (!valid) {
       return;
     }
     this.handleSubmit(frm, () => this.doSave());
   }
 
-  /** 
-   * 💡 整批存檔對應後端 TVP：
-   * 將表格中所有明細打包成一個 InvoiceList 陣列，呼叫一次 saveFIN23040 送出整張核銷單。
-   */
   private doSave(): void {
     const v = this.dataForm.getRawValue();
     const prepNo = v.prepNo ?? '';
     const redeemNo = v.redeemNo ?? (this.data.find(r => r.redeemNo)?.redeemNo || null);
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
 
-    // 將表格的所有資料列轉換成後端所需的 FIN23040InvoiceItem 清單
     const invoiceList: FIN23040InvoiceItem[] = this.data.map(detail => ({
       AccNo: detail.accNo ?? '',
       PUR_Remark: detail.purRemark ?? '',
@@ -411,7 +543,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       STO_No: storeNo,
       PREP_NO: prepNo,
       REDEEM_NO: redeemNo,
-      InvoiceList: invoiceList // 💡 包含所有明細列的整批陣列
+      InvoiceList: invoiceList
     };
 
     this.loading = true;
@@ -420,7 +552,6 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
     ).subscribe(res => {
       if (res.Data?.Success) {
         this.messageService.successBubble('儲存成功');
-        // 若為新增，可將後端回傳的新核銷單號填回表單
         if (!redeemNo && res.Data.REDEEM_NO) {
           this.dataForm.patchValue({ redeemNo: res.Data.REDEEM_NO });
         }
@@ -430,6 +561,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       }
     });
   }
+
   private toDateString(value: Date | string | null | undefined): string {
     if (!value) return '';
     if (value instanceof Date) {

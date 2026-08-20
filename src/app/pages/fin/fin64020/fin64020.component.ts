@@ -15,11 +15,11 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize, map } from 'rxjs';
 import { Fin64020Service, Fin64020UpdateRequest, QueryFIN64020Request, QueryFIN64020Row } from '../../../service/api/fin/fin64020.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin64020',
@@ -84,6 +84,7 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
     { value: '3', label: '兌現' },
     { value: '4', label: '撤票' },
     { value: '5', label: '退票' },
+    { value: 'R', label: '僅記錄' },
   ];
   constructor(
     private readonly fin64020Service: Fin64020Service,
@@ -147,22 +148,22 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
     });
   }
   onClear(): void {
-  this.queryForm.reset(
-    {
-      CompanyAccNoList: null,
-      ExpireDateFrom: null,
-      ExpireDateTo: null,
-      ChkNo: null,
-      VouNoExpire: null,
-      ChkStatus: null,
-      pageSize: 30,
-      pageIndex: 1,
-    },
-    {
-      emitEvent: false,
-    }
-  );
+    this.queryForm.reset(
+      {
+        CompanyAccNoList: null,
+        ExpireDateFrom: null,
+        ExpireDateTo: null,
+        ChkNo: null,
+        VouNoExpire: null,
+        ChkStatus: null,
+        pageSize: 30,
+        pageIndex: 1,
+      },
+      {
+        emitEvent: false,
+      }
+    );
 
-  this.submitted = false;
-}
+    this.submitted = false;
+  }
 }

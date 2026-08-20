@@ -94,7 +94,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   private readonly destroyRef = inject(DestroyRef);
   @ViewChild('accountInput') accountInput?: ElementRef<HTMLInputElement>;
 
-  logoPath = 'assets/layout/images/logo-systex.webp';
+  logoPath = environment.brand.loginLogo;
   devPassword = environment.devPassword;
   loginForm = this.formBuilder.group({
     code: ['' as string, Validators.required],

@@ -18,6 +18,7 @@ import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component'; // 假設路徑
 import { TableSubheaderGroupingComponent } from '../fin55100/fin55100-table/fin55100-table.component';
 import { FileExportService } from './../../../shared/service/file-export.service';
+import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
 
 @Component({
   selector: 'app-fin55100',
@@ -27,7 +28,7 @@ import { FileExportService } from './../../../shared/service/file-export.service
     TableSubheaderGroupingComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, RadiobuttonComponent,
-    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
+    DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule, InputTextComponent,
     CalendarRangeComponent
   ]
 })

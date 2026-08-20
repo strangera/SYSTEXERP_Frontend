@@ -1,7 +1,7 @@
 <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
   <a class="layout-topbar-logo" pRipple>
-    <img fetchpriority="high" loading="lazy" src="assets/layout/images/logo-systex.webp" alt="logo">
-    <span class="min-w-max">{{'management-platform-title' | translate}}</span>
+    <img fetchpriority="high" loading="lazy" [src]="brand.logo" alt="logo">
+    <span class="min-w-max">{{ brand.title }}</span>
   </a>
 
   <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"

@@ -11,6 +11,7 @@ import { formatAmount } from '@others/component/table/table.model';
 import { MenuItem } from 'primeng/api';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { environment } from 'src/environments/environment';
 
 interface DetailRow {
   VouDate?: string | null;
@@ -46,6 +47,7 @@ interface VoucherMeta {
   templateUrl: './fin29050Report.component.html'
 })
 export class FIN29050ReportComponent implements OnInit {
+  readonly brand = environment.brand;
   crumbs: MenuItem[] = [
     { label: '人資財會模組' },
     { label: '總帳管理系統' },

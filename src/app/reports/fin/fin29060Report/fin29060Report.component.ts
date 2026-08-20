@@ -10,6 +10,7 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 import { formatAmount } from '@others/component/table/table.model';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { environment } from 'src/environments/environment';
 
 interface DetailRow {
   VouDate?: string | null;
@@ -41,6 +42,7 @@ interface VoucherMeta {
   templateUrl: './fin29060Report.component.html'
 })
 export class FIN29060ReportComponent implements OnInit {
+  readonly brand = environment.brand;
   vouNo = '';
   initialized = false;
   meta: VoucherMeta | null = null;

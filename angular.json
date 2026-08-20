@@ -116,6 +116,28 @@
                 }
               ]
             },
+            "tsrdweb-systex": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.systex.ts"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": true,
+              "baseHref": "/TSRDWEB/",
+              "assets": [
+                "src/favicon.ico",
+                "src/assets",
+                "src/serve.json",
+                "src/web.config.template",
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@novnc/novnc",
+                  "output": "assets/novnc"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,

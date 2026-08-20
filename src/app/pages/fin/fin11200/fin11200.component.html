@@ -51,7 +51,7 @@
       }" tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
     [showCheckBox]="true" [showDelete]="false" [totalRecords]="totalRecords" [loading]="loading" [addButton]="addButton"
     (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [buttonsLoading]="manageLoading"
-    [lastQueryBody]="lastQueryBody" [lazy]="false"
+    [lastQueryBody]="lastQueryBody" [lazy]="false" [isRowSelectable]="isRowSelectable"
     [queryFunction]="fin11200Service.queryFIN11200.bind(fin11200Service)">
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"

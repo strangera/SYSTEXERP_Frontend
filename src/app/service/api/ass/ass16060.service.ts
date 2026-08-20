@@ -41,7 +41,7 @@ export interface ASS16060InsertRequest {
 export class ASS16060Service {
   private readonly apiUrl = `${environment.ApiUrl}/ASS0000/ASS1000`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * 查詢主檔列表（給查詢頁用）
@@ -54,7 +54,7 @@ export class ASS16060Service {
   ): Observable<ApiResponse<ASS16060MasterRow[]>> {
     return this.http
       .post<ApiResponse<ASS16060QueryDataWrapper<ASS16060MasterRow>>>(
-        `${this.apiUrl}/queryASS16060M`,
+        `${this.apiUrl}/queryASS16060`,
         body,
       )
       .pipe(map((res) => this.flattenWrapper(res)));
@@ -66,7 +66,7 @@ export class ASS16060Service {
   ): Observable<ApiResponse<ASS16060DetailRow[]>> {
     return this.http
       .post<ApiResponse<ASS16060QueryDataWrapper<ASS16060DetailRow>>>(
-        `${this.apiUrl}/queryASS16060`,
+        `${this.apiUrl}/queryASS16060D`,
         body,
       )
       .pipe(map((res) => this.flattenWrapper(res)));

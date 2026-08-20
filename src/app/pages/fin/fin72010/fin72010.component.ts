@@ -45,6 +45,7 @@ export interface sample72010 {
 
   'CanDel': boolean; //能否刪除(僅顯示)
 }
+
 @Component({
   selector: 'app-fin72010',
   templateUrl: './fin72010.component.html',
@@ -73,7 +74,8 @@ export interface sample72010 {
   ],
   providers: [ConfirmationService]
 })
-export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> implements OnInit {
+export class FIN72010Component extends BasicQueryPageComponent<FIN72010Data> implements OnInit {
+
   // 查詢
   queryForm = this.formBuilder.group({
     PCS_No: [null, [Validators.maxLength(20)]], // 零用金單號
@@ -86,27 +88,31 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     Keep_UsrNo: [null], // 保管人
     Keep_UsrDisplay: [''], // 保管人顯示用
     PCS_Status: [null], // 狀態
-    Keep_OrgID: [null], // 保管單位
+    Keep_OrgID: [null as string | null], // 保管單位
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
   });
+
   // 表格
   // ----------------------------------------------------------------
 
   public readonly totalRecords = signal<number>(0);
 
   PCS_No_Options = signal<{ label: string; value: string }[]>([]);
+
   status_Options: apiOption[] = [
     { No: '1', Name: '建立 ', Label: '1 - 建立 ' },
     { No: '2', Name: '請款', Label: '2 - 請款' },
     { No: '3', Name: '拋轉', Label: '3 - 拋轉' },
     { No: '4', Name: '撥補', Label: '4 - 撥補' },
   ];
+
   keepingUnit_Options = signal<{ label: string; value: string }[]>([]);
 
   data: FIN72010Data[] = [];
   lastQueryBody: QueryFIN72010Request | null = null;
+
   columns: Column[] = [
     { field: 'PCS_No', header: '零用金單號', visible: true },
     { field: 'PCS_Date', header: '申請日期', visible: true, format: formatDate },
@@ -128,27 +134,61 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
 
   addButton: AddButton[] = [
     {
+      label: '編輯',
+      icon: 'pi pi-pencil',
+      action: (data: FIN72010Data) => this.onEdit(data),
+      disabled: (data: FIN72010Data) =>
+        !this.hasPermission(this.Actions.Edit) ||
+        ['拋轉', '撥補', '作廢'].includes(String(data.PCS_Status)),
+    },
+    {
+      label: '查看',
+      icon: 'pi pi-eye',
+      action: (data: FIN72010Data) => this.onDetail(data),
+    },
+    {
       label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72010Data) => this.onDelete(rowData),
-      disabled: (rowData: FIN72010Data) => !this.hasPermission(this.Actions.Delete) || rowData.PCS_Status == '作廢',
+      disabled: (rowData: FIN72010Data) =>
+        !this.hasPermission(this.Actions.Delete) ||
+        ['拋轉', '撥補', '作廢'].includes(String(rowData.PCS_Status)),
     }
   ];
 
-  selectedItems: FIN72010Data[] = [];// 多選項目
-
+  selectedItems: FIN72010Data[] = []; // 多選項目
 
   // 「零用金申請人」與「零用金保管人」使用者對話框的變數
   userDialogVisible = false;
   userQueryForm!: FormGroup;
 
   // 原始完整資料
-  allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  allUserResultData = signal<{
+    user_No: string;
+    user_Name: string;
+    Org_ID: string;
+    Org_Name: string;
+  }[]>([]);
+
+  // 零用金保管人原始完整資料
+  allKeeperUserResultData = signal<{
+    user_No: string;
+    user_Name: string;
+    Org_ID: string;
+    Org_Name: string;
+  }[]>([]);
+
   // 畫面目前顯示資料
-  userResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  userResultData = signal<{
+    user_No: string;
+    user_Name: string;
+    Org_ID: string;
+    Org_Name: string;
+  }[]>([]);
 
   selectedUser: any = null;
   selectedUserName = '';
+
   // 目前選擇的使用者類別
   currentUserTarget: 'PCS_UsrNo' | 'Keep_UsrNo' | null = null;
 
@@ -170,7 +210,13 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN72010', 'FIN/FIN72010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage(
+      'FIN72010',
+      'FIN/FIN72010cru',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
+
     this.loadDropdownOptions();
 
     // 零用金申請人與零用金保管人
@@ -180,22 +226,27 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       Org_ID: [''],
       Org_Name: ['']
     });
-
   }
 
   onSubmit(form: FormGroup) {
     console.log(form.value);
+
     this.handleSubmit(form, () => {
       this.fin72010Service.queryFIN72010(form.value)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
         .subscribe(response => {
           this.data = response.Data;
           this.lastQueryBody = form.value;
           this.totalRecords.set(response.TotalCount);
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.queryStateService.setQueryState(
+            this.ProgNo,
+            form.getRawValue()
+          );
         });
     });
-
   }
 
   //---刪除檢查---
@@ -208,24 +259,30 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       accept: () => {
         const deleteRequest: voidFIN72010Request = {
           PCS_No: data.PCS_No
-        }
+        };
+
         this.fin72010Service.voidFIN72010(deleteRequest)
           .pipe(untilDestroyed(this))
           .subscribe(response => {
             if (response.Status !== "0000") {
-              this.messageService.errorBubble(response.Data.Message || '作廢失敗');
+              this.messageService.errorBubble(
+                response.Data.Message || '作廢失敗'
+              );
             }
             else {
-              this.messageService.successBubble(response.Data.Message || '作廢成功');
+              this.messageService.successBubble(
+                response.Data.Message || '作廢成功'
+              );
             }
+
             this.onSubmit(this.queryForm);
-          })
+          });
       }
     });
   }
 
   isRowSelectable(rowData: sample72010): boolean {
-    return rowData.CanDel
+    return rowData.CanDel;
   }
 
   queryUserData(): void {
@@ -236,7 +293,11 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     const orgId = (raw.Org_ID ?? '').trim().toLowerCase();
     const orgName = (raw.Org_Name ?? '').trim().toLowerCase();
 
-    const filteredData = this.allUserResultData().filter(item => {
+    const sourceData = this.currentUserTarget === 'Keep_UsrNo'
+      ? this.allKeeperUserResultData()
+      : this.allUserResultData();
+
+    const filteredData = sourceData.filter(item => {
       return (
         (!userNo || item.user_No.toLowerCase().includes(userNo)) &&
         (!userName || item.user_Name.toLowerCase().includes(userName)) &&
@@ -248,12 +309,11 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     this.userResultData.set(filteredData);
   }
 
-
-
   openUserDialog(target: 'PCS_UsrNo' | 'Keep_UsrNo'): void {
     this.currentUserTarget = target;
 
     this.userDialogVisible = true;
+
     this.userQueryForm.reset({
       user_No: '',
       user_Name: '',
@@ -261,8 +321,12 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       Org_Name: ''
     });
 
-    this.userResultData.set(this.allUserResultData());
-    // this.allUserResultData  = [];
+    this.userResultData.set(
+      target === 'Keep_UsrNo'
+        ? this.allKeeperUserResultData()
+        : this.allUserResultData()
+    );
+
     this.selectedUser = null;
   }
 
@@ -274,24 +338,42 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       Org_Name: ''
     });
 
-    this.userResultData.set(this.allUserResultData());
+    this.userResultData.set(
+      this.currentUserTarget === 'Keep_UsrNo'
+        ? this.allKeeperUserResultData()
+        : this.allUserResultData()
+    );
+
     this.selectedUser = null;
   }
 
   onSelectUser(row: any): void {
     console.log('選到的使用者', row);
 
-    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
     if (!this.currentUserTarget) return;
 
-    const nameControlName = this.currentUserTarget.replace('No', 'Name');
-    const DisplayName = this.currentUserTarget.replace('No', 'Display');
+    const target = this.currentUserTarget;
+    const nameControlName = target.replace('No', 'Name');
+    const DisplayName = target.replace('No', 'Display');
 
     this.queryForm.patchValue({
-      [this.currentUserTarget]: row.user_No ?? '',
+      [target]: row.user_No ?? '',
       [nameControlName]: row.user_Name ?? '',
       [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
     });
+
+    /**
+     * 選擇零用金保管人後，
+     * 依該保管人重新取得可選的保管單位。
+     *
+     * 這段比照 FIN72020。
+     */
+    if (target === 'Keep_UsrNo') {
+      this.loadKeepingUnitByUser(
+        row.user_No,
+        row.Org_ID
+      );
+    }
 
     this.userDialogVisible = false;
     this.currentUserTarget = null;
@@ -304,15 +386,25 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
         PCS_UsrNo: null,
         PCS_UsrDisplay: null,
       });
+
       return;
     }
 
     this.queryForm.patchValue({
       Keep_UsrNo: null,
-      Keep_UsrDisplay: null
+      Keep_UsrDisplay: null,
+      Keep_OrgID: null
     });
-  }
 
+    /**
+     * 清除保管人時，
+     * 同時清除該保管人的可選保管單位。
+     */
+    this.keepingUnit_Options.set([]);
+  }
+  onEditData(row: FIN72010Data): void {
+    this.onEdit(row, this.queryForm.value);
+  }
   // 根據狀態代碼回傳狀態名稱
   getPCSStatusName(status?: string | number | null): string {
     const statusMap: Record<string, string> = {
@@ -325,25 +417,28 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     return statusMap[String(status ?? '')] ?? '';
   }
 
-
   /** 載入下拉選單選項 */
   private loadDropdownOptions(): void {
+
     // 零用金單號
     this.fin72010Service.POS2064MPCS_NoDropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
+
         const options = res.Data.map(item => ({
           label: item.PCS_No ?? '',
           value: item.PCS_No ?? '',
         }));
+
         this.PCS_No_Options.set(options);
       },
     });
 
-    // 零用金申請人、零用金保管人
+    // 零用金申請人
     this.fin72010Service.queryTBLUSER_Orgid_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
+
         const options = res.Data.map(item => ({
           user_No: item.user_No ?? '',
           user_Name: item.user_Name ?? '',
@@ -356,17 +451,85 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       },
     });
 
-    // 保管單位
-    this.fin72010Service.querySYS3100_DropDownList().subscribe({
+    // 零用金保管人
+    this.fin72010Service.queryTBLUSER_PCS_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
+
         const options = res.Data.map(item => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
+          user_No: item.user_No ?? '',
+          user_Name: item.user_Name ?? '',
+          Org_ID: item.Org_ID ?? '',
+          Org_Name: item.Org_Name ?? '',
         }));
-        this.keepingUnit_Options.set(options);
+
+        this.allKeeperUserResultData.set(options);
       },
     });
+
+    /**
+     * 原本這裡的：
+     *
+     * querySYS3100_DropDownList()
+     *
+     * 已拿掉。
+     *
+     * 保管單位改成選擇保管人之後，
+     * 再由 loadKeepingUnitByUser() 動態取得。
+     */
   }
 
+  /**
+   * 依保管人取得可選的保管單位
+   *
+   * 比照 FIN72020。
+   */
+  private loadKeepingUnitByUser(
+    userNo: string,
+    selectedOrgId?: string
+  ): void {
+
+    if (!userNo) {
+      this.keepingUnit_Options.set([]);
+
+      this.queryForm.patchValue({
+        Keep_OrgID: null
+      });
+
+      return;
+    }
+
+    this.fin72010Service
+      .queryTBLUSER_PCS_DropDownList(userNo)
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+
+          const options = res.Data.map(item => ({
+            label: `${item.Org_ID ?? ''} - ${item.Org_Name ?? ''}`,
+            value: item.Org_ID ?? '',
+          }));
+
+          this.keepingUnit_Options.set(options);
+
+          /**
+           * 優先帶入選擇保管人時本身的 Org_ID。
+           *
+           * 如果該 Org_ID 不在可保管單位裡，
+           * 才帶第一筆。
+           */
+          const defaultOrg = options.some(
+            item => item.value === selectedOrgId
+          )
+            ? selectedOrgId
+            : options.length > 0
+              ? options[0].value
+              : null;
+
+          this.queryForm.patchValue({
+            Keep_OrgID: defaultOrg
+          });
+        }
+      });
+  }
 }

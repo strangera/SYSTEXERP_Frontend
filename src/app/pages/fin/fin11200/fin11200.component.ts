@@ -197,4 +197,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.navigateWithState(CRUDStatus.Create);
     }
   }
+
+  isRowSelectable(row: Pos1018) {
+    return row.GUI_Status === '00' || row.GUI_Status === '03';
+  }
 }

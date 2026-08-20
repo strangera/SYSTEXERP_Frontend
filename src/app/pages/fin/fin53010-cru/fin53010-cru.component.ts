@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@others/component/table/table.model';
 import { QueryGLS3003AbatAcctResponse } from '@pages/fin/fin53010/fin53010.model';
+import { FIN52030Service } from '@service/api/fin/fin52030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -30,7 +31,7 @@ import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
 import { concatMap, EMPTY, finalize, forkJoin, map, Observable, of, startWith, switchMap, take, tap } from 'rxjs';
-import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030Detail, FIN52030DetailData, FIN52030InsertPayload } from '../fin52030/fin52030.model';
 import { mapFin53010ForUpdateResponseToStepRows } from '../fin53010/fin53010-detail-for-update.mapper';
 import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010PayloadMapperDeps } from '../fin53010/fin53010-payload.mapper';
 import {
@@ -595,6 +596,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public selectedItems: FIN53010Data[] = [];
   public rowEditCanSave = signal<boolean>(!1);
   public displayDialog = signal<boolean>(!1);
+
+  // 儲存為常用傳票
+  public readonly showSaveTemplateDialog = signal<boolean>(!1);
+  public readonly savingTemplate = signal<boolean>(!1);
+  public readonly saveTemplateSubmitted = signal<boolean>(!1);
+  public readonly saveTemplateForm = this.formBuilder.nonNullable.group({
+    TempNo: new FormControl<string>('', [Validators.required, Validators.maxLength(8)]),
+    TempName: new FormControl<string>('', [Validators.required, Validators.maxLength(40)]),
+  });
 
   public readonly footerData = computed(() => ({
     AccAmtD: this.debitTotal(),
@@ -1201,6 +1211,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   constructor(
     public readonly service: FIN53010Service,
+    private readonly fin52030Service: FIN52030Service,
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
     private readonly injector: Injector,
@@ -3845,6 +3856,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.dataForm.patchValue({
           VouType: data.VouType,
           VoucherType: voucherTypeLabel,
+          // 套用常用傳票時，將「常用傳票名稱」帶入「傳票摘要」
+          Remark: data.TempName || this.selectedDetail()[0]?.TempName || void 0,
           CRT_USR_No: data.CRT_USR_No ?? void 0,
           CRT_Date: data.CRT_Date || void 0,
           UPD_USR_No: data.UPD_USR_No ?? void 0,
@@ -3875,6 +3888,72 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           (data.Details || []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
         ));
         accNos.forEach(acc => this.service.getPTADropdownOptions(acc));
+      },
+    });
+  }
+
+  // ── 儲存為常用傳票 ─────────────────────────────────────────────────────
+
+  /** 開啟「儲存為常用傳票」彈窗（需有明細且借貸平衡） */
+  public openSaveTemplateDialog(): void {
+    if (!this.tableData().some(row => !!row.AccNo)) {
+      this.messageService.warnBubble('請先輸入傳票明細');
+      return;
+    }
+    if (!this.isBalanced()) {
+      this.messageService.errorBubble('借貸不平衡，無法儲存為常用傳票');
+      return;
+    }
+    this.saveTemplateSubmitted.set(!1);
+    this.saveTemplateForm.reset({ TempNo: '', TempName: this.df().Remark.value ?? '' });
+    this.showSaveTemplateDialog.set(!0);
+  }
+
+  /** 將目前傳票明細存成常用傳票（FIN52030） */
+  public onSaveTemplate(): void {
+    this.saveTemplateSubmitted.set(!0);
+    if (this.saveTemplateForm.invalid) {
+      this.saveTemplateForm.markAllAsTouched();
+      return;
+    }
+
+    const { TempNo, TempName } = this.saveTemplateForm.getRawValue();
+    const details: FIN52030Detail[] = this.tableData()
+      .filter(row => !!row.AccNo)
+      .map((row, index) => {
+        const debit = row.AccAmtD ?? 0;
+        const credit = row.AccAmtC ?? 0;
+        const serNo = (index + 1) * 10;
+        return {
+          AccNo: String(row.AccNo ?? '').trim(),
+          AccAmt: debit + credit,
+          AccDC: debit > 0 ? 'D' : credit > 0 ? 'C' : '',
+          DetailNo: row.DetailNo || void 0,
+          NoteDesc: row.NoteDesc != null ? String(row.NoteDesc) : '',
+          ORG_ID: row.ORG_ID || void 0,
+          SubDetailNo: row.ReflNo || void 0,
+          SerNo: serNo,
+          index: serNo,
+        };
+      });
+
+    const payload: FIN52030InsertPayload = {
+      TempNo: TempNo!,
+      TempName: TempName!,
+      VouType: (this.df().VouType.value ?? '3') as '1' | '2' | '3',
+      CRT_USR_No: this.user.user_No,
+      Details: details,
+    };
+
+    this.savingTemplate.set(!0);
+    this.fin52030Service.insertFIN52030Data(payload).pipe(
+      finalize(() => this.savingTemplate.set(!1)),
+      take(1),
+    ).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.messageService.successBubble('已儲存為常用傳票');
+        this.showSaveTemplateDialog.set(!1);
       },
     });
   }

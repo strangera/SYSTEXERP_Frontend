@@ -28,6 +28,7 @@ import { AppTopbarSearchComponent } from './app-topbar-search.component';
 import { AppTopbarFavoritesComponent } from './app-topbar-favorites.component';
 import { AppTopbarUserComponent } from './app-topbar-user.component';
 import { AppTopbarVersionComponent } from './app-topbar-version.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-topbar',
@@ -42,6 +43,7 @@ import { AppTopbarVersionComponent } from './app-topbar-version.component';
   ],
 })
 export class AppTopbarComponent {
+  readonly brand = environment.brand;
   // 使用 inject 獲取依賴
   private readonly router = inject(Router);
   public layoutService = inject(LayoutService);

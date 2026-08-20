@@ -14,9 +14,12 @@ import { NotificationService } from '../../components/notification-message/notif
 import { LazyLoadEvent } from '@others/component/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { environment } from 'src/environments/environment';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
   protected readonly now: Date = new Date();
+  // 品牌設定（南紡/精誠依 build configuration 切換），供樣板直接綁 {{ brand.companyFullName }} 等
+  readonly brand = environment.brand;
   // constructor
   authService = inject(AuthService);
   router = inject(Router);

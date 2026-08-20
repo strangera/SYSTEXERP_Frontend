@@ -1,4 +1,3 @@
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -8,6 +7,7 @@ import { FIN72020Data, FIN72020Service, QueryFIN72020Request, voidFIN72020Reques
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
@@ -18,11 +18,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { AddButton, Column, createPaginationConfig } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
-import { AddButton, Column, createPaginationConfig } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
 @Component({
@@ -67,7 +67,7 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     Keep_UsrName: [''], // 保管人名稱
     Keep_UsrDisplay: [''], // 保管人顯示用
     PCS_Status: [null], // 狀態
-    Keep_OrgID: [null], // 保管單位
+    Keep_OrgID: [null as string | null], // 保管單位
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PCS_RqstNo', order: 1 }]), // 分頁和排序參數
@@ -85,6 +85,8 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
   PCS_RqstNo_Options = signal<{ label: string; value: string }[]>([]);
   // 原始完整資料
   allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  // 零用金保管人原始完整資料
+  allKeeperUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
   // 畫面目前顯示資料
   userResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
   keepingUnit_Options = signal<{ label: string; value: string }[]>([]);
@@ -107,7 +109,15 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72020Data) => this.onDelete(rowData),
-      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.Delete) || rowData.PCS_Status == '9',
+      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.Delete) ||
+        ['2', '3', '4', '9'].includes(String(rowData.PCS_Status)),
+    },
+    {
+      label: '反請款',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: FIN72020Data) => this.onReturnApplyAmt(rowData),
+      disabled: (rowData: FIN72020Data) => !this.hasPermission(this.Actions.ReturnApplyAmt) ||
+        rowData.PCS_Status != '2',
     }
   ];
 
@@ -207,7 +217,31 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       }
     });
   }
+  //反請款
+  onReturnApplyAmt(data: FIN72020Data): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
+    this.messageService.confirm({
+      header: '零用金反請款',
+      message: `是否確認反請款 零用金單號: ${data.PCS_No} 的資料？`,
+      accept: () => {
+        const deleteRequest: voidFIN72020Request = {
+          PCS_No: data.PCS_No
+        }
+        this.fin72020Service.returnIN72020(deleteRequest)
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            if (response.Status !== "0000") {
+              this.messageService.errorBubble(response.Data.Message || '反請款失敗');
+            }
+            else {
+              this.messageService.successBubble(response.Data.Message || '反請款成功');
+            }
+            this.onSubmit(this.queryForm);
+          })
+      }
+    });
+  }
   openUserDialog(target: 'PCS_UsrNo' | 'Keep_UsrNo'): void {
     this.currentUserTarget = target;
 
@@ -219,7 +253,12 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       Org_Name: ''
     });
 
-    this.userResultData.set(this.allUserResultData());
+    this.userResultData.set(
+      target === 'Keep_UsrNo'
+        ? this.allKeeperUserResultData()
+        : this.allUserResultData()
+    );
+
     // this.userResultData = [];
     this.selectedUser = null;
   }
@@ -232,7 +271,11 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     const orgId = (raw.Org_ID ?? '').trim().toLowerCase();
     const orgName = (raw.Org_Name ?? '').trim().toLowerCase();
 
-    const filteredData = this.allUserResultData().filter(item => {
+    const sourceData = this.currentUserTarget === 'Keep_UsrNo'
+      ? this.allKeeperUserResultData()
+      : this.allUserResultData();
+
+    const filteredData = sourceData.filter(item => {
       return (
         (!userNo || item.user_No.toLowerCase().includes(userNo)) &&
         (!userName || item.user_Name.toLowerCase().includes(userName)) &&
@@ -253,29 +296,40 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
     });
 
     // this.userResultData = [];
-    this.userResultData.set(this.allUserResultData());
+    this.userResultData.set(
+      this.currentUserTarget === 'Keep_UsrNo'
+        ? this.allKeeperUserResultData()
+        : this.allUserResultData()
+    );
+
     this.selectedUser = null;
   }
-
   onSelectUser(row: any): void {
     console.log('選到的使用者', row);
 
-    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
     if (!this.currentUserTarget) return;
 
-    const nameControlName = this.currentUserTarget.replace('No', 'Name');
-    const DisplayName = this.currentUserTarget.replace('No', 'Display');
+    const target = this.currentUserTarget;
+    const nameControlName = target.replace('No', 'Name');
+    const DisplayName = target.replace('No', 'Display');
 
     this.queryForm.patchValue({
-      [this.currentUserTarget]: row.user_No ?? '',
+      [target]: row.user_No ?? '',
       [nameControlName]: row.user_Name ?? '',
       [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
     });
 
+    // 選擇零用金保管人後，重新取得該保管人的保管單位
+    if (target === 'Keep_UsrNo') {
+      this.loadKeepingUnitByUser(
+        row.user_No,
+        row.Org_ID
+      );
+    }
+
     this.userDialogVisible = false;
     this.currentUserTarget = null;
   }
-
   // 清除使用者選擇的資料
   clearUser(type: 'PCS' | 'Keep'): void {
     if (type === 'PCS') {
@@ -288,10 +342,12 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
 
     this.queryForm.patchValue({
       Keep_UsrNo: null,
-      Keep_UsrDisplay: null
+      Keep_UsrDisplay: null,
+      Keep_OrgID: null
     });
-  }
 
+    this.keepingUnit_Options.set([]);
+  }
   /** 載入下拉選單選項 */
   private loadDropdownOptions(): void {
     // 支出請款單號
@@ -306,7 +362,7 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       },
     });
 
-    // 零用金申請人、零用金保管人
+    // 零用金申請人
     this.fin72020Service.queryTBLUSER_Orgid_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
@@ -322,17 +378,64 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       },
     });
 
-    // 保管單位
-    this.fin72020Service.querySYS3100_DropDownList().subscribe({
+    // 零用金保管人
+    this.fin72020Service.queryTBLUSER_PCS_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
+          user_No: item.user_No ?? '',
+          user_Name: item.user_Name ?? '',
+          Org_ID: item.Org_ID ?? '',
+          Org_Name: item.Org_Name ?? '',
         }));
-        this.keepingUnit_Options.set(options);
+
+        this.allKeeperUserResultData.set(options);
       },
     });
-  }
 
+
+  }
+  private loadKeepingUnitByUser(
+    userNo: string,
+    selectedOrgId?: string
+  ): void {
+    if (!userNo) {
+      this.keepingUnit_Options.set([]);
+
+      this.queryForm.patchValue({
+        Keep_OrgID: null
+      });
+
+      return;
+    }
+
+    this.fin72020Service
+      .queryTBLUSER_PCS_DropDownList(userNo)
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+
+          const options = res.Data.map(item => ({
+            label: `${item.Org_ID ?? ''} - ${item.Org_Name ?? ''}`,
+            value: item.Org_ID ?? '',
+          }));
+
+          this.keepingUnit_Options.set(options);
+
+          // 優先帶入選擇保管人時的組織
+          // 如果該組織不在可保管單位中，才預設第一筆
+          const defaultOrg = options.some(
+            item => item.value === selectedOrgId
+          )
+            ? selectedOrgId
+            : options.length > 0
+              ? options[0].value
+              : null;
+
+          this.queryForm.patchValue({
+            Keep_OrgID: defaultOrg
+          });
+        }
+      });
+  }
 }

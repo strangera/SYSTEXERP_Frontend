@@ -9,11 +9,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 import { TableComponent } from '../../../others/component/table/table.component';
 import { Column, createPaginationConfig } from '../../../others/component/table/table.model';
@@ -172,6 +172,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     { value: '3', label: '兌現' },
     { value: '4', label: '撤票' },
     { value: '5', label: '退票' },
+    { value: 'R', label: '僅記錄' },
   ];
 
   /** ✅ 查詢表單：欄位命名直接對齊後端 Request */
@@ -683,15 +684,15 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
       });
   }
   isEditDisabled = (rowData: any): boolean => {
-  // 已拋傳票
-  const isPosted = String(rowData?.Tran_Status ?? '') === '2';
+    // 已拋傳票
+    const isPosted = String(rowData?.Tran_Status ?? '') === '2';
 
-  // 已兌現
-  const isCash = String(rowData?.CHK_Status ?? '') === '3';
+    // 已兌現
+    const isCash = String(rowData?.CHK_Status ?? '') === '3';
 
-  // 已退票
-  const isBounce = String(rowData?.CHK_Status ?? '') === '5';
+    // 已退票
+    const isBounce = String(rowData?.CHK_Status ?? '') === '5';
 
-  return isPosted || isCash || isBounce;
-};
+    return isPosted || isCash || isBounce;
+  };
 }

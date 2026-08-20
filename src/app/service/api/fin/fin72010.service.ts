@@ -282,9 +282,14 @@ export class FIN72010Service {
     return this.http.post<ApiResponse<POS2064MPCS_NoDropDownListResponse[]>>(`${this.apiUrl}/POS2064MPCS_NoDropDownList`, {});
   }
 
-  // 查詢 零用金申請人、零用金保管人 下拉選單
+  // 查詢 零用金申請人
   queryTBLUSER_Orgid_DropDownList(): Observable<ApiResponse<queryTBLUSER_Orgid_DropDownListResponse[]>> {
     return this.http.post<ApiResponse<queryTBLUSER_Orgid_DropDownListResponse[]>>(`${environment.ApiUrl}/queryTBLUSER_Orgid_DropDownList`, {});
+  }
+
+  //零用金保管人 下拉選單
+  queryTBLUSER_PCS_DropDownList(user_No?: String): Observable<ApiResponse<queryTBLUSER_Orgid_DropDownListResponse[]>> {
+    return this.http.post<ApiResponse<queryTBLUSER_Orgid_DropDownListResponse[]>>(`${environment.ApiUrl}/queryTBLUSER_PCS_DropDownList`, { user_No: user_No ?? null });
   }
 
   // 查詢保管單位下拉選單

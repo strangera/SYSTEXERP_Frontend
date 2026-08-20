@@ -65,13 +65,27 @@
             [data]="data"
             [columns]="columns"
             [showDelete]="false"
-            [showInsert]="false"
+            [showInsert]="true"
+            insertText="新增科目"
             [canInsert]="false"
             [showCheckBox]="false"
             [showFooter]="true"
             [loading]="loading"
             [disabled]="!isFormCreateable"
-          ></app-table-edit>
+            (insert)="onAddAccountingLine()"
+          >
+            <ng-template #customCell let-rowData="rowData" let-col="col">
+              @if (col.field === '_delete' && rowData._dataStatus === 'new' && isFormCreateable) {
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-danger p-button-text p-button-rounded"
+                  (click)="onDeleteAccountingLine(rowData)"
+                ></button>
+              }
+            </ng-template>
+          </app-table-edit>
         }
       </div>
 

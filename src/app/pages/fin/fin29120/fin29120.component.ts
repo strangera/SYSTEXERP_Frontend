@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -21,6 +21,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
   selector: 'app-fin29120',
   templateUrl: './fin29120.component.html',
   standalone: true,
+  host: { '(click)': 'onTableLinkClick($event)' },
   imports: [
     CommonModule,
     MenubarComponent,
@@ -92,6 +93,8 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     { field: 'VoucherType', header: '憑證類別', visible: true },
   ];
 
+  private readonly location = inject(Location);
+
   constructor(
     private readonly fin29120Service: FIN29120Service,
     private readonly dropDownListService: DropDownListService,
@@ -131,30 +134,13 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
             const acpId = String(row.ACPId ?? '').trim();
             const guiNo = String(row.InvoiceNo ?? '').trim().toUpperCase();
 
-            const acpIdUrl = `./account/fin/fin24010cru?acpId=${encodeURIComponent(acpId)}`;
-            const invoiceNoUrl = `./account/fin/fin13050cru?GUI_No=${encodeURIComponent(guiNo)}`;
-
             return {
               ...row,
               ACPId: acpId
-                ?
-                `<a href="#"
-                      class="acp-link"
-                      data-acpid="${acpId}"
-                      onclick="globalThis.open('${acpIdUrl}', '_blank'); return false;"
-                    >
-                      ${acpId}
-                    </a>`
+                ? `<a href="#" class="acp-link">${acpId}</a>`
                 : '',
               InvoiceNo: guiNo
-                ?
-                `<a href="#"
-                      class="invoice-link"
-                      data-invoice="${guiNo}"
-                      onclick="globalThis.open('${invoiceNoUrl}', '_blank'); return false;"
-                    >
-                      ${guiNo}
-                    </a>`
+                ? `<a href="#" class="invoice-link">${guiNo}</a>`
                 : ''
             };
           });
@@ -179,13 +165,46 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     };
   }
 
+  onTableLinkClick(event: Event): void {
+    const anchor = (event.target as HTMLElement)?.closest('a.acp-link, a.invoice-link');
+    if (!anchor) return;
+
+    event.preventDefault();
+    const value = (anchor.textContent ?? '').trim();
+    if (!value) return;
+
+    if (anchor.classList.contains('acp-link')) this.openNewWindow(value, 'ACP');
+    else if (anchor.classList.contains('invoice-link')) this.openNewWindow(value, 'Invoice');
+  }
+
   openNewWindow(value: string, type: string) {
-    let url = '';
+    const id = String(value ?? '').trim().toUpperCase();
+    if (!id) return;
+
+    // 與 FIN34030 同套：ID 走 localStorage handoff，URL 保持乾淨，
+    // 避免全域 LowerCaseUrlSerializer 把 query param 轉小寫導致查無資料。
+    let route = '';
+    let storageKey = '';
+    let payload: Record<string, unknown> = {};
     if (type === 'ACP') {
-      url = `/account/fin/fin24010cru?acpId=${encodeURIComponent(String(value ?? '').trim())}`;
+      route = '/account/fin/fin24010cru';
+      storageKey = 'FIN24010_CRU_HANDOFF';
+      payload = { arsId: id, fromRoute: globalThis.location.pathname, ts: Date.now() };
     } else if (type === 'Invoice') {
-      url = `/account/fin/fin13050cru?GUI_No=${encodeURIComponent(String(value ?? '').trim().toUpperCase())}`;
+      route = '/account/fin/fin13050cru';
+      storageKey = 'FIN13050_CRU_HANDOFF';
+      payload = { guiNo: id, fromRoute: globalThis.location.pathname, ts: Date.now() };
+    } else {
+      return;
     }
-    globalThis.open(url, '_blank');
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch {
+      return;
+    }
+
+    const externalUrl = this.location.prepareExternalUrl(route);
+    globalThis.open(`${globalThis.location.origin}${externalUrl}`, '_blank', 'noopener');
   }
 }

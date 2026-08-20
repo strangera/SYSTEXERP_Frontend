@@ -308,7 +308,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
         const returnAmt = Number(firstRow?.return_amt ?? 0);
 
         if (si === 0) {
-          aoa.push(['精誠資訊', '專櫃日對帳單', '']);
+          aoa.push([this.brand.companyName, '專櫃日對帳單', '']);
 
           const infoItems: string[] = [
             this.showBusType
