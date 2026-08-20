@@ -895,6 +895,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (ABAT_YN !== 'Y') return true;
           // 同方向（自動編碼）禁用
           if (this.isAutoCodeRow(rowData)) return true;
+          // 已選過立沖代號 → 一律開放，讓使用者可重新挑選（避免金額被清空後兩個入口都堵死、無法改選）
+          if (rowData.PTA) return false;
           // 反方向有金額才開放，否則禁用（還沒輸金額時不可點）
           if (AccDC === 'D') return (rowData.AccAmtC ?? 0) <= 0;
           if (AccDC === 'C') return (rowData.AccAmtD ?? 0) <= 0;
@@ -4067,6 +4069,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rows.map((r, i) => {
           if (i !== rowIndex) return r;
           const updated: FIN53010DetailTable = { ...r, PTA: selected.PTA ?? '' };
+          // 此路徑直接寫 signal、不走 table-edit 的 onValueChange/validateField，
+          // 需自行清掉先前殘留的「借/貸至少填一個」及立沖代號驗證錯誤，否則帶回金額後紅框仍在
+          const prevErrs = (r as unknown as Record<string, unknown>)['_validationErrors'] as Record<string, string> | undefined;
+          if (prevErrs) {
+            const cleaned = { ...prevErrs };
+            delete cleaned['AccAmtD'];
+            delete cleaned['AccAmtC'];
+            delete cleaned['PTA'];
+            (updated as unknown as Record<string, unknown>)['_validationErrors'] = cleaned;
+          }
           // 決定沖帳金額落在哪個方向：從金額欄開窗用該欄；從立沖代號欄開窗(amtField=null)
           // 則依科目 AccDC 推導（C 科目沖在借方、D 科目沖在貸方），才能在「改選不同 PTA」時
           // 一樣回填廠商/金額/摘要（過去只在金額欄開窗才填，改 PTA 欄只換代號，是這次的 bug）
