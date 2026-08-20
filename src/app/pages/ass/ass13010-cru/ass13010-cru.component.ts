@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DetailASS13010Response, InsertASS13010Request, UpdateASS13010Request } from '@pages/ass/ass13010/ass13010.model';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
@@ -11,6 +11,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
@@ -21,7 +22,6 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 //3.1.3.1 資產維護作業 CRU
-@UntilDestroy()
 @Component({
   selector: 'app-ass13010-cru',
   templateUrl: './ass13010-cru.component.html',
@@ -111,10 +111,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   private assetsStatusFullOptions: Option[] = [];
   /** 目前資產狀態是否落於可編輯範圍（1:使用中 / 7:庫存中未使用），控制 assetsStatusOptions 要用完整清單還是限縮清單 */
   private isAssetsStatusEditableMode = false;
-  assetsTypeOptions: Option[] = [
-    { value: '1', label: '資產' },
-    { value: '2', label: '列管品' }
-  ];
+  assetsTypeOptions = getSYS1000Options('ASSET_TYPE');
   purchaseNumberOptions: Option[] = []; // queryASS13010DropDownList
   supplierCodeOptions: Option[] = []; // queryPOS2013_DropDownList
   depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD_DropDownList
@@ -146,6 +143,23 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('ASS13010', this.dataForm);
     this.accordionTabCss = this.crudstatus === CRUDStatus.Create ? 'create-accordionTab' : 'edit-accordionTab';
     this.loadDropdownOptions();
+    // 監聽「品項編號 (itemCode)」選取事件，自動帶入「資產類型 (assetsType)」
+    this.dataForm.controls.itemCode.valueChanges.pipe(untilDestroyed(this)).subscribe(selectedGoodsId => {
+      if (!selectedGoodsId) return;
+
+      // 從下拉選單陣列中尋找對應的 Option
+      const selectedOption = this.itemCodeOptions.find(opt => opt.value === selectedGoodsId);
+      if (selectedOption) {
+        // 後端展平後會存放在 MATERIAL_TYPE 屬性中
+        const materialType = selectedOption['MaterialType'] ?? '';
+
+        if (materialType) {
+          this.dataForm.patchValue({
+            assetsType: String(materialType)
+          });
+        }
+      }
+    });
     this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateKeepingPersonOptions();
       if (!this.allUserOptionsWithOrg.length) {
@@ -155,9 +169,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       const allowed = this.keepingPersonOptions.some(o => o.value === this.dataForm.controls.keepingPerson.value);
       if (unitVal != null && unitVal !== '' && !allowed) {
         this.dataForm.patchValue(
-  { keepingPerson: null },
-  { emitEvent: false }
-);
+          { keepingPerson: null },
+          { emitEvent: false }
+        );
         this.dataForm.controls.keepingPerson.markAsPristine({ onlySelf: true });
       }
     });
@@ -169,10 +183,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       const unitVal = this.dataForm.controls.userUnit.value;
       const allowed = this.userOptions.some(o => o.value === this.dataForm.controls.user.value);
       if (unitVal != null && unitVal !== '' && !allowed) {
-       this.dataForm.patchValue(
-  { user: null },
-  { emitEvent: false }
-);
+        this.dataForm.patchValue(
+          { user: null },
+          { emitEvent: false }
+        );
         this.dataForm.controls.user.markAsPristine({ onlySelf: true });
       }
     });
@@ -320,26 +334,26 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private updateKeepingPersonOptions(): void {
-  const unitVal = String(
-    this.dataForm.controls.keepingUnit.value ?? ''
-  ).trim();
+    const unitVal = String(
+      this.dataForm.controls.keepingUnit.value ?? ''
+    ).trim();
 
-  if (!unitVal) {
-    this.keepingPersonOptions = [
-      ...this.allUserOptionsWithOrg
-    ];
-    return;
+    if (!unitVal) {
+      this.keepingPersonOptions = [
+        ...this.allUserOptionsWithOrg
+      ];
+      return;
+    }
+
+    this.keepingPersonOptions =
+      this.allUserOptionsWithOrg.filter(option => {
+        const orgId = String(
+          (option as Option & { Org_ID?: string }).Org_ID ?? ''
+        ).trim();
+
+        return orgId === unitVal;
+      });
   }
-
-  this.keepingPersonOptions =
-    this.allUserOptionsWithOrg.filter(option => {
-      const orgId = String(
-        (option as Option & { Org_ID?: string }).Org_ID ?? ''
-      ).trim();
-
-      return orgId === unitVal;
-    });
-}
 
   private updateUserOptions(): void {
     const unitVal = this.dataForm.controls.userUnit.value;
@@ -353,105 +367,105 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private applyPendingEmployeeSelection(): void {
-  if (
-    !this.pendingEmployeeSelection ||
-    !this.allUserOptionsWithOrg.length
-  ) {
-    return;
-  }
+    if (
+      !this.pendingEmployeeSelection ||
+      !this.allUserOptionsWithOrg.length
+    ) {
+      return;
+    }
 
-  const { keepingPerson, user } =
-    this.pendingEmployeeSelection;
+    const { keepingPerson, user } =
+      this.pendingEmployeeSelection;
 
-  // 先依單位建立正常 options
-  this.updateKeepingPersonOptions();
-  this.updateUserOptions();
+    // 先依單位建立正常 options
+    this.updateKeepingPersonOptions();
+    this.updateUserOptions();
 
-  // ==============================
-  // 保管人
-  // ==============================
-  if (keepingPerson) {
-    const targetValue =
-      String(keepingPerson).trim();
+    // ==============================
+    // 保管人
+    // ==============================
+    if (keepingPerson) {
+      const targetValue =
+        String(keepingPerson).trim();
 
-    let exists =
-      this.keepingPersonOptions.some(option =>
-        String(option.value ?? '').trim() === targetValue
-      );
-
-    // 如果因為歷史單位等原因被過濾掉，
-    // 從完整人員清單補回
-    if (!exists) {
-      const employee =
-        this.allUserOptionsWithOrg.find(option =>
+      let exists =
+        this.keepingPersonOptions.some(option =>
           String(option.value ?? '').trim() === targetValue
         );
 
-      if (employee) {
-        this.keepingPersonOptions = [
-          ...this.keepingPersonOptions,
-          employee,
-        ];
+      // 如果因為歷史單位等原因被過濾掉，
+      // 從完整人員清單補回
+      if (!exists) {
+        const employee =
+          this.allUserOptionsWithOrg.find(option =>
+            String(option.value ?? '').trim() === targetValue
+          );
 
-        exists = true;
+        if (employee) {
+          this.keepingPersonOptions = [
+            ...this.keepingPersonOptions,
+            employee,
+          ];
+
+          exists = true;
+        }
+      }
+
+      console.log(
+        'HOLD_EMP_ID:',
+        keepingPerson,
+        '保管人是否存在 options:',
+        exists
+      );
+    }
+
+    // ==============================
+    // 使用人
+    // ==============================
+    if (user) {
+      const targetValue =
+        String(user).trim();
+
+      const exists =
+        this.userOptions.some(option =>
+          String(option.value ?? '').trim() === targetValue
+        );
+
+      if (!exists) {
+        const employee =
+          this.allUserOptionsWithOrg.find(option =>
+            String(option.value ?? '').trim() === targetValue
+          );
+
+        if (employee) {
+          this.userOptions = [
+            ...this.userOptions,
+            employee,
+          ];
+        }
       }
     }
 
-    console.log(
-      'HOLD_EMP_ID:',
-      keepingPerson,
-      '保管人是否存在 options:',
-      exists
+    // 最後才 patch 人員 ID
+    this.dataForm.patchValue(
+      {
+        keepingPerson:
+          keepingPerson != null
+            ? String(keepingPerson).trim()
+            : null,
+
+        user:
+          user != null
+            ? String(user).trim()
+            : null,
+      },
+      {
+        emitEvent: false,
+      }
     );
+
+    this.pendingEmployeeSelection = null;
   }
-
-  // ==============================
-  // 使用人
-  // ==============================
-  if (user) {
-    const targetValue =
-      String(user).trim();
-
-    const exists =
-      this.userOptions.some(option =>
-        String(option.value ?? '').trim() === targetValue
-      );
-
-    if (!exists) {
-      const employee =
-        this.allUserOptionsWithOrg.find(option =>
-          String(option.value ?? '').trim() === targetValue
-        );
-
-      if (employee) {
-        this.userOptions = [
-          ...this.userOptions,
-          employee,
-        ];
-      }
-    }
-  }
-
-  // 最後才 patch 人員 ID
-  this.dataForm.patchValue(
-    {
-      keepingPerson:
-        keepingPerson != null
-          ? String(keepingPerson).trim()
-          : null,
-
-      user:
-        user != null
-          ? String(user).trim()
-          : null,
-    },
-    {
-      emitEvent: false,
-    }
-  );
-
-  this.pendingEmployeeSelection = null;
-}
 
   private loadDropdownOptions(): void {
     this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

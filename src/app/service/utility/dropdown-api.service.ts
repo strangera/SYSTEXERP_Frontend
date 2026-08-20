@@ -15,6 +15,7 @@ import {
   Aps1003Query,
   Aps1003Tls2d010Item,
   Aps1003Tls2d010Query,
+  Ass11040DropDownItem,
   Ass13010PurchaseNumberDropDownItem,
   BatchTalentChargeQuery,
   BusClassItem,
@@ -81,6 +82,7 @@ import {
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
+  TalentAllowedQuery,
   TalentByContractDateItem,
   TalentByContractDateQuery,
   TalentChargeItem,
@@ -88,7 +90,6 @@ import {
   TalentItem,
   TalentOpenFlagItem,
   TalentOpenFlagQuery,
-  TalentAllowedQuery,
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
@@ -670,13 +671,11 @@ export class DropdownApiService {
 
   /** 查詢品項資料下拉選單(ASS11040) */
   queryASS11040_DropDownList(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>(
+    return this.queryAndMapDropdown<Ass11040DropDownItem>(
       '/ASS0000/ASS1000/queryASS11040_DropDownList',
       'No',
       'Name'
-    ).pipe(
-      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
-    );
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
   /** 查詢採購單號下拉選單(ASS13010) */
@@ -1233,7 +1232,7 @@ export class DropdownApiService {
 
   /** 查詢 ASS11040 品項編號下拉選單 */
   queryASS11040DropDownList(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>(
+    return this.queryAndMapDropdown<Ass11040DropDownItem>(
       '/ASS0000/ASS1000/queryASS11040_DropDownList',
       'No',
       'Name'

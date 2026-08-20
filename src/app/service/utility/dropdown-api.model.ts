@@ -911,3 +911,8 @@ export interface Pos1002FilteredItem {
   ECR_TLT_Name: string;
   ECR_Status: string;
 }
+
+/** 查詢商品管理編號(ASS11040)下拉選單回傳項目 */
+export interface Ass11040DropDownItem extends IDropdownItem {
+  MaterialType?: string; // 或是 MATERIAL_TYPE，與後端 JSON 大小寫一致
+}

@@ -1,11 +1,7 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div>
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -175,9 +171,9 @@
   <div class="col-12">
     <app-table-report [data]="tableData()" dataKey="ASSET_ID" tableKey="ASS13010" [columns]="columns"
       [totalRecords]="totalRecords()" [loading]="tableLoading()" [queryFunction]="queryFunction"
-      [lastQueryBody]="lastQueryBody" [showCheckBox]="true" [showDelete]="false"
-      [showReportMode]="false" [selectedItems]="selectedItems" (selectionChange)="onSelectionChange($event)"
-      (edit)="onEdit($event)" (detail)="onDetail($event)">
+      [lastQueryBody]="lastQueryBody" [showCheckBox]="true" [showDelete]="false" [showReportMode]="false"
+      [selectedItems]="selectedItems" (selectionChange)="onSelectionChange($event)" (edit)="onEdit($event)"
+      (detail)="onDetail($event)">
       <header>
         <div class="flex justify-content-end gap-2">
           <p-button styleClass="p-2" label="匯出 PDF" icon="pi pi-file-pdf" [loading]="btnPDFLoading"
