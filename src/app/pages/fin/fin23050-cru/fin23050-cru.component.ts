@@ -24,6 +24,15 @@ interface Fin23050CruState {
 }
 
 /**
+ * 傳票明細列：SP 回傳的欄位 + app-table-edit 用來標記列狀態的內部欄位。
+ * SP 回傳的既有列不會帶 _dataStatus，交給 app-table-edit 的 initializeData 自動補 'original'；
+ * 使用者自行新增的列在 onAddAccountingLine() 明確標成 'new'，藉此跟既有列區分(唯讀/可刪除等規則都靠這個欄位判斷)。
+ */
+interface Fin23050DetailLine extends DetailFIN23050Response {
+  _dataStatus?: 'original' | 'new' | 'modified' | 'deleted';
+}
+
+/**
  * 1.2.3.5 暫付款核銷傳票拋轉作業 - 拋轉預覽頁
  *
  * 查詢頁勾選多筆核銷單號後按「預覽傳票」導進這頁，這頁把整批勾選的核銷單號一次送進
@@ -32,10 +41,21 @@ interface Fin23050CruState {
  * 最後按「確定拋轉」時再依每列自帶的 REDEEM_NO/PREP_NO 分組，對每一組各自呼叫一次
  * SP_FIN23050Posting —— 比照 FIN23020-cru 的 forkJoin 做法。
  *
- * 注意：SP 回傳的明細列會多一筆虛擬列(Detail_ID=999999999，AccNo=123304)，那是 SP 算出來給畫面看的
- * 「暫付款核銷轉列」沖銷分錄，GLS6002 沒有對應的實體列——SP_FIN23050Posting 目前還是舊版(只 UPDATE
- * 既有列，靠 SerNo 比對，且序號規則跟新版 Detail 不同步)，這筆虛擬列送出去 Posting 也不會真的被寫入，
- * 這是已知的後端落差，還沒有解法，先如實顯示，不要自己在前端硬吃掉這筆虛擬列。
+ * 注意：SP 回傳的明細列會多一筆虛擬列(Detail_ID=999999999，AccNo=123304，SerNo固定排最後)，那是
+ * SP_FIN23050Detail 算出來給畫面看的「暫付款核銷轉列」貸方沖銷分錄(CreditAmt=同一張傳票所有真實明細的
+ * 借方合計，DebitAmt=0)，GLS6002 沒有對應的實體列——不要自己在前端硬吃掉這筆虛擬列，少了它畫面上的
+ * 借貸小計會不平衡(見下方 validateBeforePosting() 的借貸平衡檢查)。
+ *
+ * 2026-08-20 已用 sqlcmd 讀取 DB 端 SP_FIN23050Posting 最新定義(OBJECT_DEFINITION)查證：SP 人員已把它
+ * 從舊版(只 UPDATE 既有列)升級成完整 A.刪除(GLS6002 有、@DetailTable 沒有的 SerNo)/B.更新(SerNo 相同)/
+ * C.新增(@DetailTable 有、GLS6002 沒有的 SerNo) 三段式、依 SerNo 對照差異的邏輯，新增列可以正常 INSERT。
+ * INSERT 時 ORG_ID 是 SP 內部寫死 '100310'、DetailNo 是 SP 自動帶 APS3010.VEN_No(廠商編號)，前端完全不用送
+ * 這兩欄；前端只需要送 SerNo/AccDC/AccNo/AccAmt/NoteDesc 五欄(見 postFIN23050Details)。
+ *
+ * 這也代表送出拋轉時，那筆 123304 虛擬列一樣會被組進 details 送給 SP——因為它的 SerNo 是前端預覽時才重新
+ * 編號的假值，在既有 GLS6002 裡找不到對應列，新版 SP 依 SerNo 差異比對後會把它當「新增」INSERT 成一筆真的
+ * GLS6002 分錄，等於順便補上這筆一直缺的貸方沖銷分錄——這是新版 SP 的既有行為，不是本次前端改動特別處理的，
+ * 之後若要調整這個行為要找 SP 人員，不在前端範圍。
  *
  * 表頭「畫面呈現」的簡化跟舊版一樣：FIN23050 每一筆核銷單號各自對應各自的既有傳票，理論上不是同一張，
  * 這裡仍是取第一筆的表頭欄位填頭部顯示，明細分組送出時按各自列自帶的 REDEEM_NO/PREP_NO 正確對應。
@@ -62,10 +82,10 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     CRT_Date: [{ value: null as Date | null, disabled: true }],
   });
 
-  data: DetailFIN23050Response[] = [];
+  data: Fin23050DetailLine[] = [];
   initTable = false;
   /** 傳票明細初始載入後的原始快照，供「取消」按鈕還原編輯內容用 */
-  private originalData: DetailFIN23050Response[] = [];
+  private originalData: Fin23050DetailLine[] = [];
   private readonly orgOptions$ = this.dropdown.querySys3100();
   private readonly accNoOptions$ = this.dropdown.queryGls1005();
 
@@ -84,12 +104,21 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     { field: 'AccCName', header: '科目名稱', width: '160px', textAlign: 'left', disabled: () => true },
     { field: 'VenNo', header: '廠商代號', width: '110px', textAlign: 'left', disabled: () => true },
     { field: 'NoteDesc', header: '摘要', type: 'input', width: '220px', textAlign: 'left' },
-    { field: 'DebitAmt', header: '借方金額', width: '110px', format: formatAmount, textAlign: 'right', aggregate: 'sum', disabled: () => true },
-    { field: 'CreditAmt', header: '貸方金額', width: '110px', format: formatAmount, textAlign: 'right', aggregate: 'sum', disabled: () => true },
     {
+      field: 'DebitAmt', header: '借方金額', width: '110px', type: 'inputNumber', format: formatAmount, textAlign: 'right', aggregate: 'sum',
+      // 只有使用者自行新增的列可以輸入借方金額，既有列(SP帶出來的)維持唯讀
+      disabled: (_value: any, _index?: number, rowData?: Fin23050DetailLine) => rowData?._dataStatus !== 'new',
+    },
+    {
+      field: 'CreditAmt', header: '貸方金額', width: '110px', type: 'inputNumber', format: formatAmount, textAlign: 'right', aggregate: 'sum',
+      disabled: (_value: any, _index?: number, rowData?: Fin23050DetailLine) => rowData?._dataStatus !== 'new',
+    },
+    {
+      // 唯讀：SP_FIN23050Posting INSERT/UPDATE 時 ORG_ID 一律寫死 '100310'，不吃前端送的值，
+      // 開放編輯只會讓使用者以為自己選的組織代號有送出、實際上被 SP 忽略，所以維持唯讀只顯示 SP 帶出來的值。
       field: 'Org_ID', header: '組織代號', width: '110px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true, options: () => this.orgOptions$, optionLabel: 'value', optionValue: 'value',
-      templateLabel: 'label', showClear: false,
+      templateLabel: 'label', showClear: false, disabled: () => true,
       calculate: async (rowData: DetailFIN23050Response, value: any) => {
         const targetOrgId = rowData.Org_ID;
         if (targetOrgId) {
@@ -107,6 +136,8 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     { field: 'Org_Name', header: '組織名稱', width: '110px', textAlign: 'left', disabled: () => true },
     { field: 'PTA', header: '立沖代號', textAlign: 'left', type: 'input', width: '70px' },
     { field: 'ProjectNo', header: '活動代號', width: '110px', textAlign: 'left', disabled: () => true },
+    // 刪除鈕：實際內容交給 fin23050-cru.component.html 裡的 #customCell 樣板渲染，只有新增列會顯示可點擊的刪除鈕
+    { field: '_delete', header: '', width: '50px', textAlign: 'center', type: 'custom' },
   ];
 
   ngOnInit(): void {
@@ -148,11 +179,109 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
   }
 
   /**
+   * 「新增」按鈕：在表格最後插入一列空白明細列，比照最後一列所屬的核銷單號/傳票表頭欄位
+   * (REDEEM_NO/PREP_NO/VouNo...)，讓 onConfirmPosting() 分組送出時這筆新增列能歸屬到正確的傳票；
+   * 序號固定用「目前表格最大 SerNo + 10」，科目代號/摘要/借貸金額留白讓使用者自行填寫。
+   */
+  onAddAccountingLine(): void {
+    if (!this.isFormCreateable || this.data.length === 0) return;
+
+    const lastRow = this.data[this.data.length - 1];
+    const maxSerNo = this.data.reduce((max, line) => Math.max(max, Number(line.SerNo) || 0), 0);
+    const newSerNo = maxSerNo + 10;
+
+    const newLine: Fin23050DetailLine = {
+      REDEEM_NO: lastRow.REDEEM_NO,
+      PREP_NO: lastRow.PREP_NO,
+      VouNo: lastRow.VouNo,
+      Voucher_Name: lastRow.Voucher_Name,
+      VoucherType: lastRow.VoucherType,
+      VouDate: lastRow.VouDate,
+      Remark: lastRow.Remark,
+      CRT_USR_Name: lastRow.CRT_USR_Name,
+      CRT_Date: lastRow.CRT_Date,
+      Detail_ID: `new-${newSerNo}`,
+      SerNo: newSerNo,
+      AccNo: '',
+      AccCName: '',
+      VenNo: lastRow.VenNo,
+      NoteDesc: '',
+      DebitAmt: 0,
+      CreditAmt: 0,
+      Org_ID: '',
+      Org_Name: '',
+      ProjectNo: lastRow.ProjectNo,
+      _dataStatus: 'new',
+    };
+
+    this.data = [...this.data, newLine];
+  }
+
+  /** 刪除鈕(只有新增列會顯示)：依物件參照從表格移除該列，不影響其餘既有列/其他新增列 */
+  onDeleteAccountingLine(rowData: Fin23050DetailLine): void {
+    this.data = this.data.filter(line => line !== rowData);
+  }
+
+  /**
+   * 送出拋轉前的前端檢查，依序擋下（任一項不通過就中止、不呼叫 API）：
+   * 1. 每一列(含既有列與新增列) DebitAmt/CreditAmt 必須剛好一欄有值，不可同時有值或同時空白。
+   * 2. 依 REDEEM_NO/PREP_NO 分組，每組各自的 DebitAmt 合計必須等於 CreditAmt 合計。
+   * 3. 使用者自行新增的列(_dataStatus === 'new')必須已選擇科目代號(AccNo)。
+   * 既有列(SP帶出來的資料)本來就滿足 1、2 兩項，第 3 項也只挑新增列檢查，所以既有列不受影響。
+   */
+  private validateBeforePosting(): boolean {
+    for (const line of this.data) {
+      const hasDebit = Number(line.DebitAmt) > 0;
+      const hasCredit = Number(line.CreditAmt) > 0;
+      if (hasDebit === hasCredit) {
+        this.messageService.errorBubble(
+          `序號 ${line.SerNo} 這一列的借方金額與貸方金額必須擇一填寫，不可同時有值或同時空白`,
+          '借貸金額驗證失敗'
+        );
+        return false;
+      }
+    }
+
+    const groupedForBalance = new Map<string, Fin23050DetailLine[]>();
+    this.data.forEach(line => {
+      const key = `${line.REDEEM_NO}|${line.PREP_NO}`;
+      const arr = groupedForBalance.get(key) ?? [];
+      arr.push(line);
+      groupedForBalance.set(key, arr);
+    });
+    for (const [key, lines] of groupedForBalance) {
+      const redeemNo = key.split('|')[0];
+      const debitTotal = lines.reduce((sum, line) => sum + (Number(line.DebitAmt) || 0), 0);
+      const creditTotal = lines.reduce((sum, line) => sum + (Number(line.CreditAmt) || 0), 0);
+      if (debitTotal !== creditTotal) {
+        this.messageService.errorBubble(
+          `核銷單號 ${redeemNo} 借方金額合計(${debitTotal})與貸方金額合計(${creditTotal})不平衡，請檢查明細`,
+          '借貸不平衡'
+        );
+        return false;
+      }
+    }
+
+    for (const line of this.data) {
+      if (line._dataStatus === 'new' && !line.AccNo) {
+        this.messageService.errorBubble(
+          `序號 ${line.SerNo} 這一列是新增列，請選擇科目代號`,
+          '科目代號未選擇'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * 確定拋轉：把攤平表格依每列自帶的 REDEEM_NO/PREP_NO 分組還原成「每筆核銷單號各自一組明細」，
    * 對每一組各自呼叫一次 postFIN23050(對應 SP_FIN23050Posting)，一筆核銷單號＝一張既有傳票。
    */
   onConfirmPosting() {
     if (!this.isFormCreateable || this.data.length === 0) return;
+    if (!this.validateBeforePosting()) return;
 
     const grouped = new Map<string, DetailFIN23050Response[]>();
     this.data.forEach(line => {
