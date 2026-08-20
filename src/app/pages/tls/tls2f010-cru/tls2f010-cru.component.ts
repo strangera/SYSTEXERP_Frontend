@@ -644,26 +644,26 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     const sumAmt = sumField(allInvoices, 'ACP_GUIAmt');
 
     const noTaxPayable = Number(selectedMain?.sam_ap_notaxamt ?? 0);
-    if (noTaxPayable !== sumNoTaxAmt) {
-      this.messageService.errorBubble(`專櫃合約 ${talentId} 應付貨款(免稅)合計 (${noTaxPayable}) 需與該筆免稅單據加總 (${sumNoTaxAmt}) 相同`);
+    if (sumNoTaxAmt > noTaxPayable) {
+      this.messageService.errorBubble(`免稅單據加總 (${sumNoTaxAmt}) 不可大於該筆應付貨款(免稅)合計 (${noTaxPayable})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const namt = Number(selectedMain?.sam_ap_namt ?? 0);
-    if (namt !== sumTaxableNet) {
-      this.messageService.errorBubble(`專櫃合約 ${talentId} 廠商應開立發票額(收據)合計 (${namt}) 需與該筆應稅單據未稅金額加總 (${sumTaxableNet}) 相同`);
+    if (sumTaxableNet > namt) {
+      this.messageService.errorBubble(`應稅單據未稅金額加總 (${sumTaxableNet}) 不可大於該筆廠商應開立發票額(收據)合計 (${namt})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const taxLimit = Number(selectedMain?.sam_ap_tax ?? 0);
-    if (taxLimit !== sumTax) {
-      this.messageService.errorBubble(`專櫃合約 ${talentId} 營業稅合計 (${taxLimit}) 需與該筆稅額加總 (${sumTax}) 相同`);
+    if (sumTax > taxLimit) {
+      this.messageService.errorBubble(`稅額加總 (${sumTax}) 不可大於該筆營業稅合計 (${taxLimit})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
     const totalLimit = Number(selectedMain?.sam_ap_amt ?? 0);
-    if (totalLimit !== sumAmt) {
-      this.messageService.errorBubble(`專櫃合約 ${talentId} 總額合計 (${totalLimit}) 需與該筆應稅金額加總 (${sumAmt}) 相同`);
+    if (sumAmt > totalLimit) {
+      this.messageService.errorBubble(`應稅金額加總 (${sumAmt}) 不可大於該筆總額合計 (${totalLimit})`);
       this.loading = false; this.submitted = false; this.messageService.unblockUi(); return;
     }
 
