@@ -7,63 +7,32 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="核銷單號"
-            controlName="redeemNo"
-            [control]="dataForm.controls.redeemNo"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="核銷單號" controlName="redeemNo" [control]="dataForm.controls.redeemNo"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="預支單號"
-            controlName="prepNo"
-            optionLabel="label"
-            optionValue="value"
-            [options]="prepNoOptions$ | async"
-            [control]="dataForm.controls.prepNo"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="預支單號" controlName="prepNo" optionLabel="label" optionValue="value"
+            [options]="prepNoOptions$ | async" [control]="dataForm.controls.prepNo"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="預支金額"
-            controlName="prepAmt"
-            [control]="dataForm.controls.prepAmt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="預支金額" controlName="prepAmt" [control]="dataForm.controls.prepAmt"
+            [submitted]="submitted"></app-input-number>
         </div>
       </div>
 
       <div class="mt-3">
-        <app-table-edit
-          tableKey="fin23040-detail"
-          title="核銷明細"
-          [data]="data"
-          [columns]="columns"
-          [showCheckBox]="true"
-          [showInsert]="false"
-          [showDelete]="true"
-          [canInsert]="true"
-          [showFooter]="true"
-          [disabled]="detailDisabled"
-          [loading]="loading"
-          (dataChange)="data = $event"
-          [defaultInsertData]="defaultInsertData"
-        ></app-table-edit>
+        <app-table-edit tableKey="fin23040-detail" title="核銷明細" [data]="data" [columns]="columns" [showCheckBox]="true"
+          [showInsert]="false" [showDelete]="true" [canInsert]="true" [showFooter]="true" [disabled]="detailDisabled"
+          [loading]="loading" (dataChange)="data = $event" [defaultInsertData]="defaultInsertData"
+          [tableRequired]="true"></app-table-edit>
       </div>
 
       @if (!isFormReadable) {
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            btnType="cancel"
-            [form]="dataForm"
-            (clickEvent)="onResetDetail()"
-          ></app-button>
-          <app-button btnType="submit" [loading]="loading"></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onResetDetail()"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
       }
     </form>
   </p-panel>
