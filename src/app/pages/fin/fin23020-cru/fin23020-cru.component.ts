@@ -54,7 +54,8 @@ interface Fin23020CruState {
  * false = 貸方
  *
  * _isManual：
- * true = 使用者自行新增的會科
+ * true  = 使用者自行新增的會科
+ * false = API 原始資料
  */
 interface PostingLine extends DetailFIN23020Line {
 
@@ -242,6 +243,40 @@ export class FIN23020CRUComponent
   data: PostingLine[] = [];
 
   initTable = false;
+
+
+  /**
+   * Table Checkbox 目前勾選的資料。
+   *
+   * 這裡只允許存放：
+   * _isManual === true
+   * 的手動新增會科。
+   */
+  selectedItems: PostingLine[] = [];
+
+
+  /**
+   * Checkbox 是否允許勾選。
+   *
+   * 規則：
+   *
+   * 原始 API 資料
+   * _isManual = false
+   * => 不可勾選 / 不可刪除
+   *
+   * 手動新增資料
+   * _isManual = true
+   * => 可以勾選 / 可以刪除
+   */
+  isRowSelectable = (
+    rowData: PostingLine,
+    _rowIndex: number,
+    _data: PostingLine[]
+  ): boolean => {
+
+    return rowData._isManual === true;
+
+  };
 
 
   /**
@@ -657,6 +692,12 @@ export class FIN23020CRUComponent
                   _isDebit:
                     Number(line.DebitAmt) > 0,
 
+                  /**
+                   * API 原始資料。
+                   *
+                   * 不允許 checkbox 勾選，
+                   * 也不能透過垃圾桶刪除。
+                   */
                   _isManual:
                     false
 
@@ -669,6 +710,11 @@ export class FIN23020CRUComponent
 
 
           this.data = lines;
+
+          /**
+           * 初始化時沒有任何選取資料。
+           */
+          this.selectedItems = [];
 
           this.initTable = true;
 
@@ -684,6 +730,32 @@ export class FIN23020CRUComponent
         }
 
       });
+
+  }
+
+
+  // ============================================================
+  // Checkbox
+  // ============================================================
+
+  /**
+   * Table checkbox 選取變更。
+   */
+  onSelectionChange(
+    rows: PostingLine[]
+  ): void {
+
+    /**
+     * 再做一次防護。
+     *
+     * 即使 TableEdit 未來選取邏輯變更，
+     * 父層仍只接受 _isManual === true 的資料。
+     */
+    this.selectedItems =
+      (rows ?? []).filter(
+        row =>
+          row._isManual === true
+      );
 
   }
 
@@ -772,6 +844,22 @@ export class FIN23020CRUComponent
   ): void {
 
     this.data = rows;
+
+
+    /**
+     * TableEdit 刪除資料之後，
+     * 把已經不存在的 selectedItems 一併清掉。
+     *
+     * 避免：
+     * UI 已刪除，
+     * 但父元件 selectedItems 還保留舊 reference。
+     */
+    this.selectedItems =
+      this.selectedItems.filter(
+        selected =>
+          this.data.includes(selected) &&
+          selected._isManual === true
+      );
 
   }
 
@@ -911,7 +999,12 @@ export class FIN23020CRUComponent
       _isDebit: true,
 
       /**
-       * 使用者新增
+       * 使用者新增。
+       *
+       * 只有這種資料可以：
+       *
+       * 1. checkbox 勾選
+       * 2. 點垃圾桶刪除
        */
       _isManual: true
 
@@ -1265,7 +1358,7 @@ export class FIN23020CRUComponent
                   } else {
 
                     failMessages.push(
-                      `${prepNo}：${
+                      `${prepNo}: ${
                         res?.Data?.Message
                         || '拋轉失敗'
                       }`
