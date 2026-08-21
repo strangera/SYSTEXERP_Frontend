@@ -1,14 +1,16 @@
-import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { createPaginationConfig } from '@others/component/table/table.model';
@@ -24,6 +26,7 @@ import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls2608
   standalone: true,
   imports: [
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
@@ -32,15 +35,19 @@ import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls2608
     CalendarRangeComponent,
     InputTextComponent,
     MenubarComponent,
+    MultiSelectComponent,
     TableReportComponent,
   ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
 
+  private readonly dropdown = inject(DropdownApiService);
+
   private readonly defaultSort = [{ field: 'pod_no', order: 1 }] as const;
   public readonly queryForm = this.formBuilder.group({
-    pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
+    pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(25)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
+    tlt_noList: new FormControl<string[] | undefined>(undefined), // 專櫃編號(多選)
     pod_sdate: new FormControl<Date | undefined>(undefined), // 起始日期(起)
     pod_edate: new FormControl<Date | undefined>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
@@ -48,6 +55,9 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pageSize: [30], // 查詢頁面預設 30 筆
   });
   public readonly qf = computed(() => this.queryForm.controls);
+
+  // 專櫃編號選項
+  public readonly tltNoOptions = this.dropdown.queryTltTalent();
 
   public lastQueryBody?: TLS26080Query;
   public readonly tableData = signal<TLS26080Data[]>([]);
@@ -105,6 +115,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   const payload: TLS26080Query = {
     POD_No: formValue.pod_no || undefined,
     POD_Desc: formValue.pod_desc || undefined,
+    TLT_NoList: formValue.tlt_noList?.length ? formValue.tlt_noList : undefined,
 
     POD_SDate_start: formValue.pod_sdate
       ? this.datePipe.transform(formValue.pod_sdate, 'yyyy-MM-dd') ?? undefined

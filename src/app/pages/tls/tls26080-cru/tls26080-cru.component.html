@@ -30,12 +30,18 @@
         </app-calendar-range>
 
         <!-- 日期驗證錯誤提示 -->
-        @if(dataForm.errors && dataForm.dirty) {
+        @if(dataForm.errors) {
         <div class="flex align-items-center col-12 md:col-6 lg:col-4">
           @if(dataForm.errors['invalidBackDateRange']) {
           <p class="text-red-500 text-sm m-0">
             <i class="pi pi-exclamation-triangle mr-2"></i>
             兌回起始日期必須小於兌回結束日期
+          </p>
+          }
+          @if(dataForm.errors['invalidBackSDate']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            兌回起始日期不可早於活動起始日期
           </p>
           }
           @if(dataForm.errors['invalidBusDate']) {

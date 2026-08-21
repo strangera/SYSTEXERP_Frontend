@@ -3,9 +3,11 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, s
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@others/component/table/table.component';
+import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@others/component/table/table.model';
+import { validateRequired } from '@others/component/table/validate-field.model';
 import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
 import { Option } from '@service/utility/dropdown-api.model';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
@@ -14,11 +16,9 @@ import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/components/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
-import { TableComponent } from '@others/component/table/table.component';
-import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@others/component/table/table.model';
-import { validateRequired } from '@others/component/table/validate-field.model';
 import { ErrorReportService } from '@shared/service/error-report.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
@@ -79,8 +79,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dataForm = this.formBuilder.group({
     pod_no: [null as string | null, [Validators.maxLength(25)]], // 活動單號
     pod_desc: [null as string | null, [Validators.required]], // 活動名稱
-    pod_sdate: [this.service.dateS as Date | null], // 起始日期(起)
-    pod_edate: [this.service.dateE as Date | null], // 起始日期(迄)
+    pod_sdate: [this.service.dateS as Date | null, [Validators.required]], // 起始日期(起)
+    pod_edate: [this.service.dateE as Date | null, [Validators.required]], // 起始日期(迄)
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
     pod_back_edate: [null as Date | null, [Validators.required]], // 兌回日期(迄)
     pod_busdate: [null as Date | null, [Validators.required]], // 活動正檔日期
@@ -99,6 +99,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         // 兌回起始日期必須小於兌回結束日期
         if (!bsdate || !bedate) return null;
         if (bsdate > bedate) return { invalidBackDateRange: true };
+
+        // 兌回起始日期不可早於活動起始日期
+        if (sdate && bsdate < sdate) return { invalidBackSDate: true };
 
         // 活動正檔日期必須在活動起始日期期間內
         if (!sdate || !edate || !busdate) return null;
@@ -593,6 +596,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   public onSubmit(): void {
+    this.submitted = true;
+    if (this.dataForm.invalid) {
+      this.messageService.errorBubble('請填寫必填欄位');
+      return;
+    }
+
     this.handleSubmit(this.dataForm, () => {
       this.tableLoading.set(true);
       if (!this.dt().validateAndShowErrors()) {

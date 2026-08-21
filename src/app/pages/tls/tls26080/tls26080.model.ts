@@ -115,6 +115,7 @@ export interface TLS26080Query extends ApiRequest {
   POD_SDate_end?: string;
   POD_BusDate?: string;
   CAP_ItemList?: string[];
+  TLT_NoList?: string[];
 }
 /** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
 export interface ExportTLS26080PDFRequest extends ApiRequest {
