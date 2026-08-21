@@ -36,8 +36,17 @@
 <div class="card">
   <app-table-report tableKey="TLS26080" dataKey="pod_no" [data]="tableData()" [columns]="columns"
     [totalRecords]="totalRecords()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [loading]="loading"
-    [showCheckBox]="true" [showEdit]="true" [showDetail]="true" [showDelete]="true" [isRowSelectable]="isRowSelectable"
+    [showCheckBox]="true" [showEdit]="true" [showDetail]="true" [showDelete]="true" [editDisabled]="editDisabled"
     [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)" (edit)="onEdit($event)"
     (detail)="onDetail($event)" (delete)="onDelete($event)" [addButton]="addButton"
-    [buttonsLoading]="printLoading()"></app-table-report>
+    [buttonsLoading]="printLoading()">
+    <header>
+      <div class="flex gap-2 justify-content-end">
+        <p-button label="審核" icon="pi pi-check-circle" severity="success" [loading]="approveLoading()"
+          [disabled]="selectedItems().length === 0" (click)="onApprove()"></p-button>
+        <p-button label="反審核" icon="pi pi-undo" severity="warning" [loading]="revokeLoading()"
+          [disabled]="selectedItems().length === 0" (click)="onRevoke()"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

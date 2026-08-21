@@ -1,10 +1,10 @@
-import { DatePipe, NgStyle } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@others/component/table/table.component';
-import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@others/component/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@others/component/table/table.model';
 import { validateRequired } from '@others/component/table/validate-field.model';
 import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
 import { Option } from '@service/utility/dropdown-api.model';
@@ -36,7 +36,6 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, T
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    NgStyle,
     FileUploadModule,
     FormsModule,
     PanelModule,
@@ -56,7 +55,6 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, T
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
-  public readonly ApprovalAction = ApprovalAction;
   public readonly dt = viewChild.required<TableComponent>('dt');
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
@@ -64,10 +62,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private readonly tltIdFetchingSet = new Set<number>();
 
   private readonly erroreportService = inject(ErrorReportService);
-
-  private readonly usrData = computed(() => ({
-    ...this.authService.currentUserValue,
-  }));
 
   public readonly campaignForm = this.formBuilder.group({
     CampaignId: new FormControl<string | undefined>(undefined), // 活動編號
@@ -129,7 +123,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly downloadLoading = signal<boolean>(false);
   public readonly campaignLoading = signal<boolean>(false);
 
-  public readonly isRowSelectable = (rowData: TLS26080EditTable) => rowData.pod_status !== '9';
   public readonly validateEntireRow = (rowData: TLS26080EditTable, rowIndex?: number): { isValid: boolean, errorMessage: string; } => {
     const tltNo = String(rowData?.tlt_no ?? '').trim();
     const tltId = String(rowData?.tlt_id ?? '').trim();
@@ -516,35 +509,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         header: '審核日期',
         format: v => this.datePipe.transform(v, 'YYYY/MM/dd')
       },
-      // {
-      //   field: 'approval_action',
-      //   header: '審核反審核',
-      //   type: 'checkbox',
-      //   trueValue: '1',
-      //   falseValue: '0',
-      //   validate: [this.approvalVal.bind(this)],
-      //   // disabled: (v, i, r) => !this.approvalVal(r).isValid,
-      // }
-    ];
-  });
-
-  public readonly addButton = computed((): AddButton[] => {
-    const approval = (rowData: TLS26080EditTable) => {
-      this.toggleApprovalStatus([rowData]);
-      this.service.loadApproval(rowData).subscribe(this.onSubmit.bind(this));
-    };
-
-    return [
-      {
-        label: '核准', icon: 'pi pi-check-circle text-green-500',
-        action: approval,
-        disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准,
-      },
-      {
-        label: '反核准', icon: 'pi pi-undo text-orange-500',
-        action: approval,
-        disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.已核准,
-      },
     ];
   });
 
@@ -718,76 +682,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           },
         });
     });
-  }
-
-  public toggleApprovalStatus(rowData: TLS26080EditTable[], from?: ApprovalAction): void {
-    this.logger.debug(`toggleApprovalStatus:`, [rowData]);
-    if (!rowData?.length) return this.messageService.errorBubble('請先勾選要審核的項目');
-
-    const target = from ?? (rowData[0].pod_status === ApprovalStatus.已核准 ? ApprovalAction.Revoke : ApprovalAction.Approve);
-
-    if (target === ApprovalAction.Approve) {
-      const hasReviewedItems = rowData.some(row => row.pod_status === ApprovalStatus.已核准);
-      if (hasReviewedItems) {
-        this.messageService.warnBubble('您選取包含已審核的資料，無法進行審核。');
-        return;
-      }
-    }
-
-    if (target === ApprovalAction.Revoke) {
-      const hasUnreviewedItems = rowData.some(row => row.pod_status === ApprovalStatus.未核准);
-      if (hasUnreviewedItems) {
-        this.messageService.warnBubble('您選取包含未審核的資料，無法進行反審核。');
-        return;
-      }
-    }
-
-    if (from === ApprovalAction.Approve || from === ApprovalAction.Revoke) {
-      const message = target === ApprovalAction.Approve ? '確認是否審核?' : '確認是否反審核?';
-      this.messageService.confirm({
-        header: '確認',
-        message,
-        accept: () => this.applyApprovalStatus(rowData, target),
-      });
-      return;
-    }
-
-    this.applyApprovalStatus(rowData, target);
-  }
-
-  private applyApprovalStatus(rowData: TLS26080EditTable[], target: ApprovalAction): void {
-    this.loading = true;
-    const usrData = this.usrData();
-    const approvedRows = rowData.filter(row => row.pod_status !== ApprovalStatus.已核准);
-    const unapprovedRows = rowData.filter(row => row.pod_status !== ApprovalStatus.未核准);
-
-    if (target === ApprovalAction.Approve && approvedRows.length) {
-      const updateSet = new Set(approvedRows.map(row => row._rowKey));
-      this.tableData.update(td => td.map(item => {
-        if (!updateSet.has(item._rowKey)) return item;
-        item.pod_status = ApprovalStatus.已核准;
-        item.approved_usrno = usrData.user_No;
-        item.approved_usr_name = usrData.user_Name;
-        item.approved_date = new Date();
-        return item;
-      }));
-      this.loading = false;
-      return;
-    }
-
-    if (target === ApprovalAction.Revoke && unapprovedRows.length) {
-      const updateSet = new Set(unapprovedRows.map(row => row._rowKey));
-      this.tableData.update(td => td.map(item => {
-        if (!updateSet.has(item._rowKey)) return item;
-        item.pod_status = ApprovalStatus.未核准;
-        item.approved_usrno = undefined;
-        item.approved_usr_name = undefined;
-        item.approved_date = undefined;
-        return item;
-      }));
-    }
-
-    this.loading = false;
   }
 
   public openDialog(): void {
@@ -1037,10 +931,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         break;
       }
 
-      case 'approval_action': {
-        this.toggleApprovalStatus([rowData]);
-        return this.fieldChanges.set(undefined);
-      }
       default: return;
     }
   }
@@ -1145,20 +1035,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       : { isValid: true, errorMessage: [] };
   }
 
-  /** 檢查是否可進行審核操作 */
-  private approvalVal(rowData: TLS26080EditTable): ValidationResult {
-    const currentStatus = rowData?.pod_status;
-    const err = rowData?._err;
-    if (err) return { isValid: false, errorMessage: ['專櫃資料有誤，無法進行審核操作'] };
-    if (currentStatus === '9') return { isValid: false, errorMessage: ['已作廢資料無法進行審核操作'] };
-    return { isValid: true, errorMessage: [] };
-  }
-
   public onDelete(): void {
     const selected = this.selectedItems();
     if (!selected.length) return;
     if (selected.some(item => item.pod_status === ApprovalStatus.已核准)) {
-      this.messageService.warnBubble('已審核資料不可刪除');
+      this.messageService.warnBubble('已核准資料不可刪除');
       return;
     }
     this.messageService.confirm({
@@ -1211,7 +1092,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   private isRowEditable(rowData: TLS26080EditTable): boolean {
-    return rowData.pod_status !== ApprovalStatus.已核准 && rowData.pod_status !== ApprovalStatus.刪除;
+    return rowData.pod_status !== ApprovalStatus.已核准;
   }
 
   private parseRateValue(value: string): number {
@@ -1297,11 +1178,4 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 interface ValidationResult {
   isValid: boolean;
   errorMessage: string[];
-}
-
-enum ApprovalAction {
-  // 審核
-  Approve = 'A',
-  // 反審核
-  Revoke = 'R',
 }

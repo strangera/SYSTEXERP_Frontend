@@ -120,28 +120,12 @@
         <app-table #dt [tableKey]="'TLS26080_Counter'" [dataKey]="'_rowKey'" [data]="tableData()"
           (dataChange)="tableData.set($event)" (fieldChange)="fieldChanges.set($event)"
           [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)"
-          [isRowSelectable]="isRowSelectable" [columns]="counterColumns()" [columnGroup]="counterColumnsGroup()"
+          [columns]="counterColumns()" [columnGroup]="counterColumnsGroup()"
           [rowValidate]="validateEntireRow" [showRowValidationHint]="true" [tableRequired]="true"
           errorMessage="請至少新增一筆專櫃資料" [showInsert]="!isFormReadable" [showDelete]="!isFormReadable"
           [showEdit]="!isFormReadable" [showCheckBox]="!isFormReadable" [showRowEdit]="!isFormReadable"
           [alwaysEdit]="!isFormReadable" (insert)="openDialog()" [disabled]="isFormReadable" (delete)="onDelete()"
           [loading]="tableLoading()">
-          <header>
-            <div class="flex align-items-center mb-4">
-              <p-button label="審核" severity="primary"
-                (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Approve); loading = true"
-                [disabled]="!selectedItems().length" [ngStyle]="{ height: '18px',
-                                     fontSize: '12px',
-                                     padding: '0 4px',
-                                     marginRight: '7px' }"></p-button>
-              <p-button label="反審核" severity="danger"
-                (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Revoke); loading = true"
-                [disabled]="!selectedItems().length" [ngStyle]="{ height: '18px',
-                                     fontSize: '12px',
-                                     padding: '0 4px',
-                                     marginRight: '7px' }"></p-button>
-            </div>
-          </header>
         </app-table>
       </p-panel>
     </div>
