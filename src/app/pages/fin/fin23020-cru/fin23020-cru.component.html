@@ -14,181 +14,109 @@
 
   </div>
 
-
   <p-panel
     [header]="formTitle"
     class="line-height-3 m-0">
 
     <form [formGroup]="dataForm">
 
-
-      <!-- =================================================== -->
-      <!-- Header -->
-      <!-- =================================================== -->
-
       <div class="grid p-fluid">
 
-
-        <!-- 傳票編號 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-input-text
             label="傳票編號"
             controlName="VouNo"
             [control]="dataForm.controls.VouNo">
           </app-input-text>
-
         </div>
 
-
-        <!-- 傳票種類 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-input-text
             label="傳票種類"
             controlName="VouTypeName"
             [control]="dataForm.controls.VouTypeName">
           </app-input-text>
-
         </div>
 
-
-        <!-- 傳票型態 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-input-text
             label="傳票型態"
             controlName="VouForm"
             [control]="dataForm.controls.VouForm">
           </app-input-text>
-
         </div>
 
-
-        <!-- 傳票日期 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-calendar
             label="傳票日期"
             controlName="VouDate"
             [control]="dataForm.controls.VouDate">
           </app-calendar>
-
         </div>
 
-
-        <!-- 傳票摘要 -->
         <div class="col-12 md:col-6">
-
           <app-input-text
             label="傳票摘要"
             controlName="VouSummary"
             [control]="dataForm.controls.VouSummary">
           </app-input-text>
-
         </div>
 
-
-        <!-- 建立者 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-input-text
             label="建立者"
             controlName="CRT_USR_Name"
             [control]="dataForm.controls.CRT_USR_Name">
           </app-input-text>
-
         </div>
 
-
-        <!-- 建立日 -->
         <div class="col-12 md:col-6 lg:col-3">
-
           <app-input-text
             label="建立日"
             controlName="CRT_Date"
             [control]="dataForm.controls.CRT_Date">
           </app-input-text>
-
         </div>
 
       </div>
-
-
-      <!-- =================================================== -->
-      <!-- Detail -->
-      <!-- =================================================== -->
 
       <div class="mt-3">
 
         @if (initTable) {
 
           <app-table-edit
-
             title="傳票明細"
-
             [data]="data"
-
             [columns]="columns"
-
-
-
-            [showDelete]="false"
-
-
-
+            [showDelete]="true"
             [showInsert]="true"
-
             insertText="新增會科"
-
-
-
             [canInsert]="false"
-
-
-            [showCheckBox]="false"
-
-
+            [showCheckBox]="true"
+            [selectedItems]="selectedItems"
+            [isRowSelectable]="isRowSelectable"
             [showFooter]="true"
-
-
             [loading]="loading"
-
-
             [disabled]="!isFormCreateable"
-
-
-
+            (selectionChange)="onSelectionChange($event)"
             (fieldChange)="onTableFieldChange($event)"
-
-
-
             (dataChange)="onTableDataChange($event)"
-
-
-
             (insert)="onAddAccountingLine()">
-
           </app-table-edit>
 
         }
 
       </div>
 
-
-
-
       @if (isFormCreateable) {
 
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
 
-
           <app-button
             btnType="cancel"
             (click)="onCancel()">
           </app-button>
-
 
           <app-button
             label="確定拋轉"
@@ -197,11 +125,9 @@
             (click)="onConfirmPosting()">
           </app-button>
 
-
         </div>
 
       }
-
 
     </form>
 
