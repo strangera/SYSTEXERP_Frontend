@@ -18,8 +18,8 @@ import { formatAmount, formatDate, ReportColumn } from '@shared/components/table
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
 import { finalize, forkJoin, shareReplay } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-fin51010-cru',
@@ -192,8 +192,8 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
         }));
 
         const sheetType = mainData.SrcSheetType?.trim();
-        if (sheetType === 'PT' || sheetType === 'WT') {
-          this.loadInvoiceData(sheetType, sheetType === 'PT' ? mainId : mainData.VouNo);
+        if (sheetType === 'PT' || sheetType === 'WT' || sheetType === 'PU') {
+          this.loadInvoiceData(sheetType, sheetType === 'WT' ? mainData.VouNo : mainId);
         }
       }
 
@@ -282,14 +282,32 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     { field: 'SourceDocNo', header: '憑證單號', align: 'left' },
     { field: 'TotalCount', header: '彙整張數', align: 'right', format: formatAmount },
   ];
-  /** 新增：依據 PT 或 WT 調用不同 API 載入進項發票 */
-  loadInvoiceData(type: 'PT' | 'WT', mainId: number | string) {
+  /** 新增：依據 PT、WT 或 PU 調用不同 API 載入進項發票 */
+  loadInvoiceData(type: 'PT' | 'WT' | 'PU', mainId: number | string) {
     this.invoiceLoading = true;
 
+    let apiCall$;
+
     // 根據類別分流 API
-    const apiCall$ = type === 'PT'
-      ? this.fin51010Service.queryPTInvoice({ GLS6001_ID: mainId as number })
-      : this.fin51010Service.queryWTInvoice({ VouNo: mainId as string });
+    switch (type) {
+      case 'PT':
+        apiCall$ = this.fin51010Service.queryPTInvoice({
+          GLS6001_ID: mainId as number
+        });
+        break;
+
+      case 'WT':
+        apiCall$ = this.fin51010Service.queryWTInvoice({
+          VouNo: mainId as string
+        });
+        break;
+
+      case 'PU':
+        apiCall$ = this.fin51010Service.queryPUInvoice({
+          GLS6001_ID: mainId as number
+        });
+        break;
+    }
 
     apiCall$.pipe(
       finalize(() => this.invoiceLoading = false),
@@ -298,11 +316,16 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.invoiceData = res.Data || [];
         this.invoiceTotalRecords = res.TotalCount || res.Data.length;
+
         this.invoiceFooterData = this.invoiceData.reduce((acc, row) => ({
           InvoiceAmount: acc.InvoiceAmount + (Number(row.InvoiceAmount) || 0),
           NetAmount: acc.NetAmount + (Number(row.NetAmount) || 0),
           TaxAmount: acc.TaxAmount + (Number(row.TaxAmount) || 0),
-        }), { InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
+        }), {
+          InvoiceAmount: 0,
+          NetAmount: 0,
+          TaxAmount: 0
+        });
       }
     });
   }

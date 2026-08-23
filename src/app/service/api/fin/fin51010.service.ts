@@ -171,7 +171,15 @@ export class Fin51010Service {
       `${this.apiUrl}/FIN0000/GLS1000/queryWTInvoice`, body
     );
   }
+  /** 查詢 PU 進項發票資料 */
+  queryPUInvoice(body: { GLS6001_ID: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
+    return this.http.post<ApiResponse<QueryFIN51010InvoiceLine[]>>(
+      `${this.apiUrl}/FIN0000/GLS1000/queryPUInvoice`, body
+    );
+  }
 }
+
+
 /** 假設進項發票的欄位結構與傳票明細類似，或是你有特定的發票 Interface */
 export interface QueryFIN51010InvoiceLine {
   VoucherType: string,
