@@ -128,6 +128,8 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
   data: TLS32080Response[] = [];
   footerTotal: TLS32080Response | null = null;
   lastQueryBody: TLS32080Request | null = null;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
 
   TaxType_Option = [
     { value: 'G', label: '是' },
@@ -279,6 +281,40 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
         this.queryStateService.setQueryState('tls32080_CDate', this.c_dateForm);
       });
     });
+  }
+
+  onReport(isExcel: boolean): void {
+    if (!this.lastQueryBody || this.data.length === 0) {
+      this.messageService.errorBubble('查詢結果為空，請先查詢後再匯出');
+      return;
+    }
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.service.exportTLS32080Excel(this.lastQueryBody).pipe(
+        this.withLoading(() => {
+          this.btnExcelLoading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = '抽成類別折扣分析報表.xlsx';
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      });
+    } else {
+      this.btnPDFLoading = true;
+      this.service.exportTLS32080PDF(this.lastQueryBody).pipe(
+        this.withLoading(() => {
+          this.btnPDFLoading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        globalThis.open(blobUrl, '_blank');
+      });
+    }
   }
 
   private buildRequestBody(rawValue: any): TLS32080Request {
