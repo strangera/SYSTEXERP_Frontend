@@ -85,7 +85,7 @@
     <app-table-report tableKey="ASS16040" [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()"
       [loading]="tableLoading()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [showEdit]="true"
       [showDetail]="false" [showDelete]="false" [showCheckBox]="false"
-      [exportContext]="{ apiUrl: 'queryASS16040M', conditions: lastQueryBody ?? {} }"
+      [exportContext]="{ apiUrl: 'queryASS16040', conditions: lastQueryBody ?? {} }"
       (edit)="onEdit($event)"></app-table-report>
   </div>
 </div>
