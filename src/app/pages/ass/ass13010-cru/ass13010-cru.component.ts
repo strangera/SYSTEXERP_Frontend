@@ -41,7 +41,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產代號
     itemCode: [, [Validators.required]], // 品項編號
     assetsStatus: [, [Validators.required]], // 資產狀態
-    assetsType: ['', [Validators.required, Validators.maxLength(10)]], // 資產類型
+    assetsType: [{ value: null as string | null, disabled: true }],// 資產類型
     original_assetsCode: [, [this.validationService.numberValidator, Validators.maxLength(20)]], // 原資產編號
 
     //---
@@ -658,18 +658,13 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 }),
                 untilDestroyed(this),
               )
-              .subscribe({
-                next: res => {
-                  if (res.Status !== '0000') {
-                    this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '新增失敗');
-                    return;
-                  }
-                  this.messageService.successBubble(res.Message ?? '新增成功');
-                  this.onCancel();
-                },
-                error: err => {
-                  // this.messageService.errorBubble(err?.message ?? '新增失敗');
-                },
+              .subscribe(res => {
+                if (res.Status !== '0000') {
+                  this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '新增失敗');
+                  return;
+                }
+                this.messageService.successBubble(res.Message ?? '新增成功');
+                this.onCancel();
               });
           }
           break;
