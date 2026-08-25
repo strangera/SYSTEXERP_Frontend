@@ -52,15 +52,55 @@ export class ASS16040CRUComponent
    * 主檔表單（全部唯讀 — SPEC §5.2「不可手輸」）。
    * 依 CLAUDE.local.md §1：使用 formBuilder.group()，預設值 null 配聯合型別。
    */
-  readonly dataForm = this.formBuilder.group({
-    MTAPPLY_ID:   new FormControl<string | null>({ value: null, disabled: true }),
-    EMP_ID:       new FormControl<string | null>({ value: null, disabled: true }),
-    ORG_ID:       new FormControl<string | null>({ value: null, disabled: true }),
-    APPLY_DATE:   new FormControl<Date | null>({ value: null, disabled: true }),
-    SUGGEST_DAYS: new FormControl<number | null>({ value: null, disabled: true }),
-    WH_ID:        new FormControl<string | null>({ value: null, disabled: true }),
-    NOTES:        new FormControl<string | null>({ value: null, disabled: true }),
-  });
+readonly dataForm = this.formBuilder.group({
+  MTAPPLY_ID:
+    new FormControl<string | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  EMP_ID:
+    new FormControl<string | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  ORG_ID:
+    new FormControl<string | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  APPLY_DATE:
+    new FormControl<Date | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  /**
+   * 建議需求(日)
+   */
+  REQUIRE_DATE:
+    new FormControl<number | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  WH_ID:
+    new FormControl<string | null>({
+      value: null,
+      disabled: true,
+    }),
+
+  /**
+   * 主檔說明
+   */
+  MASTER_NOTES:
+    new FormControl<string | null>({
+      value: null,
+      disabled: true,
+    }),
+});
 
   /** 明細資料（唯讀，由 queryASS16040 取得） */
   detailData: ASS16040DetailRow[] = [];
@@ -180,18 +220,40 @@ export class ASS16040CRUComponent
   }
 
   /** 將主檔資料填入唯讀表單（SPEC §5.2 全欄位唯讀） */
-  private patchMasterForm(row: ASS16040MasterRow): void {
-    this.dataForm.patchValue({
-      MTAPPLY_ID:   row.MTAPPLY_ID ?? null,
-      EMP_ID:       row.EMP_ID ?? null,
-      ORG_ID:       row.ORG_ID ?? null,
-      APPLY_DATE:   row.APPLY_DATE ? new Date(row.APPLY_DATE) : null,
-      SUGGEST_DAYS: row.SUGGEST_DAYS ?? null,
-      WH_ID:        row.WH_ID ?? null,
-      NOTES:        row.NOTES ?? null,
-    });
-  }
+private patchMasterForm(
+  row: ASS16040MasterRow,
+): void {
+  this.dataForm.patchValue({
+    MTAPPLY_ID:
+      row.MTAPPLY_ID ?? null,
 
+    EMP_ID:
+      row.EMP_ID ?? null,
+
+    ORG_ID:
+      row.ORG_ID ?? null,
+
+    APPLY_DATE:
+      row.APPLY_DATE
+        ? new Date(row.APPLY_DATE)
+        : null,
+
+    /**
+     * 建議需求(日)
+     */
+    REQUIRE_DATE:
+      row.REQUIRE_DATE ?? null,
+
+    WH_ID:
+      row.WH_ID ?? null,
+
+    /**
+     * 主檔說明
+     */
+    MASTER_NOTES:
+      row.MASTER_NOTES ?? null,
+  });
+}
   /**
    * F-004 確認審核：先彈確認對話框 → approveASS16040（只傳 MTAPPLY_ID，
    * APRV_EMP_ID 由後端從 JWT 取）→ 成功訊息 + 返回查詢頁。
