@@ -55,17 +55,17 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     SUPPLIER_ID: [null], // 供應商代碼
     RECEIPT_TYPE: [null], // 單據代碼
     INV_FORMAT: [null], // 發票格式
-    TAX_CODE: [null], // 稅別
+    TAX_CODE: ['1'], // 稅別
     NTX_AMT: [{ value: null as number | null, disabled: true }], // 未稅金額
     TX_AMT: [{ value: null as number | null, disabled: true }], // 稅額
     AMT: [{ value: null as number | null, disabled: true }], // 含稅金額
-    REDU_CODE: [null], // 扣抵別
+    REDU_CODE: ['1'], // 扣抵別
     RECEIPT_STATUS: ['1'], //(1.可刪除 2.不可刪除)
     //------
 
     TICKET_BE: [{ value: 0, disabled: true }], // 付款天數(明細加總)
     RECEIPT_DATE: [null], // 發票日期
-    TICKET_DATE: [null], // 票據到期日
+    TICKET_DATE: [null], // 付款日期
     DEC_YM: [null], // 申報年月(YYYYMM)
   });
   //---------下拉選單-------------------------------------------------------
@@ -90,11 +90,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     'RECEIPT_TYPE': null, // 單據種類(0發票 1收據)
     'RECEIPT_NO': null, // 發票號碼
     'RECEIPT_DATE': null, // 發票日期
-    'TICKET_DATE': null, // 票據到期日
+    'TICKET_DATE': null, // 付款日期
     'DEC_YM': null, // 申報年月(YYYYMM)
     'INV_FORMAT': null, // 發票格式
-    'TAX_CODE': null, // 稅別
-    'REDU_CODE': null, // 扣抵別
+    'TAX_CODE': '1', // 稅別
+    'REDU_CODE': '1', // 扣抵別
 
     'TICKET_BE': null, // 付款天數
     'TOTAL_AMT': null, // 發票總金額
@@ -182,57 +182,52 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
               RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null,
               TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null,
-              DEC_YM: this.supplierData[0]?.DEC_YM || null,
+              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 直接帶入字串即可
               INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
               TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
               REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
               NTX_AMT: this.supplierData[0]?.TOTAL_NTX_AMT,
               TX_AMT: this.supplierData[0]?.TOTAL_TX_AMT,
               AMT: this.supplierData[0]?.TOTAL_AMT,
-            }
-            console.log('提交的payload', payload);
+            };
             this.ass14010Service.insertASS14010(payload).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
-              // 還原子表單
               this.supplierData = [];
               this.itemData = [];
             });
-            this.loading = false
+            this.loading = false;
           }
           break;
+
         case CRUDStatus.Edit:
-          // AN39731047
           if (this.canEdit()) {
-            this.loading = false;
             const payload = {
-              RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value, // 發票維護單號(編輯時帶入，新增時為null)
-              SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value, // 供應商代碼(不可修改)
-              TOKEN_NO: frm.get('TOKEN_NO')?.value, // 驗收單號(多筆)
-              TICKET_BE: this.supplierData[0]?.TICKET_BE || null, // 付款天數(編輯時帶入，新增時由使用者選擇)
-              RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null, // 單據代碼(編輯時帶入，新增時由使用者選擇)
-              RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null, // 發票/收據號碼(編輯時帶入，新增時由使用者輸入)
-              RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null, // 發票日期(編輯時帶入，新增時由使用者選擇)
-              TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null, // 票據到期日(編輯時帶入，新增時由使用者選擇)
-              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 申報年月(編輯時帶入，新增時由使用者選擇)
-              INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null, // 發票格式(編輯時帶入，新增時由使用者選擇)
-              TAX_CODE: this.supplierData[0]?.TAX_CODE || null, // 稅別(編輯時帶入，新增時由使用者選擇)
-              REDU_CODE: this.supplierData[0]?.REDU_CODE || null, // 扣抵別(編輯時帶入，新增時由使用者選擇)
+              RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value,
+              SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
+              TOKEN_NO: frm.get('TOKEN_NO')?.value,
+              TICKET_BE: this.supplierData[0]?.TICKET_BE || null,
+              RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null,
+              RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
+              RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null,
+              TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null,
+              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 直接帶入字串即可
+              INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
+              TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
+              REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
               NTX_AMT: this.supplierData[0]?.TOTAL_NTX_AMT,
               TX_AMT: this.supplierData[0]?.TOTAL_TX_AMT,
               AMT: this.supplierData[0]?.TOTAL_AMT,
-            }
-
-            console.log('提交的payload', payload);
+            };
             this.ass14010Service.updateASS14010(payload).subscribe((res) => {
               if (res.Data.O_MSGTYPE === 'S') {
                 this.messageService.successBubble('更新成功');
                 this.onCancel();
               } else {
-                this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+                this.messageService.errorBubble('更新失敗: ' + (res.Data.O_MESSAGE || '更新失敗'));
               }
             });
-            this.loading = false
+            this.loading = false;
           }
           break;
       }
@@ -240,45 +235,27 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   }
   //讀取明細
   get14010Detail(STO_NO: string | null, RECEIPT_NO: string) {
-    //編輯模式確認是否包含指定引數
     if (this.crudstatus == CRUDStatus.Edit || this.crudstatus == CRUDStatus.Read) {
-      //編輯模式不可變更供應商代號
       if (this.crudstatus == CRUDStatus.Edit) {
         this.dataForm.controls.SUPPLIER_ID.disable();
       }
       if (!STO_NO || !RECEIPT_NO) {
-        this.messageService.errorBubble('明細必須包含分店編號與收據編號')
+        this.messageService.errorBubble('明細必須包含分店編號與收據編號');
       }
       this.ass14010Service
         .queryDetailASS14010({ STO_NO: STO_NO, RECEIPT_NO: RECEIPT_NO })
         .pipe(untilDestroyed(this))
         .subscribe(res => {
-          // 確保 res.Data.QueryData 有資料
-          console.log('明細資料', res);
-          // 2. 程式碼存取時要加上索引
           if (res.Data) {
-            // 檢查 Supplier 是否為陣列，若不是則轉為陣列
             const supplierRaw = res.Data.Supplier;
-            this.supplierData = Array.isArray(supplierRaw)
-              ? [...supplierRaw]
-              : (supplierRaw ? [supplierRaw] : []);
-
-            // 檢查 Details 是否為陣列
+            this.supplierData = Array.isArray(supplierRaw) ? [...supplierRaw] : (supplierRaw ? [supplierRaw] : []);
             const detailsRaw = res.Data.Details;
-            this.itemData = Array.isArray(detailsRaw)
-              ? [...detailsRaw]
-              : (detailsRaw ? [detailsRaw] : []);
+            this.itemData = Array.isArray(detailsRaw) ? [...detailsRaw] : (detailsRaw ? [detailsRaw] : []);
 
-            // 深拷備份(切斷與原始資料物件的參考連結)
             this.orgsupplierData = JSON.parse(JSON.stringify(this.supplierData));
             this.orgitemData = JSON.parse(JSON.stringify(this.itemData));
-
-            this.updateTokenNoSum(); //更新付款天數加總
-
-            console.log('明細供應商資料', this.supplierData);
-            console.log('明細單據資料', this.itemData);
+            this.updateTokenNoSum();
           } else {
-            // 如果整個 res.Data 都是空的，也要清空表格防止舊資料殘留
             this.supplierData = [];
             this.itemData = [];
           }
@@ -288,6 +265,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   // 讀取 dropdown 選項
   loadOptions() {
+    this.DEC_YM_Options = this.generateDecYmOptions();
+
     const supplier$ = this.dropDownListService.queryPOS2013_DropDownList({});
     const invFormat$ = this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 });
     const reduCode$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DiscNo' });
@@ -364,15 +343,65 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       });
   }
   //---發票明細---
+  DEC_YM_Options: { value: string; label: string }[] = [];
+  /**
+ * 動態生成申報年月雙月選項 (每年 2, 4, 6, 8, 10, 12 月)
+ * @param startYear 起始年份 (預設為前一年)
+ * @param yearCount 產生幾年 (預設 3 年：前一年、今年、下一年)
+ */
+  private generateDecYmOptions(startYear = new Date().getFullYear() - 100, yearCount = 103): { value: string; label: string }[] {
+    const options: { value: string; label: string }[] = [];
+    const evenMonths = [2, 4, 6, 8, 10, 12];
 
+    for (let i = 0; i < yearCount; i++) {
+      const year = startYear + i;
+      for (const month of evenMonths) {
+        const monthStr = month.toString().padStart(2, '0');
+        const ymValue = `${year}${monthStr}`;
+        options.push({
+          value: ymValue,
+          label: `${year}/${monthStr}` // 畫面顯示如 2026/02
+        });
+      }
+    }
+    return options;
+  }
+  /** 將 Date 物件轉為 YYYYMM 字串，若原本就是字串則直接回傳 */
+  private formatToDecYm(value: Date | string | null | undefined): string | null {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (value instanceof Date) {
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
+      return `${year}${month}`;
+    }
+    return null;
+  }
+  /** 傳入 Date 或日期字串，回傳該月份最後一天的 Date 物件 */
+  private getLastDayOfMonth(dateValue: Date | string | null | undefined): Date | null {
+    if (!dateValue) return null;
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return null;
+
+    // 下個月的第 0 天即為本月的最後一天
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  }
   //欄位名稱初始化
   private initSupplierColumns() {
     this.supplierColumn = [
       { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'RECEIPT_NO', header: '發票號碼', type: 'input' },
       { field: 'RECEIPT_DATE', header: '發票日期', type: 'date' },
-      { field: 'TICKET_DATE', header: '票據到期日', type: 'date' },
-      { field: 'DEC_YM', header: '申報年月', type: 'input' },
+      { field: 'TICKET_DATE', header: '付款日期', type: 'date' },
+      // --- 申報年月：改為下拉式選單 ---
+      {
+        field: 'DEC_YM',
+        header: '申報年月',
+        type: 'dropdown',
+        options: this.DEC_YM_Options,
+        optionLabel: 'label',
+        optionValue: 'value'
+      },
       { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
@@ -390,33 +419,36 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
     ];
   }
-  //依據明細驗收單號進行主檔token_no刷新
+  // 依據明細驗收單號進行主檔 token_no 刷新
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
-    // 1. 變更後的資料同步回 itemData
-    this.supplierData = eventData;
+    // 1. 處理發票日期變更 -> 自動帶入付款日期為當月最後一天
+    this.supplierData = eventData.map(item => {
+      if (item.RECEIPT_DATE) {
+        const lastDay = this.getLastDayOfMonth(item.RECEIPT_DATE);
 
-    // 2. 實作「發票號清空連帶清除 單據資料」
+        // 這裡採用「只要有發票日期就自動計算帶入」的邏輯
+        // 若希望使用者手動修改後不被覆蓋，可以加條件 (例如 !item.TICKET_DATE)
+        return {
+          ...item,
+          TICKET_DATE: lastDay
+        };
+      }
+      return item;
+    });
+
+    // 2. 實作「發票號清空連帶清除單據資料」
     // 檢查是否還有任何發票號碼存在
-    const hasReceiptNo = this.supplierData.some(item =>
-      item.RECEIPT_NO && item.RECEIPT_NO.trim() !== ''
-    );
+    const hasReceiptNo = this.supplierData.some(item => item.RECEIPT_NO && item.RECEIPT_NO.trim() !== '');
 
     // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
     if (!hasReceiptNo) {
       this.itemData = []; // 清空單據明細表格
-
       // 同步更新主表單中的驗收單號與金額欄位
-      this.dataForm.patchValue({
-        TOKEN_NO: '',
-        NTX_AMT: 0,
-        TX_AMT: 0,
-        AMT: 0,
-        TICKET_BE: 0
-      });
+      this.dataForm.patchValue({ TOKEN_NO: '', NTX_AMT: 0, TX_AMT: 0, AMT: 0, TICKET_BE: 0 });
     }
 
-    //更新付款天數
-    this.updateTokenNoSum()
+    // 3. 更新付款天數
+    this.updateTokenNoSum();
   }
 
   //更新付款天數
