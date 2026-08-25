@@ -6,12 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ASS16050Service } from '@service/api/ass/ass16050.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import {
   formatAmount,
@@ -45,8 +45,7 @@ import {
 })
 export class ASS16050CRUComponent
   extends BasicCruPageComponent<Ass16050MasterDisplayRow>
-  implements OnInit
-{
+  implements OnInit {
   /** 主檔顯示用 form（Read mode 自動 disabled） */
   readonly dataForm = this.formBuilder.group({
     MTAPPLY_ID: new FormControl<string | null>(null),
@@ -59,7 +58,7 @@ export class ASS16050CRUComponent
   });
 
   detailColumns: ReportColumn[] = [
-    { field: 'LINE_NUM', header: '序號', align: 'right' },
+    // { field: 'LINE_NUM', header: '序號', align: 'right' },
     { field: 'FASITEM_ID', header: '品項編號' },
     {
       field: 'FASITEM_NAME',

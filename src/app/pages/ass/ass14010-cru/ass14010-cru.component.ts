@@ -122,6 +122,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     this.get14010Detail(STO_NO, RECEIPT_NO);
 
     this.loadOptions();
+    //編輯/查看 進來就先取得一次驗收單選項
+    const supplierId = this.dataForm.get('SUPPLIER_ID')?.value;
+    if (supplierId && this.crudstatus != CRUDStatus.Create) {
+      this.loadTokenOptions(supplierId);
+    }
 
     // 監聽供應商變更
     this.dataForm.controls.SUPPLIER_ID.valueChanges
@@ -297,7 +302,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         // 尚未選供應商，不載入驗收單
-        this.TOKEN_NO_Options = [];
+        // this.TOKEN_NO_Options = [];
 
         this.initSupplierColumns();
       });
@@ -412,7 +417,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID', disabled: () => !this.dataForm.get('SUPPLIER_ID')?.value },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID', disabled: () => !this.dataForm.getRawValue().SUPPLIER_ID },
       // { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
       { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
       { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
