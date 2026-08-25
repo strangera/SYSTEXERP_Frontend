@@ -40,6 +40,13 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 /** 進入新增頁時的套用模式：已詢價=套用請購清單，未詢價=套用詢價清單 */
 export type CreateMode = 'quoted' | 'unquoted';
 
+/** 品項完整主檔資料型別定義 (包含 PROD_TYPE) */
+export interface GoodsOption {
+  value: string;
+  label: string;
+  PROD_TYPE?: string;
+}
+
 /** 3.1.2.3 採購申請作業 CRU */
 @UntilDestroy()
 @Component({
@@ -82,21 +89,28 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
 
   /** 申請人下拉選項 */
   empIdOptions: { value: string; label: string }[] = [];
+
   /** 部門下拉選項 */
   orgIdOptions = this.dropdownApiService.querySys3100();
+
   /** 委託部門下拉選項：querySYS3100_DropDownList */
   entrustOrgIdOptions: { value: string; label: string }[] = [];
+
   /** 稅別下拉選項 */
   taxCodeOptions: { value: string; label: string }[] = [];
+
   /** 支出類型下拉選項 */
   subPayTypeOptions: { value: string; label: string }[] = getSYS1000Options('SUB_PAY_TYPE');
+
   /** 商品類型下拉選項 */
   prodTypeOptions: { value: string; label: string }[] = getSYS1000Options('PROD_TYPE');
 
-  /** 品項編號下拉選項：queryASS11040_DropDownList（固定資產品項主檔，與 ASS12010/ASS12020 一致） */
-  goodsIdOptions: { value: string; label: string }[] = [];
+  /** 品項編號下拉選項：包含 PROD_TYPE */
+  goodsIdOptions: GoodsOption[] = [];
+
   /** 供應商：queryPOS2013_DropDownList(VEN_Flag: '1') */
   supplierIdOptions: { value: string; label: string }[] = [];
+
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
 
@@ -165,7 +179,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       optionLabel: 'label',
       optionValue: 'value',
       options: () => this.prodTypeOptions,
-      validate: [validateRequired],
+      // 【需求2】已移除 validate: [validateRequired]，免除必填檢查
     },
     { field: 'NOTES', header: '說明', type: 'input' },
   ];
@@ -178,6 +192,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   selectedQuotedRow: ASS12010Data | null = null;
   selectedPurchaseRow: ASS12020QueryRow | null = null;
   applyListLoading = false;
+
   applyQuotedColumns: Column[] = [
     { field: 'NEED_ID', header: '需求單號' },
     { field: 'EMP_NAME', header: '申請人' },
@@ -186,6 +201,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     { field: 'NEEDS_STATUS_NAME', header: '狀態' },
     { field: 'Detail_CNT', header: '明細筆數' },
   ];
+
   applyPurchaseColumns: Column[] = [
     { field: 'BATCH_ID', header: '登錄批號' },
     { field: 'SUPPLIER_ID', header: '供應商' },
@@ -210,10 +226,12 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
 
   ngOnInit(): void {
     this.initializePage('ASS12030', this.dataForm);
+
     const state = this.router.lastSuccessfulNavigation?.extras?.state as Record<string, unknown> | undefined;
     if (this.crudstatus === CRUDStatus.Create && state?.['createMode']) {
       this.createMode = state['createMode'] as CreateMode;
     }
+
     this.loadDropdownOptions();
 
     const rowSubpoenaId = (this.rowdata as Record<string, unknown> | null)?.['SUBPOENA_ID'] as string | undefined;
@@ -263,6 +281,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
+
     this.dropDownListService
       .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
@@ -273,6 +292,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
+
     this.dropDownListService
       .queryPOS2013_DropDownList({ VEN_Flag: '1' })
       .pipe(untilDestroyed(this))
@@ -289,12 +309,18 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       { value: '2', label: '免稅' },
     ];
 
+    // 【需求3】取得品項主檔清單（保留 PROD_TYPE，以供選擇 GOODS_ID 時連動帶入）
     this.dropdownApiService
       .queryASS11040_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.goodsIdOptions = res ?? [];
+      .subscribe((res: any) => {
+        this.goodsIdOptions = (res ?? []).map((item: any) => ({
+          value: item.value ?? item.GOODS_ID ?? item.No ?? '',
+          label: item.label ?? `${item.GOODS_ID ?? item.No ?? ''} - ${item.GOODS_NAME ?? item.Name ?? ''}`,
+          PROD_TYPE: item.PROD_TYPE ?? item.PROD_TYPE_ID ?? item.ASSET_TYPE ?? null,
+        }));
       });
+
     this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
@@ -306,7 +332,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
           }));
         this.whIdOptions = options;
       },
-    })
+    });
   }
 
   /** 開啟套用請購清單 dialog（取得請購申請清單 ASS12010） */
@@ -366,47 +392,35 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
-
             const d: ASS12010DetailResponse = res.Data;
-
             const orgId = d?.Header?.ORG_ID ?? row.ORG_ID ?? '';
             const orgName = d?.Header?.ORG_NAME ?? row.ORG_NAME ?? '';
 
             // 避免停用部門不在下拉選項中，導致畫面無法顯示名稱
             this.ensureEntrustOrgOption(orgId, orgName);
 
+            // 【需求1】移除 EMP_ID 的自動帶入，保留表單現有選取的採購申請人
             this.dataForm.patchValue({
-              EMP_ID:
-                d?.Header?.EMP_ID ??
-                this.dataForm.get('EMP_ID')?.value ??
-                '',
-
-              ORG_ID:
-                orgId ||
-                this.dataForm.get('ORG_ID')?.value ||
-                '',
-
-              APPLY_DATE: d?.Header?.APPLY_DATE
-                ? new Date(String(d.Header.APPLY_DATE))
-                : this.dataForm.get('APPLY_DATE')?.value,
-
-              NOTES:
-                d?.Header?.NOTE ??
-                this.dataForm.get('NOTES')?.value ??
-                '',
+              ORG_ID: orgId || this.dataForm.get('ORG_ID')?.value || '',
+              APPLY_DATE: d?.Header?.APPLY_DATE ? new Date(String(d.Header.APPLY_DATE)) : this.dataForm.get('APPLY_DATE')?.value,
+              NOTES: d?.Header?.NOTE ?? this.dataForm.get('NOTES')?.value ?? '',
             });
 
             const needId = d?.Header?.NEED_ID ?? row.NEED_ID ?? '';
 
-            this.data = (d?.Details ?? []).map(item => ({
-              GOODS_ID: item.GOODS_ID,
-              NEED_ID: needId,
-              QTY: item.QTY,
-              NOTES: item.NOTES,
-TAX_CODE: '1', // 預設應稅
-              // 委託部門帶入請購單表頭部門
-              ORG_ID: orgId,
-            }));
+            // 【需求3】帶入明細時自動計算並填入 PROD_TYPE
+            this.data = (d?.Details ?? []).map(item => {
+              const matchedGoods = this.goodsIdOptions.find(g => g.value === item.GOODS_ID);
+              return {
+                GOODS_ID: item.GOODS_ID,
+                NEED_ID: needId,
+                QTY: item.QTY,
+                NOTES: item.NOTES,
+                TAX_CODE: '1', // 預設應稅
+                ORG_ID: orgId, // 委託部門帶入請購單表頭部門
+                PROD_TYPE: matchedGoods?.PROD_TYPE ?? null,
+              };
+            });
 
             this.displayApplyDialog = false;
             this.messageService.successBubble('套用成功');
@@ -414,6 +428,7 @@ TAX_CODE: '1', // 預設應稅
         });
       return;
     }
+
     const row = this.selectedPurchaseRow;
     const id = row?.FAQuotationM_ID;
     if (!id) {
@@ -432,30 +447,36 @@ TAX_CODE: '1', // 預設應稅
             SUPPLIER_ID: d?.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? '',
             NOTES: d?.NOTES ?? this.dataForm.get('NOTES')?.value ?? '',
           });
-          this.data = (d?.Details ?? []).map(item => ({
-            GOODS_ID: item.GOODS_ID,
-            GOODS_PRICE: item.GOODS_PRICE,
-            QTY: item.QTY,
-            WH_ID: item.WH_ID,
-            NEED_ID: item.NEED_ID,
-            NOTES: item.NOTES,
-            TAX_CODE: '1', // 預設應稅
-          }));
+
+          // 【需求3】帶入明細時自動計算並填入 PROD_TYPE (經由 goodsIdOptions 自動對照)
+          this.data = (d?.Details ?? []).map(item => {
+            const matchedGoods = this.goodsIdOptions.find(g => g.value === item.GOODS_ID);
+            return {
+              GOODS_ID: item.GOODS_ID,
+              GOODS_PRICE: item.GOODS_PRICE,
+              QTY: item.QTY,
+              WH_ID: item.WH_ID,
+              NEED_ID: item.NEED_ID,
+              NOTES: item.NOTES,
+              TAX_CODE: '1', // 預設應稅
+              PROD_TYPE: matchedGoods?.PROD_TYPE ?? null,
+            };
+          });
+
           this.displayApplyDialog = false;
           this.messageService.successBubble('套用成功');
         },
       });
   }
+
   private ensureEntrustOrgOption(
     orgId: string | null | undefined,
     orgName: string | null | undefined
   ): void {
     if (!orgId) return;
-
     const exists = this.entrustOrgIdOptions.some(
       option => option.value === orgId
     );
-
     if (!exists) {
       this.entrustOrgIdOptions = [
         ...this.entrustOrgIdOptions,
@@ -466,12 +487,17 @@ TAX_CODE: '1', // 預設應稅
       ];
     }
   }
+
   get applyDialogTitle(): string {
-    return this.applyDialogMode === 'quoted' ? '選擇請購清單（套用請購清單）' : '選擇詢價清單（套用詢價清單）';
+    return this.applyDialogMode === 'quoted'
+      ? '選擇請購清單（套用請購清單）'
+      : '選擇詢價清單（套用詢價清單）';
   }
 
   get canConfirmApply(): boolean {
-    return this.applyDialogMode === 'quoted' ? !!this.selectedQuotedRow : !!this.selectedPurchaseRow;
+    return this.applyDialogMode === 'quoted'
+      ? !!this.selectedQuotedRow
+      : !!this.selectedPurchaseRow;
   }
 
   onTableInsert(): void {
@@ -491,6 +517,28 @@ TAX_CODE: '1', // 預設應稅
       PROD_TYPE: null,
       NOTES: null,
     };
+  }
+
+  /**
+   * 【需求3】當表格變更（如手動變更 GOODS_ID）時呼叫此方法，自動連動 PROD_TYPE
+   */
+  onTableDataChange(updatedRows: Record<string, unknown>[]): void {
+    this.data = updatedRows.map(row => {
+      const goodsId = row['GOODS_ID'] as string;
+      let prodType = row['PROD_TYPE'] as string;
+
+      if (goodsId) {
+        const matchedOption = this.goodsIdOptions.find(opt => opt.value === goodsId);
+        if (matchedOption?.PROD_TYPE) {
+          prodType = matchedOption.PROD_TYPE;
+        }
+      }
+
+      return {
+        ...row,
+        PROD_TYPE: prodType,
+      } as ASS12030DetailItem;
+    });
   }
 
   private toDetails(rows: Record<string, unknown>[]): ASS12030DetailItem[] {
@@ -517,9 +565,10 @@ TAX_CODE: '1', // 預設應稅
       }
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
-      const applyDate = raw.APPLY_DATE instanceof Date
-  ? this.formatLocalDate(raw.APPLY_DATE)
-  : String(raw.APPLY_DATE ?? '');
+      const applyDate =
+        raw.APPLY_DATE instanceof Date
+          ? this.formatLocalDate(raw.APPLY_DATE)
+          : String(raw.APPLY_DATE ?? '');
 
       if (this.crudstatus === CRUDStatus.Create) {
         const payload: ASS12030InsertRequest = {
@@ -572,13 +621,12 @@ TAX_CODE: '1', // 預設應稅
       }
     });
   }
+
   private formatLocalDate(date: Date | null): string {
-  if (!date) return '';
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 }
