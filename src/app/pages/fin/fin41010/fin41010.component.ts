@@ -44,13 +44,13 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
 
 
 
-orgOptionList: any[] = [];
+  orgOptionList: any[] = [];
 
-orgOptions = this.dropdownApi.querySys3100().pipe(
-  tap((options) => {
-    this.orgOptionList = options ?? [];
-  }),
-);
+  orgOptions = this.dropdownApi.querySys3100().pipe(
+    tap((options) => {
+      this.orgOptionList = options ?? [];
+    }),
+  );
   files: File[] = [];
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
 
@@ -81,35 +81,35 @@ orgOptions = this.dropdownApi.querySys3100().pipe(
   }
 
   onDownloadTemplate(): void {
-  this.handleSubmit(this.queryForm, () => {
-    const { year, version, orgId } = this.queryForm.getRawValue();
+    this.handleSubmit(this.queryForm, () => {
+      const { year, version, orgId } = this.queryForm.getRawValue();
 
-    const selectedOrg = this.orgOptionList.find(
-      (item) => item.value === orgId,
-    );
+      const selectedOrg = this.orgOptionList.find(
+        (item) => item.value === orgId,
+      );
 
-    const orgName = selectedOrg?.label ?? '';
+      const orgName = (selectedOrg?.label ?? '').replace(/\s*-\s*/g, '_');
 
-    const filename = `BudgetSample_${year}_${orgId}_${orgName}.xlsx`;
+      const filename = `BudgetSample_${year}_${orgName}.xlsx`;
 
-    this.loading = true;
+      this.loading = true;
 
-    this.fileExportService
-      .executeFileExport(
-        this.fin41010Service
-          .exportYearBudget({
-            BudgetYear: year!,
-            BudgetVersion: version!,
-            OrgId: orgId!,
-          })
-          .pipe(untilDestroyed(this)),
-        '.xlsx',
-        (isLoading) => (this.loading = isLoading),
-        filename,
-      )
-      .subscribe();
-  });
-}
+      this.fileExportService
+        .executeFileExport(
+          this.fin41010Service
+            .exportYearBudget({
+              BudgetYear: year!,
+              BudgetVersion: version!,
+              OrgId: orgId!,
+            })
+            .pipe(untilDestroyed(this)),
+          '.xlsx',
+          (isLoading) => (this.loading = isLoading),
+          filename,
+        )
+        .subscribe();
+    });
+  }
 
   onConvert(): void {
     const currentFiles = this.getSelectedFiles();
