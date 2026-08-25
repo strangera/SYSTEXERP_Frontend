@@ -24,6 +24,7 @@ import {
   Aps1002DropdownItem,
   FIN64010DetailRow,
   Fin64010Service,
+  FIN64010InsertRequest,
   FIN64010UpdateRequest,
 } from '../../../service/api/fin/fin64010.service';
 
@@ -143,17 +144,22 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN64010', this.dataForm);
-    // ✅ 先補 Id（避免 raw.Id 是 null）
-    const routeId = this.getRouteId();
-    const listRow: any = (history as any)?.state?.rowdata;
-    const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
 
-    const finalId = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
-    if (finalId) {
-      this.dataForm.get('Id')?.setValue(finalId, { emitEvent: false });
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.setupCreateDefaults();
+    } else {
+      // ✅ 先補 Id（避免 raw.Id 是 null）
+      const routeId = this.getRouteId();
+      const listRow: any = (history as any)?.state?.rowdata;
+      const stateId = Number(listRow?.ID ?? listRow?.Id ?? listRow?.id);
+
+      const finalId = routeId ?? (Number.isFinite(stateId) && stateId > 0 ? stateId : null);
+      if (finalId) {
+        this.dataForm.get('Id')?.setValue(finalId, { emitEvent: false });
+      }
+
+      this.patchFromListRowIfNeeded();
     }
-
-    this.patchFromListRowIfNeeded();
     // 1) 廠客
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
@@ -245,8 +251,27 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
       });
 
 
-    // ✅ 最後載明細（避免 patch 時 options 未就緒）
-    this.loadDetailByRoute();
+    // ✅ 最後載明細（避免 patch 時 options 未就緒）；新增模式沒有明細可載，直接套用鎖定規則
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.applyReadonlyRules();
+    } else {
+      this.loadDetailByRoute();
+    }
+  }
+
+  /** 新增模式：收票日預設今天、收票業務員帶入登入者且鎖定、票據狀態鎖定為 R(僅記錄) */
+  private setupCreateDefaults(): void {
+    this.dataForm.get('Id')?.clearValidators();
+    this.dataForm.get('Id')?.updateValueAndValidity({ emitEvent: false });
+
+    const user = this.authService.currentUserValue;
+    this.dataForm.patchValue({
+      CHK_ReceDate: new Date(),
+      Sales_Id: user?.user_No ?? '',
+      CHK_Status: 'R',
+    }, { emitEvent: false });
+
+    this.dataForm.get('CHK_Status')?.disable({ emitEvent: false });
   }
 
   private normalizeDetailRow(res: any): FIN64010DetailRow | null {
@@ -354,6 +379,12 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.markAllAsTouched();
       return;
     }
+
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.submitCreate();
+      return;
+    }
+
     if (!this.isEditable) return;
 
     const raw = this.dataForm.getRawValue();
@@ -424,6 +455,55 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
   }
+
+  /** 新增模式送出：狀態固定為 R(僅記錄)；mid/STO_No/建立人由後端依登入 Token 帶入 */
+  private submitCreate(): void {
+    const raw = this.dataForm.getRawValue();
+
+    const payload: FIN64010InsertRequest = {
+      BNK_Key: String(raw.BNK_Key ?? '').trim(),
+      BNK_AccNo: String(raw.BNK_AccNo ?? '').trim(),
+      COL_BNK_id: String(raw.COL_BNK_id ?? '').trim(),
+
+      CHK_No: String(raw.CHK_No ?? '').trim(),
+      VEN_No: String(raw.VEN_No ?? '').trim(),
+
+      CHK_Amt: Number(raw.CHK_Amt),
+
+      CHK_ReceDate: this.toYmd(raw.CHK_ReceDate) ?? '',
+      CHK_ExpireDate: this.toYmd(raw.CHK_ExpireDate) ?? '',
+
+      CHK_PreDate: this.toYmd(raw.CHK_PreDate),
+      CHK_ColleDate: this.toYmd(raw.CHK_ColleDate),
+      CHK_CashDate: this.toYmd(raw.CHK_CashDate),
+
+      Ticket_YN: raw.Ticket_YN ? String(raw.Ticket_YN) : null,
+      CHK_Type: raw.CHK_Type ? String(raw.CHK_Type) : null,
+      CHK_Comment: raw.CHK_Comment ? String(raw.CHK_Comment) : null,
+
+      ORG_ID: raw.ORG_ID ? String(raw.ORG_ID) : null,
+      ProjectNo: raw.ProjectNo ? String(raw.ProjectNo) : null,
+      RCV_No: raw.RCV_No ? String(raw.RCV_No) : null,
+    };
+
+    this.loading = true;
+
+    this.fin64010Service.insertFIN64010(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (_res: ApiResponse<number>) => this.onCancel(),
+        error: (err: any) => {
+          console.error('FIN64010 insert error:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        complete: () => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
   private patchFromListRowIfNeeded(): void {
     const listRow: any = (history as any)?.state?.rowdata;
     if (!listRow) return;

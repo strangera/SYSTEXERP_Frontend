@@ -274,6 +274,33 @@ export interface FIN64010UpdateRequest {
 
   [key: string]: any;
 }
+/** ========== Insert (自行新增，狀態固定為R僅記錄) ========== */
+export interface FIN64010InsertRequest {
+  BNK_Key: string;     // 票面銀行(必填)
+  BNK_AccNo: string;   // 票據上的帳號(必填)
+  COL_BNK_id: string;  // 託收帳戶(必填)
+
+  CHK_No: string;      // 必填
+  CHK_Amt: number;     // 必填
+  CHK_ExpireDate: string; // 必填
+  CHK_ReceDate: string;   // 必填
+  VEN_No: string;      // 必填
+
+  CHK_Type?: string | null;
+  Ticket_YN?: string | null;
+  CHK_Comment?: string | null;
+
+  ORG_ID?: string | null;
+  ProjectNo?: string | null;
+  RCV_No?: string | null;
+
+  CHK_PreDate?: string | null;
+  CHK_ColleDate?: string | null;
+  CHK_CashDate?: string | null;
+
+  [key: string]: any;
+}
+
 export interface Aps1002DropdownItem {
   BNK_DepositAccNo: string;
   ACCCNAME: string | null;
@@ -312,6 +339,10 @@ queryAPS1002_DropDownList(): Observable<ApiResponse<Aps1002DropdownItem[]>> {
 
   updateFIN64010(body: FIN64010UpdateRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN64010`, body);
+  }
+
+  insertFIN64010(body: FIN64010InsertRequest): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertFIN64010`, body);
   }
 
   exportFIN64010(body: QueryFIN64010Request): Observable<HttpResponse<Blob>> {
