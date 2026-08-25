@@ -122,6 +122,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     this.get14010Detail(STO_NO, RECEIPT_NO);
 
     this.loadOptions();
+    //編輯/查看 進來就先取得一次驗收單選項
+    const supplierId = this.dataForm.get('SUPPLIER_ID')?.value;
+    if (supplierId && this.crudstatus != CRUDStatus.Create) {
+      this.loadTokenOptions(supplierId);
+    }
 
     // 監聽供應商變更
     this.dataForm.controls.SUPPLIER_ID.valueChanges
@@ -318,7 +323,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         // 尚未選供應商，不載入驗收單
-        this.TOKEN_NO_Options = [];
+        // this.TOKEN_NO_Options = [];
 
         this.initSupplierColumns();
       });
@@ -383,7 +388,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID', disabled: () => !this.dataForm.get('SUPPLIER_ID')?.value },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID', disabled: () => !this.dataForm.getRawValue().SUPPLIER_ID },
       // { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
       { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
       { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
@@ -395,17 +400,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     // 1. 變更後的資料同步回 itemData
     this.supplierData = eventData;
 
-    // 2. 實作「發票號清空連帶清除 單據資料」
-    // 檢查是否還有任何發票號碼存在
-    const hasReceiptNo = this.supplierData.some(item =>
-      item.RECEIPT_NO && item.RECEIPT_NO.trim() !== ''
-    );
+    // 2. 只有當整筆發票列都被刪除（supplierData 為空）時才清空單據資料
+    // 避免使用者還沒填發票號碼、但先切換單據種類時誤將驗收單清空
+    if (!this.supplierData || this.supplierData.length === 0) {
+      this.itemData = [];
 
-    // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
-    if (!hasReceiptNo) {
-      this.itemData = []; // 清空單據明細表格
-
-      // 同步更新主表單中的驗收單號與金額欄位
       this.dataForm.patchValue({
         TOKEN_NO: '',
         NTX_AMT: 0,
