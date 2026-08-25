@@ -206,6 +206,20 @@ export const toApiDate = (v: Date | string | null | undefined) => {
 };
 
 export function getStatusColor(row: any): string {
+  // 取得數值並轉為 Number 防呆
+  const zAmt = Number(row.SLE_SaleAmt ?? 0);          // Z報總金額
+  const modeP = Number(row.TXN_Mode_P ?? 0);          // 後台(作廢/補登)
+  const payAmt = Number(row.TXN_TotPayAmt ?? 0);      // 付款金額
+
+  // 💡 當 Z 報總金額 + 後台(作廢/補登) 等於 付款金額時，視為帳平，不顯示綠色
+  // 使用 Number.EPSILON 避免浮點數運算誤差
+  if (Math.abs((zAmt + modeP) - payAmt) < 0.001) {
+    // 若符合帳平條件，且原本是綠色標記 (@)，則直接清除樣式
+    if (row.Status_Code === '@') {
+      return '';
+    }
+  }
+
   switch (row.Status_Code) {
     case '#': // 粉紅：L檔金額異常
       return 'bg-pink-100 text-red-600';
