@@ -37,7 +37,7 @@ export class ASS16040Service {
    */
   queryASS16040M(payload: ASS16040QueryRequest): Observable<ApiResponse<ASS16040MasterRow[]>> {
     return this.http
-      .post<NestedQueryResponse<ASS16040MasterRow>>(`${this.apiUrl}/queryASS16040M`, payload)
+      .post<NestedQueryResponse<ASS16040MasterRow>>(`${this.apiUrl}/queryASS16040`, payload)
       .pipe(map(res => this.flattenNested<ASS16040MasterRow>(res)));
   }
 
@@ -48,7 +48,7 @@ export class ASS16040Service {
    */
   queryASS16040(payload: ASS16040QueryRequest): Observable<ApiResponse<ASS16040DetailRow[]>> {
     return this.http
-      .post<NestedQueryResponse<ASS16040DetailRow>>(`${this.apiUrl}/queryASS16040`, payload)
+      .post<NestedQueryResponse<ASS16040DetailRow>>(`${this.apiUrl}/queryASS16040D`, payload)
       .pipe(map(res => this.flattenNested<ASS16040DetailRow>(res)));
   }
 
