@@ -8,12 +8,12 @@ import { fin72040Data } from '@service/api/fin/fin72040.service';
 import { formatAmount } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
-import { TableComponent } from '../../../others/component/table/table.component';
-import { Column } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
 
 @Component({
@@ -62,7 +62,8 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
     // { field: 'RowType', header: '列類型', visible: false },
     // { field: 'IDX', header: '主檔唯一識別碼', visible: true },
     // { field: 'SeqNo', header: '顯示項次', visible: true },
-    { field: 'RqstNo', header: '傳票號碼', visible: true },
+    { field: 'RqstNo', header: '支出請款單號', visible: true },
+    { field: 'VoucherNo', header: '傳票號碼', visible: true },
     { field: 'TotAmt', header: '申請金額', visible: true, format: formatAmount },
     { field: 'PCS_Date', header: '零用金申請日期', visible: true, format: formatDate },
     { field: 'PCS_UsrNo', header: '申請人員工編號', visible: true },
