@@ -58,6 +58,9 @@
           [loading]="PDFBtnLoading" [disabled]="loading || (data.length || 0) === 0"></p-button>
         <p-button styleClass="p-2" label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX()"
           [loading]="XLSXBtnLoading" [disabled]="loading || (data.length || 0) === 0"></p-button>
+        <!-- 新增「匯出 Excel (不分頁)」按鈕 -->
+        <p-button styleClass="p-2" label="匯出 Excel（不分頁）" icon="pi pi-file-excel" (click)="onExportXLSXSingleSheet()"
+          [loading]="XLSXSingleSheetBtnLoading" [disabled]="loading || (data.length || 0) === 0"></p-button>
       </div>
     </header>
   </app-table-subheader>
