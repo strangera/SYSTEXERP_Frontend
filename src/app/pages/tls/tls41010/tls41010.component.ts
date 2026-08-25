@@ -9,16 +9,16 @@ import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
+import { AddButton } from '../../../others/component/table/table.model';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { AddButton } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { columns, TLS41010Data, TLS41010Item, tltNoPickerQueryColumns } from './tls41010.model';
@@ -53,7 +53,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   queryForm = this.formBuilder.group({
     ECR_No: [null, [Validators.maxLength(10)]],
     ECR_Type: [null, [Validators.maxLength(2)]],
-    ECR_Name: [null, [Validators.maxLength(20)]],
+    ECR_Name: [null, [Validators.maxLength(60)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_TLT_Name: [{ value: null as string | null, disabled: true }],
     ECR_ActiveDateStart: [null as Date | null],
