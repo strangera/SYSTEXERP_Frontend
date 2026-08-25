@@ -443,13 +443,30 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
     // 2. 實作「發票號清空連帶清除單據資料」
     // 檢查是否還有任何發票號碼存在
-    const hasReceiptNo = this.supplierData.some(item => item.RECEIPT_NO && item.RECEIPT_NO.trim() !== '');
+    // const hasReceiptNo = this.supplierData.some(item => item.RECEIPT_NO && item.RECEIPT_NO.trim() !== '');
 
-    // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
-    if (!hasReceiptNo) {
-      this.itemData = []; // 清空單據明細表格
-      // 同步更新主表單中的驗收單號與金額欄位
-      this.dataForm.patchValue({ TOKEN_NO: '', NTX_AMT: 0, TX_AMT: 0, AMT: 0, TICKET_BE: 0 });
+    // // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
+    // if (!hasReceiptNo) {
+    //   this.itemData = []; // 清空單據明細表格
+    //   // 同步更新主表單中的驗收單號與金額欄位
+    //   this.dataForm.patchValue({ TOKEN_NO: '', NTX_AMT: 0, TX_AMT: 0, AMT: 0, TICKET_BE: 0 });
+    // }
+
+    // 1. 變更後的資料同步回 supplierData
+    this.supplierData = eventData;
+
+    // 2. 只有當整筆發票列都被刪除（supplierData 為空）時才清空單據資料
+    // 避免使用者還沒填發票號碼、但先切換單據種類時誤將驗收單清空
+    if (!this.supplierData || this.supplierData.length === 0) {
+      this.itemData = [];
+
+      this.dataForm.patchValue({
+        TOKEN_NO: '',
+        NTX_AMT: 0,
+        TX_AMT: 0,
+        AMT: 0,
+        TICKET_BE: 0
+      });
     }
 
     // 3. 更新付款天數
