@@ -272,6 +272,10 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     }, { emitEvent: false });
 
     this.dataForm.get('CHK_Status')?.disable({ emitEvent: false });
+
+    // 自行新增(狀態R僅記錄)不會走託收/兌現流程，SP_FIN64010Insert 也沒有這兩個參數，鎖住避免使用者誤填卻沒被儲存
+    this.dataForm.get('CHK_ColleDate')?.disable({ emitEvent: false });
+    this.dataForm.get('CHK_CashDate')?.disable({ emitEvent: false });
   }
 
   private normalizeDetailRow(res: any): FIN64010DetailRow | null {
@@ -474,8 +478,6 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
       CHK_ExpireDate: this.toYmd(raw.CHK_ExpireDate) ?? '',
 
       CHK_PreDate: this.toYmd(raw.CHK_PreDate),
-      CHK_ColleDate: this.toYmd(raw.CHK_ColleDate),
-      CHK_CashDate: this.toYmd(raw.CHK_CashDate),
 
       Ticket_YN: raw.Ticket_YN ? String(raw.Ticket_YN) : null,
       CHK_Type: raw.CHK_Type ? String(raw.CHK_Type) : null,
@@ -491,7 +493,7 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     this.fin64010Service.insertFIN64010(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (_res: ApiResponse<number>) => this.onCancel(),
+        next: (_res: ApiResponse<boolean>) => this.onCancel(),
         error: (err: any) => {
           console.error('FIN64010 insert error:', err);
           this.loading = false;

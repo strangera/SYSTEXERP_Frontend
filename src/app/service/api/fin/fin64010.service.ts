@@ -295,8 +295,6 @@ export interface FIN64010InsertRequest {
   RCV_No?: string | null;
 
   CHK_PreDate?: string | null;
-  CHK_ColleDate?: string | null;
-  CHK_CashDate?: string | null;
 
   [key: string]: any;
 }
@@ -341,8 +339,8 @@ queryAPS1002_DropDownList(): Observable<ApiResponse<Aps1002DropdownItem[]>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN64010`, body);
   }
 
-  insertFIN64010(body: FIN64010InsertRequest): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertFIN64010`, body);
+  insertFIN64010(body: FIN64010InsertRequest): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertFIN64010`, body);
   }
 
   exportFIN64010(body: QueryFIN64010Request): Observable<HttpResponse<Blob>> {
