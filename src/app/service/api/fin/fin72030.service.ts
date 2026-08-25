@@ -52,6 +52,7 @@ export interface FIN72030DetailResult {
   ORG_Name: string;
   PTA: string;
   ProjectNo: string;
+  RECON_Key: string | null;
 }
 
 export interface FIN72030QueryResult {
@@ -104,6 +105,13 @@ export class Fin72030Service {
   getPCS_RqstNoDropDownList(): Observable<ApiResponse<PCS_RqstNoDropdownItem[]>> {
     return this.http.post<ApiResponse<PCS_RqstNoDropdownItem[]>>(
       `${this.dropdownUrl}/POS2064MPCS_RqstNoDropDownList`,
+      {}
+    );
+  }
+
+  getFIN72030RqstNoDropDownList(): Observable<ApiResponse<PCS_RqstNoDropdownItem[]>> {
+    return this.http.post<ApiResponse<PCS_RqstNoDropdownItem[]>>(
+      `${this.apiUrl}/getFIN72030RqstNoDropDownList`,
       {}
     );
   }

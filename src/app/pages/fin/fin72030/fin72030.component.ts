@@ -17,14 +17,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { catchError, distinctUntilChanged, finalize, of } from 'rxjs';
 
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { formatAmountNo0, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TableEditComponent } from '../../../shared/components/table-edit/table-edit.component';
-import { formatAmountNo0, formatDateToYYYY_MM_DD } from '../../../others/component/table/table.model';
 
 /** 進項稅額 123203 / 應付費用-現金 216104 為 SP_FIN72030VouDetail 自動產生筆，摘要走 Detail2/Detail3NoteDesc；其餘為費用明細逐筆摘要，走 Detail1NoteDescList */
 const TAX_ACC_NO = '123203';
@@ -44,6 +44,7 @@ const DETAIL_COLUMNS: EditColumn[] = [
   { field: 'ORG_Name', header: '組織名稱', disabled: () => true },
   { field: 'PTA', header: '立沖代號', textAlign: 'center', disabled: () => true },
   { field: 'ProjectNo', header: '活動代號', disabled: () => true },
+  { field: 'RECON_Key', header: '對帳key值', disabled: () => true },
 ];
 
 @UntilDestroy()
@@ -172,7 +173,7 @@ export class FIN72030Component
 
   loadDropdownOptions(): void {
     this.fin72030Service
-      .getPCS_RqstNoDropDownList()
+      .getFIN72030RqstNoDropDownList()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.rqstNoOptions = res?.Data ?? [];
