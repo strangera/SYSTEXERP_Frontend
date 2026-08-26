@@ -53,9 +53,10 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   private handleTableState() {
     const threshold = 30; // 資料超過 30 筆就開啟虛擬滾動與固定高度
 
+    //由固定高度改為css限制
     if (this.data && this.data.length > threshold) {
       this.useVirtualScroll = true;
-      this.dynamicScrollHeight = '450px';
+      this.dynamicScrollHeight = 'calc(100vh - 350px)'; // 或固定 '450px'，但由 CSS 限制 max-height
     } else {
       this.useVirtualScroll = false;
       this.dynamicScrollHeight = undefined;
