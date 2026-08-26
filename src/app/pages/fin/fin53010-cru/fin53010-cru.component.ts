@@ -3624,7 +3624,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
-          if (event.value) rowData.AccAmtC = void 0;
+          if (event.value) {
+            rowData.AccAmtC = void 0;
+            // validateAmtEither 同掛在借/貸兩欄，但這次只重驗借方欄，
+            // 需手動清掉貸方欄殘留的「至少填一個」錯誤，否則貸方紅框不會消失
+            this.clearAmtEitherError(rowData, 'AccAmtC');
+          }
           // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
           this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           // rebuildAllAutoPta 由 onDataChange 呼叫（tableData 已更新後），
@@ -3633,7 +3638,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
-          if (event.value) rowData.AccAmtD = void 0;
+          if (event.value) {
+            rowData.AccAmtD = void 0;
+            // 同上：清掉借方欄殘留的「至少填一個」錯誤
+            this.clearAmtEitherError(rowData, 'AccAmtD');
+          }
           // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
           this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           break;
@@ -3719,6 +3728,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     rowData.DetailName = undefined;
     rowData.NoteDesc = String(this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label
       || this.service.accNoMap().get(String(rowData.AccNo))?.label || '');
+  }
+
+  /** 清除某金額欄殘留的驗證錯誤（table-edit 每次只重驗當下變更的欄，跨欄的 validateAmtEither
+   *  掛在借/貸兩欄，故另一欄的舊錯誤需在此手動清除，否則紅框不會消失） */
+  private clearAmtEitherError(rowData: FIN53010DetailTable, field: 'AccAmtD' | 'AccAmtC'): void {
+    const errs = (rowData as unknown as Record<string, unknown>)['_validationErrors'] as Record<string, string> | undefined;
+    if (errs) delete errs[field];
   }
 
   /** 為「自動編碼」列指定 PTA。
