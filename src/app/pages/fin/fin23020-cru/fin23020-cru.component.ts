@@ -187,7 +187,7 @@ export class FIN23020CRUComponent
      */
     VouDate: [
       {
-        value: null as string | null,
+        value: null as Date | string | null,
         disabled: true
       }
     ],
@@ -628,7 +628,20 @@ export class FIN23020CRUComponent
           if (firstHeader) {
 
             this.dataForm.patchValue(
-              firstHeader,
+              {
+                ...firstHeader,
+
+                /**
+                 * app-calendar 只有在收到 Date 物件時，
+                 * 才會用 dateFormat('yy/mm/dd') 格式化顯示，
+                 * 後端回傳的字串（帶時間）需先轉成 Date，
+                 * 避免畫面直接顯示原始字串（含時間）。
+                 */
+                VouDate:
+                  firstHeader.VouDate
+                    ? new Date(firstHeader.VouDate)
+                    : null
+              },
               {
                 emitEvent: false
               }
@@ -645,7 +658,7 @@ export class FIN23020CRUComponent
             this.dataForm.patchValue(
               {
                 VouDate:
-                  this.rowdata.VouDate
+                  new Date(this.rowdata.VouDate)
               },
               {
                 emitEvent: false
