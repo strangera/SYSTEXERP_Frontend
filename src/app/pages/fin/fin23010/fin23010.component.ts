@@ -59,7 +59,7 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
       label: '送審',
       icon: 'pi pi-send',
       action: (rowData: FIN23010Data) => this.onSend(rowData),
-      disabled: (rowData: FIN23010Data) => !this.hasPermission(this.Actions.SendToEIP) || Boolean(rowData.IsSend),
+      disabled: (rowData: FIN23010Data) => !this.hasPermission(this.Actions.SendToEIP) || rowData.IsSend != "1",
     }
   ];
 
@@ -95,8 +95,7 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
     { field: 'Summary', header: '摘要' },
     { field: 'PlanPayDate', header: '預計付款日' },
     { field: 'StatusName', header: '狀態' },
-    { field: 'EipApproveYNName', header: '簽核結果' },
-    { field: 'CloseStatusName', header: '結案狀態' },
+    { field: 'VouStatusName', header: '傳票狀態' },
   ];
 
   pickerVisible = false;

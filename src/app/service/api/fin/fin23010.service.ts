@@ -54,10 +54,8 @@ export interface FIN23010Data {
   StatusCode: string | null;
   /** 狀態(中文名稱，建立中時依簽核結果細分審核中/已審核/已駁回) */
   StatusName: string | null;
-  /** 簽核結果(NULL=尚無結果/Y=通過/N=駁回) */
-  EipApproveYN: string | null;
-  /** 簽核結果(中文名稱) */
-  EipApproveYNName: string | null;
+  /** 傳票狀態(中文名稱) */
+  VouStatusName: string | null;
   /** 是否可刪除('1'=可刪除) */
   CanVoid: string | null;
 
