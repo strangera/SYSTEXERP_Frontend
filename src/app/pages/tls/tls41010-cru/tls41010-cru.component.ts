@@ -8,16 +8,16 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { InputTextareaComponent } from "src/app/shared/components/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLS42010KBLevelItem } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { TLS41010Data, TLS41010Item, tltNoPickerCruColumns } from '../tls41010/tls41010.model';
 import { TltNoPickerComponent } from '../tls41010/tlt-no-picker/tlt-no-picker.component';
 
@@ -83,7 +83,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   dataForm = this.formBuilder.nonNullable.group({
     ECR_SchNo: [null as string | null],
     ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],
-    ECR_Name: [null, [Validators.required, Validators.maxLength(20)]],
+    ECR_Name: [null, [Validators.required, Validators.maxLength(60)]],
     ECR_TLT_No: [null, [Validators.maxLength(20)]],
     ECR_TLT_Name: [null, [Validators.maxLength(60)]],
     ECR_Type: ['2', [Validators.required, Validators.maxLength(2)]],
