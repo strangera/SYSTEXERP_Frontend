@@ -62,7 +62,8 @@ export enum Actions {
   CloseAccount = '510',             // 關帳
   Connect = '520',             // 連線
   Control = '530',            // 控制
-  ReturnApplyAmt = '540'//反請款
+  ReturnApplyAmt = '540',//反請款
+  SendToEIP = '550'//送審
 }
 
 @Injectable({

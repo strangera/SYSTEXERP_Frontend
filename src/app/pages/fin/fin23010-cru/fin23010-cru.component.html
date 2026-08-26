@@ -47,9 +47,9 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="匯款銀行代號" controlName="transferAccount" [control]="dataForm.controls.transferAccount"
-            [submitted]="submitted">
-          </app-input-text>
+           <app-dropdown label="匯款銀行代號" controlName="transferAccount" [options]="VEN_BNK_No_ParamOptions | async"
+              optionLabel="label" optionValue="value" [control]="dataForm.controls.transferAccount"
+              [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="銀行帳號" controlName="bankAccount" [control]="dataForm.controls.bankAccount"

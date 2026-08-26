@@ -10,6 +10,7 @@ import { finalize } from 'rxjs';
 import { getSYS1000Options$ } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AddButton } from '../../../others/component/table/table.model';
 import { FIN23010Data, FIN23010Service, QueryFIN23010Request } from '../../../service/api/fin/fin23010.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
@@ -25,6 +26,7 @@ import { VenEmpPicked, VenEmpPickerComponent } from '../fin23010-cru/ven-emp-pic
 @Component({
   selector: 'app-fin23010',
   templateUrl: './fin23010.component.html',
+  styleUrl: './fin23010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputNumberRangeComponent, DropdownComponent, InputTextComponent, TableReportComponent, VenEmpPickerComponent, ButtonModule, InputTextModule, AsyncPipe, TranslateModule]
 })
@@ -52,6 +54,15 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
     summary: [''], // 摘要
   });
 
+  addButton: AddButton[] = [
+    {
+      label: '送審',
+      icon: 'pi pi-send',
+      action: (rowData: FIN23010Data) => this.onSend(rowData),
+      disabled: (rowData: FIN23010Data) => !this.hasPermission(this.Actions.SendToEIP) || Boolean(rowData.IsSend),
+    }
+  ];
+
   readonly payoutMethodOptions$ = getSYS1000Options$(this.systemDataService, 'VEN_PayType');
   readonly bankOptions$ = this.dropdown.queryAps1001NoBranch();
 
@@ -63,10 +74,10 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   readonly tableQueryFunction = (body: QueryFIN23010Request) => this.finService.queryFIN23010(body);
 
-  isRowSelectable(row: FIN23010Data): boolean { return row.CanVoid === '1' };
+  isRowSelectable(row: FIN23010Data): boolean { return row.CanVoid === '1'; }
 
   /** 僅「建立中」(StatusCode='1') 可編輯，比照 SP_FIN23010GetById 的 CanEdit 規則 */
-  editDisabled = (row: FIN23010Data): boolean => row.StatusCode !== '1';
+  editDisabled = (row: FIN23010Data): boolean => row.CanEdit !== '1';
 
   columns: ReportColumn[] = [
     { field: 'PrepNo', header: '預支單號' },
@@ -150,6 +161,46 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
       },
     });
   }
+
+  /** EIP送審 */
+  onSend(data: FIN23010Data): void {
+    this.messageService.confirm({
+      header: '送審確認',
+      message: `是否送審單號: ${data.PrepNo} 暫付款申請資料？`,
+      accept: () => {
+        this.voiding = true;
+
+        this.finService.sendFIN23010(data.id).pipe(
+          finalize(() => {
+            this.voiding = false;
+          }),
+        ).subscribe({
+          next: res => {
+            if (!res.Data?.Success) {
+              this.messageService.errorBubble(
+                res.Data?.Message || '送審失敗',
+                '送審失敗'
+              );
+              return;
+            }
+
+            this.messageService.successBubble(
+              res.Data?.Message || '送審成功'
+            );
+
+            this.onSubmit(this.queryForm);
+          },
+          error: () => {
+            this.messageService.errorBubble(
+              '送審失敗，請稍後再試。',
+              '送審失敗'
+            );
+          },
+        });
+      },
+    });
+  }
+
   /** 從表單組出查詢條件(過濾空值) */
   private buildQueryBodyFromForm(): QueryFIN23010Request {
     const raw = this.queryForm.getRawValue();

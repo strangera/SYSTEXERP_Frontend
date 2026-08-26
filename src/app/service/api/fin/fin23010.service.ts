@@ -60,6 +60,9 @@ export interface FIN23010Data {
   EipApproveYNName: string | null;
   /** 是否可刪除('1'=可刪除) */
   CanVoid: string | null;
+
+  CanEdit: string | null;
+  IsSend: string | null;
 }
 
 /** 編輯畫面單筆資料 */
@@ -222,7 +225,10 @@ export class FIN23010Service {
   voidFIN23010(id: number): Observable<ApiResponse<VoidFIN23010Response>> {
     return this.http.post<ApiResponse<VoidFIN23010Response>>(`${this.apiUrl}/voidFIN23010`, { id });
   }
-
+  /** 送審 */
+  sendFIN23010(id: number): Observable<ApiResponse<SaveFIN23010Response>> {
+    return this.http.post<ApiResponse<SaveFIN23010Response>>(`${this.apiUrl}/sendFIN23010`, { id });
+  }
   /** 新增頁「申請廠商/員工」選擇廠商時，依廠商編號查詢廠商資料 */
   queryVenFIN23010(VEN_No: string): Observable<ApiResponse<QueryVenFIN23010Response>> {
     return this.http.post<ApiResponse<QueryVenFIN23010Response>>(`${this.apiUrl}/queryVenFIN23010`, { VEN_No });

@@ -55,7 +55,7 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     map(options => options.filter(o => o.value === '1' || o.value === '3')),
   );
   readonly organizationOptions$ = this.dropdown.querySys3100();
-
+  readonly VEN_BNK_No_ParamOptions = this.dropdown.queryAps1001_DropDownList(); // 匯款銀行代號
   /** 目前選定的廠商/員工名稱(顯示用) */
   venName = '';
   /** 目前資料 id(修改時使用) */
@@ -87,6 +87,11 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     // 不把 dataForm 傳給 initializePage：清單頁傳回的列資料欄位命名與本頁表單不同，
     // 交由本頁自行依 id 呼叫 getByIdFIN23010 取得完整資料後再 patch，避免誤用泛用 patchValue。
     this.initializePage('FIN23010');
+
+    // 付款方式為電匯(1)時，匯款銀行代號/銀行帳號/帳戶名稱必填
+    this.dataForm.controls.payoutMethod.valueChanges.subscribe(payType => {
+      this.setBankValidators(payType);
+    });
 
     switch (this.crudstatus) {
       case CRUDStatus.Create:
@@ -141,6 +146,10 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
           organization: d.CostOrg,
           summary: d.Summary,
         });
+
+        // 依付款方式套用銀行相關欄位必填規則
+        this.setBankValidators(d.VEN_PayType);
+
         // 僅「建立中」狀態允許編輯；已作廢/已付款一律鎖定唯讀(不論從編輯或明細按鈕進入)
         if (this.crudstatus === CRUDStatus.Read || !d.CanEdit) {
           this.dataForm.disable();
@@ -150,6 +159,45 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
         this.messageService.errorBubble('載入暫付款申請資料失敗，請稍後再試。', '載入失敗');
       },
     });
+  }
+
+  /**
+   * 付款方式為電匯(1)時，
+   * 匯款銀行代號/銀行帳號/帳戶名稱皆為必填
+   */
+  private setBankValidators(payType: string | null): void {
+    const transferAccount = this.dataForm.controls.transferAccount;
+    const bankAccount = this.dataForm.controls.bankAccount;
+    const accountName = this.dataForm.controls.accountName;
+
+    if (payType === '1') {
+      transferAccount.setValidators([
+        Validators.required,
+        Validators.maxLength(10),
+      ]);
+      bankAccount.setValidators([
+        Validators.required,
+        Validators.maxLength(20),
+      ]);
+      accountName.setValidators([
+        Validators.required,
+        Validators.maxLength(80),
+      ]);
+    } else {
+      transferAccount.setValidators([
+        Validators.maxLength(10),
+      ]);
+      bankAccount.setValidators([
+        Validators.maxLength(20),
+      ]);
+      accountName.setValidators([
+        Validators.maxLength(80),
+      ]);
+    }
+
+    transferAccount.updateValueAndValidity({ emitEvent: false });
+    bankAccount.updateValueAndValidity({ emitEvent: false });
+    accountName.updateValueAndValidity({ emitEvent: false });
   }
 
   // ----------------------------------------------------------------
