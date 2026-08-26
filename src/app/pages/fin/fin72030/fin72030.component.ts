@@ -173,7 +173,7 @@ export class FIN72030Component
 
   loadDropdownOptions(): void {
     this.fin72030Service
-      .getFIN72030RqstNoDropDownList()
+      .getFIN72030RqstNoDropDownList(['1', '2']) // 拋轉：只撈未拋轉的單（建立/請款）
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.rqstNoOptions = res?.Data ?? [];

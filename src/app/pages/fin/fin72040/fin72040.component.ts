@@ -14,6 +14,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { Fin72030Service } from '@service/api/fin/fin72030.service';
 import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
 
 @Component({
@@ -75,6 +76,7 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
   // ----------------------------------------------------------------
   constructor(
     private readonly fin72040Service: Fin72040Service,
+    private readonly fin72030Service: Fin72030Service,
   ) {
     super();
   }
@@ -159,17 +161,16 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
   }
 
   loadOptions() {
-    // 支出請款單號 下拉
-    this.fin72040Service.POS2064MPCS_RqstNoDropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+    // 支出請款單號 下拉：撥補只撈已拋轉(狀態3)、尚未撥補的單，共用 FIN72030 下拉端點
+    this.fin72030Service.getFIN72030RqstNoDropDownList(['3']).pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response.Data) ? response.Data : [];
-      this.PCS_RqstNo_Options = list.map((item: any) => {
+      this.PCS_RqstNo_Options = list.map((item) => {
         return {
           PCS_RqstNo: item.PCS_RqstNo,
-          PCS_RqstDate: item.PCS_RqstDate,
+          PCS_RqstDate: item.PCS_RqstDate as unknown as Date,
           Keep_UsrNo: item.Keep_UsrNo,
         };
       });
-      console.log('支出請款單號 下拉:', this.PCS_RqstNo_Options);
     });
   }
 }
