@@ -227,22 +227,25 @@ export class ASS16040Component
     },
 
     {
-      field: 'MTAPPLY_STATUS',
-      header: '領用單狀態代碼',
-    },
+  field: 'MTAPPLY_STATUS',
+  header: '領用單狀態代碼',
+  sortField: 'MTAPPLY_STATUS',
+},
 
-    {
-      field: 'MTAPPLY_STATUS_NAME',
-      header: '領用單狀態名稱',
-      format: (
-        _v,
-        _i,
-        row: ASS16040MasterRow,
-      ) =>
-        this.statusNameMap.get(
-          row?.MTAPPLY_STATUS ?? '',
-        ) ?? '',
-    },
+{
+  field: 'MTAPPLY_STATUS_NAME',
+  header: '領用單狀態名稱',
+  sortField: 'MTAPPLY_STATUS',
+
+  format: (
+    _v,
+    _i,
+    row: ASS16040MasterRow,
+  ) =>
+    this.statusNameMap.get(
+      row?.MTAPPLY_STATUS ?? '',
+    ) ?? '',
+},
 
     {
       field: 'APRV_EMP_ID',
@@ -895,4 +898,14 @@ this.dropdownApiService
       },
     );
   }
+  /**
+ * 已審核的資料不可再編輯
+ * 1 = 待審核，可編輯
+ * 其它狀態 = 不可編輯
+ */
+readonly editDisabled = (
+  row: ASS16040MasterRow,
+): boolean => {
+  return row?.MTAPPLY_STATUS !== '1';
+};
 }
