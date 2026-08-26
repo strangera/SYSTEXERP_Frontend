@@ -70,7 +70,7 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   columns: ReportColumn[] = [
     { field: 'PrepNo', header: '預支單號' },
-    { field: 'StatusName', header: '狀態' },
+
     { field: 'PrepAmt', header: '預支金額', align: 'right', format: formatAmount },
     { field: 'ApplyDate', header: '申請日期' },
     { field: 'PlanCloseDate', header: '預計核銷日' },
@@ -83,6 +83,7 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
     { field: 'VenCheckTitle', header: '統一編號/身分證字號' },
     { field: 'Summary', header: '摘要' },
     { field: 'PlanPayDate', header: '預計付款日' },
+    { field: 'StatusName', header: '狀態' },
     { field: 'EipApproveYNName', header: '簽核結果' },
     { field: 'CloseStatusName', header: '結案狀態' },
   ];
