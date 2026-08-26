@@ -22,8 +22,9 @@
           </div>
           <!-- 傳票狀態 (多選) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="傳票狀態" controlName="PostFlagList" [options]="postFlagOptions" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.PostFlagList" [submitted]="submitted">
+            <app-multi-select label="傳票狀態" controlName="TransStatusList" [options]="transStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.TransStatusList"
+              [submitted]="submitted">
             </app-multi-select>
           </div>
           <!-- 結帳單號 -->
