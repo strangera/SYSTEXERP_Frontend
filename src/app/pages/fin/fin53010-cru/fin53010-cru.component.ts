@@ -3625,6 +3625,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'AccAmtD':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtC = void 0;
+          // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
+          this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           // rebuildAllAutoPta 由 onDataChange 呼叫（tableData 已更新後），
           // 在此提前呼叫時 tableData 仍是舊值，會錯誤清除原有 PTA 並產生新號
           break;
@@ -3632,6 +3634,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'AccAmtC':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtD = void 0;
+          // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
+          this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           break;
 
         case 'ORG_ID':
@@ -3691,6 +3695,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const { ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
     if (ABAT_YN !== 'Y') return false;
     return this.isCreatingDirectionRow(rowData);
+  }
+
+  /** 該 PTA 是否為系統自動產生的立沖代號（新增模式 #N；編輯模式 {VouNo}-N） */
+  private isAutoPtaValue(pta: string | undefined | null): boolean {
+    if (!pta) return false;
+    if (pta.startsWith('#')) return true;
+    const vouNo = this.dataForm.getRawValue().VouNo?.trim();
+    return !!vouNo && vouNo !== '自動給號' && pta.startsWith(`${vouNo}-`);
+  }
+
+  /** 借貸方金額切到「建立方向」時，清除先前反向沖帳挑選殘留的立沖代號與帶入的廠商/摘要。
+   *  建立方向的立沖代號應由 rebuildAllAutoPta 自動產號，不可沿用反向挑選的號，否則資料會錯誤。 */
+  private clearStaleOffsetPtaOnDirectionSwitch(rowData: FIN53010DetailTable): void {
+    const { ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+    if (ABAT_YN !== 'Y') return;
+    if (rowData.id) return; // 已存 DB 的列方向已鎖定，不處理
+    if (!this.isCreatingDirectionRow(rowData)) return; // 只在切到建立方向時清除
+    if (!rowData.PTA || this.isAutoPtaValue(rowData.PTA)) return; // 無號或已是自動號 → 交給 rebuildAllAutoPta
+    // 反向挑選殘留 → 清除立沖代號與由沖帳對象帶入的廠商/摘要，摘要還原為科目預設
+    rowData.PTA = undefined;
+    rowData.DetailNo = undefined;
+    rowData.DetailName = undefined;
+    rowData.NoteDesc = String(this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label
+      || this.service.accNoMap().get(String(rowData.AccNo))?.label || '');
   }
 
   /** 為「自動編碼」列指定 PTA。
