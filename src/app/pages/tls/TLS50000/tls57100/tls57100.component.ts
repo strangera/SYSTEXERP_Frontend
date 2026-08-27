@@ -53,6 +53,12 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
     Status: [null],
     ODM_No: ['', Validators.maxLength(16)],
     DisplayMode: [1, [Validators.required]],
+      SortBy: [[
+    {
+      field: 'ODM_Date',
+      order: -1,
+    }
+  ]],
   });
   totalRecords = 0;
   footerTotal: any
@@ -145,20 +151,43 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
       const displayMode = formValue.DisplayMode;
 
       const requestBody: QueryTLS57100Request = {
-        ReportType: displayMode === 1 ? '彙總' : '明細',
-        HOS_No: formValue.HOS_No,
-        LOGO_No: formValue.LOGO_No,
-        VEN_No: formValue.VEN_No,
-        ODM_Date_Start: formValue.ODM_Date_Start ? this.datePipe.transform(formValue.ODM_Date_Start, 'yyyy-MM-dd') ?? undefined : undefined,
-        ODM_Date_End: formValue.ODM_Date_End ? this.datePipe.transform(formValue.ODM_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
-        APRV_Date_Start: formValue.APRV_Date_Start ? this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd') ?? undefined : undefined,
-        APRV_Date_End: formValue.APRV_Date_End ? this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
-        ODM_Type: formValue.ODM_Type,
-        Status: formValue.Status,
-        ODM_No: formValue.ODM_No,
-        pageIndex: 1,
-        pageSize: 500,
-      };
+  ReportType: displayMode === 1 ? '彙總' : '明細',
+
+  HOS_No: formValue.HOS_No,
+  LOGO_No: formValue.LOGO_No,
+  VEN_No: formValue.VEN_No,
+
+  ODM_Date_Start: formValue.ODM_Date_Start
+    ? this.datePipe.transform(formValue.ODM_Date_Start, 'yyyy-MM-dd') ?? undefined
+    : undefined,
+
+  ODM_Date_End: formValue.ODM_Date_End
+    ? this.datePipe.transform(formValue.ODM_Date_End, 'yyyy-MM-dd') ?? undefined
+    : undefined,
+
+  APRV_Date_Start: formValue.APRV_Date_Start
+    ? this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd') ?? undefined
+    : undefined,
+
+  APRV_Date_End: formValue.APRV_Date_End
+    ? this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd') ?? undefined
+    : undefined,
+
+  ODM_Type: formValue.ODM_Type,
+  Status: formValue.Status,
+  ODM_No: formValue.ODM_No,
+
+  pageIndex: 1,
+  pageSize: 500,
+
+  // 申請日期 DESC
+  SortBy: formValue.SortBy ?? [
+    {
+      field: 'ODM_Date',
+      order: -1,
+    }
+  ],
+};
       this.tls57100Service.queryTLS57100(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response: any) => {
         if (response.Data) {
           this.totalRecords = response.TotalCount || 0;
