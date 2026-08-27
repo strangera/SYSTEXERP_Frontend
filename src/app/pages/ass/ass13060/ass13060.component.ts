@@ -232,19 +232,33 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
   }
 
   public onExportPDF(): void {
-    const ids = this.selectedItems
-      .filter(row => row.ID != null)
-      .map(row => row.ID as number);
-    if (ids.length === 0) {
-      this.messageService.warnBubble('請先選擇要列印的資料');
-      return;
-    }
-    this.loading = true;
-    const download$ = this.service.exportPDFASS13060({ Ids: ids });
-    this.fileExportService.executeFileExport(
-      download$,
-      '.pdf',
-      (isLoading) => this.loading = isLoading
-    ).subscribe();
+  const ids = this.selectedItems
+    .filter(row => row.ID != null)
+    .map(row => row.ID as number);
+
+  if (ids.length === 0) {
+    this.messageService.warnBubble('請先選擇要列印的資料');
+    return;
   }
+
+  const firstItem = this.selectedItems[0];
+
+  const payload = {
+    MID: firstItem.MID ?? 0,
+    STO_NO: firstItem.STO_NO ?? null,
+    Ids: ids
+  };
+
+  console.log('exportPDFASS13060 payload:', payload);
+
+  this.loading = true;
+
+  const download$ = this.service.exportPDFASS13060(payload);
+
+  this.fileExportService.executeFileExport(
+    download$,
+    '.pdf',
+    (isLoading) => this.loading = isLoading
+  ).subscribe();
+}
 }
