@@ -78,7 +78,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
     pod_back_edate: [null as Date | null, [Validators.required]], // 兌回日期(迄)
     pod_busdate: [null as Date | null, [Validators.required]], // 活動正檔日期
-    pod_status: ['0', [Validators.required]], // 活動狀態 (0=未核准, 1=已核准, 9=刪除)
+    pod_status: ['0'], // 活動狀態 (0=未核准, 1=已核准, 9=刪除)，永遠 disabled 顯示用，不需必填驗證
+    approved_usr_name: [null as string | null], // 審核人員(唯讀顯示，於查詢頁審核/反審核後帶回)
+    approved_date: [null as Date | null], // 審核日期(唯讀顯示，於查詢頁審核/反審核後帶回)
     pod_type: ['2', [Validators.required]], // 活動類型
     pod_type2: ['3', [Validators.required]], // 活動類型
   }, {
@@ -492,23 +494,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         groupField: 'groupField2',
         textAlign: 'right',
       },
-      {
-        field: 'pod_status',
-        header: '審核狀態',
-        options: () => [{ value: '0', label: '未核准' }, { value: '1', label: '已核准' }],
-        optionLabel: 'label',
-        optionValue: 'value',
-        format: this.service.approvalStatus,
-      },
-      {
-        field: 'approved_usr_name',
-        header: '審核人員',
-      },
-      {
-        field: 'approved_date',
-        header: '審核日期',
-        format: v => this.datePipe.transform(v, 'YYYY/MM/dd')
-      },
     ];
   });
 
@@ -574,8 +559,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       }
 
       const rowData = this.rowdata!;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除 pod_type2，僅用於表單不送 API
-      const { pod_type2, ...d } = this.dataForm.getRawValue();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除 pod_type2/pod_status/approved_usr_name/approved_date，這些僅用於表單唯讀顯示，不送 API（審核資訊一律由查詢頁審核/反審核動作維護；update 時 pod_status 改由下方 { ...rowData, ...payload } 帶入原始值)
+      const { pod_type2, pod_status, approved_usr_name, approved_date, ...d } = this.dataForm.getRawValue();
       const validTableData = this.tableData().filter(item => !item._isAutoInsertCandidate);
 
       this.logger.debug(`beforeSubmit:`, [rowData, d, validTableData]);
@@ -646,9 +631,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_busdate: d.pod_busdate!,
         pod_back_sdate: d.pod_back_sdate!,
         pod_back_edate: d.pod_back_edate!,
-        // fare_rate_* 僅 queryTLS26080_Detail 使用，不寫入 insert／update
+        // fare_rate_*/pod_status 僅顯示用，insert／update 明細後端 Request 皆已無這些欄位，不寫入
+        // （queryTLS26080_Detail 回應也已不再帶 approved_usrno/approved_usr_name/approved_date，明細列不再有這些欄位）
         TALPORDERD_VOUCHERDetails: validTableData.map(item => {
-          const { fare_rate_d16: _fr16, fare_rate_d17: _fr17, ...row } = item;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除合約分攤與審核狀態欄位，不送 API
+          const { fare_rate_d16: _fr16, fare_rate_d17: _fr17, pod_status: _podStatus, ...row } = item;
           return {
             ...row,
             pod_no: d.pod_no ?? '',
@@ -659,8 +646,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             cap_item_D17: item.cap_item_D17 ?? 'D17',
             tpy_rate_D16: item.tpy_rate_D16,
             tpy_rate_D17: item.tpy_rate_D17,
-            approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
-            pod_status: item.pod_status ?? '0',
           };
         }),
       };
@@ -668,9 +653,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0) && !k.startsWith('_')
       )) as unknown as TLS26080InsertPayload;
 
-      const request = this.isFormEditable
-        ? this.service.updateTLS26080({ ...rowData, ...payload } as TLS26080UpdatePayload)
-        : this.service.insertTLS26080(payload);
+      let request;
+      if (this.isFormEditable) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 後端 updateTLS26080Request 已無 pod_status 欄位，審核狀態一律走查詢頁審核/反審核動作維護
+        const { pod_status: _rowPodStatus, ...rowDataForUpdate } = rowData;
+        request = this.service.updateTLS26080({ ...rowDataForUpdate, ...payload } as TLS26080UpdatePayload);
+      } else {
+        request = this.service.insertTLS26080(payload);
+      }
 
       this.logger.debug(`submit:`, [d, payload]);
       request.pipe(finalize(() => this.tableLoading.set(false)))
@@ -717,9 +707,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tpy_rate_D17: 0,
       pod_no: this.getPodNo() ?? '',
       pod_status: '0' as const,
-      approved_usrno: '',
-      approved_usr_name: '',
-      approved_date: undefined,
     }));
 
     // 預載抽成類別下拉選項
@@ -768,9 +755,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tpy_rate_D17: 0,
       pod_no: this.getPodNo() ?? '',
       pod_status: '0',
-      approved_usrno: '',
-      approved_usr_name: '',
-      approved_date: undefined,
     };
     this.tableData.update(td => [...td, blank]);
   }
