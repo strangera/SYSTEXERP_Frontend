@@ -1334,11 +1334,11 @@ export class FIN23020CRUComponent
 
             next: results => {
 
-              const failMessages:
+              const successMessages:
                 string[] = [];
 
-
-              let successCount = 0;
+              const failMessages:
+                string[] = [];
 
 
               results.forEach(
@@ -1353,7 +1353,22 @@ export class FIN23020CRUComponent
                     res?.Data?.Success
                   ) {
 
-                    successCount++;
+                    /**
+                     * 顯示後端回傳的訊息
+                     * （已含傳票號），
+                     * 沒有訊息時用傳票號補上。
+                     */
+                    const detail =
+                      res.Data.Message
+                      || (
+                        res.Data.VouNo
+                          ? `拋轉成功，傳票號：${res.Data.VouNo}`
+                          : '拋轉成功'
+                      );
+
+                    successMessages.push(
+                      `${prepNo}: ${detail}`
+                    );
 
                   } else {
 
@@ -1370,10 +1385,20 @@ export class FIN23020CRUComponent
               );
 
 
+              const successCount =
+                successMessages.length;
+
+
+              const successBlock =
+                successMessages.length
+                  ? `成功 ${successCount} 筆：<br>${successMessages.join('<br>')}`
+                  : `成功 ${successCount} 筆`;
+
+
               const summary =
                 failMessages.length
-                  ? `成功 ${successCount} 筆，失敗 ${failMessages.length} 筆：<br>${failMessages.join('<br>')}`
-                  : `成功 ${successCount} 筆`;
+                  ? `${successBlock}<br>失敗 ${failMessages.length} 筆：<br>${failMessages.join('<br>')}`
+                  : successBlock;
 
 
               setTimeout(() => {

@@ -411,6 +411,10 @@ export interface Aps1001ComboItem {
   No: string;
   Name: string;
   DisplayText: string;
+  /** 銀行別(前3碼) */
+  BNK_No: string;
+  /** 分行(後4碼) */
+  BNK_BranchNo: string;
 }
 
 /**

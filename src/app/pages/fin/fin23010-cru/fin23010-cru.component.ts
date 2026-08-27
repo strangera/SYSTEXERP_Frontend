@@ -1,5 +1,6 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
@@ -31,6 +32,10 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
   private readonly finService = inject(FIN23010Service);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** 匯款銀行代號(7碼) → { BNK_No(前3碼), BNK_BranchNo(後4碼) } 對照，存檔時拆分用 */
+  private readonly bankBranchMap = new Map<string, { BNK_No: string; BNK_BranchNo: string }>();
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
@@ -88,6 +93,14 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     // 交由本頁自行依 id 呼叫 getByIdFIN23010 取得完整資料後再 patch，避免誤用泛用 patchValue。
     this.initializePage('FIN23010');
 
+    // 匯款銀行下拉載入後，建立「7碼 → BNK_No/BNK_BranchNo」對照，供存檔時拆分
+    this.VEN_BNK_No_ParamOptions.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(opts => {
+      this.bankBranchMap.clear();
+      (opts ?? []).forEach(o => {
+        this.bankBranchMap.set(String(o['value']), { BNK_No: o['BNK_No'], BNK_BranchNo: o['BNK_BranchNo'] });
+      });
+    });
+
     // 付款方式為電匯(1)時，匯款銀行代號/銀行帳號/帳戶名稱必填
     this.dataForm.controls.payoutMethod.valueChanges.subscribe(payType => {
       this.setBankValidators(payType);
@@ -138,7 +151,8 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
           writeOffDate: d.CLOSE_Date ? new Date(d.CLOSE_Date) : null,
           requsetEmployee: d.VEN_No,
           payoutMethod: d.VEN_PayType,
-          transferAccount: d.BNK_No,
+          // 下拉值為 7 碼(BNK_No + BNK_BranchNo)，由拆存的兩欄還原以正確帶出選項
+          transferAccount: `${d.BNK_No ?? ''}${d.BNK_BranchNo ?? ''}`,
           bankAccount: d.BNK_AccNo,
           accountName: d.BNK_AccountName,
           ticketTitle: d.VEN_CheckTitle,
@@ -207,6 +221,8 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
 
   private doSave(): void {
     const v = this.dataForm.getRawValue();
+    // 匯款銀行 7 碼拆成 BNK_No(前3碼) / BNK_BranchNo(後4碼)分開儲存
+    const bank = v.transferAccount ? this.bankBranchMap.get(v.transferAccount) : undefined;
     const payload = {
       ActionMode: (this.crudstatus === CRUDStatus.Create ? 'I' : 'U') as 'I' | 'U',
       id: this.crudstatus === CRUDStatus.Create ? null : this.currentId,
@@ -216,7 +232,8 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
       PAY_Date: this.toDateString(v.eExpectPayDate),
       CLOSE_Date: this.toDateString(v.writeOffDate),
       VEN_PayType: v.payoutMethod,
-      BNK_No: v.transferAccount || null,
+      BNK_No: bank?.BNK_No ?? null,
+      BNK_BranchNo: bank?.BNK_BranchNo ?? null,
       BNK_AccNo: v.bankAccount || null,
       BNK_AccountName: v.accountName || null,
       VEN_CheckTitle: v.ticketTitle || null,
