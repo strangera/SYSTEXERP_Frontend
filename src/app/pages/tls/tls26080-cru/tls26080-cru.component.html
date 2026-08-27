@@ -28,6 +28,16 @@
         <app-calendar-range class="col-12 md:col-6 lg:col-4" label="活動兌回日期" [startControl]="df().pod_back_sdate"
           [endControl]="df().pod_back_edate" [submitted]="submitted">
         </app-calendar-range>
+        @if (!isFormCreateable) {
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核狀態" controlName="pod_status"
+          [options]="service.podStatusItems" optionLabel="label" optionValue="value" [disabled]="true"
+          [control]="df().pod_status" [submitted]="submitted"></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="審核人員" controlName="approved_usr_name"
+          [control]="df().approved_usr_name" [disabled]="true" [submitted]="submitted"></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="審核日期"
+          controlName="approved_date" [control]="df().approved_date" [disabled]="true"
+          customPlaceholder="核准後自動產生" [submitted]="submitted"></app-calendar>
+        }
 
         <!-- 日期驗證錯誤提示 -->
         @if(dataForm.errors) {
@@ -91,7 +101,7 @@
     [totalRecords]="dialogData().length" [selectedItems]="selectedItemsDialog()"
     (selectionChange)="selectedItemsDialog.set($event)" [showCaption]="false" [showFilter]="false"
     [showReportMode]="false" [showExcel]="false" [showDelete]="false" [showManage]="false" [showCheckBox]="true"
-    [queryFunction]="queryTalentDialog" [loading]="dialogLoading()">
+    [queryFunction]="queryTalentDialog" [loading]="dialogLoading()" [ItemSize]="30">
   </app-table-report>
 </app-dialog>
 
@@ -124,8 +134,8 @@
           [rowValidate]="validateEntireRow" [showRowValidationHint]="true" [tableRequired]="true"
           errorMessage="請至少新增一筆專櫃資料" [showInsert]="!isFormReadable" [showDelete]="!isFormReadable"
           [showEdit]="!isFormReadable" [showCheckBox]="!isFormReadable" [showRowEdit]="!isFormReadable"
-          [alwaysEdit]="!isFormReadable" (insert)="openDialog()" [disabled]="isFormReadable" (delete)="onDelete()"
-          [loading]="tableLoading()">
+          [showManage]="!isFormReadable" [alwaysEdit]="!isFormReadable" (insert)="openDialog()"
+          [disabled]="isFormReadable" (delete)="onDelete()" [loading]="tableLoading()">
         </app-table>
       </p-panel>
     </div>
