@@ -69,6 +69,12 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
     WH_ID: [null as string | null],
     PageSize: [30],
     PageIndex: [1],
+    SortBy: [[
+  {
+    field: 'SUBPOENA_ID',
+    order: -1,
+  },
+]],
   });
 
   /** 品項：queryASS11040_DropDownList */
@@ -246,7 +252,12 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
       WH_ID: raw.WH_ID || undefined,
       PageSize: (body as any).pageSize ?? body.PageSize,
       PageIndex: (body as any).pageIndex ?? body.PageIndex ?? 1,
-      SortBy: body.SortBy,
+      SortBy: body.SortBy ?? [
+  {
+    field: 'SUBPOENA_ID',
+    order: -1,
+  },
+],
     };
 
     const clean = removeEmptyValues(payload) as QueryASS12050Request;
@@ -279,7 +290,13 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
         WH_ID: raw.WH_ID || undefined,
         PageSize: raw.PageSize ?? 30,
         PageIndex: 1,
-      } as QueryASS12050Request;
+       SortBy: raw.SortBy ?? [
+    {
+      field: 'SUBPOENA_ID',
+      order: -1,
+    },
+  ],
+} as QueryASS12050Request;
 
       this.loading = true;
       this.queryStateService.setQueryState(this.ProgNo, raw);

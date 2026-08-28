@@ -103,7 +103,7 @@ export class ASS12010Component
      */
     SortBy: new FormControl<SortItem[]>([
       {
-        field: 'APPLY_DATE',
+        field: 'NEED_ID',
         order: -1,
       },
     ]),
@@ -334,7 +334,7 @@ export class ASS12010Component
       rawFormValue.SortBy ??
       [
         {
-          field: 'APPLY_DATE',
+          field: 'NEED_ID',
           order: -1,
         },
       ];
@@ -432,7 +432,7 @@ export class ASS12010Component
           SortBy:
             rawFormValue.SortBy ?? [
               {
-                field: 'APPLY_DATE',
+                field: 'NEED_ID',
                 order: -1,
               },
             ],
