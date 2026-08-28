@@ -151,14 +151,38 @@ export interface ASS12050MasterDataWrapper {
 /** 主檔一筆（採購單下的驗收單清單） */
 export interface ASS12050MasterRow {
   ROW_NO?: number | null;
+
+  /** 驗收單號 */
   SUBCHECK_ID?: string | null;
+
+  /** 驗收人員編號 */
+  CLOSE_EMP_ID?: string | null;
+
+  /** 驗收人員名稱 */
   CLOSEName?: string | null;
+
+  /** 驗收日期 */
+  CHECK_DATE?: string | null;
+
+  /** 部門名稱 */
   Org_Name?: string | null;
+
+  /** 申請人名稱 */
   APPLYName?: string | null;
+
+  /** 申請日期 */
   APPLY_DATE?: string | null;
+
+  /** 供應商名稱 */
   VEN_Name?: string | null;
+
+  /** 驗收狀態 */
   STATUS?: string | null;
+
+  /** 明細筆數 */
   DETAIL_COUNT?: number | null;
+
+  /** 行號 */
   RowNum?: number | null;
 }
 
@@ -172,30 +196,52 @@ export interface ASS12050GetDetailRequest {
 /** 採購單驗收明細（編輯頁載入用） */
 export interface ASS12050Detail {
   ROW_NO?: number | null;
+
   /** 驗收單號 */
   SUBCHECK_ID?: string | null;
+
   /** 申請人編號 */
   EMP_ID?: string | null;
+
   /** 申請人名稱 */
   EMP_Name?: string | null;
+
   /** 部門代號 */
   ORG_ID?: string | null;
+
   /** 部門名稱 */
   Org_Name?: string | null;
+
   /** 申請日期 */
   APPLY_DATE?: string | null;
+
+  /** 驗收人員編號 */
+  CLOSE_EMP_ID?: string | null;
+
+  /** 驗收人員名稱 */
+  CLOSE_EMP_NAME?: string | null;
+
+  /** 驗收日期 */
+  CHECK_DATE?: string | null;
+
   /** 供應商代號 */
   SUPPLIER_ID?: string | null;
+
   /** 供應商名稱 */
   VEN_Name?: string | null;
+
   /** 未稅總金額 */
   NTAX_AMT?: number | null;
+
   /** 稅額 */
   TAX_AMT?: number | null;
+
   /** 含稅總金額 */
   AMT?: number | null;
+
   /** 驗收狀態 */
   CHK_Status?: string | null;
+
   /** 明細列 */
   Details?: ASS12050DetailItem[];
 }
