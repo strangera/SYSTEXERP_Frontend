@@ -5,33 +5,86 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別" controlName="WH_ID" [options]="whIdOptions()"
-            optionLabel="label" optionValue="value" [control]="qf().WH_ID" [submitted]="submitted"></app-dropdown>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="需求單號" controlName="NEED_ID" [control]="qf().NEED_ID"
-            [submitted]="submitted"></app-input-text>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="品項代號" controlName="GOODS_ID"
-            [options]="goodsIdOptions()" optionLabel="label" optionValue="value" [control]="qf().GOODS_ID"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="倉別"
+            controlName="WH_ID"
+            [options]="whIdOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().WH_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="需求單號"
+            controlName="NEED_ID"
+            [control]="qf().NEED_ID"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="品項代號"
+            controlName="GOODS_ID"
+            [options]="goodsIdOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().GOODS_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人代號/名稱" controlName="EMP_ID"
-            [options]="empIdOptions()" optionLabel="label" optionValue="value" [control]="qf().EMP_ID"
-            [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="部門代號/名稱" controlName="ORG_ID" [options]="orgIdOptions()"
-            optionLabel="label" optionValue="value" [control]="qf().ORG_ID" [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="請購申請狀態" controlName="NEEDS_STATUS"
-            [options]="needsStatusOptions()" optionLabel="label" optionValue="value" [control]="qf().NEEDS_STATUS"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="申請人代號/名稱"
+            controlName="EMP_ID"
+            [options]="empIdOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().EMP_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="部門代號/名稱"
+            controlName="ORG_ID"
+            [options]="orgIdOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().ORG_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="請購申請狀態"
+            controlName="NEEDS_STATUS"
+            [options]="needsStatusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().NEEDS_STATUS"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="grid p-fluid">
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="需求日期" [startControl]="qf().APPLY_DATE_S"
-            [endControl]="qf().APPLY_DATE_E" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="需求日期"
+            [startControl]="qf().APPLY_DATE_S"
+            [endControl]="qf().APPLY_DATE_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -42,9 +95,21 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()" dataKey="NEED_ID" tableKey="ASS12010_Data" [columns]="columns"
-      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction" [showDelete]="false" [showReportMode]="false" [editDisabled]="editDisabled"
-      [addButton]="addButton" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table-report>
+    <app-table-report
+      [data]="tableData()"
+      dataKey="NEED_ID"
+      tableKey="ASS12010_Data"
+      [columns]="columns"
+      [totalRecords]="totalRecords()"
+      [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
+      [showDelete]="false"
+      [showReportMode]="false"
+      [editDisabled]="editDisabled"
+      [addButton]="addButton"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table-report>
   </div>
 </div>
