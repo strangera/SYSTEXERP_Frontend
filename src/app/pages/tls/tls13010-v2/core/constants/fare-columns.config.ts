@@ -5,6 +5,12 @@
 import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ColumnDef } from '@others/component/expandable-edit-table/expandable-edit-table.component';
 
+/** 單位下拉：最前面加一個空白選項（顯示為空列，選了即送出空白），讓使用者可不指定單位 */
+const TPY_TYPE_OPTIONS_WITH_BLANK = [
+  { label: ' ', value: '' },
+  ...TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+];
+
 /**
  * 扣款類型枚舉
  */
@@ -118,7 +124,7 @@ export function getDeductionAColumns(contractDates?: { bdate?: string; edate?: s
       header: '單位',
       type: 'dropdown',
       editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      options: TPY_TYPE_OPTIONS_WITH_BLANK,
       required: true
     },
     {
@@ -191,7 +197,7 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       header: '單位',
       type: 'dropdown',
       editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      options: TPY_TYPE_OPTIONS_WITH_BLANK,
       required: true,
       style: 'min-width: 120px;'
     },
@@ -443,7 +449,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '單位',
       type: 'dropdown',
       editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      options: TPY_TYPE_OPTIONS_WITH_BLANK,
       required: true,
       style: 'width: 60px; min-width: 60px; font-size: 0.65rem;'
     },
@@ -513,7 +519,7 @@ export function getDeductionEColumns(contractDates?: { bdate?: string; edate?: s
       header: '單位',
       type: 'dropdown',
       editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      options: TPY_TYPE_OPTIONS_WITH_BLANK,
       required: true,
       autoWidth: true
     },
