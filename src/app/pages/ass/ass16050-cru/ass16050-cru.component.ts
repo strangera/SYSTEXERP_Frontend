@@ -59,12 +59,12 @@ export class ASS16050CRUComponent
 
   detailColumns: ReportColumn[] = [
     // { field: 'LINE_NUM', header: '序號', align: 'right' },
-    { field: 'FASITEM_ID', header: '品項編號' },
+    { field: 'GOODS_ID', header: '品項編號' },
     {
-      field: 'FASITEM_NAME',
+      field: 'GOODS_NAME',
       header: '品項名稱',
       format: (_v, _i, row) =>
-        this.getOptionName(String(row?.FASITEM_ID ?? ''), this.fasItemOptions),
+        this.getOptionName(String(row?.GOODS_ID ?? ''), this.fasItemOptions),
     },
     {
       field: 'QTY',
@@ -89,8 +89,9 @@ export class ASS16050CRUComponent
   detailLoading = false;
 
   /** 領用單狀態為「審核確認 (4)」時才可結案 */
+  // 更新，查看SYS1000與資料為審核確認為 (2)
   get canDispatch(): boolean {
-    return this.dataForm.controls.MTAPPLY_STATUS.value === '4';
+    return this.dataForm.controls.MTAPPLY_STATUS.value === '2';
   }
 
   constructor(
