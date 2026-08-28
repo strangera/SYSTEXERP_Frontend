@@ -89,8 +89,9 @@ export class ASS16050CRUComponent
   detailLoading = false;
 
   /** 領用單狀態為「審核確認 (4)」時才可結案 */
+  // 更新，查看SYS1000與資料為審核確認為 (2)
   get canDispatch(): boolean {
-    return this.dataForm.controls.MTAPPLY_STATUS.value === '4';
+    return this.dataForm.controls.MTAPPLY_STATUS.value === '2';
   }
 
   constructor(
