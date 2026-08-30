@@ -187,7 +187,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
               RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null,
               TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null,
-              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 直接帶入字串即可
+              DEC_YM: this.formatToDecYm(this.supplierData[0]?.DEC_YM), // Date -> YYYYMM 字串
               INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
               TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
               REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
@@ -216,7 +216,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
               RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null,
               TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null,
-              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 直接帶入字串即可
+              DEC_YM: this.formatToDecYm(this.supplierData[0]?.DEC_YM), // Date -> YYYYMM 字串
               INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
               TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
               REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
@@ -253,7 +253,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         .subscribe(res => {
           if (res.Data) {
             const supplierRaw = res.Data.Supplier;
-            this.supplierData = Array.isArray(supplierRaw) ? [...supplierRaw] : (supplierRaw ? [supplierRaw] : []);
+            const supplierList = Array.isArray(supplierRaw) ? [...supplierRaw] : (supplierRaw ? [supplierRaw] : []);
+            this.supplierData = supplierList.map(item => ({
+              ...item,
+              DEC_YM: this.parseDecYm(item.DEC_YM),
+            }));
             const detailsRaw = res.Data.Details;
             this.itemData = Array.isArray(detailsRaw) ? [...detailsRaw] : (detailsRaw ? [detailsRaw] : []);
 
@@ -270,8 +274,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   // 讀取 dropdown 選項
   loadOptions() {
-    this.DEC_YM_Options = this.generateDecYmOptions();
-
     const supplier$ = this.dropDownListService.queryPOS2013_DropDownList({});
     const invFormat$ = this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 });
     const reduCode$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DiscNo' });
@@ -348,29 +350,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       });
   }
   //---發票明細---
-  DEC_YM_Options: { value: string; label: string }[] = [];
-  /**
- * 動態生成申報年月雙月選項 (每年 2, 4, 6, 8, 10, 12 月)
- * @param startYear 起始年份 (預設為前一年)
- * @param yearCount 產生幾年 (預設 3 年：前一年、今年、下一年)
- */
-  private generateDecYmOptions(startYear = new Date().getFullYear() - 100, yearCount = 103): { value: string; label: string }[] {
-    const options: { value: string; label: string }[] = [];
-    const evenMonths = [2, 4, 6, 8, 10, 12];
-
-    for (let i = 0; i < yearCount; i++) {
-      const year = startYear + i;
-      for (const month of evenMonths) {
-        const monthStr = month.toString().padStart(2, '0');
-        const ymValue = `${year}${monthStr}`;
-        options.push({
-          value: ymValue,
-          label: `${year}/${monthStr}` // 畫面顯示如 2026/02
-        });
-      }
-    }
-    return options;
-  }
   /** 將 Date 物件轉為 YYYYMM 字串，若原本就是字串則直接回傳 */
   private formatToDecYm(value: Date | string | null | undefined): string | null {
     if (!value) return null;
@@ -381,6 +360,16 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       return `${year}${month}`;
     }
     return null;
+  }
+  /** 將 YYYYMM 字串(或既有 Date/ISO 字串)轉為 Date 物件，供月份選擇器顯示 */
+  private parseDecYm(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (/^\d{6}$/.test(value)) {
+      return new Date(+value.substring(0, 4), +value.substring(4, 6) - 1, 1);
+    }
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date;
   }
   /** 傳入 Date 或日期字串，回傳該月份最後一天的 Date 物件 */
   private getLastDayOfMonth(dateValue: Date | string | null | undefined): Date | null {
@@ -398,15 +387,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'RECEIPT_NO', header: '發票號碼', type: 'input' },
       { field: 'RECEIPT_DATE', header: '發票日期', type: 'date' },
       { field: 'TICKET_DATE', header: '付款日期', type: 'date' },
-      // --- 申報年月：改為下拉式選單 ---
-      {
-        field: 'DEC_YM',
-        header: '申報年月',
-        type: 'dropdown',
-        options: this.DEC_YM_Options,
-        optionLabel: 'label',
-        optionValue: 'value'
-      },
+      // --- 申報年月：改為月份選擇器（比照 TLS2F010CRU columns3 DEC_YM 定義） ---
+      { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
       { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
@@ -592,7 +574,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       ...item,
       // 手動將字串轉回 Date 物件
       RECEIPT_DATE: item.RECEIPT_DATE ? new Date(item.RECEIPT_DATE) : null,
-      TICKET_DATE: item.TICKET_DATE ? new Date(item.TICKET_DATE) : null
+      TICKET_DATE: item.TICKET_DATE ? new Date(item.TICKET_DATE) : null,
+      DEC_YM: this.parseDecYm(item.DEC_YM)
     }));
     this.itemData = JSON.parse(JSON.stringify(this.orgitemData));
     this.updateTokenNoSum(); // 重新觸發加總計算
