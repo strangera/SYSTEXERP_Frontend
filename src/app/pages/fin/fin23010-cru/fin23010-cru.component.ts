@@ -61,7 +61,7 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
   );
   readonly organizationOptions$ = this.dropdown.querySys3100();
   readonly VEN_BNK_No_ParamOptions = this.dropdown.queryAps1001_DropDownList(); // 匯款銀行代號
-  /** 目前選定的廠商/員工名稱(顯示用) */
+  /** 目前選定的員工名稱(顯示用) */
   venName = '';
   /** 目前資料 id(修改時使用) */
   private currentId: number | null = null;

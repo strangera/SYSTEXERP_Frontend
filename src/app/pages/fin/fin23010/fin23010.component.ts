@@ -37,20 +37,20 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   queryForm = this.formBuilder.group({
     advanceSheetNumber: [''], // 預支單號
-    startRequestDate: [null as Date | null], //申請日期
-    endRequestDate: [null as Date | null], //申請日期
+    startRequestDate: [null as Date | null], // 申請日期
+    endRequestDate: [null as Date | null], // 申請日期
     startAdvanceAmount: [null as number | null], // 預支金額
     endAdvanceAmount: [null as number | null], // 預支金額
-    startWriteOffDate: [null as Date | null], //預計核銷日
-    endWriteOffDate: [null as Date | null], //預計核銷日
-    requsetEmployee: [''], //申請廠商/員工(VEN_No)
-    payoutMethod: [null as string | null], //付款方式
-    transferAccount: [null as string | null], //匯款銀行代號
+    startWriteOffDate: [null as Date | null], // 預計核銷日
+    endWriteOffDate: [null as Date | null], // 預計核銷日
+    requsetEmployee: [''], // 申請員工(EMP_No)
+    payoutMethod: [null as string | null], // 付款方式
+    transferAccount: [null as string | null], // 匯款銀行代號
     bankAccount: [''], // 銀行帳號
     accountName: [''], // 帳戶名稱
     ticketTitle: [''], // 統一編號/身分證字號
-    startExpectPayDate: [null as Date | null], //預計付款日
-    endExpectPayfDate: [null as Date | null], //預計付款日
+    startExpectPayDate: [null as Date | null], // 預計付款日
+    endExpectPayfDate: [null as Date | null], // 預計付款日
     summary: [''], // 摘要
   });
 
@@ -81,12 +81,11 @@ export class FIN23010Component extends BasicQueryPageComponent<FIN23010Data> imp
 
   columns: ReportColumn[] = [
     { field: 'PrepNo', header: '預支單號' },
-
     { field: 'PrepAmt', header: '預支金額', align: 'right', format: formatAmount },
     { field: 'ApplyDate', header: '申請日期' },
     { field: 'PlanCloseDate', header: '預計核銷日' },
-    { field: 'VenNo', header: '廠商/員工代號' },
-    { field: 'VenName', header: '廠商/員工名稱' },
+    { field: 'VenNo', header: '員工代號' },
+    { field: 'VenName', header: '員工名稱' },
     { field: 'PayTypeName', header: '付款方式' },
     { field: 'BnkNo', header: '匯款銀行代號' },
     { field: 'BnkAccNo', header: '銀行帳號' },

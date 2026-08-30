@@ -28,10 +28,11 @@
               [startControl]="queryForm.controls.startWriteOffDate" [endControl]="queryForm.controls.endWriteOffDate"
               [submitted]="submitted"></app-calendar-range>
           </div>
+          <!-- 調整「申請員工」查詢欄位 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <label>申請廠商/員工</label>
+            <label>申請員工</label>
             <div class="p-inputgroup">
-              <input pInputText [value]="queryForm.controls.requsetEmployee.value" readonly placeholder="請選擇廠商/員工"
+              <input pInputText [value]="queryForm.controls.requsetEmployee.value" readonly placeholder="請選擇員工"
                 (click)="openPicker()" />
               <button type="button" pButton icon="pi pi-search" (click)="openPicker()"></button>
             </div>

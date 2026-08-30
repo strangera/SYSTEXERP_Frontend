@@ -56,7 +56,7 @@ export class FIN23050Component extends BasicQueryPageComponent<QueryFIN23050Resp
     { field: 'CLOSE_Date', header: '預計核銷日', format: formatDate, align: 'left', width: '100px' },
     { field: 'PAY_Date', header: '預計付款日', format: formatDate, align: 'left', width: '100px' },
     { field: 'PREP_Amt', header: '預支金額', format: formatAmount, align: 'right' },
-    { field: 'RedeemedAmt', header: '已核銷金額', format: formatAmount, align: 'right' },
+    // { field: 'RedeemedAmt', header: '已核銷金額', format: formatAmount, align: 'right' },
     { field: 'BalanceAmt', header: '核銷金額', format: formatAmount, align: 'right' },
     { field: 'NoteDesc', header: '備註', align: 'left' },
   ];
