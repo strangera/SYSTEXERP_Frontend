@@ -1455,7 +1455,7 @@ export class DropdownApiService {
   /** 查詢財產編號下拉選單 (FAASSET) */
   queryFAASSETChooseList_DropDownList(): Observable<Option[] | null> {
     return this.http
-      .post<ApiResponse<{ AssetId: string; AssetName: string }[]>>(
+      .post<ApiResponse<{ AssetId: string; AssetName: string; MATERIAL_TYPE: string }[]>>(
         `${this.apiUrl}/queryFAASSETChooseList_DropDownList`,
         {},
       )

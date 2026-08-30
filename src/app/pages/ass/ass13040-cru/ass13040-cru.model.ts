@@ -175,7 +175,8 @@ export interface QueryFAASSETChooseListASS13040Request extends ApiRequest {
   S_CLASS_ID?: string | null;    // 小分類
   HOLD_EMP_ID?: string | null;   // 保管人代號
   HOLD_ORG_ID?: string | null;   // 保管單位代號
-  ASSET_STATUS?: string | null;  // 資產狀態
+  ASSET_STATUS?: string | null;  // 資產狀態   
+  MATERIAL_TYPE?: string | null; // 資產類型 
 }
 
 /**

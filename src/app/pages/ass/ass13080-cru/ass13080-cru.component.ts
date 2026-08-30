@@ -249,15 +249,15 @@ export class ASS13080CRUComponent
     value: string;
     label: string;
   }[] = [
-    {
-      value: '1',
-      label: '資產',
-    },
-    {
-      value: '2',
-      label: '列管品',
-    },
-  ];
+      {
+        value: '1',
+        label: '資產',
+      },
+      {
+        value: '2',
+        label: '列管品',
+      },
+    ];
 
   acpOptions: {
     value: string;
@@ -379,12 +379,12 @@ export class ASS13080CRUComponent
        */
       const row =
         this.rowdata as
-          | (
-              Partial<ASS13080Detail> & {
-                ASSET_PK_ID?: number | null;
-              }
-            )
-          | undefined;
+        | (
+          Partial<ASS13080Detail> & {
+            ASSET_PK_ID?: number | null;
+          }
+        )
+        | undefined;
 
 
       const assetPkId =
@@ -541,7 +541,10 @@ export class ASS13080CRUComponent
 
 
           const rows =
-            cRes.Data ?? [];
+            (cRes.Data ?? []).filter(
+              row =>
+                String(row.MATERIAL_TYPE ?? '').trim() !== '4'
+            );
 
 
           const choose =
@@ -713,7 +716,7 @@ export class ASS13080CRUComponent
             expectedAssetId &&
             returnedAssetId &&
             expectedAssetId !==
-              returnedAssetId
+            returnedAssetId
           ) {
 
             this.messageService.errorBubble(
@@ -861,12 +864,12 @@ export class ASS13080CRUComponent
 
       assetType:
         depreYn != null &&
-        String(
-          depreYn
-        ).trim() !== ''
+          String(
+            depreYn
+          ).trim() !== ''
           ? String(
-              depreYn
-            )
+            depreYn
+          )
           : null,
 
       acpNo:
@@ -880,8 +883,8 @@ export class ASS13080CRUComponent
       buyDate:
         d.GET_DATE
           ? new Date(
-              d.GET_DATE
-            )
+            d.GET_DATE
+          )
           : null,
 
       buyAmt:
@@ -907,8 +910,8 @@ export class ASS13080CRUComponent
       txnDate:
         d.BILL_DATE
           ? new Date(
-              d.BILL_DATE
-            )
+            d.BILL_DATE
+          )
           : null,
 
       residualAmt:
@@ -935,8 +938,8 @@ export class ASS13080CRUComponent
       soldDate:
         d.HANDLE_DATE
           ? new Date(
-              d.HANDLE_DATE
-            )
+            d.HANDLE_DATE
+          )
           : null,
 
       soldVendorNo:
@@ -1386,8 +1389,8 @@ export class ASS13080CRUComponent
         assetType:
           r.ASSET_TYPE != null
             ? String(
-                r.ASSET_TYPE
-              )
+              r.ASSET_TYPE
+            )
             : null,
 
         acpNo:
@@ -1429,12 +1432,12 @@ export class ASS13080CRUComponent
         soldDate:
           r.SALDATE
             ? new Date(
-                r.SALDATE
-              )
+              r.SALDATE
+            )
             : r.HANDLE_DATE
               ? new Date(
-                  r.HANDLE_DATE
-                )
+                r.HANDLE_DATE
+              )
               : null,
 
 
@@ -1664,12 +1667,12 @@ export class ASS13080CRUComponent
     const assetListReq:
       QueryFAASSETChooseListASS13060Request = {
 
-        PageSize:
-          9999,
+      PageSize:
+        9999,
 
-        PageIndex:
-          1,
-      };
+      PageIndex:
+        1,
+    };
 
 
     this.ass13080Service
@@ -1688,10 +1691,16 @@ export class ASS13080CRUComponent
         }
 
 
+        const rows =
+          (res.Data ?? []).filter(
+            row =>
+              String(row.MATERIAL_TYPE ?? '').trim() !== '4'
+          );
+
+
         this.assetsOptions =
           this.faAssetChooseListToOpts(
-            res.Data ??
-            []
+            rows
           );
 
 
@@ -1748,12 +1757,12 @@ export class ASS13080CRUComponent
     const q11040:
       QueryASS11040Request = {
 
-        PageSize:
-          9999,
+      PageSize:
+        9999,
 
-        PageIndex:
-          1,
-      };
+      PageIndex:
+        1,
+    };
 
 
     this.ass11040Service
@@ -1768,9 +1777,9 @@ export class ASS13080CRUComponent
           res =>
             (
               res.Data as
-                | QueryASS11040DataWrapper
-                | null
-                | undefined
+              | QueryASS11040DataWrapper
+              | null
+              | undefined
             )?.QueryData ??
             []
         ),
@@ -2151,25 +2160,25 @@ export class ASS13080CRUComponent
     const payload:
       CreateASS13080Request = {
 
-        ASSET_ID:
-          raw.assetNo,
+      ASSET_ID:
+        raw.assetNo,
 
-        SALDATE:
-          raw.soldDate
-            ? raw.soldDate.toISOString()
-            : '',
+      SALDATE:
+        raw.soldDate
+          ? raw.soldDate.toISOString()
+          : '',
 
-        BUYER_VENNO:
-          raw.soldVendorNo,
+      BUYER_VENNO:
+        raw.soldVendorNo,
 
-        SALE_AMT:
-          raw.soldAmtTax ??
-          0,
+      SALE_AMT:
+        raw.soldAmtTax ??
+        0,
 
-        HANDLE_NOTE:
-          raw.soldRemark ??
-          undefined,
-      };
+      HANDLE_NOTE:
+        raw.soldRemark ??
+        undefined,
+    };
 
 
     console.log(
@@ -2295,9 +2304,9 @@ export class ASS13080CRUComponent
     const payload:
       CancelASS13080Request = {
 
-        ID:
-          id,
-      };
+      ID:
+        id,
+    };
 
 
     this.messageService.confirm({
@@ -2411,9 +2420,9 @@ export class ASS13080CRUComponent
     const payload:
       ApproveASS13080Request = {
 
-        ID:
-          id,
-      };
+      ID:
+        id,
+    };
 
 
     this.messageService.confirm({

@@ -614,6 +614,9 @@ export interface QueryFAASSETChooseListASS13060Response {
 
   ASSET_STATUSName?: string | null;
 
+  /** 資產類型 */
+  MATERIAL_TYPE?: string | null;
+
   PurchaseAmt?: number | null;
 
   ChangeAmt?: number | null;
@@ -664,8 +667,8 @@ export interface QueryFAASSETChooseListASS13060Response {
 export interface QueryFAASSETChooseListASS13060Result {
 
   QueryData?:
-    QueryFAASSETChooseListASS13060Response[]
-    | null;
+  QueryFAASSETChooseListASS13060Response[]
+  | null;
 
   TotalRows?: number;
 
