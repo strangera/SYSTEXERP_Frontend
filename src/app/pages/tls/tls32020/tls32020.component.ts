@@ -113,7 +113,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     PreSale: [false],
     ConsumerNum: [false],
-    ShowBuilding: [true],
+    ShowBuilding: [false],
   });
 
   // 其餘屬性 (沿用 TLS32020)
