@@ -83,7 +83,7 @@ export class FIN23050Component extends BasicQueryPageComponent<QueryFIN23050Resp
    */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin23050Service.getFIN23050(frm.value).pipe(
+      this.fin23050Service.queryFIN23050(frm.value).pipe(
         switchMap(getRes => {
           const pairs = getRes.Data ?? [];
           if (pairs.length === 0) return of([] as QueryFIN23050Response[]);
