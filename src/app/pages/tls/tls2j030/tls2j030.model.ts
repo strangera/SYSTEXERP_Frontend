@@ -243,6 +243,7 @@ export interface TLS2J030Data {
   INV_Qty?: number;
   INV_SaleAmt?: number;  // 編輯時使用 (注：TXN_SaleAmt 已在換開發票欄位中定義，用於後端回傳/查看時使用)
   isInvoiceClose?: string; // 是否已關帳 (Y/N)
+  ORG_TXN_Date?: string;    // 來源發票日期(多筆以逗號區隔，前端依此換行顯示)
 }
 export interface TLS2J030Source {
   /** 發票號碼起 */

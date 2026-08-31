@@ -73,6 +73,16 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'CHG_No', header: '換開編號', visible: true },
     { field: 'GUI_InputDate', header: '換開日期', visible: true, format: formatDate },
     { field: 'TXN_Date', header: '換開發票日期', visible: true, format: formatDate },
+    {
+      field: 'ORG_TXN_Date', header: '來源發票日期', visible: true,
+      cellClass: () => 'multiline-cell',
+      format: (value: string) =>
+        (value ?? '')
+          .split(',')
+          .map((s) => formatDate(s.trim()))
+          .filter(Boolean)
+          .join('\n'),
+    },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, format: (value: number) => String(value ?? '').padStart(6, '0') },
     { field: 'TXN_GUINo', header: '換開發票號碼', visible: true },
