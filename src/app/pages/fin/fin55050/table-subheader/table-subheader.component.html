@@ -1,17 +1,18 @@
-<p-table #dt [value]="data" [columns]="selectedColumns" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
+<p-table #dt [value]="displayData" [columns]="selectedColumns" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [scrollable]="true" scrollHeight="867px" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  tableStyleClass="h-full" [styleClass]="
-    'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ')" [virtualScroll]="!IsPrint"
-  [virtualScrollItemSize]="35" [virtualScrollDelay]="250" [loading]="loading && data.length === 0"
-  paginatorDropdownAppendTo="body" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
+  tableStyleClass="h-full" [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ')"
+  [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
+  [loading]="loading && displayData.length === 0" paginatorDropdownAppendTo="body" [groupRowsBy]="groupRowsBy"
+  rowGroupMode="subheader">
   <ng-template pTemplate="caption">
-    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
+    <app-table-caption [data]="displayData" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
       [showCaption]="true" [showFilter]="true" [showReportMode]="false" [showDelete]="false" [showPage]="false"
       [totalRecords]="dt.totalRecords">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
+
   <ng-template pTemplate="header" let-columns>
     <tr>
       <th *ngFor="let col of columns" pReorderableColumn [pSortableColumn]="col.sortField ?? col.field"
@@ -21,30 +22,33 @@
       </th>
     </tr>
   </ng-template>
-  <!-- 群組表頭 -->
+
+  <!-- 群組表頭 + 期初餘額列 -->
   <ng-template pTemplate="groupheader" let-rowData>
     <tr pRowGroupHeader style="height: 40.8px">
-      <td [attr.colspan]="getVisibleHeaderCount"
+      <td [attr.colspan]="selectedColumns.length"
         class="bg-gray-200 text-blue gray-900 px-3 py-2 border-bottom-1 surface-border" style="font-weight: bold;">
         <div class="flex align-items-center">
           <span>會計科目: {{ rowData.AccNo }} - {{ rowData.AccCName }}</span>
         </div>
       </td>
     </tr>
+    <!-- 期初餘額列 (固定在群組頂端) -->
+    <tr *ngIf="openingBalMap[rowData[groupRowsBy]] as openingRow" class="bg-gray-100 font-bold text-color-secondary">
+      <td *ngFor="let col of selectedColumns" style="text-overflow: ellipsis; min-width: 55px"
+        [ngClass]="[col.style || '', 'text-center']">
+        <span>{{ col.format ? col.format(openingRow[col.field], 0, openingRow) : openingRow[col.field] }}</span>
+      </td>
+    </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-ri="rowIndex"
-    let-index="rowIndex">
-    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"
-      [pSelectableRowIndex]="rowIndex" [ngClass]="{
-        'bg-gray-100 font-bold text-color-secondary': rowData.VouNo === '【期初餘額】',
-        'bg-blue-50 font-bold text-blue-800 shadow-2': rowData.Org_Name === '【總計】'
-    }">
 
+  <!-- 明細資料區 -->
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"
+      [pSelectableRowIndex]="rowIndex">
       <td *ngFor="let col of columns" style="text-overflow: ellipsis; min-width: 55px"
         [ngClass]="[col.style || '', 'text-center']">
-
         <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"></app-table-input>
-
         <ng-container *ngIf="col.type === 'detail'">
           <ng-container *ngIf="rowData[col.field]?.toString().includes('【'); else detailLink">
             <span class="font-bold">{{ rowData[col.field] }}</span>
@@ -56,13 +60,23 @@
             </a>
           </ng-template>
         </ng-container>
-
         <span *ngIf="!col.type && !col.htmlFormat">
           {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
         </span>
       </td>
     </tr>
   </ng-template>
+
+  <!-- 群組表尾 (固定在群組底端的【總計】列) -->
+  <ng-template pTemplate="groupfooter" let-rowData>
+    <tr *ngIf="groupTotalMap[rowData[groupRowsBy]] as totalRow" class="bg-blue-50 font-bold text-blue-800 shadow-2">
+      <td *ngFor="let col of selectedColumns" style="text-overflow: ellipsis; min-width: 55px"
+        [ngClass]="[col.style || '', 'text-center']">
+        <span>{{ col.format ? col.format(totalRow[col.field], 0, totalRow) : totalRow[col.field] }}</span>
+      </td>
+    </tr>
+  </ng-template>
+
   <ng-template pTemplate="emptymessage">
     <tr>
       <td [attr.colspan]="getVisibleHeaderCount">
