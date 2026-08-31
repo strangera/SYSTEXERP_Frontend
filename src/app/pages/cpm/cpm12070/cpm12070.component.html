@@ -14,9 +14,29 @@
             </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="責任單位" controlName="CLASS_IDs" [options]="unitOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CLASS_IDs" [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range label="接件日期" [startControl]="queryForm.controls.DATE_FROM"
               [endControl]="queryForm.controls.DATE_TO" [submitted]="submitted">
             </app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label class="block mb-2">報表類型</label>
+            <div class="flex align-items-center gap-4">
+              <div class="flex align-items-center gap-2">
+                <p-radioButton inputId="reportType0" name="ReportType" value="0"
+                  formControlName="ReportType"></p-radioButton>
+                <label for="reportType0">統計表</label>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <p-radioButton inputId="reportType1" name="ReportType" value="1"
+                  formControlName="ReportType"></p-radioButton>
+                <label for="reportType1">明細表</label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -28,16 +48,50 @@
   </p-accordion>
 </div>
 
+
+<!-- 舊版「意見類別清單」表格已下架 (SPEC-CPM12070責任單位矩陣報表 子任務5)。
+  後端 SP_CPM12070Query／queryCPM12070 API 維持現狀、未修改未刪除，這裡只是不再顯示，
+  程式碼保留註解供未來需要復原時參考，不要直接刪除。 -->
+
 <div class="card">
   <app-table-report tableKey="cpm12070" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [loading]="loading" [lastQueryBody]="historyRequestBody" [showDelete]="false" [showManage]="false"
     [queryFunction]="cpm12070Service.queryCPM12070.bind(cpm12070Service)" [showSort]="false">
-    <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="產出顧客意見類別統計表.PDF" icon="pi pi-file" (click)="onExportPDF()"
-          [disabled]="data.length === 0" [loading]="btnLoading">
-        </p-button>
-      </div>
-    </header>
   </app-table-report>
 </div>
+
+
+@if (matrix) {
+<div class="card">
+  <div class="flex justify-content-end align-items-center gap-2 mb-2">
+    <p-button styleClass="p-2" label="匯出EXCEL" icon="pi pi-file-excel" (click)="onExportMatrixExcel()"
+      [loading]="excelBtnLoading">
+    </p-button>
+    <p-button styleClass="p-2" label="匯出PDF" icon="pi pi-file-pdf" (click)="onExportMatrixPdf()"
+      [loading]="pdfBtnLoading">
+    </p-button>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr>
+          <th class="border-1 surface-border p-2 surface-100">{{ matrixRowHeader }}</th>
+          @for (col of matrix.Columns; track col.CLASS_ID) {
+          <th class="border-1 surface-border p-2 surface-100">{{ col.CLASS_NAME }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of matrix.Rows; track row.Label) {
+        <tr [class.font-bold]="row.IsTotal" [class.surface-100]="row.IsTotal">
+          <td class="border-1 surface-border p-2 text-center">{{ row.Label }}</td>
+          @for (col of matrix.Columns; track col.CLASS_ID) {
+          <td class="border-1 surface-border p-2 text-center">{{ row.Cells[col.CLASS_ID] }}</td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
