@@ -895,6 +895,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (ABAT_YN !== 'Y') return true;
           // 同方向（自動編碼）禁用
           if (this.isAutoCodeRow(rowData)) return true;
+          // 已選過立沖代號 → 一律開放，讓使用者可重新挑選（避免金額被清空後兩個入口都堵死、無法改選）
+          if (rowData.PTA) return false;
           // 反方向有金額才開放，否則禁用（還沒輸金額時不可點）
           if (AccDC === 'D') return (rowData.AccAmtC ?? 0) <= 0;
           if (AccDC === 'C') return (rowData.AccAmtD ?? 0) <= 0;
@@ -3622,14 +3624,27 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
-          if (event.value) rowData.AccAmtC = void 0;
+          if (event.value) {
+            rowData.AccAmtC = void 0;
+            // validateAmtEither 同掛在借/貸兩欄，但這次只重驗借方欄，
+            // 需手動清掉貸方欄殘留的「至少填一個」錯誤，否則貸方紅框不會消失
+            this.clearAmtEitherError(rowData, 'AccAmtC');
+          }
+          // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
+          this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           // rebuildAllAutoPta 由 onDataChange 呼叫（tableData 已更新後），
           // 在此提前呼叫時 tableData 仍是舊值，會錯誤清除原有 PTA 並產生新號
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
-          if (event.value) rowData.AccAmtD = void 0;
+          if (event.value) {
+            rowData.AccAmtD = void 0;
+            // 同上：清掉借方欄殘留的「至少填一個」錯誤
+            this.clearAmtEitherError(rowData, 'AccAmtD');
+          }
+          // 切到建立方向 → 清除反向沖帳殘留的立沖代號/廠商/摘要（改由 rebuildAllAutoPta 自動產號）
+          this.clearStaleOffsetPtaOnDirectionSwitch(rowData);
           break;
 
         case 'ORG_ID':
@@ -3689,6 +3704,37 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const { ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
     if (ABAT_YN !== 'Y') return false;
     return this.isCreatingDirectionRow(rowData);
+  }
+
+  /** 該 PTA 是否為系統自動產生的立沖代號（新增模式 #N；編輯模式 {VouNo}-N） */
+  private isAutoPtaValue(pta: string | undefined | null): boolean {
+    if (!pta) return false;
+    if (pta.startsWith('#')) return true;
+    const vouNo = this.dataForm.getRawValue().VouNo?.trim();
+    return !!vouNo && vouNo !== '自動給號' && pta.startsWith(`${vouNo}-`);
+  }
+
+  /** 借貸方金額切到「建立方向」時，清除先前反向沖帳挑選殘留的立沖代號與帶入的廠商/摘要。
+   *  建立方向的立沖代號應由 rebuildAllAutoPta 自動產號，不可沿用反向挑選的號，否則資料會錯誤。 */
+  private clearStaleOffsetPtaOnDirectionSwitch(rowData: FIN53010DetailTable): void {
+    const { ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+    if (ABAT_YN !== 'Y') return;
+    if (rowData.id) return; // 已存 DB 的列方向已鎖定，不處理
+    if (!this.isCreatingDirectionRow(rowData)) return; // 只在切到建立方向時清除
+    if (!rowData.PTA || this.isAutoPtaValue(rowData.PTA)) return; // 無號或已是自動號 → 交給 rebuildAllAutoPta
+    // 反向挑選殘留 → 清除立沖代號與由沖帳對象帶入的廠商/摘要，摘要還原為科目預設
+    rowData.PTA = undefined;
+    rowData.DetailNo = undefined;
+    rowData.DetailName = undefined;
+    rowData.NoteDesc = String(this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label
+      || this.service.accNoMap().get(String(rowData.AccNo))?.label || '');
+  }
+
+  /** 清除某金額欄殘留的驗證錯誤（table-edit 每次只重驗當下變更的欄，跨欄的 validateAmtEither
+   *  掛在借/貸兩欄，故另一欄的舊錯誤需在此手動清除，否則紅框不會消失） */
+  private clearAmtEitherError(rowData: FIN53010DetailTable, field: 'AccAmtD' | 'AccAmtC'): void {
+    const errs = (rowData as unknown as Record<string, unknown>)['_validationErrors'] as Record<string, string> | undefined;
+    if (errs) delete errs[field];
   }
 
   /** 為「自動編碼」列指定 PTA。
@@ -4067,6 +4113,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rows.map((r, i) => {
           if (i !== rowIndex) return r;
           const updated: FIN53010DetailTable = { ...r, PTA: selected.PTA ?? '' };
+          // 此路徑直接寫 signal、不走 table-edit 的 onValueChange/validateField，
+          // 需自行清掉先前殘留的「借/貸至少填一個」及立沖代號驗證錯誤，否則帶回金額後紅框仍在
+          const prevErrs = (r as unknown as Record<string, unknown>)['_validationErrors'] as Record<string, string> | undefined;
+          if (prevErrs) {
+            const cleaned = { ...prevErrs };
+            delete cleaned['AccAmtD'];
+            delete cleaned['AccAmtC'];
+            delete cleaned['PTA'];
+            (updated as unknown as Record<string, unknown>)['_validationErrors'] = cleaned;
+          }
           // 決定沖帳金額落在哪個方向：從金額欄開窗用該欄；從立沖代號欄開窗(amtField=null)
           // 則依科目 AccDC 推導（C 科目沖在借方、D 科目沖在貸方），才能在「改選不同 PTA」時
           // 一樣回填廠商/金額/摘要（過去只在金額欄開窗才填，改 PTA 欄只換代號，是這次的 bug）

@@ -1,13 +1,12 @@
 import { formatDate } from '@angular/common';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { IDropdownItem, Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
-import { filter, finalize, map, Observable, take, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 export const enum ApprovalStatus {
   未核准 = '0',
@@ -67,14 +66,8 @@ export class TLS26080Service {
     }
   }
 
-  // 核准狀態檢查
-  private approvalCheck({ pod_status }: TLS26080EditTable) {
-    return pod_status === ApprovalStatus.未核准 ? 'approveTLS26080' : 'disapproveTLS26080';
-  }
-
   constructor(
     private readonly http: HttpClient,
-    private readonly messageService: NotificationService,
     private readonly logger: NGXLogger,
     private readonly dropdown: DropdownApiService,
   ) { }
@@ -138,6 +131,13 @@ export class TLS26080Service {
     );
   }
 
+  /** 更新活動審核狀態（連同底下明細一併更新，pod_status: '0'=未核准/反審核, '1'=已核准/審核） */
+  public updateTLS26080Status(podNoList: string[], pod_status: ApprovalStatus): Observable<ApiResponse<unknown[]>> {
+    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26080Status`, { podNoList, pod_status }).pipe(
+      take(1)
+    );
+  }
+
   /** 匯出活動單 PDF（查詢頁管理欄「列印」） */
   public exportTLS26080PDF(body: ExportTLS26080PDFRequest): Observable<HttpResponse<Blob>> {
     return this.http.post(`${apiUrl}/TLS0000/TLS2000/exportTLS26080PDF`, body, {
@@ -170,21 +170,6 @@ export class TLS26080Service {
     return this.http.post<ApiResponse<TLS26080TLTTALENT_D16_D17Row>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080TLTTALENT_D16_D17`, req).pipe(
       take(1),
       tap(res => this.logger.debug(`queryTLS26080TLTTALENT_D16_D17:`, [res]))
-    );
-  }
-
-  /** 核准或反核准專櫃活動 */
-  public loadApproval(data: TLS26080EditTable): Observable<{ newStatus: ApprovalStatus; }> {
-    const api = this.approvalCheck(data);
-    return this.http.post<ApiResponse<{ Status: ApprovalStatus; }[]>>(`${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }).pipe(
-      take(1),
-      filter(res => res.Status === '0000'),
-      map(() => ({
-        newStatus: api === 'approveTLS26080' ? ApprovalStatus.已核准 : ApprovalStatus.未核准
-      })),
-      tap(() =>
-        this.messageService.successBubble(`${api === 'approveTLS26080' ? '核准' : '反核准'}成功`)
-      )
     );
   }
 
@@ -296,17 +281,4 @@ export class TLS26080Service {
     );
   }
 
-  public approveApprovalTLS26080(payload: TLS26080EditTable[]): Observable<ApiResponse<unknown[]>> {
-    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/approveTLS26080`, { payload }).pipe(
-      take(1),
-      finalize(() => this.logger.debug(`核准:`, [payload]))
-    );
-  }
-
-  public revokeApprovalTLS26080(payload: TLS26080EditTable[]): Observable<ApiResponse<unknown[]>> {
-    return this.http.post<ApiResponse<unknown[]>>(`${apiUrl}/TLS0000/TLS2000/revokeApprovalTLS26080`, { payload }).pipe(
-      take(1),
-      finalize(() => this.logger.debug(`反核准:`, [payload]))
-    );
-  }
 }

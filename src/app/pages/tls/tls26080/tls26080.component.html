@@ -20,6 +20,9 @@
             [endControl]="qf().pod_edate" [submitted]="submitted"></app-calendar-range>
           <app-calendar class="col-12 md:col-6 lg:col-4" label="活動正檔日期" controlName="pod_busdate"
             [control]="qf().pod_busdate" [submitted]="submitted"></app-calendar>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_noList"
+            [options]="tltNoOptions | async" optionLabel="label" optionValue="value" [control]="qf().tlt_noList"
+            [submitted]="submitted"></app-multi-select>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -33,8 +36,17 @@
 <div class="card">
   <app-table-report tableKey="TLS26080" dataKey="pod_no" [data]="tableData()" [columns]="columns"
     [totalRecords]="totalRecords()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [loading]="loading"
-    [showCheckBox]="true" [showEdit]="true" [showDetail]="true" [showDelete]="true" [isRowSelectable]="isRowSelectable"
+    [showCheckBox]="true" [showEdit]="true" [showDetail]="true" [showDelete]="true" [editDisabled]="editDisabled"
     [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)" (edit)="onEdit($event)"
     (detail)="onDetail($event)" (delete)="onDelete($event)" [addButton]="addButton"
-    [buttonsLoading]="printLoading()"></app-table-report>
+    [buttonsLoading]="printLoading()">
+    <header>
+      <div class="flex gap-2 justify-content-end">
+        <p-button label="審核" icon="pi pi-check-circle" severity="success" [loading]="approveLoading()"
+          [disabled]="selectedItems().length === 0" (click)="onApprove()"></p-button>
+        <p-button label="反審核" icon="pi pi-undo" severity="warning" [loading]="revokeLoading()"
+          [disabled]="selectedItems().length === 0" (click)="onRevoke()"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

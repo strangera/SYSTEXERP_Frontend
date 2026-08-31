@@ -1,8 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2 align-items-center">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="轉入" icon="pi pi-upload" [loading]="loading"
-      [disabled]="!checkPassed" (clickEvent)="onTransfer()"></app-button>
+    <app-button label="轉入" icon="pi pi-upload" [loading]="loading" [disabled]="!checkPassed"
+      (clickEvent)="onTransfer()"></app-button>
   </div>
 
   <p-accordion>
@@ -11,8 +11,8 @@
       <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="工作表名稱" controlName="sheetName"
-              [control]="queryForm.controls.sheetName" [submitted]="submitted"></app-input-text>
+            <app-input-text label="工作表名稱" controlName="sheetName" [control]="queryForm.controls.sheetName"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -20,8 +20,7 @@
           <div class="col-12">
             <app-file-upload #fileUpload name="File" accept=".xlsx,.xls" [multiple]="false" [auto]="false"
               [customUpload]="true" mode="advanced" chooseLabel="選擇檔案" uploadLabel="上傳" cancelLabel="清除"
-              [loading]="loading"
-              emptyMessage="拖曳檔案到此處或點擊「選擇檔案」按鈕。" (select)="onFileSelect($event)"
+              [loading]="loading" emptyMessage="拖曳檔案到此處或點擊「選擇檔案」按鈕。" (select)="onFileSelect($event)"
               (remove)="onFileRemove()" (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
           </div>
         </div>

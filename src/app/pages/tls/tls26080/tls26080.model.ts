@@ -51,9 +51,6 @@ export interface TLS26080DetailTable {
   tpy_rate_4?: number;         // 合約建檔 D17 費用比率
   pod_no: string;              // 活動編號
   pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-  approved_usrno?: string;    // 核准人員編號
-  approved_usr_name?: string;  // 核准人員姓名
-  approved_date?: Date;        // 核准日期
 }
 
 export interface TLS26080DetailResult {
@@ -70,9 +67,6 @@ export interface TLS26080DetailResult {
   tpy_rate_D17: string;              // D17 費用比率 (含'%')
   pod_no?: string;                   // 活動編號
   pod_status: '0' | '1' | '9';       // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-  approved_userno?: string;          // 核准人員編號
-  approved_usr_name?: string;        // 核准人員姓名
-  approved_date?: Date;              // 核准日期
 
   pod_type?: string;                 // 活動類型
 }
@@ -105,9 +99,7 @@ export interface TLS26080InsertPayload {
   TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
 }
 
-export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
-  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-}
+export type TLS26080UpdatePayload = TLS26080InsertPayload;
 export interface TLS26080Query extends ApiRequest {
   POD_No?: string;
   POD_Desc?: string;
@@ -115,6 +107,7 @@ export interface TLS26080Query extends ApiRequest {
   POD_SDate_end?: string;
   POD_BusDate?: string;
   CAP_ItemList?: string[];
+  TLT_NoList?: string[];
 }
 /** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
 export interface ExportTLS26080PDFRequest extends ApiRequest {

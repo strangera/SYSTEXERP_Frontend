@@ -122,6 +122,8 @@ export interface ASS13060ApproveRequest {
  * ASS13060 列印/匯出 PDF 請求參數
  */
 export interface ASS13060ExportPDFRequest {
+  MID?: number;
+  STO_NO?: string | null;
   Ids: number[];
 }
 

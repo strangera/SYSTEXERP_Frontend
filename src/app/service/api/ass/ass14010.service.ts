@@ -87,8 +87,8 @@ export interface Ass14010Supplier {
   'RECEIPT_TYPE': string; // 單據種類(0發票 1收據)
   'RECEIPT_NO': string; // 發票號碼
   'RECEIPT_DATE': Date; // 發票日期
-  'TICKET_DATE': Date; // 票據到期日
-  'DEC_YM': string; // 申報年月(YYYYMM)
+  'TICKET_DATE': Date | null; // 票據到期日
+  'DEC_YM': Date | null; // 申報年月(YYYYMM)，表格內以月份選擇器編輯，送出前需轉為 YYYYMM 字串
   'INV_FORMAT': string; // 發票格式
   'TAX_CODE': string; // 稅別
   'TAX_CODE_NAME'?: string; // 稅別名稱

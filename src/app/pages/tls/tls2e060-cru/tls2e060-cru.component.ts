@@ -41,7 +41,7 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
     adj_no: [{ value: '系統自動產生', disabled: true }],
     adj_date: [{ value: new Date(), disabled: true }],
     sam_yyymm: [null, [Validators.required]],
-    tlt_no: [null as Tls2e060DropDownListData | null, [Validators.required]],
+    tlt_no: [null as string | null, [Validators.required]],
     talent_id: [0],
     sam_termno: [0],
     contract_no: [{ value: '', disabled: true }],
@@ -99,25 +99,33 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
           label: `${item.tlt_no} - ${item.tlt_name}`
         }));
 
-        // 啟用下拉選單
-        this.dataForm.controls.tlt_no.enable();
+        // 啟用下拉選單 (檢視模式維持鎖定)
+        if (!this.isFormReadable) {
+          this.dataForm.controls.tlt_no.enable();
+        }
 
         // 編輯模式回填
         if (!this.isFormCreateable && this.rowdata) {
-          const targetOption = this.tlt_noOptions.find(opt => opt.tlt_no === this.rowdata?.tlt_no);
+          const targetOption = this.tlt_noOptions.find(
+            opt => opt.tlt_no === this.rowdata?.tlt_no
+          );
+
           if (targetOption) {
-            this.dataForm.controls.tlt_no.setValue(targetOption);
+            this.dataForm.controls.tlt_no.setValue(targetOption.tlt_no);
+
             this.dataForm.patchValue({
+              talent_id: targetOption.talent_id,
               contract_no: targetOption.contract_no,
-              contract_subno: targetOption.contract_subno
+              contract_subno: targetOption.contract_subno,
+              sam_termno: targetOption.sam_termno
             });
           }
         }
       });
   }
-  onTltNoChange(event: Tls2e060DropDownListData): void {
-    // 這裡的 event 通常是選中的整個物件 (Tls2e060DropDownListData)
-    const selectedTlt = event;
+  onTltNoChange(tltNo: string | null): void {
+    // valueChange 拿到的是 optionValue (tlt_no 字串)，從選單找回完整物件帶欄位
+    const selectedTlt = this.tlt_noOptions.find(opt => opt.tlt_no === tltNo);
     if (selectedTlt) {
       this.dataForm.patchValue({
         talent_id: selectedTlt.talent_id,
@@ -139,7 +147,6 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
       const body = {
         ...frm.getRawValue(),
         sam_yyymm: this.datePipe.transform(frm.getRawValue().sam_yyymm, 'yyyyMM'),
-        tlt_no: frm.getRawValue().tlt_no.tlt_no,
       }
       const request$ = this.isFormCreateable ? this.tls2e060Service.createTls2e060(body) : this.tls2e060Service.updateTls2e060(body);
       request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {

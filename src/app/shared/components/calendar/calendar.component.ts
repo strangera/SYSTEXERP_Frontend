@@ -1,12 +1,12 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
+import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
 import { Subscription } from 'rxjs';
-import { EnterToTabDirective } from '@shared/directive/enter-to-tab.directive';
-import { FieldStateDirective } from '@shared/directive/field-state.directive';
 import { ReadonlyCalendarDisplayComponent } from './readonly-calendar-display/readonly-calendar-display.component';
 
 export type CalendarType = 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
@@ -206,31 +206,22 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const formatted = this.formatFullString(value, this.calendarType);
       input.value = maxLen > 0 ? formatted.substring(0, maxLen) : formatted;
 
-      // 🌟 若已能解析為完整日期，直接存 Date 物件；避免字串（yyyy/mm/dd）被原樣送到後端
       const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
       const parsedDate = this.parseDateWithOptionalTime(input.value, shouldKeepTime);
       this.control.setValue(parsedDate ?? input.value, { emitEvent: false });
       this.control.updateValueAndValidity({ emitEvent: false });
-
       this.inputChange.emit(input.value);
       return;
     }
 
-    // 3. 🌟 關鍵修正：如果當前長度已經超過 maxLength
+    // 3. 長度超過 maxLength 時裁切
     if (maxLen > 0 && value.length > maxLen) {
       const truncatedValue = value.substring(0, maxLen);
-
-      // (1) 修正 HTML 畫面的顯示
       input.value = truncatedValue;
-
-      // (2) 修正 Angular FormControl 的值，不觸發 valueChanges 避免無窮迴圈
       this.control.setValue(truncatedValue, { emitEvent: false });
-
-      // (3) 強制 Angular 重新驗證該欄位，這會把 maxlength 的錯誤洗掉，讓紅框消失！
       this.control.updateValueAndValidity({ emitEvent: false });
-
       this.inputChange.emit(truncatedValue);
-      this.cdr.markForCheck(); // 確保畫面即時重繪
+      this.cdr.markForCheck();
       return;
     }
 
@@ -244,9 +235,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
           if (!/[！-～ ]/.test(value)) {
             const newValue = value + charToAppend;
             if (maxLen === 0 || newValue.length <= maxLen) {
-              input.value = newValue;
-              // 補完符號也順便幫 FormControl 更新，保持同步
-              this.control.setValue(newValue, { emitEvent: false });
+              // 🌟 使用 setTimeout 避開 PrimeNG 的同步 writeValue 週期
+              setTimeout(() => {
+                input.value = newValue;
+                this.control.setValue(newValue, { emitEvent: false });
+                // 確保游標停在最新補上的符號後面
+                input.setSelectionRange(newValue.length, newValue.length);
+                this.inputChange.emit(newValue);
+              });
+              return;
             }
           }
         }

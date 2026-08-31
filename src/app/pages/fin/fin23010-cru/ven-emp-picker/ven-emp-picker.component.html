@@ -1,44 +1,13 @@
 <!-- @format -->
-<p-dialog
-  header="選擇申請廠商/員工"
-  [(visible)]="visible"
-  [modal]="true"
-  [style]="{ width: '960px' }"
-  (onShow)="onShow()"
-  (onHide)="close()"
->
+<p-dialog header="選擇申請員工" [(visible)]="visible" [modal]="true" [style]="{ width: '960px' }" (onShow)="onShow()"
+  (onHide)="close()">
   <div class="flex flex-column gap-3">
-    <!-- 模式切換(僅作為篩選條件，兩者皆走同一支API查POS2013) -->
-    <div class="flex gap-4">
-      <div class="flex align-items-center gap-2">
-        <p-radioButton name="mode" value="vendor" [(ngModel)]="mode" (ngModelChange)="onModeChange()" inputId="fin23010-mode-vendor" />
-        <label for="fin23010-mode-vendor" class="cursor-pointer">廠商</label>
-      </div>
-      <div class="flex align-items-center gap-2">
-        <p-radioButton name="mode" value="employee" [(ngModel)]="mode" (ngModelChange)="onModeChange()" inputId="fin23010-mode-employee" />
-        <label for="fin23010-mode-employee" class="cursor-pointer">員工</label>
-      </div>
-    </div>
-
     <!-- 關鍵字輸入：debounce後即時查詢，無需查詢按鈕 -->
-    <input
-      pInputText
-      [(ngModel)]="keyword"
-      [placeholder]="mode === 'vendor' ? '輸入廠商編號/名稱即時查詢' : '輸入員工編號/姓名即時查詢'"
-      class="w-full"
-      (ngModelChange)="onKeywordChange()"
-    />
+    <input pInputText [(ngModel)]="keyword" placeholder="輸入員工編號/姓名即時查詢" class="w-full"
+      (ngModelChange)="onKeywordChange()" />
 
-    <p-table
-      [value]="rows"
-      [paginator]="true"
-      [rows]="20"
-      [rowsPerPageOptions]="[20, 50]"
-      [loading]="loading"
-      [scrollable]="true"
-      scrollHeight="420px"
-      dataKey="VenNo"
-    >
+    <p-table [value]="rows" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20, 50]" [loading]="loading"
+      [scrollable]="true" scrollHeight="420px" dataKey="VenNo">
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 12%">代號</th>
@@ -66,7 +35,9 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="9">{{ hasSearched ? '查無資料' : '請輸入關鍵字查詢' }}</td></tr>
+        <tr>
+          <td colspan="9">{{ hasSearched ? '查無資料' : '請輸入關鍵字查詢' }}</td>
+        </tr>
       </ng-template>
     </p-table>
   </div>

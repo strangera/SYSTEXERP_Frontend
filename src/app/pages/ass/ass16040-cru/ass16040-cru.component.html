@@ -1,8 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
-    <!-- 確認審核：僅 Edit 模式且有 Edit 權限時顯示（F-004） -->
+    <app-menubar
+      [ProgNo]="ProgNo"
+      class="flex-1"
+    ></app-menubar>
+
+    <!-- 確認審核 -->
     <app-button
       *ngIf="isFormEditable"
       btnType="default"
@@ -11,14 +15,27 @@
       (click)="onApprove()"
     ></app-button>
 
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <!-- 返回 -->
+    <app-button
+      btnType="back"
+      (click)="onCancel()"
+    ></app-button>
+
   </div>
 
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+
+  <p-panel
+    [header]="formTitle | translate"
+    class="line-height-3 m-0"
+  >
+    <form
+      [formGroup]="dataForm"
+      id="dataForm"
+      (ngSubmit)="onSubmit()"
+    >
       <div class="grid p-fluid">
 
-        <!-- 申請人代號/名稱（唯讀，合併顯示） -->
+        <!-- 申請人代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="申請人代號/名稱"
@@ -31,7 +48,8 @@
           ></app-dropdown>
         </div>
 
-        <!-- 部門代號/名稱（唯讀，合併顯示） -->
+
+        <!-- 部門代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="部門代號/名稱"
@@ -44,7 +62,8 @@
           ></app-dropdown>
         </div>
 
-        <!-- 申請日期（唯讀） -->
+
+        <!-- 申請日期 -->
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
           calendarType="dateOne"
@@ -55,17 +74,19 @@
           [disabled]="true"
         ></app-calendar>
 
-        <!-- 建議需求(日)（唯讀，後端待補欄位） -->
+
+        <!-- 建議需求(日) -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="建議需求(日)"
-          controlName="SUGGEST_DAYS"
-          [control]="dataForm.controls.SUGGEST_DAYS"
+          controlName="REQUIRE_DATE"
+          [control]="dataForm.controls.REQUIRE_DATE"
           [submitted]="submitted"
           [disabled]="true"
         ></app-input-text>
 
-        <!-- 倉別代號/名稱（唯讀，合併顯示） -->
+
+        <!-- 倉別代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="倉別代號/名稱"
@@ -78,19 +99,21 @@
           ></app-dropdown>
         </div>
 
-        <!-- 說明（唯讀，後端待補欄位） -->
+
+        <!-- 主檔說明 -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="說明"
-          controlName="NOTES"
-          [control]="dataForm.controls.NOTES"
+          controlName="MASTER_NOTES"
+          [control]="dataForm.controls.MASTER_NOTES"
           [submitted]="submitted"
           [disabled]="true"
         ></app-input-text>
 
       </div>
 
-      <!-- 明細表格（唯讀） -->
+
+      <!-- 明細 -->
       <div class="col-12">
         <app-table-report
           tableKey="ASS16040Detail"
@@ -105,6 +128,7 @@
           [showDelete]="false"
         ></app-table-report>
       </div>
+
     </form>
   </p-panel>
 </div>

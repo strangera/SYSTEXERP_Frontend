@@ -113,7 +113,8 @@
       border-width: 0 1px 1px 1px;
     }
     .p-datatable-wrapper {
-      border: 1px solid var(--surface-d);
+      max-height: 450px; // 限制最大高度，筆數少時自動縮短
+      height: auto !important;
     }
     // 可選行的hover效果
     .p-selectable-row:not(.p-disabled-row) {

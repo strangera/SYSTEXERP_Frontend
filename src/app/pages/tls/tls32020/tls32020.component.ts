@@ -15,7 +15,7 @@ import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { formatAmount, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -113,7 +113,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     PreSale: [false],
     ConsumerNum: [false],
-    ShowBuilding: [true],
+    ShowBuilding: [false],
   });
 
   // 其餘屬性 (沿用 TLS32020)
@@ -169,9 +169,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   ];
 
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
-  // 表頭三層群組：topGroupField (比較期/基準期/差異) > groupField (營業額/客單價/坪效/預售消費) > 個別欄位
-  // 註記：頁面查詢區塊「比較/基準」呈現字眼與內部欄位命名互換 (見上方查詢表單註記)，
-  //       此處 topGroupField 沿用同一套互換慣例，讓表頭與查詢區塊用語保持一致。
+  // 表頭三層群組：topGroupField (基準期/比較期/差異) > groupField (營業額/客單價/坪效/預售消費) > 個別欄位
   columns: ReportColumn[] = [
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
     { field: 'BuildingName', header: '館別', align: 'left', visible: this.isShowBuilding },
@@ -184,6 +182,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
@@ -195,6 +194,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'CompareTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },

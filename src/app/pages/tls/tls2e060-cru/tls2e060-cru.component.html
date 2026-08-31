@@ -15,8 +15,8 @@
         <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結帳年月" controlName="sam_yyymm"
           [control]="dataForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
-          [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions" optionLabel="label" [submitted]="submitted"
-          (valueChange)="onTltNoChange($event)"></app-dropdown>
+          [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions" optionLabel="label" optionValue="tlt_no"
+          [submitted]="submitted" (valueChange)="onTltNoChange($event)"></app-dropdown>
       </div>
       <div class=" grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="契約編號" controlName="contract_no"

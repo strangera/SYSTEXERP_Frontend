@@ -86,7 +86,8 @@
         <!-- 新增：進項發票 Tab 頁籤 (僅在 PT 或 WT 時顯示) -->
         <p-tabPanel header="進項發票" *ngIf="
             dataForm.get('SrcSheetType')?.value === 'PT' ||
-            dataForm.get('SrcSheetType')?.value === 'WT'
+            dataForm.get('SrcSheetType')?.value === 'WT' ||
+            dataForm.get('SrcSheetType')?.value === 'PU'
           ">
           <div class="relative">
             <div *ngIf="invoiceLoading"

@@ -67,8 +67,16 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
     amtFrom: [null as number | null],
     amtTo: [null as number | null],
     whId: [null as string | null],
+
     PageSize: [30],
     PageIndex: [1],
+
+    SortBy: [[
+      {
+        field: 'SUBPOENA_ID',
+        order: -1,
+      }
+    ]],
   });
 
   /** 申請人、審核人：queryTBLUSER_DropDownList */
@@ -225,6 +233,9 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
 
   queryFunction = (body: unknown): ReturnType<ASS12030Service['queryASS12030']> => {
     const raw = this.queryForm.getRawValue();
+
+    const tableBody = body as Partial<QueryASS12030Request>;
+
     const payload: QueryASS12030Request = {
       SUBPOENA_ID: raw.subpoenaId ?? undefined,
       GOODS_ID: raw.goodsId ?? undefined,
@@ -232,13 +243,33 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
       ORG_ID: raw.orgId ?? undefined,
       SUPPLIER_ID: raw.supplierId ?? undefined,
       SUBPOENA_STATUS: raw.subpoenaStatus ?? undefined,
-      APPLY_DATE_S: raw.applyDateFrom ? this.formatDate(raw.applyDateFrom) : undefined,
-      APPLY_DATE_E: raw.applyDateTo ? this.formatDate(raw.applyDateTo) : undefined,
+
+      APPLY_DATE_S: raw.applyDateFrom
+        ? this.formatDate(raw.applyDateFrom)
+        : undefined,
+
+      APPLY_DATE_E: raw.applyDateTo
+        ? this.formatDate(raw.applyDateTo)
+        : undefined,
+
       APRV_EMP_ID: raw.aprvEmpId ?? undefined,
-      APRV_DATE_S: raw.aprvDateFrom ? this.formatDate(raw.aprvDateFrom) : undefined,
-      APRV_DATE_E: raw.aprvDateTo ? this.formatDate(raw.aprvDateTo) : undefined,
-      PAY_DATE_S: raw.payDateFrom ? this.formatDate(raw.payDateFrom) : undefined,
-      PAY_DATE_E: raw.payDateTo ? this.formatDate(raw.payDateTo) : undefined,
+
+      APRV_DATE_S: raw.aprvDateFrom
+        ? this.formatDate(raw.aprvDateFrom)
+        : undefined,
+
+      APRV_DATE_E: raw.aprvDateTo
+        ? this.formatDate(raw.aprvDateTo)
+        : undefined,
+
+      PAY_DATE_S: raw.payDateFrom
+        ? this.formatDate(raw.payDateFrom)
+        : undefined,
+
+      PAY_DATE_E: raw.payDateTo
+        ? this.formatDate(raw.payDateTo)
+        : undefined,
+
       TAX_AMT_S: raw.taxAmtFrom ?? undefined,
       TAX_AMT_E: raw.taxAmtTo ?? undefined,
       NTAX_AMT_S: raw.ntaxAmtFrom ?? undefined,
@@ -246,33 +277,62 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
       AMT_S: raw.amtFrom ?? undefined,
       AMT_E: raw.amtTo ?? undefined,
       WH_ID: raw.whId ?? undefined,
-      ...(body as object),
+
+      PageSize: tableBody.PageSize ?? raw.PageSize ?? 30,
+      PageIndex: tableBody.PageIndex ?? raw.PageIndex ?? 1,
+
+      // Table 有點排序 → 使用 Table 的
+      // 沒有 → 預設申請日期 DESC
+      SortBy: tableBody.SortBy ?? raw.SortBy ?? [
+        {
+          field: 'SUBPOENA_ID',
+          order: -1,
+        },
+      ],
     };
+
     return this.ass12030Service.queryASS12030(payload);
   };
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
+
       this.lastQueryBody = {
         ...raw,
+
         PageSize: 30,
         PageIndex: 1,
+
+        SortBy: [
+          {
+            field: 'SUBPOENA_ID',
+            order: -1,
+          },
+        ],
       };
+
       this.loading = true;
+
       this.queryFunction(this.lastQueryBody)
-        .pipe(finalize(() => (this.loading = false)))
+        .pipe(
+          finalize(() => (this.loading = false))
+        )
         .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
+
             this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? 0;
-            this.queryStateService.setQueryState(this.ProgNo, raw);
+
+            this.queryStateService.setQueryState(
+              this.ProgNo,
+              raw
+            );
           },
         });
     });
   }
-
   onDeleteRow(row: ASS12030QueryRow): void {
     const subpoenaId = row.SUBPOENA_ID;
     if (!subpoenaId) {

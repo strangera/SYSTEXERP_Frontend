@@ -12,13 +12,13 @@ import {
 } from '@service/api/ass/ass16060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
-import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/components/input-textarea/input-textarea.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
+import { NotificationService } from '@shared/components/notification-message/notification.service';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -71,7 +71,7 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
   public readonly warehouseOptions = signal<{ label: string; value: string }[]>([]);
   public readonly returnEmpOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
   public readonly orgOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
-  public readonly itemOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly itemOptions = signal<{ label: string; value: string; unit?: string; unitName?: string }[]>([]);
 
   public readonly editColumns: EditColumn[] = [
     {
@@ -82,12 +82,18 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
+      onChange: (value: string | null, row: ASS16060TableItem) => {
+        const match = this.itemOptions().find((opt) => opt.value === value);
+        row.UNIT = match ? match.unitName : '';
+      },
     },
     {
       field: 'UNIT',
       header: '單位',
       type: 'input',
       maxLength: 8,
+      textAlign: 'left',
+      disabled: () => true,
     },
     {
       field: 'QTY',
@@ -173,12 +179,15 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
           }
           // 把所有 detail rows 轉成明細 table items
           this.tableData.set(
-            rows.map((row): ASS16060TableItem => ({
-              GOODS_ID: row.GOODS_ID ?? undefined,
-              UNIT: undefined,
-              QTY: row.QTY ?? undefined,
-              NOTES: row.NOTES ?? undefined,
-            })),
+            rows.map((row): ASS16060TableItem => {
+              const match = this.itemOptions().find((opt) => opt.value === row.GOODS_ID);
+              return {
+                GOODS_ID: row.GOODS_ID ?? undefined,
+                UNIT: match ? match.unitName : undefined,
+                QTY: row.QTY ?? undefined,
+                NOTES: row.NOTES ?? undefined,
+              };
+            })
           );
         },
         error: () => {
@@ -246,11 +255,22 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
           list.map((o) => ({
             label: String(o.label ?? o.value),
             value: String(o.value),
+            unit: String(o['UNIT'] ?? ''),
+            unitName: String(o['UNIT_NAME'] ?? o['UNIT'] ?? ''),
           })),
         );
+        // 若表格已載入明細，補上品項單位名稱
         const current = this.tableData();
         if (current.length > 0) {
-          this.tableData.set(current.map((item) => ({ ...item })));
+          this.tableData.set(
+            current.map((item) => {
+              const match = this.itemOptions().find((opt) => opt.value === item.GOODS_ID);
+              return {
+                ...item,
+                UNIT: match ? match.unitName : item.UNIT,
+              };
+            })
+          );
         }
       });
   }

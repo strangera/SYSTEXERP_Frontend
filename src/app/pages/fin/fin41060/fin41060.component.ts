@@ -144,32 +144,33 @@ export class FIN41060Component extends BasicQueryPageComponent<FIN41060QueryRow>
   }
 
   private runAudit(rowData: FIN41060QueryRow, action: 'Y' | 'N', label: string): void {
-    this.messageService.confirm({
-      header: `確認${label}`,
-      message: `是否確認${label}此筆資料？`,
-      accept: () => {
-        this.btnLoading = true;
-        this.fin41060Service
-          .updateFIN41060({
-            Org_ID: rowData.Org_ID,
-            Budget_Year: rowData.Budget_Year,
-            Budget_Version: rowData.Budget_Version,
-            Action: action,
-          })
-          .pipe(
-            finalize(() => (this.btnLoading = false)),
-            untilDestroyed(this),
-          )
-          .subscribe({
-            next: (res: { Status: string; Message?: string; Data: FIN41060UpdateData }) => {
-              if (res.Status === '0000') {
-                const msg = res.Message ?? res.Data?.ErrMsg ?? `${label}成功`;
-                this.messageService.successBubble(msg);
-                this.onSubmit(this.queryForm);
-              }
-            },
-          });
-      },
-    });
-  }
+  this.messageService.confirm({
+    header: `確認${label}`,
+    message: `是否確認${label}此筆資料？`,
+    accept: () => {
+      this.btnLoading = true;
+
+      this.fin41060Service
+        .updateFIN41060({
+          Org_ID: rowData.Org_ID,
+          Budget_Year: rowData.Budget_Year,
+          Budget_Version: rowData.Budget_Version,
+          Action: action,
+        })
+        .pipe(
+          finalize(() => (this.btnLoading = false)),
+          untilDestroyed(this),
+        )
+        .subscribe({
+          next: (res: { Status: string; Message?: string; Data: FIN41060UpdateData }) => {
+            if (res.Status === '0000') {
+              const msg = `${label}成功`;
+              this.messageService.successBubble(msg);
+              this.onSubmit(this.queryForm);
+            }
+          },
+        });
+    },
+  });
+}
 }

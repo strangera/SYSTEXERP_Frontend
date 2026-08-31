@@ -425,15 +425,15 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 更新欄位值
     rowData[fieldName] = newValue;
 
-    // 當單位改為「坪數」(tpy_type = '01') 時，自動帶入坪數總和
-    // 僅在數量仍為預設值 (空/0/1) 時帶入，避免蓋掉使用者已填或已存的數量
-    if (
-      fieldName === 'tpy_type' &&
-      newValue === '01' &&
-      this.totalLocationSpace > 0 &&
-      (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1)
-    ) {
-      rowData.tpy_qty = this.totalLocationSpace;
+    // 單位切換時自動維護數量：
+    // - 選「坪數」(tpy_type = '01')：以坪數加總覆蓋數量（使用者可於選完後再手動改）
+    // - 從坪數改成其他單位，且數量仍停在先前自動帶入的總坪數（未被手動改過）：還原為 1
+    if (fieldName === 'tpy_type' && this.totalLocationSpace > 0) {
+      if (newValue === '01') {
+        rowData.tpy_qty = this.totalLocationSpace;
+      } else if (rowData.tpy_qty === this.totalLocationSpace) {
+        rowData.tpy_qty = 1;
+      }
     }
 
     // 執行計算

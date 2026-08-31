@@ -8,12 +8,13 @@ import { fin72040Data } from '@service/api/fin/fin72040.service';
 import { formatAmount } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableComponent } from '../../../others/component/table/table.component';
+import { Column } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
-import { TableComponent } from '../../../others/component/table/table.component';
-import { Column } from '../../../others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { Fin72030Service } from '@service/api/fin/fin72030.service';
 import { Fin72040Service } from './../../../service/api/fin/fin72040.service';
 
 @Component({
@@ -62,7 +63,8 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
     // { field: 'RowType', header: '列類型', visible: false },
     // { field: 'IDX', header: '主檔唯一識別碼', visible: true },
     // { field: 'SeqNo', header: '顯示項次', visible: true },
-    { field: 'RqstNo', header: '傳票號碼', visible: true },
+    { field: 'RqstNo', header: '支出請款單號', visible: true },
+    { field: 'VoucherNo', header: '傳票號碼', visible: true },
     { field: 'TotAmt', header: '申請金額', visible: true, format: formatAmount },
     { field: 'PCS_Date', header: '零用金申請日期', visible: true, format: formatDate },
     { field: 'PCS_UsrNo', header: '申請人員工編號', visible: true },
@@ -74,6 +76,7 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
   // ----------------------------------------------------------------
   constructor(
     private readonly fin72040Service: Fin72040Service,
+    private readonly fin72030Service: Fin72030Service,
   ) {
     super();
   }
@@ -158,17 +161,16 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
   }
 
   loadOptions() {
-    // 支出請款單號 下拉
-    this.fin72040Service.POS2064MPCS_RqstNoDropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+    // 支出請款單號 下拉：撥補只撈已拋轉(狀態3)、尚未撥補的單，共用 FIN72030 下拉端點
+    this.fin72030Service.getFIN72030RqstNoDropDownList(['3']).pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response.Data) ? response.Data : [];
-      this.PCS_RqstNo_Options = list.map((item: any) => {
+      this.PCS_RqstNo_Options = list.map((item) => {
         return {
           PCS_RqstNo: item.PCS_RqstNo,
-          PCS_RqstDate: item.PCS_RqstDate,
+          PCS_RqstDate: item.PCS_RqstDate as unknown as Date,
           Keep_UsrNo: item.Keep_UsrNo,
         };
       });
-      console.log('支出請款單號 下拉:', this.PCS_RqstNo_Options);
     });
   }
 }

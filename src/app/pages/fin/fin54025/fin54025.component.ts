@@ -120,7 +120,6 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
             this.messageService.errorBubble(res.Message || '反過帳失敗');
           }
         },
-        error: () => this.messageService.errorBubble('系統錯誤'),
       });
   }
   onSubmit(frm: FormGroup): void {

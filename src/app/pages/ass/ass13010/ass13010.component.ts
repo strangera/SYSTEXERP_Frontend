@@ -17,12 +17,13 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { DeleteASS13010Request, ExportPDFASS13010Request, QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
 
 //3.1.3.1 資產維護作業
@@ -107,10 +108,7 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   // 下拉選單（品項編號、採購單號來源待確認，先留空）
   itemCodeOptions: Option[] = [];
   assetsStatusOptions: Option[] = []; // querySYS1000_DropDownList SYS_Type='ASSET_STATUS'
-  assetsTypeOptions: Option[] = [
-    { value: '1', label: '資產' },
-    { value: '2', label: '列管品' }
-  ];
+  assetsTypeOptions = getSYS1000Options('ASSET_TYPE');
   purchaseNumberOptions: Option[] = [];
   supplierCodeOptions: Option[] = []; // queryPOS2013（供應商編號、處分廠商）
   depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD（會計科目借/貸、折舊、累計折舊）

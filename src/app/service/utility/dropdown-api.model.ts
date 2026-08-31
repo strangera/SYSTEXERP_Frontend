@@ -411,6 +411,10 @@ export interface Aps1001ComboItem {
   No: string;
   Name: string;
   DisplayText: string;
+  /** 銀行別(前3碼) */
+  BNK_No: string;
+  /** 分行(後4碼) */
+  BNK_BranchNo: string;
 }
 
 /**
@@ -910,4 +914,9 @@ export interface Pos1002FilteredItem {
   ECR_TLT_No: string;
   ECR_TLT_Name: string;
   ECR_Status: string;
+}
+
+/** 查詢商品管理編號(ASS11040)下拉選單回傳項目 */
+export interface Ass11040DropDownItem extends IDropdownItem {
+  MaterialType?: string; // 或是 MATERIAL_TYPE，與後端 JSON 大小寫一致
 }

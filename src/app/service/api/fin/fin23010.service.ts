@@ -54,12 +54,13 @@ export interface FIN23010Data {
   StatusCode: string | null;
   /** 狀態(中文名稱，建立中時依簽核結果細分審核中/已審核/已駁回) */
   StatusName: string | null;
-  /** 簽核結果(NULL=尚無結果/Y=通過/N=駁回) */
-  EipApproveYN: string | null;
-  /** 簽核結果(中文名稱) */
-  EipApproveYNName: string | null;
+  /** 傳票狀態(中文名稱) */
+  VouStatusName: string | null;
   /** 是否可刪除('1'=可刪除) */
   CanVoid: string | null;
+
+  CanEdit: string | null;
+  IsSend: string | null;
 }
 
 /** 編輯畫面單筆資料 */
@@ -222,7 +223,10 @@ export class FIN23010Service {
   voidFIN23010(id: number): Observable<ApiResponse<VoidFIN23010Response>> {
     return this.http.post<ApiResponse<VoidFIN23010Response>>(`${this.apiUrl}/voidFIN23010`, { id });
   }
-
+  /** 送審 */
+  sendFIN23010(id: number): Observable<ApiResponse<SaveFIN23010Response>> {
+    return this.http.post<ApiResponse<SaveFIN23010Response>>(`${this.apiUrl}/sendFIN23010`, { id });
+  }
   /** 新增頁「申請廠商/員工」選擇廠商時，依廠商編號查詢廠商資料 */
   queryVenFIN23010(VEN_No: string): Observable<ApiResponse<QueryVenFIN23010Response>> {
     return this.http.post<ApiResponse<QueryVenFIN23010Response>>(`${this.apiUrl}/queryVenFIN23010`, { VEN_No });

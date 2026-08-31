@@ -239,7 +239,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> implements O
       OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
 
       pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
-      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 1000,
+      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
     };
 
@@ -342,7 +342,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> implements O
         ? Number(body.pageSize)
         : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
           ? Number(base.pageSize)
-          : 1000);
+          : 30);
 
     const loaded = Array.isArray(this.data) ? this.data.length : 0;
 
@@ -355,10 +355,19 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> implements O
 
     const knownTotal = Number(this.viewTotalRecords || this.totalRecords || 0);
 
-    // A) 已載滿就不再打
-    if (knownTotal > 0 && loaded >= knownTotal) {
-      return of({ Data: [], TotalCount: knownTotal, GrandTotal: null });
-    }
+    // A) 只有「載入下一頁」時，已載滿才不再打 API
+// pageIndex = 1 可能是重新排序、重新查詢，一定要允許呼叫 API
+if (
+  incomingPageIndex > 1 &&
+  knownTotal > 0 &&
+  loaded >= knownTotal
+) {
+  return of({
+    Data: [],
+    TotalCount: knownTotal,
+    GrandTotal: null
+  });
+}
 
     // B) 同一頁重覆叫（page=2 常見）
     if (incomingPageIndex > 1) {

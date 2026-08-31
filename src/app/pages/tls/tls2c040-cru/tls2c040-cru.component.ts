@@ -3,22 +3,22 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/components/table-edit/table-edit.component';
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
-import { formatAmount, formatDate } from '@others/component/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { TLS2C040Service, UpdateTLS2C040Request } from '../../../service/api/tls/tls2c040.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 @Component({
   selector: 'app-tls2c040-cru',
@@ -47,7 +47,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     VouDate: [{ value: '', disabled: true }],                   // 傳票日期
     Remark: ['', Validators.required],                          // 傳票摘要
     No: [{ value: '', disabled: true }],                        // 結帳單號
-    PostFlag: [{ value: '', disabled: true }],                  // 傳票狀態
+    Trans_Status: [{ value: '', disabled: true }],                  // 傳票狀態
     CRT_USR_No: [{ value: '', disabled: true }],                // 建立人員
     CRT_Date: [{ value: '', disabled: true }],                  // 建立日期
     UPD_USR_No: [{ value: '', disabled: true }],                // 修改人員
@@ -55,8 +55,17 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   });
 
   vouTypeOptions = getSYS1000Options('VouType');
-  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE');
-  postFlagOptions = getSYS1000Options('PostFlag');
+  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')
+    .filter(option => option.value !== 'WT' && option.value !== 'WD' && option.value !== 'PNC')
+    .map(option => {
+      const name = option.value === 'PN' ? '進貨帳款' : option.label;
+      return {
+        value: option.value,
+        label: name,
+        Display: `${option.value} - ${name}`
+      };
+    });
+  transStatusOptions = getSYS1000Options('Trans_Status');
   private ledgerOptions$ = this.dropDown.queryGls1005_ledgerMD();
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   data: any[] = [];

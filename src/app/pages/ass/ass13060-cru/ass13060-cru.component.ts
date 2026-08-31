@@ -70,9 +70,19 @@ export class ASS13060CRUComponent
 
   data: ASS13060DetailItem[] = [];
   selectedItems: ASS13060DetailItem[] = [];
+  private initialData: ASS13060DetailItem[] = [];
 
+  private initialFormValue: {
+    ASSET_EVAL_ID: string;
+    EMP_ID: string | null;
+    ORG_ID: string | null;
+    APPLY_DATE: Date | null;
+    NOTES: string;
+    EVAL_TYPE: string | null;
+  } | null = null;
   empIdOptions: { label: string; value: string }[] = [];
   orgIdOptions: { label: string; value: string }[] = [];
+  assetStatusOptions: { label: string; value: string }[] = [];
 
   public readonly columns: EditColumn[] = [
     { field: 'ASSET_ID', header: '資產編號', type: 'input', disabled: () => true },
@@ -275,6 +285,23 @@ export class ASS13060CRUComponent
               NOTES: detail.NOTES,
             }));
 
+            // ==========================================
+            // 保存頁面第一次載入時的原始資料
+            // ==========================================
+            this.initialFormValue = {
+              ASSET_EVAL_ID: master.ASSET_EVAL_ID ?? '',
+              EMP_ID: master.EMP_ID ?? null,
+              ORG_ID: master.ORG_ID ?? null,
+              APPLY_DATE: applyDate,
+              NOTES: master.NOTES ?? '',
+              EVAL_TYPE: master.EVAL_TYPE ?? null,
+            };
+
+            // Deep copy，避免後續 Table 編輯一起改到原始資料
+            this.initialData = this.data.map(item => ({
+              ...item,
+            }));
+
             if (this.isFormReadable) {
               this.dataForm.disable();
             }
@@ -295,7 +322,20 @@ export class ASS13060CRUComponent
         this.holdEmpIdOptions = options;
       },
     });
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_STATUS' } as { SYS_Type: string })
+      .subscribe({
+        next: (res: { Status: string; Data: { No: string; Name: string }[] }) => {
+          if (res.Status !== '0000') return;
 
+          this.assetStatusOptions = res.Data.map(
+            (item: { No: string; Name: string }) => ({
+              label: `${item.No} - ${item.Name}`,
+              value: item.No,
+            })
+          );
+        },
+      });
     this.dropDownListService.querySYS3100_DropDownList().subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
@@ -565,35 +605,57 @@ export class ASS13060CRUComponent
       }
     });
   }
+onReset(): void {
+  this.submitted = false;
+  this.selectedItems = [];
 
-  onReset(): void {
-    this.submitted = false;
-    this.selectedItems = [];
-
-    if (this.isFormCreateable) {
-      this.dataForm.reset();
-      this.data = [];
-    } else if (this.isFormEditable && this.rowdata) {
-      const row = this.rowdata as unknown as {
-        ASSET_EVAL_ID?: string;
-        EMP_ID?: string;
-        ORG_ID?: string;
-        APPLY_DATE?: Date | string;
-        NOTES?: string;
-        EVAL_TYPE?: string;
-        Items?: ASS13060DetailItem[];
-      };
-      this.dataForm.patchValue({
-        ASSET_EVAL_ID: row.ASSET_EVAL_ID ?? '',
-        EMP_ID: row.EMP_ID ?? null,
-        ORG_ID: row.ORG_ID ?? null,
-        APPLY_DATE: row.APPLY_DATE ? (row.APPLY_DATE as Date) : null,
-        NOTES: row.NOTES ?? '',
-        EVAL_TYPE: row.EVAL_TYPE ?? null,
+  // ==========================================
+  // 新增模式
+  // 恢復成「剛進新增頁」的狀態
+  // ==========================================
+  if (this.isFormCreateable) {
+    if (this.initialFormValue) {
+      this.dataForm.reset({
+        ASSET_EVAL_ID: this.initialFormValue.ASSET_EVAL_ID,
+        EMP_ID: this.initialFormValue.EMP_ID,
+        ORG_ID: this.initialFormValue.ORG_ID,
+        APPLY_DATE: this.initialFormValue.APPLY_DATE,
+        NOTES: this.initialFormValue.NOTES,
+        EVAL_TYPE: this.initialFormValue.EVAL_TYPE,
       });
-      this.data = row.Items ? [...row.Items] : [];
+    } else {
+      this.dataForm.reset();
     }
+
+    this.data = this.initialData.map(item => ({
+      ...item,
+    }));
+
+    this.cdr.detectChanges();
+    return;
   }
+
+  // ==========================================
+  // 編輯模式
+  // 恢復成 API 第一次載入進來的狀態
+  // ==========================================
+  if (this.isFormEditable && this.initialFormValue) {
+    this.dataForm.reset({
+      ASSET_EVAL_ID: this.initialFormValue.ASSET_EVAL_ID,
+      EMP_ID: this.initialFormValue.EMP_ID,
+      ORG_ID: this.initialFormValue.ORG_ID,
+      APPLY_DATE: this.initialFormValue.APPLY_DATE,
+      NOTES: this.initialFormValue.NOTES,
+      EVAL_TYPE: this.initialFormValue.EVAL_TYPE,
+    });
+
+    this.data = this.initialData.map(item => ({
+      ...item,
+    }));
+
+    this.cdr.detectChanges();
+  }
+}
 
   onApprove(): void {
     const row = this.rowdata as unknown as { ID?: number };

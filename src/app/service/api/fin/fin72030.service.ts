@@ -52,6 +52,7 @@ export interface FIN72030DetailResult {
   ORG_Name: string;
   PTA: string;
   ProjectNo: string;
+  RECON_Key: string | null;
 }
 
 export interface FIN72030QueryResult {
@@ -105,6 +106,15 @@ export class Fin72030Service {
     return this.http.post<ApiResponse<PCS_RqstNoDropdownItem[]>>(
       `${this.dropdownUrl}/POS2064MPCS_RqstNoDropDownList`,
       {}
+    );
+  }
+
+  // statusList = 要顯示的收支狀態白名單 (1建立 2請款 3拋轉 4撥補)；
+  // 拋轉(FIN72030) 傳 ['1','2']，撥補(FIN72040) 傳 ['3']
+  getFIN72030RqstNoDropDownList(statusList: string[] = ['1', '2']): Observable<ApiResponse<PCS_RqstNoDropdownItem[]>> {
+    return this.http.post<ApiResponse<PCS_RqstNoDropdownItem[]>>(
+      `${this.apiUrl}/getFIN72030RqstNoDropDownList`,
+      { PCS_StatusList: statusList }
     );
   }
 }

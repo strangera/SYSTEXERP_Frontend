@@ -4,12 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -227,17 +227,41 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     const export$ = this.fin55060Service.exportFIN55060PDF(payload);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.PDFBtnLoading = isLoading).subscribe();
   }
+  override onDetail(row: TableRow) {
+    if (!row?.AccNo4) return;
+    this.navigateWithState(CRUDStatus.Read, row, this.queryForm.getRawValue());
+  }
+  XLSXSingleSheetBtnLoading = false; // <-- 新增此行
 
+  // 2. 修改/新增 Excel 匯出方法
   onExportXLSX() {
     if ((this.data?.length ?? 0) === 0) return;
     const payload = this.buildExportBody();
     if (!payload) return;
-    const export$ = this.fin55060Service.exportFIN55060Excel(payload);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.PDFBtnLoading = isLoading).subscribe();
 
+    // 傳送 IsExportSingle: 'N'
+    const fullPayload: ExportFIN55060Payload = { ...payload, IsExportSingle: 'N' };
+    const export$ = this.fin55060Service.exportFIN55060Excel(fullPayload);
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => (this.XLSXBtnLoading = isLoading))
+      .subscribe();
   }
-  override onDetail(row: TableRow) {
-    if (!row?.AccNo4) return;
-    this.navigateWithState(CRUDStatus.Read, row, this.queryForm.getRawValue());
+
+  /** 匯出 Excel（不分頁，所有會科往下排列在同一頁） */
+  onExportXLSXSingleSheet() {
+    if ((this.data?.length ?? 0) === 0) return;
+    const payload = this.buildExportBody();
+    if (!payload) return;
+
+    // 傳送 IsExportSingle: 'Y'
+    const fullPayload: ExportFIN55060Payload = { ...payload, IsExportSingle: 'Y' };
+    const export$ = this.fin55060Service.exportFIN55060Excel(fullPayload);
+    this.fileExportService
+      .executeFileExport(
+        export$.pipe(untilDestroyed(this)),
+        '.xlsx',
+        (isLoading) => (this.XLSXSingleSheetBtnLoading = isLoading)
+      )
+      .subscribe();
   }
 }

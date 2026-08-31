@@ -20,22 +20,6 @@ export interface QueryFIN55060Payload {
   TargetNo: string;
 }
 
-export interface ExportFIN55060Payload {
-  AccNoFrom: string;
-  AccNoTo: string;
-  DateFrom: string;       // yyyy-MM-dd
-  DateTo: string;         // yyyy-MM-dd
-  OrgId: string;
-  Notes: string;
-  VendorFrom: string;
-  VendorTo: string;
-  PTAFrom: string;
-  PTATo: string;
-  VouType: string;
-  VouStatus: string;
-  TargetNo: string;
-}
-
 export interface FIN55060DetailRow {
   AccNo: string;
   AccCName: string;
@@ -47,7 +31,23 @@ export interface FIN55060DetailRow {
   Credit_Amt: number;
   OpeningBal: number;
 }
-
+export interface ExportFIN55060Payload {
+  AccNoFrom: string;
+  AccNoTo: string;
+  DateFrom: string;
+  DateTo: string;
+  OrgId: string;
+  Notes: string;
+  VendorFrom: string;
+  VendorTo: string;
+  PTAFrom: string;
+  PTATo: string;
+  VouType: string;
+  VouStatus: string;
+  TargetNo: string;
+  /** 匯出會科是否單一頁（Y=不拆分頁/N=依會科拆分頁），未帶預設 N */
+  IsExportSingle?: string;
+}
 @Injectable({ providedIn: 'root' })
 export class FIN55060Service {
   private baseApi = environment.ApiUrl + '/FIN0000/GLS1000';

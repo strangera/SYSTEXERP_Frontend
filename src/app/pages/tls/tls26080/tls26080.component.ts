@@ -1,20 +1,23 @@
-import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApprovalStatus, TLS26080Service } from '@service/api/tls/tls26080.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls26080.model';
 
@@ -24,23 +27,29 @@ import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls2608
   standalone: true,
   imports: [
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
+    ButtonModule,
     CalendarComponent,
     CalendarRangeComponent,
     InputTextComponent,
     MenubarComponent,
+    MultiSelectComponent,
     TableReportComponent,
   ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
 
+  private readonly dropdown = inject(DropdownApiService);
+
   private readonly defaultSort = [{ field: 'pod_no', order: 1 }] as const;
   public readonly queryForm = this.formBuilder.group({
-    pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
+    pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(25)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
+    tlt_noList: new FormControl<string[] | undefined>(undefined), // 專櫃編號(多選)
     pod_sdate: new FormControl<Date | undefined>(undefined), // 起始日期(起)
     pod_edate: new FormControl<Date | undefined>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
@@ -49,13 +58,15 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  // 專櫃編號選項
+  public readonly tltNoOptions = this.dropdown.queryTltTalent();
+
   public lastQueryBody?: TLS26080Query;
   public readonly tableData = signal<TLS26080Data[]>([]);
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  // public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
-  public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
+  public readonly editDisabled = (rowData: TLS26080Data) => rowData.pod_status === ApprovalStatus.已核准;
 
   public readonly printLoading = signal(false);
 
@@ -63,7 +74,6 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     {
       label: '列印',
       icon: 'pi pi-print',
-      disabled: (rowData: TLS26080Data) => rowData.pod_status === ApprovalStatus.刪除,
       action: (rowData: TLS26080Data) => {
         if (!rowData?.pod_no) {
           this.messageService.errorBubble('無活動編號，無法列印');
@@ -105,6 +115,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   const payload: TLS26080Query = {
     POD_No: formValue.pod_no || undefined,
     POD_Desc: formValue.pod_desc || undefined,
+    TLT_NoList: formValue.tlt_noList?.length ? formValue.tlt_noList : undefined,
 
     POD_SDate_start: formValue.pod_sdate
       ? this.datePipe.transform(formValue.pod_sdate, 'yyyy-MM-dd') ?? undefined
@@ -151,13 +162,13 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 
-  // 保留供日後核准/反核准按鈕用
-
   public readonly tableLoading = signal<boolean>(false);
   public readonly deleteLoading = signal<boolean>(false);
+  public readonly approveLoading = signal<boolean>(false);
+  public readonly revokeLoading = signal<boolean>(false);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading() || this.deleteLoading()
+    this.loading = this.tableLoading() || this.deleteLoading() || this.approveLoading() || this.revokeLoading()
   }, { allowSignalWrites: true });
 
   constructor(
@@ -195,8 +206,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   public onDelete(event: TLS26080Data[]): void {
-    if (event.some(item => item.pod_status === ApprovalStatus.已核准)) {
-      this.messageService.warnBubble('已審核資料不可刪除');
+    if (event.some(item => item.pod_status !== ApprovalStatus.未核准)) {
+      this.messageService.warnBubble('已核准資料不可刪除');
       return;
     }
     this.messageService.confirm({
@@ -207,6 +218,48 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
         const podNoList = event.map(v => v.pod_no);
         this.service.deleteTLS26080(podNoList).pipe(finalize(() => this.deleteLoading.set(false))).subscribe(res => {
           this.messageService.successBubble(res.Message || '刪除成功');
+          this.onSubmit(); // 重新查詢
+        });
+      },
+    });
+  }
+
+  public onApprove(): void {
+    const selected = this.selectedItems();
+    if (selected.some(item => item.pod_status !== ApprovalStatus.未核准)) {
+      this.messageService.warnBubble('您選取包含已核准的資料，無法進行審核。');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認審核',
+      message: `是否確認審核 ${selected.length} 筆活動？`,
+      accept: () => {
+        this.approveLoading.set(true);
+        const podNoList = selected.map(v => v.pod_no);
+        this.service.updateTLS26080Status(podNoList, ApprovalStatus.已核准).pipe(finalize(() => this.approveLoading.set(false))).subscribe(res => {
+          this.messageService.successBubble(res.Message || '審核成功');
+          this.selectedItems.set([]);
+          this.onSubmit(); // 重新查詢
+        });
+      },
+    });
+  }
+
+  public onRevoke(): void {
+    const selected = this.selectedItems();
+    if (selected.some(item => item.pod_status !== ApprovalStatus.已核准)) {
+      this.messageService.warnBubble('您選取包含未核准的資料，無法進行反審核。');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認反審核',
+      message: `是否確認反審核 ${selected.length} 筆活動？`,
+      accept: () => {
+        this.revokeLoading.set(true);
+        const podNoList = selected.map(v => v.pod_no);
+        this.service.updateTLS26080Status(podNoList, ApprovalStatus.未核准).pipe(finalize(() => this.revokeLoading.set(false))).subscribe(res => {
+          this.messageService.successBubble(res.Message || '反審核成功');
+          this.selectedItems.set([]);
           this.onSubmit(); // 重新查詢
         });
       },
