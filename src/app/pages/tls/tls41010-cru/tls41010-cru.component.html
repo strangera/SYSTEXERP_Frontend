@@ -39,8 +39,27 @@
             optionValue="value" [control]="dataForm.controls.ECR_SAL_Type" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="位置編號" controlName="ECR_LocNo" [control]="dataForm.controls.ECR_LocNo"
-            [options]="LocOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
+          <app-auto-complete label="位置編號" controlName="ECR_LocNo" [control]="dataForm.controls.ECR_LocNo"
+            [options]="LocOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-auto-complete>
+          @if (locNoWarning) {
+            <small class="text-orange-600 text-sm block">
+              <i class="pi pi-exclamation-triangle mr-1"></i>{{ locNoWarningMessage }}
+            </small>
+          }
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="館別" controlName="ECR_Group" [control]="dataForm.controls.ECR_Group"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="樓層" controlName="ECR_SubGroup" [control]="dataForm.controls.ECR_SubGroup"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="區域" controlName="ECR_AreaNo" [control]="dataForm.controls.ECR_AreaNo"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <div class="grid p-fluid">
