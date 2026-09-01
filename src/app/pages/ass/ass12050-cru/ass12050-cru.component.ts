@@ -96,7 +96,7 @@ export class ASS12050CRUComponent
   editColumns: EditColumn[] = [
     {
       field: 'GOODS_ID',
-      header: '品項代號/名稱',
+      header: '品項編號/名稱',
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
