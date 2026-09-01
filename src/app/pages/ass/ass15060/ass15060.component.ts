@@ -93,7 +93,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
   data: ass15060[] = [];
   columns: Column[] = [
     // { field: 'ROW_NO', header: '行號', visible: false },
-    { field: 'ASSET_ID', header: '財產編號', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
     { field: 'B_CLASS_NAME', header: '大分類名稱', visible: true },
     { field: 'M_CLASS_NAME', header: '中分類名稱', visible: true },
     { field: 'S_CLASS_NAME', header: '小分類名稱', visible: true },
@@ -115,7 +115,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
   smallOption: apiOption[] = [];
   QUERY_MODE_OPTIONS: { value: number; label: string }[] = [
     { value: 1, label: '以狀態查詢' },
-    { value: 2, label: '以財產編號查詢' },
+    { value: 2, label: '以資產編號查詢' },
     { value: 3, label: '以財產類型查詢' },
     { value: 4, label: '以分類查詢' },
   ];

@@ -150,7 +150,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   ];
 
   readonly columns: ReportColumn[] = [
-    { field: 'ASSET_ID', header: '財產編號', groupField: 'item' },
+    { field: 'ASSET_ID', header: '資產編號', groupField: 'item' },
     { field: 'GOODS_ID', header: '品項代碼', groupField: 'item' },
     { field: 'GOODS_NAME', header: '品項名稱', groupField: 'item' },
     { field: 'QTY', header: '數量', groupField: 'item' },

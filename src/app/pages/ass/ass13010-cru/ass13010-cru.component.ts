@@ -37,8 +37,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
-    // 資產代號：新增時由後端 SP 自動產生（disabled 不參與 validation 也不送 API），最大長度 20。
-    assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產代號
+    // 資產編號：新增時由後端 SP 自動產生（disabled 不參與 validation 也不送 API），最大長度 20。
+    assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產編號
     itemCode: [, [Validators.required]], // 品項編號
     assetsStatus: [, [Validators.required]], // 資產狀態
     assetsType: [{ value: null as string | null, disabled: true }],// 資產類型

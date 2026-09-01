@@ -78,7 +78,7 @@ export class ASS15080Component
   btnPDFLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'ASSET_ID', header: '財產編號', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
     { field: 'GOODS_ID', header: '項目編號', visible: true },
     { field: 'GOODS_NAME', header: '項目名稱', visible: true },
     {

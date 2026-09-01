@@ -61,7 +61,7 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
   readonly columnsPreview: ReportColumn[] = [
     { field: 'DEPRE_YN_NAME', header: '財產類型' },
     { field: 'SUBPOENA_ID', header: '進貨單號' },
-    { field: 'ASSET_ID', header: '財產編號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     {
       field: 'GOODS_NAME',
       header: '品項',
@@ -88,7 +88,7 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
       },
     },
     { field: 'SUBPOENA_ID', header: '進貨單號' },
-    { field: 'ASSET_ID', header: '財產編號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     { field: 'GOODS_NAME', header: '品項' },
     {
       field: 'INPUT_DATE',

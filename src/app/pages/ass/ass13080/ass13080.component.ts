@@ -85,7 +85,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
 
   public readonly columns: ReportColumn[] = [
     { field: 'ASSET_SALENO', header: '變賣單號', visible: true },
-    { field: 'ASSET_ID', header: '資產代號', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
     { field: 'GOODS_ID', header: '品項編號', visible: true },
     { field: 'GOODS_NAME', header: '品項名稱', visible: true },
     { field: 'ASSET_STATUS_NAME', header: '資產狀態', visible: true },
@@ -95,6 +95,8 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
     { field: 'DEPRE_ID', header: '攤提代號', visible: true },
   ];
 
+  /** 資產編號：queryASS13010AssetIdDropdown（全部資產編號，借用 ASS13010 主查詢） */
+  assetIdOptions: { value: string; label: string }[] = [];
   /** 品項：query11040dropdown（先以 ASS11040 查詢替代） */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 資產狀態：SYS1000(ASSET_STATUS) */
@@ -137,6 +139,13 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
         value: item.No ?? '',
         label: `${item.No ?? ''} - ${item.Name ?? ''}`,
       }));
+
+    this.dropdownApiService
+      .queryASS13010AssetIdDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.assetIdOptions = res ?? [];
+      });
 
     this.dropDownListService
       .querySYS1000_DropDownList({ SYS_Type: 'ASSET_STATUS' } as any)

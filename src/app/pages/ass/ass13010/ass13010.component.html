@@ -9,8 +9,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="資產代號" controlName="assetsCode" [control]="queryForm.controls.assetsCode"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="資產編號" controlName="assetsCode" [options]="assetsCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.assetsCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label"

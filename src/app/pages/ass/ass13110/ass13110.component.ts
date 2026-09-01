@@ -64,7 +64,7 @@ export class ASS13110Component extends BasicQueryPageComponent<ASS13110Row> impl
 
   /** 表格欄位定義 */
   public readonly columns: ReportColumn[] = [
-    { field: 'ASSET_ID', header: '財產編號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     { field: 'GOODS_ID', header: '品項編號' },
     { field: 'GOODS_NAME', header: '品項名稱' },
     { field: 'GET_DATE', header: '購入日期', format: formatDate },

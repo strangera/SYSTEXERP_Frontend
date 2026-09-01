@@ -36,9 +36,9 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.holdOrgId"
             [submitted]="submitted"></app-dropdown>
 
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="財產編號"
-            [startControl]="queryForm.controls.assetIdFrom" [endControl]="queryForm.controls.assetIdTo"
-            [submitted]="submitted"></app-input-text-range>
+          <app-dropdown-range class="col-12 md:col-6 lg:col-4" label="資產編號" [options]="assetIdOptions"
+            optionLabel="label" optionValue="value" [startControl]="queryForm.controls.assetIdFrom"
+            [endControl]="queryForm.controls.assetIdTo" [submitted]="submitted"></app-dropdown-range>
 
           <app-calendar-range class="col-12 md:col-6 lg:col-5" label="入帳日期"
             [startControl]="queryForm.controls.getDateFrom" [endControl]="queryForm.controls.getDateTo"

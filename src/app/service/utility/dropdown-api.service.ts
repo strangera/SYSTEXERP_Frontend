@@ -696,6 +696,39 @@ export class DropdownApiService {
     );
   }
 
+  /**
+   * 查詢全部資產編號下拉選單 — 沒有專屬 DropDownList endpoint，
+   * 借用既有 queryASS13010 主查詢 endpoint，不帶查詢條件、PageSize=9999 一次取齊全部資產。
+   * Endpoint response 為 wrapped 結構 `ApiResponse<{ TotalRows, TotalPages, QueryData: T[] }>`，
+   * 與 `queryAndMapDropdown` 預期的扁平 `ApiResponse<T[]>` 不同，因此直接 inline 處理（比照 queryFasItemAss1000Dropdown）。
+   */
+  queryASS13010AssetIdDropdown(): Observable<Option[] | null> {
+    return this.http
+      .post<
+        ApiResponse<{
+          TotalRows?: number;
+          TotalPages?: number;
+          QueryData?: { ASSET_ID?: string | null }[] | null;
+        }>
+      >(`${this.apiUrl}/ASS0000/ASS1000/queryASS13010`, {
+        PageSize: 9999,
+        PageIndex: 1,
+      })
+      .pipe(
+        map(response => {
+          const items = response?.Data?.QueryData ?? null;
+          if (!items) return null;
+          const assetIds = [...new Set(items.map(item => item.ASSET_ID).filter((id): id is string => !!id))];
+          return assetIds.map(id => ({ value: id, label: id }));
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryASS13010 (資產編號下拉) 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
+
   /** 查詢進貨單號下拉選單(ASS15070) */
   queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
     return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
