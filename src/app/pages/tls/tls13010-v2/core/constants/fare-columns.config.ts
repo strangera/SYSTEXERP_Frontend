@@ -53,8 +53,8 @@ export const FARE_CHANGE_DETECTION_CONFIG = {
     dateFields: ['tpy_bdate', 'tpy_edate']
   },
   D: {
-    editableFields: ['tpy_bdate', 'tpy_edate', 'cap_saletype', 'instms_type', 'edc_bank', 'pay_no', 'calc_type', 'over_base_rate', 'rent_plus_rate', 'down_payment', 'tpy_type', 'tpy_rate', 'gui_flag'],
-    numericFields: ['over_base_rate', 'rent_plus_rate', 'down_payment', 'tpy_rate'],
+    editableFields: ['tpy_bdate', 'tpy_edate', 'cap_saletype', 'instms_type', 'edc_bank', 'pay_no', 'calc_type', 'over_base_rate', 'down_payment', 'tpy_type', 'tpy_rate', 'gui_flag'],
+    numericFields: ['over_base_rate', 'down_payment', 'tpy_rate'],
     dateFields: ['tpy_bdate', 'tpy_edate']
   },
   E: {
@@ -407,16 +407,17 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       editable: true,
       style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
     },
-    {
-      field: 'rent_plus_rate',
-      header: '加抽比率',
-      type: 'number',
-      editable: true,
-      required: true,
-      allowDecimal: true,
-      decimalPlaces: 3,
-      style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
-    },
+    // 加抽比率欄位暫時隱藏
+    // {
+    //   field: 'rent_plus_rate',
+    //   header: '加抽比率',
+    //   type: 'number',
+    //   editable: true,
+    //   required: true,
+    //   allowDecimal: true,
+    //   decimalPlaces: 3,
+    //   style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
+    // },
     {
       field: 'down_payment',
       header: '超過基準金額',
