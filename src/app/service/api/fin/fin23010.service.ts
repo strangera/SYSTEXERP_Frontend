@@ -97,6 +97,8 @@ export interface FIN23010Detail {
   VEN_CheckTitle: string | null;
   CostOrg: string | null;
   CostOrgName: string | null;
+  /** 會計科目代號(GLS1005) */
+  AccNo: string | null;
   Summary: string | null;
   REDEEM_NO: string | null;
   VouNo: string | null;
@@ -126,6 +128,8 @@ export interface SaveFIN23010Request {
   /** 統一編號/身分證字號(原票據抬頭欄位改用途) */
   VEN_CheckTitle?: string | null;
   CostOrg: string;
+  /** 會計科目代號(GLS1005) */
+  AccNo: string;
   Summary?: string | null;
 }
 

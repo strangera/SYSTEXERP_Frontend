@@ -44,13 +44,14 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     advanceAmount: [null as number | null, [Validators.required, this.validationService.numberValidator]], // 預支金額
     writeOffDate: [new Date(), [Validators.required]], //預計核銷日
     requsetEmployee: [{ value: '', disabled: true }, [Validators.required]], //申請員工(VEN_No，固定為登入帳號，鎖定不可改)
-    payoutMethod: [null as string | null], //付款方式
+    payoutMethod: [null as string | null, [Validators.required]], //付款方式
     transferAccount: ['', [Validators.maxLength(10)]], //匯款銀行代號
     bankAccount: ['', [Validators.maxLength(20)]], // 銀行帳號
     accountName: ['', [Validators.maxLength(80)]], // 帳戶名稱
     ticketTitle: ['', [Validators.maxLength(100)]], // 統一編號/身分證字號(原票據抬頭欄位改用途)
     eExpectPayDate: [null as Date | null, [Validators.required]], //預計付款日
     organization: [null as string | null, [Validators.required]], //費用組織
+    accSubject: [null as string | null, [Validators.required]], // 會計科目
     summary: ['', [Validators.maxLength(160)]], // 摘要
   });
 
@@ -60,6 +61,7 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
     map(options => options.filter(o => o.value === '1' || o.value === '3')),
   );
   readonly organizationOptions$ = this.dropdown.querySys3100();
+  readonly accSubjectOptions$ = this.dropdown.queryGls1005_ledgerMD(); // 會計科目(只顯示明細，不顯示統制)
   readonly VEN_BNK_No_ParamOptions = this.dropdown.queryAps1001_DropDownList(); // 匯款銀行代號
   /** 目前選定的員工名稱(顯示用) */
   venName = '';
@@ -158,6 +160,7 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
           ticketTitle: d.VEN_CheckTitle,
           eExpectPayDate: d.PAY_Date ? new Date(d.PAY_Date) : null,
           organization: d.CostOrg,
+          accSubject: d.AccNo,
           summary: d.Summary,
         });
 
@@ -238,6 +241,7 @@ export class FIN23010CRUComponent extends BasicCruPageComponent<FIN23010Data> im
       BNK_AccountName: v.accountName || null,
       VEN_CheckTitle: v.ticketTitle || null,
       CostOrg: v.organization ?? '',
+      AccNo: v.accSubject ?? '',
       Summary: v.summary || null,
     };
 
