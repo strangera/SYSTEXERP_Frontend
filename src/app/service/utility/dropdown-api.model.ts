@@ -919,4 +919,6 @@ export interface Pos1002FilteredItem {
 /** 查詢商品管理編號(ASS11040)下拉選單回傳項目 */
 export interface Ass11040DropDownItem extends IDropdownItem {
   MaterialType?: string; // 或是 MATERIAL_TYPE，與後端 JSON 大小寫一致
+  B_CLASS_ID?: string; // 大分類代碼，供查詢 ASS11090 中分類會計科目設定用
+  M_CLASS_ID?: string; // 中分類代碼，供查詢 ASS11090 中分類會計科目設定用
 }
