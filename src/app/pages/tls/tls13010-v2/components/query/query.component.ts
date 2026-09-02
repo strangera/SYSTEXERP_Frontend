@@ -493,16 +493,15 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     const row = this.earlyTerminationRow;
 
     this.apiService.earlyTerminationTLS13010({ talentId: row.talent_id, tlt_contract_edate: formatted }).subscribe({
-      next: (res: { Status: string; Message: string }) => {
+      next: (res: { Status: string; Data?: { Message?: string } }) => {
         if (res.Status === '0000') {
           this.messageService.successBubble('提前撤櫃成功');
           this.earlyTerminationDialogVisible = false;
           this.onSubmit(this.queryForm);
         } else {
-          this.messageService.errorBubble(`提前撤櫃失敗: ${res.Message}`);
+          this.messageService.errorBubble(`提前撤櫃失敗: ${res.Data?.Message || '請聯繫系統管理員'}`);
         }
-      },
-      error: () => this.messageService.errorBubble('提前撤櫃失敗')
+      }
     });
   }
 
