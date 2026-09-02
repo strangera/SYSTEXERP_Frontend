@@ -1,89 +1,72 @@
 <div class="card">
-
   <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
-    <app-menubar
-      [ProgNo]="ProgNo"
-      class="flex-1">
-    </app-menubar>
-
-    <app-button
-      btnType="back"
-      (click)="onCancel()">
-    </app-button>
-
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
-  <p-panel
-    [header]="formTitle"
-    class="line-height-3 m-0">
-
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
     <form [formGroup]="dataForm">
-
       <div class="grid p-fluid">
-
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="傳票編號"
             controlName="VouNo"
-            [control]="dataForm.controls.VouNo">
-          </app-input-text>
+            [control]="dataForm.controls.VouNo"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="傳票種類"
             controlName="VouTypeName"
-            [control]="dataForm.controls.VouTypeName">
-          </app-input-text>
+            [control]="dataForm.controls.VouTypeName"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="傳票型態"
             controlName="VouForm"
-            [control]="dataForm.controls.VouForm">
-          </app-input-text>
+            [control]="dataForm.controls.VouForm"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
           <app-calendar
             label="傳票日期"
             controlName="VouDate"
-            [control]="dataForm.controls.VouDate">
-          </app-calendar>
+            [control]="dataForm.controls.VouDate"
+          ></app-calendar>
         </div>
 
         <div class="col-12 md:col-6">
           <app-input-text
             label="傳票摘要"
             controlName="VouSummary"
-            [control]="dataForm.controls.VouSummary">
-          </app-input-text>
+            [control]="dataForm.controls.VouSummary"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="建立者"
             controlName="CRT_USR_Name"
-            [control]="dataForm.controls.CRT_USR_Name">
-          </app-input-text>
+            [control]="dataForm.controls.CRT_USR_Name"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text
             label="建立日"
             controlName="CRT_Date"
-            [control]="dataForm.controls.CRT_Date">
-          </app-input-text>
+            [control]="dataForm.controls.CRT_Date"
+          ></app-input-text>
         </div>
-
       </div>
 
       <div class="mt-3">
-
         @if (initTable) {
-
           <app-table-edit
             title="傳票明細"
             [data]="data"
@@ -101,36 +84,28 @@
             (selectionChange)="onSelectionChange($event)"
             (fieldChange)="onTableFieldChange($event)"
             (dataChange)="onTableDataChange($event)"
-            (insert)="onAddAccountingLine()">
-          </app-table-edit>
-
+            (insert)="onAddAccountingLine()"
+          ></app-table-edit>
         }
-
       </div>
 
       @if (isFormCreateable) {
-
         <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="cancel"
-            (click)="onCancel()">
-          </app-button>
+            (click)="onResetEditableFields()"
+          ></app-button>
 
           <app-button
             label="確定拋轉"
             icon="pi pi-send"
             [loading]="loading"
-            (click)="onConfirmPosting()">
-          </app-button>
-
+            (click)="onConfirmPosting()"
+          ></app-button>
         </div>
-
       }
-
     </form>
-
   </p-panel>
-
 </div>
