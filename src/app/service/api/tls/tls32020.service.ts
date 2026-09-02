@@ -68,6 +68,7 @@ export interface TLS32020Data {
   DiffTicket: number,
   DiffPyeff: number,
   DiffPyContrib: number,
+  DiffSquare: number,
   Diff_PrePerformance: number,
   Diff_ConsumerNum: number,
   Diff_ConsumerOrder: number,
