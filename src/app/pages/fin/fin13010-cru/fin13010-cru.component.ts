@@ -309,7 +309,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> implements 
 
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'PUR_Net', 'PUR_Tax', 'PUR_Amt'];
+      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'Voucher_No', 'PUR_Net', 'PUR_Tax', 'PUR_Amt'];
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
         if (editableFields.includes(key)) control?.enable();
