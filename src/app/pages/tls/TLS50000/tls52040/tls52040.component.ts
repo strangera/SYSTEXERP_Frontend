@@ -131,6 +131,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已審核); },
       disabled: (rowData: ITLS52040Data) =>
         rowData.RJM_Status !== POStatus.已確認 ||
+        !!rowData.ReAPRV_Date ||
         !rowData.CanAPRV ||
         !this.hasPermission(Actions.Audit)
     },
