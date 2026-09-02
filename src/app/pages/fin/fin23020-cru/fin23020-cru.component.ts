@@ -235,6 +235,9 @@ export class FIN23020CRUComponent
 
   });
 
+  private initialFormDataSnapshot: Record<string, any> | null = null;
+  private initialDataSnapshot: PostingLine[] = [];
+
 
   // ============================================================
   // Table
@@ -730,6 +733,12 @@ export class FIN23020CRUComponent
           this.selectedItems = [];
 
           this.initTable = true;
+
+          // ====================================================
+          // 儲存原始快照（包含 disabled 欄位的值與原始明細）
+          // ====================================================
+          this.initialFormDataSnapshot = this.dataForm.getRawValue();
+          this.initialDataSnapshot = lines.map(line => ({ ...line }));
 
         },
 
@@ -1386,9 +1395,8 @@ export class FIN23020CRUComponent
                   } else {
 
                     failMessages.push(
-                      `${prepNo}: ${
-                        res?.Data?.Message
-                        || '拋轉失敗'
+                      `${prepNo}: ${res?.Data?.Message
+                      || '拋轉失敗'
                       }`
                     );
 
@@ -1464,4 +1472,18 @@ export class FIN23020CRUComponent
 
   }
 
+  onResetEditableFields(): void {
+    // 1. 還原主表（使用 patchValue + 快照，不會清空 disabled 欄位）
+    if (this.initialFormDataSnapshot) {
+      this.dataForm.patchValue(this.initialFormDataSnapshot);
+    }
+
+    // 2. 還原明細（深拷貝還原，自動移除手動新增的行，並復原編輯過的金額/科目）
+    if (this.initialDataSnapshot) {
+      this.data = this.initialDataSnapshot.map(line => ({ ...line }));
+    }
+
+    // 3. 清空表格選取項目
+    this.selectedItems = [];
+  }
 }
