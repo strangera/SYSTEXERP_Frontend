@@ -103,14 +103,20 @@ const PASSWORD_EXPIRE_DAYS = 90;
       </div>
     </div>
 
-    <div class="flex gap-2 mt-3" [class.justify-content-between]="secondaryAction() !== 'none'"
-      [class.justify-content-end]="secondaryAction() === 'none'">
-      @if (secondaryAction() === 'logout') {
-      <p-button label="登出" severity="secondary" type="button" (onClick)="authService.logout()" />
-      }
-      @if (secondaryAction() === 'cancel') {
-      <p-button label="取消" severity="secondary" type="button" (onClick)="cancelled.emit()" />
-      }
+    <div class="flex gap-2 mt-3" [class.justify-content-between]="secondaryAction() !== 'none' || showExtendButton()"
+      [class.justify-content-end]="secondaryAction() === 'none' && !showExtendButton()">
+      <div class="flex gap-2">
+        @if (secondaryAction() === 'logout') {
+        <p-button label="登出" severity="secondary" type="button" (onClick)="authService.logout()" />
+        }
+        @if (secondaryAction() === 'cancel') {
+        <p-button label="取消" severity="secondary" type="button" (onClick)="cancelled.emit()" />
+        }
+        @if (showExtendButton()) {
+        <p-button label="沿用舊密碼" severity="secondary" type="button" [loading]="extending"
+          (onClick)="onExtendPassword()" />
+        }
+      </div>
       <p-button [label]="submitLabel()" [loading]="loading" type="submit" />
     </div>
   </form>
@@ -123,8 +129,12 @@ export class ChangePasswordComponent implements OnInit {
   readonly secondaryAction = input<'none' | 'logout' | 'cancel'>('none');
   /** 是否顯示使用者代號／姓名唯讀欄位（獨立頁面用） */
   readonly showUserInfo = input(false);
+  /** 是否顯示「沿用舊密碼」按鈕（僅密碼已到期強制跳窗時傳入 true） */
+  readonly showExtendButton = input(false);
   /** secondaryAction 為 cancel 時，點擊觸發，讓呼叫端自行關閉視窗 */
   readonly cancelled = output<void>();
+  /** 沿用舊密碼展延到期日成功後觸發，讓呼叫端自行關閉視窗 */
+  readonly extended = output<void>();
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly notemessage = inject(NotificationService);
@@ -136,6 +146,7 @@ export class ChangePasswordComponent implements OnInit {
 
   submitted = false;
   loading = false;
+  extending = false;
 
   form = this.formBuilder.group({
     User_No: [{ value: '', disabled: true }],
@@ -196,6 +207,25 @@ export class ChangePasswordComponent implements OnInit {
         this.authService.logout();
       } else {
         this.notemessage.errorBubble(response?.Message || '未知錯誤', '更新失敗');
+      }
+    });
+  }
+
+  /** 沿用舊密碼：不驗證表單，直接依 Token 身分展延密碼到期日 90 天，不需重新輸入舊密碼 */
+  onExtendPassword(): void {
+    this.extending = true;
+
+    this.userCodeService.extendPassword().pipe(
+      take(1),
+      finalize(() => this.extending = false),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((response) => {
+      if (response?.Status === '0000') {
+        this.authService.updatePwdExpireDate(response.Data?.PwdExpireDate);
+        this.notemessage.successBubble(response.Message || '密碼到期日已成功展延', '展延成功');
+        this.extended.emit();
+      } else {
+        this.notemessage.errorBubble(response?.Message || '未知錯誤', '展延失敗');
       }
     });
   }

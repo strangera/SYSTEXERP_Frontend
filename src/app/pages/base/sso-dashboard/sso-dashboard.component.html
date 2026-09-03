@@ -61,5 +61,6 @@
 
 <p-dialog header="修改使用者密碼" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }" [closeOnEscape]="!noClose"
   [closable]="!noClose" [breakpoints]="{ '575px': '100vw' }">
-  <app-change-password [secondaryAction]="noClose ? 'logout' : 'cancel'" (cancelled)="visible = false"></app-change-password>
+  <app-change-password [secondaryAction]="noClose ? 'logout' : 'cancel'" [showExtendButton]="noClose"
+    (cancelled)="visible = false" (extended)="visible = false"></app-change-password>
 </p-dialog>

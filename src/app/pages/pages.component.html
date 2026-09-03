@@ -4,5 +4,5 @@
 
 <p-dialog header="修改使用者密碼" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }" [closeOnEscape]="!noClose"
   [closable]="!noClose" [breakpoints]="{ '575px': '100vw' }">
-  <app-change-password secondaryAction="logout"></app-change-password>
+  <app-change-password secondaryAction="logout" [showExtendButton]="noClose" (extended)="visible = false"></app-change-password>
 </p-dialog>
