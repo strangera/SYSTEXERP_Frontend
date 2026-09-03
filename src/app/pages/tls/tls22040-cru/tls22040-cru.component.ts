@@ -126,9 +126,10 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  // POS2100 來源的 TXN_Date 實際是 GUI_InputDate(作廢日期)，重送需改用原始交易日期 ORI_TXN_Date
+  // POS2100/APS4023 來源的 TXN_Date 需改用原始交易日期 ORI_TXN_Date（POS2100 是因為 TXN_Date 實際是 GUI_InputDate 作廢日期）
   private resolveTxnDate(item: any): string {
-    const rawDate = item._TableName === 'POS2100'
+    const useOriTxnDate = item._TableName === 'POS2100' || item._TableName === 'APS4023';
+    const rawDate = useOriTxnDate
       ? (item.ORI_TXN_Date ?? item.TXN_Date)
       : item.TXN_Date;
     return rawDate ? String(rawDate).replace(/-/g, '/') : '';
