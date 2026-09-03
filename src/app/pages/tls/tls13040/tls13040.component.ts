@@ -27,7 +27,6 @@ import { MultiSelectComponent } from '../../../shared/components/multi-select/mu
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
-import { Tls13040TableReportComponent } from './tls13040-table-report.component';
 import { ExportContext } from '@shared/exports/report-export.service';
 @UntilDestroy()
 @Component({
@@ -46,8 +45,7 @@ import { ExportContext } from '@shared/exports/report-export.service';
     TranslateModule,
     DropdownComponent,
     TableReportComponent,
-    
-    Tls13040TableReportComponent
+
   ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> implements OnInit {
