@@ -16,7 +16,7 @@ import { InputTextComponent } from '@shared/components/input-text/input-text.com
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -26,6 +26,15 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 const today = new Date();
 const yesterday = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
+
+// TLS32070 專用：金額類欄位（銷售金額/交易筆數/客單價/預售金額/消費人數/消費客單/差異）四捨五入至整數後再套千分位，
+// 與後端 PDF/Excel 匯出的 "#,##0" 格式（ToString 預設四捨五入away-from-zero）對齊，不修改共用的 formatAmount。
+const formatAmountRounded = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  const rounded = Math.sign(num) * Math.round(Math.abs(num));
+  return rounded.toLocaleString();
+};
 
 @Component({
   selector: 'app-tls32070',
@@ -185,22 +194,22 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     // 比較期 (依 PM 截圖，比較期放在前)
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較期' },
     { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '比較期' },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isPreSale },
-    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
-    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '比較期' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '比較期' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '比較期' },
+    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isConsumerNum },
 
     // 基準期 (本期)
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
     { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '基準期' },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isPreSale },
-    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
-    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '基準期' },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '基準期' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '基準期' },
+    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isConsumerNum },
 
     // 成長率 Group
     { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
@@ -208,12 +217,12 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
 
     // 差異 Group
-    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '差異', visible: this.isPreSale },
-    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
-    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '差異' },
+    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isConsumerNum },
   ];
 
   // 跨欄 Group 表頭
