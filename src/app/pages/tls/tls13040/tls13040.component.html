@@ -66,8 +66,20 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="TLS13040" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [lazy]="true" [dataKey]="'_key'" [showCheckBox]="false" [showManage]="false"
-    [showDelete]="false" [lastQueryBody]="lastQueryBody" [queryFunction]="queryTLS13040Fn"
-    (dataChange)="data = $event"></app-table-report>
+<app-table-report
+  tableKey="TLS13040"
+  [data]="data"
+  [columns]="columns"
+  [totalRecords]="totalRecords"
+  [loading]="loading"
+  [lazy]="true"
+  [dataKey]="'_key'"
+  [showCheckBox]="false"
+  [showManage]="false"
+  [showDelete]="false"
+  [lastQueryBody]="lastQueryBody"
+  [queryFunction]="queryTLS13040Fn"
+  [exportContext]="exportContext"
+  (dataChange)="data = $event">
+</app-table-report>
 </div>
