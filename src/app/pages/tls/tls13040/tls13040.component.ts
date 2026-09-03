@@ -27,7 +27,7 @@ import { MultiSelectComponent } from '../../../shared/components/multi-select/mu
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
-
+import { ExportContext } from '@shared/exports/report-export.service';
 @UntilDestroy()
 @Component({
   selector: 'app-tls13040',
@@ -45,6 +45,7 @@ import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/mult
     TranslateModule,
     DropdownComponent,
     TableReportComponent,
+
   ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -355,4 +356,18 @@ export class TLS13040Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
+  exportContext: ExportContext = {
+  reportTitle: '專櫃契約抽成報表',
+  customFileName: this.getExportFileName()
+};
+
+private getExportFileName(): string {
+  const now = new Date();
+
+  const yyyy = now.getFullYear();
+  const MM = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+
+  return `專櫃契約抽成報表_${yyyy}${MM}${dd}`;
+}
 }
