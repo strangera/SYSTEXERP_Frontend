@@ -3,26 +3,32 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
     @if (isFormCreateable) {
-    <app-button icon="pi pi-file-import"
-                label="轉入採購單"
-                [loading]="transferListLoading || loading"
-                (click)="openTransferDialog()"></app-button>
+      <app-button
+        icon="pi pi-file-import"
+        label="轉入採購單"
+        [loading]="transferListLoading || loading"
+        (click)="openTransferDialog()"
+      ></app-button>
     }
 
     @if (isFormEditable) {
-    <app-button btnType="default"
-                icon="pi pi-file-check"
-                label="驗收"
-                [loading]="loading"
-                [disabled]="!canConfirm"
-                (click)="onConfirm()"></app-button>
+      <app-button
+        btnType="default"
+        icon="pi pi-file-check"
+        label="驗收"
+        [loading]="loading"
+        [disabled]="!canConfirm"
+        (click)="onConfirm()"
+      ></app-button>
 
-    <app-button btnType="default"
-                icon="pi pi-check-circle"
-                label="審核"
-                [loading]="loading"
-                [disabled]="!canApprove"
-                (click)="onApprove()"></app-button>
+      <app-button
+        btnType="default"
+        icon="pi pi-check-circle"
+        label="審核"
+        [loading]="loading"
+        [disabled]="!canApprove"
+        (click)="onApprove()"
+      ></app-button>
     }
 
     <app-button btnType="back" (click)="onCancel()"></app-button>
@@ -31,140 +37,181 @@
   <p-panel header="採購主檔資料" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onUpdate()">
       <div class="grid p-fluid">
+        <!-- 驗收單號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="驗收單號"
-                          controlName="SUBCHECK_ID"
-                          [control]="dataForm.controls.SUBCHECK_ID"
-                          [submitted]="submitted"
-                          [disabled]="true"></app-input-text>
+          <app-input-text
+            label="驗收單號"
+            controlName="SUBCHECK_ID"
+            [control]="dataForm.controls.SUBCHECK_ID"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
         </div>
 
+        <!-- 申請人 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="申請人編號"
-                        controlName="EMP_ID"
-                        [options]="empIdOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="dataForm.controls.EMP_ID"
-                        [submitted]="submitted"
-                        [disabled]="!isFormCreateable"></app-dropdown>
+          <app-dropdown
+            label="申請人編號"
+            controlName="EMP_ID"
+            [options]="empIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EMP_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
         </div>
 
+        <!-- 部門 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="部門代號"
-                        controlName="ORG_ID"
-                        [options]="orgIdOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="dataForm.controls.ORG_ID"
-                        [submitted]="submitted"
-                        [disabled]="!isFormCreateable"></app-dropdown>
+          <app-dropdown
+            label="部門代號"
+            controlName="ORG_ID"
+            [options]="orgIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ORG_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
         </div>
 
+        <!-- 申請日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne"
-                        label="申請日期"
-                        [control]="dataForm.controls.APPLY_DATE"
-                        [submitted]="submitted"
-                        [disabled]="!isFormCreateable"></app-calendar>
+          <app-calendar
+            calendarType="dateOne"
+            label="申請日期"
+            [control]="dataForm.controls.APPLY_DATE"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-calendar>
         </div>
 
+        <!-- 供應商 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="供應商代號"
-                        controlName="SUPPLIER_ID"
-                        [options]="supplierIdOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="dataForm.controls.SUPPLIER_ID"
-                        [submitted]="submitted"
-                        [disabled]="!isFormCreateable"></app-dropdown>
+          <app-dropdown
+            label="供應商代號"
+            controlName="SUPPLIER_ID"
+            [options]="supplierIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.SUPPLIER_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
         </div>
 
+        <!-- 未稅總金額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="未稅總金額"
-                            controlName="NTAX_AMT"
-                            [control]="dataForm.controls.NTAX_AMT"
-                            [submitted]="submitted"
-                            [disabled]="true"></app-input-number>
+          <app-input-number
+            label="未稅總金額"
+            controlName="NTAX_AMT"
+            [control]="dataForm.controls.NTAX_AMT"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-number>
         </div>
 
+        <!-- 稅額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="稅額"
-                            controlName="TAX_AMT"
-                            [control]="dataForm.controls.TAX_AMT"
-                            [submitted]="submitted"
-                            [disabled]="true"></app-input-number>
+          <app-input-number
+            label="稅額"
+            controlName="TAX_AMT"
+            [control]="dataForm.controls.TAX_AMT"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-number>
         </div>
 
+        <!-- 含稅總金額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="含稅總金額"
-                            controlName="AMT"
-                            [control]="dataForm.controls.AMT"
-                            [submitted]="submitted"
-                            [disabled]="true"></app-input-number>
+          <app-input-number
+            label="含稅總金額"
+            controlName="AMT"
+            [control]="dataForm.controls.AMT"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-number>
         </div>
-        <div class="col-12 md:col-6 lg:col-4 flex align-items-center">      
+
+        <!-- 是否整批計稅 -->
+        <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
           <p-checkbox
             label="是否整批計稅"
-            formControlName="IsAllTax"            
-            [binary]="true">
-          </p-checkbox>
+            formControlName="IsAllTax"
+            [binary]="true"
+          ></p-checkbox>
         </div>
       </div>
 
       <hr />
 
-      <app-table-edit #tableEdit
-                      class="col-12"
-                      tableKey="ASS12050Detail"
-                      [columns]="editColumns"
-                      [data]="data"
-                      (dataChange)="onDetailDataChange($event)"
-                      (insert)="onTableInsert()"
-                      [showReorder]="isFormCreateable"
-                      [disabled]="isFormReadable"
-                      [showCheckBox]="isFormCreateable"
-                      [showInsert]="false"
-                      [showDelete]="isFormCreateable"
-                      [canInsert]="isFormCreateable"></app-table-edit>
+      <app-table-edit
+        #tableEdit
+        class="col-12"
+        tableKey="ASS12050Detail"
+        [columns]="editColumns"
+        [data]="data"
+        (dataChange)="onDetailDataChange($event)"
+        (insert)="onTableInsert()"
+        [showReorder]="isFormCreateable"
+        [disabled]="isFormReadable"
+        [showCheckBox]="isFormCreateable"
+        [showInsert]="false"
+        [showDelete]="isFormCreateable"
+        [canInsert]="isFormCreateable"
+      ></app-table-edit>
     </form>
 
     @if (isFormCreateable || isFormEditable) {
-    <div class="col pt-4">
-      <div class="grid justify-content-end gap-2">
-        <app-button btnType="cancel"
-                    [form]="dataForm"
-                    (clickEvent)="onCancelButtonClick()"></app-button>
+      <div class="col pt-4">
+        <div class="grid justify-content-end gap-2">
+          <app-button
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onCancelButtonClick()"
+          ></app-button>
 
-        <app-button btnType="submit"
-                    label="儲存"
-                    [loading]="loading"
-                     [disabled]="canApprove"
-                    (click)="onUpdate()"></app-button>
+          <app-button
+            btnType="submit"
+            label="儲存"
+            [loading]="loading"
+            [disabled]="canApprove"
+            (click)="onUpdate()"
+          ></app-button>
+        </div>
       </div>
-    </div>
     }
   </p-panel>
 </div>
 
-<app-dialog [(visible)]="displayTransferDialog"
-            header="選擇採購單"
-            [disable]="!canConfirmTransfer"
-            [loading]="transferListLoading"
-            (save)="onTransferConfirm()">
-  <div [style]="{ 'min-height': '50vh', 'max-height': '75vh' }"
-       class="mt-3 mb-3">
-    <app-table [showReportMode]="false"
-               [showCaption]="false"
-               [showHeader]="false"
-               [showManage]="false"
-               [showDelete]="false"
-               [showCheckBox]="true"
-               [selectionMode]="'single'"
-               dataKey="SUBPOENA_ID"
-               [data]="transferData"
-               [columns]="transferColumns"
-               [selectedItems]="selectedTransferRow ? [selectedTransferRow] : []"
-               (selectionChange)="onTransferSelectionChange($event)"></app-table>
+<app-dialog
+  [(visible)]="displayTransferDialog"
+  header="選擇採購單"
+  [disable]="!canConfirmTransfer"
+  [loading]="transferListLoading"
+  (save)="onTransferConfirm()"
+>
+  <div
+    [style]="{
+      'min-height': '50vh',
+      'max-height': '75vh',
+    }"
+    class="mt-3 mb-3"
+  >
+    <app-table
+      [showReportMode]="false"
+      [showCaption]="false"
+      [showHeader]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      [showCheckBox]="true"
+      [selectionMode]="'single'"
+      dataKey="SUBPOENA_ID"
+      [data]="transferData"
+      [columns]="transferColumns"
+      [selectedItems]="selectedTransferRow ? [selectedTransferRow] : []"
+      (selectionChange)="onTransferSelectionChange($event)"
+    ></app-table>
   </div>
 </app-dialog>
