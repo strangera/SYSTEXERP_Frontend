@@ -66,13 +66,16 @@ const PASSWORD_EXPIRE_DAYS = 90;
       <div class="col-12 md:col-10">
         <p-password id="cp-New_password" class="w-full" styleClass="w-full" inputStyleClass="w-full"
           autocomplete="new-password" formControlName="New_password" placeholder="請輸入新密碼" [maxLength]="20"
-          [toggleMask]="true" [feedback]="false" appendTo="body">
+          [toggleMask]="true" [feedback]="true" [strongRegex]="strongRegex" promptLabel="設定密碼" weakLabel="太簡單"
+          mediumLabel="中等複雜度" strongLabel="符合規則" appendTo="body">
           <ng-template pTemplate="footer">
             <div class="flex flex-column">
               <p-divider />
               <p class="mt-2">密碼規則格式限制：</p>
               <ul class="pl-2 ml-2 mt-0" style="line-height: 1.5">
-                <li>字數限制：4 至 20 個字元，不限字元種類</li>
+                <li>字數限制：4 至 20 個字元</li>
+                <li>至少一個英文小寫字母（a–z）</li>
+                <li>至少一個數字（0–9）</li>
               </ul>
             </div>
           </ng-template>
@@ -85,6 +88,9 @@ const PASSWORD_EXPIRE_DAYS = 90;
         }
         @if (submitted && f['New_password'].errors?.['maxlength']) {
         <small class="p-error block">密碼長度最多 20 個字元。</small>
+        }
+        @if (submitted && f['New_password'].errors?.['invalidPasswordStrength']) {
+        <small class="p-error block">密碼需包含至少一個英文小寫字母與一個數字。</small>
         }
       </div>
     </div>
@@ -147,6 +153,8 @@ export class ChangePasswordComponent implements OnInit {
   submitted = false;
   loading = false;
   extending = false;
+  /** p-password 強度提示用：至少一個英文小寫字母與一個數字，4-20 碼 */
+  readonly strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,20}$';
 
   form = this.formBuilder.group({
     User_No: [{ value: '', disabled: true }],
@@ -156,6 +164,7 @@ export class ChangePasswordComponent implements OnInit {
       Validators.required,
       Validators.minLength(4),
       Validators.maxLength(20),
+      this.validationService.passwordStrengthValidator(),
     ]],
     New_password2: ['', [Validators.required, Validators.maxLength(20)]],
   }, {
