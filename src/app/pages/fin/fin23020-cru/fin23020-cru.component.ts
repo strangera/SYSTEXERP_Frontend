@@ -102,10 +102,15 @@ export class FIN23020CRUComponent
   // ============================================================
 
   /**
-   * 科目
+   * 科目。
+   *
+   * 用 Fin23020Service.queryGls1005Fin23020()，
+   * 不用 DropdownApiService.queryGls1005_ledgerMD()：
+   * 後者多處共用，不帶 AccDC(借貸方屬性)，
+   * 本頁需要 AccDC 判斷選擇科目後開放借方或貸方金額欄位。
    */
   private readonly ledgerOptions$ =
-    this.dropdown.queryGls1005_ledgerMD();
+    this.fin23020Service.queryGls1005Fin23020();
 
 
   /**
@@ -119,6 +124,13 @@ export class FIN23020CRUComponent
    * 科目代號 -> 科目名稱
    */
   private readonly ledgerNameMap =
+    new Map<string, string>();
+
+
+  /**
+   * 科目代號 -> 借貸方屬性(AccDC，D:借方 C:貸方)
+   */
+  private readonly ledgerDCMap =
     new Map<string, string>();
 
 
@@ -251,9 +263,7 @@ export class FIN23020CRUComponent
   /**
    * Table Checkbox 目前勾選的資料。
    *
-   * 這裡只允許存放：
-   * _isManual === true
-   * 的手動新增會科。
+   * 原始 API 資料與手動新增會科皆可勾選 / 刪除。
    */
   selectedItems: PostingLine[] = [];
 
@@ -261,25 +271,9 @@ export class FIN23020CRUComponent
   /**
    * Checkbox 是否允許勾選。
    *
-   * 規則：
-   *
-   * 原始 API 資料
-   * _isManual = false
-   * => 不可勾選 / 不可刪除
-   *
-   * 手動新增資料
-   * _isManual = true
-   * => 可以勾選 / 可以刪除
+   * 所有列（含原始 API 資料與手動新增會科）皆開放勾選 / 刪除。
    */
-  isRowSelectable = (
-    rowData: PostingLine,
-    _rowIndex: number,
-    _data: PostingLine[]
-  ): boolean => {
-
-    return rowData._isManual === true;
-
-  };
+  isRowSelectable = (): boolean => true;
 
 
   /**
@@ -310,27 +304,12 @@ export class FIN23020CRUComponent
 
       templateLabel: 'label',
 
-      showClear: false,
+      showClear: false
 
       /**
-       * 規則：
-       *
-       * 1. 原始借方不可修改
-       * 2. 原始貸方可以修改
-       * 3. 手動新增的借方會科可以修改
+       * 借貸方科目代號皆開放編輯，
+       * 選擇後由 onTableFieldChange 同步更新科目名稱。
        */
-      disabled: (
-        _value,
-        _index,
-        rowData: PostingLine
-      ) => {
-
-        return (
-          rowData._isDebit === true &&
-          rowData._isManual !== true
-        );
-
-      }
 
     },
 
@@ -424,6 +403,8 @@ export class FIN23020CRUComponent
       header: '貸方金額',
       width: '120px',
 
+      type: 'inputNumber',
+
       format: formatAmount,
 
       textAlign: 'right',
@@ -431,9 +412,19 @@ export class FIN23020CRUComponent
       aggregate: 'sum',
 
       /**
-       * 目前貸方金額維持不可修改。
+       * 貸方列可以修改。
+       *
+       * 借方列的 CreditAmt 鎖住。
        */
-      disabled: () => true
+      disabled: (
+        _value,
+        _index,
+        rowData: PostingLine
+      ) => {
+
+        return rowData._isDebit !== false;
+
+      }
     },
 
 
@@ -546,11 +537,18 @@ export class FIN23020CRUComponent
 
         this.ledgerNameMap.clear();
 
+        this.ledgerDCMap.clear();
+
         options?.forEach(option => {
 
           this.ledgerNameMap.set(
             String(option.value),
             String(option.label)
+          );
+
+          this.ledgerDCMap.set(
+            String(option.value),
+            String(option['AccDC'] ?? '')
           );
 
         });
@@ -767,17 +765,8 @@ export class FIN23020CRUComponent
     rows: PostingLine[]
   ): void {
 
-    /**
-     * 再做一次防護。
-     *
-     * 即使 TableEdit 未來選取邏輯變更，
-     * 父層仍只接受 _isManual === true 的資料。
-     */
     this.selectedItems =
-      (rows ?? []).filter(
-        row =>
-          row._isManual === true
-      );
+      rows ?? [];
 
   }
 
@@ -808,6 +797,32 @@ export class FIN23020CRUComponent
         this.ledgerNameMap.get(
           String(value)
         ) ?? '';
+
+
+      /**
+       * 依科目本身的借貸方屬性(AccDC)，
+       * 決定這一列要開放借方金額還是貸方金額，
+       * 並把另一邊金額歸零。
+       */
+      const accDC =
+        this.ledgerDCMap.get(
+          String(value)
+        );
+
+
+      if (accDC === 'D') {
+
+        rowData._isDebit = true;
+
+        rowData.CreditAmt = 0;
+
+      } else if (accDC === 'C') {
+
+        rowData._isDebit = false;
+
+        rowData.DebitAmt = 0;
+
+      }
 
     }
 
@@ -846,6 +861,23 @@ export class FIN23020CRUComponent
     }
 
 
+    // ==========================================================
+    // 貸方金額
+    // ==========================================================
+
+    if (
+      field === 'CreditAmt' &&
+      !rowData._isDebit
+    ) {
+
+      rowData.CreditAmt =
+        Number(value ?? 0);
+
+      rowData.DebitAmt = 0;
+
+    }
+
+
     /**
      * 重新給 Array Reference，
      * 確保 TableEdit 合計列更新。
@@ -879,8 +911,7 @@ export class FIN23020CRUComponent
     this.selectedItems =
       this.selectedItems.filter(
         selected =>
-          this.data.includes(selected) &&
-          selected._isManual === true
+          this.data.includes(selected)
       );
 
   }
@@ -1107,6 +1138,85 @@ export class FIN23020CRUComponent
 
 
     // ==========================================================
+    // 原始借貸科目代號檢查
+    //
+    // 借貸科目代號已開放編輯且為後端必填欄位，
+    // 需再次確認原始借方/貸方列的科目代號未被清空。
+    // ==========================================================
+
+    const originalLines =
+      this.data.filter(
+        row =>
+          row._isManual !== true
+      );
+
+
+    for (const row of originalLines) {
+
+      if (!row.AcctCode) {
+
+        this.messageService.errorBubble(
+          `${row._isDebit ? '借方' : '貸方'}科目代號不可為空`
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // 每筆暫付款申請至少須保留一筆借方、一筆貸方
+    //
+    // Checkbox 已開放刪除原始資料，
+    // 需防止使用者把某筆暫付款申請的借方或貸方整筆刪光。
+    // ==========================================================
+
+    const sourceGroups =
+      new Map<number, PostingLine[]>();
+
+
+    this.data.forEach(row => {
+
+      const arr =
+        sourceGroups.get(row._sourceId) ?? [];
+
+
+      arr.push(row);
+
+
+      sourceGroups.set(
+        row._sourceId,
+        arr
+      );
+
+    });
+
+
+    for (const [, rows] of sourceGroups) {
+
+      const hasDebit =
+        rows.some(row => row._isDebit === true);
+
+      const hasCredit =
+        rows.some(row => row._isDebit === false);
+
+
+      if (!hasDebit || !hasCredit) {
+
+        this.messageService.errorBubble(
+          `${rows[0]._prepNo}：借方與貸方明細皆不可整筆刪除`
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    // ==========================================================
     // 借貸平衡檢查
     // ==========================================================
 
@@ -1155,31 +1265,11 @@ export class FIN23020CRUComponent
     }
 
 
-    // ==========================================================
-    // 按 sourceId 分組
-    // ==========================================================
-
+    /**
+     * 按 sourceId 分組（沿用上方已建立的 sourceGroups）
+     */
     const grouped =
-      new Map<number, PostingLine[]>();
-
-
-    this.data.forEach(line => {
-
-      const arr =
-        grouped.get(
-          line._sourceId
-        ) ?? [];
-
-
-      arr.push(line);
-
-
-      grouped.set(
-        line._sourceId,
-        arr
-      );
-
-    });
+      sourceGroups;
 
 
     const vouSummary =
@@ -1272,12 +1362,16 @@ export class FIN23020CRUComponent
 
 
                 // ----------------------------------------------
-                // 貸方科目
+                // 借貸方科目
                 // ----------------------------------------------
+
+                DebitAccNo:
+                  debit?.AcctCode
+                  ?? '',
 
                 CreditAccNo:
                   credit?.AcctCode
-                  ?? undefined,
+                  ?? '',
 
 
                 // ----------------------------------------------
