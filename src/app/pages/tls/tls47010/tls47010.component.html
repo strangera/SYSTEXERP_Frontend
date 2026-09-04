@@ -40,6 +40,7 @@
           <th class="text-left">資料表名稱</th>
           <th class="text-left">收銀機清單</th>
           <th class="text-left">狀態</th>
+          <th class="text-left">發動時間</th>
         </tr>
       </thead>
       <tbody>
@@ -53,6 +54,7 @@
                 （{{ getStatusItem(key.ID)?.Reason }}）
               }
             </td>
+            <td>{{ getStatusItem(key.ID)?.EXP_Time | date:'yyyy/MM/dd HH:mm:ss' }}</td>
           </tr>
         }
       </tbody>

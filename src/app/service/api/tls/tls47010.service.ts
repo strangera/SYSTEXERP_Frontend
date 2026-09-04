@@ -32,6 +32,7 @@ export interface TLS47010StatusItem {
   EXP_EcrLst: string | null;
   StatusText: string;
   Reason: string | null;
+  EXP_Time: string | null;
 }
 
 @Injectable({

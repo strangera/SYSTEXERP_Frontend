@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -32,7 +32,8 @@ const FINISHED_STATUS_TEXTS = ['成功', '失敗'];
     ReactiveFormsModule,
     MultiSelectComponent,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    DatePipe
   ],
 })
 export class TLS47010Component extends BasicQueryPageComponent<unknown> implements OnInit {
