@@ -1,111 +1,378 @@
 <div class="card">
+
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <app-menubar
+      [ProgNo]="ProgNo"
+      class="flex-1">
+    </app-menubar>
+
+    <app-button
+      btnType="back"
+      (click)="onCancel()">
+    </app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+
+  <p-panel
+    [header]="formTitle | translate"
+    class="line-height-3 m-0">
+
+    <form
+      [formGroup]="dataForm"
+      id="dataForm"
+      (ngSubmit)="onSubmit()">
+
+      <!-- ================================================== -->
+      <!-- 基本資料 -->
+      <!-- ================================================== -->
+
+      <p-panel
+        header="基本資料"
+        class="mb-3">
+
+        <div class="grid p-fluid">
+
+          <!-- 廠商編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商編號"
+              controlName="VEN_No"
+              [control]="dataForm.controls.VEN_No"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 統一編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="統一編號"
+              controlName="VEN_Uniform"
+              [control]="dataForm.controls.VEN_Uniform"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 廠商名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商名稱(中文)"
+              controlName="VEN_Name"
+              [control]="dataForm.controls.VEN_Name"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+
+        <div class="grid p-fluid">
+
+          <!-- 廠商名稱英文 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商名稱(英文)"
+              controlName="VEN_EngName"
+              [control]="dataForm.controls.VEN_EngName"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 廠商簡稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商簡稱"
+              controlName="VEN_ShortName"
+              [control]="dataForm.controls.VEN_ShortName"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+      </p-panel>
+
+
+      <!-- ================================================== -->
+      <!-- 公司資料 -->
+      <!-- ================================================== -->
+
+      <p-panel
+        header="公司資料"
+        class="mb-3">
+
+        <div class="grid p-fluid">
+
+          <!-- 公司登記地址 -->
+          <div class="col-12 md:col-6">
+            <app-input-text
+              label="公司登記地址"
+              controlName="VEN_GUIAddr"
+              [control]="dataForm.controls.VEN_GUIAddr"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 通訊地址 -->
+          <div class="col-12 md:col-6">
+            <app-input-text
+              label="通訊地址"
+              controlName="VEN_PostAddr"
+              [control]="dataForm.controls.VEN_PostAddr"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+
+        <div class="grid p-fluid">
+
+          <!-- 公司電話 -->
+          <div class="col-12 md:col-6">
+            <app-input-text
+              label="公司登記電話"
+              controlName="VEN_Tel"
+              [control]="dataForm.controls.VEN_Tel"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 公司傳真 -->
+          <div class="col-12 md:col-6">
+            <app-input-text
+              label="公司傳真"
+              controlName="VEN_Fax"
+              [control]="dataForm.controls.VEN_Fax"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+      </p-panel>
+
+      <!-- ================================================== -->
+      <!-- 付款資料 -->
+      <!-- ================================================== -->
+      <p-panel header="付款資料" class="mb-3">
+
+        <div class="grid p-fluid">
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商匯款銀行代號"
+              controlName="VEN_BNK_No"
+              [control]="dataForm.controls.VEN_BNK_No"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="銀行分行代號"
+              controlName="VEN_BNK_BranchNo"
+              [control]="dataForm.controls.VEN_BNK_BranchNo"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="匯款帳號"
+              controlName="VEN_BankAccountNo"
+              [control]="dataForm.controls.VEN_BankAccountNo"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+      </p-panel>
+      <!-- ================================================== -->
+      <!-- 訂貨及工廠資料 -->
+      <!-- ================================================== -->
+
+      <p-panel
+        header="訂貨及工廠資料"
+        class="mb-3">
+
+        <div class="grid p-fluid">
+
+          <!-- 訂貨地址 -->
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text
+              label="訂貨地址"
+              controlName="ORDER_ADDR"
+              [control]="dataForm.controls.ORDER_ADDR"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 訂貨電話 -->
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="訂貨電話"
+              controlName="ORDER_TEL"
+              [control]="dataForm.controls.ORDER_TEL"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 訂貨傳真 -->
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="訂貨傳真"
+              controlName="ORDER_FAX"
+              [control]="dataForm.controls.ORDER_FAX"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+
+        <div class="grid p-fluid">
+
+          <!-- 工廠地址 -->
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text
+              label="工廠地址"
+              controlName="FACTO_ADDR"
+              [control]="dataForm.controls.FACTO_ADDR"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 工廠電話 -->
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="工廠電話"
+              controlName="FACTO_TEL"
+              [control]="dataForm.controls.FACTO_TEL"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <!-- 工廠傳真 -->
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text
+              label="工廠傳真"
+              controlName="FACTO_FAX"
+              [control]="dataForm.controls.FACTO_FAX"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+        </div>
+
+      </p-panel>
+
+
+      <!-- ================================================== -->
+      <!-- 配送資料 -->
+      <!-- ================================================== -->
+
+      <p-panel
+        header="配送資料"
+        class="mb-3">
+
+        <div class="grid p-fluid">
+
+          <!-- 送貨期限 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              [min]="0"
+              [max]="9"
+              label="廠商送貨期限(天)"
+              controlName="DELIVERY_LIMIT"
+              [control]="dataForm.controls.DELIVERY_LIMIT"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-input-number>
+          </div>
+
+          <!-- 送貨方式 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="送貨方式"
+              controlName="DELIVERY"
+              [options]="deliveryMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.DELIVERY"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+
+          <!-- 退貨處理方式 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="退貨處理方式"
+              controlName="RETURN_ORDER"
+              [options]="returnMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.RETURN_ORDER"
+              [readonly]="isFormReadable"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+
+        </div>
+
+      </p-panel>
+
+
+      <!-- ================================================== -->
+      <!-- 備註 -->
+      <!-- ================================================== -->
+
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-6">
-          <app-input-text
-            label="訂貨地址"
-            controlName="ORDER_ADDR"
-            [control]="dataForm.controls.ORDER_ADDR"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="訂貨電話"
-            controlName="ORDER_TEL"
-            [control]="dataForm.controls.ORDER_TEL"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="訂貨傳真"
-            controlName="ORDER_FAX"
-            [control]="dataForm.controls.ORDER_FAX"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+
+        <app-input-textarea
+          class="col-12"
+          label="備註"
+          controlName="VEN_Remark"
+          [control]="dataForm.controls.VEN_Remark"
+          [readonly]="isFormReadable"
+          [submitted]="submitted">
+        </app-input-textarea>
+
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-6">
-          <app-input-text
-            label="工廠地址"
-            controlName="FACTO_ADDR"
-            [control]="dataForm.controls.FACTO_ADDR"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="工廠電話"
-            controlName="FACTO_TEL"
-            [control]="dataForm.controls.FACTO_TEL"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="工廠傳真"
-            controlName="FACTO_FAX"
-            [control]="dataForm.controls.FACTO_FAX"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
-            [min]="0"
-            [max]="9"
-            label="廠商送貨期限(天)"
-            controlName="DELIVERY_LIMIT"
-            [control]="dataForm.controls.DELIVERY_LIMIT"
-            [submitted]="submitted"
-          ></app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="送貨方式"
-            controlName="DELIVERY"
-            [options]="deliveryMethodOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.DELIVERY"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="退貨處理方式"
-            controlName="RETURN_ORDER"
-            [options]="returnMethodOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.RETURN_ORDER"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <app-input-textarea class="col-12"
-                            label="備註"
-                            controlName="VEN_Remark"
-                            [control]="dataForm.controls.VEN_Remark"
-                            [readonly]="isFormReadable"
-                            [submitted]="submitted"></app-input-textarea>
-      </div>
+
+
+      <!-- ================================================== -->
+      <!-- 按鈕 -->
+      <!-- ================================================== -->
+
       @if (!isFormReadable) {
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" [loading]="loading"></app-button>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+
+          <app-button
+            btnType="cancel"
+            [form]="dataForm">
+          </app-button>
+
+          <app-button
+            btnType="submit"
+            [loading]="loading">
+          </app-button>
+
         </div>
+
       }
+
     </form>
+
   </p-panel>
+
 </div>
