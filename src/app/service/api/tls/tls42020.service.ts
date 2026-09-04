@@ -131,6 +131,11 @@ export class TLS42020Service {
     return this.http.post<ApiResponse<TLS42020DetailData[]>>(`${this.apiUrl}/queryTLS42020_Detail`, data);
   }
 
+  // 查詢全部既有菜單設定(POS1027M)下拉選單，不受查詢頁篩選條件限制，供複製設定來源選單使用
+  queryTLS42020AllDropDownList(): Observable<ApiResponse<TLS42020Data[]>> {
+    return this.http.post<ApiResponse<TLS42020Data[]>>(`${this.apiUrl}/queryTLS42020_AllDropDownList`, {});
+  }
+
   // 新增POS1027M資料表
   insertTLS42020(data: TLS42020InsertUpdateRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS42020`, data);
