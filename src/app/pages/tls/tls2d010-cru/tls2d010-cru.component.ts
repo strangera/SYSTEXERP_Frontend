@@ -104,7 +104,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   talentDialogColumns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱' },
-    { field: 'contract_no', header: '契約編號' },
+    { field: 'apply_no', header: '招募編號' },
     { field: 'contract_subno', header: '版次' },
     { field: 'tlt_contract_bdate', header: '契約起日', format: columnDateFormat },
     { field: 'tlt_contract_edate', header: '契約迄日', format: columnDateFormat },
@@ -128,7 +128,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     remarks: [''],
     pod_no: [],
     totalCash: [{ value: null, disabled: true }, [Validators.required]],
-    contract_no: [{ value: null, disabled: true }],
+    apply_no: [{ value: null, disabled: true }],
     contract_subno: [{ value: null, disabled: true }],
     tlt_contract_bdate: [{ value: null as string | null, disabled: true }],
     tlt_contract_edate: [{ value: null as string | null, disabled: true }],
@@ -397,6 +397,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           return {
             contract_no: row.tlt_no.contract_no ?? '',
             contract_subno: row.tlt_no.contract_subno ?? '',
+            apply_no: row.tlt_no.apply_no ?? '',
             org_id: row.tlt_no.org_id ?? '',
             tlt_contract_bdate: row.tlt_no.tlt_contract_bdate
               ? (this.parseBackendDate(row.tlt_no.tlt_contract_bdate) ? formatDate(this.parseBackendDate(row.tlt_no.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null)
@@ -425,7 +426,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       this.counterTltDisplayControl.setValue(selected?.label ?? '', { emitEvent: false });
       if (selected) {
         this.dataFormCounter.patchValue({
-          contract_no: selected.contract_no ?? '',
+          apply_no: selected.apply_no ?? '',
           contract_subno: selected.contract_subno ?? '',
           tlt_contract_bdate: selected.tlt_contract_bdate
             ? (this.parseBackendDate(selected.tlt_contract_bdate) ? formatDate(this.parseBackendDate(selected.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
@@ -688,7 +689,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           optionLabel: 'label',
           width: '15rem', validate: [validateRequired]
         },
-        { field: 'contract_no', header: '契約編號', type: 'input', width: '1rem', disabled: () => true },
+        { field: 'apply_no', header: '招募編號', type: 'input', width: '1rem', disabled: () => true },
         { field: 'contract_subno', header: '版次', type: 'input', width: '1rem', disabled: () => true },
         { field: 'org_id', header: '組織代號/名稱', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', options: this.pod_noOptions, optionLabel: 'label', optionValue: 'value', width: '18rem' },
@@ -699,7 +700,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           width: '12rem',
           calculate: () => {
             // 扣款日期改變時，該列的專櫃需要重選，一併清空跟著專櫃帶出來的欄位，避免殘留舊資料
-            return { tlt_no: null, contract_no: '', contract_subno: '', org_id: '' };
+            return { tlt_no: null, contract_no: '', contract_subno: '', apply_no: '', org_id: '' };
           },
           validate: [
             (value: any, rowData: any, data: any[], field: string, header: string) => {
@@ -767,10 +768,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           row.org_id = row.tlt_no.org_id ?? '';
           row.contract_no = row.tlt_no.contract_no ?? '';
           row.contract_subno = row.tlt_no.contract_subno ?? '';
+          row.apply_no = row.tlt_no.apply_no ?? '';
         } else {
           row.org_id = '';
           row.contract_no = '';
           row.contract_subno = '';
+          row.apply_no = '';
         }
         // 若該列尚未有扣款日期，且表單已有選擇日期，則自動帶入
         if (formTpyDate && !row.tpy_date) {
@@ -792,10 +795,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         row.org_id = row.tlt_no.org_id ?? '';
         row.contract_no = row.tlt_no.contract_no ?? '';
         row.contract_subno = row.tlt_no.contract_subno ?? '';
+        row.apply_no = row.tlt_no.apply_no ?? '';
       } else {
         row.org_id = '';
         row.contract_no = '';
         row.contract_subno = '';
+        row.apply_no = '';
       }
       // 換新陣列參考，確保 table-edit (OnPush) 能立即感知並重繪
       this.data = Array.isArray(this.data) ? [...this.data] : this.data;
@@ -882,6 +887,15 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 需求：上方日期一變更，所有明細列的扣款日期都要即時改成同一天
     this.data.forEach(row => {
+      // 日期一變更就一併清空已選過的專櫃跟著帶出來的欄位，比照該欄位在 table 內自己編輯時的 calculate 邏輯，
+      // 避免舊專櫃在新日期已不在契約期間內，卻仍殘留舊選取物件（下拉會因對不到新選項而把整個物件當字串顯示成 [object Object]）
+      if (row.tlt_no) {
+        row.tlt_no = null;
+        row.contract_no = '';
+        row.contract_subno = '';
+        row.apply_no = '';
+        row.org_id = '';
+      }
       row.tpy_date = date ?? null;
     });
 

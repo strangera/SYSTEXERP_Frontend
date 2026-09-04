@@ -43,15 +43,22 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
     sam_yyymm: [null, [Validators.required]],
     tlt_no: [null as string | null, [Validators.required]],
     talent_id: [0],
-    sam_termno: [0],
     contract_no: [{ value: '', disabled: true }],
-    contract_subno: [{ value: 0, disabled: true }],
+    money_type: [{ value: null as string | null, disabled: true }],
+    sam_termno: [null as number | null, [Validators.required]],
     adj_taxtype: [null, [Validators.required]],
     adj_amount: [null, [Validators.required, Validators.max(999999999999)]],
     remarks: [null, [Validators.maxLength(4000)]],
   });
   tlt_noOptions: Tls2e060DropDownListData[] = [];
   adj_taxtypeOptions = getSYS1000Options('PLU_TaxType');
+  money_typeOptions = getSYS1000Options('money_type');
+  sam_termnoOptions: { value: number; label: string }[] = []; // 帳次選項，依結帳方式變動
+  private readonly SAM_TERMNO_MAP: Record<string, number[]> = {
+    '10': [1, 2, 3], // 十日結
+    '15': [1, 2],    // 半月結
+    '30': [1],       // 月結
+  };
   constructor(
     private readonly tls2e060Service: Tls2e060Service,
     private readonly datePipe: DatePipe
@@ -61,6 +68,16 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
 
   ngOnInit(): void {
     this.initializePage('TLS2E060', this.dataForm);
+
+    // 編輯/檢視模式：initializePage 已經用這筆資料本身存的 money_type 回填，這裡只需要
+    // 補算帳次選項，並把 sam_termno（後端是字串）轉成 number 讓下拉能正確選中。
+    // 之後即使去查專櫃下拉清單，也不會用「目前」的專櫃資料覆蓋掉這筆資料當初存的結帳方式/帳次。
+    if (!this.isFormCreateable && this.rowdata) {
+      this.updateSamTermnoOptions(this.rowdata.money_type);
+      this.dataForm.patchValue({
+        sam_termno: this.rowdata.sam_termno != null ? Number(this.rowdata.sam_termno) : null
+      });
+    }
 
     // 1. 初始化時先禁用專櫃下拉 (如果年月沒值)
     if (!this.dataForm.controls.sam_yyymm.value) {
@@ -77,6 +94,8 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
         this.tlt_noOptions = [];
         this.dataForm.controls.tlt_no.setValue(null);
         this.dataForm.controls.tlt_no.disable();
+        this.updateSamTermnoOptions(null);
+        this.dataForm.patchValue({ money_type: null, sam_termno: null });
       }
     });
 
@@ -104,41 +123,44 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
           this.dataForm.controls.tlt_no.enable();
         }
 
-        // 編輯模式回填
+        // 編輯/檢視模式：只補上 talent_id（送出 API 需要，但查詢清單資料沒有這個內部 ID）。
+        // 結帳方式/帳次沿用這筆資料本身存的值（上面已從 rowdata 帶入），不要被這裡查到的
+        // 「該專櫃目前」的結帳方式/帳次覆蓋掉。
         if (!this.isFormCreateable && this.rowdata) {
           const targetOption = this.tlt_noOptions.find(
             opt => opt.tlt_no === this.rowdata?.tlt_no
           );
 
           if (targetOption) {
-            this.dataForm.controls.tlt_no.setValue(targetOption.tlt_no);
-
-            this.dataForm.patchValue({
-              talent_id: targetOption.talent_id,
-              contract_no: targetOption.contract_no,
-              contract_subno: targetOption.contract_subno,
-              sam_termno: targetOption.sam_termno
-            });
+            this.dataForm.patchValue({ talent_id: targetOption.talent_id });
           }
         }
       });
+  }
+  /** 依結帳方式 (money_type) 重算帳次 (sam_termno) 選項：月結=1，半月結=1、2，十日結=1、2、3 */
+  private updateSamTermnoOptions(moneyType: string | null): void {
+    const termNumbers = moneyType ? this.SAM_TERMNO_MAP[moneyType] : undefined;
+    this.sam_termnoOptions = termNumbers ? termNumbers.map(num => ({ value: num, label: `${num}` })) : [];
   }
   onTltNoChange(tltNo: string | null): void {
     // valueChange 拿到的是 optionValue (tlt_no 字串)，從選單找回完整物件帶欄位
     const selectedTlt = this.tlt_noOptions.find(opt => opt.tlt_no === tltNo);
     if (selectedTlt) {
+      this.updateSamTermnoOptions(selectedTlt.money_type);
       this.dataForm.patchValue({
         talent_id: selectedTlt.talent_id,
         contract_no: selectedTlt.contract_no,
-        contract_subno: selectedTlt.contract_subno,
-        sam_termno: selectedTlt.sam_termno
+        money_type: selectedTlt.money_type,
+        sam_termno: 1 // 選擇專櫃編號一律預設帶入帳次 1，不取該專櫃目前既有的帳次
       });
     } else {
       // 清空時的處理
+      this.updateSamTermnoOptions(null);
       this.dataForm.patchValue({
         talent_id: undefined,
         contract_no: '',
-        contract_subno: undefined
+        money_type: null,
+        sam_termno: null
       });
     }
   }

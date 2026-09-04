@@ -23,6 +23,9 @@ export interface Tls2e060Data {
   tlt_no: string;
   contract_no: string;
   contract_subno: string;
+  money_type: string;      // 結帳方式 10=十日結 15=半月結 30=月結
+  money_type_desc: string; // 結帳方式名稱（後端已轉換好的中文名稱）
+  sam_termno: string;      // 帳次
   adj_taxtype: string;
   adj_amount: number;
   remarks: string;      // 修正為複數符合後端

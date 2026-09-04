@@ -655,6 +655,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly lastSalesInvoiceLookupKey = new Map<number, string>();
   private readonly lastPurchaseInvoiceLookupKey = new Map<number, string>();
 
+  /**
+   * 上次已依「傳票明細發票摘要」同步過的 token 指紋。
+   * appendStepInvoiceRowsFromSummaryForStep 每次切到進項/銷項發票步驟都會被呼叫，
+   * 若傳票明細的發票 token 沒變還一直重跑，就會把同一批發票反覆 append，導致總計越加越多。
+   * 用指紋擋住「內容沒變的重複同步」，只有傳票明細真的變動才重新帶入。
+   */
+  private _lastSummaryInvoiceFingerprint: string | null = null;
+
 
   // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
@@ -715,6 +723,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }));
 
     const rows = this.tableData();
+    // 以 DB 帶回的傳票明細摘要作為進項/銷項發票步驟表的「已同步」基準：
+    // 首次進入步驟時 append 指紋即命中而略過，不會把「摘要有、但 forupdate 未帶回對應 APS2002」
+    // 的發票（未連結本傳票者）多帶一列進來；之後使用者真的改了摘要才會重新同步。
+    this._lastSummaryInvoiceFingerprint = this.computeSummaryInvoiceFingerprint();
     this.logger.debug(`loadingDetail:`, {
       data,
       form: this.dataForm.getRawValue(),
@@ -1799,6 +1811,26 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
   }
 
+  /**
+   * 依目前傳票明細中格式=5/6 的發票摘要 token 計算指紋。
+   * 供 appendStepInvoiceRowsFromSummaryForStep 判斷「傳票明細發票摘要是否變動」，
+   * 以及編輯模式載入時 (dataEffect) 建立「已同步」基準，避免重複帶入發票列。
+   */
+  private computeSummaryInvoiceFingerprint(): string {
+    const accVoucherTypeMap = this.service.accVoucherTypeMap();
+    return this.tableData()
+      .map(r => {
+        const accNo = String(r.AccNo ?? '').trim();
+        const vt = String(accVoucherTypeMap.get(accNo) ?? '').trim();
+        if (vt !== '5' && vt !== '6') return '';
+        const parsed = this.parseSummaryInvoiceToken(this.resolveNoteDescForStep(r));
+        return parsed ? `${vt}:${this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no)}` : '';
+      })
+      .filter(Boolean)
+      .sort()
+      .join('|');
+  }
+
   private resolveNoteDescForStep(row: FIN53010DetailTable): string {
     const n = row.NoteDesc;
     if (n === void 0 || n === null) return '';
@@ -1826,8 +1858,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     };
   }
 
-  private buildInvoiceDedupKey(invoiceType: string | null | undefined, prefix: string | null | undefined, invoiceNo: string | null | undefined): string {
-    return `${String(invoiceType ?? '').trim().toUpperCase()}|${String(prefix ?? '').trim().toUpperCase()}|${String(invoiceNo ?? '').trim()}`;
+  // 去重僅用「字軌 + 發票號碼」這個穩定識別。發票格式(voucher_type/invoice_type)在
+  // append 後會被 hydrate*RowByInvoice 的 APS2002/APS4023 回傳值非同步覆蓋，若把它納入 key，
+  // 來回切換步驟時（每次進 step 5/6 都會重跑 appendStepInvoiceRowsFromSummaryForStep）就會因
+  // key 對不上而把同一張發票重覆 append，導致底部合計（未稅/稅額）越加越多。invoiceType 參數
+  // 保留以維持呼叫端語意，但不參與 key 計算。
+  private buildInvoiceDedupKey(_invoiceType: string | null | undefined, prefix: string | null | undefined, invoiceNo: string | null | undefined): string {
+    return `${String(prefix ?? '').trim().toUpperCase()}|${String(invoiceNo ?? '').trim()}`;
   }
 
   private hydrateSalesRowByInvoice(index: number, prefix: string, no: string): void {
@@ -2411,6 +2448,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     const accVoucherTypeMap = this.service.accVoucherTypeMap();
     const rows = this.tableData();
+
+    // 只有當「傳票明細」的發票摘要 token 集合真的變動時才重新同步。
+    // 否則來回切換步驟每次都重跑，會把同一批發票一再 append，總計就越加越多（#進項發票重複）。
+    // 編輯模式下 dataEffect 已在 DB 載入時把此指紋設為當下值當基準，因此首次進入步驟即會命中而略過，
+    // 不會把「摘要有、但 forupdate 未帶回對應 APS2002」的發票（例如未連結本傳票的發票）誤加進來。
+    const fingerprint = this.computeSummaryInvoiceFingerprint();
+    if (fingerprint === this._lastSummaryInvoiceFingerprint) return;
+    this._lastSummaryInvoiceFingerprint = fingerprint;
+
     const salesRowsToAppend: FIN53010StepSalesInvoiceRow[] = [];
     const purchaseRowsToAppend: FIN53010StepPurchaseInvoiceRow[] = [];
     const salesKeys = new Set(
@@ -2588,6 +2634,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   private clearEditStepDetailRows(): void {
+    this._lastSummaryInvoiceFingerprint = null; // 重載傳票 → 讓下次進入步驟重新依摘要 token 帶入
     this.stepAPRows.set([]);
     this.stepARRows.set([]);
     this.stepSalesRows.set([]);

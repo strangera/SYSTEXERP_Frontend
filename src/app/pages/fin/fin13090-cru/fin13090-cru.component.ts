@@ -515,8 +515,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     }
 
     // 發票稅額加總必須等於進項稅額貸方（GLS3002 AccAmt 合計）
+    // 折讓（23/24）不列入對帳：GLS3002 進項稅額只含進項發票，折讓稅額不參與
     const taxTotal = Number(this.dataForm.get('TaxTotal')?.value) || 0;
-    const inputTaxSum = this.detailData.reduce((sum, item) => sum + (Number(item.PUR_Tax) || 0), 0);
+    const inputTaxSum = this.detailData
+      .filter(item => item.PUR_VoucherType !== '23' && item.PUR_VoucherType !== '24')
+      .reduce((sum, item) => sum + (Number(item.PUR_Tax) || 0), 0);
     if (inputTaxSum !== taxTotal) {
       this.messageService.errorBubble(`發票稅額合計 (${inputTaxSum}) 必須等於進項稅額貸方 (${taxTotal})`);
       return false;
