@@ -1468,6 +1468,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               acc_no: row.AccNo,
               note_desc: noteDesc,
               PTA: row.PTA ?? null,
+              ACCT_KEY: row.recKey ?? null,
               _detailSerNo: row.SerNo,
             });
           } else if (vt === '7') {
@@ -1597,7 +1598,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
             const d = resolveStepDetail(r.gls3002_id, r.PTA);
             if (!d) return r;
-            return { ...r, ars_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+            return { ...r, ars_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo, ACCT_KEY: d.recKey !== undefined ? (d.recKey ?? null) : r.ACCT_KEY };
           }));
 
           // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
@@ -3320,10 +3321,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (amount != null && amount > 0) {
         const taxType = String(row.tax_type ?? '').trim();
         if (taxType === '1') {
+          // 應稅：反推未稅 + 稅額
           const tax = Math.round(amount * 5 / 105);
           event.rowData.tax_amount = tax;
           event.rowData.net_amount = amount - tax;
+        } else if (taxType === '0') {
+          // 免稅：全額為免稅銷售金額，未稅金額與稅額均為 0
+          event.rowData.tax_amount = 0;
+          event.rowData.net_amount = 0;
         } else {
+          // 零稅率：應稅但稅率 0%，未稅 = 總額，稅額 = 0
           event.rowData.tax_amount = 0;
           event.rowData.net_amount = amount;
         }

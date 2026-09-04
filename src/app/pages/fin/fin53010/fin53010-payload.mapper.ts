@@ -395,11 +395,14 @@ function buildUpdateNext(
     ? stepSalesAllowance.map(r => mapStepSalesToUpdate4023(r, deps))
     : [];
   const mergedSales = [...normalSalesAps, ...allowanceSalesRows];
-  if (mergedSales.length) {
+  const salesStepActive = activeSteps.includes(6) || activeSteps.includes(9);
+  // 步驟啟用時一律傳陣列（即使空陣列），讓後端能比對並清除已移除列的 Voucher_No（解關聯）
+  if (salesStepActive) {
     next.updateAPS4023Datas = mergedSales;
-  }
-  if (normalSalesPos.length) {
     next.updatePOS4023Datas = normalSalesPos;
+  } else {
+    if (mergedSales.length) next.updateAPS4023Datas = mergedSales;
+    if (normalSalesPos.length) next.updatePOS4023Datas = normalSalesPos;
   }
   const normalPurchaseRows = activeSteps.includes(5)
     ? stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id))
@@ -415,9 +418,9 @@ function buildUpdateNext(
     next.updateAPS4002Datas = stepBank.map(r => mapStepBankToUpdate4002(r, deps, r.id));
   }
   if (
-    !(next.updateAPS3001Datas?.length)
+    !salesStepActive
+    && !(next.updateAPS3001Datas?.length)
     && !(next.updateARS3001Datas?.length)
-    && !(next.updateAPS4023Datas?.length)
     && !(next.updateAPS2002Datas?.length)
     && !(next.updateAPS4002Datas?.length)
   ) {
