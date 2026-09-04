@@ -166,10 +166,10 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'BusClassName', header: '中分類名稱', visible: true, align: 'left' },
     { field: 'BusSClass', header: '小分類代碼', visible: true, align: 'left' },
     { field: 'BusSClassName', header: '小分類名稱', visible: true, align: 'left' },
-    { field: 'TltNo', header: '櫃號', visible: true, align: 'left' },
+    { field: 'TltNo', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'TltName', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left' },
-    { field: 'LocationNo', header: '代表位置', visible: true, align: 'left' },
+    { field: 'LocationNo', header: '位置編號', visible: true, align: 'left' },
 
     // ================= 本期 Group =================
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', groupField: '本期' },

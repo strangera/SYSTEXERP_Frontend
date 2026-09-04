@@ -40,10 +40,10 @@ export interface TLS32060Response extends ApiRequest {
   "BusSClass": string, // 小分類代碼（TEAM 有值，小計/合計/總計為 NULL）
   "BusSClassName": string, // 小分類(商品類別)名稱
 
-  "TltNo": string, // 櫃號
+  "TltNo": string, // 專櫃編號
   "TltName": string, // 專櫃名稱
   "TltKindName": string, // 櫃別名稱
-  "LocationNo": string, // 代表位置
+  "LocationNo": string, // 位置編號
 
   "Space": number, // 營業坪數（坪）
 
