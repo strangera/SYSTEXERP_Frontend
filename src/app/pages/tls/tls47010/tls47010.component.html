@@ -21,9 +21,41 @@
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" label="確定下傳" icon="pi pi-cloud-upload" [loading]="loading"></app-button>
+          <app-button btnType="query" label="確定下傳" icon="pi pi-cloud-upload" [loading]="loading"
+            [disabled]="polling"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+@if (totalCount > 0) {
+  <div class="card">
+    <h5>下傳處理進度</h5>
+    <p class="mb-3">
+      共 {{ totalCount }} 筆／已完成 {{ successCount }} 筆／失敗 {{ failCount }} 筆／處理中 {{ processingCount }} 筆
+    </p>
+    <table class="w-full">
+      <thead>
+        <tr>
+          <th class="text-left">資料表名稱</th>
+          <th class="text-left">收銀機清單</th>
+          <th class="text-left">狀態</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (key of trackingKeys; track key.ID) {
+          <tr>
+            <td>{{ getDataTypeLabel(key.EXP_Type) }}</td>
+            <td>{{ getEcrCountLabel(key.EXP_EcrLst) }}</td>
+            <td>
+              {{ getStatusItem(key.ID)?.StatusText || '待處理' }}
+              @if (getStatusItem(key.ID)?.Reason) {
+                （{{ getStatusItem(key.ID)?.Reason }}）
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
