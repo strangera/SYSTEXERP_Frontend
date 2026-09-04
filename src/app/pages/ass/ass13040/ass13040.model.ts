@@ -20,9 +20,12 @@ export interface ASS13040QueryRow {
   FAASSET_ID?: number;
   DAMAGEM_ID?: string | null;
   ASSET_ID?: string | null;
+  GOODS_NAME?: string | null;
   CHECK_STATUS?: string | null;
   EMP_ID?: string | null;
+  EMP_NAME?: string | null;
   ORG_ID?: string | null;
+  ORG_NAME?: string | null;
   APPLY_DATE?: string | null;
   DAMAGEM_STATUS?: string | null;
   DAMAGEM_STATUS_NAME?: string | null;

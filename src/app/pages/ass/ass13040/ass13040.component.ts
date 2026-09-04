@@ -69,8 +69,9 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
   columns: ReportColumn[] = [
     { field: 'DAMAGEM_ID', header: '商品報廢單編號', visible: true },
     { field: 'ASSET_ID', header: '商品管理編號', visible: true },
-    { field: 'EMP_ID', header: '報廢人員編號', visible: true },
-    { field: 'ORG_ID', header: '部門代號', visible: true },
+    { field: 'GOODS_NAME', header: '資產名稱', visible: true },
+    { field: 'EMP_NAME', header: '報廢人員編號', visible: true },
+    { field: 'ORG_NAME', header: '部門代號', visible: true },
     {
       field: 'APPLY_DATE',
       header: '報廢申請日期',
