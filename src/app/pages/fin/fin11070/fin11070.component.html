@@ -34,17 +34,9 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()"
-                      dataKey="TXN_No"
-                      tableKey="FIN11070_Data"
-                      [columns]="columns"
-                      [totalRecords]="totalRecords()"
-                      [loading]="tableLoading()"
-                      [lastQueryBody]="lastQueryBody"
-                      [queryFunction]="queryFunction"
-                      [showCheckBox]="false"
-                      [showEdit]="false"
-                      [showDetail]="false"
-                      [showDelete]="false"></app-table-report>
+    <app-table-report [data]="tableData()" dataKey="TXN_No" tableKey="FIN11070_Data" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" [showCheckBox]="false" [showManage]="false"
+      [showDelete]="false"></app-table-report>
   </div>
 </div>

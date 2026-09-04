@@ -15,9 +15,9 @@ import { concatMap, finalize, Subscription } from 'rxjs'; // 引入 tap
 import { environment } from 'src/environments/environment';
 import { LayoutService } from '../../../core/layout/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
+import { ChangePasswordComponent } from '../../../shared/biz-components/change-password/change-password.component';
 import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { ChangePasswordComponent } from '../../../shared/biz-components/change-password/change-password.component';
 import { ApiItem, ERP_SYSTEM_ID, SsoDashboardService } from './sso-dashboard.service';
 @UntilDestroy()
 @Component({
