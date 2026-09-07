@@ -71,12 +71,12 @@ export interface DetailFIN23020Response {
 
 /**
  * 確定拋轉 Request (對應 SP_FIN23020Posting)
- * 2026-09-04 起借貸科目代號改由前端畫面確認/調整後傳入，為後端必填欄位。
- * DebitOrgId/CreditOrgId/DebitOffsetNo 已改由 SP 端用 APS3010.CostOrg / 自動產生立沖 PTA，
- * 後端已忽略這三個欄位，僅保留簽章相容，前端仍可照舊帶值。
+ * 支援多筆合併成一張傳票：ids 傳入所有選取的暫付款 id。
+ * DebitAccNo / CreditAccNo 為後端必填，由畫面確認後傳入。
+ * DebitOrgId/CreditOrgId/DebitOffsetNo 後端已改用 APS3010.CostOrg / 自動立沖 PTA，僅保留相容。
  */
 export interface PostingFIN23020Request {
-  id: number;
+  ids: number[];
   DebitAccNo: string;
   CreditAccNo: string;
   DebitSummary?: string | null;

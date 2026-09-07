@@ -1307,135 +1307,76 @@ export class FIN23020CRUComponent
 
 
         // ======================================================
-        // Request
+        // Request：所有 id 合併成一張傳票，借/貸科目取第一筆
         // ======================================================
 
-        /**
-         * 注意：
-         *
-         * 目前 PostingFIN23020Request
-         * 還是舊結構。
-         *
-         * 目前 API 真正送出的內容仍然是：
-         *
-         * 原始借方
-         * +
-         * 原始貸方
-         *
-         * 手動新增會科目前只存在畫面。
-         *
-         * 如果後端要真正新增第 3、4 筆傳票明細，
-         * Request / API / SP 必須一起改 Details[]。
-         */
-        const requests =
-          entries.map(
-            ([id, lines]) => {
+        const firstLines =
+          entries[0][1];
 
-
-              /**
-               * 原始借方
-               *
-               * 排除新增會科。
-               */
-              const debit =
-                lines.find(
-                  line =>
-                    line._isDebit &&
-                    !line._isManual
-                );
-
-
-              /**
-               * 原始貸方
-               */
-              const credit =
-                lines.find(
-                  line =>
-                    !line._isDebit
-                );
-
-
-              const request:
-                PostingFIN23020Request = {
-
-                id,
-
-
-                // ----------------------------------------------
-                // 借貸方科目
-                // ----------------------------------------------
-
-                DebitAccNo:
-                  debit?.AcctCode
-                  ?? '',
-
-                CreditAccNo:
-                  credit?.AcctCode
-                  ?? '',
-
-
-                // ----------------------------------------------
-                // 組織
-                // ----------------------------------------------
-
-                DebitOrgId:
-                  debit?.DeptCode
-                  ?? undefined,
-
-                CreditOrgId:
-                  credit?.DeptCode
-                  ?? undefined,
-
-
-                // ----------------------------------------------
-                // 立沖
-                // ----------------------------------------------
-
-                DebitOffsetNo:
-                  debit?.OffsetCode
-                  ?? undefined,
-
-
-                // ----------------------------------------------
-                // 摘要
-                // ----------------------------------------------
-
-                DebitSummary:
-                  debit?.Summary
-                  ?? undefined,
-
-                CreditSummary:
-                  credit?.Summary
-                  ?? undefined,
-
-                VouSummary:
-                  vouSummary,
-
-
-                // ----------------------------------------------
-                // 傳票日期
-                // ----------------------------------------------
-
-                VouDate:
-                  vouDate
-
-              };
-
-
-              return this.fin23020Service
-                .postingFIN23020(
-                  request
-                );
-
-            }
+        const debit =
+          firstLines.find(
+            line =>
+              line._isDebit &&
+              !line._isManual
           );
 
+        const credit =
+          firstLines.find(
+            line =>
+              !line._isDebit
+          );
+
+        const request:
+          PostingFIN23020Request = {
+
+          ids:
+            entries.map(
+              ([id]) => id
+            ),
+
+          DebitAccNo:
+            debit?.AcctCode
+            ?? undefined,
+
+          CreditAccNo:
+            credit?.AcctCode
+            ?? undefined,
+
+          DebitOrgId:
+            debit?.DeptCode
+            ?? undefined,
+
+          CreditOrgId:
+            credit?.DeptCode
+            ?? undefined,
+
+          DebitOffsetNo:
+            debit?.OffsetCode
+            ?? undefined,
+
+          DebitSummary:
+            debit?.Summary
+            ?? undefined,
+
+          CreditSummary:
+            credit?.Summary
+            ?? undefined,
+
+          VouSummary:
+            vouSummary,
+
+          VouDate:
+            vouDate
+
+        };
+
 
         // ======================================================
-        // API
+        // API：單一呼叫，一張傳票
         // ======================================================
 
-        forkJoin(requests)
+        this.fin23020Service
+          .postingFIN23020(request)
           .pipe(
 
             finalize(
@@ -1448,72 +1389,15 @@ export class FIN23020CRUComponent
           )
           .subscribe({
 
-            next: results => {
+            next: res => {
 
-              const successMessages:
-                string[] = [];
-
-              const failMessages:
-                string[] = [];
-
-
-              results.forEach(
-                (res, idx) => {
-
-                  const prepNo =
-                    entries[idx][1][0]
-                      ?._prepNo;
-
-
-                  if (
-                    res?.Data?.Success
-                  ) {
-
-                    /**
-                     * 顯示後端回傳的訊息
-                     * （已含傳票號），
-                     * 沒有訊息時用傳票號補上。
-                     */
-                    const detail =
-                      res.Data.Message
-                      || (
-                        res.Data.VouNo
-                          ? `拋轉成功，傳票號：${res.Data.VouNo}`
-                          : '拋轉成功'
-                      );
-
-                    successMessages.push(
-                      `${prepNo}: ${detail}`
-                    );
-
-                  } else {
-
-                    failMessages.push(
-                      `${prepNo}: ${res?.Data?.Message
-                      || '拋轉失敗'
-                      }`
-                    );
-
-                  }
-
-                }
-              );
-
-
-              const successCount =
-                successMessages.length;
-
-
-              const successBlock =
-                successMessages.length
-                  ? `成功 ${successCount} 筆：<br>${successMessages.join('<br>')}`
-                  : `成功 ${successCount} 筆`;
-
-
-              const summary =
-                failMessages.length
-                  ? `${successBlock}<br>失敗 ${failMessages.length} 筆：<br>${failMessages.join('<br>')}`
-                  : successBlock;
+              const message =
+                res?.Data?.Message
+                || (
+                  res?.Data?.VouNo
+                    ? `拋轉成功，傳票號：${res.Data.VouNo}`
+                    : '拋轉成功'
+                );
 
 
               setTimeout(() => {
@@ -1521,17 +1405,16 @@ export class FIN23020CRUComponent
                 this.messageService.confirm({
 
                   header:
-                    failMessages.length
-                      ? '拋轉完成(部分失敗)'
-                      : '拋轉成功',
+                    res?.Data?.Success
+                      ? '拋轉成功'
+                      : '拋轉失敗',
 
-                  message:
-                    summary,
+                  message,
 
                   icon:
-                    failMessages.length
-                      ? 'pi pi-exclamation-triangle'
-                      : 'pi pi-check-circle',
+                    res?.Data?.Success
+                      ? 'pi pi-check-circle'
+                      : 'pi pi-exclamation-triangle',
 
                   acceptLabel:
                     '確定',
@@ -1540,8 +1423,11 @@ export class FIN23020CRUComponent
                     false,
 
                   accept:
-                    () =>
-                      this.onCancel()
+                    () => {
+                      if (res?.Data?.Success) {
+                        this.onCancel();
+                      }
+                    }
 
                 });
 
