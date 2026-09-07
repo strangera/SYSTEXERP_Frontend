@@ -112,7 +112,12 @@ export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoice
     inv_cancel: row.INV_Cancel ?? undefined,
     total_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_SaleAmt ?? undefined),
     tax_type: row.PLU_TaxType ?? undefined,
-    net_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Net ?? undefined),
+    // 免稅 (PLU_TaxType='0')：TXN_Net 固定存 0，免稅銷售額存在 TXN_SaleNoTax，取 TXN_SaleNoTax 顯示
+    net_amount: row.INV_Cancel === 'Y' ? 0 : (
+      String(row.PLU_TaxType ?? '').trim() === '0'
+        ? (row.TXN_SaleNoTax ?? undefined)
+        : (row.TXN_Net ?? undefined)
+    ),
     tax_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Tax ?? undefined),
   };
 }

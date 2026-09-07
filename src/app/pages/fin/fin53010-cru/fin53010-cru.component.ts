@@ -3349,9 +3349,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           event.rowData.tax_amount = tax;
           event.rowData.net_amount = amount - tax;
         } else if (taxType === '0') {
-          // 免稅：全額為免稅銷售金額，未稅金額與稅額均為 0
+          // 免稅：全額為免稅銷售金額，未稅金額 = 總額，稅額 = 0（與進項一致）
           event.rowData.tax_amount = 0;
-          event.rowData.net_amount = 0;
+          event.rowData.net_amount = amount;
         } else {
           // 零稅率：應稅但稅率 0%，未稅 = 總額，稅額 = 0
           event.rowData.tax_amount = 0;
@@ -4106,7 +4106,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option & { short?: string; }): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
-    rowData.ReflNo = String(item?.['No'] ?? '').trim() || '';
+    const uniformNo = String(item?.['No'] ?? '').trim();
+    const inGLS1016 = uniformNo && this.service.refNameOptions().some(o => String(o.value) === uniformNo);
+    rowData.ReflNo = inGLS1016 ? uniformNo : '';
   };
 
   public vouTermChange(event: Event): void {
