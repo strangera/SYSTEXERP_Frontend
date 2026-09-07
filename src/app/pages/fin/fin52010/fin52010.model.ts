@@ -7,6 +7,7 @@ export interface FIN52010Data {
   AccNoInTax: string;
   AccNoOutTax: string;
   AccNoPost: string;
+  AccNoPrepaid: string;
   AccNoPriPL: string;
   AccNoRemitFee: string;
   AccNoTotPL: string;
@@ -34,6 +35,7 @@ export interface FIN52010UpdatePayload {
   AccNoInTax?: string;
   AccNoOutTax?: string;
   AccNoPost?: string;
+  AccNoPrepaid?: string;
   AccNoRemitFee?: string;
   AccYear?: string;
 }
@@ -53,6 +55,7 @@ interface _FIN52010UpdateResult {
   AccNoInTax: string;
   AccNoOutTax: string;
   AccNoPost: string;
+  AccNoPrepaid: string;
   AccNoRemitFee: string;
   AccYear: string;
 }

@@ -59,6 +59,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccNoAP: new FormControl<string | void>(void 0),
     AccNoInTax: new FormControl<string | void>(void 0),
     AccNoOutTax: new FormControl<string | void>(void 0),
+    AccNoPrepaid: new FormControl<string | void>(void 0),
     AccNoPost: new FormControl<string | void>(void 0),
     AccNoRemitFee: new FormControl<string | void>(void 0),
     billTransferCon: new FormControl<'N' | 'Y'>('N'),
@@ -74,6 +75,10 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   public org_id_Options: any[] = [];
 
+  // 避免 gls1005Options／tableData 兩支各自獨立的非同步 API 誰先回來的競態：
+  // 科目下拉先回來、使用者已經選了值，之後 tableData 才回來時，若沒有這個旗標會整包 patchValue 蓋掉使用者剛選的值。
+  private initialDataApplied = false;
+
   public readonly dataEffect = effect(() => {
     const gls1005 = this.service.gls1005Options();
     const table = this.tableData();
@@ -81,6 +86,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     // 尚未有後端資料或科目下拉尚未載入完成時，不做 patch
     if (!table || Object.keys(table as any).length === 0 || !gls1005.length) return;
     if (this.service.gls1005Loading()) return;
+    if (this.initialDataApplied) return;
 
     const { OpenDate, CloseDate, ...rest } = table;
 
@@ -89,6 +95,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
       OpenDate: this.formatYmDisplay(OpenDate),
       CloseDate: this.formatYmDisplay(CloseDate),
     });
+    this.initialDataApplied = true;
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
@@ -148,6 +155,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
       this.service.updateFIN52010Data(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe(res => {
+        this.initialDataApplied = false; // 存檔成功後允許用最新後端資料回填一次
         this.tableData.set(res.Data);
         this.messageService.successBubble(res.Message || '更新成功');
       });
