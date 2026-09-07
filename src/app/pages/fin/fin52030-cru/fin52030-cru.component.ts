@@ -205,15 +205,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         this.tableLoading.set(!1);
         this.initEffect.destroy();
       }),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.tableData.set((res.Data?.Details || []).map((v) => ({
-          ...v,
-          NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
-        })));
-      },
-    });
+    ).subscribe();
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
