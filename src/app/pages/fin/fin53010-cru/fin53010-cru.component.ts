@@ -1253,6 +1253,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getBankNoOptions();
     this.service.getStepDropdownOptions();
 
+    // 新增模式：從 GLS1012 帶入預設組織代號
+    if (this.isFormCreateable) {
+      this.service.getDefaultOrgId().pipe(
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe(res => {
+        if (res.Data) this.selectedOrgId.set(res.Data);
+      });
+    }
+
     // 如果是新增模式，等待選項載入後設定初始 label
     if (this.isFormCreateable) {
       const setInitialLabel = () => {
@@ -3678,8 +3687,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           rowData.AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 如果摘要為空，自動帶入摘要
           if (!rowData.NoteDesc) {
-            rowData.NoteDesc = String(this.service.noteDescMap()
-              .get(event.value)?.data?.[0].label || event.value || '');
+            rowData.NoteDesc = this.service.noteDescMap()
+              .get(event.value)?.data?.[0]?.label ?? '';
           }
           // 取得立沖代號下拉選單
           this.service.getPTADropdownOptions(String(event.value));
@@ -3718,7 +3727,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'ORG_ID':
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
-          rowData.SubDetailNo = '';
+          rowData.ReflNo = '';
           break;
 
         // case 'NoteDesc':
@@ -3794,8 +3803,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     rowData.PTA = undefined;
     rowData.DetailNo = undefined;
     rowData.DetailName = undefined;
-    rowData.NoteDesc = String(this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label
-      || this.service.accNoMap().get(String(rowData.AccNo))?.label || '');
+    rowData.NoteDesc = this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label ?? '';
   }
 
   /** 清除某金額欄殘留的驗證錯誤（table-edit 每次只重驗當下變更的欄，跨欄的 validateAmtEither
@@ -4098,6 +4106,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option & { short?: string; }): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
+    rowData.ReflNo = String(item?.['No'] ?? '').trim() || '';
   };
 
   public vouTermChange(event: Event): void {
@@ -4108,6 +4117,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public clearVenUsr(rowData: FIN53010DetailTable): void {
     rowData.DetailNo = '';
     rowData.DetailName = '';
+    rowData.ReflNo = '';
   }
 
   // ── 立沖代號選取彈窗 ─────────────────────────────────────────────────────

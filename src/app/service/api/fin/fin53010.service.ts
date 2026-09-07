@@ -414,6 +414,10 @@ export class FIN53010Service {
       );
   }
 
+  public getDefaultOrgId(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${apiUrl}/getDefaultOrgId`, {}).pipe(take(1));
+  }
+
   public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
     this.calculatedPayDateLoading.set(true);
     return this.http.post<GetCalculatedPayDateResult>(`${apiUrl}/getCalculatedPayDate`, payload).pipe(
