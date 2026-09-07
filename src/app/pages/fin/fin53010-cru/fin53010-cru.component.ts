@@ -118,6 +118,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   @ViewChild('apTableEdit') apTableEditComponent?: TableEditComponent;
   @ViewChild('arTableEdit') arTableEditComponent?: TableEditComponent;
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
+  @ViewChild('purchaseAllowanceTableEdit') purchaseAllowanceTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
   @ViewChild('ptaDialogTable') ptaDialogTable!: TableComponent;
 
@@ -1017,7 +1018,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
-    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left', validate: [this.validateRequired.bind(this)] },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, textAlign: 'left' },
     { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
     { field: 'comb', header: '彙加註記', type: 'input', textAlign: 'left' },
@@ -1158,6 +1159,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'net_amount', header: '退回/折讓未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'tax_amount', header: '退回/折讓稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left', validate: [this.validateRequired.bind(this)] },
   ];
 
   /** 銷項折讓發票欄位定義（格式 33/34） */
@@ -2417,6 +2419,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       rowData.invoice_amount = item.PUR_Amt ?? rowData.invoice_amount;
       rowData.vendor_tax_id = item.PUR_VenUniform ?? rowData.vendor_tax_id;
       rowData.tax_type = item.PUR_TaxType ?? rowData.tax_type;
+      rowData.deduction_code = String(item.PUR_DiscNo ?? '').trim() || rowData.deduction_code;
       rowData.orig_invoice_amount = item.PUR_Amt ?? undefined;
       rowData.already_allowance_amt = item.AlreadyAllowanceAmt ?? 0;
       this.stepPurchaseAllowanceRows.update(rows => [...rows, rowData]);
@@ -2434,6 +2437,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           invoice_amount: item.PUR_Amt ?? next[idx].invoice_amount,
           vendor_tax_id: item.PUR_VenUniform ?? next[idx].vendor_tax_id,
           tax_type: item.PUR_TaxType ?? next[idx].tax_type,
+          deduction_code: String(item.PUR_DiscNo ?? '').trim() || next[idx].deduction_code,
           orig_invoice_amount: item.PUR_Amt ?? undefined,
           already_allowance_amt: item.AlreadyAllowanceAmt ?? 0,
         };
@@ -2866,10 +2870,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
+    const purchaseAllowanceValid = this.purchaseAllowanceTableEditComponent?.validateAndShowErrors();
     const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
 
-    if (valid === false || bankValid === false) {
+    if (valid === false || purchaseAllowanceValid === false || bankValid === false) {
       return;
+    }
+
+    // 進項折讓：ViewChild 不在 DOM（非當前步驟）時，做資料層檢查
+    if (this.activeVoucherSteps().includes(8) && purchaseAllowanceValid === undefined) {
+      const badAllowance = this.stepPurchaseAllowanceRows().filter(r => !r.deduction_code);
+      if (badAllowance.length > 0) {
+        this.messageService.errorBubble(`進項折讓第 ${badAllowance.map(r => r.SerNo).join('、')} 筆「扣抵代號」為必填`);
+        return;
+      }
     }
 
     // 銷項發票：所有列必須已找到對應 DB 記錄（id 不為 0 / undefined）

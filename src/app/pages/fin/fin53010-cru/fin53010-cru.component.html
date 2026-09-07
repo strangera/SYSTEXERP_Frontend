@@ -445,6 +445,7 @@
   <div class="card">
     <p-panel header="進項折讓發票" class="line-height-3 m-0">
       <app-table-edit
+        #purchaseAllowanceTableEdit
         [showCheckBox]="!isFormReadable && !isPostedEdit"
         [showReorder]="false"
         [disabled]="isFormReadable || isPostedEdit"
