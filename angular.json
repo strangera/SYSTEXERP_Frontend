@@ -103,6 +103,7 @@
               ],
               "outputHashing": "all",
               "optimization": true,
+              "sourceMap": false,
               "baseHref": "/TSRDWEB/",
               "assets": [
                 "src/favicon.ico",

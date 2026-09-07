@@ -28,7 +28,7 @@ jobs:
       shell: powershell
       run: npm run build:tsrdweb
       env:
-        NODE_OPTIONS: "--max_old_space_size=4096"
+        NODE_OPTIONS: "--max_old_space_size=3072"
         TZ: Asia/Taipei
 
     - name: Prepare files
@@ -42,8 +42,7 @@ jobs:
           Write-Error "dist folder not found"
           exit 1
         }
-        Get-ChildItem -Path "dist-out" -Recurse -Filter "*.map" | Remove-Item -Force
-        $count = (Get-ChildItem -Path "dist-out" -Recurse -File).Count
+$count = (Get-ChildItem -Path "dist-out" -Recurse -File).Count
         Write-Host "Total files: $count"
 
     - name: Resolve version
