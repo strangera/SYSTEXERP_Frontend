@@ -1336,11 +1336,11 @@ export class FIN23020CRUComponent
 
           DebitAccNo:
             debit?.AcctCode
-            ?? undefined,
+            ?? '',
 
           CreditAccNo:
             credit?.AcctCode
-            ?? undefined,
+            ?? '',
 
           DebitOrgId:
             debit?.DeptCode
