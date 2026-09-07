@@ -174,18 +174,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
     { field: 'BuildingName', header: '館別', align: 'left', visible: this.isShowBuilding },
 
-    // ======================= 基準期 (Base) 欄位 =======================
-    { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
-    { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
-    { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
-    { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
-    { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
-    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
-    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
-    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     // ======================= 比較期 (Compare) 欄位 =======================
     { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
     { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
@@ -198,6 +186,18 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
+    // ======================= 基準期 (Base) 欄位 =======================
+    { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
+    { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
+    { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
+    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
+    { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
+    { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
 
     // ======================= 差異 (Difference) 欄位 =======================
     { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffRevenue', topGroupField: 'diff' },
@@ -215,29 +215,29 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   ];
   // 報表分組標頭 (第二層，配合新增的欄位進行調整)
   columnGroup = [
-    { field: 'revenue', header: 'YYYY 營業額' },
-    { field: 'atv', header: 'YYYY 客單價' },
-    { field: 'salesPerArea', header: 'YYYY 營業坪效' },
-    { field: 'preSaleConsumer', header: 'YYYY 預售/消費' }, // <--- 新增基準期群組
     { field: 'compareRevenue', header: 'XXXX 營業額' },
     { field: 'compareATV', header: 'XXXX 客單價' },
     { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
-    { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 新增比較期群組
+    { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 比較期群組
+    { field: 'revenue', header: 'YYYY 營業額' },
+    { field: 'atv', header: 'YYYY 客單價' },
+    { field: 'salesPerArea', header: 'YYYY 營業坪效' },
+    { field: 'preSaleConsumer', header: 'YYYY 預售/消費' }, // <--- 基準期群組
     { field: 'diffRevenue', header: '營業額差異' },
     { field: 'diffATV', header: '客單/交易差異' },
     { field: 'diffSalesPerArea', header: '營業坪效差異' },
     { field: 'diffPreSaleConsumer', header: '預售/消費差異' },
   ];
-  // 報表最外層分組標頭 (第一層)：沿用查詢區塊「比較/基準呈現字眼互換」慣例 (base 欄位 -> 顯示「比較期」)
+  // 報表最外層分組標頭 (第一層)：欄位呈現順序為 compare(比較期) > base(基準期) > diff(差異)，base 欄位群組顯示「基準期」、compare 欄位群組顯示「比較期」，語意對齊查詢區塊「基準/比較資料查詢條件」
   columnTopGroup = [
-    { field: 'base', header: '比較期' },
-    { field: 'compare', header: '基準期' },
+    { field: 'compare', header: '比較期' },
+    { field: 'base', header: '基準期' },
     { field: 'diff', header: '差異' },
   ];
 
   ngOnInit(): void {
     this.initializePage('TLS32020');
-    // 底色依「頂層分組」(比較期/基準期/差異) 套用，子分組(營業額/客單價/坪效/預售消費)只影響表頭文字分層、不影響底色
+    // 底色依「頂層分組」(基準期/比較期/差異) 套用，子分組(營業額/客單價/坪效/預售消費)只影響表頭文字分層、不影響底色
     this.columns = this.columns.map((col): ReportColumn => ({
       ...col,
       cellClass: () => {
