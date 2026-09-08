@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, DestroyRef, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, inject, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,6 +10,7 @@ import { FIN52030Service } from '@service/api/fin/fin52030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
@@ -593,6 +594,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
     { field: 'Remark', header: '摘要', visible: true, align: 'left' },
   ];
+
+  private readonly fileExportService = inject(FileExportService);
 
   public selectedItems: FIN53010Data[] = [];
   public rowEditCanSave = signal<boolean>(!1);
@@ -4245,6 +4248,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   closePtaDialog(): void {
     this.showPtaDialog = false;
     this.ptaDialogSelectedItem = null;
+  }
+
+  public onExportExcel(): void {
+    const id = this.rowdata?.id;
+    if (!id) return;
+    this.loading = true;
+    this.service.exportFIN53010(id).pipe(
+      this.withLoading(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      this.fileExportService.handleResponse(res, '.xlsx');
+    });
   }
 
 }

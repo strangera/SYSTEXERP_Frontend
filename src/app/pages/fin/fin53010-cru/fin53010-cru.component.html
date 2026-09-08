@@ -20,6 +20,15 @@
         (click)="openSaveTemplateDialog()"
       ></app-button>
     }
+    @if (!isFormCreateable) {
+      <app-button
+        btnType="default"
+        label="匯出Excel"
+        icon="pi pi-file-excel"
+        [loading]="loading"
+        (click)="onExportExcel()"
+      ></app-button>
+    }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   @if (isFormCreateable || isFormEditable) {
