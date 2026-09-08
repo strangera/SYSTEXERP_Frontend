@@ -49,7 +49,7 @@ export class TLS24030Component extends BasicQueryPageComponent<TLS24030Item> imp
     TXN_No: [null as string | number | null, [Validators.maxLength(8), this.validation.numberValidator]],
     pageSize: [1000],
     pageIndex: [1],
-    SortBy: [[{ field: 'TXN_Date', order: -1 }]],
+    SortBy: [[{ field: 'TXN_No', order: 1 }]],
   });
   totalRecords = 0;
   lastQueryBody: TLS24030Request | null = null;
