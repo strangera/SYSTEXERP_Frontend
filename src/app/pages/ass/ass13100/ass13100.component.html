@@ -32,16 +32,7 @@
             [endControl]="queryForm.controls.CHK_DATE_E"
             [submitted]="submitted"
           ></app-calendar-range>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="部門代號/名稱"
-            controlName="ORG_ID"
-            [options]="orgIdOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ORG_ID"
-            [submitted]="submitted"
-          ></app-dropdown>
+
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="清點人姓名"

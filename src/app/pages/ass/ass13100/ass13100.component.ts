@@ -7,7 +7,6 @@ import { ASS13100Service } from '@service/api/ass/ass13100.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Pos2002LocationItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
@@ -16,6 +15,7 @@ import { DropdownComponent } from '@shared/components/dropdown/dropdown.componen
 import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
 import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn } from '@shared/components/table-report/table-report.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -81,11 +81,12 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   inventoryStatusOptions: { label: string; value: string }[] = [];
   inventoryDataStatusOptions: { label: string; value: string }[] = [];
   public readonly orgIdOptions =
-      signal<{ label: string; value: string }[]>([]);
+    signal<{ label: string; value: string }[]>([]);
   /** 表格資料與狀態 */
   data: ASS13100QueryRow[] = [];
   totalRecords = 0;
   columns: ReportColumn[] = [
+    { field: 'FIRST_CHK_ORG_NAME', header: '部門' },
     { field: 'CHK_ID', header: '清點單號' },
     { field: 'CHK_DATE', header: '清點日期' },
     { field: 'FIRST_CHK_EMP_ID', header: '清點人代碼' },
@@ -483,67 +484,67 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     document.body.removeChild(a);
     globalThis.URL.revokeObjectURL(url);
   }
-/** 匯出資產清點作業 Excel */
-onExportExcel(): void {
-  // 未勾選
-  if (!this.selectedItems || this.selectedItems.length === 0) {
-    this.messageService.warnBubble('請先勾選一筆清點單');
-    return;
+  /** 匯出資產清點作業 Excel */
+  onExportExcel(): void {
+    // 未勾選
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選一筆清點單');
+      return;
+    }
+
+    // 僅允許單筆匯出
+    if (this.selectedItems.length > 1) {
+      this.messageService.warnBubble('匯出 Excel 一次只能選擇一筆清點單');
+      return;
+    }
+
+    const selectedRow = this.selectedItems[0];
+    const chkId = selectedRow.CHK_ID?.trim();
+
+    if (!chkId) {
+      this.messageService.warnBubble('選取的資料沒有清點單號');
+      return;
+    }
+
+    const body: ASS13100ExportPDFRequest = {
+      CHK_ID_S: chkId,
+      CHK_ID_E: chkId,
+    };
+
+    this.loading = true;
+
+    this.service
+      .exportExcelASS13100(body)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          const contentDisposition =
+            response.headers.get('Content-Disposition');
+
+          const filename =
+            this.getFilenameFromHeader(
+              contentDisposition,
+              '.xlsx'
+            );
+
+          const blob = response.body;
+
+          if (blob && blob.size > 0) {
+            const url =
+              globalThis.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+
+            a.href = url;
+            a.download = filename;
+
+            document.body.appendChild(a);
+            a.click();
+
+            globalThis.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
+        },
+      });
   }
-
-  // 僅允許單筆匯出
-  if (this.selectedItems.length > 1) {
-    this.messageService.warnBubble('匯出 Excel 一次只能選擇一筆清點單');
-    return;
-  }
-
-  const selectedRow = this.selectedItems[0];
-  const chkId = selectedRow.CHK_ID?.trim();
-
-  if (!chkId) {
-    this.messageService.warnBubble('選取的資料沒有清點單號');
-    return;
-  }
-
-  const body: ASS13100ExportPDFRequest = {
-    CHK_ID_S: chkId,
-    CHK_ID_E: chkId,
-  };
-
-  this.loading = true;
-
-  this.service
-    .exportExcelASS13100(body)
-    .pipe(finalize(() => (this.loading = false)))
-    .subscribe({
-      next: (response: HttpResponse<Blob>) => {
-        const contentDisposition =
-          response.headers.get('Content-Disposition');
-
-        const filename =
-          this.getFilenameFromHeader(
-            contentDisposition,
-            '.xlsx'
-          );
-
-        const blob = response.body;
-
-        if (blob && blob.size > 0) {
-          const url =
-            globalThis.URL.createObjectURL(blob);
-
-          const a = document.createElement('a');
-
-          a.href = url;
-          a.download = filename;
-
-          document.body.appendChild(a);
-          a.click();
-
-          globalThis.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        }
-      },
-    });
-}
 }
