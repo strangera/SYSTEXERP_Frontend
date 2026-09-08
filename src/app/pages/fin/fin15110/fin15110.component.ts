@@ -664,16 +664,8 @@ export class FIN15110Component
     const v = this.queryForm.value;
     const reportType = v.displayMode || '2';
 
-    // ReportType "2" 需要確保日期為同一天
     const startDate = v.TXN_DT_S;
-    let endDate = v.TXN_DT_E;
-
-    if (reportType === '2' || reportType === '3') {
-      // 發票報表一機台加總/明細需要同一天的日期
-      endDate = startDate;
-    }
-
-    // ReportType "2" 可能需要不同的參數配置
+    const endDate = v.TXN_DT_E;
     const isMerge = reportType === '2' ? false : true;
 
     const payload = {
