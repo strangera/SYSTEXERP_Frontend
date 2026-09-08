@@ -463,9 +463,10 @@ export class FIN13040CRUComponent
         PLU_Name: d.PLU_Name ?? '',
         TXN_Qty: qty,
         PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
+        PLU_SalePrc_Display: qty > 0 ? Math.round((saleAmt - tax) / qty) : 0,
         TXN_SaleAmt: saleAmt,
         TXN_Tax: tax,
-        SaleAmt: saleAmt - tax,
+        SaleAmt: saleAmt,
       };
     });
     this.totalRecords = this.data.length;
@@ -644,12 +645,12 @@ export class FIN13040CRUComponent
     const txnSaleAmt = Number(lastRow.TXN_SaleAmt) || 0;
     const qty = Number(lastRow.TXN_Qty) || 0;
     const newTax = manualTax - otherTax;
-    const newSaleAmt = txnSaleAmt - newTax;
     const updatedLastRow = {
       ...lastRow,
       TXN_Tax: newTax,
-      SaleAmt: newSaleAmt,
-      PLU_SalePrc: qty > 0 ? Math.round(newSaleAmt / qty) : newSaleAmt,
+      SaleAmt: txnSaleAmt,
+      PLU_SalePrc: qty > 0 ? Math.round(txnSaleAmt / qty) : txnSaleAmt,
+      PLU_SalePrc_Display: qty > 0 ? Math.round((txnSaleAmt - newTax) / qty) : txnSaleAmt - newTax,
     };
 
     this.data = this.data.map((row) =>
@@ -750,13 +751,14 @@ export class FIN13040CRUComponent
           // 使用者已手動調整過稅額：稅額視為固定值，未稅金額直接用「含稅金額-稅額」回推，不再用公式重算稅額
           if (this.isTaxManuallyEdited) {
             const tax = Number(rowData.TXN_Tax) || 0;
-            const saleAmt = value - tax;
-            const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : saleAmt;
+            const unitPrice = qty > 0 ? Math.round(value / qty) : value;
+            const displayPrice = qty > 0 ? Math.round((value - tax) / qty) : value - tax;
             return {
               TXN_SaleAmt: value,
               TXN_Tax: tax,
               PLU_SalePrc: unitPrice,
-              SaleAmt: saleAmt,
+              PLU_SalePrc_Display: displayPrice,
+              SaleAmt: value,
             };
           }
 
@@ -764,46 +766,42 @@ export class FIN13040CRUComponent
           const isNoTax = this.isNoTaxType(taxType);
 
           const tax = isNoTax ? 0 : Math.round(value / 21);
-
-          const saleAmt = value - tax;
-          const unitPrice = isNoTax
-            ? qty > 0
-              ? Math.round(value / qty)
-              : value
-            : Math.round(value / qty - value / qty / 21);
+          const unitPrice = qty > 0 ? Math.round(value / qty) : value;
+          const displayPrice = qty > 0 ? Math.round((value - tax) / qty) : value - tax;
 
           return {
             TXN_SaleAmt: value,
             TXN_Tax: tax,
             PLU_SalePrc: unitPrice,
-            SaleAmt: saleAmt,
+            PLU_SalePrc_Display: displayPrice,
+            SaleAmt: value,
           };
         },
       },
       {
-        field: 'PLU_SalePrc',
+        field: 'PLU_SalePrc_Display',
         header: '單價',
         type: 'inputNumber',
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
+          // value = 未稅單價（顯示值），回推含稅
           const qty = Number(rowData.TXN_Qty) || 0;
-          const saleAmt = Math.round(Number(value) * qty);
+          const netAmt = Math.round(Number(value) * qty);
 
-          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
           if (this.isTaxManuallyEdited) {
             const tax = Number(rowData.TXN_Tax) || 0;
-            const txnSaleAmt = saleAmt + tax;
-            return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
+            const txnSaleAmt = netAmt + tax;
+            const prc = qty > 0 ? Math.round(txnSaleAmt / qty) : txnSaleAmt;
+            return { PLU_SalePrc: prc, PLU_SalePrc_Display: value, SaleAmt: txnSaleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
           }
 
           const taxType = this.dataForm.get('PUR_TaxType')?.value;
           const isNoTax = this.isNoTaxType(taxType);
-          const txnSaleAmt = isNoTax
-            ? saleAmt
-            : Math.round((saleAmt * 21) / 20);
-          const tax = txnSaleAmt - saleAmt;
-          return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
+          const txnSaleAmt = isNoTax ? netAmt : Math.round((netAmt * 21) / 20);
+          const tax = txnSaleAmt - netAmt;
+          const prc = qty > 0 ? Math.round(txnSaleAmt / qty) : txnSaleAmt;
+          return { PLU_SalePrc: prc, PLU_SalePrc_Display: value, SaleAmt: txnSaleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
         },
       },
       {
@@ -813,31 +811,31 @@ export class FIN13040CRUComponent
         defaultValue: 0,
         validate: [validateRequired],
         calculate: (rowData, value) => {
+          // value 現在 = 含稅金額 (= TXN_SaleAmt)
           const qty = Number(rowData.TXN_Qty) || 0;
-          const saleAmt = Number(value);
-          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
 
-          // 使用者已手動調整過稅額：稅額視為固定值，用「未稅金額+稅額」回推含稅金額
           if (this.isTaxManuallyEdited) {
             const tax = Number(rowData.TXN_Tax) || 0;
-            const txnSaleAmt = saleAmt + tax;
+            const unitPrice = qty > 0 ? Math.round(value / qty) : value;
+            const displayPrice = qty > 0 ? Math.round((value - tax) / qty) : value - tax;
             return {
-              TXN_SaleAmt: txnSaleAmt,
+              TXN_SaleAmt: value,
               TXN_Tax: tax,
               PLU_SalePrc: unitPrice,
+              PLU_SalePrc_Display: displayPrice,
             };
           }
 
-          const taxType = this.dataForm.get('PUR_TaxType')?.value;
-          const isNoTax = this.isNoTaxType(taxType);
-          const txnSaleAmt = isNoTax
-            ? saleAmt
-            : Math.round((saleAmt * 21) / 20);
-          const tax = txnSaleAmt - saleAmt;
+          const tax = isNoTax ? 0 : Math.round(value / 21);
+          const unitPrice = qty > 0 ? Math.round(value / qty) : value;
+          const displayPrice = qty > 0 ? Math.round((value - tax) / qty) : value - tax;
           return {
-            TXN_SaleAmt: txnSaleAmt,
+            TXN_SaleAmt: value,
             TXN_Tax: tax,
             PLU_SalePrc: unitPrice,
+            PLU_SalePrc_Display: displayPrice,
           };
         },
       },
@@ -903,21 +901,16 @@ export class FIN13040CRUComponent
     // 稅額：免稅 / 零稅時強制為 0
     const tax = isNoTax ? 0 : Math.round(txnSaleAmt / 21);
 
-    // 未稅金額
-    const saleAmt = txnSaleAmt - tax;
-    // 含稅單價
-    const taxIncludedUnitPrice = qty > 0 ? txnSaleAmt / qty : 0;
-    // 未稅單價
-    const unitPrice = isNoTax
-      ? Math.round(taxIncludedUnitPrice)
-      : Math.round(taxIncludedUnitPrice - taxIncludedUnitPrice / 21);
+    const unitPrice = qty > 0 ? Math.round(txnSaleAmt / qty) : txnSaleAmt;
+    const displayPrice = qty > 0 ? Math.round((txnSaleAmt - tax) / qty) : txnSaleAmt - tax;
 
     return {
       ...row,
-      TXN_SaleAmt: txnSaleAmt, // 含稅金額
-      TXN_Tax: tax, // 稅額
-      SaleAmt: saleAmt, // 未稅金額
-      PLU_SalePrc: unitPrice, // 未稅單價
+      TXN_SaleAmt: txnSaleAmt,
+      TXN_Tax: tax,
+      SaleAmt: txnSaleAmt,
+      PLU_SalePrc: unitPrice,
+      PLU_SalePrc_Display: displayPrice,
     };
   }
 
@@ -951,24 +944,12 @@ export class FIN13040CRUComponent
       (sum, r) => sum + (Number(r.TXN_SaleAmt) || 0),
       0,
     );
-    const detailUntaxedTotal = this.data.reduce(
-      (sum, r) => sum + (Number(r.SaleAmt) || 0),
-      0,
-    );
     const headerAmt = Number(this.dataForm.controls.PUR_Amt.value) || 0;
-    const headerNet = Number(this.dataForm.controls.PUR_Net.value) || 0;
 
     if (Math.abs(detailTaxedTotal - headerAmt) > 0.5) {
       this.loading = false;
       this.messageService.errorBubble(
         '列表含稅金額加總需等於總含稅金額，請確認',
-      );
-      return;
-    }
-    if (Math.abs(detailUntaxedTotal - headerNet) > 0.5) {
-      this.loading = false;
-      this.messageService.errorBubble(
-        '列表銷售金額加總需等於總未稅金額，請確認',
       );
       return;
     }
