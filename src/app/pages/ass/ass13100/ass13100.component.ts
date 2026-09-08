@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13100Service } from '@service/api/ass/ass13100.service';
@@ -72,6 +72,7 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     NOTES: new FormControl<string | null>(null),
     pageSize: new FormControl<number>(30),
     pageIndex: new FormControl<number>(1),
+    ORG_ID: new FormControl<string | null>(null),
   });
 
   /** 下拉選項（查詢條件） */
@@ -79,7 +80,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   locationOptions: { label: string; value: string }[] = [];
   inventoryStatusOptions: { label: string; value: string }[] = [];
   inventoryDataStatusOptions: { label: string; value: string }[] = [];
-
+  public readonly orgIdOptions =
+      signal<{ label: string; value: string }[]>([]);
   /** 表格資料與狀態 */
   data: ASS13100QueryRow[] = [];
   totalRecords = 0;
@@ -169,7 +171,21 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
             value: x.location_no!,
           }));
       });
+    // 部門
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
 
+          const options = res.Data.map(item => ({
+            label: `${item.No} - ${item.Name}`,
+            value: item.No,
+          }));
+
+          this.orgIdOptions.set(options);
+        },
+      });
     // 清點單狀態：SYS1000.SYS_TYPE = 'ASSET_CHK_STATUS'
     this.dropDownListService
       .querySYS1000_DropDownList({ SYS_Type: 'ASSET_CHK_STATUS' })
@@ -467,5 +483,67 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     document.body.removeChild(a);
     globalThis.URL.revokeObjectURL(url);
   }
+/** 匯出資產清點作業 Excel */
+onExportExcel(): void {
+  // 未勾選
+  if (!this.selectedItems || this.selectedItems.length === 0) {
+    this.messageService.warnBubble('請先勾選一筆清點單');
+    return;
+  }
 
+  // 僅允許單筆匯出
+  if (this.selectedItems.length > 1) {
+    this.messageService.warnBubble('匯出 Excel 一次只能選擇一筆清點單');
+    return;
+  }
+
+  const selectedRow = this.selectedItems[0];
+  const chkId = selectedRow.CHK_ID?.trim();
+
+  if (!chkId) {
+    this.messageService.warnBubble('選取的資料沒有清點單號');
+    return;
+  }
+
+  const body: ASS13100ExportPDFRequest = {
+    CHK_ID_S: chkId,
+    CHK_ID_E: chkId,
+  };
+
+  this.loading = true;
+
+  this.service
+    .exportExcelASS13100(body)
+    .pipe(finalize(() => (this.loading = false)))
+    .subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        const contentDisposition =
+          response.headers.get('Content-Disposition');
+
+        const filename =
+          this.getFilenameFromHeader(
+            contentDisposition,
+            '.xlsx'
+          );
+
+        const blob = response.body;
+
+        if (blob && blob.size > 0) {
+          const url =
+            globalThis.URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+
+          a.href = url;
+          a.download = filename;
+
+          document.body.appendChild(a);
+          a.click();
+
+          globalThis.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
+      },
+    });
+}
 }
