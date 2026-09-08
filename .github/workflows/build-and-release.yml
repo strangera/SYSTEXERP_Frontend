@@ -42,7 +42,7 @@ jobs:
           Write-Error "dist folder not found"
           exit 1
         }
-$count = (Get-ChildItem -Path "dist-out" -Recurse -File).Count
+        $count = (Get-ChildItem -Path "dist-out" -Recurse -File).Count
         Write-Host "Total files: $count"
 
     - name: Resolve version
