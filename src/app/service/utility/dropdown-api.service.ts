@@ -85,6 +85,8 @@ import {
   TalentAllowedQuery,
   TalentByContractDateItem,
   TalentByContractDateQuery,
+  TalentContractHistoryItem,
+  TalentContractHistoryQuery,
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
@@ -1082,6 +1084,24 @@ export class DropdownApiService {
   queryTltTalentActiveContract(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<TLTTALENTActiveContractItem>('/queryTLTTALENT_ActiveContract_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /**
+   * 【共通】查詢專櫃主檔(TLTTALENT)下拉選單(含歷史合約，同一tlt_no不去重，逐筆回傳每份合約)
+   * DateFrom/DateTo 可選填(篩選與此區間有重疊的合約)，不填則回傳全部；value=talent_id，label 含合約起訖日期
+   */
+  queryTltTalentContractHistory(body: TalentContractHistoryQuery = {}): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<TalentContractHistoryItem, TalentContractHistoryQuery>(
+      '/queryTLTTALENT_ContractHistory_DropDownList',
+      body
+    ).pipe(
+      map(items => items?.map(item => ({
+        ...item,
+        value: item.talent_id,
+        label: `${item.tlt_no} - ${item.tlt_name} (${item.tlt_bdate ?? ''}~${item.tlt_edate ?? ''})`,
+      })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

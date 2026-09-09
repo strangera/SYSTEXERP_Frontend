@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { formatPercentage } from '@others/component/table/table.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { BusClassItem, BusSClassItem } from '@service/utility/dropdown-api.model';
+import { BusClassItem, BusSClassItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount, formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -141,7 +141,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   floorOptions = this.dropdown.querySys3900();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
   operationsOptions = getSYS1000Options('TLT_Kind');
-  counterCodeOptions = this.dropdown.queryTltTalent();
+  counterCodeOptions = this.dropdown.queryTltTalentContractHistory();
+  // 供 onSubmit 把勾選到的talent_id對照換算回tlt_no用；counterCodeOptions 是 shareReplay(1)，這裡再訂閱一次不會多打API
+  private talentContractOptions: Option[] = [];
   ReceFilterOptions = [
     { value: 'A', label: '全部' },
     { value: 'Y', label: '是' },
@@ -209,8 +211,21 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     if (typeof list === 'string' && list.trim() !== '') return list;
     return null;
   }
+
+  // 把勾選到的talent_id(下拉每筆合約獨立選項)對照本次下拉結果換算回對應tlt_no並去重
+  private mapTalentIdsToTltNoList(talentIds: any): string | null {
+    const ids: any[] = Array.isArray(talentIds) ? talentIds : [];
+    const tltNos = ids
+      .map(id => this.talentContractOptions.find(opt => opt.value === id)?.['tlt_no'])
+      .filter((tltNo): tltNo is string => !!tltNo);
+    const unique = Array.from(new Set(tltNos));
+    return unique.length > 0 ? unique.join(',') : null;
+  }
   ngOnInit(): void {
     this.initializePage('TLS32030', 'tls/tls32030', this.queryForm, f => this.onSubmit(f));
+    this.counterCodeOptions.pipe(untilDestroyed(this)).subscribe(options => {
+      this.talentContractOptions = options || [];
+    });
     this.columns = this.columns.map((col): ReportColumn => ({
       ...col,
       cellClass: () => {
@@ -452,7 +467,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         BusSClassList: this.formatListForBackend(cat.bus_sclass?.map((s: BusSClassItem) => s.No)),
         TltKindList: this.formatListForBackend(formValue.TltKindList),
         OrgList: this.formatListForBackend(formValue.OrgList),
-        TltNoList: this.formatListForBackend(formValue.TltNoList),
+        TltNoList: this.mapTalentIdsToTltNoList(formValue.TltNoList),
         TermTypeList: this.formatListForBackend(formValue.TermTypeList),
         BuildingList: this.formatListForBackend(formValue.BuildingList),
         PreSale: formValue.PreSale === true,

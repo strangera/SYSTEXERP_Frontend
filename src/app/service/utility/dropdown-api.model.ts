@@ -539,6 +539,26 @@ export interface TLTTALENTActiveContractItem extends IDropdownItem {
 }
 
 /**
+ * 查詢 TLTTALENT_ContractHistory_DropDownList 的請求 body（可選填，不填回傳全部）
+ */
+export interface TalentContractHistoryQuery {
+  DateFrom?: string | null;
+  DateTo?: string | null;
+}
+
+/**
+ * 查詢 TLTTALENT_ContractHistory_DropDownList 回傳的項目型別
+ * 含歷史合約，同一 tlt_no 可能有多筆(不同 talent_id 合約)，不做去重
+ */
+export interface TalentContractHistoryItem {
+  talent_id: number;
+  tlt_no: string;
+  tlt_name: string;
+  tlt_bdate: string | null;
+  tlt_edate: string | null;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
