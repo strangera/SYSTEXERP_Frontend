@@ -216,7 +216,8 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="折扣別" controlName="DiscCodeList" [options]="disc_code_Option" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.DiscCodeList" [submitted]="submitted"></app-multi-select>
+              optionValue="value" [control]="queryForm.controls.DiscCodeList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="銷售金額是否含稅" groupname="AmtTaxMode" [control]="queryForm.controls.AmtTaxMode"
@@ -248,7 +249,7 @@
   <app-table-report tableKey="tls32080" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
     [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody" [lazy]="false"
     [queryFunction]="service.queryTLS32080.bind(service)" [footerData]="footerTotal" [showDelete]="false"
-    [showManage]="false">
+    [showManage]="false" [exportContext]="{customFileName: '抽成類別條件分析報表'}">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="抽成類別折扣分析報表.PDF" icon="pi pi-file" (click)="onReport(false)"

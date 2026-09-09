@@ -195,41 +195,43 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
     { field: 'DiscDesc', header: '折扣別', align: 'left' },
 
     // 比較期 (依 PM 截圖，比較期放在前)
+    // reportType/exportFormat 是給共通報表 /exportPDF /exportExcel（table-report-caption → ReportExportService）用的匯出格式，
+    // 跟畫面上 format callback 是兩條獨立路徑，兩邊都要設才能讓畫面跟匯出檔顯示一致（同 TLS32070 做法）。
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較期' },
-    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '比較期' },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '比較期' },
-    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '比較期' },
-    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '比較期' },
-    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isPreSale },
-    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isConsumerNum },
-    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '比較期', visible: this.isConsumerNum },
-    { field: 'Comp_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), groupField: '比較期' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '比較期' },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '比較期' },
 
     // 基準期 (本期)
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
-    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '基準期' },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '基準期' },
-    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '基準期' },
-    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '基準期' },
-    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isPreSale },
-    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isConsumerNum },
-    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '基準期', visible: this.isConsumerNum },
-    { field: 'Base_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), groupField: '基準期' },
+    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '基準期' },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '基準期' },
 
-    // 成長率 Group
-    { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
-    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
-    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
-    { field: 'Growth_ChargeRatePct', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
+    // 成長率 Group（原始值是比例小數，用 reportType: 'percentage' 換算成 ×100 兩位小數 + %）
+    { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
+    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
+    { field: 'Growth_ChargeRatePct', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
 
     // 差異 Group
-    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, groupField: '差異' },
-    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, groupField: '差異' },
-    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, groupField: '差異' },
-    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isPreSale },
-    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isConsumerNum },
-    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, groupField: '差異', visible: this.isConsumerNum },
-    { field: 'Diff_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), groupField: '差異' },
+    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_ChargeRate', header: '抽成率', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '差異' },
   ];
 
   // 跨欄 Group 表頭

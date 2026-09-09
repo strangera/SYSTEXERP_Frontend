@@ -74,7 +74,9 @@ export class ReportExportService {
       expansion_columns: pdfExpansionColumns,
       config: { ...event, footer_DataType: finalPrintRemark ? progNo : undefined },
       footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
-      file_name: context.customFileName || `${userInfo?.user_No}_${funInfo?.prog_id || progNo}_${formattedToday}`,
+      // file_name 優先用 finalReportTitle（REPORT_TITLES/prog_name，跟 report_title 內容同一個來源），
+      // 沒有才退回原本的 prog_id/progNo，避免下載檔名一直只顯示看不懂的作業代碼
+      file_name: context.customFileName || `${userInfo?.user_No}_${finalReportTitle || funInfo?.prog_id || progNo}_${formattedToday}`,
       data_key_name: finalDataKeyName,
       print_remark_text: context.printRemarkText || undefined
     };
@@ -124,7 +126,9 @@ export class ReportExportService {
       expansion_columns: excelExpansionColumns,
       config: event,
       footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
-      file_name: context.customFileName || `${userInfo?.user_No}_${funInfo?.prog_id || progNo}_${formattedToday}`,
+      // file_name 優先用 finalReportTitle（REPORT_TITLES/prog_name，跟 report_title 內容同一個來源），
+      // 沒有才退回原本的 prog_id/progNo，避免下載檔名一直只顯示看不懂的作業代碼
+      file_name: context.customFileName || `${userInfo?.user_No}_${finalReportTitle || funInfo?.prog_id || progNo}_${formattedToday}`,
       data_key_name: finalDataKeyName,
       print_remark_text: context.printRemarkText || undefined
     };
