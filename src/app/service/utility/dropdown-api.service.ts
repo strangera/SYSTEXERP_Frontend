@@ -837,6 +837,22 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢廠商統一編號下拉(POS2013，依統編去重，value=統一編號 No，label='統編 - 廠商名稱') — 同一統編可能對應多筆不同 VEN_No 的廠商資料，只保留第一筆，寫法比照 tls13010 的 VendorCategoryOptionsService.getVendorCategoryNoNameOptions() — 供 TLS2F010 廠商統一編號欄位使用 */
+  queryPos2013VenUniformDistinct(): Observable<Option[] | null> {
+    return this.queryPos2013VenUniform().pipe(
+      map(options => {
+        if (!options) return null;
+        const seen = new Set<string | number>();
+        return options.filter(opt => {
+          if (seen.has(opt.value)) return false;
+          seen.add(opt.value);
+          return true;
+        });
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢廠商資料表(POS2013)(統一編號為主) */
   queryVendorNoGroup(body: any = { VEN_Flag: '' }): Observable<any[] | null> {
     return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, body).pipe(

@@ -574,17 +574,18 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (this.isFormEditable) {
       const params = this.buildUpdateParams();
-      this.tls2f010Service.updateTLS2F010(params).subscribe({
-        next: () => {
-          this.messageService.successBubble('更新成功');
-          this.onCancel();
-        },
-        complete: () => {
+      this.tls2f010Service.updateTLS2F010(params)
+        .pipe(finalize(() => {
           this.loading = false;
           this.messageService.unblockUi();
           this.submitted = false;
-        },
-      });
+        }))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          },
+        });
       return;
     }
 

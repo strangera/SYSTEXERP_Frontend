@@ -50,7 +50,7 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號/名稱" controlName="ven_uniform" [options]="ven_noOptions | async"
+            <app-dropdown label="廠商統一編號" controlName="ven_uniform" [options]="venUniformOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.ven_uniform"
               [submitted]="submitted"></app-dropdown>
           </div>
