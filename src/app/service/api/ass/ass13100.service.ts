@@ -24,7 +24,7 @@ export class ASS13100Service {
   /** ASS 資產管理共用 API Prefix */
   private readonly apiUrl = `${environment.ApiUrl}/ASS0000/ASS1000`;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * 查詢清點單
@@ -77,6 +77,16 @@ export class ASS13100Service {
       responseType: 'blob',
     });
   }
+  exportExcelASS13100(body: ASS13100ExportPDFRequest) {
+    return this.http.post(
+      `${this.apiUrl}/exportExcelASS13100`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
+    );
+  }
 
   /**
    * 上傳盤點機檔案
@@ -90,11 +100,11 @@ export class ASS13100Service {
     return this.http.post<ApiResponse<UploadASS13100ResponseData>>(`${this.apiUrl}/uploadASS13100`, formData);
   }
   downloadASS13100CsvTemplate() {
-  return this.http.get(
-    `${this.apiUrl}/downloadASS13100CsvTemplate`,
-    {
-      responseType: 'blob',
-    }
-  );
-}
+    return this.http.get(
+      `${this.apiUrl}/downloadASS13100CsvTemplate`,
+      {
+        responseType: 'blob',
+      }
+    );
+  }
 }
