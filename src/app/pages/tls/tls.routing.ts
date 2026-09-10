@@ -314,7 +314,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls32060', loadComponent: () => import('./tls32060/tls32060.component').then(m => m.TLS32060Component), data: { progNo: 'TLS32060' } },
   // 抽成類別分析報表
   { path: 'tls32070', loadComponent: () => import('./tls32070/tls32070.component').then(m => m.TLS32070Component), data: { progNo: 'TLS32070' } },
-  // 抽成類別折扣分析報表
+  // 抽成類別條件分析報表
   { path: 'tls32080', loadComponent: () => import('./tls32080/tls32080.component').then(m => m.TLS32080Component), data: { progNo: 'TLS32080' } },
   // 收銀機基本資料維護
   { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },

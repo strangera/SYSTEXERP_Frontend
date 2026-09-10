@@ -19,7 +19,7 @@ export const REPORT_TITLES: Record<string, string> = {
   queryTLS23120: '專櫃日對帳單',
   queryTLS23130: '信用卡銷貨月報表',
   queryTLS32070: '抽成類別分析報表',
-  queryTLS32080: '抽成類別折扣分析報表',
+  queryTLS32080: '抽成類別條件分析報表',
 
   queryForExportFIN24020: '保留款沖款明細',
   queryFIN25010: '電匯付款資料',
