@@ -102,7 +102,7 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
       AccNo: rowData.STYPE_ID,
       DateFrom: this.historyRequestBody?.DateFrom,
       DateTo: this.historyRequestBody?.DateTo,
-      OrgId: this.historyRequestBody?.OrgId
+      OrgId: this.historyRequestBody?.OrgList?.join(',')
     });
   }
 }
