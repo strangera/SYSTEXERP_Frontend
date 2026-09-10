@@ -247,7 +247,7 @@
 
 <div class="card">
   <app-table-report dataKey="talent_id" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [columnGroup]="columnGroup" [topColumnGroup]="columnTopGroup" [footerData]="footerData"
+    [loading]="loading" [lazy]="false" [columnGroup]="columnGroup" [topColumnGroup]="columnTopGroup" [footerData]="footerData"
     [subTotalData]="subFooterData" [lastQueryBody]="historyRequestBody"
     [groupRowsBy]="queryForm.get('ShowBuilding')?.value !== false ? 'YM' : undefined"
     [showSubTotalGroupValue]="false" [showManage]="false" [showEdit]="false" [showDetail]="false"

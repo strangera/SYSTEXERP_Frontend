@@ -1,6 +1,6 @@
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -60,7 +60,9 @@ export interface TLS32020Data {
   Comp_PrePerformance: number,
   Comp_ConsumerNum: number,
   Comp_ConsumerOrder: number,
-
+  CompareMonthTarget: number,
+  CompareMonthSale: number,
+  CompareMonthAchieveRate: number,
   // ======================= 差異 (Difference) 欄位 =======================
   DiffAmt: number,
   GrowthRate: number,

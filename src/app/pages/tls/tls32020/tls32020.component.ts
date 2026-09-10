@@ -20,15 +20,27 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { startWith, take } from 'rxjs';
+import { auditTime, merge, shareReplay, take } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 
-// 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位 (eg. 4335615.16 -> "4,335,615")
+// 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位。
+// Intl.NumberFormat 僅建立一次，避免表格每個儲存格都重新建立 locale formatter。
+const INTEGER_FORMATTER = new Intl.NumberFormat('zh-TW', {
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+});
+
 const formatInt = (val: number | string): string => {
   const num = Number(val);
-  if (isNaN(num)) return '0';
-  return Math.round(num).toLocaleString();
+  if (!Number.isFinite(num)) return '0';
+  return INTEGER_FORMATTER.format(Math.round(num));
 };
+
+// 週次固定為 1~53，不需每次年份變動都重新建立陣列。
+const WEEK_OPTIONS = Array.from({ length: 53 }, (_, i) => ({
+  value: i + 1,
+  label: `第 ${i + 1} 週`
+}));
 
 @Component({
   selector: 'app-tls32020',
@@ -124,6 +136,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   subFooterData: TLS32020Data[] = []; // **新增**：用於存放期間小計資料
   pdfBtnLoading = false;
   excelBtnLoading = false;
+
+  // 大量報表資料採漸進式掛載，避免 API 回傳後一次建立數萬個 table cell 而卡住主執行緒。
+  private readonly RENDER_BATCH_SIZE = 100;
+  private progressiveRenderToken = 0;
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
   isShowBuilding = this.queryForm.get('ShowBuilding')?.value ?? true;
@@ -139,7 +155,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
   // 下拉選單/Radio Button 選項
   // **新增**：館別
-  auditoriumOptions = this.dropdown.querySys3800();
+  auditoriumOptions = this.dropdown.querySys3800().pipe(
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
   organizationOptions = this.dropdown.querySys3100();
   regionOptions = this.dropdown.querySys3A00();
   floorOptions = this.dropdown.querySys3900();
@@ -162,7 +180,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     value: i + 1, // 1 到 12
     label: `${i + 1} 月`
   }));
-  weekOptions: { value: number, label: string }[] = [];
+  weekOptions: { value: number, label: string }[] = WEEK_OPTIONS;
   halfYearOptions = [
     { value: 1, label: '上半年' }, // 1: 上半年 (1/1 ~ 6/30)
     { value: 2, label: '下半年' } // 2: 下半年 (7/1 ~ 12/31)
@@ -186,6 +204,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
+    { field: 'CompareMonthTarget', header: '月營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareMonth', topGroupField: 'compare' },
+    { field: 'CompareMonthSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareMonth', topGroupField: 'compare' },
+    { field: 'CompareMonthAchieveRate', header: '完成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'compareMonth', topGroupField: 'compare' },
     // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
     { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
@@ -218,6 +239,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'compareRevenue', header: 'XXXX 營業額' },
     { field: 'compareATV', header: 'XXXX 客單價' },
     { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
+    { field: 'compareMonth', header: '月累計' },
     { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 比較期群組
     { field: 'revenue', header: 'YYYY 營業額' },
     { field: 'atv', header: 'YYYY 客單價' },
@@ -237,7 +259,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS32020');
-    // 底色依「頂層分組」(基準期/比較期/差異) 套用，子分組(營業額/客單價/坪效/預售消費)只影響表頭文字分層、不影響底色
+
+    // 底色依「頂層分組」(基準期/比較期/差異) 套用。
+    // 僅初始化一次 cellClass，避免後續重複建立函式。
     this.columns = this.columns.map((col): ReportColumn => ({
       ...col,
       cellClass: () => {
@@ -249,108 +273,168 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         }
       },
     }));
-    this.setWeekOptions(this.queryForm.controls.year.value);// 初始化週次選項
-    this.calculateInitialRanges('3');// 【保留】只在頁面初始化時執行一次完整的初始化
-    this.queryForm.controls.DayType.valueChanges.pipe(startWith(this.queryForm.controls.DayType.value), takeUntilDestroyed(this.destroyRef)).subscribe(type => {
-      const today = new Date();
-      const compareDefaultDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-      // 1-1. 清除/設定輔助欄位（僅在初始化時會被覆蓋，後續手動切換 DayType 時會被清除）
-      // 先清除不相關的輔助欄位
-      this.queryForm.controls.week.setValue(null, { emitEvent: false });
-      this.queryForm.controls.weekTo.setValue(null, { emitEvent: false });
-      this.queryForm.controls.month.setValue(null, { emitEvent: false });
-      this.queryForm.controls.monthTo.setValue(null, { emitEvent: false });
-      this.queryForm.controls.halfYear.setValue(null, { emitEvent: false });
-      this.queryForm.controls.halfYearTo.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareWeek.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareWeekTo.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareMonth.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareMonthTo.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareHalfYear.setValue(null, { emitEvent: false });
-      this.queryForm.controls.CompareHalfYearTo.setValue(null, { emitEvent: false });
 
-      // 重新設定 Base / Compare 預設值（同時處理 DayType 切換和首次初始化）
-      if (type === '2') {
-        const currentWeek = this.getCurrentWeekNumber(today);
-        const compareWeek = this.getCurrentWeekNumber(compareDefaultDate);
-        this.queryForm.controls.week.setValue(currentWeek, { emitEvent: false });
-        this.queryForm.controls.weekTo.setValue(currentWeek, { emitEvent: false });
-        this.queryForm.controls.CompareWeek.setValue(compareWeek, { emitEvent: false }); // 去年同期週次
-        this.queryForm.controls.CompareWeekTo.setValue(compareWeek, { emitEvent: false });
-        this.setWeekOptions(today);
-      } else if (type === '3') {
-        this.queryForm.controls.month.setValue(today.getMonth() + 1, { emitEvent: false });
-        this.queryForm.controls.monthTo.setValue(today.getMonth() + 1, { emitEvent: false });
-        this.queryForm.controls.CompareMonth.setValue(today.getMonth() + 1, { emitEvent: false }); // 同樣月份
-        this.queryForm.controls.CompareMonthTo.setValue(today.getMonth() + 1, { emitEvent: false });
-      } else if (type === '4') {
-        const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
-        this.queryForm.controls.halfYear.setValue(defaultHalfYear, { emitEvent: false });
-        this.queryForm.controls.halfYearTo.setValue(defaultHalfYear, { emitEvent: false });
-        this.queryForm.controls.CompareHalfYear.setValue(defaultHalfYear, { emitEvent: false }); // 同樣半年別
-        this.queryForm.controls.CompareHalfYearTo.setValue(defaultHalfYear, { emitEvent: false });
-      }
+    // 初始化只執行一次，避免 startWith + calculateInitialRanges 造成重複計算。
+    this.setWeekOptions(this.queryForm.controls.year.value);
+    this.calculateInitialRanges('3');
+    this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
 
-      // 1-2. 設定年份（確保首次初始化時設定正確的年份）
-      this.queryForm.controls.year.setValue(today, { emitEvent: false });
-      this.queryForm.controls.yearTo.setValue(today, { emitEvent: false });
-      this.queryForm.controls.CompareYear.setValue(compareDefaultDate, { emitEvent: false });
-      this.queryForm.controls.CompareYearTo.setValue(compareDefaultDate, { emitEvent: false });
+    this.bindDayTypeChanges();
+    this.bindDateRangeChanges();
+    this.bindDisplayOptionChanges();
+    this.bindActualDateHeaderChanges();
+  }
 
-      // 1-3. 重新計算日期和標頭
-      this.calculateDateRanges(type);
-      this.updateYMColumnHeader(type);
+  /**
+   * 報表類型切換：重設該類型需要的輔助欄位，再重新計算日期。
+   * 保留原本切換 DayType 時自動回到「今年 / 去年同期」的邏輯。
+   */
+  private bindDayTypeChanges(): void {
+    this.queryForm.controls.DayType.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(type => this.resetRangeByDayType(type));
+  }
+
+  private resetRangeByDayType(type: string | null): void {
+    if (!type) return;
+
+    const today = new Date();
+    const compareDefaultDate = new Date(
+      today.getFullYear() - 1,
+      today.getMonth(),
+      today.getDate()
+    );
+
+    // 一次 patchValue 完成所有清除與年度預設，且不觸發其他 valueChanges。
+    this.queryForm.patchValue({
+      year: today,
+      yearTo: today,
+      week: null,
+      weekTo: null,
+      month: null,
+      monthTo: null,
+      halfYear: null,
+      halfYearTo: null,
+
+      CompareYear: compareDefaultDate,
+      CompareYearTo: compareDefaultDate,
+      CompareWeek: null,
+      CompareWeekTo: null,
+      CompareMonth: null,
+      CompareMonthTo: null,
+      CompareHalfYear: null,
+      CompareHalfYearTo: null,
+    }, { emitEvent: false });
+
+    if (type === '2') {
+      const currentWeek = this.getCurrentWeekNumber(today);
+      const compareWeek = this.getCurrentWeekNumber(compareDefaultDate);
+
+      this.queryForm.patchValue({
+        week: currentWeek,
+        weekTo: currentWeek,
+        CompareWeek: compareWeek,
+        CompareWeekTo: compareWeek,
+      }, { emitEvent: false });
+
+      this.setWeekOptions(today);
+    } else if (type === '3') {
+      const currentMonth = today.getMonth() + 1;
+
+      this.queryForm.patchValue({
+        month: currentMonth,
+        monthTo: currentMonth,
+        CompareMonth: currentMonth,
+        CompareMonthTo: currentMonth,
+      }, { emitEvent: false });
+    } else if (type === '4') {
+      const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
+
+      this.queryForm.patchValue({
+        halfYear: defaultHalfYear,
+        halfYearTo: defaultHalfYear,
+        CompareHalfYear: defaultHalfYear,
+        CompareHalfYearTo: defaultHalfYear,
+      }, { emitEvent: false });
+    }
+
+    this.calculateDateRanges(type);
+    this.updateYMColumnHeader(type);
+  }
+
+  /**
+   * 將原本十多個日期欄位 subscription 合併成單一日期重算入口。
+   * auditTime(0) 可合併同一事件循環內的連續變更，避免重複計算。
+   */
+  private bindDateRangeChanges(): void {
+    // 年份異動時才需要重新建立週次選項。
+    merge(
+      this.queryForm.controls.year.valueChanges,
+      this.queryForm.controls.yearTo.valueChanges,
+    ).pipe(
+      auditTime(0),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.setWeekOptions(this.queryForm.controls.year.value);
     });
-    // 2. 訂閱 Base 輔助欄位變化 (不變)
-    this.queryForm.controls.year.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.setWeekOptions(this.queryForm.controls.year.value); // 年份變動時，更新週次選項
-      this.calculateDateRanges(this.queryForm.controls.DayType.value)
-    });
-    this.calculateDateRanges(this.queryForm.controls.DayType.value);
-    this.queryForm.controls.week.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.weekTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.yearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.setWeekOptions(this.queryForm.controls.year.value); // yearTo 變動時，同步檢查週次選項上限
+
+    merge(
+      this.queryForm.controls.year.valueChanges,
+      this.queryForm.controls.week.valueChanges,
+      this.queryForm.controls.yearTo.valueChanges,
+      this.queryForm.controls.weekTo.valueChanges,
+      this.queryForm.controls.month.valueChanges,
+      this.queryForm.controls.monthTo.valueChanges,
+      this.queryForm.controls.halfYear.valueChanges,
+      this.queryForm.controls.halfYearTo.valueChanges,
+      this.queryForm.controls.CompareYear.valueChanges,
+      this.queryForm.controls.CompareWeek.valueChanges,
+      this.queryForm.controls.CompareYearTo.valueChanges,
+      this.queryForm.controls.CompareWeekTo.valueChanges,
+      this.queryForm.controls.CompareMonth.valueChanges,
+      this.queryForm.controls.CompareMonthTo.valueChanges,
+      this.queryForm.controls.CompareHalfYear.valueChanges,
+      this.queryForm.controls.CompareHalfYearTo.valueChanges,
+    ).pipe(
+      auditTime(0),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.calculateDateRanges(this.queryForm.controls.DayType.value);
     });
-    this.queryForm.controls.month.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.monthTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.halfYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.halfYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
+  }
 
-    // 3. 訂閱 Compare 輔助欄位變化 (不變)
-    this.queryForm.controls.CompareYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareWeek.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareWeekTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareMonth.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareMonthTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareHalfYear.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-    this.queryForm.controls.CompareHalfYearTo.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
-
-    this.updateYMColumnHeader(this.queryForm.controls.DayType.value);// 初始化時先設定一次正確的欄位標頭
-
-    this.queryForm.get('PreSale')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+  /**
+   * 顯示欄位相關 checkbox 共用同一個 subscription。
+   */
+  private bindDisplayOptionChanges(): void {
+    merge(
+      this.queryForm.controls.PreSale.valueChanges,
+      this.queryForm.controls.ConsumerNum.valueChanges,
+      this.queryForm.controls.ShowBuilding.valueChanges,
+    ).pipe(
+      auditTime(0),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.setColumns();
       this.updateHistoryRequestBody();
     });
-    this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.setColumns();
-      this.updateHistoryRequestBody();
-    });
-    this.queryForm.get('ShowBuilding')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.setColumns();
-      this.updateHistoryRequestBody();
-    });
-    // 監聽實際 DatePicker 的變更，確保 Header 年份 100% 同步
-    this.queryForm.controls.BaseDateFrom.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.refreshHeadersFromActualDates();
-    });
+  }
 
-    this.queryForm.controls.CompareDateFrom.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+  /**
+   * 使用者直接操作實際 DatePicker 時才刷新年度群組 Header。
+   */
+  private bindActualDateHeaderChanges(): void {
+    merge(
+      this.queryForm.controls.BaseDateFrom.valueChanges,
+      this.queryForm.controls.CompareDateFrom.valueChanges,
+    ).pipe(
+      auditTime(0),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.refreshHeadersFromActualDates();
     });
   }
+
   /**
    * 直接從實際查詢的 DatePicker 欄位取出年份並刷新 Header
    */
@@ -583,9 +667,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.queryForm.controls.CompareHalfYearTo.setValue(defaultHalfYear, { emitEvent: false });
     }
 
+    // calculateDateRanges 內部已同步更新 ColumnGroup Header，不再重複刷新。
     this.calculateDateRanges(defaultType);
-    // 初始化時也應該更新一次 ColumnGroup Header
-    this.updateColumnGroupHeader(today.getFullYear(), compareDefaultDate.getFullYear());
   }
 
   /**
@@ -595,13 +678,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   setWeekOptions(year: Date | null): void {
     if (!year) return;
 
-    // 簡化處理：這裡假設一年最大週數為 53 (實際應根據 ISO 8601 計算)
+    // 週次選項固定共用 WEEK_OPTIONS；此方法只保留原本的週次合法性檢查。
     const maxWeeks = 53;
-
-    this.weekOptions = Array.from({ length: maxWeeks }, (_, i) => ({
-      value: i + 1,
-      label: `第 ${i + 1} 週`
-    }));
 
     if (this.queryForm.controls.week.value && this.queryForm.controls.week.value > maxWeeks) {
       this.queryForm.controls.week.setValue(null, { emitEvent: false });
@@ -794,17 +872,36 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           // 2. 依據 ShowBuilding 判斷是否需要處理「期間小計」
           const isShowBuilding = formValue.ShowBuilding !== false;
 
+          // 先排除最後一筆總計；館別模式下再用單次迴圈分離明細與小計。
+          const rows = grandTotal ? allData.slice(0, -1) : allData;
+
+          let detailRows: TLS32020Data[];
+
           if (isShowBuilding) {
-            // 有勾選館別：篩選出小計列，並排除小計與總計
-            this.subFooterData = allData.filter(item => item.BuildingName === '小計');
-            this.data = allData
-              .slice(0, allData.length - 1) // 移除總計
-              .filter(item => item.BuildingName !== '小計'); // 移除期間小計
+            detailRows = [];
+            const subtotalRows: TLS32020Data[] = [];
+
+            for (const item of rows) {
+              if (item.BuildingName === '小計') {
+                subtotalRows.push(item);
+              } else {
+                detailRows.push(item);
+              }
+            }
+
+            this.subFooterData = subtotalRows;
           } else {
-            // 不勾選館別：不顯示小計列，明細只需排除最後一筆總計
             this.subFooterData = [];
-            this.data = allData.slice(0, allData.length - 1);
+            detailRows = rows;
           }
+
+          // totalRecords 必須使用完整明細筆數，不能使用目前已 render 的 data.length。
+          this.totalRecords = detailRows.length;
+
+          // API 資料已到齊後，避免一次把所有資料交給 TableReport。
+          // 有館別時依 YM 完整群組逐批掛載，避免同一期間被拆開；
+          // 無館別分組時則固定每批 100 筆。
+          this.renderRowsProgressively(detailRows, isShowBuilding);
 
           // 3. 設置 Footer 數據 (使用總計數據)
           if (grandTotal) {
@@ -817,10 +914,92 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
             this.footerData = null;
           }
 
-          this.totalRecords = this.data.length;
         });
       });
     });
+  }
+
+  /**
+   * 漸進式掛載大量報表資料。
+   *
+   * TableReport 欄位很多，若一次把數千筆資料指定給 [data]，Angular / PrimeNG
+   * 會在同一個 rendering cycle 建立大量 DOM 與執行 formatter。
+   * 這裡先掛第一批，後續利用 requestAnimationFrame 讓瀏覽器有機會先完成畫面更新。
+   */
+  private renderRowsProgressively(rows: TLS32020Data[], groupByYM: boolean): void {
+    const token = ++this.progressiveRenderToken;
+    this.data = [];
+
+    if (rows.length === 0) {
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const chunks = groupByYM
+      ? this.createYMRenderChunks(rows)
+      : this.createFixedRenderChunks(rows, this.RENDER_BATCH_SIZE);
+
+    let chunkIndex = 0;
+    const renderedRows: TLS32020Data[] = [];
+
+    const appendNextChunk = () => {
+      // 使用者已重新查詢時，停止上一輪尚未完成的 rendering。
+      if (token !== this.progressiveRenderToken) return;
+
+      const chunk = chunks[chunkIndex++];
+      if (!chunk) return;
+
+      renderedRows.push(...chunk);
+
+      // OnPush 子元件需要新的 Array reference 才能穩定收到變更。
+      this.data = renderedRows.slice();
+      this.cdr.markForCheck();
+
+      if (chunkIndex < chunks.length) {
+        requestAnimationFrame(appendNextChunk);
+      }
+    };
+
+    // 第一批同步掛上；Angular 在本次 callback 結束後即可先 render 第一批。
+    appendNextChunk();
+  }
+
+  /**
+   * 館別模式依「連續相同 YM」建立 render chunk。
+   * 不使用 Map 重排資料，保留後端原始排序，也不會把同一個 YM 從中間切斷。
+   */
+  private createYMRenderChunks(rows: TLS32020Data[]): TLS32020Data[][] {
+    const chunks: TLS32020Data[][] = [];
+    let currentChunk: TLS32020Data[] = [];
+    let currentYM: unknown = undefined;
+
+    for (const row of rows) {
+      if (currentChunk.length === 0 || row.YM === currentYM) {
+        currentChunk.push(row);
+      } else {
+        chunks.push(currentChunk);
+        currentChunk = [row];
+      }
+
+      currentYM = row.YM;
+    }
+
+    if (currentChunk.length > 0) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks;
+  }
+
+  /** 無群組模式固定切批，控制每一個 rendering cycle 的 DOM 建立量。 */
+  private createFixedRenderChunks(rows: TLS32020Data[], size: number): TLS32020Data[][] {
+    const chunks: TLS32020Data[][] = [];
+
+    for (let i = 0; i < rows.length; i += size) {
+      chunks.push(rows.slice(i, i + size));
+    }
+
+    return chunks;
   }
 
   onExportPDF() {
