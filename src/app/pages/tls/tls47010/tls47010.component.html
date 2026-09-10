@@ -28,36 +28,41 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-@if (totalCount > 0) {
-  <div class="card">
-    <h5>下傳處理進度</h5>
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-2">
+    <h5 class="m-0">當天下傳紀錄</h5>
+    <app-button label="查詢" icon="pi pi-search" [loading]="todayLoading" (clickEvent)="queryTodayRecords()"></app-button>
+  </div>
+  @if (totalCount > 0) {
     <p class="mb-3">
       共 {{ totalCount }} 筆／已完成 {{ successCount }} 筆／失敗 {{ failCount }} 筆／處理中 {{ processingCount }} 筆
     </p>
-    <table class="w-full">
-      <thead>
+  }
+  <table class="w-full">
+    <thead>
+      <tr>
+        <th class="text-left">資料類別</th>
+        <th class="text-left">收銀機清單</th>
+        <th class="text-left">狀態</th>
+        <th class="text-left">發動時間</th>
+        <th class="text-left">建立人員</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of todayRecords; track record.ID) {
         <tr>
-          <th class="text-left">資料表名稱</th>
-          <th class="text-left">收銀機清單</th>
-          <th class="text-left">狀態</th>
-          <th class="text-left">發動時間</th>
+          <td>{{ getDataTypeLabel(record.EXP_Type) }}</td>
+          <td>{{ getEcrCountLabel(record.EXP_EcrLst) }}</td>
+          <td>
+            {{ record.StatusText }}
+            @if (record.Reason) {
+              （{{ record.Reason }}）
+            }
+          </td>
+          <td>{{ record.EXP_Time | date:'yyyy/MM/dd HH:mm:ss' }}</td>
+          <td>{{ record.CRT_USR_No }}</td>
         </tr>
-      </thead>
-      <tbody>
-        @for (key of trackingKeys; track key.ID) {
-          <tr>
-            <td>{{ getDataTypeLabel(key.EXP_Type) }}</td>
-            <td>{{ getEcrCountLabel(key.EXP_EcrLst) }}</td>
-            <td>
-              {{ getStatusItem(key.ID)?.StatusText || '待處理' }}
-              @if (getStatusItem(key.ID)?.Reason) {
-                （{{ getStatusItem(key.ID)?.Reason }}）
-              }
-            </td>
-            <td>{{ getStatusItem(key.ID)?.EXP_Time | date:'yyyy/MM/dd HH:mm:ss' }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-}
+      }
+    </tbody>
+  </table>
+</div>

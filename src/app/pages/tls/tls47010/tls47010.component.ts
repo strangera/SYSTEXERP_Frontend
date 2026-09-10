@@ -10,8 +10,8 @@ import {
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AccordionModule } from 'primeng/accordion';
-import { interval, Subscription, switchMap, take } from 'rxjs';
-import { TLS47010StatusItem, TLS47010Service, TLS47010TrackingKey } from '../../../service/api/tls/tls47010.service';
+import { finalize, interval, Subscription, switchMap, take } from 'rxjs';
+import { TLS47010Service, TLS47010TodayRecord } from '../../../service/api/tls/tls47010.service';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -51,9 +51,9 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
   private totalEcrCount = 0;
   private pollingSub?: Subscription;
 
-  // 下傳進度：目前這批的追蹤鍵與各筆最新狀態
-  trackingKeys: TLS47010TrackingKey[] = [];
-  statusItems: TLS47010StatusItem[] = [];
+  // 當天下傳紀錄(全部使用者)，含輪詢直到全部結案
+  todayRecords: TLS47010TodayRecord[] = [];
+  todayLoading = false;
   polling = false;
 
   constructor() { super(); }
@@ -71,6 +71,19 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
     ).subscribe(options => {
       this.totalEcrCount = options?.length ?? 0;
     });
+    this.queryTodayRecords();
+  }
+
+  // 查詢當天下傳紀錄(全部使用者)：獨立按鈕用，不受收銀機/資料類別必填驗證影響，任何時候可直接呼叫
+  queryTodayRecords(): void {
+    this.todayLoading = true;
+    this.tls47010Service.queryTLS47010TodayRecords().pipe(
+      finalize(() => { this.todayLoading = false; }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      this.todayRecords = res.Data ?? [];
+      this.syncPolling();
+    });
   }
   // 用來接收子元件傳上來的全選狀態
   onEcrNoAllSelected(isAllSelected: boolean): void {
@@ -86,14 +99,10 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
       this.tls47010Service.insertTLS47010(requestBody).pipe(
         this.withLoading(),
         takeUntilDestroyed(this.destroyRef),
-      ).subscribe(res => {
+      ).subscribe(() => {
         this.messageService.successBubble('已送出下傳要求');
-        // 後端理論上每筆都會回傳追蹤鍵，但 API 資料仍可能有例外髒資料，過濾掉避免畫面崩潰
-        this.trackingKeys = (res.Data?.TrackingKeys ?? []).filter((key): key is TLS47010TrackingKey => !!key);
-        this.statusItems = [];
-        if (this.trackingKeys.length > 0) {
-          this.startPolling();
-        }
+        // 新送出的批次已寫入DB，直接重新查當天紀錄即可併入清單，並依結果自動接續輪詢
+        this.queryTodayRecords();
       });
     });
   }
@@ -102,10 +111,6 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
   getDataTypeLabel(expType: string | null): string {
     if (!expType) return '';
     return this.dataTypeLabelMap[expType] ?? expType;
-  }
-
-  getStatusItem(id: number): TLS47010StatusItem | undefined {
-    return this.statusItems.find(s => s.ID === id);
   }
 
   // 收銀機清單改用筆數顯示，避免選很多筆時整串代號洗版
@@ -118,28 +123,41 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   get totalCount(): number {
-    return this.trackingKeys.length;
+    return this.todayRecords.length;
   }
   get successCount(): number {
-    return this.statusItems.filter(s => s.StatusText === '成功').length;
+    return this.todayRecords.filter(r => r.StatusText === '成功').length;
   }
   get failCount(): number {
-    return this.statusItems.filter(s => s.StatusText === '失敗').length;
+    return this.todayRecords.filter(r => r.StatusText === '失敗').length;
   }
   get processingCount(): number {
     return this.totalCount - this.successCount - this.failCount;
+  }
+
+  // 依目前清單判斷是否要開始/停止輪詢：只要還有未結案(非成功/失敗)紀錄就輪詢，全部結案就停止
+  private syncPolling(): void {
+    if (this.hasPendingRecords()) {
+      this.startPolling();
+    } else {
+      this.stopPolling();
+    }
+  }
+
+  private hasPendingRecords(): boolean {
+    return this.todayRecords.some(r => !FINISHED_STATUS_TEXTS.includes(r.StatusText));
   }
 
   private startPolling(): void {
     this.pollingSub?.unsubscribe();
     this.polling = true;
     this.pollingSub = interval(POLLING_INTERVAL_MS).pipe(
-      switchMap(() => this.tls47010Service.queryTLS47010Status({ TrackingKeys: this.trackingKeys })),
+      switchMap(() => this.tls47010Service.queryTLS47010TodayRecords()),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: res => {
-        this.statusItems = res.Data ?? [];
-        if (this.isAllFinished()) {
+        this.todayRecords = res.Data ?? [];
+        if (!this.hasPendingRecords()) {
           this.stopPolling();
         }
       },
@@ -155,13 +173,5 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
     this.pollingSub?.unsubscribe();
     this.pollingSub = undefined;
     this.polling = false;
-  }
-
-  private isAllFinished(): boolean {
-    return this.trackingKeys.length > 0
-      && this.trackingKeys.every(key => {
-        const status = this.getStatusItem(key.ID);
-        return !!status && FINISHED_STATUS_TEXTS.includes(status.StatusText);
-      });
   }
 }

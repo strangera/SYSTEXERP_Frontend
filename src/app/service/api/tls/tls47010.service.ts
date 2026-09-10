@@ -21,18 +21,16 @@ export interface InsertTLS47010Response {
   TrackingKeys: TLS47010TrackingKey[];
 }
 
-export interface QueryTLS47010StatusRequest {
-  TrackingKeys: TLS47010TrackingKey[];
-}
-
-/** 整檔下傳進度查詢結果 */
-export interface TLS47010StatusItem {
+/** 當天下傳紀錄(全部使用者) */
+export interface TLS47010TodayRecord {
   ID: number;
+  CRT_Date: string;
   EXP_Type: string | null;
   EXP_EcrLst: string | null;
   StatusText: string;
   Reason: string | null;
   EXP_Time: string | null;
+  CRT_USR_No: string | null;
 }
 
 @Injectable({
@@ -44,7 +42,7 @@ export class TLS47010Service {
   insertTLS47010(data: InsertTLS47010Request): Observable<ApiResponse<InsertTLS47010Response>> {
     return this.http.post<ApiResponse<InsertTLS47010Response>>(`${this.apiUrl}/TLS0000/TLS4000/insertTLS47010`, data);
   }
-  queryTLS47010Status(data: QueryTLS47010StatusRequest): Observable<ApiResponse<TLS47010StatusItem[]>> {
-    return this.http.post<ApiResponse<TLS47010StatusItem[]>>(`${this.apiUrl}/TLS0000/TLS4000/queryTLS47010Status`, data);
+  queryTLS47010TodayRecords(): Observable<ApiResponse<TLS47010TodayRecord[]>> {
+    return this.http.post<ApiResponse<TLS47010TodayRecord[]>>(`${this.apiUrl}/TLS0000/TLS4000/queryTLS47010TodayRecords`, {});
   }
 }
