@@ -351,7 +351,7 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = '抽成類別折扣分析報表.xlsx';
+        a.download = '抽成類別條件分析報表.xlsx';
         a.click();
         URL.revokeObjectURL(blobUrl);
       });

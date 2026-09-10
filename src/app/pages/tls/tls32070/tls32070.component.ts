@@ -190,6 +190,8 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'TltName', header: '櫃位名稱', align: 'left' },
     { field: 'TltId', header: '抽成類別代號', align: 'left' },
     { field: 'TltIdDesc', header: '抽成類別名稱', align: 'left' },
+    { field: 'DiscCode', header: '折扣別代碼', align: 'left' },
+    { field: 'DiscDesc', header: '折扣別名稱', align: 'left' },
 
     // 比較期 (依 PM 截圖，比較期放在前)
     // reportType/exportFormat 是給共通報表 /exportPDF /exportExcel（table-report-caption → ReportExportService）用的匯出格式，
