@@ -24,7 +24,6 @@ export interface InsertTLS47010Response {
 /** 當天下傳紀錄(全部使用者) */
 export interface TLS47010TodayRecord {
   ID: number;
-  CRT_Date: string;
   EXP_Type: string | null;
   EXP_EcrLst: string | null;
   StatusText: string;
