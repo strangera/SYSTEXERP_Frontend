@@ -71,7 +71,7 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
     ).subscribe(options => {
       this.totalEcrCount = options?.length ?? 0;
     });
-    this.queryTodayRecords();
+    // PM 2026-09-11 確認：頁面載入不自動查詢，需使用者按「查詢」按鈕才呈現當天下傳紀錄
   }
 
   // 查詢當天下傳紀錄(全部使用者)：獨立按鈕用，不受收銀機/資料類別必填驗證影響，任何時候可直接呼叫
@@ -133,6 +133,10 @@ export class TLS47010Component extends BasicQueryPageComponent<unknown> implemen
   }
   get processingCount(): number {
     return this.totalCount - this.successCount - this.failCount;
+  }
+  // 查詢結果清單只顯示「處理中」（非成功/失敗）的紀錄
+  get processingRecords(): TLS47010TodayRecord[] {
+    return this.todayRecords.filter(r => !FINISHED_STATUS_TEXTS.includes(r.StatusText));
   }
 
   // 依目前清單判斷是否要開始/停止輪詢：只要還有未結案(非成功/失敗)紀錄就輪詢，全部結案就停止

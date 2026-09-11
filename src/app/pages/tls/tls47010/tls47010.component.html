@@ -33,11 +33,9 @@
     <h5 class="m-0">當天下傳紀錄</h5>
     <app-button label="查詢" icon="pi pi-search" [loading]="todayLoading" (clickEvent)="queryTodayRecords()"></app-button>
   </div>
-  @if (totalCount > 0) {
-    <p class="mb-3">
-      共 {{ totalCount }} 筆／已完成 {{ successCount }} 筆／失敗 {{ failCount }} 筆／處理中 {{ processingCount }} 筆
-    </p>
-  }
+  <p class="mb-3">
+    處理中 {{ processingCount }} 筆
+  </p>
   <table class="w-full">
     <thead>
       <tr>
@@ -49,7 +47,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (record of todayRecords; track record.ID) {
+      @for (record of processingRecords; track record.ID) {
         <tr>
           <td>{{ getDataTypeLabel(record.EXP_Type) }}</td>
           <td>{{ getEcrCountLabel(record.EXP_EcrLst) }}</td>
