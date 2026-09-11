@@ -40,6 +40,8 @@ export interface ASS15020QueryRow {
   TOTAL_COST?: number | null;
   NOTES?: string | null;
   PURCHASE_NOTES?: string | null;
+  GroupKey?: string | null;
+  GroupName?: string | null;
   ID?: number | string | null;
   [key: string]: unknown;
 }
