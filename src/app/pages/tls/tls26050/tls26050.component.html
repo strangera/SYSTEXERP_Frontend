@@ -288,8 +288,8 @@
   <app-table-report tableKey="TLS26050" dataKey="talent_id" [data]="data" [columns]="columns"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
     [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false" [showCheckBox]="false" [footerData]="footerData"
-    [footerLabelField]="'group_name'">
+    [showManage]="true" [showDelete]="false" [showEdit]="false" [showCheckBox]="false" [footerData]="footerData"
+    [footerLabelField]="'group_name'" (detail)="onDetail1($event)">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
@@ -302,3 +302,6 @@
     </header>
   </app-table-report>
 </div>
+
+<app-tls26050-cru [(visible)]="dialogVisible" [rowData]="selectedRow"
+  [queryConditions]="lastQueryBody"></app-tls26050-cru>

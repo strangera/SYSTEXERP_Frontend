@@ -6,10 +6,13 @@ import { formatAmount, formatPercentage } from '@others/component/table/table.mo
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
-import { TLS32050DetailRequest, TLS32050DetailResponse, TLS32050Request, TLS32050Response, TLS32050Service } from 'src/app/service/api/tls/tls32050.service';
+import { TLS32050Request, TLS32050Response } from 'src/app/service/api/tls/tls32050.service';
+import { TLS32060Request, TLS32060Response, TLS32060Service } from 'src/app/service/api/tls/tls32060.service';
 import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
 import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
+// 比照 TLS32060(各櫃業績報表) 下鑽：點擊 TEAM 列時改查各櫃層級明細，
+// 直接沿用 TLS32060Service.queryTLS32060 + 其既有 ReportColumn 定義，不再呼叫 queryTLS32050Detail。
 @Component({
   selector: 'app-tls32050-cru',
   standalone: true,
@@ -17,7 +20,7 @@ import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
   templateUrl: './tls32050-cru.component.html'
 })
 export class Tls32050CRUComponent implements OnChanges {
-  public readonly tls32050Service = inject(TLS32050Service);
+  private readonly tls32060Service = inject(TLS32060Service);
   private readonly messageService = inject(NotificationService);
 
   @Input() visible = false;
@@ -26,100 +29,102 @@ export class Tls32050CRUComponent implements OnChanges {
   @Output() visibleChange = new EventEmitter<boolean>();
 
   loading = false;
-  btnLoading = false;
   totalRecords = 0;
-  data: TLS32050DetailResponse[] = [];
-  historyRequestBody: TLS32050DetailRequest | null = null;
+  data: TLS32060Response[] = [];
+  historyRequestBody: TLS32060Request | null = null;
 
-  readonly detailQueryFn = (body: TLS32050DetailRequest) =>
-    this.tls32050Service.queryTLS32050Detail(body);
+  readonly detailQueryFn = (body: TLS32060Request) =>
+    this.tls32060Service.queryTLS32060(body);
 
+  // 欄位定義比照 TLS32060 現有 ReportColumn（館別/中小分類/專櫃編號/專櫃名稱/位置編號等）
   columns: ReportColumn[] = [
-    { field: 'RowType', header: '列別', visible: true, align: 'left' },
+    { field: 'BuildingName', header: '館別', visible: true, align: 'left' },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },
     { field: 'OrgId', header: '樓組代碼', visible: true, align: 'left' },
     { field: 'OrgName', header: '樓組名稱', visible: true, align: 'left' },
+    { field: 'BusClass', header: '中分類代碼', visible: true, align: 'left' },
+    { field: 'BusClassName', header: '中分類名稱', visible: true, align: 'left' },
+    { field: 'BusSClass', header: '小分類代碼', visible: true, align: 'left' },
+    { field: 'BusSClassName', header: '小分類名稱', visible: true, align: 'left' },
+    { field: 'TltNo', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'TltName', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left' },
+    { field: 'LocationNo', header: '位置編號', visible: true, align: 'left' },
+
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Base_CustCnt', header: '本期來客數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
+    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
+
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
-    { field: 'BaseCustCnt', header: '本期顧客數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'CompCustCnt', header: '上期顧客數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'TotalSpace', header: '總坪數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'BaseDays', header: '基準天數', visible: true, format: formatAmount, align: 'right' },
   ];
-
-  tlt_kind_Option = [
-    { value: '1', label: '正櫃' },
-    { value: '2', label: '臨時櫃' },
-    { value: '3', label: '特賣會' },
-    { value: '4', label: '虛擬櫃' },
-  ]
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible']?.currentValue === true && this.rowData && this.queryConditions) {
       this.data = [];
       this.totalRecords = 0;
-      this.queryTLS32050Detail();
+      this.queryDetail();
     }
   }
 
-  private buildRequest(): TLS32050DetailRequest {
+  // 沿用主查詢頁的 historyRequestBody，將被點擊列的 OrgId 帶入 OrgList、Bus_Class 帶入 BusClassList。
+  //
+  // ⚠️ TLS32050Response 的列資料只有 Bus_Class、沒有 BusType，但 TLS32060Request.BusClassList 要求
+  // {BusType, BusClass} 成對精確比對（SP_TLS32060Query 內是 BC.BusType = T.bus_type AND BC.BusClass = T.bus_class，
+  // 兩者都要對才會命中）。若隨便帶空字串當 BusType 會導致完全查不到資料而不是「少篩選」。
+  // 因此改用「回推」：優先從主查詢頁當時實際送出的 BusClassList（tuple 陣列 [bus_type, bus_class]）
+  // 找出 bus_class 等於被點擊列 Bus_Class 的那筆取出 BusType；找不到、且主查詢頁剛好只鎖了單一大分類時，
+  // 退而求其次直接用那個大分類；兩者都無法確定 BusType 時寧可不加這個中分類篩選（只靠 OrgList narrow），
+  // 避免比 SP 用錯 BusType 反而讓明細整個查不到資料。
+  private buildRequest(): TLS32060Request {
     const q = this.queryConditions!;
     const row = this.rowData!;
 
-    const tltKindName = row.TltKindName ?? '';
-    // 🔎 由名稱找對應的編號
-    const tltKindValue =
-      this.tlt_kind_Option.find(x => x.label === tltKindName)?.value ?? '';
+    // TLS32050Request.BusClassList/BusSClassList 型別宣告雖是 string[]，但 tls32050.component.ts
+    // onSubmit() 實際組裝送出的是 tuple 陣列，跟 TLS32060Request 要求的物件陣列格式不同，需轉換。
+    const rawBusClassList = (q.BusClassList ?? []) as unknown as string[][];
+    const rawBusSClassList = (q.BusSClassList ?? []) as unknown as string[][];
+
+    const busSClassList = rawBusSClassList
+      .filter(t => Array.isArray(t) && t.length >= 3)
+      .map(t => ({ BusType: t[0], BusClass: t[1], BusSClass: t[2] }));
+
+    const matchedTuple = rawBusClassList.find(pair => Array.isArray(pair) && pair[1] === row.Bus_Class);
+    const inferredBusType = matchedTuple?.[0] ?? ((q.BusTypeList?.length === 1) ? q.BusTypeList[0] : null);
+    const busClassList = (row.Bus_Class && inferredBusType)
+      ? [{ BusType: inferredBusType, BusClass: row.Bus_Class }]
+      : [];
 
     return {
-      OrgId: row.OrgId ?? '',
-      BaseDateFrom: q.BaseDateFrom?.toString() ?? '',
-      BaseDateTo: q.BaseDateTo?.toString() ?? '',
-      CompareDateFrom: q.CompareDateFrom?.toString() ?? '',
-      CompareDateTo: q.CompareDateTo?.toString() ?? '',
-      BusClass: row.Bus_Class ?? '',
-      TltKind: tltKindValue ?? '', // row.TltKind ?? '', 
-      FloorList: q.FloorList ?? '',
-      AreaList: q.AreaList ?? '',
-      BusTypeList: q.BusTypeList ?? [],
-      BusClassList: q.BusClassList ?? [],
-      BusSClassList: q.BusSClassList ?? [],
-      TltKindList: q.TltKindList ?? '',
-      OrgList: q.OrgList ?? '',
-      TltNoList: q.TltNoList ?? '',
-      TermTypeList: q.TermTypeList ?? '',
-      BuildingList: q.BuildingList ?? '',
-      AmtTaxMode: q.AmtTaxMode ?? 'G',
-      ReceFilter: q.ReceFilter ?? 'A',
-    } as TLS32050DetailRequest;
+      ...q,
+      OrgList: row.OrgId ?? '',
+      BusClassList: busClassList,
+      BusSClassList: busSClassList,
+    } as unknown as TLS32060Request;
   }
 
-  private queryTLS32050Detail(): void {
+  private queryDetail(): void {
     const request = this.buildRequest();
     this.historyRequestBody = request;
     this.loading = true;
-    this.tls32050Service.queryTLS32050Detail(request)
+    this.tls32060Service.queryTLS32060(request)
       .pipe(finalize(() => this.loading = false))
-      .subscribe((res: ApiResponse<TLS32050DetailResponse[]>) => {
+      .subscribe((res: ApiResponse<TLS32060Response[]>) => {
         this.data = res.Data ?? [];
         this.totalRecords = (res.TotalCount && res.TotalCount > 0) ? res.TotalCount : (this.data?.length ?? 0);
       });
   }
-
 }

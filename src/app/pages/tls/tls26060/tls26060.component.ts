@@ -23,6 +23,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { createPaginationConfig } from '../../../others/component/table/table.model';
+import { Tls26060CRUComponent } from './tls26060-cru/tls26060-cru.component';
 
 @UntilDestroy()
 @Component({
@@ -44,7 +45,8 @@ import { createPaginationConfig } from '../../../others/component/table/table.mo
     MultiSelectComponent,
     CalendarRangeComponent,
     TableReportComponent,
-    DropdownComponent
+    DropdownComponent,
+    Tls26060CRUComponent,
   ]
 })
 export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> implements OnInit {
@@ -116,6 +118,10 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     customFileName: '中分類預售總表',
     printRemarkText: '查詢業績期間：暫無條件資料'
   };
+
+  // 各櫃層級明細 Modal
+  dialogVisible = false;
+  selectedRow: TLS26060Data | null = null;
   //#region 下拉選項定義
   // 1. 日期查詢條件相關下拉選項
   // 報表類型選項（日/週/月/半年/年/區間/活動區間營業報表）
@@ -396,6 +402,12 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
       { field: 'nMonthlyFloorEffect', header: '月坪效', visible: tax, format: formatAmount, isTotal: true, align: 'right' }
     ];
     this.columns = allColumns.filter(c => c.visible !== false);
+  }
+
+  // 查詢結果列（data 陣列本身不含小計，小計另外在 footerData/AllData 呈現）皆可點擊開啟各櫃層級明細 Modal
+  onDetail1(event: TLS26060Data) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   // 查詢週報表起訖日期
