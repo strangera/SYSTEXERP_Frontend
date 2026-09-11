@@ -199,6 +199,6 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   }
 
   isRowSelectable(row: Pos1018) {
-    return row.GUI_Status === '00';
+    return row.GUI_Status === '00' || row.GUI_Status === '03';
   }
 }
