@@ -379,6 +379,14 @@ export class TLS13010Service {
     );
   }
 
+  /** 批次更新多筆合約的組織編號（連動 TLTTALENT_FARE） */
+  updateOrgIdBatch(talentIds: string[], orgId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/updateOrgIdBatch`, {
+      talentIds: talentIds.map(Number),
+      orgId
+    });
+  }
+
   /**
  * 刷新使用者資料權限範圍
  */
