@@ -107,7 +107,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
         rowData.approve_status !== '2' ||
-        !this.hasPermission(Actions.AntiAudit)
+        !this.hasPermission(Actions.AntiAudit) ||
+        this.isUnApproveBlocked(rowData)
     },
 
     {
@@ -134,6 +135,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   earlyTerminationDialogVisible = false;
   earlyTerminationRow: ContractItem | null = null;
   earlyTerminationDateControl = new FormControl<Date | null>(null, Validators.required);
+
 
   // ========== 表單定義 ==========
   queryForm = this.formBuilder.nonNullable.group({
@@ -646,4 +648,22 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   private formatCommissionType(value: string): string {
     return CommissionTypeLabels[value as CommissionType] || value || '';
   }
+
+  // ========== 反審核月份卡控 ==========
+  /**
+   * 撤櫃(tlt_openflag='9')超過 撤櫃月+1 的月底即封鎖反審核
+   */
+  isUnApproveBlocked(rowData: ContractItem): boolean {
+    if (rowData.tlt_openflag !== '0') return false; // '0' = 已撤櫃
+    if (!rowData.tlt_contract_edate) return false;
+    const withdrawalDate = new Date(rowData.tlt_contract_edate);
+    let cutoffMonth = withdrawalDate.getMonth() + 2;
+    let cutoffYear = withdrawalDate.getFullYear();
+    if (cutoffMonth >= 12) { cutoffYear++; cutoffMonth -= 12; }
+    const today = new Date();
+    if (today.getFullYear() > cutoffYear) return true;
+    if (today.getFullYear() === cutoffYear && today.getMonth() >= cutoffMonth) return true;
+    return false;
+  }
+
 }
