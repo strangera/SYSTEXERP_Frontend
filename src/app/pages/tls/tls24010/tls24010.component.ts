@@ -514,23 +514,19 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     const form = this.queryForm;
     this.data = [];
     this.submitted = false;
-    form.patchValue({ ECR_No: null, TXN_No: null });// 重設欄位
     // 根據 value 定義配置
-    const configs: Record<string, { label: string; columns: ReportColumn[]; ecrRequired?: boolean; txnRequired?: boolean }> = {
-      'M': { label: '銷售日期', columns: columns, ecrRequired: true, txnRequired: true },
+    const configs: Record<string, { label: string; columns: ReportColumn[] }> = {
+      'M': { label: '銷售日期', columns: columns },
       'C': { label: '折讓單日期', columns: C_columns },
       'R': { label: '作廢日期', columns: columns },
       'default': { label: '銷售日期', columns: columns }
     };
     const config = configs[value] || configs['default'];
-    // 統一處理驗證
     this.TXN_Date_Label = config.label;
     this.columns = config.columns;
-    const ecrValidators = config.ecrRequired ? [Validators.required] : null;
-    const txnValidators = [Validators.maxLength(8), Validators.max(99999999)];
-    if (config.txnRequired) txnValidators.push(Validators.required);
-    form.get('ECR_No')?.setValidators(ecrValidators);
-    form.get('TXN_No')?.setValidators(txnValidators);
+    form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
+    // 驗證規則要先套用，重設欄位時才會用「新」規則重新驗證，而不是沿用切換前的舊規則
+    form.patchValue({ ECR_No: null, TXN_No: null });
     form.updateValueAndValidity();
     this.cdr.markForCheck();
   }
