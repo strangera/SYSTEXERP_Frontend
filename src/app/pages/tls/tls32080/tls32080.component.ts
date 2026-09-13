@@ -365,6 +365,9 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
       ).subscribe((blob) => {
         const blobUrl = URL.createObjectURL(blob);
         globalThis.open(blobUrl, '_blank');
+        // window.open 開新分頁是非同步載入資源，立刻 revoke 會讓新分頁還沒抓到內容就失效，
+        // 延後釋放避免 blob URL 一直累積在記憶體裡（同 tls32070 的處理方式）
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
       });
     }
   }

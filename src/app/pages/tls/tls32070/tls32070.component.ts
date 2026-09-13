@@ -354,8 +354,15 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }),
         takeUntilDestroyed(this.destroyRef),
       ).subscribe((blob) => {
+        // 分頁標題實測不吃前端包 File 帶檔名這招（Chrome PDF 檢視器仍顯示 blob URL 的亂數 GUID），
+        // 真正決定分頁標題的是 PDF 檔案本身的 /Title metadata，已改在後端
+        // TLS32040ServiceExportHelper.ExportPDF() 用 QuestPDF 的 WithMetadata 設定，這裡不用再處理。
         const blobUrl = URL.createObjectURL(blob);
         globalThis.open(blobUrl, '_blank');
+        // 不能像 Excel 分支一樣 click 完立刻 revoke：window.open 開新分頁是非同步載入資源，
+        // 太早 revoke 會讓新分頁還沒抓到內容就失效（開出空白/錯誤頁）。延後釋放，
+        // 給新分頁足夠時間完成載入，同時避免 blob URL 一直累積在記憶體裡。
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
       });
     }
   }
