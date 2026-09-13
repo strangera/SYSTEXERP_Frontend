@@ -4,13 +4,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import {
   ASS11060Service,
   DetailASS11060Response,
   QueryASS11060Response,
   UpdateASS11060Request
 } from '../../../service/api/ass/ass11060.service';
+import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
@@ -80,14 +81,14 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
     // =========================
     // 付款資料 - 僅顯示，不可修改
     // =========================
-    /** 銀行代號 */
-    VEN_BNK_No: [{ value: '', disabled: true }],
+    /** 廠商匯款銀行代號+分行代號（合併顯示，比照 sysb200） */
+    VEN_BankBranch: [{ value: '', disabled: true }],
 
-    /** 銀行分行代號 */
-    VEN_BNK_BranchNo: [{ value: '', disabled: true }],
-
-    /** 銀行帳號 */
+    /** 匯款帳號 */
     VEN_BankAccountNo: [{ value: '', disabled: true }],
+
+    /** 匯款帳號名稱 */
+    VEN_AccountName: [{ value: '', disabled: true }],
     // =========================
     // 原本欄位 - 可修改
     // =========================
@@ -144,8 +145,12 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
     { value: '3', label: '其他' },
   ];
 
+  /** 銀行分行下拉選項（比照 sysb200cru，label 組成 "代號 - 銀行名稱(分行名稱)"） */
+  bankBranchOptions: { label: string; value: string; BNK_No: string; BNK_BranchNo: string }[] = [];
+
   constructor(
     private readonly ass11060Service: ASS11060Service,
+    private readonly sysb200Service: Sysb200Service,
   ) {
     super();
   }
@@ -165,70 +170,77 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
 
     this.loading = true;
 
-    this.ass11060Service
-      .detailASS11060({
+    forkJoin({
+      detail: this.ass11060Service.detailASS11060({
         VEN_No: venNo,
         VEN_Uniform: venUniform
-      })
+      }),
+      bankBranch: this.sysb200Service.queryBankBranchDropdown(),
+    })
       .pipe(
         finalize(() => this.loading = false),
         untilDestroyed(this),
       )
-      .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000' || !res.Data) {
-            return;
-          }
+      .subscribe(({ detail: res, bankBranch }) => {
+        this.bankBranchOptions = (bankBranch.Data || []).map(item => ({
+          label: `${item.BNK_No || ''}${item.BNK_BranchNo || ''} - ${item.BNK_Name || ''}${item.BNK_BranchName ? `(${item.BNK_BranchName})` : ''}`,
+          value: (item.BNK_No || '') + (item.BNK_BranchNo || ''),
+          BNK_No: item.BNK_No || '',
+          BNK_BranchNo: item.BNK_BranchNo || '',
+        }));
 
-          this.detailData = res.Data;
+        if (res.Status !== '0000' || !res.Data) {
+          return;
+        }
 
-          const d = res.Data;
+        this.detailData = res.Data;
 
-          this.dataForm.patchValue({
+        const d = res.Data;
 
-            // =========================
-            // 基本資料
-            // =========================
+        this.dataForm.patchValue({
 
-            VEN_No: d.VEN_No ?? '',
-            VEN_Uniform: d.VEN_Uniform ?? '',
-            VEN_Name: d.VEN_Name ?? '',
-            VEN_EngName: d.VEN_EngName ?? '',
-            VEN_ShortName: d.VEN_ShortName ?? '',
+          // =========================
+          // 基本資料
+          // =========================
 
-            // =========================
-            // 公司資料
-            // =========================
+          VEN_No: d.VEN_No ?? '',
+          VEN_Uniform: d.VEN_Uniform ?? '',
+          VEN_Name: d.VEN_Name ?? '',
+          VEN_EngName: d.VEN_EngName ?? '',
+          VEN_ShortName: d.VEN_ShortName ?? '',
 
-            VEN_GUIAddr: d.VEN_GUIAddr ?? '',
-            VEN_PostAddr: d.VEN_PostAddr ?? '',
-            VEN_Tel: d.VEN_Tel ?? '',
-            VEN_Fax: d.VEN_Fax ?? '',
-            // =========================
-            // 公司資料
-            // =========================
-            VEN_BNK_No: d.VEN_BNK_No ?? '',
-            VEN_BNK_BranchNo: d.VEN_BNK_BranchNo ?? '',
-            VEN_BankAccountNo: d.VEN_BankAccountNo ?? '',
-            // =========================
-            // 原本可修改資料
-            // =========================
+          // =========================
+          // 公司資料
+          // =========================
 
-            ORDER_ADDR: d.VEN_ORDER_ADDR ?? '',
-            ORDER_TEL: d.VEN_ORDER_TEL ?? '',
-            ORDER_FAX: d.VEN_ORDER_FAX ?? '',
+          VEN_GUIAddr: d.VEN_GUIAddr ?? '',
+          VEN_PostAddr: d.VEN_PostAddr ?? '',
+          VEN_Tel: d.VEN_Tel ?? '',
+          VEN_Fax: d.VEN_Fax ?? '',
+          // =========================
+          // 付款資料
+          // =========================
+          VEN_BankBranch: (d.VEN_BNK_No ?? '') + (d.VEN_BNK_BranchNo ?? ''),
+          VEN_BankAccountNo: d.VEN_BankAccountNo ?? '',
+          VEN_AccountName: d.VEN_AccountName ?? '',
+          // =========================
+          // 原本可修改資料
+          // =========================
 
-            FACTO_ADDR: d.VEN_FACTO_ADDR ?? '',
-            FACTO_TEL: d.VEN_FACTO_TEL ?? '',
-            FACTO_FAX: d.VEN_FACTO_FAX ?? '',
+          ORDER_ADDR: d.VEN_ORDER_ADDR ?? '',
+          ORDER_TEL: d.VEN_ORDER_TEL ?? '',
+          ORDER_FAX: d.VEN_ORDER_FAX ?? '',
 
-            DELIVERY: d.VEN_DELIVERY ?? null,
-            DELIVERY_LIMIT: d.VEN_DELIVERY_LIMIT ?? null,
-            RETURN_ORDER: d.VEN_RETURN_ORDER ?? null,
+          FACTO_ADDR: d.VEN_FACTO_ADDR ?? '',
+          FACTO_TEL: d.VEN_FACTO_TEL ?? '',
+          FACTO_FAX: d.VEN_FACTO_FAX ?? '',
 
-            VEN_Remark: d.VEN_Remark ?? '',
-          });
-        },
+          DELIVERY: d.VEN_DELIVERY ?? null,
+          DELIVERY_LIMIT: d.VEN_DELIVERY_LIMIT ?? null,
+          RETURN_ORDER: d.VEN_RETURN_ORDER ?? null,
+
+          VEN_Remark: d.VEN_Remark ?? '',
+        });
       });
   }
 

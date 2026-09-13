@@ -158,21 +158,15 @@
         <div class="grid p-fluid">
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="廠商匯款銀行代號"
-              controlName="VEN_BNK_No"
-              [control]="dataForm.controls.VEN_BNK_No"
+              controlName="VEN_BankBranch"
+              [control]="dataForm.controls.VEN_BankBranch"
+              [options]="bankBranchOptions"
+              optionLabel="label"
+              optionValue="value"
               [submitted]="submitted">
-            </app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銀行分行代號"
-              controlName="VEN_BNK_BranchNo"
-              [control]="dataForm.controls.VEN_BNK_BranchNo"
-              [submitted]="submitted">
-            </app-input-text>
+            </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -180,6 +174,15 @@
               label="匯款帳號"
               controlName="VEN_BankAccountNo"
               [control]="dataForm.controls.VEN_BankAccountNo"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="匯款帳號名稱"
+              controlName="VEN_AccountName"
+              [control]="dataForm.controls.VEN_AccountName"
               [submitted]="submitted">
             </app-input-text>
           </div>

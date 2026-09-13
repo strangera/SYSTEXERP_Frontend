@@ -52,6 +52,7 @@ export interface TLS26040Data {
   batch_no: string;
   talent_id: string;
   TXN_TotSaleAmt: number;          // 修正欄位名稱
+  isClose: string;                 // 是否已關帳
   details?: any[];  // 展開的詳細資料
 }
 

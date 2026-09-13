@@ -30,6 +30,7 @@ export interface TLS24010Data {
   TXN_Status: string; // 交易狀態
   TXN_Remark: string; // 備註
   TXN_Mode: string; // 交易型態
+  TXN_Type?: string; // 交易型態代碼 (01:銷貨 02:退貨 03:作廢)
   USR_No: string; // 操作員編號
   TXN_PreOrder: string,
   TXN_VIP: string,

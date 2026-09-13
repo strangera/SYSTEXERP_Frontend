@@ -135,7 +135,7 @@
               [TLT_Name]="TLT_Name" [store_way]="store_way" [talent_id]="talent_id"
               [TXN_Date]="this.dataForm.controls.TXN_Date.value" [TLT_No]="this.dataForm.get('TLT_No')?.value"
               [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable"
-              [type]="type" (totalChange)="onProductTotalChange($event)"></app-tls24010-pos5007>
+              [type]="type" (totalChange)="onProductTotalChange()"></app-tls24010-pos5007>
           </div>
         }
         @if (type !== EDIT_TYPES.PAY_NO) {
