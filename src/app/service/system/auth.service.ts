@@ -113,7 +113,8 @@ export class AuthService {
         const updatedUserInfo: UserInfo = {
           ...userInfo,
           client_ip: this.client_ip,
-          mid: Number(userInfo.mid)
+          mid: Number(userInfo.mid),
+          loginTime: new Date().toISOString()
         };
         localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
         sessionStorage.removeItem('SSO_LOGOUT');
