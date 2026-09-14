@@ -702,58 +702,52 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }
 
 
-  // =====================================================
-  // A ~ I 摘要設定
-  // =====================================================
+ // =====================================================
+// A ~ J 摘要設定
+// =====================================================
 
-  private readonly SUMMARY_CONFIG = [
-
-    {
-      key: 'A',
-      label: '(A)發票金額'
-    },
-
-    {
-      key: 'B',
-      label: '(B)已開發票的支付工具'
-    },
-
-    {
-      key: 'C',
-      label: '(C)已開發票的支付工具溢收'
-    },
-
-    {
-      key: 'D',
-      label: '(D)訂金'
-    },
-
-    {
-      key: 'E',
-      label: '(E)訂金結帳全額'
-    },
-
-    {
-      key: 'F',
-      label: '(F)訂金結帳的訂金'
-    },
-
-    {
-      key: 'G',
-      label: '(G)預售'
-    },
-
-    {
-      key: 'H',
-      label: '(H)預售結帳金額'
-    },
-
-    {
-      key: 'I',
-      label: '(I)非開業主發票業績金額'
-    },
-
-  ];
+private readonly SUMMARY_CONFIG = [
+  {
+    key: 'A',
+    label: '(A)發票金額'
+  },
+  {
+    key: 'B',
+    label: '(B)已開發票的支付工具'
+  },
+  {
+    key: 'C',
+    label: '(C)已開發票的支付工具溢收'
+  },
+  {
+    key: 'D',
+    label: '(D)訂金'
+  },
+  {
+    key: 'E',
+    label: '(E)訂金結帳全額'
+  },
+  {
+    key: 'F',
+    label: '(F)訂金結帳的訂金'
+  },
+  {
+    key: 'G',
+    label: '(G)預售'
+  },
+  {
+    key: 'H',
+    label: '(H)預售結帳金額'
+  },
+  {
+    key: 'I',
+    label: '(I)非開業主發票業績金額'
+  },
+  {
+    key: 'J',
+    label: '(J)已開發票的支付工具找零'
+  }
+];
 
 
   // =====================================================
@@ -787,7 +781,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     }
 
 
-    // 查詢 A ~ I
+    // 查詢 A ~ J
     this.tls23010Service
       .queryOtherData(req)
       .pipe(
@@ -802,205 +796,121 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }
 
 
-  /**
-   * =====================================================
-   * A ~ I 核心計算
-   * =====================================================
-   *
-   * 折扣別(專櫃業績)
-   * = A + B - C + E - G + H + I
-   *
-   * 付款別(支付工具)
-   * = A + B + D - F + I
-   *
-   */
-  private processSummaryData(
-    apiData: any
-  ): void {
+  private processSummaryData(apiData: any): void {
 
-    const values:
-      Record<string, number> = {};
+  const values: Record<string, number> = {};
 
+  // ===================================================
+  // 取得 A ~ J
+  // ===================================================
 
-    // ===================================================
-    // 取得 A ~ I
-    // ===================================================
+  this.SUMMARY_CONFIG.forEach(({ key }) => {
 
-    this.SUMMARY_CONFIG
-      .forEach(({ key }) => {
+    // queryOtherData API 有回資料
+    if (apiData) {
 
-        // ===============================================
-        // queryOtherData API 有回資料
-        // ===============================================
+      values[key] = Number(apiData[key] ?? 0);
 
-        if (apiData) {
+      return;
+    }
 
-          values[key] =
-            Number(
-              apiData[key] ?? 0
-            );
+    // API 無資料時的前端備援計算
+    const fieldMap: Record<string, string> = {
 
-          return;
+      A: 'TXN_TotGUI',
 
-        }
+      B: 'TXN_TotPayAmt',
 
+      C: 'TXN_TotOver',
 
-        // ===============================================
-        // API 無資料時的前端備援計算
-        // ===============================================
+      D: 'TXN_Deposit',
 
-        const fieldMap:
-          Record<string, string> = {
+      E: 'TXN_DepositSettle',
 
-            A:
-              'TXN_TotGUI',
+      F: 'TXN_DepositUsed',
 
-            B:
-              'TXN_TotPayAmt',
+      G: 'TXN_TotDisc',
 
-            C:
-              'TXN_TotOver',
+      H: this.getSum('TXN_PresaleSettle')
+        ? 'TXN_PresaleSettle'
+        : 'TXN_TaxFreeCertNo'
+    };
 
-            D:
-              'TXN_Deposit',
+    /*
+     * I = 非開業主發票業績金額
+     * J = 已開發票的支付工具找零
+     *
+     * 目前 I、J 都由 queryOtherData API 提供。
+     * 如果 API 沒有資料，前端備援先當成 0。
+     */
+    if (key === 'I' || key === 'J') {
 
-            E:
-              'TXN_DepositSettle',
+      values[key] = 0;
 
-            F:
-              'TXN_DepositUsed',
+      return;
+    }
 
-            G:
-              'TXN_TotDisc',
+    const field = fieldMap[key];
 
-            H:
-              this.getSum(
-                'TXN_PresaleSettle'
-              )
-                ? 'TXN_PresaleSettle'
-                : 'TXN_TaxFreeCertNo',
+    values[key] =
+      (this.data ?? []).reduce(
+        (sum, row: any) =>
+          sum + (Number(row?.[field]) || 0),
+        0
+      );
+  });
 
-            /*
-             * I = 非開業主發票業績金額
-             *
-             * 目前你的明細資料沒有提供
-             * I 對應的實際欄位名稱，
-             * 因此 I 主要使用 queryOtherData API 回傳值。
-             *
-             * API 無資料時，I 先視為 0。
-             */
 
-          };
+  // ===================================================
+  // 折扣別（專櫃業績）
+  //
+  // A + B - C + E - G + H + I - J
+  // ===================================================
 
+  const disc =
+    values['A']
+    + values['B']
+    - values['C']
+    + values['E']
+    - values['G']
+    + values['H']
+    + values['I']
+    - values['J'];
 
-        // I 沒有前端對應明細欄位
-        if (key === 'I') {
 
-          values[key] = 0;
+  // ===================================================
+  // 付款別（支付工具）
+  //
+  // A + B + D - F + I - J
+  // ===================================================
 
-          return;
+  const pay =
+    values['A']
+    + values['B']
+    + values['D']
+    - values['F']
+    + values['I']
+    - values['J'];
 
-        }
 
+  // ===================================================
+  // 顯示內容
+  // ===================================================
 
-        const field =
-          fieldMap[key];
+  this.pdfSummary = [
 
+    ...this.SUMMARY_CONFIG.map(
+      ({ key, label }) =>
+        `${label} =\t${values[key].toLocaleString()}`
+    ),
 
-        values[key] =
-          (this.data ?? [])
-            .reduce(
+    '====================================================',
 
-              (
-                sum,
-                row: any
-              ) =>
+    `折扣別(專櫃業績) = (A)+(B)-(C)+(E)-(G)+(H)+(I)-(J) =\t${disc.toLocaleString()}`,
 
-                sum
-                +
-                (
-                  Number(
-                    row?.[field]
-                  )
-                  || 0
-                ),
-
-              0
-
-            );
-
-      });
-
-
-    // ===================================================
-    // 折扣別（專櫃業績）
-    //
-    // A + B - C + E - G + H + I
-    // ===================================================
-
-    const disc =
-
-      values['A']
-
-      + values['B']
-
-      - values['C']
-
-      + values['E']
-
-      - values['G']
-
-      + values['H']
-
-      + values['I'];
-
-
-    // ===================================================
-    // 付款別（支付工具）
-    //
-    // A + B + D - F + I
-    // ===================================================
-
-    const pay =
-
-      values['A']
-
-      + values['B']
-
-      + values['D']
-
-      - values['F']
-
-      + values['I'];
-
-
-    // ===================================================
-    // 顯示內容
-    // ===================================================
-
-    this.pdfSummary = [
-
-      ...this.SUMMARY_CONFIG
-        .map(
-
-          ({ key, label }) =>
-
-            `${label} =\t${values[key].toLocaleString()}`
-
-        ),
-
-
-      '====================================================',
-
-
-      `折扣別(專櫃業績) = (A)+(B)-(C)+(E)-(G)+(H)+(I) =\t${disc.toLocaleString()}`,
-
-
-      `付款別(支付工具) = (A)+(B)+(D)-(F)+(I) =\t${pay.toLocaleString()}`
-
-    ];
-
-  }
+    `付款別(支付工具) = (A)+(B)+(D)-(F)+(I)-(J) =\t${pay.toLocaleString()}`
+  ];
+}
 
 
   // =====================================================
