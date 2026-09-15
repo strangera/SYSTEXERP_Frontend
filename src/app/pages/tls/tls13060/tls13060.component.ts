@@ -63,7 +63,7 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
     rece_yn: [null], // 是否開立業主發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
