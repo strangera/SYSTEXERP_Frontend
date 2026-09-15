@@ -79,7 +79,6 @@
     [showManage]="false"
     [showDelete]="false"
     [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryTLS13060Fn"
-    (dataChange)="data = $event">
+    [queryFunction]="tLS13060Service.queryTLS13060.bind(tLS13060Service)">
   </app-table-report>
 </div>

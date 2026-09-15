@@ -71,7 +71,6 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   data: TLS13060ResponseItem[] = [];
   columns: Column[] = TLTTALENT_columns;
   lastQueryBody: TLS13060QueryRequest | null = null;
-  queryTLS13060Fn = (body: TLS13060QueryRequest) => this.tLS13060Service.queryTLS13060(body);
   vandorCategoryOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   tlt_nocationOptions = this.dropdown.queryTltTalent();
   locationOptions = this.dropdown.queryPos2002();
