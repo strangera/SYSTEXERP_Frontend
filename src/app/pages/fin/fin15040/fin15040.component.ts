@@ -57,7 +57,10 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     TXN_Date_S: [null],                                     // 發票日期起
     TXN_Date_E: [null],                                     // 發票日期訖
     PUR_VoucherType: [null],                                // 發票格式
-    GUI_Track: [null],                                      // 字軌
+    GUI_Track: ['', [
+      Validators.maxLength(2),
+      Validators.pattern(/^[A-Za-z]{0,2}$/)
+    ]], // 字軌，只能輸入 2 碼英文                                    // 字軌
     INV_GUINumber_S: ['', [Validators.maxLength(8)]],       // 發票號碼起
     INV_GUINumber_E: ['', [Validators.maxLength(8)]],       // 發票號碼訖
     INV_YM1_S: [''],                                      // 資料所屬年月起
@@ -171,6 +174,20 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     const defaultYM = this.datePipe.transform(currentDate, 'yyyyMM') ?? '';
     this.queryForm.get('INV_YM2_S')?.setValue(defaultYM);
     this.queryForm.get('INV_YM2_E')?.setValue(defaultYM);
+    this.queryForm.controls.GUI_Track.valueChanges.subscribe(value => {
+      if (value) {
+        const formattedValue = value
+          .replace(/[^A-Za-z]/g, '') // 只留英文
+          .slice(0, 2)               // 最多兩碼
+          .toUpperCase();            // 自動轉大寫
+
+        if (value !== formattedValue) {
+          this.queryForm.controls.GUI_Track.setValue(formattedValue, {
+            emitEvent: false
+          });
+        }
+      }
+    });
   }
 
   onSubmit(frm: FormGroup): void {
