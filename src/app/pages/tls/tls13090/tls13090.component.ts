@@ -3,8 +3,9 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
+import { TooltipModule } from 'primeng/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
@@ -32,8 +33,9 @@ import { ContractItem } from '../tls13020/components/query/query.component';
     FormsModule,
     ReactiveFormsModule,
     AccordionModule,
+    ButtonModule,
     DialogModule,
-    DropdownModule,
+    TooltipModule,
     TranslateModule,
     MenubarComponent,
     ButtonComponent,
@@ -46,7 +48,7 @@ import { ContractItem } from '../tls13020/components/query/query.component';
   ]
 })
 export class TLS13090Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
-  private readonly apiService = inject(TLS13010Service);
+  protected readonly apiService = inject(TLS13010Service);
   private readonly sharedDropdownService = inject(SharedDropdownService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -65,7 +67,6 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_floor: [null as string | null],
     contact_USR_No: [[] as string[]],
     org_id: [null as string | null],
-    comm_comp_type: [[] as string[]],
     feedback_date_from: [null as Date | null],
     feedback_date_to: [null as Date | null],
     due_date_from: [null as Date | null],
@@ -81,15 +82,15 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_contract_bdate_to: [null as Date | null],
     tlt_contract_edate_from: [null as Date | null],
     tlt_contract_edate_to: [null as Date | null],
-    tlt_kindList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    pageSize: [1000],
+    pageSize: [500],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
 
   data: ContractItem[] = [];
   totalRecords = 0;
+  lastQueryBody: Record<string, unknown> | null = null;
   selectedItems: ContractItem[] = [];
 
   private readonly formatDate = (value: string): string =>
@@ -127,13 +128,13 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
   businessTypeOptions: DropdownOption[] = [];
 
   get approvalStatusOptions() { return this.sharedDropdownService.approveStatusOptions; }
-  get counterTypeOptions() { return this.sharedDropdownService.tltKindOptions; }
-  get calculationMethodOptions() { return this.sharedDropdownService.commCompTypeOptions; }
   readonly openFlagOptions = getSYS1000Options('tlt_openflag');
 
   // === 批次更新對話框 ===
   showBatchOrgDialog = false;
-  selectedOrgId: string | null = null;
+  dialogForm = this.formBuilder.group({
+    org_id: [null as string | null, [Validators.required]],
+  });
 
   override ngOnInit(): void {
     this.initializePage('TLS13090', undefined, this.queryForm, (form) => this.onSubmit(form));
@@ -168,6 +169,7 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
         if (res.Status === '0000') {
           this.data = res.Data || [];
           this.totalRecords = res.TotalCount || this.data.length;
+          this.lastQueryBody = payload;
           this.selectedItems = [];
           this.queryStateService.setQueryState(this.ProgNo, form.value);
           if (this.data.length === 0) this.messageService.infoBubble('查詢無資料');
@@ -179,17 +181,18 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   onBatchUpdateOrg(): void {
-    this.selectedOrgId = null;
+    this.dialogForm.reset();
     this.showBatchOrgDialog = true;
   }
 
   confirmBatchUpdateOrg(): void {
-    if (!this.selectedOrgId) {
+    const orgId = this.dialogForm.value.org_id;
+    if (!orgId) {
       this.messageService.warnBubble('請選擇組織代號');
       return;
     }
     const talentIds = this.selectedItems.map(item => String(item.id));
-    this.apiService.updateOrgIdBatch(talentIds, this.selectedOrgId).pipe(
+    this.apiService.updateOrgIdBatch(talentIds, orgId).pipe(
       this.withLoading(),
       takeUntilDestroyed(this.destroyRef),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
