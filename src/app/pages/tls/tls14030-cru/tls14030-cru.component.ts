@@ -69,7 +69,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
-    VEN_No: [null as string | null, [Validators.required]], // 廠商編號 下拉選擇
+    VEN_No: [{ value: null as string | null, disabled: true }], // 廠商編號 自動帶入，不可手改
 
     ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
@@ -153,7 +153,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   }
 
   onDialogRowSelect(row: TLTTALENT): void {
-    this.dataForm.patchValue({ talent_id: Number(row.No) });
+    this.dataForm.patchValue({ talent_id: Number(row.No) }, { emitEvent: false });
     this.onTalentSelected(row);
     this.searchDialogVisible = false;
   }
@@ -229,8 +229,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       tlt_no: data.tlt_no || '',
       ticket_amount: ticketAmount,
     };
-    // 只有 API 有回傳 VEN_No 才帶入，避免 edit 模式 ticket_type 切換時誤清
-    if (data.VEN_No != null) patch['VEN_No'] = data.VEN_No;
+    // undefined 表示來源（loadTLTTALENTDetail）根本沒回傳此欄位，不要動現有值
+    if (data.VEN_No !== undefined) patch['VEN_No'] = data.VEN_No;
 
     this.dataForm.patchValue(patch, { emitEvent: false });
 
