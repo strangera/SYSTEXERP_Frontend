@@ -102,8 +102,8 @@ export class Tls14030Service {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
   }
 
-  //查詢 專櫃主檔 編號(新版)
-  queryTLTTALENT_TLS14030_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_TLS14030_DropDownList`, body);
+  //查詢 專櫃主檔 編號(新版，含分頁，路由在 TLS14030Controller)
+  queryTalentDropDown(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTalentDropDown`, body);
   }
 }

@@ -1,12 +1,16 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/components/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { Column, createPaginationConfig } from '@others/component/table/table.model';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -17,21 +21,19 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Garantee_Ticket, Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
-interface TLTTALENTOption {
-  No: string;
-  Name: string;
-  contract_no: string;
-}
-
-// 專櫃下拉資訊
+// 對應後端 queryTalentDropDownResponse
 interface TLTTALENT {
-  talent_id: number,
-  ticket_remarks: string,
-  tlt_name: string,
-  tlt_no: string
-  open_fees: number, // 準時開業保證票
-  construct_fees: number, // 施工保證票
-  expiration_fees: number, // 契約屆滿
+  No: string,         // talent_id (string)
+  Name: string,       // tlt_name
+  Label: string,
+  tlt_no: string,
+  VEN_No?: string,
+  contract_no?: string,
+  contract_subno?: string,
+  open_fees: number,
+  construct_fees: number,
+  expiration_fees: number,
+  ticket_remarks?: string,
 }
 
 @Component({
@@ -50,7 +52,12 @@ interface TLTTALENT {
     InputNumberComponent,
     CalendarComponent,
     NgIf,
-    TranslateModule]
+    TranslateModule,
+    DialogModule,
+    TableModule,
+    InputTextModule,
+    ButtonModule,
+  ]
 })
 
 export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
@@ -58,11 +65,11 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [{ value: null, disabled: true }], // read only
-    talent_id: [, [Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
+    talent_id: [null as number | null, [Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
-    VEN_No: [null], // 廠商編號 下拉選擇
+    VEN_No: [null as string | null, [Validators.required]], // 廠商編號 下拉選擇
 
     ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
@@ -124,11 +131,40 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
-    { field: 'No', header: '合約編號', align: 'left' },
+    { field: 'contract_no', header: '合約編號', align: 'left' },
     { field: 'Name', header: '專櫃名稱' },
     { field: 'contract_subno', header: '版次' },
   ];
   opTotalRecords = 0;
+
+  // ── 選取合約 Dialog ──────────────────────────────────────────────
+  searchDialogVisible = false;
+  dialogKeyword = '';
+
+  openSearchDialog(): void {
+    this.searchDialogVisible = true;
+    this.opForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+    this.fetchTalentData(this.dialogKeyword);
+  }
+
+  onDialogSearch(): void {
+    this.opForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+    this.fetchTalentData(this.dialogKeyword);
+  }
+
+  onDialogRowSelect(row: TLTTALENT): void {
+    this.dataForm.patchValue({ talent_id: Number(row.No) });
+    this.onTalentSelected(row);
+    this.searchDialogVisible = false;
+  }
+
+  onDialogLazyLoad(event: TableLazyLoadEvent): void {
+    const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
+    const pageIndex = Math.floor((event.first ?? 0) / pageSize) + 1;
+    this.opForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
+    this.fetchTalentData(this.dialogKeyword);
+  }
+  // ────────────────────────────────────────────────────────────────
 
   // ----------------------------------------------------------------
   constructor(
@@ -187,12 +223,16 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       case '3': ticketAmount = data.expiration_fees ?? null; break;
     }
 
-    this.dataForm.patchValue({
+    const patch: Record<string, unknown> = {
       ticket_remarks: data.ticket_remarks || '',
-      tlt_name: data.tlt_name || '',
+      tlt_name: data.Name || '',
       tlt_no: data.tlt_no || '',
       ticket_amount: ticketAmount,
-    }, { emitEvent: false });
+    };
+    // 只有 API 有回傳 VEN_No 才帶入，避免 edit 模式 ticket_type 切換時誤清
+    if (data.VEN_No != null) patch['VEN_No'] = data.VEN_No;
+
+    this.dataForm.patchValue(patch, { emitEvent: false });
 
     console.log('applyTalentData', data);
   }
@@ -253,69 +293,49 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   // 讀取dropdown選項
   loadOptions() {
-    // ⭐ 初始化 Overlay Panel 的資料 (第一次展開時看到的內容)
-    this.fetchTalentData();
-
-    this.tls14030Service
-      .queryTLTTALENT_Status_DropDownList({ "approve_status": '2' }) //這支作業都固定帶已審核 (能選擇的tltid都已經審核)
-      .subscribe((response) => {
-        this.TLTTALENT_Option = response.Data.map((item: TLTTALENTOption) => ({
-          No: Number(item.No), // 確保是 number
-          Name: item.Name,
-          contract_no: item.contract_no,// 用戶顯示適用這個欄位，還是用talent_id，只是顯示是contract_no合約編號)
-          Label: item.contract_no + '-' + item.Name // 顯示合約編號+名稱
-        }));
-
-        // console.log('專櫃主檔(合約編號)明細:', response.Data);
-      });
-    //統一編號 下拉
+    // queryPOS2013_DropDownList 合併成一次呼叫，同時給統一編號篩選與廠商編號主欄位使用
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
-      //去除掉重複的統一編號，並且加上 Label 欄位
-      this.ven_uniformOption = response.Data
-        .filter((item: apiOption, index: number, self: apiOption[]) => {
-          return index === self.findIndex((t) => t.No === item.No);
-        })
-        .map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-      // console.log('統一編號:', response.Data);
-    });
-
-    //專櫃編號 下拉
-    this.tls14030Service
-      .queryTLTTALENT_DropDownList({})
-      .subscribe((response) => {
-        this.tlt_noListOption = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Label: item.No + '-' + item.Name,
-        }));
-
-        // console.log('專櫃編號:', response.Data);
-      });
-
-    // 廠商編號 下拉
-    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
-      this.VEN_No_Option = response.Data.map((item: any) => ({
+      const items = response.Data as { No: string; VEN_No: string; Name: string }[];
+      this.ven_uniformOption = items
+        .filter((item, i, self) => i === self.findIndex(t => t.No === item.No))
+        .map(item => ({ No: item.No, Name: item.Name, Label: `${item.No}-${item.Name}` }));
+      this.VEN_No_Option = items.map(item => ({
         No: item.VEN_No,
         Name: item.Name,
-        Label: item.VEN_No + '-' + item.Name,
+        Label: `${item.VEN_No}-${item.Name}`,
       }));
-      // console.log('廠商編號:', this.VEN_No_Option);
-    }
-    );
+    });
+
+    this.tls14030Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+        No: item.No,
+        Label: `${item.No}-${item.Name}`,
+      }));
+    });
+    // 注意：fetchTalentData() 不在 init 呼叫。
+    // dropdown-table 的 onFocusAndInitialLoad 會在使用者第一次聚焦時自動觸發 formValueChanged → onformValueChanged()
   }
 
   // Fallback：只有編輯模式改 ticket_type 且無快取時才呼叫
+  // getTLTTALENT 回傳欄位名與 TLTTALENT interface 不同，手動轉換
   private loadTLTTALENTDetail(talent_id: number) {
     if (!talent_id) return;
     this.tls14030Service.getTLTTALENT({ talent_id }).subscribe((response) => {
-      const data: TLTTALENT = response.Data;
-      if (!data) return;
+      const raw = response.Data;
+      if (!raw) return;
+      const data: TLTTALENT = {
+        No: String(raw.talent_id),
+        Name: raw.tlt_name ?? '',
+        Label: raw.tlt_no ?? '',
+        tlt_no: raw.tlt_no ?? '',
+        open_fees: raw.open_fees ?? 0,
+        construct_fees: raw.construct_fees ?? 0,
+        expiration_fees: raw.expiration_fees ?? 0,
+        ticket_remarks: raw.ticket_remarks,
+        // VEN_No 不帶入：edit 模式下表單已有值，避免 getTLTTALENT 未回傳時誤清
+      };
       this.lastTalentData = data;
       this.applyTalentData(data);
-      // console.log('fallback getTLTTALENT', data);
     });
   }
 
@@ -324,27 +344,19 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     this.opLoading = true;
 
     const formRaw = this.opForm.getRawValue();
-    // 建立符合 Postman 測試成功的參數格式
     const params = {
-      // 如果是從 AutoComplete 輸入的，通常對應 TLT_NO 或專櫃編號
-      TLT_NO: keyword || formRaw.TLT_NO || '',
+      keyword: keyword || '',          // AutoComplete 模糊搜尋（contract_no / tlt_no / tlt_name）
+      TLT_NO: formRaw.TLT_NO || '',   // 面板 dropdown 精確篩選
       ven_uniform: formRaw.ven_uniform || '',
-      pageSize: formRaw.pageSize || 10,
+      pageSize: formRaw.pageSize || 30,
       pageIndex: formRaw.pageIndex || 1,
-      // 排序欄位需確認後端是否支援 No，若不支援改用 TLT_NO
-      SortBy: formRaw.SortBy || [{ field: 'TLT_NO', order: 1 }]
+      SortBy: [{ field: 'contract_subno', order: -1 }],
     };
 
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(params)
+    this.tls14030Service.queryTalentDropDown(params)
       .subscribe({
         next: (results: any) => {
-          // 確保 Data 轉型正確
-          const data = (results['Data'] ?? []).map((item: any) => ({
-            ...item,
-            // 這裡要對應 optionValue="No" 和 optionLabel="Label"
-            No: item.No || item.talent_id,
-            Label: item.Label || `${item.No}-${item.Name}`
-          }));
+          const data = (results['Data'] ?? []) as TLTTALENT[];
 
           // console.log('⭐fetchTalentData 取得的資料:', data);
 
@@ -367,7 +379,11 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   }
 
   onformValueChanged(event: any) {
-    // 當 Overlay Panel 裡的 input 輸入時觸發
+    this.fetchTalentData();
+  }
+
+  onLazyLoad(event: { pageIndex: number; pageSize: number }) {
+    this.opForm.patchValue({ pageIndex: event.pageIndex, pageSize: event.pageSize }, { emitEvent: false });
     this.fetchTalentData();
   }
 }

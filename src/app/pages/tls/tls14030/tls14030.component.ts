@@ -354,7 +354,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
       pageIndex: 1,
       SortBy: [{ field: 'TLT_NO', order: 1 }],
     }
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+    this.tls14030Service.queryTalentDropDown(body).pipe(untilDestroyed(this)).subscribe((results) => {
       // 關鍵修正：將資料加工處理，加上 Label 欄位
       this.suggestions = results.Data.map((item: any) => ({
         ...item,
@@ -369,7 +369,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
       TLT_NO: event.TLT_NO || '',
       ven_uniform: event.ven_uniform || '',
     };
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+    this.tls14030Service.queryTalentDropDown(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.opData = [...results.Data]; // 更新data資料
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
