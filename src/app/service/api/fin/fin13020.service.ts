@@ -52,17 +52,16 @@ queryFIN13100ByVoucherNo(voucherNo: string) {
     VouNoEnd: voucherNo,
   });
 }
-  // ✅ 依「字軌+號碼」查對應資訊（預設 Source=APS）
+  // Source 不傳時後端不過濾，APS + POS 都查
   queryCorrespondByGUINoCorrespond(param: {
     InvoiceNumber_Correspond: string;
     Source?: 'APS' | 'POS' | string;
   }) {
+    const body: Record<string, unknown> = { InvoiceNumber_Correspond: param.InvoiceNumber_Correspond };
+    if (param.Source) body['Source'] = param.Source;
     return this.http.post<any>(
       `${this.apiUrl}/FIN0000/INV1000/queryFIN13020_Correspond`,
-      {
-        Source: 'APS',
-        ...param,
-      },
+      body,
     );
   }
 

@@ -400,6 +400,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
    * 共用：把 API 回來的資料套進畫面
    */
   private applyInvoiceDto(dto: any, track: string, no: string): void {
+    // 確保 Source 從 API 回來時同步更新，不管使用者是 dialog 選取還是手動輸入
+    if (dto.Source) {
+      this.currentInvoiceSource = dto.Source;
+    }
+
     const invoiceType = String(dto.InvoiceType ?? '');
     let voucherType = invoiceType;
     if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
