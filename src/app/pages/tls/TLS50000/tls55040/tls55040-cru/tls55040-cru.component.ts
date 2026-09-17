@@ -32,7 +32,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     OTA_No: [{ value: null as string | null, disabled: true }],
     VEN_No: [null as string | null, [Validators.required]],
     ACP_YYYYMM: [null as Date | null, [Validators.required]],
-    PUR_Uniform: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    PUR_Uniform: [{ value: null as string | null, disabled: true }],
     VEN_PayConditionDay: [null as number | null, [Validators.required]],
     ACP_PayDate: [{ value: null as Date | null, disabled: true }, [Validators.required]],
     TABTYPE: ['0' as string | null, [Validators.required]],
@@ -144,7 +144,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
           const venData = venRes.Data[0];
           if (venData) {
             this.dataForm.patchValue({
-              PUR_Uniform: venData.VEN_Uniform,
               VEN_PayConditionDay: venData.VEN_PayConditionDay,
             });
           }
@@ -276,7 +275,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   onVenSelect(selectedData: Tls55040VenData): void {
     if (!selectedData || !selectedData.VEN_No || !selectedData.VEN_PayConditionDay) return;
     this.dataForm.patchValue({
-      PUR_Uniform: selectedData.VEN_Uniform,
       VEN_PayConditionDay: selectedData.VEN_PayConditionDay,
     });
     const acpYearMonth = this.dataForm.controls.ACP_YYYYMM.value;

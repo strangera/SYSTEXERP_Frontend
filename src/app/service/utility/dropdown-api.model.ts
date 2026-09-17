@@ -539,6 +539,26 @@ export interface TLTTALENTActiveContractItem extends IDropdownItem {
 }
 
 /**
+ * 查詢 TLTTALENT_ContractHistory_DropDownList 的請求 body（可選填，不填回傳全部）
+ */
+export interface TalentContractHistoryQuery {
+  DateFrom?: string | null;
+  DateTo?: string | null;
+}
+
+/**
+ * 查詢 TLTTALENT_ContractHistory_DropDownList 回傳的項目型別
+ * 含歷史合約，同一 tlt_no 可能有多筆(不同 talent_id 合約)，不做去重
+ */
+export interface TalentContractHistoryItem {
+  talent_id: number;
+  tlt_no: string;
+  tlt_name: string;
+  tlt_bdate: string | null;
+  tlt_edate: string | null;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
@@ -919,4 +939,6 @@ export interface Pos1002FilteredItem {
 /** 查詢商品管理編號(ASS11040)下拉選單回傳項目 */
 export interface Ass11040DropDownItem extends IDropdownItem {
   MaterialType?: string; // 或是 MATERIAL_TYPE，與後端 JSON 大小寫一致
+  B_CLASS_ID?: string; // 大分類代碼，供查詢 ASS11090 中分類會計科目設定用
+  M_CLASS_ID?: string; // 中分類代碼，供查詢 ASS11090 中分類會計科目設定用
 }

@@ -65,6 +65,7 @@ export interface ITalentOption extends IDropdownItem {
   org_id: string;
   contract_no?: string;
   contract_subno?: string;
+  apply_no?: string;
   tlt_contract_bdate?: string | null;
   tlt_contract_edate?: string | null;
 }

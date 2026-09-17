@@ -94,7 +94,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   btnLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'No', header: '序號', visible: true },
+   
     { field: 'INV_Remark', header: '退出/折讓單號', visible: true },
     { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },

@@ -119,19 +119,10 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
       onFocus: (_rowData, _value, _col, index) => this.openAssetDialog(index),
     },
     {
-      field: 'UNIT',
-      header: '商品單位',
-      type: 'dropdown',
-      optionLabel: 'label',
-      optionValue: 'value',
-      options: () => this.unitOptions,
-      validate: [validateRequired],
-    },
-    {
-      field: 'QTY',
-      header: '數量',
-      type: 'inputNumber',
-      validate: [validateRequired],
+      field: 'ASSET_NAME',
+      header: '資產名稱',
+      type: 'input',
+      disabled: () => true,
     },
     {
       field: 'BUY_AMT',
@@ -415,6 +406,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   private mapApiDetailsToTable(details: QueryDetailASS13040DetailData[]): ASS13040DetailItem[] {
     return details.map(d => ({
       ITEM_NO: d.GOODS_ID ?? undefined,
+      ASSET_NAME: d.GOODS_NAME ?? undefined,
       UNIT: d.GOODS_UNIT ?? undefined,
       QTY: d.QTY ?? undefined,
       BUY_AMT: d.GOODS_COST ?? d.SUBCOST ?? undefined,
@@ -427,6 +419,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   private mapAssetToDetail(row: ASS13040AssetQueryRow): ASS13040DetailItem {
     return {
       ITEM_NO: row.ASSET_ID ?? '',
+      ASSET_NAME: row.AssetName ?? undefined,
       UNIT: row.Unit ?? undefined,
       QTY: 1,
       BUY_AMT: row.PurchaseAmt ?? 0,

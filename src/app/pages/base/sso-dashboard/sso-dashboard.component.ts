@@ -1,6 +1,5 @@
 import { AsyncPipe, LocationStrategy, NgFor, NgIf } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,20 +8,16 @@ import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
-import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
-import { PasswordModule } from 'primeng/password';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
 import { concatMap, finalize, Subscription } from 'rxjs'; // 引入 tap
 import { environment } from 'src/environments/environment';
 import { LayoutService } from '../../../core/layout/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { UserCodeService } from '../../../service/system/user-code.service';
+import { ChangePasswordComponent } from '../../../shared/biz-components/change-password/change-password.component';
 import { NotificationService } from '../../../shared/components/notification-message/notification.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { EncryptionService } from '../../../shared/service/encryption.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { ApiItem, ERP_SYSTEM_ID, SsoDashboardService } from './sso-dashboard.service';
 @UntilDestroy()
 @Component({
@@ -40,21 +35,14 @@ import { ApiItem, ERP_SYSTEM_ID, SsoDashboardService } from './sso-dashboard.ser
     CardModule,
     Button,
     DialogModule,
-    FormsModule,
-    ReactiveFormsModule,
-    PasswordModule,
-    DividerModule,
     AsyncPipe,
     TranslateModule,
+    ChangePasswordComponent,
   ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy {
   private readonly ssoDashboardService = inject(SsoDashboardService);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly encryptionService = inject(EncryptionService);
   private readonly messageService = inject(NotificationService);
-  private readonly userCodeService = inject(UserCodeService);
-  private readonly validationService = inject(ValidationService);
   private readonly locationStrategy = inject(LocationStrategy);
   private readonly systemDataService = inject(SystemDataService);
   public layoutService = inject(LayoutService);
@@ -73,8 +61,6 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
         {
           label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => {
             this.visible = true;
-            this.form.reset();
-            this.form.markAsPristine();
           }
         },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() },
@@ -85,7 +71,6 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
         this.user = x;
-        if (this.user) this.form.patchValue({ code: this.user.user_No });
       }),
     );
   }
@@ -100,7 +85,6 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
       this.messageService.warnBubble('為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。', '建議您定期更換密碼');
       this.visible = true;
       this.noClose = true; // 禁用關閉，強制用戶修改密碼
-      this.form.patchValue({ code: userInfo.user_No }); // 設置 user_No 到表單
     }
   }
   fetchUrlList(): void {
@@ -170,34 +154,9 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
   }
   // ======================= 修改密碼 =======================
   public visible = false;
-  public formButtonLoading = false;
   public noClose = false;
   public loading = true;
-  public strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,8}$';
-  public form = this.formBuilder.group({
-    code: [{ value: '', disabled: true }],
-    oldPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
-    confirmPassword: ['', [Validators.required]],
-  }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
 
-  onSubmit(frm: FormGroup): void {
-    frm.markAllAsTouched();
-    if (!frm.valid) return;
-    this.formButtonLoading = true;
-    const query = {
-      User_No: this.user?.user_No || '',
-      Old_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.oldPassword),
-      New_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.newPassword),
-      PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-    this.subscriptions.push(
-      this.userCodeService.changePassword(query).pipe(untilDestroyed(this), finalize(() => this.formButtonLoading = false)).subscribe((response) => {
-        this.messageService.successBubble(response?.Message, '更新成功');
-        this.authService.logout();
-      })
-    );
-  }
   ngOnDestroy(): void {
     for (const sub of this.subscriptions) {
       sub.unsubscribe();

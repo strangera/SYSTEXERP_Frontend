@@ -28,6 +28,24 @@ interface EARLY_TERMINATION_TLS13010Request {
   tlt_contract_edate: string; // YYYY-MM-DD
 }
 
+export interface EarlyTerminationPreviewItem {
+  Description?: string;
+  StartDate: string;
+  OriginalEndDate: string;
+  NewEndDate?: string;
+}
+
+export interface EarlyTerminationPreview {
+  NewEdate: string;
+  Location: { ToUpdate: Array<{ LocationNo?: string; OriginalEdate: string; NewEdate: string }> };
+  Fare: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+  Charged: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+  Rent: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+  Limit: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+  Level: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+  YearCharged: { ToUpdate: EarlyTerminationPreviewItem[]; ToDelete: EarlyTerminationPreviewItem[] };
+}
+
 interface TLS13010CommissionRequest {
   TalentId: string;
   CurrentTltTermType: string;
@@ -265,6 +283,13 @@ export class TLS13010Service {
     );
   }
 
+  /** 提前撤櫃預覽 */
+  earlyTerminationPreviewTLS13010(request: EARLY_TERMINATION_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/earlyTerminationPreviewTLS13010`, request).pipe(
+      tap((res) => console.log('提前撤櫃預覽結果:', res)),
+    );
+  }
+
   /** 提前撤櫃 */
   earlyTerminationTLS13010(request: EARLY_TERMINATION_TLS13010Request) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/earlyTerminationTLS13010`, request).pipe(
@@ -377,6 +402,14 @@ export class TLS13010Service {
       tap((res) => console.log('[queryTLTALENTList] 結果:', res)),
       catchError(this.errorHandler.handleError)
     );
+  }
+
+  /** 批次更新多筆合約的組織編號（連動 TLTTALENT_FARE） */
+  updateOrgIdBatch(talentIds: string[], orgId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/updateOrgIdBatch`, {
+      talentIds: talentIds.map(Number),
+      orgId
+    });
   }
 
   /**

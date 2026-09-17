@@ -506,6 +506,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
           this.locationData.forEach(loc => {
             if (loc._status !== 'deleted') {
               loc.tlt_bdate = contractStart;
+              if (loc._status === 'original') loc._status = 'modified';
               changed = true;
             }
           });
@@ -527,6 +528,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
           this.locationData.forEach(loc => {
             if (loc._status !== 'deleted') {
               loc.tlt_edate = contractEnd;
+              if (loc._status === 'original') loc._status = 'modified';
               changed = true;
             }
           });

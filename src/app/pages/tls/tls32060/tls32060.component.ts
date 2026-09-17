@@ -7,6 +7,8 @@ import { formatAmount, formatPercentage } from '@others/component/table/table.mo
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { TLS32060Request, TLS32060Response, TLS32060Service } from '@service/api/tls/tls32060.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
@@ -166,10 +168,10 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'BusClassName', header: '中分類名稱', visible: true, align: 'left' },
     { field: 'BusSClass', header: '小分類代碼', visible: true, align: 'left' },
     { field: 'BusSClassName', header: '小分類名稱', visible: true, align: 'left' },
-    { field: 'TltNo', header: '櫃號', visible: true, align: 'left' },
+    { field: 'TltNo', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'TltName', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'TltKindName', header: '櫃別名稱', visible: true, align: 'left' },
-    { field: 'LocationNo', header: '代表位置', visible: true, align: 'left' },
+    { field: 'LocationNo', header: '位置編號', visible: true, align: 'left' },
 
     // ================= 本期 Group =================
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
@@ -242,7 +244,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
   bus_class_Option: IDropdownItem[] = [];
   bus_sclass_Option: IDropdownItem[] = [];
   org_id_Option: IDropdownItem[] = [];
-  tlt_no_id_Option: IDropdownItem[] = [];
+  tlt_no_id_Option: Option[] = [];
 
   btnPDFLoading = false;
   btnExcelLoading = false;
@@ -250,6 +252,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     public readonly tls32060Service: TLS32060Service,
     private readonly tls26050Service: TLS26050Service,
     private readonly datePipe: DatePipe,
@@ -288,8 +291,8 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.tlt_building_Option = res.Data; });
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.tlt_floor_Option = res.Data; });
     this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.area_no_Option = res.Data; });
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_no_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    this.dropdownApiService.queryTltTalentContractHistory().pipe(untilDestroyed(this)).subscribe(options => {
+      this.tlt_no_id_Option = options || [];
     });
 
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
@@ -370,6 +373,14 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => { this.setColumns(); });
   }
 
+  // 把勾選到的talent_id(下拉每筆合約獨立選項)對照本次下拉結果換算回對應tlt_no並去重
+  private mapTalentIdsToTltNoList(talentIds: number[]): string {
+    const tltNos = (talentIds || [])
+      .map(talentId => this.tlt_no_id_Option.find(opt => opt.value === talentId)?.['tlt_no'])
+      .filter((tltNo): tltNo is string => !!tltNo);
+    return Array.from(new Set(tltNos)).join(',');
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = {
@@ -385,7 +396,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
         BusSClassList: (frm.getRawValue().BusSClassList || []).map((item: any) => ({ BusType: item.bus_type ?? '', BusClass: item.CAT_MNo ?? '', BusSClass: item.No ?? '' })),
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
         OrgList: (frm.getRawValue().OrgList || []).join(','),
-        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TltNoList: this.mapTalentIdsToTltNoList(frm.getRawValue().TltNoList || []),
         TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
         BuildingList: (frm.getRawValue().BuildingList || []).join(','),
         PreSale: frm.getRawValue().PreSale,           // 帶入 PreSale 狀態
@@ -427,7 +438,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
       BusSClassList: (frm.getRawValue().BusSClassList || []).map((item: any) => ({ BusType: item.bus_type ?? '', BusClass: item.CAT_MNo ?? '', BusSClass: item.No ?? '' })),
       TltKindList: (frm.getRawValue().TltKindList || []).join(','),
       OrgList: (frm.getRawValue().OrgList || []).join(','),
-      TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+      TltNoList: this.mapTalentIdsToTltNoList(frm.getRawValue().TltNoList || []),
       TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
       BuildingList: (frm.getRawValue().BuildingList || []).join(','),
       PreSale: frm.getRawValue().PreSale,           // 帶入 PreSale 狀態

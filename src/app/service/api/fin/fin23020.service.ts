@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Option } from '@service/utility/dropdown-api.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable, of, shareReplay } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 /** 查詢可拋轉暫付款申請清單 Request (對應 SP_FIN23020Query) */
@@ -70,12 +71,14 @@ export interface DetailFIN23020Response {
 
 /**
  * 確定拋轉 Request (對應 SP_FIN23020Posting)
- * 查詢頁多選拋轉只會帶 id(勾選列的 rowData)，其餘欄位由後端 Service 帶入預設值，
- * 這裡保留為可選只是讓未來若有「單筆客製化拋轉」的畫面時可以覆蓋預設值。
+ * 支援多筆合併成一張傳票：ids 傳入所有選取的暫付款 id。
+ * DebitAccNo / CreditAccNo 為後端必填，由畫面確認後傳入。
+ * DebitOrgId/CreditOrgId/DebitOffsetNo 後端已改用 APS3010.CostOrg / 自動立沖 PTA，僅保留相容。
  */
 export interface PostingFIN23020Request {
-  id: number;
-  CreditAccNo?: string | null;
+  ids: number[];
+  DebitAccNo: string;
+  CreditAccNo: string;
   DebitSummary?: string | null;
   CreditSummary?: string | null;
   DebitOrgId?: string | null;
@@ -91,6 +94,18 @@ export interface PostingFIN23020Response {
   Success: boolean;
   Message: string;
   VouNo?: string | null;
+}
+
+/**
+ * 會計科目下拉(GLS1005 FIN23020 專用)。
+ * 沿用 fin53010Service.queryGls1005Fin53010() 的作法：
+ * 帶出 AccDC(借貸方屬性 D:借方 C:貸方)供前端判斷開放借方/貸方金額欄位，
+ * 不共用 DropdownApiService.queryGls1005_ledgerMD()(該下拉多處共用，不帶 AccDC)。
+ */
+export interface Gls1005Fin23020DropdownItem {
+  AccNo: string;
+  AccCName: string;
+  AccDC: string;
 }
 
 @Injectable({
@@ -123,5 +138,31 @@ export class Fin23020Service {
       `${this.apiUrl}/FIN0000/APS1000/postingFIN23020`,
       body
     );
+  }
+
+  /** 查詢會計科目(GLS1005 FIN23020 專用下拉，含 AccDC 借貸方屬性) */
+  queryGls1005Fin23020(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<Gls1005Fin23020DropdownItem[]>>(
+        `${this.apiUrl}/queryGLS1005_FIN23020_DropDownList`,
+        {}
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data;
+          return data
+            ? data.map(item => ({
+              ...item,
+              value: (item.AccNo ?? '').trim(),
+              label: `${(item.AccNo ?? '').trim()} - ${item.AccCName ?? ''}`,
+            }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005_FIN23020_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 }

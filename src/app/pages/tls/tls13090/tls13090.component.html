@@ -1,0 +1,338 @@
+<!-- @format -->
+
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordion [multiple]="true">
+      <!-- 基本資訊 -->
+      <p-accordionTab
+        header="基本資訊"
+        [selected]="true"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text
+              label="專櫃招募編號"
+              controlName="apply_no"
+              [control]="queryForm.controls.apply_no"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text
+              label="專櫃編號"
+              controlName="tlt_no"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text
+              label="櫃位名稱"
+              controlName="tlt_name"
+              [control]="queryForm.controls.tlt_name"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown
+              label="大分類代號"
+              [options]="industryCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bus_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="統編"
+              [options]="vendorUIDOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ven_uniformList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="營運狀況"
+              [options]="openFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="版本編號"
+              [startControl]="queryForm.controls.contract_subno_from"
+              [endControl]="queryForm.controls.contract_subno_to"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="審核狀態"
+              [options]="approvalStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.approve_statusList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+      </p-accordionTab>
+
+      <!-- 櫃位地點資訊 -->
+      <p-accordionTab
+        header="櫃位地點資訊"
+        [selected]="true"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown
+              label="位置編號"
+              [options]="locationNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.location_no"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown
+              label="區域"
+              [options]="regionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.area_no"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="館別"
+              [options]="buildingOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_buildingList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+      </p-accordionTab>
+
+      <!-- 合約資訊 -->
+      <p-accordionTab
+        header="合約資訊"
+        [selected]="true"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="洽談者"
+              [options]="negotiatorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.contact_USR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="回函日期"
+              [startControl]="queryForm.controls.feedback_date_from"
+              [endControl]="queryForm.controls.feedback_date_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="回函截止日"
+              [startControl]="queryForm.controls.due_date_from"
+              [endControl]="queryForm.controls.due_date_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="洽談日期"
+              [startControl]="queryForm.controls.contact_Date_from"
+              [endControl]="queryForm.controls.contact_Date_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="營運起始日"
+              [startControl]="queryForm.controls.tlt_contract_bdate_from"
+              [endControl]="queryForm.controls.tlt_contract_bdate_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="營運截止日"
+              [startControl]="queryForm.controls.tlt_contract_edate_from"
+              [endControl]="queryForm.controls.tlt_contract_edate_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+      </p-accordionTab>
+
+      <!-- 營運資訊 -->
+      <p-accordionTab
+        header="營運資訊"
+        [selected]="true"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select
+              label="營業型態"
+              [options]="businessTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.paper_typeList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown
+              label="組織代號"
+              [options]="organizationCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="契約起始日"
+              [startControl]="queryForm.controls.tlt_bdate_start_from"
+              [endControl]="queryForm.controls.tlt_bdate_start_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="契約截止日"
+              [startControl]="queryForm.controls.tlt_edate_start_from"
+              [endControl]="queryForm.controls.tlt_edate_start_to"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button btnType="clear" [form]="queryForm"></app-button>
+      <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <app-table-report
+    dataKey="id"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="apiService.queryTLS13020.bind(apiService)"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showManage]="false"
+    [showDelete]="false"
+  >
+    <header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <p-button
+          icon="pi pi-building"
+          [rounded]="true"
+          pTooltip="批次更新組織"
+          tooltipPosition="top"
+          [disabled]="selectedItems.length === 0 || !hasPermission(Actions.Edit)"
+          (click)="onBatchUpdateOrg()"
+        />
+        @if (selectedItems.length > 0) {
+          <span class="text-sm text-primary font-medium"
+            >已選取 {{ selectedItems.length }} 筆</span
+          >
+        }
+      </div>
+    </header>
+  </app-table-report>
+</div>
+
+<!-- 批次更新組織對話框 -->
+<p-dialog
+  [(visible)]="showBatchOrgDialog"
+  header="批次更新組織編號"
+  [modal]="true"
+  [style]="{ width: '460px' }"
+  [draggable]="false"
+>
+  <div class="p-fluid">
+    <p class="mb-3">
+      將 <strong>{{ selectedItems.length }}</strong> 筆合約的組織更新為：
+    </p>
+    <form [formGroup]="dialogForm">
+      <app-dropdown
+        label="組織代號"
+        controlName="org_id"
+        [options]="organizationCodeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogForm.controls.org_id"
+        [submitted]="submitted"
+      ></app-dropdown>
+    </form>
+  </div>
+  <ng-template pTemplate="footer">
+    <app-button
+      label="取消"
+      icon="pi pi-times"
+      (click)="showBatchOrgDialog = false"
+    ></app-button>
+    <app-button
+      label="確認更新"
+      icon="pi pi-check"
+      [loading]="loading"
+      (click)="confirmBatchUpdateOrg()"
+    ></app-button>
+  </ng-template>
+</p-dialog>

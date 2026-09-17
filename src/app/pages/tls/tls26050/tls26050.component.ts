@@ -23,6 +23,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { createPaginationConfig, formatAmount } from '../../../others/component/table/table.model';
+import { Tls26050CRUComponent } from './tls26050-cru/tls26050-cru.component';
 
 @Component({
   selector: 'app-tls26050',
@@ -44,7 +45,8 @@ import { createPaginationConfig, formatAmount } from '../../../others/component/
     CalendarRangeComponent,
     TableReportComponent,
     DropdownComponent,
-    ButtonModule
+    ButtonModule,
+    Tls26050CRUComponent,
   ]
 })
 export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> implements OnInit {
@@ -111,6 +113,10 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
   columns: ReportColumn[] = [];
   lastQueryBody: TLS26050QueryRequest | null = null;
+
+  // 各櫃層級明細 Modal
+  dialogVisible = false;
+  selectedRow: TLS26050Data | null = null;
 
   // 列印按鈕載入狀態
   exportPdfLoading = false;
@@ -500,6 +506,12 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         this.queryForm.controls['event_enddate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
         break;
     }
+  }
+
+  // 查詢結果列（data 陣列本身不含小計，小計另外在 footerData 呈現）皆可點擊開啟各櫃層級明細 Modal
+  onDetail1(event: TLS26050Data) {
+    this.selectedRow = event;
+    this.dialogVisible = true;
   }
 
   /** 建立供 table-report 使用的 footer 多列資料（SumData + AllData） */

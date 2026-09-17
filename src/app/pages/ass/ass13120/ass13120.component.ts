@@ -9,10 +9,10 @@ import { ASS13120Service } from '@service/api/ass/ass13120.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 
 //3.1.3.12  折舊攤提作業
 @Component({
@@ -62,28 +62,72 @@ export class ASS13120Component extends BasicQueryPageComponent<unknown> implemen
     onGenerate(form: FormGroup): void {
         this.handleSubmit(form, () => {
             const depreYM = this.toYYYYMM(form.value.DepreYM as Date | null);
-            this.creating = true;
 
+            // 先查詢是否有尚未審核的資產
+            this.loading = true;
             this.ass13120Service
-                .createASS13120({ DepreYM: depreYM })
+                .queryASS13120()
                 .pipe(
                     takeUntilDestroyed(this.destroyRef),
                     finalize(() => {
                         this.loading = false;
-                        this.creating = false;
-                        this.messageService.unblockUi();
                     })
                 )
-                .subscribe((res) => {
+                .subscribe({
+                    next: (res) => {
+                        const isHaveAssetNotApproved =
+                            res?.Data?.IsHaveAssetNotApproved === true;
+
+                        // 有未審核資產 → 跳確認視窗
+                        if (isHaveAssetNotApproved) {
+                            this.messageService.confirm({
+                                header: '確認建立',
+                                message: '目前尚有資產未審核，是否仍要繼續執行折舊攤提作業？',
+                                accept: () => {
+                                    this.createDepreciation(depreYM);
+                                },
+                            });
+
+                            return;
+                        }
+
+                        // 沒有未審核資產 → 直接建立
+                        this.createDepreciation(depreYM);
+                    },
+                });
+        });
+    }
+
+    private createDepreciation(depreYM: string): void {
+        this.creating = true;
+        this.loading = true;
+
+        this.ass13120Service
+            .createASS13120({ DepreYM: depreYM })
+            .pipe(
+                takeUntilDestroyed(this.destroyRef),
+                finalize(() => {
+                    this.loading = false;
+                    this.creating = false;
+                    this.messageService.unblockUi();
+                })
+            )
+            .subscribe({
+                next: (res) => {
                     if (res?.Status === '0000' && res.Data?.IsSuccess) {
                         this.messageService.successBubble('建立成功');
                         this.queryForm.reset();
                         this.loadLastVoucherDate();
-                    } else if (res?.Data && !res.Data.IsSuccess) {
-                        this.messageService.errorBubble(res.Data.Message || '建立折舊傳票失敗');
+                        return;
                     }
-                });
-        });
+
+                    if (res?.Data && !res.Data.IsSuccess) {
+                        this.messageService.errorBubble(
+                            res.Data.Message || '建立折舊傳票失敗'
+                        );
+                    }
+                },
+            });
     }
 
     private toYYYYMM(value: Date | null): string {
@@ -92,4 +136,5 @@ export class ASS13120Component extends BasicQueryPageComponent<unknown> implemen
         const m = `${value.getMonth() + 1}`.padStart(2, '0');
         return `${y}${m}`;
     }
+
 }

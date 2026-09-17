@@ -5,6 +5,8 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55050Data, FIN55050Service, GroupedFIN55050Detail, QueryFIN55050Request } from '@service/api/fin/fin55050.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { Column, formatAmount } from '@others/component/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
@@ -29,6 +31,7 @@ export class FIN55080ReportComponent implements OnInit {
   readonly brand = environment.brand;
   private readonly fin55050Service = inject(FIN55050Service);
   private readonly dropDownListService = inject(DropDownListService);
+  private readonly dropdownApi = inject(DropdownApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly datePipe = inject(DatePipe);
   private readonly fileExportService = inject(FileExportService);
@@ -63,8 +66,13 @@ export class FIN55080ReportComponent implements OnInit {
       value: x.No
     })))
   );
+
+  orgListOptions: Option[] = [];
+  private readonly orgListData$ = this.dropdownApi.querySys3100().pipe(untilDestroyed(this));
+
   ngOnInit(): void {
     this.dropdownData$.subscribe(options => this.accNoListOptions = options);
+    this.orgListData$.subscribe(options => this.orgListOptions = options ?? []);
     this.initParamSubscription();
   }
 
@@ -93,7 +101,8 @@ export class FIN55080ReportComponent implements OnInit {
     const accNo = params['accno'] || params['AccNo'];
     const dateFrom = params['datefrom'] || params['DateFrom'];
     const dateTo = params['dateto'] || params['DateTo'];
-    const orgId = params['orgid'] || params['OrgId']; // 新增
+    const orgIdParam = params['orgid'] || params['OrgId']; // 逗號分隔的部門清單
+    const orgIdList = orgIdParam ? String(orgIdParam).split(',').filter(Boolean) : undefined;
 
     if (!accNo || !dateFrom || !dateTo) return null;
 
@@ -107,7 +116,8 @@ export class FIN55080ReportComponent implements OnInit {
         AccNoTo: accNo,
         DateFrom: this.datePipe.transform(startDate, 'yyyy-MM-dd') || '',
         DateTo: this.datePipe.transform(endDate, 'yyyy-MM-dd') || '',
-        OrgId: orgId // 確保 Request 中包含此欄位
+        OrgId: orgIdList?.join(',') ?? '', // 供畫面顯示用 (displayOrgLabel)
+        OrgIdList: orgIdList // 實際查詢過濾欄位，後端以此欄位篩選部門
       };
     } catch (e) {
       console.error('日期解析失敗', e);
@@ -117,6 +127,10 @@ export class FIN55080ReportComponent implements OnInit {
 
   getAccNoLabel(accNo: string): string {
     return this.accNoListOptions.find(x => x.value === accNo)?.label ?? accNo;
+  }
+
+  getOrgLabel(orgId: string): string {
+    return this.orgListOptions.find(x => x.value === orgId)?.label ?? orgId;
   }
 
   /** 展平巢狀資料並插入【期初】與【合計】列 */
@@ -216,9 +230,8 @@ export class FIN55080ReportComponent implements OnInit {
   }
 
   get displayOrgLabel(): string {
-    const orgId = this.lastQuery?.OrgId;
-    if (!orgId || orgId === '') return '全部';
-    // 如果你有部門清單，可以在這裡做 find label，否則先顯示 ID
-    return orgId;
+    const orgIdList = this.lastQuery?.OrgIdList;
+    if (!orgIdList || orgIdList.length === 0) return '全部';
+    return orgIdList.map(id => this.getOrgLabel(id)).join('、');
   }
 }

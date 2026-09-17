@@ -73,6 +73,8 @@ export interface TLS26050Data {
   division_no?: string; // 組別編號（後端回傳可能包含）
   division_name: string; // 部門名稱
   tlt_kind: string; // 櫃別
+  bus_type?: string; // 大分類代碼（後端 TLS26050Response 有回傳，本介面原本漏列）
+  bus_type_name?: string; // 大分類名稱（後端 TLS26050Response 有回傳，本介面原本漏列）
   bus_class_name: string; // 大分類名稱
   budget_now: number; // 當期預算
   preorder_amt_now: number; // 當期預售金額(含稅)

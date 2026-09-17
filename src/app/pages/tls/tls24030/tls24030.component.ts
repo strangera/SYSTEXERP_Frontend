@@ -49,7 +49,7 @@ export class TLS24030Component extends BasicQueryPageComponent<TLS24030Item> imp
     TXN_No: [null as string | number | null, [Validators.maxLength(8), this.validation.numberValidator]],
     pageSize: [1000],
     pageIndex: [1],
-    SortBy: [[{ field: 'TXN_Date', order: -1 }]],
+    SortBy: [[{ field: 'TXN_No', order: 1 }]],
   });
   totalRecords = 0;
   lastQueryBody: TLS24030Request | null = null;
@@ -60,7 +60,7 @@ export class TLS24030Component extends BasicQueryPageComponent<TLS24030Item> imp
   columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '交易日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號' },
+    { field: 'TXN_No', header: '交易序號', format: (value) => String(value).padStart(6, '0') },
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
     { field: 'TXN_GUIPaperDesc', header: '發票狀態' },

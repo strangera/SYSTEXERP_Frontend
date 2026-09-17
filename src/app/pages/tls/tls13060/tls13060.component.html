@@ -69,7 +69,17 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="fin11030" dataKey="id" [data]="data" [columns]="columns" [showDelete]="false"
-    [totalRecords]="totalRecords" [showManage]="false" [loading]="loading" [lastQueryBody]="historyRequestBody"
-    [queryFunction]="tLS13060Service.queryTLS13060.bind(tLS13060Service)" />
+  <app-table-report
+    tableKey="TLS13060"
+    dataKey="id"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showDelete]="false"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tLS13060Service.queryTLS13060.bind(tLS13060Service)"
+    [ItemSize]="34">
+  </app-table-report>
 </div>

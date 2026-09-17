@@ -20,8 +20,8 @@ export interface GetFIN23050Response {
 
 /** 查詢核銷傳票清單明細 Request (對應 SP_FIN23050Query) */
 export interface QueryFIN23050Request {
-  PREP_NO: string;
-  REDEEM_NO: string;
+  REDEEM_NO_S?: string | null;
+  REDEEM_NO_E?: string | null;
 }
 
 /** 查詢核銷傳票清單明細 Response */
@@ -82,6 +82,7 @@ export interface DetailFIN23050Response {
   Org_ID: string;
   Org_Name: string;
   ProjectNo: string;
+  ACCT_KEY: string;
 }
 
 /** 拋轉傳票明細單筆 (對應 Table Type: FIN23050Details) */

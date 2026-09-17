@@ -58,6 +58,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
       displayText: '認列還原',
       icon: '',
       action: (rowData: TLS26040Data) => { this.onRestore(rowData); },
+      disabled: (rowData: TLS26040Data) => rowData.isClose === 'Y',
     }
   ];
 

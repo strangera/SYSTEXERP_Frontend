@@ -289,27 +289,16 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       }));
       console.log('品牌代碼:', this.tlt_name_Option);
     });
-    // 查 統編
-    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
-      // 去除重複的 No，只保留第一筆
-      const uniqueMap = new Map<string, any>();
-      response.Data.forEach((item: any) => {
-        if (!uniqueMap.has(item.No)) {
-          uniqueMap.set(item.No, item);
-        }
-      });
-
-      // 建立 dropdown options
-      this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
-        No: item.No,
-        Name: item.Name,
-        ShortName: item.ShortName,
-        VEN_No: item.VEN_No,
-        VEN_EngName: item.VEN_EngName,
-        Label: item.No + '/' + item.Name,
+    // 查 廠商統一編號（從Potential_Customer取distinct值）
+    this.tls12010Service.queryTLS12010_CusUniformDropDown().pipe(untilDestroyed(this)).subscribe((response) => {
+      this.cus_uniform_Option = (response.Data ?? []).map((item: { Value: string; Label: string }) => ({
+        No: item.Value,
+        Name: item.Value,
+        ShortName: '',
+        VEN_No: '',
+        VEN_EngName: '',
+        Label: item.Label,
       }));
-
-      console.log('統編代號(去重):', this.cus_uniform_Option);
     });
     // 查 經營方式
     this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).pipe(untilDestroyed(this)).subscribe((response) => {

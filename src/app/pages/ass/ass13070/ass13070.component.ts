@@ -97,7 +97,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
   public readonly columns: ReportColumn[] = [
     { field: 'DEPRE_YN_NAME', header: '財產類型' },
     { field: 'SUBPOENA_ID', header: '進貨單號' },
-    { field: 'ASSET_ID', header: '財產編號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     {
       field: 'GOODS_NAME',
       header: '品項',

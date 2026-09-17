@@ -73,7 +73,7 @@ detailTotalRecords = 0;
   locationOptions: { label: string; value: string }[] = [];
   detailColumns: EditColumn[] = [
     { field: 'ID', header: 'ID', type: 'input', disabled: () => true },
-    { field: 'ASSET_ID', header: '資產代號', type: 'input', disabled: () => true },
+    { field: 'ASSET_ID', header: '資產編號', type: 'input', disabled: () => true },
     { field: 'GOODS_NAME', header: '品項名稱', type: 'input', disabled: () => true },
     { field: 'ASSET_STATUS_NAME', header: '資產狀態(清點前)', type: 'input', disabled: () => true },
     {

@@ -397,10 +397,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       console.log('接洽人員代號:', this.contact_USR_Option);
     });
 
-    //查 統一編號
-    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": "1" }).pipe(untilDestroyed(this)).subscribe((response) => {
-      console.log('統一編號', response)
-    });
+    // 統一編號下拉目前 CRU 頁未使用，保留呼叫供未來擴充
   }
 
   // 讀取明細資料

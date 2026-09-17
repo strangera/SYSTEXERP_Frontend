@@ -80,7 +80,6 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public readonly extColumns: ReportColumn[] = [
     { field: 'TLT_No', header: '專櫃編號/名稱', format: (v, i, r) => `${v}${r?.TLT_Name ? '-' + r.TLT_Name : ''}` },
     { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
-    { field: 'ENG_Remark', header: '備註' },
   ];
 
   constructor(

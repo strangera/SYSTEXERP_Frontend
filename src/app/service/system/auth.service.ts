@@ -86,6 +86,16 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  // 沿用舊密碼展延到期日後，同步更新本機使用者資訊，不需重新登入
+  updatePwdExpireDate(pwdExpireDate: string): void {
+    const latestUserInfo = this.getUserInfo();
+    if (!latestUserInfo) return;
+
+    const updatedUserInfo: UserInfo = { ...latestUserInfo, USER_PwdExpireDate: pwdExpireDate };
+    localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
+    this.userSubject.next(updatedUserInfo);
+  }
+
   // 檢查是否已登入
   isLoggedIn(): boolean {
     const user = this.userSubject.value;
@@ -103,7 +113,8 @@ export class AuthService {
         const updatedUserInfo: UserInfo = {
           ...userInfo,
           client_ip: this.client_ip,
-          mid: Number(userInfo.mid)
+          mid: Number(userInfo.mid),
+          loginTime: new Date().toISOString()
         };
         localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
         sessionStorage.removeItem('SSO_LOGOUT');

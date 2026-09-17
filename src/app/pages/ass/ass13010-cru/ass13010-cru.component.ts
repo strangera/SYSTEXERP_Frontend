@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DetailASS13010Response, InsertASS13010Request, UpdateASS13010Request } from '@pages/ass/ass13010/ass13010.model';
+import { ASS11090Service } from '@service/api/ass/ass11090.service';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -32,13 +33,14 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   private validationService = inject(ValidationService);
   private dropdownApiService = inject(DropdownApiService);
   private ass13010Service = inject(ASS13010Service);
+  private ass11090Service = inject(ASS11090Service);
   accordionTabCss = '';
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
-    // 資產代號：新增時由後端 SP 自動產生（disabled 不參與 validation 也不送 API），最大長度 20。
-    assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產代號
+    // 資產編號：新增時由後端 SP 自動產生（disabled 不參與 validation 也不送 API），最大長度 20。
+    assetsCode: [{ value: null as string | null, disabled: true } as any, [Validators.maxLength(20)]], // 資產編號
     itemCode: [, [Validators.required]], // 品項編號
     assetsStatus: [, [Validators.required]], // 資產狀態
     assetsType: [{ value: null as string | null, disabled: true }],// 資產類型
@@ -143,9 +145,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('ASS13010', this.dataForm);
     this.accordionTabCss = this.crudstatus === CRUDStatus.Create ? 'create-accordionTab' : 'edit-accordionTab';
     this.loadDropdownOptions();
-    // 監聽「品項編號 (itemCode)」選取事件，自動帶入「資產類型 (assetsType)」
+    // 監聽「品項編號 (itemCode)」選取事件，自動帶入「資產類型 (assetsType)」及會計科目/折舊設定
+    // 僅新增模式會觸發：編輯模式下 itemCode 欄位鎖定不可改，明細載入 patchValue 也用 emitEvent:false 不會觸發此處。
     this.dataForm.controls.itemCode.valueChanges.pipe(untilDestroyed(this)).subscribe(selectedGoodsId => {
-      if (!selectedGoodsId) return;
+      if (!selectedGoodsId || this.crudstatus !== CRUDStatus.Create) return;
 
       // 從下拉選單陣列中尋找對應的 Option
       const selectedOption = this.itemCodeOptions.find(opt => opt.value === selectedGoodsId);
@@ -159,6 +162,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
           });
         }
       }
+
+      this.autoFillAccountingByItem(selectedOption);
     });
     this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateKeepingPersonOptions();
@@ -166,8 +171,12 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
       const unitVal = this.dataForm.controls.keepingUnit.value;
-      const allowed = this.keepingPersonOptions.some(o => o.value === this.dataForm.controls.keepingPerson.value);
-      if (unitVal != null && unitVal !== '' && !allowed) {
+      const personVal = this.dataForm.controls.keepingPerson.value;
+      if (unitVal == null || unitVal === '' || personVal == null || personVal === '') {
+        return;
+      }
+      const allowed = this.keepingPersonOptions.some(o => this.isSameOptionValue(o.value, personVal));
+      if (!allowed) {
         this.dataForm.patchValue(
           { keepingPerson: null },
           { emitEvent: false }
@@ -181,8 +190,12 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
       const unitVal = this.dataForm.controls.userUnit.value;
-      const allowed = this.userOptions.some(o => o.value === this.dataForm.controls.user.value);
-      if (unitVal != null && unitVal !== '' && !allowed) {
+      const userVal = this.dataForm.controls.user.value;
+      if (unitVal == null || unitVal === '' || userVal == null || userVal === '') {
+        return;
+      }
+      const allowed = this.userOptions.some(o => this.isSameOptionValue(o.value, userVal));
+      if (!allowed) {
         this.dataForm.patchValue(
           { user: null },
           { emitEvent: false }
@@ -333,6 +346,14 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
+  /**
+   * 比對下拉選項值與表單值是否代表同一人員。統一轉字串並 trim 再比對，
+   * 避免資料庫欄位（如 CHAR 定長型別）前後空白或型別差異，導致明明屬於該單位的人員被誤判為不存在而清空。
+   */
+  private isSameOptionValue(optionValue: unknown, formValue: unknown): boolean {
+    return String(optionValue ?? '').trim() === String(formValue ?? '').trim();
+  }
+
   private updateKeepingPersonOptions(): void {
     const unitVal = String(
       this.dataForm.controls.keepingUnit.value ?? ''
@@ -356,13 +377,19 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private updateUserOptions(): void {
-    const unitVal = this.dataForm.controls.userUnit.value;
-    if (unitVal == null || unitVal === '') {
+    const unitVal = String(
+      this.dataForm.controls.userUnit.value ?? ''
+    ).trim();
+    if (!unitVal) {
       this.userOptions = [...this.allUserOptionsWithOrg];
     } else {
-      this.userOptions = this.allUserOptionsWithOrg.filter(
-        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal
-      );
+      this.userOptions = this.allUserOptionsWithOrg.filter(o => {
+        const orgId = String(
+          (o as Option & { Org_ID?: string }).Org_ID ?? ''
+        ).trim();
+
+        return orgId === unitVal;
+      });
     }
   }
 
@@ -465,6 +492,42 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     );
 
     this.pendingEmployeeSelection = null;
+  }
+
+  /**
+   * 新增模式下，依品項所屬中分類(B_CLASS_ID+M_CLASS_ID)向 ASS11090 查詢對應的會計科目/折舊設定並自動帶入。
+   * 查無設定（Data 為 null）時將對應欄位清空，不報錯、不阻擋操作；每次切換品項都重新查詢並覆蓋，帶入後使用者仍可手動修改。
+   */
+  private autoFillAccountingByItem(selectedOption: Option | undefined): void {
+    const bClassId = selectedOption?.['B_CLASS_ID'] ? String(selectedOption['B_CLASS_ID']) : '';
+    const mClassId = selectedOption?.['M_CLASS_ID'] ? String(selectedOption['M_CLASS_ID']) : '';
+
+    if (!bClassId || !mClassId) {
+      const clearPatch: any = {
+        accounting_Borrow: null,
+        accounting_Credit: null,
+        depreciation: null,
+        totalDepreciation: null,
+        depreciationLife: null,
+      };
+      this.dataForm.patchValue(clearPatch);
+      return;
+    }
+
+    this.ass11090Service
+      .queryASS11090Detail({ B_CLASS_ID: bClassId, M_CLASS_ID: mClassId })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const data = res?.Data;
+        const fillPatch: any = {
+          accounting_Borrow: data?.STYPE_ACCNO ?? null,
+          accounting_Credit: data?.STYPE_ACCNO2 ?? null,
+          depreciation: data?.DEPRE_STYPE_ACCNO ?? null,
+          totalDepreciation: data?.DEPRE_STYPE_ACCNO2 ?? null,
+          depreciationLife: data?.EXP_YEAR ?? null,
+        };
+        this.dataForm.patchValue(fillPatch);
+      });
   }
 
   private loadDropdownOptions(): void {
@@ -584,13 +647,55 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
 
+  /**
+   * 財務類欄位：尚未攤提時可自由編輯，已攤提後鎖定不可修改（避免帳務資料與已入帳分錄脫勾）。
+   * 對應驗收條件列出的：金額、入帳日期、折舊年限(年/月)、殘值、會計科目(借/貸)、折舊科目(借)、累計折舊科目(貸)、供應商、原資產編號。
+   * 另外加入 purchaseDate（購入日期）：語意上屬同一組財務資訊，且既有鎖定方向本來就正確，一併沿用。
+   */
+  private readonly financialEditLockFields: readonly string[] = [
+    'purchasePrice',
+    'purchaseDate',
+    'entryDate',
+    'depreciationLife',
+    'depreciationLifeMM',
+    'residual',
+    'accounting_Borrow',
+    'accounting_Credit',
+    'depreciation',
+    'totalDepreciation',
+    'supplierCode',
+    'original_assetsCode',
+  ];
+
+  /** 非財務類欄位：不論是否已攤提皆可編輯，對應驗收條件列出的 8 個欄位。 */
+  private readonly nonFinancialEditFields: readonly string[] = [
+    'assetsStatus',
+    'keepingPerson',
+    'keepingUnit',
+    'user',
+    'userUnit',
+    'deviceCode',
+    'maintenanceCode',
+    'remark',
+  ];
+
   private applyEditLock(isAlreadyAmortized: boolean): void {
+    // ⚠️ 後端限制：dbo.SP_ASS13010Update 目前只接受 GET_DATE/GET_COST/ASSET_STATUS/EQUIP_ID/NOTES/
+    // PURCHASE_NOTES/RESI_VALUE/EXP_YEAR/EXP_MONTH/HOLD_EMP_ID/USE_EMP_ID/DEPRE_SDATE/TAL_DEPRE_AMT/TAL_DEPRE_MON
+    // 這些參數（已用 sqlcmd 查過 OBJECT_DEFINITION 確認，唯讀查詢未動 SP）。本函式解鎖的 entryDate/
+    // accounting_Borrow/accounting_Credit/depreciation/totalDepreciation/supplierCode/original_assetsCode/
+    // keepingUnit/userUnit/maintenanceCode 這 10 個欄位，SP 完全沒有對應參數可接收，UpdateASS13010Request
+    // 也還沒加這些欄位，使用者在編輯畫面改了值、送出仍不會被儲存（非本次改動範圍，需要另外 ALTER PROCEDURE
+    // 才能真正持久化，已回報請使用者決定是否要開這個後續工單）。
+    // 另外 SP 在「已攤提」分支裡完全不更新 HOLD_EMP_ID/USE_EMP_ID，即使本函式讓保管人/使用人在已攤提時仍可編輯，
+    // 送出後 SP 也不會套用該次修改，同樣需要改 SP 才能徹底符合「已攤提仍可改保管人/使用人並送出成功」的驗收條件。
     // 由於 ReactiveForms 的 disabled 欄位不參與 validation，因此鎖欄能避免 required 驗證誤擋送出。
-    const allowedControls = new Set<string>(
-      isAlreadyAmortized
-        ? ['purchasePrice', 'depreciationLife', 'keepingPerson', 'user', 'amortizationYearMonth', 'assetsStatus']
-        : ['assetsStatus', 'purchaseDate', 'deviceCode', 'remark']
-    );
+    // 注意：amortizationYearMonth（攤提年月）沿用既有規則（僅已攤提時可編輯），本次未列入財務/非財務兩組，非本次調整範圍。
+    const allowedControls = new Set<string>([
+      ...this.nonFinancialEditFields,
+      ...(isAlreadyAmortized ? [] : this.financialEditLockFields),
+      ...(isAlreadyAmortized ? ['amortizationYearMonth'] : []),
+    ]);
 
     // `Object.keys()` 會回傳 `string[]`，但 `controls` 是強型別結構；
     // 這裡把 key 型別收斂回 `keyof controls` 以避免 TS7053。

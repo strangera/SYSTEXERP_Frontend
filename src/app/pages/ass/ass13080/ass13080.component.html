@@ -10,8 +10,9 @@
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-4" label="變賣單號" controlName="assetSaleNo"
             [control]="queryForm.controls.assetSaleNo" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="資產代號" controlName="assetId"
-            [control]="queryForm.controls.assetId" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="資產編號" controlName="assetId" [options]="assetIdOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.assetId"
+            [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="品項編號" controlName="goodsId" [options]="goodsIdOptions"
             optionLabel="label" optionValue="value" [control]="queryForm.controls.goodsId"
             [submitted]="submitted"></app-dropdown>

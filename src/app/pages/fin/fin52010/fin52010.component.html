@@ -49,6 +49,10 @@
         [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
         [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoRemitFee"
         [submitted]="submitted"></app-dropdown>
+      <app-dropdown class="col-12 md:col-6 lg:col-4" label="預支費用科目" controlName="AccNoPrepaid"
+        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
+        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoPrepaid"
+        [submitted]="submitted"></app-dropdown>
       <app-dropdown class="col-12 md:col-6 lg:col-4" label="應付票據是否需領用才拋轉傳票" controlName="billTransferCon"
         [options]="service.billTransferConOptions()" optionLabel="label" optionValue="value" [showClear]="!1"
         [control]="df().billTransferCon" [submitted]="submitted"></app-dropdown>

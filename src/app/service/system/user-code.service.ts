@@ -17,6 +17,11 @@ export class UserCodeService {
     return this.http.post<any>(`${this.apiUrl}/User/changePassword`, body);
   }
 
+  // 沿用舊密碼，展延密碼到期日 90 天
+  extendPassword(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/extendPassword`, {});
+  }
+
   // 重製 使用者密碼
   resetPassword(body: { SYS_StoreNo: string, User_No: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/resetPassword`, body);

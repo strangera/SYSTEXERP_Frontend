@@ -47,6 +47,8 @@ export interface TLS32070Response extends ApiRequest {
   TltName: string; // 櫃位名稱
   TltId: string; // 抽成類別代號
   TltIdDesc: string; // 抽成類別名稱
+  DiscCode: string; // 折扣別代碼（SALCHARGE.sad_barcode）
+  DiscDesc: string; // 折扣別名稱（SYS1000 SYS_Type='T102'）
 
   // 本期 (Base)
   Base_LocationNo: string; // 本期位置編號

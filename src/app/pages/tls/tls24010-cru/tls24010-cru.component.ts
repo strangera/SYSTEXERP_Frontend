@@ -180,7 +180,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         }
       })
     }
-    if (rowDataTyped.ORG_TXN_Date) {
+    if (rowDataTyped.TXN_Type === '02' || rowDataTyped.TXN_Type === '03') {
       this.dataForm.get('isNegativeTXN')?.setValue(true);
     }
     // 檢查是否開立業主發票 (rece_yn)
@@ -284,8 +284,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         controls.ORG_ECR_No.setValue(controls.ECR_No.value);
         controls.ORG_TXN_Date.enable();
         controls.ORG_ECR_No.enable();
-        controls.ORG_TXN_Date.setValidators([Validators.required]);
-        controls.ORG_ECR_No.setValidators([Validators.required]);
       } else {
         // 未勾選：清空
         controls.ORG_TXN_Date.setValue(null);
@@ -724,19 +722,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     // 年度或期數不同即為跨期
     return orgYear !== voidYear || orgPeriod !== voidPeriod;
   }
-  onProductTotalChange(total: number) {
-    const controls = this.dataForm.controls;
-    const isNegative = total < 0;
-
-    if (isNegative) {
-      controls.ORG_TXN_Date.setValidators([Validators.required]);
-      controls.ORG_ECR_No.setValidators([Validators.required]);
-    } else {
-      controls.ORG_TXN_Date.clearValidators();
-      controls.ORG_ECR_No.clearValidators();
-    }
-    controls.ORG_TXN_Date.updateValueAndValidity();
-    controls.ORG_ECR_No.updateValueAndValidity();
+  onProductTotalChange() {
     if (this.isFormCreateable || this.type === FIX_TYPE.付款別修正) {
       this.updateTxnTotGUI(); // 更新(未開)發票金額
     }

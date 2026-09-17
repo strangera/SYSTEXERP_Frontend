@@ -351,8 +351,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       vendor_acct_no: ['', [Validators.maxLength(16)]],
 
       // 聯絡資訊
-      email: ['', [Validators.maxLength(100)]],
-      invoice_email: ['', [Validators.maxLength(100)]],
+      email: ['', [Validators.maxLength(200)]],
+      invoice_email: ['', [Validators.maxLength(200)]],
       contact_tel: ['', [Validators.maxLength(20)]],
       contact_fax: ['', [Validators.maxLength(15)]],
       contact_addr: ['', [Validators.maxLength(100)]],

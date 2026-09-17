@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { afterNextRender, Component, computed, DestroyRef, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, inject, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,6 +10,7 @@ import { FIN52030Service } from '@service/api/fin/fin52030.service';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
@@ -118,6 +119,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   @ViewChild('apTableEdit') apTableEditComponent?: TableEditComponent;
   @ViewChild('arTableEdit') arTableEditComponent?: TableEditComponent;
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
+  @ViewChild('purchaseAllowanceTableEdit') purchaseAllowanceTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
   @ViewChild('ptaDialogTable') ptaDialogTable!: TableComponent;
 
@@ -593,6 +595,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'Remark', header: '摘要', visible: true, align: 'left' },
   ];
 
+  private readonly fileExportService = inject(FileExportService);
+
   public selectedItems: FIN53010Data[] = [];
   public rowEditCanSave = signal<boolean>(!1);
   public displayDialog = signal<boolean>(!1);
@@ -655,6 +659,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly lastSalesInvoiceLookupKey = new Map<number, string>();
   private readonly lastPurchaseInvoiceLookupKey = new Map<number, string>();
 
+  /**
+   * 上次已依「傳票明細發票摘要」同步過的 token 指紋。
+   * appendStepInvoiceRowsFromSummaryForStep 每次切到進項/銷項發票步驟都會被呼叫，
+   * 若傳票明細的發票 token 沒變還一直重跑，就會把同一批發票反覆 append，導致總計越加越多。
+   * 用指紋擋住「內容沒變的重複同步」，只有傳票明細真的變動才重新帶入。
+   */
+  private _lastSummaryInvoiceFingerprint: string | null = null;
+
 
   // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
@@ -715,6 +727,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }));
 
     const rows = this.tableData();
+    // 以 DB 帶回的傳票明細摘要作為進項/銷項發票步驟表的「已同步」基準：
+    // 首次進入步驟時 append 指紋即命中而略過，不會把「摘要有、但 forupdate 未帶回對應 APS2002」
+    // 的發票（未連結本傳票者）多帶一列進來；之後使用者真的改了摘要才會重新同步。
+    this._lastSummaryInvoiceFingerprint = this.computeSummaryInvoiceFingerprint();
     this.logger.debug(`loadingDetail:`, {
       data,
       form: this.dataForm.getRawValue(),
@@ -1005,7 +1021,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
-    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left', validate: [this.validateRequired.bind(this)] },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, textAlign: 'left' },
     { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
     { field: 'comb', header: '彙加註記', type: 'input', textAlign: 'left' },
@@ -1146,6 +1162,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'net_amount', header: '退回/折讓未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'tax_amount', header: '退回/折讓稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left', validate: [this.validateRequired.bind(this)] },
   ];
 
   /** 銷項折讓發票欄位定義（格式 33/34） */
@@ -1238,6 +1255,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getVoucherTypeOptions();
     this.service.getBankNoOptions();
     this.service.getStepDropdownOptions();
+
+    // 新增模式：從 GLS1012 帶入預設組織代號
+    if (this.isFormCreateable) {
+      this.service.getDefaultOrgId().pipe(
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe(res => {
+        if (res.Data) this.selectedOrgId.set(res.Data);
+      });
+    }
 
     // 如果是新增模式，等待選項載入後設定初始 label
     if (this.isFormCreateable) {
@@ -1456,6 +1482,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               acc_no: row.AccNo,
               note_desc: noteDesc,
               PTA: row.PTA ?? null,
+              ACCT_KEY: row.recKey ?? null,
               _detailSerNo: row.SerNo,
             });
           } else if (vt === '7') {
@@ -1486,7 +1513,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
                 // 新建列日期一律為 undefined，保留既有值以免重建時閃爍；reconcileStepExpectedDates 會權威補齊
                 acp_expect_pay_date: r.acp_expect_pay_date ?? existing.acp_expect_pay_date,
                 ven_ctrlyn: existing.ven_ctrlyn ?? r.ven_ctrlyn,
-                note_desc: existing.note_desc ?? r.note_desc,
+                note_desc: r.note_desc ?? existing.note_desc,
               } : {}),
             };
           });
@@ -1497,7 +1524,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               SerNo: i + 1,
               ...(existing != null ? {
                 pta_date: r.pta_date ?? existing.pta_date,
-                note_desc: existing.note_desc ?? r.note_desc,
+                note_desc: r.note_desc ?? existing.note_desc,
               } : {}),
             };
           });
@@ -1579,13 +1606,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
             const d = resolveStepDetail(r.gls3002_id, r.PTA);
             if (!d) return r;
-            return { ...r, acp_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+            return { ...r, acp_amt: detailAmt(d), note_desc: this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
           }));
           this.stepARRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
             if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
             const d = resolveStepDetail(r.gls3002_id, r.PTA);
             if (!d) return r;
-            return { ...r, ars_amt: detailAmt(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+            return { ...r, ars_amt: detailAmt(d), note_desc: this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo, ACCT_KEY: d.recKey !== undefined ? (d.recKey ?? null) : r.ACCT_KEY };
           }));
 
           // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
@@ -1799,6 +1826,26 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
   }
 
+  /**
+   * 依目前傳票明細中格式=5/6 的發票摘要 token 計算指紋。
+   * 供 appendStepInvoiceRowsFromSummaryForStep 判斷「傳票明細發票摘要是否變動」，
+   * 以及編輯模式載入時 (dataEffect) 建立「已同步」基準，避免重複帶入發票列。
+   */
+  private computeSummaryInvoiceFingerprint(): string {
+    const accVoucherTypeMap = this.service.accVoucherTypeMap();
+    return this.tableData()
+      .map(r => {
+        const accNo = String(r.AccNo ?? '').trim();
+        const vt = String(accVoucherTypeMap.get(accNo) ?? '').trim();
+        if (vt !== '5' && vt !== '6') return '';
+        const parsed = this.parseSummaryInvoiceToken(this.resolveNoteDescForStep(r));
+        return parsed ? `${vt}:${this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no)}` : '';
+      })
+      .filter(Boolean)
+      .sort()
+      .join('|');
+  }
+
   private resolveNoteDescForStep(row: FIN53010DetailTable): string {
     const n = row.NoteDesc;
     if (n === void 0 || n === null) return '';
@@ -1826,8 +1873,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     };
   }
 
-  private buildInvoiceDedupKey(invoiceType: string | null | undefined, prefix: string | null | undefined, invoiceNo: string | null | undefined): string {
-    return `${String(invoiceType ?? '').trim().toUpperCase()}|${String(prefix ?? '').trim().toUpperCase()}|${String(invoiceNo ?? '').trim()}`;
+  // 去重僅用「字軌 + 發票號碼」這個穩定識別。發票格式(voucher_type/invoice_type)在
+  // append 後會被 hydrate*RowByInvoice 的 APS2002/APS4023 回傳值非同步覆蓋，若把它納入 key，
+  // 來回切換步驟時（每次進 step 5/6 都會重跑 appendStepInvoiceRowsFromSummaryForStep）就會因
+  // key 對不上而把同一張發票重覆 append，導致底部合計（未稅/稅額）越加越多。invoiceType 參數
+  // 保留以維持呼叫端語意，但不參與 key 計算。
+  private buildInvoiceDedupKey(_invoiceType: string | null | undefined, prefix: string | null | undefined, invoiceNo: string | null | undefined): string {
+    return `${String(prefix ?? '').trim().toUpperCase()}|${String(invoiceNo ?? '').trim()}`;
   }
 
   private hydrateSalesRowByInvoice(index: number, prefix: string, no: string): void {
@@ -2379,6 +2431,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       rowData.invoice_amount = item.PUR_Amt ?? rowData.invoice_amount;
       rowData.vendor_tax_id = item.PUR_VenUniform ?? rowData.vendor_tax_id;
       rowData.tax_type = item.PUR_TaxType ?? rowData.tax_type;
+      rowData.deduction_code = String(item.PUR_DiscNo ?? '').trim() || rowData.deduction_code;
       rowData.orig_invoice_amount = item.PUR_Amt ?? undefined;
       rowData.already_allowance_amt = item.AlreadyAllowanceAmt ?? 0;
       this.stepPurchaseAllowanceRows.update(rows => [...rows, rowData]);
@@ -2396,6 +2449,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           invoice_amount: item.PUR_Amt ?? next[idx].invoice_amount,
           vendor_tax_id: item.PUR_VenUniform ?? next[idx].vendor_tax_id,
           tax_type: item.PUR_TaxType ?? next[idx].tax_type,
+          deduction_code: String(item.PUR_DiscNo ?? '').trim() || next[idx].deduction_code,
           orig_invoice_amount: item.PUR_Amt ?? undefined,
           already_allowance_amt: item.AlreadyAllowanceAmt ?? 0,
         };
@@ -2411,6 +2465,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     const accVoucherTypeMap = this.service.accVoucherTypeMap();
     const rows = this.tableData();
+
+    // 只有當「傳票明細」的發票摘要 token 集合真的變動時才重新同步。
+    // 否則來回切換步驟每次都重跑，會把同一批發票一再 append，總計就越加越多（#進項發票重複）。
+    // 編輯模式下 dataEffect 已在 DB 載入時把此指紋設為當下值當基準，因此首次進入步驟即會命中而略過，
+    // 不會把「摘要有、但 forupdate 未帶回對應 APS2002」的發票（例如未連結本傳票的發票）誤加進來。
+    const fingerprint = this.computeSummaryInvoiceFingerprint();
+    if (fingerprint === this._lastSummaryInvoiceFingerprint) return;
+    this._lastSummaryInvoiceFingerprint = fingerprint;
+
     const salesRowsToAppend: FIN53010StepSalesInvoiceRow[] = [];
     const purchaseRowsToAppend: FIN53010StepPurchaseInvoiceRow[] = [];
     const salesKeys = new Set(
@@ -2588,6 +2651,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   private clearEditStepDetailRows(): void {
+    this._lastSummaryInvoiceFingerprint = null; // 重載傳票 → 讓下次進入步驟重新依摘要 token 帶入
     this.stepAPRows.set([]);
     this.stepARRows.set([]);
     this.stepSalesRows.set([]);
@@ -2818,10 +2882,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
+    const purchaseAllowanceValid = this.purchaseAllowanceTableEditComponent?.validateAndShowErrors();
     const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
 
-    if (valid === false || bankValid === false) {
+    if (valid === false || purchaseAllowanceValid === false || bankValid === false) {
       return;
+    }
+
+    // 進項折讓：ViewChild 不在 DOM（非當前步驟）時，做資料層檢查
+    if (this.activeVoucherSteps().includes(8) && purchaseAllowanceValid === undefined) {
+      const badAllowance = this.stepPurchaseAllowanceRows().filter(r => !r.deduction_code);
+      if (badAllowance.length > 0) {
+        this.messageService.errorBubble(`進項折讓第 ${badAllowance.map(r => r.SerNo).join('、')} 筆「扣抵代號」為必填`);
+        return;
+      }
     }
 
     // 銷項發票：所有列必須已找到對應 DB 記錄（id 不為 0 / undefined）
@@ -3273,10 +3347,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (amount != null && amount > 0) {
         const taxType = String(row.tax_type ?? '').trim();
         if (taxType === '1') {
+          // 應稅：反推未稅 + 稅額
           const tax = Math.round(amount * 5 / 105);
           event.rowData.tax_amount = tax;
           event.rowData.net_amount = amount - tax;
+        } else if (taxType === '0') {
+          // 免稅：全額為免稅銷售金額，未稅金額 = 總額，稅額 = 0（與進項一致）
+          event.rowData.tax_amount = 0;
+          event.rowData.net_amount = amount;
         } else {
+          // 零稅率：應稅但稅率 0%，未稅 = 總額，稅額 = 0
           event.rowData.tax_amount = 0;
           event.rowData.net_amount = amount;
         }
@@ -3610,8 +3690,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           rowData.AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 如果摘要為空，自動帶入摘要
           if (!rowData.NoteDesc) {
-            rowData.NoteDesc = String(this.service.noteDescMap()
-              .get(event.value)?.data?.[0].label || event.value || '');
+            rowData.NoteDesc = this.service.noteDescMap()
+              .get(event.value)?.data?.[0]?.label ?? '';
           }
           // 取得立沖代號下拉選單
           this.service.getPTADropdownOptions(String(event.value));
@@ -3650,7 +3730,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'ORG_ID':
           // 設定目前選擇的組織代號
           this.selectedOrgId.set(String(event.value));
-          rowData.SubDetailNo = '';
+          rowData.ReflNo = '';
           break;
 
         // case 'NoteDesc':
@@ -3726,8 +3806,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     rowData.PTA = undefined;
     rowData.DetailNo = undefined;
     rowData.DetailName = undefined;
-    rowData.NoteDesc = String(this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label
-      || this.service.accNoMap().get(String(rowData.AccNo))?.label || '');
+    rowData.NoteDesc = this.service.noteDescMap().get(String(rowData.AccNo))?.data?.[0]?.label ?? '';
   }
 
   /** 清除某金額欄殘留的驗證錯誤（table-edit 每次只重驗當下變更的欄，跨欄的 validateAmtEither
@@ -4030,6 +4109,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public selectTemplateItem(rowData: FIN53010DetailTable, item?: Option & { short?: string; }): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     [rowData.DetailNo, rowData.DetailName] = [item?.value ?? '', item?.short ?? item?.label ?? ''];
+    const uniformNo = String(item?.['No'] ?? '').trim();
+    const inGLS1016 = uniformNo && this.service.refNameOptions().some(o => String(o.value) === uniformNo);
+    rowData.ReflNo = inGLS1016 ? uniformNo : '';
   };
 
   public vouTermChange(event: Event): void {
@@ -4040,6 +4122,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public clearVenUsr(rowData: FIN53010DetailTable): void {
     rowData.DetailNo = '';
     rowData.DetailName = '';
+    rowData.ReflNo = '';
   }
 
   // ── 立沖代號選取彈窗 ─────────────────────────────────────────────────────
@@ -4165,6 +4248,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   closePtaDialog(): void {
     this.showPtaDialog = false;
     this.ptaDialogSelectedItem = null;
+  }
+
+  public onExportExcel(): void {
+    const id = this.rowdata?.id;
+    if (!id) return;
+    this.loading = true;
+    this.service.exportFIN53010(id).pipe(
+      this.withLoading(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      this.fileExportService.handleResponse(res, '.xlsx');
+    });
   }
 
 }

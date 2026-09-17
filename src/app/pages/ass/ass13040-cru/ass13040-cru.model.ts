@@ -49,6 +49,7 @@ export interface QueryDetailASS13040DetailData {
   DAMAGEM_ID?: string | null;
   LINE_NUM?: number | null;
   GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
   GOODS_PRICE?: number | null;
   QTY?: number | null;
   GOODS_UNIT?: string | null;
@@ -92,6 +93,7 @@ export interface ASS13040Header {
  */
 export interface ASS13040DetailItem {
   ITEM_NO?: string;
+  ASSET_NAME?: string;
   UNIT?: string;
   QTY?: number;
   BUY_AMT?: number;

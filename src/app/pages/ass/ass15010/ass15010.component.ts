@@ -13,8 +13,8 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '@shared/components/input-text-range/input-text-range.component';
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ReportColumn, formatDate } from '@shared/components/table-report/table-report.model';
@@ -42,7 +42,7 @@ type ExportAssetLabelRequest = QueryASS15010ApiRequest & {
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextRangeComponent,
+    DropdownRangeComponent,
     CalendarRangeComponent,
     ButtonComponent,
     TableReportComponent,
@@ -114,6 +114,8 @@ export class ASS15010Component
     { value: '2', label: '列管品' },
   ];
 
+  /** 資產編號（起訖）：queryASS13010AssetIdDropdown（全部資產編號，借用 ASS13010 主查詢） */
+  assetIdOptions: Option[] = [];
   goodsIdOptions: Option[] = [];
   bigClassOptions: { label: string; value: string }[] = [];
   midClassOptions: { label: string; value: string }[] = [];
@@ -152,6 +154,13 @@ export class ASS15010Component
   }
 
   private loadDropdowns(): void {
+    this.dropdownApi
+      .queryASS13010AssetIdDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.assetIdOptions = opts ?? [];
+      });
+
     this.dropdownApi
       .queryASS11040DropDownList()
       .pipe(untilDestroyed(this))

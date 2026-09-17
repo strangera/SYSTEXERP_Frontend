@@ -9,6 +9,7 @@ import { environment } from 'src/environments/environment';
 export interface QueryASS13120Response {
   /** 例如：最後傳票產生日期：2026年05月 / 最後傳票產生日期：查無資料 */
   Result: string;
+  IsHaveAssetNotApproved: boolean;//是否有變賣、作廢(未審核)的資產
 }
 
 export interface CreatePdEntryRequest {

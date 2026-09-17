@@ -35,7 +35,7 @@
 
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="清點人代碼"
+            label="清點人姓名"
             controlName="CHK_EMP_ID"
             [options]="inventoryPersonOptions"
             optionLabel="label"
@@ -145,6 +145,13 @@
             label="列印盤點表"
             icon="pi pi-file"
             (click)="onPrintInventoryReport()"
+            [disabled]="loading"
+          ></p-button>
+          <p-button
+            label="匯出 Excel"
+            icon="pi pi-file-excel"
+            severity="success"
+            (click)="onExportExcel()"
             [disabled]="loading"
           ></p-button>
         </div>

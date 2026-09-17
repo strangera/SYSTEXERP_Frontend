@@ -287,7 +287,10 @@
 <div class="card">
   <app-table-report [exportContext]="myExportContext" tableKey="TLS26060" dataKey="talent_id" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
-    [lazy]="true" [loading]="loading" [showCheckBox]="false" [showManage]="false" [showDelete]="false"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [footerData]="footerData"
-    [footerLabelField]="'group_name'"></app-table-report>
+    [lazy]="true" [loading]="loading" [showCheckBox]="false" [showManage]="true" [showEdit]="false"
+    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [footerData]="footerData" [footerLabelField]="'group_name'" (detail)="onDetail1($event)"></app-table-report>
 </div>
+
+<app-tls26060-cru [(visible)]="dialogVisible" [rowData]="selectedRow"
+  [queryConditions]="lastQueryBody"></app-tls26060-cru>

@@ -80,6 +80,8 @@ export class FIN15050Component extends BasicQueryPageComponent<unknown> implemen
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(decodeURIComponent(rawUrl));
+          } else if (response.Status === '0000') {
+            this.messageService.warnBubble(response.Data?.Message ?? '查無資料');
           } else {
             this.messageService.errorBubble(response.Message);
           }

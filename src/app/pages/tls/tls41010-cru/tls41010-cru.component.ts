@@ -6,6 +6,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { AutoCompleteComponent } from '@shared/components/auto-complete/auto-complete.component';
 import { InputTextareaComponent } from "src/app/shared/components/input-textarea/input-textarea.component";
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { TLTTALENTActiveContractItem } from '../../../service/utility/dropdown-api.model';
@@ -49,7 +50,8 @@ interface LabelValueOption {
     InputNumberComponent,
     TranslateModule,
     InputTextareaComponent,
-    TltNoPickerComponent
+    TltNoPickerComponent,
+    AutoCompleteComponent,
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
@@ -205,6 +207,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   tltNoPickerColumns = tltNoPickerCruColumns;
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
+  /** 目前輸入的位置編號是否查無位置主檔(POS2002)資料，控制常駐警告文字顯示(不阻擋送出) */
+  locNoWarning = false;
+  readonly locNoWarningMessage = '查無此位置編號對應的位置主檔資料';
   KBLevelOptions: LabelValueOption[] = []; // 機台鍵盤編號 下拉選項
   tmplDetailList: TLS41010Item[] = [];
 
@@ -225,6 +230,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       'ECR_ElecSVCrdA', 'ECR_ElecSVCrdB', 'ECR_ElecSVCrdC', 'ECR_ElecPay', 'ECR_Drawer',
       'CRT_Date', 'CRT_USR_No', 'CRT_USR_Name', 'UPD_Date', 'UPD_USR_No', 'UPD_USR_Name',
       'ECR_TLT_Name',
+      // 館別/樓層/區域：一律由位置編號查位置主檔(POS2002)自動回填，不開放手動輸入
+      'ECR_Group', 'ECR_SubGroup', 'ECR_AreaNo',
     ]) this.dataForm.get(field)?.disable();
 
     if (this.isFormCreateable) {
@@ -287,6 +294,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(options => {
         this.LocOptions = (options ?? []) as IDropdownItem[];
+        // LocOptions 是非同步載入，編輯模式的既有位置編號在這批資料回來前就已由 initializePage() 帶入表單，
+        // 這裡載入完成後要用目前欄位值重新查一次，警告提示/館別樓層區域才會跟著正確顯示
+        this.syncLocNo(this.dataForm.get('ECR_LocNo')?.value);
       });
 
     // 機台鍵盤編號下拉 (來自 TLS42010 下拉資料，key/value 皆為 USR_Level，附鍵盤說明組成顯示文字)
@@ -301,22 +311,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
     this.dataForm.get('ECR_LocNo')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(selectedNo => {
-        const selected = this.LocOptions.find(c => c.value === selectedNo);
-        if (!selected) return;
-
-        const patch: Record<string, string> = {
-          ECR_Group: selected.tlt_building || '',
-          ECR_SubGroup: selected.tlt_floor || '',
-          ECR_AreaNo: selected.area_no || '',
-        };
-
-        if (this.isFormCreateable && !this.dataForm.get('ECR_TLT_Name')?.value) {
-          patch['ECR_TLT_Name'] = selected.Name || '';
-        }
-
-        this.dataForm.patchValue(patch, { emitEvent: false });
-      });
+      .subscribe(selectedNo => this.syncLocNo(selectedNo));
 
     // 監聽欄位變化：環境變數（範本）切換
     this.dataForm.get('ECR_TmplNo')?.valueChanges
@@ -370,18 +365,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           : this.CounterOptions.find(c => c.No === selectedNo);
         if (!selected) return;
 
-        // 只要專櫃資料有值，就覆蓋（不動沒給值的欄位）
+        // 只要專櫃資料有值，就覆蓋（不動沒給值的欄位）；館別/樓層/區域不直接用合約自帶的值，
+        // 一律交給 syncLocNo() 依覆蓋後的位置編號重新比對位置主檔(POS2002)決定，查無資料時才會正確留空+顯示警告
         const patch: Record<string, string | Date> = {};
         if (selected.ECR_LocNo) patch['ECR_LocNo'] = selected.ECR_LocNo;
-        if (selected.ECR_Group) patch['ECR_Group'] = selected.ECR_Group;
-        if (selected.ECR_SubGroup) patch['ECR_SubGroup'] = selected.ECR_SubGroup;
-        if (selected.ECR_AreaNo) patch['ECR_AreaNo'] = selected.ECR_AreaNo;
         if (selected.tlt_bdate) patch['ECR_ActiveDate'] = new Date(selected.tlt_bdate);
         if (selected.tlt_edate) patch['ECR_ExpireDate'] = new Date(selected.tlt_edate);
         if (selected.Name) patch['ECR_Name'] = selected.Name;
         if (selected.Name) patch['ECR_TLT_Name'] = selected.Name;
 
         this.dataForm.patchValue(patch, { emitEvent: false });
+        this.syncLocNo(this.dataForm.get('ECR_LocNo')?.value);
       });
 
     // 若後端/範本回傳 null/undefined 的連接埠欄位，畫面預設顯示 0
@@ -398,6 +392,27 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   /** 專櫃選擇器彈窗點選某列：記住這筆(可能是生效中或尚未生效的營運區間)，供 ECR_TLT_No valueChanges 精確帶入表單 */
   onCounterRowSelect(row: TLTTALENTActiveContractItem): void {
     this.selectedCounterRow = row;
+  }
+
+  /**
+   * 位置編號比對位置主檔(POS2002)：查得到就回填館別/樓層/區域並隱藏警告，查不到則清空該三欄並顯示常駐警告，
+   * 不論來源是自動帶入(專櫃合約/範本)、手動輸入，或 LocOptions 非同步載入完成後的重新比對，都走同一套邏輯。
+   */
+  private syncLocNo(selectedNo: string | null | undefined): void {
+    const selected = this.LocOptions.find(c => c.value === selectedNo);
+    this.locNoWarning = !!selectedNo && !selected;
+
+    const patch: Record<string, string> = {
+      ECR_Group: selected?.tlt_building || '',
+      ECR_SubGroup: selected?.tlt_floor || '',
+      ECR_AreaNo: selected?.area_no || '',
+    };
+
+    if (selected && this.isFormCreateable && !this.dataForm.get('ECR_TLT_Name')?.value) {
+      patch['ECR_TLT_Name'] = selected.Name || '';
+    }
+
+    this.dataForm.patchValue(patch, { emitEvent: false });
   }
 
   /** 判斷 TLT (專櫃編號) 必填 */

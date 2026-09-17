@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+﻿import { HttpClient, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
 import { AccDescOption, Aps2002DetailDataByInvoiceNoData, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, GetEmployeeBankAccountRequest, GetEmployeeBankAccountResult, EmployeeBankAccountItem, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps2002DetailDataByInvoiceNoRequest, QueryAps2002OriginalInvoicesForAllowanceRequest, QueryAps2002PurchaseInvoicesForPickerRequest, QueryAps4023DetailDataByInvoiceNumberRequest, QueryAps4023OriginalInvoicesForAllowanceRequest, Pos4023DetailDataByInvoiceNumberData, QueryPos4023DetailDataByInvoiceNumberRequest, QuerySalesInvoicesForPickerRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, QueryGLS3003AbatAcctRequest, QueryGLS3003AbatAcctResponse, CheckGLS3003PtaLockedRequest, CheckGLS3003PtaLockedResponse, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
@@ -412,6 +412,10 @@ export class FIN53010Service {
         map(res => res?.Data ?? false),
         catchError(() => of(false)),
       );
+  }
+
+  public getDefaultOrgId(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${apiUrl}/getDefaultOrgId`, {}).pipe(take(1));
   }
 
   public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
@@ -919,4 +923,12 @@ export class FIN53010Service {
       finalize(() => this.usrLoading.set(!1)),
     ).subscribe();
   }
+
+  public exportFIN53010(id: number): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${apiUrl}/exportFIN53010`, { id }, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
 }
+

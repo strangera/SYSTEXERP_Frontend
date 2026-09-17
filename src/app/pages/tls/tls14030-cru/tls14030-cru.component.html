@@ -16,19 +16,20 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div> -->
-        <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.talent_id"
-          [submitted]="submitted" optionLabel="Label" optionValue="No" [suggestions]="suggestions"
-          [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-          (formValueChanged)="onformValueChanged($event)" (select)="onTalentSelected($event)" [formGroup]="opForm"
-          [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords"
-          [lazy]="true">
-          <app-dropdown class="col-12 md:col-6" label="專櫃編號" [options]="tlt_noListOption" optionLabel="Label"
-            optionValue="No" (click)="$event.stopPropagation()" [control]="opForm.controls.TLT_NO"
-            [submitted]="submitted"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6" label="統一編號" [options]="ven_uniformOption" optionLabel="Label"
-            optionValue="No" (click)="$event.stopPropagation()" [control]="opForm.controls.ven_uniform"
-            [submitted]="submitted"></app-dropdown>
-        </app-dropdown-table>
+        <div class="col-12 md:col-6 lg:col-4 relative">
+          <app-dropdown-table [control]="dataForm.controls.talent_id"
+            [submitted]="submitted" optionLabel="Label" optionValue="No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)" (select)="onTalentSelected($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns"
+            [loading]="opLoading" [totalRecords]="opTotalRecords" [lazy]="true" [showOverlay]="false">
+          </app-dropdown-table>
+          @if (!dataForm.controls.talent_id.disabled) {
+            <div class="absolute top-0 left-0 w-full h-full"
+              style="cursor: pointer; z-index: 100; background: transparent;"
+              (click)="openSearchDialog()"></div>
+          }
+        </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
@@ -105,3 +106,66 @@
     </form>
   </p-panel>
 </div>
+
+<!-- ── 選取合約 Dialog ── -->
+<p-dialog
+  [(visible)]="searchDialogVisible"
+  header="選取合約"
+  [modal]="true"
+  [draggable]="true"
+  [resizable]="false"
+  [style]="{ width: '860px', 'max-width': '95vw' }">
+
+  <div class="grid p-fluid mb-3">
+    <div class="col">
+      <input pInputText [(ngModel)]="dialogKeyword" placeholder="合約編號 / 專櫃編號 / 專櫃名稱"
+        class="w-full" (keydown.enter)="onDialogSearch()" />
+    </div>
+    <div class="col-4">
+      <app-dropdown label="" controlName="ven_uniform"
+        [options]="ven_uniformOption" optionLabel="Label" optionValue="No"
+        [control]="opForm.controls.ven_uniform" [submitted]="false"
+        [showClear]="true" [filter]="true" customPlaceholder="統一編號（選填）">
+      </app-dropdown>
+    </div>
+    <div class="col-fixed" style="width: auto">
+      <button pButton label="查詢" icon="pi pi-search" type="button" (click)="onDialogSearch()"></button>
+    </div>
+  </div>
+
+  <p-table
+    [value]="opData"
+    [columns]="opColumns"
+    [loading]="opLoading"
+    [totalRecords]="opTotalRecords"
+    [paginator]="true"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90]"
+    [lazy]="true"
+    (onLazyLoad)="onDialogLazyLoad($event)"
+    selectionMode="single"
+    (onRowSelect)="onDialogRowSelect($event.data)"
+    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-hoverable-rows"
+    [scrollable]="true"
+    scrollHeight="400px">
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="text-left">合約編號</th>
+        <th class="text-left">專櫃名稱</th>
+        <th class="text-center" style="width: 80px">版次</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr [pSelectableRow]="row" style="cursor: pointer">
+        <td>{{ row.contract_no }}</td>
+        <td>{{ row.Name }}</td>
+        <td class="text-center">{{ row.contract_subno }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="text-center p-4 text-500">查無資料</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

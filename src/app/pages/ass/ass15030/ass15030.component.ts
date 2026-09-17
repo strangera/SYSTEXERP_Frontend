@@ -92,7 +92,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   private readonly detailColumns: any[] = [
     { field: 'SEQ', header: '項次', visible: true, width: '70px' },
-    { field: 'ASSET_ID', header: '財產編號', visible: true, width: '110px' },
+    { field: 'ASSET_ID', header: '資產編號', visible: true, width: '110px' },
     { field: 'GOODS_NAME', header: '項目名稱', visible: true, width: '160px' },
     { field: 'GET_DATE', header: '購入\n日期', visible: true, width: '100px', format: (v: string) => formatDate(v) },
     { field: 'BILL_DATE', header: '入帳\n日期', visible: true, width: '100px', format: (v: string) => formatDate(v) },

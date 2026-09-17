@@ -27,6 +27,7 @@ import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 
 // 共用組件
@@ -48,7 +49,7 @@ import { ContractItem } from '../../core/models/contract';
 // API 服務
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
-import { TLS13010Service } from '@service/api/tls/tls13010.service';
+import { EarlyTerminationPreview, TLS13010Service } from '@service/api/tls/tls13010.service';
 import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 import { concatMap, finalize, from } from 'rxjs';
 
@@ -84,7 +85,8 @@ import {
     Button,
     TooltipModule,
     DialogModule,
-    DatePipe
+    DatePipe,
+    TableModule
   ]
 })
 export class QueryComponent extends BasicQueryPageComponent<ContractItem> implements OnInit {
@@ -107,7 +109,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
         rowData.approve_status !== '2' ||
-        !this.hasPermission(Actions.AntiAudit)
+        !this.hasPermission(Actions.AntiAudit) ||
+        this.isUnApproveBlocked(rowData)
     },
 
     {
@@ -134,6 +137,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   earlyTerminationDialogVisible = false;
   earlyTerminationRow: ContractItem | null = null;
   earlyTerminationDateControl = new FormControl<Date | null>(null, Validators.required);
+  earlyTerminationPreview: EarlyTerminationPreview | null = null;
+  previewLoading = false;
+
 
   // ========== 表單定義 ==========
   queryForm = this.formBuilder.nonNullable.group({
@@ -466,12 +472,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   onEarlyTermination(rowData: ContractItem): void {
     this.earlyTerminationRow = rowData;
-    // minDate: 明天 (必須 > 系統日)
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
     this.earlyTerminationMinDate = tomorrow;
-    // maxDate: 契約截止日前一天 (必須 < tlt_edate)
     if (rowData.tlt_edate) {
       const contractEnd = new Date(rowData.tlt_edate);
       contractEnd.setDate(contractEnd.getDate() - 1);
@@ -480,29 +484,58 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       this.earlyTerminationMaxDate = null;
     }
     this.earlyTerminationDateControl.setValue(null);
+    this.earlyTerminationPreview = null;
     this.earlyTerminationDialogVisible = true;
   }
 
-  confirmEarlyTermination(): void {
+  private formatSelectedDate(): string {
+    const date = this.earlyTerminationDateControl.value!;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  previewEarlyTermination(): void {
     if (!this.earlyTerminationRow || !this.earlyTerminationDateControl.value) {
       this.earlyTerminationDateControl.markAsTouched();
       return;
     }
-    const date = this.earlyTerminationDateControl.value;
-    const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    const row = this.earlyTerminationRow;
+    this.previewLoading = true;
+    this.earlyTerminationPreview = null;
+    this.apiService.earlyTerminationPreviewTLS13010({
+      talentId: this.earlyTerminationRow.talent_id,
+      tlt_contract_edate: this.formatSelectedDate()
+    }).subscribe({
+      next: (res: any) => {
+        this.previewLoading = false;
+        if (res.Status === '0000') {
+          this.earlyTerminationPreview = res.Data;
+        } else {
+          this.messageService.errorBubble(`預覽失敗: ${res.Data?.Message || '請聯繫系統管理員'}`);
+        }
+      },
+      error: () => {
+        this.previewLoading = false;
+        this.messageService.errorBubble('預覽失敗，請檢查網路連線');
+      }
+    });
+  }
 
-    this.apiService.earlyTerminationTLS13010({ talentId: row.talent_id, tlt_contract_edate: formatted }).subscribe({
-      next: (res: { Status: string; Message: string }) => {
+  confirmEarlyTermination(): void {
+    if (!this.earlyTerminationRow || !this.earlyTerminationDateControl.value) return;
+    this.messageService.blockUi();
+    this.apiService.earlyTerminationTLS13010({
+      talentId: this.earlyTerminationRow.talent_id,
+      tlt_contract_edate: this.formatSelectedDate()
+    }).subscribe({
+      next: (res: any) => {
         if (res.Status === '0000') {
           this.messageService.successBubble('提前撤櫃成功');
           this.earlyTerminationDialogVisible = false;
           this.onSubmit(this.queryForm);
         } else {
-          this.messageService.errorBubble(`提前撤櫃失敗: ${res.Message}`);
+          this.messageService.errorBubble(`提前撤櫃失敗: ${res.Data?.Message || '請聯繫系統管理員'}`);
         }
       },
-      error: () => this.messageService.errorBubble('提前撤櫃失敗')
+      complete: () => this.messageService.unblockUi()
     });
   }
 
@@ -647,4 +680,22 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   private formatCommissionType(value: string): string {
     return CommissionTypeLabels[value as CommissionType] || value || '';
   }
+
+  // ========== 反審核月份卡控 ==========
+  /**
+   * 撤櫃(tlt_openflag='9')超過 撤櫃月+1 的月底即封鎖反審核
+   */
+  isUnApproveBlocked(rowData: ContractItem): boolean {
+    if (rowData.tlt_openflag !== '0') return false; // '0' = 已撤櫃
+    if (!rowData.tlt_contract_edate) return false;
+    const withdrawalDate = new Date(rowData.tlt_contract_edate);
+    let cutoffMonth = withdrawalDate.getMonth() + 2;
+    let cutoffYear = withdrawalDate.getFullYear();
+    if (cutoffMonth >= 12) { cutoffYear++; cutoffMonth -= 12; }
+    const today = new Date();
+    if (today.getFullYear() > cutoffYear) return true;
+    if (today.getFullYear() === cutoffYear && today.getMonth() >= cutoffMonth) return true;
+    return false;
+  }
+
 }

@@ -118,7 +118,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     });
   }
 
-  isRowSelectable(row: ISysbc00Data): boolean {
-    return row.CanDel;
+  isRowSelectable(): boolean {
+    return true;
   }
 }

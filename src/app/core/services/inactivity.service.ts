@@ -8,7 +8,7 @@ import { DOCUMENT } from '@angular/common';
 })
 export class InactivityService {
   private timeoutId: ReturnType<typeof setTimeout> | undefined;
-  private readonly timeout: number = 10 * 60 * 1000 * 6 * 8; // 10 minutes
+  private readonly timeout: number = 10 * 60 * 60 * 1000; // 10 hours
 
   constructor(
     private readonly authService: AuthService,

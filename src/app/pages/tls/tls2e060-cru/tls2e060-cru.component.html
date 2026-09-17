@@ -18,11 +18,17 @@
           [control]="dataForm.controls.tlt_no" [options]="tlt_noOptions" optionLabel="label" optionValue="tlt_no"
           [submitted]="submitted" (valueChange)="onTltNoChange($event)"></app-dropdown>
       </div>
-      <div class=" grid p-fluid">
+      <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="契約編號" controlName="contract_no"
           [control]="dataForm.controls.contract_no" [submitted]="submitted"></app-input-text>
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="版次" controlName="contract_subno"
-          [control]="dataForm.controls.contract_subno" [submitted]="submitted"></app-input-number>
+        <div class="col-12 md:col-6 lg:col-4 flex gap-2">
+          <app-dropdown class="flex-1" label="結帳方式" controlName="money_type"
+            [control]="dataForm.controls.money_type" [options]="money_typeOptions" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="flex-1" label="帳次" controlName="sam_termno"
+            [control]="dataForm.controls.sam_termno" [options]="sam_termnoOptions" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
+        </div>
       </div>
       <div class="grid p-fluid">
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="調整稅別" controlName="adj_taxtype"

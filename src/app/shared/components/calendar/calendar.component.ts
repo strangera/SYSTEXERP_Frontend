@@ -282,14 +282,38 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const value = input.value;
     if (!value) return;
 
-    // 🌟 離開欄位時一律嘗試將輸入字串轉為 Date 物件（不論是否為補值後的字串），
-    // 避免手key/貼上的完整日期字串（yyyy/mm/dd）殘留在 FormControl 中被原樣送到後端
-    const completedValue = this.fillIncompleteDate(value, this.calendarType);
     const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
-    const dateValue = this.parseDateWithOptionalTime(completedValue, shouldKeepTime);
+
+    // 🌟 優先直接解析使用者原始輸入（尊重使用者自己打的分隔符號位置，允許月/日/時/分為1~2碼），
+    // 避免 fillIncompleteDate 純憑數字總長度猜段落，把「2026/1/1」誤判成「2026/11/01」。
+    // 只有直接解析失敗（代表段落數量不足，如只打了年份或年+月）才 fallback 回舊有補值邏輯。
+    let dateValue = this.parseStrict(value);
+    if (!dateValue) {
+      const completedValue = this.fillIncompleteDate(value, this.calendarType);
+      dateValue = this.parseDateWithOptionalTime(completedValue, shouldKeepTime);
+    }
+
     if (dateValue) {
       this.control.setValue(dateValue);
-      input.value = completedValue;
+      input.value = this.formatDateForDisplay(dateValue, this.calendarType);
+    }
+  }
+
+  // 統一將 Date 物件格式化為畫面顯示字串，月/日/時/分一律補齊2碼，分隔符號固定歸一
+  private formatDateForDisplay(date: Date, type: CalendarType): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mi = pad(date.getMinutes());
+
+    switch (type) {
+      case 'dateTimeOne': return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+      case 'dateMonthOne': return `${yyyy}/${mm}`;
+      case 'timeOne': return `${hh}:${mi}`;
+      case 'dateYearOne': return `${yyyy}`;
+      default: return `${yyyy}/${mm}/${dd}`;
     }
   }
 
@@ -339,11 +363,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
   }
 
-  private parseDateWithOptionalTime(value: string, keepTime = false): Date | null {
+  // 嚴格解析：只認使用者自己打的分隔符號位置，允許月/日/時/分為1~2碼；不做任何猜測式 fallback。
+  // dateOne/dateTimeOne/dateMonthOne/timeOne 共用，貼上路徑與離焦手動輸入路徑皆靠這個函式保證正確歸位。
+  private parseStrict(value: string): Date | null {
     if (!value) return null;
     const dateStr = value.trim();
 
-    let match = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    let match = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{1,2})$/);
+    if (match) {
+      const date = new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10), parseInt(match[4], 10), parseInt(match[5], 10));
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    match = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
     if (match) {
       const year = parseInt(match[1], 10);
       const month = parseInt(match[2], 10) - 1;
@@ -359,6 +391,22 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const date = new Date(year, month, 1);
       return isNaN(date.getTime()) ? null : date;
     }
+
+    match = dateStr.match(/^(\d{1,2}):(\d{1,2})$/);
+    if (match) {
+      const now = new Date();
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(match[1], 10), parseInt(match[2], 10));
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    return null;
+  }
+
+  private parseDateWithOptionalTime(value: string, keepTime = false): Date | null {
+    if (!value) return null;
+
+    const strict = this.parseStrict(value);
+    if (strict) return strict;
 
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) {

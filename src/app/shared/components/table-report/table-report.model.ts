@@ -24,7 +24,8 @@ export interface ReportColumn {
 
 export type reportType =
   'string' | // string 類型，匯出時直接輸出原始值
-  'percentage' // percentage 類型，匯出時將數值乘以 100 並添加百分號，保留兩位小數
+  'percentage' | // percentage 類型，匯出時將數值乘以 100 並添加百分號，保留兩位小數
+  'integer' // integer 類型，匯出時四捨五入取整數並加上千分位
 
 export type TableTypes =
   'input' |

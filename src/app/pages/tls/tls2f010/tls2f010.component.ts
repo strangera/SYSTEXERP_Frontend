@@ -133,14 +133,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   isRowSelectable(row: any): boolean { return row?.Status !== 'Y' };
   deleteDisabled = (row: any): boolean => row?.Status === 'Y';
   editDisabled = (row: any): boolean => row?.Status === 'Y';
-  ven_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
-    map(list =>
-      (list ?? []).map(item => ({
-        label: `${item['No']} - ${item['Name']}`,
-        value: item['No']
-      }))
-    )
-  );
+  venUniformOptions = this.dropdown.queryPos2013VenUniformDistinct();
 
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();

@@ -96,7 +96,7 @@ export class ASS16040CRUComponent
    * NOTES
    */
 readonly detailColumns: ReportColumn[] = [
-  { field: 'GOODS_ID', header: '品項代號' },
+  { field: 'GOODS_ID', header: '品項編號' },
   { field: 'GOODS_NAME', header: '品項名稱' },
   { field: 'UNIT_NAME', header: '單位' },
   { field: 'QTY', header: '數量', align: 'right' },

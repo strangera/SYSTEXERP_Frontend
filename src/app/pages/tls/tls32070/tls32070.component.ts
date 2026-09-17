@@ -16,7 +16,7 @@ import { InputTextComponent } from '@shared/components/input-text/input-text.com
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
-import { formatAmount, formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { formatAmountWithDecimals, formatPercentage, ReportColumn } from '@shared/components/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -26,6 +26,15 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 const today = new Date();
 const yesterday = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
+
+// TLS32070 專用：金額類欄位（銷售金額/交易筆數/客單價/預售金額/消費人數/消費客單/差異）四捨五入至整數後再套千分位，
+// 與後端 PDF/Excel 匯出的 "#,##0" 格式（ToString 預設四捨五入away-from-zero）對齊，不修改共用的 formatAmount。
+const formatAmountRounded = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  const rounded = Math.sign(num) * Math.round(Math.abs(num));
+  return rounded.toLocaleString();
+};
 
 @Component({
   selector: 'app-tls32070',
@@ -181,39 +190,44 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
     { field: 'TltName', header: '櫃位名稱', align: 'left' },
     { field: 'TltId', header: '抽成類別代號', align: 'left' },
     { field: 'TltIdDesc', header: '抽成類別名稱', align: 'left' },
+    { field: 'DiscCode', header: '折扣別代碼', align: 'left' },
+    { field: 'DiscDesc', header: '折扣別名稱', align: 'left' },
 
     // 比較期 (依 PM 截圖，比較期放在前)
+    // reportType/exportFormat 是給共通報表 /exportPDF /exportExcel（table-report-caption → ReportExportService）用的匯出格式，
+    // 跟畫面上 format callback 是兩條獨立路徑，兩邊都要設才能讓畫面跟匯出檔顯示一致。
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較期' },
-    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '比較期' },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '比較期' },
-    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isPreSale },
-    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
-    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '比較期' },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
+    { field: 'Comp_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isPreSale },
+    { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isConsumerNum },
+    { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期', visible: this.isConsumerNum },
 
     // 基準期 (本期)
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
-    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), groupField: '基準期' },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '基準期' },
-    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isPreSale },
-    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
-    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '基準期' },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
+    { field: 'Base_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isPreSale },
+    { field: 'Base_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isConsumerNum },
+    { field: 'Base_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期', visible: this.isConsumerNum },
 
-    // 成長率 Group
-    { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
-    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
-    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), groupField: '成長率' },
+    // 成長率 Group（原始值是比例小數，用 reportType: 'percentage' 換算成 ×100 兩位小數 + %，
+    // 跟 tls2g030 的「平均抽成率」欄位是同一套既有機制，只是後端先前沒有真的實作，這次一併補上）
+    { field: 'Growth_SaleAmtPct', header: '銷售金額', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
+    { field: 'Growth_TxnCntPct', header: '交易筆數', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', format: (v) => formatPercentage(v), reportType: 'percentage', groupField: '成長率' },
 
     // 差異 Group
-    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmount, groupField: '差異' },
-    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmount, groupField: '差異', visible: this.isPreSale },
-    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
-    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmount, groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異' },
+    { field: 'Diff_PreOrderAmt', header: '預售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isPreSale },
+    { field: 'Diff_ConsumerNum', header: '消費人數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isConsumerNum },
+    { field: 'Diff_ConsumerOrder', header: '消費客單', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '差異', visible: this.isConsumerNum },
   ];
 
   // 跨欄 Group 表頭
@@ -340,8 +354,15 @@ export class TLS32070Component extends BasicQueryPageComponent<TLS32070Response>
         }),
         takeUntilDestroyed(this.destroyRef),
       ).subscribe((blob) => {
+        // 分頁標題實測不吃前端包 File 帶檔名這招（Chrome PDF 檢視器仍顯示 blob URL 的亂數 GUID），
+        // 真正決定分頁標題的是 PDF 檔案本身的 /Title metadata，已改在後端
+        // TLS32040ServiceExportHelper.ExportPDF() 用 QuestPDF 的 WithMetadata 設定，這裡不用再處理。
         const blobUrl = URL.createObjectURL(blob);
         globalThis.open(blobUrl, '_blank');
+        // 不能像 Excel 分支一樣 click 完立刻 revoke：window.open 開新分頁是非同步載入資源，
+        // 太早 revoke 會讓新分頁還沒抓到內容就失效（開出空白/錯誤頁）。延後釋放，
+        // 給新分頁足夠時間完成載入，同時避免 blob URL 一直累積在記憶體裡。
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
       });
     }
   }

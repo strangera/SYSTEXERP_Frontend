@@ -1,10 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-
-    <app-menubar
-      [ProgNo]="ProgNo"
-      class="flex-1"
-    ></app-menubar>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
     <!-- 確認審核 -->
     <app-button
@@ -16,25 +12,12 @@
     ></app-button>
 
     <!-- 返回 -->
-    <app-button
-      btnType="back"
-      (click)="onCancel()"
-    ></app-button>
-
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
-
-  <p-panel
-    [header]="formTitle | translate"
-    class="line-height-3 m-0"
-  >
-    <form
-      [formGroup]="dataForm"
-      id="dataForm"
-      (ngSubmit)="onSubmit()"
-    >
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-
         <!-- 申請人代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -47,7 +30,6 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-
 
         <!-- 部門代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -62,7 +44,6 @@
           ></app-dropdown>
         </div>
 
-
         <!-- 申請日期 -->
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
@@ -74,7 +55,6 @@
           [disabled]="true"
         ></app-calendar>
 
-
         <!-- 建議需求(日) -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
@@ -84,7 +64,6 @@
           [submitted]="submitted"
           [disabled]="true"
         ></app-input-text>
-
 
         <!-- 倉別代號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -99,7 +78,6 @@
           ></app-dropdown>
         </div>
 
-
         <!-- 主檔說明 -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
@@ -109,9 +87,7 @@
           [submitted]="submitted"
           [disabled]="true"
         ></app-input-text>
-
       </div>
-
 
       <!-- 明細 -->
       <div class="col-12">
@@ -124,11 +100,11 @@
           [lazy]="false"
           [showCheckBox]="false"
           [showManage]="false"
+          [showReportMode]="false"
           [showReorder]="false"
           [showDelete]="false"
         ></app-table-report>
       </div>
-
     </form>
   </p-panel>
 </div>

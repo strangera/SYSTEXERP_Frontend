@@ -81,9 +81,9 @@ export class Tls12010Service {
     return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
   }
 
-  // 查詢 廠商統一編號 設定檔  
-  queryPOS2013_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryPOS2013_DropDownList`, body);
+  // 廠商統一編號下拉（從Potential_Customer取distinct值，與POS2013無關）
+  queryTLS12010_CusUniformDropDown(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010_CusUniformDropDown`, {});
   }
   // 查詢 經營方式 設定檔 (SYS1000.t117)
   querySYS1000_DropDownList(body: any): Observable<any> {

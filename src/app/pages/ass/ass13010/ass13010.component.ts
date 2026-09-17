@@ -39,7 +39,7 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   private dropdownApiService = inject(DropdownApiService);
   //
   queryForm = this.formBuilder.group({
-    assetsCode: [], // 資產代號
+    assetsCode: [], // 資產編號
     itemCode: [], // 品項編號
     original_assetsCode: [, [Validators.maxLength(20)]], // 原資產編號
     assetsStatus: [], // 資產狀態
@@ -94,7 +94,7 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   selectedItems: QueryASS13010Response[] = [];
   btnPDFLoading = false;
   columns: ReportColumn[] = [
-    { field: 'ASSET_ID', header: '資產代號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     { field: 'GOODS_ID', header: '品項名稱' },
     { field: 'ASSET_STATUS_NAME', header: '資產狀態' },
     { field: 'DEPRE_YN_NAME', header: '資產類型' },
@@ -106,6 +106,7 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   ];
   // ----------------------------------------------------------------
   // 下拉選單（品項編號、採購單號來源待確認，先留空）
+  assetsCodeOptions: Option[] = []; // queryASS13010AssetIdDropdown（資產編號）
   itemCodeOptions: Option[] = [];
   assetsStatusOptions: Option[] = []; // querySYS1000_DropDownList SYS_Type='ASSET_STATUS'
   assetsTypeOptions = getSYS1000Options('ASSET_TYPE');
@@ -189,6 +190,9 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   };
 
   private loadDropdownOptions(): void {
+    this.dropdownApiService.queryASS13010AssetIdDropdown().pipe(untilDestroyed(this)).subscribe(res => {
+      this.assetsCodeOptions = res ?? [];
+    });
     this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.itemCodeOptions = res ?? [];
     });

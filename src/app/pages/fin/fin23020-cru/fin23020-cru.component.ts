@@ -102,10 +102,15 @@ export class FIN23020CRUComponent
   // ============================================================
 
   /**
-   * 科目
+   * 科目。
+   *
+   * 用 Fin23020Service.queryGls1005Fin23020()，
+   * 不用 DropdownApiService.queryGls1005_ledgerMD()：
+   * 後者多處共用，不帶 AccDC(借貸方屬性)，
+   * 本頁需要 AccDC 判斷選擇科目後開放借方或貸方金額欄位。
    */
   private readonly ledgerOptions$ =
-    this.dropdown.queryGls1005_ledgerMD();
+    this.fin23020Service.queryGls1005Fin23020();
 
 
   /**
@@ -119,6 +124,13 @@ export class FIN23020CRUComponent
    * 科目代號 -> 科目名稱
    */
   private readonly ledgerNameMap =
+    new Map<string, string>();
+
+
+  /**
+   * 科目代號 -> 借貸方屬性(AccDC，D:借方 C:貸方)
+   */
+  private readonly ledgerDCMap =
     new Map<string, string>();
 
 
@@ -235,6 +247,9 @@ export class FIN23020CRUComponent
 
   });
 
+  private initialFormDataSnapshot: Record<string, any> | null = null;
+  private initialDataSnapshot: PostingLine[] = [];
+
 
   // ============================================================
   // Table
@@ -248,9 +263,7 @@ export class FIN23020CRUComponent
   /**
    * Table Checkbox 目前勾選的資料。
    *
-   * 這裡只允許存放：
-   * _isManual === true
-   * 的手動新增會科。
+   * 原始 API 資料與手動新增會科皆可勾選 / 刪除。
    */
   selectedItems: PostingLine[] = [];
 
@@ -258,25 +271,9 @@ export class FIN23020CRUComponent
   /**
    * Checkbox 是否允許勾選。
    *
-   * 規則：
-   *
-   * 原始 API 資料
-   * _isManual = false
-   * => 不可勾選 / 不可刪除
-   *
-   * 手動新增資料
-   * _isManual = true
-   * => 可以勾選 / 可以刪除
+   * 所有列（含原始 API 資料與手動新增會科）皆開放勾選 / 刪除。
    */
-  isRowSelectable = (
-    rowData: PostingLine,
-    _rowIndex: number,
-    _data: PostingLine[]
-  ): boolean => {
-
-    return rowData._isManual === true;
-
-  };
+  isRowSelectable = (): boolean => true;
 
 
   /**
@@ -307,27 +304,12 @@ export class FIN23020CRUComponent
 
       templateLabel: 'label',
 
-      showClear: false,
+      showClear: false
 
       /**
-       * 規則：
-       *
-       * 1. 原始借方不可修改
-       * 2. 原始貸方可以修改
-       * 3. 手動新增的借方會科可以修改
+       * 借貸方科目代號皆開放編輯，
+       * 選擇後由 onTableFieldChange 同步更新科目名稱。
        */
-      disabled: (
-        _value,
-        _index,
-        rowData: PostingLine
-      ) => {
-
-        return (
-          rowData._isDebit === true &&
-          rowData._isManual !== true
-        );
-
-      }
 
     },
 
@@ -421,6 +403,8 @@ export class FIN23020CRUComponent
       header: '貸方金額',
       width: '120px',
 
+      type: 'inputNumber',
+
       format: formatAmount,
 
       textAlign: 'right',
@@ -428,9 +412,19 @@ export class FIN23020CRUComponent
       aggregate: 'sum',
 
       /**
-       * 目前貸方金額維持不可修改。
+       * 貸方列可以修改。
+       *
+       * 借方列的 CreditAmt 鎖住。
        */
-      disabled: () => true
+      disabled: (
+        _value,
+        _index,
+        rowData: PostingLine
+      ) => {
+
+        return rowData._isDebit !== false;
+
+      }
     },
 
 
@@ -543,11 +537,18 @@ export class FIN23020CRUComponent
 
         this.ledgerNameMap.clear();
 
+        this.ledgerDCMap.clear();
+
         options?.forEach(option => {
 
           this.ledgerNameMap.set(
             String(option.value),
             String(option.label)
+          );
+
+          this.ledgerDCMap.set(
+            String(option.value),
+            String(option['AccDC'] ?? '')
           );
 
         });
@@ -731,6 +732,12 @@ export class FIN23020CRUComponent
 
           this.initTable = true;
 
+          // ====================================================
+          // 儲存原始快照（包含 disabled 欄位的值與原始明細）
+          // ====================================================
+          this.initialFormDataSnapshot = this.dataForm.getRawValue();
+          this.initialDataSnapshot = lines.map(line => ({ ...line }));
+
         },
 
 
@@ -758,17 +765,8 @@ export class FIN23020CRUComponent
     rows: PostingLine[]
   ): void {
 
-    /**
-     * 再做一次防護。
-     *
-     * 即使 TableEdit 未來選取邏輯變更，
-     * 父層仍只接受 _isManual === true 的資料。
-     */
     this.selectedItems =
-      (rows ?? []).filter(
-        row =>
-          row._isManual === true
-      );
+      rows ?? [];
 
   }
 
@@ -799,6 +797,32 @@ export class FIN23020CRUComponent
         this.ledgerNameMap.get(
           String(value)
         ) ?? '';
+
+
+      /**
+       * 依科目本身的借貸方屬性(AccDC)，
+       * 決定這一列要開放借方金額還是貸方金額，
+       * 並把另一邊金額歸零。
+       */
+      const accDC =
+        this.ledgerDCMap.get(
+          String(value)
+        );
+
+
+      if (accDC === 'D') {
+
+        rowData._isDebit = true;
+
+        rowData.CreditAmt = 0;
+
+      } else if (accDC === 'C') {
+
+        rowData._isDebit = false;
+
+        rowData.DebitAmt = 0;
+
+      }
 
     }
 
@@ -837,6 +861,23 @@ export class FIN23020CRUComponent
     }
 
 
+    // ==========================================================
+    // 貸方金額
+    // ==========================================================
+
+    if (
+      field === 'CreditAmt' &&
+      !rowData._isDebit
+    ) {
+
+      rowData.CreditAmt =
+        Number(value ?? 0);
+
+      rowData.DebitAmt = 0;
+
+    }
+
+
     /**
      * 重新給 Array Reference，
      * 確保 TableEdit 合計列更新。
@@ -870,8 +911,7 @@ export class FIN23020CRUComponent
     this.selectedItems =
       this.selectedItems.filter(
         selected =>
-          this.data.includes(selected) &&
-          selected._isManual === true
+          this.data.includes(selected)
       );
 
   }
@@ -1098,6 +1138,85 @@ export class FIN23020CRUComponent
 
 
     // ==========================================================
+    // 原始借貸科目代號檢查
+    //
+    // 借貸科目代號已開放編輯且為後端必填欄位，
+    // 需再次確認原始借方/貸方列的科目代號未被清空。
+    // ==========================================================
+
+    const originalLines =
+      this.data.filter(
+        row =>
+          row._isManual !== true
+      );
+
+
+    for (const row of originalLines) {
+
+      if (!row.AcctCode) {
+
+        this.messageService.errorBubble(
+          `${row._isDebit ? '借方' : '貸方'}科目代號不可為空`
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    // ==========================================================
+    // 每筆暫付款申請至少須保留一筆借方、一筆貸方
+    //
+    // Checkbox 已開放刪除原始資料，
+    // 需防止使用者把某筆暫付款申請的借方或貸方整筆刪光。
+    // ==========================================================
+
+    const sourceGroups =
+      new Map<number, PostingLine[]>();
+
+
+    this.data.forEach(row => {
+
+      const arr =
+        sourceGroups.get(row._sourceId) ?? [];
+
+
+      arr.push(row);
+
+
+      sourceGroups.set(
+        row._sourceId,
+        arr
+      );
+
+    });
+
+
+    for (const [, rows] of sourceGroups) {
+
+      const hasDebit =
+        rows.some(row => row._isDebit === true);
+
+      const hasCredit =
+        rows.some(row => row._isDebit === false);
+
+
+      if (!hasDebit || !hasCredit) {
+
+        this.messageService.errorBubble(
+          `${rows[0]._prepNo}：借方與貸方明細皆不可整筆刪除`
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    // ==========================================================
     // 借貸平衡檢查
     // ==========================================================
 
@@ -1146,31 +1265,11 @@ export class FIN23020CRUComponent
     }
 
 
-    // ==========================================================
-    // 按 sourceId 分組
-    // ==========================================================
-
+    /**
+     * 按 sourceId 分組（沿用上方已建立的 sourceGroups）
+     */
     const grouped =
-      new Map<number, PostingLine[]>();
-
-
-    this.data.forEach(line => {
-
-      const arr =
-        grouped.get(
-          line._sourceId
-        ) ?? [];
-
-
-      arr.push(line);
-
-
-      grouped.set(
-        line._sourceId,
-        arr
-      );
-
-    });
+      sourceGroups;
 
 
     const vouSummary =
@@ -1208,131 +1307,76 @@ export class FIN23020CRUComponent
 
 
         // ======================================================
-        // Request
+        // Request：所有 id 合併成一張傳票，借/貸科目取第一筆
         // ======================================================
 
-        /**
-         * 注意：
-         *
-         * 目前 PostingFIN23020Request
-         * 還是舊結構。
-         *
-         * 目前 API 真正送出的內容仍然是：
-         *
-         * 原始借方
-         * +
-         * 原始貸方
-         *
-         * 手動新增會科目前只存在畫面。
-         *
-         * 如果後端要真正新增第 3、4 筆傳票明細，
-         * Request / API / SP 必須一起改 Details[]。
-         */
-        const requests =
-          entries.map(
-            ([id, lines]) => {
+        const firstLines =
+          entries[0][1];
 
-
-              /**
-               * 原始借方
-               *
-               * 排除新增會科。
-               */
-              const debit =
-                lines.find(
-                  line =>
-                    line._isDebit &&
-                    !line._isManual
-                );
-
-
-              /**
-               * 原始貸方
-               */
-              const credit =
-                lines.find(
-                  line =>
-                    !line._isDebit
-                );
-
-
-              const request:
-                PostingFIN23020Request = {
-
-                id,
-
-
-                // ----------------------------------------------
-                // 貸方科目
-                // ----------------------------------------------
-
-                CreditAccNo:
-                  credit?.AcctCode
-                  ?? undefined,
-
-
-                // ----------------------------------------------
-                // 組織
-                // ----------------------------------------------
-
-                DebitOrgId:
-                  debit?.DeptCode
-                  ?? undefined,
-
-                CreditOrgId:
-                  credit?.DeptCode
-                  ?? undefined,
-
-
-                // ----------------------------------------------
-                // 立沖
-                // ----------------------------------------------
-
-                DebitOffsetNo:
-                  debit?.OffsetCode
-                  ?? undefined,
-
-
-                // ----------------------------------------------
-                // 摘要
-                // ----------------------------------------------
-
-                DebitSummary:
-                  debit?.Summary
-                  ?? undefined,
-
-                CreditSummary:
-                  credit?.Summary
-                  ?? undefined,
-
-                VouSummary:
-                  vouSummary,
-
-
-                // ----------------------------------------------
-                // 傳票日期
-                // ----------------------------------------------
-
-                VouDate:
-                  vouDate
-
-              };
-
-
-              return this.fin23020Service
-                .postingFIN23020(
-                  request
-                );
-
-            }
+        const debit =
+          firstLines.find(
+            line =>
+              line._isDebit &&
+              !line._isManual
           );
 
+        const credit =
+          firstLines.find(
+            line =>
+              !line._isDebit
+          );
+
+        const request:
+          PostingFIN23020Request = {
+
+          ids:
+            entries.map(
+              ([id]) => id
+            ),
+
+          DebitAccNo:
+            debit?.AcctCode
+            ?? '',
+
+          CreditAccNo:
+            credit?.AcctCode
+            ?? '',
+
+          DebitOrgId:
+            debit?.DeptCode
+            ?? undefined,
+
+          CreditOrgId:
+            credit?.DeptCode
+            ?? undefined,
+
+          DebitOffsetNo:
+            debit?.OffsetCode
+            ?? undefined,
+
+          DebitSummary:
+            debit?.Summary
+            ?? undefined,
+
+          CreditSummary:
+            credit?.Summary
+            ?? undefined,
+
+          VouSummary:
+            vouSummary,
+
+          VouDate:
+            vouDate
+
+        };
+
 
         // ======================================================
-        // API
+        // API：單一呼叫，一張傳票
         // ======================================================
 
-        forkJoin(requests)
+        this.fin23020Service
+          .postingFIN23020(request)
           .pipe(
 
             finalize(
@@ -1345,73 +1389,15 @@ export class FIN23020CRUComponent
           )
           .subscribe({
 
-            next: results => {
+            next: res => {
 
-              const successMessages:
-                string[] = [];
-
-              const failMessages:
-                string[] = [];
-
-
-              results.forEach(
-                (res, idx) => {
-
-                  const prepNo =
-                    entries[idx][1][0]
-                      ?._prepNo;
-
-
-                  if (
-                    res?.Data?.Success
-                  ) {
-
-                    /**
-                     * 顯示後端回傳的訊息
-                     * （已含傳票號），
-                     * 沒有訊息時用傳票號補上。
-                     */
-                    const detail =
-                      res.Data.Message
-                      || (
-                        res.Data.VouNo
-                          ? `拋轉成功，傳票號：${res.Data.VouNo}`
-                          : '拋轉成功'
-                      );
-
-                    successMessages.push(
-                      `${prepNo}: ${detail}`
-                    );
-
-                  } else {
-
-                    failMessages.push(
-                      `${prepNo}: ${
-                        res?.Data?.Message
-                        || '拋轉失敗'
-                      }`
-                    );
-
-                  }
-
-                }
-              );
-
-
-              const successCount =
-                successMessages.length;
-
-
-              const successBlock =
-                successMessages.length
-                  ? `成功 ${successCount} 筆：<br>${successMessages.join('<br>')}`
-                  : `成功 ${successCount} 筆`;
-
-
-              const summary =
-                failMessages.length
-                  ? `${successBlock}<br>失敗 ${failMessages.length} 筆：<br>${failMessages.join('<br>')}`
-                  : successBlock;
+              const message =
+                res?.Data?.Message
+                || (
+                  res?.Data?.VouNo
+                    ? `拋轉成功，傳票號：${res.Data.VouNo}`
+                    : '拋轉成功'
+                );
 
 
               setTimeout(() => {
@@ -1419,17 +1405,16 @@ export class FIN23020CRUComponent
                 this.messageService.confirm({
 
                   header:
-                    failMessages.length
-                      ? '拋轉完成(部分失敗)'
-                      : '拋轉成功',
+                    res?.Data?.Success
+                      ? '拋轉成功'
+                      : '拋轉失敗',
 
-                  message:
-                    summary,
+                  message,
 
                   icon:
-                    failMessages.length
-                      ? 'pi pi-exclamation-triangle'
-                      : 'pi pi-check-circle',
+                    res?.Data?.Success
+                      ? 'pi pi-check-circle'
+                      : 'pi pi-exclamation-triangle',
 
                   acceptLabel:
                     '確定',
@@ -1438,8 +1423,11 @@ export class FIN23020CRUComponent
                     false,
 
                   accept:
-                    () =>
-                      this.onCancel()
+                    () => {
+                      if (res?.Data?.Success) {
+                        this.onCancel();
+                      }
+                    }
 
                 });
 
@@ -1464,4 +1452,18 @@ export class FIN23020CRUComponent
 
   }
 
+  onResetEditableFields(): void {
+    // 1. 還原主表（使用 patchValue + 快照，不會清空 disabled 欄位）
+    if (this.initialFormDataSnapshot) {
+      this.dataForm.patchValue(this.initialFormDataSnapshot);
+    }
+
+    // 2. 還原明細（深拷貝還原，自動移除手動新增的行，並復原編輯過的金額/科目）
+    if (this.initialDataSnapshot) {
+      this.data = this.initialDataSnapshot.map(line => ({ ...line }));
+    }
+
+    // 3. 清空表格選取項目
+    this.selectedItems = [];
+  }
 }

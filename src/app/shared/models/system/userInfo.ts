@@ -16,4 +16,5 @@ export interface UserInfo {
   client_ip: string;          // 使用者 IP 地址
   STR_Uniform: string;        // 統一編號
   CompNo: string;             // 公司編號
+  loginTime?: string;         // 登入時間
 }

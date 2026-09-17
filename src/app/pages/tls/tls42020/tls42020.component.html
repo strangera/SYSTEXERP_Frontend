@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" label="複製設定" (click)="openCopyDialog()"></app-button>
     <app-button btnType="create" (click)="onCreate()" label="新增"></app-button>
   </div>
   <p-accordion>
@@ -63,4 +64,42 @@
   </form>
   <app-file-upload #fileUpload [accept]="'.xlsx,.xls'" [customUpload]="true"
     (uploadHandler)="onFileUpload($event)"></app-file-upload>
+</app-dialog>
+
+<app-dialog [visible]="copyDialogVisible" header="複製設定" (visibleChange)="copyDialogVisible = $event"
+  (save)="saveCopyDialog(copyDialogForm)" [loading]="loading" [width]="'900px'">
+  <form [formGroup]="copyDialogForm" class="grid p-fluid">
+    <app-dropdown class="col-12" label="來源菜單" controlName="Source_No" [control]="copyDialogForm.controls.Source_No"
+      [options]="copySourceOptions" optionLabel="label" optionValue="value" [submitted]="submitted"
+      (changeEvent)="onCopySourceChange($event)"></app-dropdown>
+
+    <hr class="col-12" />
+
+    <app-dropdown class="col-12 md:col-6" label="目標專櫃" controlName="Target_TLT_No"
+      [control]="copyDialogForm.controls.Target_TLT_No" [options]="targetTltNoOptions | async" optionLabel="label"
+      optionValue="value" [submitted]="submitted"></app-dropdown>
+    <app-dropdown class="col-12 md:col-6" label="目標菜單類別" controlName="Target_SBM_Type"
+      [control]="copyDialogForm.controls.Target_SBM_Type" [options]="menuTypeOptions" optionLabel="label"
+      optionValue="value" [submitted]="submitted"></app-dropdown>
+    <app-calendar class="col-12 md:col-6" label="目標有效起始日期" calendarType="dateOne"
+      [control]="copyDialogForm.controls.Target_SBM_BegDate" [submitted]="submitted"></app-calendar>
+    <app-calendar class="col-12 md:col-6" label="目標有效結束日期" calendarType="dateOne"
+      [control]="copyDialogForm.controls.Target_SBM_EndDate" [submitted]="submitted"></app-calendar>
+  </form>
+
+  @if (submitted && !selectedSourceItem) {
+  <small class="text-red-500 block mt-2">
+    ❌ 請先選擇來源菜單
+  </small>
+  }
+  @if (submitted && isTargetSameAsSource) {
+  <small class="text-red-500 block mt-2">
+    ❌ 目標專櫃不可與來源專櫃相同
+  </small>
+  }
+
+  <app-table-report tableKey="TLS42020CopySourceDetail" dataKey="ID" [lazy]="false" [showManage]="false"
+    [showDelete]="false" [showReportMode]="false" [showExcel]="false" [data]="copySourceDetail"
+    [columns]="copySourceExpansionColumns" [totalRecords]="copySourceDetail.length"
+    [loading]="copySourceDetailLoading"></app-table-report>
 </app-dialog>

@@ -46,7 +46,9 @@ interface DetailRow {
   purTaxType: string | null;
   purNet: number | null;
   purTax: number | null;
+  orgId: string | null;
   projectNo: string | null;
+  acctKey: string | null;
   purDiscNo: string | null;
   purType: string | null;
   purCombCnt: number | null;
@@ -78,6 +80,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
   });
 
   readonly accNoOptions$ = this.dropdown.queryGls1005_ledgerMD();
+  readonly orgIdOptions$ = this.dropdown.querySys3100();
   readonly acpTypeOptions$ = getSYS1000Options$(this.systemDataService, 'PCS_DtlType');
   // 發票格式原始選項串流（加上 shareReplay 避免重複請求 API）
   readonly purVoucherTypeBaseOptions$ = getSYS1000Options$(this.systemDataService, 'PUR_VoucherType').pipe(
@@ -334,18 +337,31 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       },
     },
     {
-      field: 'projectNo',
-      header: '活動代碼',
+      field: 'orgId',
+      header: '組織代碼',
       width: '160px',
       type: 'dropdown',
       textAlign: 'left',
       optionsAsync: true,
-      options: () => this.projectNoOptions$,
+      options: () => this.orgIdOptions$,
       optionLabel: 'label',
       optionValue: 'value',
       templateLabel: 'label',
-      validate: [this.maxLengthRule(20)],
     },
+    // 活動代碼：後端保留欄位，前端暫不顯示
+    // {
+    //   field: 'projectNo',
+    //   header: '活動代碼',
+    //   width: '160px',
+    //   type: 'dropdown',
+    //   textAlign: 'left',
+    //   optionsAsync: true,
+    //   options: () => this.projectNoOptions$,
+    //   optionLabel: 'label',
+    //   optionValue: 'value',
+    //   templateLabel: 'label',
+    //   validate: [this.maxLengthRule(20)],
+    // },
     {
       field: 'purDiscNo',
       header: '扣抵代號',
@@ -373,6 +389,7 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       templateLabel: 'label',
     },
     { field: 'purCombCnt', header: '彙總張數', width: '100px', type: 'inputNumber' },
+    { field: 'acctKey', header: '對帳key值', width: '140px', type: 'input', textAlign: 'left' },
   ];
 
   readonly defaultInsertData: Partial<DetailRow> = {
@@ -493,7 +510,9 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       purTaxType: d.PUR_TaxType,
       purNet: d.PUR_Net,
       purTax: d.PUR_Tax,
+      orgId: d.ORG_ID,
       projectNo: d.ProjectNo,
+      acctKey: d.ACCT_KEY,
       purDiscNo: d.PUR_DiscNo,
       purType: d.PUR_Type,
       purCombCnt: d.PUR_Comb_Cnt,
@@ -532,7 +551,9 @@ export class FIN23040CRUComponent extends BasicCruPageComponent<QueryFIN23040Typ
       PUR_TaxType: detail.purTaxType ?? '',
       PUR_Net: Number(detail.purNet ?? 0),
       PUR_Tax: detail.purTax != null ? Number(detail.purTax) : null,
+      ORG_ID: detail.orgId || null,
       ProjectNo: detail.projectNo || null,
+      ACCT_KEY: detail.acctKey || null,
       PUR_DiscNo: detail.purDiscNo || null,
       PUR_Type: detail.purType || null,
       PUR_Comb_Cnt: detail.purCombCnt != null ? Number(detail.purCombCnt) : null,

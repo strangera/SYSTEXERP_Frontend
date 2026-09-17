@@ -143,8 +143,11 @@ export class TLS24030CRUComponent extends BasicCruPageComponent<TLS24030Item> im
     this.tls24030Service.queryTLS24030Detail(body).subscribe(res => {
       if (res.Data && res.Data.length > 0) {
         const detail = res.Data[0];
-        // 1. 填充主表單資料
-        this.dataForm.patchValue(detail.MainData as any);
+        // 1. 填充主表單資料（TXN_No 補零至6碼顯示，不影響原始資料）
+        this.dataForm.patchValue({
+          ...detail.MainData,
+          TXN_No: String(detail.MainData.TXN_No).padStart(6, '0')
+        } as any);
         // 2. 處理商品明細 (ProductDetailList) 並組合欄位
         this.productDetailList = (detail.ProductDetailList || []).map((item) => ({
           ...item,

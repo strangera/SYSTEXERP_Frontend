@@ -87,7 +87,9 @@ export interface DetailFIN23040Response {
   PUR_TaxType: string;
   PUR_Net: number | null;
   PUR_Tax: number | null;
+  ORG_ID: string | null;
   ProjectNo: string | null;
+  ACCT_KEY: string | null;
   PUR_DiscNo: string | null;
   PUR_Type: string | null;
   PUR_Comb_Cnt: number | null;
@@ -117,7 +119,9 @@ export interface FIN23040InvoiceItem {
   PUR_TaxType: string;
   PUR_Net: number;
   PUR_Tax?: number | null;
+  ORG_ID?: string | null;
   ProjectNo?: string | null;
+  ACCT_KEY?: string | null;
   PUR_DiscNo?: string | null;
   PUR_Type?: string | null;
   PUR_Comb_Cnt?: number | null;

@@ -7,6 +7,7 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { FileUploadComponent } from '@shared/components/file-upload/file-upload.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
@@ -16,10 +17,18 @@ import { ErrorReportService } from '@shared/service/error-report.service'; // �
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { TLS42020Data, TLS42020DetailQueryRequest, TLS42020Service } from '../../../service/api/tls/tls42020.service';
+import {
+  TLS42020Data,
+  TLS42020DetailData,
+  TLS42020DetailQueryRequest,
+  TLS42020InsertUpdateDetailData,
+  TLS42020InsertUpdateRequest,
+  TLS42020Service
+} from '../../../service/api/tls/tls42020.service';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -40,6 +49,7 @@ import { formatDate } from '../tls2f010-cru/tls2f010-table-report.model';
     TableReportComponent,
     TranslateModule,
     DialogComponent,
+    DropdownComponent,
     FileUploadComponent,
     RadiobuttonComponent,
     CalendarComponent,
@@ -105,6 +115,33 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { field: 'PLU_SalePrc', header: '商品售價', format: formatAmount },
   ];
 
+  // =================================================================
+  // 複製設定 Dialog
+  // =================================================================
+  copyDialogVisible = false;
+  copyDialogForm = this.fb.group({
+    Source_No: [null as number | null, [Validators.required]],
+    Target_TLT_No: [null as string | null, [Validators.required]],
+    Target_SBM_Type: [null as string | null, [Validators.required]],
+    Target_SBM_BegDate: [null as Date | null, [Validators.required]],
+    Target_SBM_EndDate: [null as Date | null, [Validators.required]],
+  });
+  copySourceOptions: { value: number; label: string; item: TLS42020Data }[] = [];
+  copySourceDetail: TLS42020DetailData[] = [];
+  copySourceDetailLoading = false;
+  /** 使用者目前選定的來源菜單完整資料，供卡控(目標專櫃不可與來源相同)與送出組 payload 用 */
+  selectedSourceItem: TLS42020Data | null = null;
+  targetTltNoOptions = this.dropDown.queryTltTalent();
+  copySourceExpansionColumns: ReportColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理碼' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_PrnName', header: '按鍵名稱' },
+    { field: 'PLU_FixPrc', header: '定價', format: formatAmount },
+    { field: 'PLU_SalePrc', header: '售價', format: formatAmount },
+    { field: 'SBM_BtnNo', header: '按鍵序號' },
+  ];
+
   constructor(private readonly fileExportService: FileExportService) {
     super();
   }
@@ -136,6 +173,98 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     };
     return this.tls42020Service.queryTLS42020Detail(request);
   };
+
+  openCopyDialog(): void {
+    this.copyDialogVisible = true;
+    this.copyDialogForm.reset();
+    this.copySourceDetail = [];
+    this.selectedSourceItem = null;
+    this.submitted = false;
+    this.tls42020Service.queryTLS42020AllDropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const data = res?.Data ?? [];
+        this.copySourceOptions = data.map(item => ({
+          value: item.id,
+          label: `${item.TLT_No}-${item.TLT_Name}－${getSYS1000('SBM_Type', item.SBM_Type ?? '')}－${this.datePipe.transform(item.SBM_BegDate, 'yyyy-MM-dd')}~${this.datePipe.transform(item.SBM_EndDate, 'yyyy-MM-dd')}`,
+          item,
+        }));
+      });
+  }
+
+  onCopySourceChange(event: DropdownChangeEvent): void {
+    this.copySourceDetail = [];
+    const selected = this.copySourceOptions.find(opt => opt.value === event.value)?.item;
+    this.selectedSourceItem = selected ?? null;
+    if (!selected) return;
+
+    const request: TLS42020DetailQueryRequest = {
+      MID: selected.mid,
+      STO_No: selected.STO_No,
+      SBM_Type: selected.SBM_Type?.toString() ?? '',
+      TLT_No: selected.TLT_No,
+      SBM_BegDate: this.datePipe.transform(selected.SBM_BegDate, 'yyyy-MM-ddTHH:mm:ss') ?? '',
+    };
+    this.copySourceDetailLoading = true;
+    this.tls42020Service.queryTLS42020Detail(request)
+      .pipe(untilDestroyed(this), finalize(() => this.copySourceDetailLoading = false))
+      .subscribe(res => {
+        this.copySourceDetail = res?.Data ?? [];
+      });
+  }
+
+  /** 目標專櫃 trim 後是否與來源專櫃相同(僅支援跨專櫃複製，不支援複製到同專櫃) */
+  get isTargetSameAsSource(): boolean {
+    const source = this.selectedSourceItem?.TLT_No?.trim() ?? '';
+    const target = this.copyDialogForm.value.Target_TLT_No?.toString().trim() ?? '';
+    return source !== '' && target !== '' && source === target;
+  }
+
+  saveCopyDialog(frm: FormGroup): void {
+    this.submitted = true;
+
+    if (frm.invalid || !this.selectedSourceItem || this.isTargetSameAsSource) {
+      return;
+    }
+
+    this.handleSubmit(frm, () => {
+      const v = frm.getRawValue();
+      const targetTltNo = v.Target_TLT_No ?? '';
+      const targetSbmType = v.Target_SBM_Type ?? '';
+      const targetBegDate = this.datePipe.transform(v.Target_SBM_BegDate, 'yyyy-MM-ddTHH:mm:ss') ?? '';
+      const targetEndDate = this.datePipe.transform(v.Target_SBM_EndDate, 'yyyy-MM-ddTHH:mm:ss') ?? '';
+
+      const payload: TLS42020InsertUpdateRequest = {
+        SBM_Type: targetSbmType,
+        TLT_No: targetTltNo,
+        SBM_BegDate: targetBegDate,
+        SBM_EndDate: targetEndDate,
+        POS10271: this.copySourceDetail.map((d): TLS42020InsertUpdateDetailData => ({
+          ID: 0,
+          SBM_Type: targetSbmType,
+          TLT_No: targetTltNo,
+          SBM_BegDate: targetBegDate,
+          SBM_EndDate: targetEndDate,
+          SBM_SeqNo: d.SBM_SeqNo,
+          PLU_MagNo: '',
+          PLU_No: '',
+          PLU_Name: d.PLU_Name,
+          PLU_PrnName: d.PLU_PrnName,
+          PLU_FixPrc: d.PLU_FixPrc,
+          PLU_SalePrc: d.PLU_SalePrc,
+          SBM_BtnNo: d.SBM_BtnNo,
+        })),
+      };
+
+      this.tls42020Service.insertTLS42020(payload)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(() => {
+          this.messageService.successBubble('複製成功');
+          this.copyDialogVisible = false;
+          this.onSubmit(this.queryForm);
+        });
+    });
+  }
 
   onDelete(selectedItems: TLS42020Data[]) {
     this.messageService.confirm({

@@ -85,6 +85,8 @@ import {
   TalentAllowedQuery,
   TalentByContractDateItem,
   TalentByContractDateQuery,
+  TalentContractHistoryItem,
+  TalentContractHistoryQuery,
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
@@ -696,6 +698,39 @@ export class DropdownApiService {
     );
   }
 
+  /**
+   * 查詢全部資產編號下拉選單 — 沒有專屬 DropDownList endpoint，
+   * 借用既有 queryASS13010 主查詢 endpoint，不帶查詢條件、PageSize=9999 一次取齊全部資產。
+   * Endpoint response 為 wrapped 結構 `ApiResponse<{ TotalRows, TotalPages, QueryData: T[] }>`，
+   * 與 `queryAndMapDropdown` 預期的扁平 `ApiResponse<T[]>` 不同，因此直接 inline 處理（比照 queryFasItemAss1000Dropdown）。
+   */
+  queryASS13010AssetIdDropdown(): Observable<Option[] | null> {
+    return this.http
+      .post<
+        ApiResponse<{
+          TotalRows?: number;
+          TotalPages?: number;
+          QueryData?: { ASSET_ID?: string | null }[] | null;
+        }>
+      >(`${this.apiUrl}/ASS0000/ASS1000/queryASS13010`, {
+        PageSize: 9999,
+        PageIndex: 1,
+      })
+      .pipe(
+        map(response => {
+          const items = response?.Data?.QueryData ?? null;
+          if (!items) return null;
+          const assetIds = [...new Set(items.map(item => item.ASSET_ID).filter((id): id is string => !!id))];
+          return assetIds.map(id => ({ value: id, label: id }));
+        }),
+        catchError(err => {
+          console.error('API /ASS0000/ASS1000/queryASS13010 (資產編號下拉) 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
+
   /** 查詢進貨單號下拉選單(ASS15070) */
   queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
     return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
@@ -798,6 +833,22 @@ export class DropdownApiService {
       'Name',
       { VEN_Flag: '' }
     ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢廠商統一編號下拉(POS2013，依統編去重，value=統一編號 No，label='統編 - 廠商名稱') — 同一統編可能對應多筆不同 VEN_No 的廠商資料，只保留第一筆，寫法比照 tls13010 的 VendorCategoryOptionsService.getVendorCategoryNoNameOptions() — 供 TLS2F010 廠商統一編號欄位使用 */
+  queryPos2013VenUniformDistinct(): Observable<Option[] | null> {
+    return this.queryPos2013VenUniform().pipe(
+      map(options => {
+        if (!options) return null;
+        const seen = new Set<string | number>();
+        return options.filter(opt => {
+          if (seen.has(opt.value)) return false;
+          seen.add(opt.value);
+          return true;
+        });
+      }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
@@ -1049,6 +1100,24 @@ export class DropdownApiService {
   queryTltTalentActiveContract(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<TLTTALENTActiveContractItem>('/queryTLTTALENT_ActiveContract_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /**
+   * 【共通】查詢專櫃主檔(TLTTALENT)下拉選單(含歷史合約，同一tlt_no不去重，逐筆回傳每份合約)
+   * DateFrom/DateTo 可選填(篩選與此區間有重疊的合約)，不填則回傳全部；value=talent_id，label 含合約起訖日期
+   */
+  queryTltTalentContractHistory(body: TalentContractHistoryQuery = {}): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<TalentContractHistoryItem, TalentContractHistoryQuery>(
+      '/queryTLTTALENT_ContractHistory_DropDownList',
+      body
+    ).pipe(
+      map(items => items?.map(item => ({
+        ...item,
+        value: item.talent_id,
+        label: `${item.tlt_no} - ${item.tlt_name} (${item.tlt_bdate ?? ''}~${item.tlt_edate ?? ''})`,
+      })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

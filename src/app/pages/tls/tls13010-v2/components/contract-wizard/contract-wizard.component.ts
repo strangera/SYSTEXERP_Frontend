@@ -483,8 +483,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       expiration_fees: [0],
 
       // 聯絡資訊
-      email: ['', [Validators.maxLength(100)]],
-      invoice_email: ['', [Validators.maxLength(100)]],
+      email: ['', [Validators.maxLength(200)]],
+      invoice_email: ['', [Validators.maxLength(200)]],
       CHECK_TITLE: ['', [Validators.maxLength(100)]],
       store_tel: ['', [Validators.maxLength(50)]],
       bank_id: ['', [Validators.maxLength(10)]],

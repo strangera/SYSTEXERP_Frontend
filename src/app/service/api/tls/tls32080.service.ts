@@ -97,17 +97,17 @@ export class TLS32080Service {
 
   constructor(private http: HttpClient) { }
 
-  // 查詢抽成類別折扣分析報表
+  // 查詢抽成類別條件分析報表
   queryTLS32080(data: TLS32080Request): Observable<ApiResponse<TLS32080Response[]>> {
     return this.http.post<ApiResponse<TLS32080Response[]>>(`${this.apiUrl}/queryTLS32080`, data);
   }
 
-  // 匯出抽成類別折扣分析報表 PDF
+  // 匯出抽成類別條件分析報表 PDF
   exportTLS32080PDF(data: TLS32080Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS32080PDF`, data, { responseType: 'blob' });
   }
 
-  // 匯出抽成類別折扣分析報表 Excel
+  // 匯出抽成類別條件分析報表 Excel
   exportTLS32080Excel(data: TLS32080Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS32080Excel`, data, { responseType: 'blob' });
   }

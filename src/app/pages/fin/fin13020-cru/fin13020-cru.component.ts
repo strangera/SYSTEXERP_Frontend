@@ -58,7 +58,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 發票號碼選取 dialog
   showInvoiceDialog = false;
-  invoiceDialogData: { InvoiceNumber: string }[] = [];
+  invoiceDialogData: { InvoiceNumber: string; Source?: string }[] = [];
   invoiceDialogTotal = 0;
   invoiceDialogFilterControl = new FormControl('');
   invoiceDialogLoading = false;
@@ -91,6 +91,9 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
    * 避免同一組字軌+發票號碼重複打 API
    */
   private lastLoadedInvoiceKey = '';
+
+  /** 使用者從 dialog 選取的發票來源（APS 或 POS），undefined 表示不限制 */
+  private currentInvoiceSource: string | undefined = undefined;
 
   /** Edit/Read 模式下保存從 row 帶入的 Credit_Type，防止被各種計算邏輯清空 */
   private storedCreditType = '';
@@ -319,11 +322,10 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.patchValue({ Credit_Type: savedCreditType }, { emitEvent: false });
     }
 
-    // 呼叫 correspond API 才能取得原始發票的正確剩餘金額
+    // 呼叫 correspond API 才能取得原始發票的正確剩餘金額（Edit 模式不限制 Source，兩表都查）
     this.fin13020Service
       .queryCorrespondByGUINoCorrespond({
         InvoiceNumber_Correspond: full,
-        Source: 'APS',
       })
       .subscribe((res: any) => {
         const dto = res?.Data?.[0];
@@ -343,7 +345,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.fin13020Service
       .queryCorrespondByGUINoCorrespond({
         InvoiceNumber_Correspond: `${track}${no}`,
-        Source: 'APS',
       })
       .subscribe((res: any) => {
         const dto = res?.Data?.[0];
@@ -385,7 +386,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.fin13020Service
       .queryCorrespondByGUINoCorrespond({
         InvoiceNumber_Correspond: full,
-        Source: 'APS',
+        Source: this.currentInvoiceSource,
       })
       .subscribe((res: any) => {
         const dto = res?.Data?.[0];
@@ -399,6 +400,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
    * 共用：把 API 回來的資料套進畫面
    */
   private applyInvoiceDto(dto: any, track: string, no: string): void {
+    // 確保 Source 從 API 回來時同步更新，不管使用者是 dialog 選取還是手動輸入
+    if (dto.Source) {
+      this.currentInvoiceSource = dto.Source;
+    }
+
     const invoiceType = String(dto.InvoiceType ?? '');
     let voucherType = invoiceType;
     if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
@@ -719,7 +725,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         }
       } else {
         const insertPayload: any = {
-          Source: 'APS',
+          Source: this.currentInvoiceSource ?? 'APS',
           GUI_Track: formValue.GUI_Track,
           InvoiceNumber: pureInvoiceNumber,
           InvoiceDate: invoiceDate,
@@ -1174,8 +1180,9 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  selectInvoiceNumber(rowData: { InvoiceNumber: string }): void {
+  selectInvoiceNumber(rowData: { InvoiceNumber: string; Source?: string }): void {
     this.lastLoadedInvoiceKey = '';
+    this.currentInvoiceSource = rowData.Source ?? undefined;
     this.guiNumberOptions = [{ label: rowData.InvoiceNumber, value: rowData.InvoiceNumber }];
     this.dataForm.patchValue({ PUR_GUINo: rowData.InvoiceNumber }, { emitEvent: false });
     this.showInvoiceDialog = false;

@@ -71,7 +71,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     { field: 'TLT_No', header: '專櫃編號', type: 'custom' },
     { field: 'TLT_Name', header: '櫃位名稱', },
     // { field: 'LocationNo', header: '位置編號', },
-    { field: 'ApplyNo', header: '招募編號', },
     {
       field: 'ENG_Rate', header: '比率', type: 'inputNumber', min: 0, max: 100, maxFractionDigits: 2,
       validate: [validateRequired, validateMinNumber(1)],
@@ -299,7 +298,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     { field: 'TltNo', header: '專櫃編號', },
     { field: 'TltName', header: '櫃位名稱', },
     { field: 'LocationNo', header: '位置編號', },
-    { field: 'ApplyNo', header: '招募編號', },
   ];
   totalRecords = 0;
 

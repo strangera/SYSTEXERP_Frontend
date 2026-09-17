@@ -135,7 +135,9 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
     },
     { field: 'Org_Name', header: '組織名稱', width: '110px', textAlign: 'left', disabled: () => true },
     { field: 'PTA', header: '立沖代號', textAlign: 'left', type: 'input', width: '70px' },
-    { field: 'ProjectNo', header: '活動代號', width: '110px', textAlign: 'left', disabled: () => true },
+    { field: 'ACCT_KEY', header: '對帳key值', width: '120px', textAlign: 'left', disabled: () => true },
+    // 活動代號：後端保留欄位，前端暫不顯示
+    // { field: 'ProjectNo', header: '活動代號', width: '110px', textAlign: 'left', disabled: () => true },
     // 刪除鈕：實際內容交給 fin23050-cru.component.html 裡的 #customCell 樣板渲染，只有新增列會顯示可點擊的刪除鈕
     { field: '_delete', header: '', width: '50px', textAlign: 'center', type: 'custom' },
   ];
@@ -211,6 +213,7 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
       Org_ID: '',
       Org_Name: '',
       ProjectNo: lastRow.ProjectNo,
+      ACCT_KEY: '',
       _dataStatus: 'new',
     };
 
@@ -315,22 +318,22 @@ export class FIN23050CRUComponent extends BasicCruPageComponent<Fin23050CruState
           takeUntilDestroyed(this.destroyRef),
         ).subscribe(results => {
           const failMessages: string[] = [];
-          let successCount = 0;
+          const successMessages: string[] = [];
 
           results.forEach((res, idx) => {
             const redeemNo = entries[idx][0].split('|')[0];
-            // 後端目前固定回傳「拋轉成功」/「拋轉失敗」字串(見 FIN23050Controller.postFIN23050)，只能用字面比對判斷
+            // 後端目前固定回傳「拋轉成功，傳票號碼：XXXXXX」/「拋轉失敗」字串(見 FIN23050Controller.postFIN23050)，只能用字面比對判斷
             const isSuccess = !!res.Data && res.Data.includes('成功');
             if (isSuccess) {
-              successCount++;
+              successMessages.push(`核銷單號：${redeemNo} ${res.Data}`);
             } else {
               failMessages.push(`${redeemNo}：${res.Data || res.Message || '拋轉失敗'}`);
             }
           });
 
           const summary = failMessages.length
-            ? `成功 ${successCount} 筆，失敗 ${failMessages.length} 筆：<br>${failMessages.join('<br>')}`
-            : `成功 ${successCount} 筆`;
+            ? `成功 ${successMessages.length} 筆，失敗 ${failMessages.length} 筆：<br>${[...successMessages, ...failMessages].join('<br>')}`
+            : successMessages.join('<br>');
 
           setTimeout(() => {
             this.messageService.confirm({

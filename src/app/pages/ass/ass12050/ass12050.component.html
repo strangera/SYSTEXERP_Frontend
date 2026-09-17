@@ -1,71 +1,164 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="新增驗收單" (click)="onCreateReceiving()"></app-button>
+    <app-button
+      btnType="create"
+      label="新增驗收單"
+      (click)="onCreateReceiving()"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="採購單號" controlName="SUBPOENA_ID" [control]="queryForm.controls.SUBPOENA_ID"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="採購單號"
+              controlName="SUBPOENA_ID"
+              [control]="queryForm.controls.SUBPOENA_ID"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品項編號" controlName="GOODS_ID" [options]="goodsIdOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.GOODS_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="品項編號"
+              controlName="GOODS_ID"
+              [options]="goodsIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.GOODS_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="申請人編號" controlName="EMP_ID" [options]="empIdOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.EMP_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="申請人編號"
+              controlName="EMP_ID"
+              [options]="empIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.EMP_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="部門代號" controlName="ORG_ID" [options]="orgIdOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="部門代號"
+              controlName="ORG_ID"
+              [options]="orgIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ORG_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="申請日期" [startControl]="queryForm.controls.APPLY_DATE_S"
-              [endControl]="queryForm.controls.APPLY_DATE_E" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="申請日期"
+              [startControl]="queryForm.controls.APPLY_DATE_S"
+              [endControl]="queryForm.controls.APPLY_DATE_E"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="供應商編號" controlName="SUPPLIER_ID" [options]="supplierIdOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.SUPPLIER_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="供應商編號"
+              controlName="SUPPLIER_ID"
+              [options]="supplierIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.SUPPLIER_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="稅額" descLabel="" [startControl]="queryForm.controls.TAX_AMT_S"
-              [endControl]="queryForm.controls.TAX_AMT_E" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="稅額"
+              descLabel=""
+              [startControl]="queryForm.controls.TAX_AMT_S"
+              [endControl]="queryForm.controls.TAX_AMT_E"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="未稅總金額" descLabel="" [startControl]="queryForm.controls.NTAX_AMT_S"
-              [endControl]="queryForm.controls.NTAX_AMT_E" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="未稅總金額"
+              descLabel=""
+              [startControl]="queryForm.controls.NTAX_AMT_S"
+              [endControl]="queryForm.controls.NTAX_AMT_E"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="含稅總金額" descLabel="" [startControl]="queryForm.controls.AMT_S"
-              [endControl]="queryForm.controls.AMT_E" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              label="含稅總金額"
+              descLabel=""
+              [startControl]="queryForm.controls.AMT_S"
+              [endControl]="queryForm.controls.AMT_E"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="狀態" controlName="STATUS" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.STATUS" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="狀態"
+              controlName="STATUS"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.STATUS"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核人編號" controlName="APRV_EMP_ID" [options]="aprvEmpIdOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.APRV_EMP_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="審核人編號"
+              controlName="APRV_EMP_ID"
+              [options]="aprvEmpIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.APRV_EMP_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="審核日期" [startControl]="queryForm.controls.APRV_DATE_S"
-              [endControl]="queryForm.controls.APRV_DATE_E" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="審核日期"
+              [startControl]="queryForm.controls.APRV_DATE_S"
+              [endControl]="queryForm.controls.APRV_DATE_E"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="驗收日期" [startControl]="queryForm.controls.CHECK_DATE_S"
-              [endControl]="queryForm.controls.CHECK_DATE_E" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="驗收日期"
+              [startControl]="queryForm.controls.CHECK_DATE_S"
+              [endControl]="queryForm.controls.CHECK_DATE_E"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="WH_ID" [options]="whIdOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.WH_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="倉別"
+              controlName="WH_ID"
+              [options]="whIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.WH_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -74,8 +167,19 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="SUBCHECK_ID" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [addButton]="addButton"
-    [showDelete]="false" [showDetail]="false" (edit)="onEdit($event)" (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows"></app-table-report>
+  <app-table-report
+    dataKey="SUBCHECK_ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [addButton]="addButton"
+    [showDelete]="false"
+    [showDetail]="false"
+    (edit)="onEdit($event)"
+    (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows"
+  ></app-table-report>
 </div>

@@ -488,12 +488,12 @@
   </form>
 </div>
 
-<!-- 提前撤櫃 Dialog -->
+<!-- 提前撤櫃 Dialog（含 inline 預覽） -->
 <p-dialog
   header="提前撤櫃"
   [(visible)]="earlyTerminationDialogVisible"
   [modal]="true"
-  [style]="{ width: '480px' }"
+  [style]="{ width: 'min(960px, 92vw)', 'max-height': '90vh' }"
   [closable]="true"
   [focusOnShow]="false"
 >
@@ -535,6 +535,8 @@
         <label class="font-semibold text-sm text-color-secondary">契約截止日</label>
         <div class="mt-1">{{ earlyTerminationRow.tlt_edate | date:'yyyy/MM/dd' }}</div>
       </div>
+
+      <!-- 日期選擇 -->
       <div class="col-12 mt-2">
         <app-calendar
           label="提前撤櫃日期"
@@ -546,20 +548,128 @@
         ></app-calendar>
         <small class="text-color-secondary">必須大於今日且小於契約截止日</small>
       </div>
+
+      <!-- inline 預覽區 -->
+      @if (earlyTerminationPreview) {
+        <div class="col-12 mt-3">
+          <!-- 標題列 -->
+          <div class="flex align-items-center gap-2 mb-3 px-3 py-2 border-round" style="background: var(--surface-100);">
+            <i class="pi pi-eye text-primary text-sm"></i>
+            <span class="text-sm font-semibold">影響範圍預覽</span>
+            <span class="text-xs text-500 ml-1">撤櫃日：{{ earlyTerminationPreview.NewEdate }}</span>
+          </div>
+
+          <!-- 2 欄 grid：左右並排顯示各區塊 -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+
+            <!-- 位置截止日 -->
+            @if (earlyTerminationPreview.Location.ToUpdate.length > 0) {
+              <div class="border-round overflow-hidden border-1 surface-border" style="grid-column: 1 / -1;">
+                <div class="flex align-items-center justify-content-between px-3 py-2" style="background: var(--blue-50);">
+                  <span class="text-xs font-bold" style="color: var(--blue-800);">位置截止日</span>
+                  <span class="text-xs px-2 py-1 border-round-sm font-semibold" style="background: var(--blue-100); color: var(--blue-700);">截短 {{ earlyTerminationPreview.Location.ToUpdate.length }} 筆</span>
+                </div>
+                @for (item of earlyTerminationPreview.Location.ToUpdate; track item.LocationNo) {
+                  <div class="px-3 py-2 text-xs border-top-1 surface-border surface-card" style="display: grid; grid-template-columns: 6rem 1fr; align-items: center; gap: 0.5rem;">
+                    <span class="font-semibold">{{ item.LocationNo }}</span>
+                    <span style="white-space: nowrap;">
+                      <span class="text-500">{{ item.OriginalEdate }}</span>
+                      <i class="pi pi-arrow-right text-400 mx-1" style="font-size: 0.6rem;"></i>
+                      <span class="font-bold" style="color: var(--blue-600);">{{ item.NewEdate }}</span>
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- 各子表（2 欄並排） -->
+            @for (section of [
+              { label: '代扣款', data: earlyTerminationPreview.Fare },
+              { label: '抽成明細', data: earlyTerminationPreview.Charged },
+              { label: '租金', data: earlyTerminationPreview.Rent },
+              { label: '包底抽成', data: earlyTerminationPreview.Limit },
+              { label: '階梯抽成', data: earlyTerminationPreview.Level },
+              { label: '年度業績', data: earlyTerminationPreview.YearCharged }
+            ]; track section.label) {
+              @if (section.data.ToDelete.length > 0 || section.data.ToUpdate.length > 0) {
+                <div class="border-round overflow-hidden border-1 surface-border">
+                  <!-- 區塊標題 -->
+                  <div class="flex align-items-center gap-2 px-3 py-2" style="background: var(--surface-50);">
+                    <span class="text-xs font-bold">{{ section.label }}</span>
+                    <div class="flex gap-1 ml-auto">
+                      @if (section.data.ToDelete.length > 0) {
+                        <span class="text-xs px-2 py-1 border-round-sm font-semibold" style="background: var(--red-50); color: var(--red-700);">刪除 {{ section.data.ToDelete.length }} 筆</span>
+                      }
+                      @if (section.data.ToUpdate.length > 0) {
+                        <span class="text-xs px-2 py-1 border-round-sm font-semibold" style="background: var(--orange-50); color: var(--orange-700);">截短 {{ section.data.ToUpdate.length }} 筆</span>
+                      }
+                    </div>
+                  </div>
+                  <!-- 刪除的資料 -->
+                  @for (item of section.data.ToDelete; track item.StartDate) {
+                    <div class="px-3 py-2 text-xs border-top-1 surface-border" style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.5rem; background: var(--red-50);">
+                      <span class="font-semibold overflow-hidden" style="white-space: nowrap; text-overflow: ellipsis;" [title]="item.Description ?? ''">{{ item.Description }}</span>
+                      <span style="white-space: nowrap;">
+                        <span class="text-500">{{ item.StartDate }} ~ {{ item.OriginalEndDate }}</span>
+                        <span class="font-bold text-red-600 ml-2">刪除</span>
+                      </span>
+                    </div>
+                  }
+                  <!-- 截短的資料 -->
+                  @for (item of section.data.ToUpdate; track item.StartDate) {
+                    <div class="px-3 py-2 text-xs border-top-1 surface-border surface-card" style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.5rem;">
+                      <span class="font-semibold overflow-hidden" style="white-space: nowrap; text-overflow: ellipsis;" [title]="item.Description ?? ''">{{ item.Description }}</span>
+                      <span style="white-space: nowrap;">
+                        <span class="text-400">{{ item.StartDate }} ~ {{ item.OriginalEndDate }}</span>
+                        <i class="pi pi-arrow-right text-400 mx-1" style="font-size: 0.6rem;"></i>
+                        <span class="font-bold text-orange-600">{{ item.NewEndDate }}</span>
+                      </span>
+                    </div>
+                  }
+                </div>
+              }
+            }
+
+          </div>
+
+          @if (
+            earlyTerminationPreview.Location.ToUpdate.length === 0 &&
+            earlyTerminationPreview.Fare.ToDelete.length === 0 && earlyTerminationPreview.Fare.ToUpdate.length === 0 &&
+            earlyTerminationPreview.Charged.ToDelete.length === 0 && earlyTerminationPreview.Charged.ToUpdate.length === 0 &&
+            earlyTerminationPreview.Rent.ToDelete.length === 0 && earlyTerminationPreview.Rent.ToUpdate.length === 0 &&
+            earlyTerminationPreview.Limit.ToDelete.length === 0 && earlyTerminationPreview.Limit.ToUpdate.length === 0 &&
+            earlyTerminationPreview.Level.ToDelete.length === 0 && earlyTerminationPreview.Level.ToUpdate.length === 0 &&
+            earlyTerminationPreview.YearCharged.ToDelete.length === 0 && earlyTerminationPreview.YearCharged.ToUpdate.length === 0
+          ) {
+            <div class="flex align-items-center gap-2 mt-2 px-3 py-2 border-round border-1 surface-border text-xs text-500">
+              <i class="pi pi-check-circle text-green-500"></i>
+              無子資料受影響，僅更新主表營運截止日。
+            </div>
+          }
+
+        </div>
+      }
     </div>
   }
   <ng-template pTemplate="footer">
-    <div class="flex justify-content-end gap-2">
+    <div class="flex justify-content-between align-items-center w-full">
       <p-button
-        label="取消"
+        label="查看影響範圍"
+        icon="pi pi-eye"
         severity="secondary"
-        (click)="earlyTerminationDialogVisible = false"
+        [loading]="previewLoading"
+        (click)="previewEarlyTermination()"
       />
-      <p-button
-        label="確定"
-        icon="pi pi-check"
-        (click)="confirmEarlyTermination()"
-      />
+      <div class="flex gap-2">
+        <p-button label="取消" severity="secondary" (click)="earlyTerminationDialogVisible = false" />
+        <p-button
+          label="確認執行"
+          icon="pi pi-check"
+          severity="danger"
+          [disabled]="!earlyTerminationPreview"
+          (click)="confirmEarlyTermination()"
+        />
+      </div>
     </div>
   </ng-template>
 </p-dialog>

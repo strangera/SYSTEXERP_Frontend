@@ -89,6 +89,7 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> im
       const state = this.router.lastSuccessfulNavigation?.extras.state;
       this.zeroTaxGUIData = state?.['rowdata'];
       this.dataForm.patchValue({
+        INV_GUITrack: this.zeroTaxGUIData.INV_GUITrack,
         INV_GUINo: this.zeroTaxGUIData.INV_GUINo,
         INV_GUIDate: this.zeroTaxGUIData.INV_GUIDate,
         INV_YM: this.zeroTaxGUIData.INV_YM,
@@ -265,15 +266,18 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> im
   }
 
   getZeroTaxGUIData(form: FormGroup): void {
+    // 後端SplitGuiNo要求10碼(字軌2碼+號碼8碼)才能正確切出字軌/號碼查詢，這裡要組合字軌+號碼，不能只送8碼號碼
+    const raw = form.getRawValue();
+    const fullGUINo = `${raw.INV_GUITrack ?? ''}${raw.INV_GUINo ?? ''}`;
     const rb: FIN13030GetZeroTaxGUIRequest = {
-      INV_GUINo_B: form.value.INV_GUINo,
-      INV_GUINo_E: form.value.INV_GUINo,
-      INV_GUIDate_B: form.value.INV_GUIDate,
-      INV_GUIDate_E: form.value.INV_GUIDate,
-      INV_YM_B: form.value.INV_YM,
-      INV_YM_E: form.value.INV_YM,
-      INV_DeclareYM_B: form.value.INV_DeclareYM,
-      INV_DeclareYM_E: form.value.INV_DeclareYM
+      INV_GUINo_B: fullGUINo,
+      INV_GUINo_E: fullGUINo,
+      INV_GUIDate_B: raw.INV_GUIDate,
+      INV_GUIDate_E: raw.INV_GUIDate,
+      INV_YM_B: raw.INV_YM,
+      INV_YM_E: raw.INV_YM,
+      INV_DeclareYM_B: raw.INV_DeclareYM,
+      INV_DeclareYM_E: raw.INV_DeclareYM
     };
 
     this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(response => {
@@ -305,6 +309,10 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> im
       }
       if (typeof z.INV_SeqNo !== 'undefined') {
         this.dataForm.patchValue({ INV_SeqNo: z.INV_SeqNo });
+      }
+      // 新增流程才自動帶入證明文件號碼，編輯/明細已由既有資料回填，避免覆蓋
+      if (this.crudstatus === CRUDStatus.Create && z.TXN_REMARK) {
+        this.dataForm.patchValue({ INV_DocNo: z.TXN_REMARK });
       }
     });
   }

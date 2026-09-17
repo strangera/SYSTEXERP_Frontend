@@ -59,17 +59,23 @@ export class ASS12050CRUComponent
   @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
 
   dataForm = this.formBuilder.group({
-    SUBCHECK_ID: [null as string | null],
-    EMP_ID: [null as string | null, [Validators.required]],
-    ORG_ID: [null as string | null, [Validators.required]],
-    APPLY_DATE: [null as Date | null, [Validators.required]],
-    SUPPLIER_ID: [null as string | null, [Validators.required]],
-    NTAX_AMT: [null as number | null],
-    TAX_AMT: [null as number | null],
-    AMT: [null as number | null],
-    CHK_Status: [null as string | null],
-    IsAllTax: [false],
-  });
+  SUBCHECK_ID: [null as string | null],
+  EMP_ID: [null as string | null, [Validators.required]],
+  ORG_ID: [null as string | null, [Validators.required]],
+  APPLY_DATE: [null as Date | null, [Validators.required]],
+  SUPPLIER_ID: [null as string | null, [Validators.required]],
+
+  // 驗收資訊
+  CLOSE_EMP_ID: [null as string | null],
+  CLOSE_EMP_NAME: [null as string | null],
+  CHECK_DATE: [null as Date | null],
+
+  NTAX_AMT: [null as number | null],
+  TAX_AMT: [null as number | null],
+  AMT: [null as number | null],
+  CHK_Status: [null as string | null],
+  IsAllTax: [false],
+});
 
   /** 明細資料（table-edit 綁定） */
   data: ASS12050DetailItem[] = [];
@@ -96,7 +102,7 @@ export class ASS12050CRUComponent
   editColumns: EditColumn[] = [
     {
       field: 'GOODS_ID',
-      header: '品項代號/名稱',
+      header: '品項編號/名稱',
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
@@ -290,67 +296,90 @@ export class ASS12050CRUComponent
   }
 
   /** 查詢驗收單主檔及明細 */
-  private loadDetail(subcheckId: string): void {
-    this.loading = true;
+private loadDetail(subcheckId: string): void {
+  this.loading = true;
 
-    this.ass12050Service
-      .getDetailASS12050({
-        SUBCHECK_ID: subcheckId,
-      })
-      .pipe(
-        finalize(() => (this.loading = false)),
-        untilDestroyed(this),
-      )
-      .subscribe({
-        next: res => {
-          if (res.Status !== '0000') {
-            this.messageService.errorBubble(
-              '查詢失敗：' + (res.Message ?? ''),
-            );
-            return;
-          }
+  this.ass12050Service
+    .getDetailASS12050({
+      SUBCHECK_ID: subcheckId,
+    })
+    .pipe(
+      finalize(() => (this.loading = false)),
+      untilDestroyed(this),
+    )
+    .subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(
+            '查詢失敗：' + (res.Message ?? ''),
+          );
+          return;
+        }
 
-          const detail = res.Data;
+        const detail = res.Data;
 
-          this.subcheckId = detail?.SUBCHECK_ID ?? subcheckId;
+        this.subcheckId =
+          detail?.SUBCHECK_ID ?? subcheckId;
 
-          this.dataForm.patchValue({
-            SUBCHECK_ID: detail?.SUBCHECK_ID ?? null,
-            EMP_ID: detail?.EMP_ID ?? null,
-            ORG_ID: detail?.ORG_ID ?? null,
-            APPLY_DATE: detail?.APPLY_DATE
-              ? new Date(detail.APPLY_DATE)
-              : null,
-            SUPPLIER_ID: detail?.SUPPLIER_ID ?? null,
-            NTAX_AMT: detail?.NTAX_AMT ?? null,
-            TAX_AMT: detail?.TAX_AMT ?? null,
-            AMT: detail?.AMT ?? null,
-            CHK_Status: detail?.CHK_Status ?? null,
-          });
+        // 尚未驗收時，驗收日期預設今天
+        const checkDate = detail?.CHECK_DATE
+          ? new Date(detail.CHECK_DATE)
+          : new Date();
 
-          const details = (detail?.Details ?? []).map(item => ({
+        this.dataForm.patchValue({
+          SUBCHECK_ID: detail?.SUBCHECK_ID ?? null,
+          EMP_ID: detail?.EMP_ID ?? null,
+          ORG_ID: detail?.ORG_ID ?? null,
+
+          APPLY_DATE: detail?.APPLY_DATE
+            ? new Date(detail.APPLY_DATE)
+            : null,
+
+          SUPPLIER_ID:
+            detail?.SUPPLIER_ID ?? null,
+
+          // 驗收資訊
+          CLOSE_EMP_ID:
+            detail?.CLOSE_EMP_ID ?? null,
+
+          CLOSE_EMP_NAME:
+            detail?.CLOSE_EMP_NAME ?? null,
+
+          // DB 有驗收日期就使用 DB 日期
+          // 尚未驗收則預設今天
+          CHECK_DATE: checkDate,
+
+          NTAX_AMT: detail?.NTAX_AMT ?? null,
+          TAX_AMT: detail?.TAX_AMT ?? null,
+          AMT: detail?.AMT ?? null,
+          CHK_Status: detail?.CHK_Status ?? null,
+        });
+
+        const details =
+          (detail?.Details ?? []).map(item => ({
             ...item,
           }));
 
-          this.data = details.map(item => ({
-            ...item,
-            AMT: item.AMT ?? this.calculateDetailAmount(item),
-          }));
+        this.data = details.map(item => ({
+          ...item,
+          AMT:
+            item.AMT ??
+            this.calculateDetailAmount(item),
+        }));
 
-          this.originalData = this.data.map(item => ({
-            ...item,
-          }));
+        this.originalData = this.data.map(item => ({
+          ...item,
+        }));
 
-          if (this.data.length > 0) {
-            this.calculateHeaderAmounts();
-          }
+        if (this.data.length > 0) {
+          this.calculateHeaderAmounts();
+        }
 
-          this.dataForm.markAsPristine();
-          this.dataForm.markAsUntouched();
-        },
-      });
-  }
-
+        this.dataForm.markAsPristine();
+        this.dataForm.markAsUntouched();
+      },
+    });
+}
   private loadDropdownOptions(): void {
     const toOpt = (items: { No?: string; Name?: string }[]) =>
       (items ?? []).map(item => ({
@@ -526,17 +555,26 @@ export class ASS12050CRUComponent
   /** 驗收 */
   onConfirm(): void {
     if (!this.canConfirm) {
-      this.messageService.warnBubble('目前驗收單狀態不可執行驗收');
+      this.messageService.warnBubble(
+        '目前驗收單狀態不可執行驗收',
+      );
       return;
     }
 
     const subcheckId =
       this.subcheckId ??
-      this.dataForm.get('SUBCHECK_ID')?.value;
+      this.dataForm.controls.SUBCHECK_ID.value;
 
     if (!subcheckId) {
       this.messageService.errorBubble('無可驗收的資料');
       return;
+    }
+
+    // 尚未驗收時，驗收日期預設今天；欄位本身於 HTML 維持 disabled。
+    if (!this.dataForm.controls.CHECK_DATE.value) {
+      this.dataForm.patchValue({
+        CHECK_DATE: new Date(),
+      });
     }
 
     this.messageService.confirm({
@@ -544,7 +582,6 @@ export class ASS12050CRUComponent
       message: '是否確認執行驗收確認？',
       accept: () => {
         this.loading = true;
-
 
         const details: ASS12050ConfirmDetail[] =
           this.data.map(item => ({
@@ -557,8 +594,8 @@ export class ASS12050CRUComponent
 
         this.ass12050Service
           .confirmASS12050({
-            DETAILS: details,
             SUBCHECK_ID: subcheckId,
+            DETAILS: details,
           })
           .pipe(
             untilDestroyed(this),
@@ -574,12 +611,16 @@ export class ASS12050CRUComponent
               }
 
               this.messageService.successBubble('驗收確認成功');
+
+              // 後端會由 Token 寫入驗收人員，SP 寫入驗收日期，
+              // 驗收完成後重新查詢即可顯示。
               this.loadDetail(subcheckId);
             },
           });
       },
     });
   }
+
   /** 審核驗收單 */
   onApprove(): void {
     if (!this.canApprove) {
@@ -837,17 +878,8 @@ export class ASS12050CRUComponent
               return;
             }
 
-            this.messageService.successBubble(
-              '儲存成功',
-            );
-
-            const currentSubcheckId =
-              this.subcheckId ??
-              this.dataForm.controls.SUBCHECK_ID.value;
-
-            if (currentSubcheckId) {
-              this.loadDetail(currentSubcheckId);
-            }
+            this.messageService.successBubble('儲存成功');
+this.onCancel();
           },
           error: error => {
             this.messageService.errorBubble(

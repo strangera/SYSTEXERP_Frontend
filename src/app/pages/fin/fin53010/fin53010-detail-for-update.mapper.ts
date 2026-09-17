@@ -97,7 +97,8 @@ export function mapArs3001RowToStepAR(row: ARS3001): FIN53010StepAR {
 
 export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoiceRow {
   // 這些 31/32 是本傳票自己寫進 POS4023 的 → 帶 id、可編輯，存檔走 UPDATE POS4023 by id
-  const idRaw = row.ID;
+  // 後端 C# 序列化可能輸出 "ID" 或 "id"，兩種都接
+  const idRaw = row.ID ?? (row as unknown as Record<string, unknown>)['id'];
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
   return {
     ...(id !== undefined ? { id } : {}),
@@ -111,7 +112,12 @@ export function mapPos4023RowToStepSales(row: Pos4023): FIN53010StepSalesInvoice
     inv_cancel: row.INV_Cancel ?? undefined,
     total_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_SaleAmt ?? undefined),
     tax_type: row.PLU_TaxType ?? undefined,
-    net_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Net ?? undefined),
+    // 免稅 (PLU_TaxType='0')：TXN_Net 固定存 0，免稅銷售額存在 TXN_SaleNoTax，取 TXN_SaleNoTax 顯示
+    net_amount: row.INV_Cancel === 'Y' ? 0 : (
+      String(row.PLU_TaxType ?? '').trim() === '0'
+        ? (row.TXN_SaleNoTax ?? undefined)
+        : (row.TXN_Net ?? undefined)
+    ),
     tax_amount: row.INV_Cancel === 'Y' ? 0 : (row.TXN_Tax ?? undefined),
   };
 }

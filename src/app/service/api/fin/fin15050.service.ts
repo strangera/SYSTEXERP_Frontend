@@ -16,6 +16,7 @@ export interface FIN15050PrintRequest {
 
 export interface FIN15050PrintResponse {
   Print_URL: string | null;
+  Message: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -90,6 +90,7 @@ export interface FIN13030GetZeroTaxGUIResponse {
   INV_GUIType: string;         // 發票類別
   INV_ZeroTax: string;         // 零稅率註記
   INV_SeqNo: number;           // 序號
+  TXN_REMARK?: string;         // 備註(即TDS1001.TXN_REMARK，已同步POS4023.INV_Remark)，供自動帶入證明文件號碼
 }
 
 

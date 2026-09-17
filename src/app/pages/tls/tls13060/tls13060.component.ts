@@ -63,14 +63,14 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
     rece_yn: [null], // 是否開立業主發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
-    pageSize: [30],
+    pageSize: [500],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
   totalRecords = 0;
   data: TLS13060ResponseItem[] = [];
   columns: Column[] = TLTTALENT_columns;
-  historyRequestBody: TLS13060QueryRequest | null = null;
+  lastQueryBody: TLS13060QueryRequest | null = null;
   vandorCategoryOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   tlt_nocationOptions = this.dropdown.queryTltTalent();
   locationOptions = this.dropdown.queryPos2002();
@@ -106,10 +106,11 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
         tlt_contract_edate_start: this.datePipe.transform(frm.value.tlt_contract_edate_start, 'yyyy-MM-dd') || null,
         tlt_contract_edate_end: this.datePipe.transform(frm.value.tlt_contract_edate_end, 'yyyy-MM-dd') || null,
       }
+      this.lastQueryBody = body;
       this.tLS13060Service.queryTLS13060(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
-        this.historyRequestBody = frm.value;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     })
   }
