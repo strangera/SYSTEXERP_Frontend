@@ -10,6 +10,7 @@ import { MultiSelectComponent } from '@shared/components/multi-select/multi-sele
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/components/table-report/table-report.model';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
@@ -37,6 +38,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
     TranslateModule,
     TableReportComponent,
     ButtonModule,
+    ReportSignatureComponent,
   ],
 })
 export class FIN34020Component extends BasicQueryPageComponent<any> implements OnInit {
