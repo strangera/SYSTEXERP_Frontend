@@ -29,4 +29,13 @@ export class TLS2A030Service {
     return this.http.post<any>(`${this.apiUrl}/UnLockTLS2A030`, data);
   }
 
+  /** 溢欠彙總表第二層-每日資料 */
+  queryTLS2A030_ByDay(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2A030_ByDay`, data);
+  }
+
+  /** 溢欠彙總表第三層-每日支付別收銀機資料 */
+  queryTLS2A030_ByDayAndPayNo(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2A030_ByDayAndPayNo`, data);
+  }
 }

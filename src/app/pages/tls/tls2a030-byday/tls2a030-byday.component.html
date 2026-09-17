@@ -1,0 +1,65 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onBack()"></app-button>
+  </div>
+
+  <div class="mb-3 text-sm text-600" *ngIf="queryContext">
+    銷售日期：{{ queryContext.SaleDateStart }} ~ {{ queryContext.SaleDateEnd }}
+    <span *ngIf="queryContext.ECR_No_Start || queryContext.ECR_No_End">
+      ／收銀機號：{{ queryContext.ECR_No_Start || '000000' }} ~ {{ queryContext.ECR_No_End || '999999' }}
+    </span>
+  </div>
+
+  <p-accordion [multiple]="true">
+    <p-accordionTab *ngFor="let day of dayGroups" [header]="day.TXN_Date" [selected]="true">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="surface-100">
+            <th class="p-2 text-center">支付工具</th>
+            <th class="p-2 text-right">實際溢欠總額 (A)</th>
+            <th class="p-2 text-right">審核前溢欠總額 (B)</th>
+            <th class="p-2 text-right">實收總額 (C)</th>
+            <th class="p-2 text-right">系統帳 (D)</th>
+            <th class="p-2 text-center">(C) 與 (D) 比較</th>
+            <th class="p-2 text-center">(A) 與 (B) 比較</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of day.mainData" class="cursor-pointer hover:surface-100"
+            (click)="onSelectPayTool(day, row)">
+            <td class="p-2 text-center text-primary underline">{{ row.PAY_NAME }}</td>
+            <td class="p-2 text-right">{{ formatAmount(row.OVER_PayAmt) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(row.PreAudit_OVER_PayAmt) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(row.Actual_ReceivedAmt) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(row.BOOK_PayAmt) }}</td>
+            <td class="p-2 text-center">{{ compareLabel(row.Compare_CD) }}</td>
+            <td class="p-2 text-center">{{ compareLabel(row.Compare_AB) }}</td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="day.subtotalData as sub">
+          <tr class="font-bold surface-100">
+            <td class="p-2 text-center">小計</td>
+            <td class="p-2 text-right">{{ formatAmount(sub.OVER_SubTotal_PayAmt) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(sub.PreAudit_OVER_SubTotal_PayAmt) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(sub.Actual_ReceivedAmt_SubTotal) }}</td>
+            <td class="p-2 text-right">{{ formatAmount(sub.BOOK_SubTotal_PayAmt) }}</td>
+            <td class="p-2 text-center">{{ compareLabel(sub.Compare_CD_SubTotal) }}</td>
+            <td class="p-2 text-center">{{ compareLabel(sub.Compare_AB_SubTotal) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </p-accordionTab>
+  </p-accordion>
+
+  <div class="mt-3 font-bold" *ngIf="totalData as total">
+    總計：實際溢欠總額(A) {{ formatAmount(total.OVER_Total_PayAmt) }}
+    ／審核前溢欠總額(B) {{ formatAmount(total.PreAudit_OVER_Total_PayAmt) }}
+    ／實收總額(C) {{ formatAmount(total.Actual_ReceivedAmt_Total) }}
+    ／系統帳(D) {{ formatAmount(total.BOOK_Total_PayAmt) }}
+  </div>
+
+  <div *ngIf="loaded && dayGroups.length === 0" class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+    <i class="pi pi-search mr-2"></i>查無資料
+  </div>
+</div>

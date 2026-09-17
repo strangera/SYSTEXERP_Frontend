@@ -1,0 +1,16 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onBack()"></app-button>
+  </div>
+
+  <div class="mb-3 text-sm text-600" *ngIf="queryContext">
+    銷售日期：{{ queryContext.TXN_Date }}
+    ／支付工具：{{ queryContext.PAY_NAME || queryContext.PAY_NO }}
+  </div>
+
+  <app-table-report dataKey="ECR_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [lazy]="false" [showManage]="false" [showCheckBox]="false" [showDelete]="false"
+    [showReportMode]="false" [showFilter]="false" [footerData]="footerData"
+    (linkClick)="onLinkClick($event)"></app-table-report>
+</div>
