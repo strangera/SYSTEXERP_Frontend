@@ -54,9 +54,26 @@ export class TLS2A030ByDayComponent extends BasicQueryPageComponent<DayPayToolRo
       this.withLoading(() => (this.loaded = true)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(res => {
-      this.dayGroups = res?.Data?.QueryData ?? [];
+      const groups: DayGroup[] = res?.Data?.QueryData ?? [];
+      // 後端 TXN_Date 型別是 string，由 Dapper 依伺服器當地文化(zh-TW)把 DateTime 轉成
+      // 「2026/5/1 上午 12:00:00」這種格式，不是 ISO；這裡統一轉成 yyyy-MM-dd 再往下用，
+      // 避免把伺服器語系格式原封不動送回後端當 SaleDate 解析失敗。
+      this.dayGroups = groups.map(g => ({ ...g, TXN_Date: this.toIsoDate(g.TXN_Date) }));
       this.totalData = res?.Data?.payAmtTotalData ?? null;
     });
+  }
+
+  /** 把「2026/5/1 上午 12:00:00」或已是 ISO 格式的日期字串，統一轉成 yyyy-MM-dd */
+  private toIsoDate(raw: string): string {
+    if (!raw) return raw;
+    const zhTwMatch = /^(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(raw);
+    if (zhTwMatch) {
+      const [, y, m, d] = zhTwMatch;
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    const parsed = new Date(raw);
+    if (isNaN(parsed.getTime())) return raw;
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
   }
 
   onSelectPayTool(day: DayGroup, row: DayPayToolRow): void {
