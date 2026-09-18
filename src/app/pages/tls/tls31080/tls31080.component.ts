@@ -79,7 +79,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
   totalRecords = 0;
   data: TLS31080Response[] = [];
-  footerData: TLS31080Response | null = null;
+  footerData: TLS31080Response[] = [];
   historyRequestBody: TLS31080Request | null = null;
   dialogVisible = false;
   selectedRow: TLS31080Response | null = null;
@@ -88,8 +88,16 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
+  private readonly formatReportAmount = (value: any) => {
+    if (typeof value === 'string' && value.endsWith('%')) {
+      return value;
+    }
+    return formatAmount(value);
+  };
+
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {
-    const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH);
+    const filteredHours = filterHourColumns(TimeMode, TimeFromHH, TimeToHH)
+      .map(col => ({ ...col, format: this.formatReportAmount }));
     const isPreSale = this.queryForm.get('PreSale')?.value === true;
     const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
 
@@ -97,12 +105,12 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
       { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
       ...filteredHours,
-      { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-      { field: 'PrePerformance', header: '預售業績', visible: isPreSale, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerNum', header: '消費人數', visible: isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'ConsumerOrder', header: '消費客單', visible: isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-      { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+      { field: 'Reentry', header: '補登', visible: true, format: this.formatReportAmount, align: 'right' },
+      { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: this.formatReportAmount, align: 'right' },
+      { field: 'PrePerformance', header: '預售業績', visible: isPreSale, format: this.formatReportAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerNum', header: '消費人數', visible: isConsumerNum, format: this.formatReportAmount, align: 'right', isTotal: true },
+      { field: 'ConsumerOrder', header: '消費客單', visible: isConsumerNum, format: this.formatReportAmount, align: 'right', isTotal: true },
+      { field: 'Subtotal', header: '小計', visible: true, format: this.formatReportAmount, align: 'right' },
     ];
   }
 
@@ -135,32 +143,187 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           const resData = Array.isArray(resultObj.Data) ? resultObj.Data : []; // 確保一定是 Array
           const totalData = resultObj.TotalData || {};
 
-          this.data = resData; // 賦予陣列給 [data]
-          this.footerData = {
-            floor_desc: '營業實績',
-            TimeType: '',
-            TotalCount: totalData.TotalTxnCount ?? 0,
-            Subtotal: totalData.TotalSales ?? 0,
-            Reentry: totalData.TotalReentry ?? 0,
-            PresaleCheckout: totalData.TotalPresaleCheckout ?? 0,
-            PrePerformance: totalData.TotalPrePerformance,
-            ConsumerNum: totalData.TotalConsumerNum,
-            ConsumerOrder: totalData.TotalConsumerOrder,
-            H00: totalData.TotalH00 ?? 0, H01: totalData.TotalH01 ?? 0, H02: totalData.TotalH02 ?? 0,
-            H03: totalData.TotalH03 ?? 0, H04: totalData.TotalH04 ?? 0, H05: totalData.TotalH05 ?? 0,
-            H06: totalData.TotalH06 ?? 0, H07: totalData.TotalH07 ?? 0, H08: totalData.TotalH08 ?? 0,
-            H09: totalData.TotalH09 ?? 0, H10: totalData.TotalH10 ?? 0, H11: totalData.TotalH11 ?? 0,
-            H12: totalData.TotalH12 ?? 0, H13: totalData.TotalH13 ?? 0, H14: totalData.TotalH14 ?? 0,
-            H15: totalData.TotalH15 ?? 0, H16: totalData.TotalH16 ?? 0, H17: totalData.TotalH17 ?? 0,
-            H18: totalData.TotalH18 ?? 0, H19: totalData.TotalH19 ?? 0, H20: totalData.TotalH20 ?? 0,
-            H21: totalData.TotalH21 ?? 0, H22: totalData.TotalH22 ?? 0, H23: totalData.TotalH23 ?? 0,
-          } as TLS31080Response;
+          // 明細顯示格式：
+          // 1. 營業實績 / 交易筆數 => 千分位
+          // 2. 營業實績佔比 => 加上 %
+          this.data = resData.map((row: TLS31080Response) => this.formatDisplayRow(row));
+
+          // 總計固定顯示三列：營業實績、交易筆數、營業實績佔比，並套用相同顯示格式
+          this.footerData = this.buildFooterRows(resData, totalData)
+            .map((row: TLS31080Response) => this.formatDisplayRow(row));
 
           this.historyRequestBody = formValue;
           this.totalRecords = res.TotalCount ?? resData.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  /**
+   * 報表需要統計 / 顯示的數值欄位。
+   * H00~H23 為各時段，後面為報表附加統計欄位。
+   */
+  private readonly summaryFields = [
+    ...Array.from({ length: 24 }, (_, i) => `H${i.toString().padStart(2, '0')}`),
+    'Reentry',
+    'PresaleCheckout',
+    'PrePerformance',
+    'ConsumerNum',
+    'ConsumerOrder',
+    'Subtotal',
+  ];
+
+  /**
+   * 表格顯示格式：
+   * 1. 營業實績、交易筆數：加千分位逗號
+   * 2. 營業實績佔比：加上 %
+   *
+   * 直接處理 row 的顯示值，不依賴 table-report 的 column.format。
+   */
+  private formatDisplayRow(row: TLS31080Response): TLS31080Response {
+    if (!row) {
+      return row;
+    }
+
+    if (row.TimeType === '營業實績佔比') {
+      return this.formatPercentageRow(row);
+    }
+
+    if (row.TimeType !== '營業實績' && row.TimeType !== '交易筆數') {
+      return row;
+    }
+
+    const result: any = { ...row };
+    this.summaryFields.forEach(field => {
+      const value = result[field];
+      if (value !== null && value !== undefined && value !== '') {
+        result[field] = this.formatThousands(value);
+      }
+    });
+
+    return result as TLS31080Response;
+  }
+
+  /**
+   * 數字轉千分位。
+   * 例如：425243 => 425,243
+   */
+  private formatThousands(value: any): string {
+    const numericValue = this.toNumber(value);
+    return numericValue.toLocaleString('en-US', {
+      maximumFractionDigits: 20,
+    });
+  }
+
+  /**
+   * 「營業實績佔比」加上 %。
+   */
+  private formatPercentageRow(row: TLS31080Response): TLS31080Response {
+    if (row?.TimeType !== '營業實績佔比') {
+      return row;
+    }
+
+    const result: any = { ...row };
+    this.summaryFields.forEach(field => {
+      const value = result[field];
+      if (value !== null && value !== undefined && value !== '') {
+        const numericValue = Number(String(value).replace('%', ''));
+        result[field] = Number.isFinite(numericValue)
+          ? `${this.trimPercentage(numericValue)}%`
+          : value;
+      }
+    });
+
+    return result as TLS31080Response;
+  }
+
+  /**
+   * 建立總計三列：
+   * 1. 營業實績
+   * 2. 交易筆數
+   * 3. 營業實績佔比
+   */
+  private buildFooterRows(resData: TLS31080Response[], totalData: any): TLS31080Response[] {
+    const salesRows = resData.filter(x => x?.TimeType === '營業實績');
+    const txnRows = resData.filter(x => x?.TimeType === '交易筆數');
+
+    const salesTotal: any = {
+      floor_desc: '',
+      TimeType: '營業實績',
+    };
+
+    const txnTotal: any = {
+      floor_desc: '',
+      TimeType: '交易筆數',
+    };
+
+    // 營業實績：優先沿用後端 TotalData；若沒有對應值，再由明細加總。
+    this.summaryFields.forEach(field => {
+      const totalField = this.getTotalDataField(field);
+      const backendValue = totalField ? totalData?.[totalField] : undefined;
+      salesTotal[field] = backendValue ?? this.sumField(salesRows, field);
+      txnTotal[field] = this.sumField(txnRows, field);
+    });
+
+    // 保留原本交易總筆數。若明細沒有 Subtotal，使用後端 TotalTxnCount。
+    txnTotal.Subtotal = txnTotal.Subtotal || totalData?.TotalTxnCount || 0;
+    txnTotal.TotalCount = totalData?.TotalTxnCount ?? txnTotal.Subtotal ?? 0;
+    salesTotal.TotalCount = totalData?.TotalTxnCount ?? 0;
+
+    const percentageTotal: any = {
+      floor_desc: '',
+      TimeType: '營業實績佔比',
+    };
+
+    const salesGrandTotal = this.toNumber(salesTotal.Subtotal);
+    this.summaryFields.forEach(field => {
+      const value = this.toNumber(salesTotal[field]);
+      const percentage = salesGrandTotal === 0 ? 0 : (value / salesGrandTotal) * 100;
+      percentageTotal[field] = `${this.trimPercentage(percentage)}%`;
+    });
+
+    // 總營業實績本身的佔比固定為 100%。
+    percentageTotal.Subtotal = salesGrandTotal === 0 ? '0%' : '100%';
+
+    return [
+      salesTotal as TLS31080Response,
+      txnTotal as TLS31080Response,
+      percentageTotal as TLS31080Response,
+    ];
+  }
+
+  private getTotalDataField(field: string): string | null {
+    if (/^H\d{2}$/.test(field)) {
+      return `Total${field}`;
+    }
+
+    const map: Record<string, string> = {
+      Reentry: 'TotalReentry',
+      PresaleCheckout: 'TotalPresaleCheckout',
+      PrePerformance: 'TotalPrePerformance',
+      ConsumerNum: 'TotalConsumerNum',
+      ConsumerOrder: 'TotalConsumerOrder',
+      Subtotal: 'TotalSales',
+    };
+
+    return map[field] ?? null;
+  }
+
+  private sumField(rows: TLS31080Response[], field: string): number {
+    return rows.reduce((sum, row: any) => sum + this.toNumber(row?.[field]), 0);
+  }
+
+  private toNumber(value: any): number {
+    if (value === null || value === undefined || value === '') {
+      return 0;
+    }
+
+    const numericValue = Number(String(value).replaceAll(',', '').replace('%', ''));
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  }
+
+  private trimPercentage(value: number): string {
+    return value.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
   }
 
   columnGroup: ColumnGroup[] = [
