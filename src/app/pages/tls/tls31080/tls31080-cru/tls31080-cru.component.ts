@@ -26,7 +26,7 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
   loading = false;
   totalRecords = 0;
   data: TLS31080DetailResponse[] = [];
-  footerData: Partial<TLS31080DetailResponse> | null = null;
+  footerData: Partial<TLS31080DetailResponse>[] = [];
   historyRequestBody: TLS31080Request | null = null;
   columns: ReportColumn[] = [];
   private floorOptions: IDropdownItem[] = [];
@@ -42,7 +42,7 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible']?.currentValue === true && this.rowData && this.queryConditions) {
       this.data = [];
-      this.footerData = null;
+      this.footerData = [];
       this.totalRecords = 0;
       this.buildColumns();
       this.queryDetail();
@@ -89,23 +89,62 @@ export class Tls31080CRUComponent implements OnChanges, OnInit {
     this.tls31080Service.queryTLS31080Detail(request)
       .pipe(finalize(() => this.loading = false))
       .subscribe(res => {
-        // ✅ 修正點：對接後端 ApiResult 的 Data 與 TotalData
-        const queryData = res.Data ?? [];
-        const t = res.TotalData;
 
-        this.data = queryData;
-        this.footerData = t ? {
-          H00: t.H00 ?? 0, H01: t.H01 ?? 0, H02: t.H02 ?? 0, H03: t.H03 ?? 0, H04: t.H04 ?? 0, H05: t.H05 ?? 0,
-          H06: t.H06 ?? 0, H07: t.H07 ?? 0, H08: t.H08 ?? 0, H09: t.H09 ?? 0, H10: t.H10 ?? 0, H11: t.H11 ?? 0,
-          H12: t.H12 ?? 0, H13: t.H13 ?? 0, H14: t.H14 ?? 0, H15: t.H15 ?? 0, H16: t.H16 ?? 0, H17: t.H17 ?? 0,
-          H18: t.H18 ?? 0, H19: t.H19 ?? 0, H20: t.H20 ?? 0, H21: t.H21 ?? 0, H22: t.H22 ?? 0, H23: t.H23 ?? 0,
+        const resultObj: any = res?.Data ?? {};
+
+        const queryData: TLS31080DetailResponse[] =
+          Array.isArray(res?.Data)
+            ? res.Data
+            : Array.isArray(resultObj?.Data)
+              ? resultObj.Data
+              : [];
+
+        const totalData: TLS31080DetailResponse[] =
+          Array.isArray(res?.TotalData)
+            ? res.TotalData
+            : Array.isArray(resultObj?.TotalData)
+              ? resultObj.TotalData
+              : [];
+
+        // ★ 只補 Detail 小計欄位名稱相容
+        this.data = queryData.map((x: any) => ({
+          ...x,
+          SubTotal: x.SubTotal ?? x.Subtotal ?? 0
+        }));
+
+        this.footerData = totalData.map((t: TLS31080DetailResponse) => ({
+          TimeType: t.TimeType,
+          H00: t.H00 ?? 0,
+          H01: t.H01 ?? 0,
+          H02: t.H02 ?? 0,
+          H03: t.H03 ?? 0,
+          H04: t.H04 ?? 0,
+          H05: t.H05 ?? 0,
+          H06: t.H06 ?? 0,
+          H07: t.H07 ?? 0,
+          H08: t.H08 ?? 0,
+          H09: t.H09 ?? 0,
+          H10: t.H10 ?? 0,
+          H11: t.H11 ?? 0,
+          H12: t.H12 ?? 0,
+          H13: t.H13 ?? 0,
+          H14: t.H14 ?? 0,
+          H15: t.H15 ?? 0,
+          H16: t.H16 ?? 0,
+          H17: t.H17 ?? 0,
+          H18: t.H18 ?? 0,
+          H19: t.H19 ?? 0,
+          H20: t.H20 ?? 0,
+          H21: t.H21 ?? 0,
+          H22: t.H22 ?? 0,
+          H23: t.H23 ?? 0,
           ReentryAmt: t.ReentryAmt ?? 0,
           PresaleCheckoutAmt: t.PresaleCheckoutAmt ?? 0,
           PrePerformance: t.PrePerformance ?? 0,
           ConsumerNum: t.ConsumerNum ?? 0,
           ConsumerOrder: t.ConsumerOrder ?? 0,
           SubTotal: t.SubTotal ?? 0,
-        } : null;
+        }));
 
         this.totalRecords = this.data.length;
       });
