@@ -183,6 +183,9 @@
       </div>
     </header>
   </app-table-report>
+  @if (data.length) {
+    <app-report-signature dataType="FIN34020" />
+  }
 </div>
 
 <!-- 立帳本身固定佔第 1 行，其後依 getExtraLineCount(rowData) 補對應筆數的空白行，維持跟 multiLineTemplate 同步的列高 -->

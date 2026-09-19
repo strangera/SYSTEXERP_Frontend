@@ -113,6 +113,76 @@
         ></app-input-text>
       </div>
 
+      <!-- 銷售類型 / 收單行 / 分期期數（只有 D 類才顯示） -->
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+        <app-dropdown
+          label="銷售類型"
+          [control]="dataForm.controls.CAP_SALETYPE"
+          [options]="capSaletypeOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+        <app-dropdown
+          label="收單行"
+          [control]="dataForm.controls.EDC_BANK"
+          [options]="edcBankOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+        <app-dropdown
+          label="分期期數"
+          [control]="dataForm.controls.INSTMS_TYPE"
+          [options]="instmsTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
+      <!-- 支付別編號 / 券類計算方式 / 超過基準金額（只有 D 類才顯示） -->
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+        <app-dropdown
+          label="支付別編號"
+          [control]="dataForm.controls.PAY_NO"
+          [options]="payNoOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isCalcTypeVisible">
+        <app-dropdown
+          label="券類計算方式"
+          [control]="dataForm.controls.CALC_TYPE"
+          [options]="calcTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isDownPaymentVisible">
+        <app-input-text
+          label="超過基準金額"
+          [control]="dataForm.controls.DOWN_PAYMENT"
+          placeholder="請輸入金額"
+          type="number"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isOverBaseRateVisible">
+        <app-input-text
+          label="超過基準比率"
+          [control]="dataForm.controls.OVER_BASE_RATE"
+          placeholder="例：0.3"
+          type="number"
+        ></app-input-text>
+      </div>
+
       <!-- 底部按鈕列：只在 非 Read 模式 顯示 -->
       <div
         class="col-12 flex justify-content-end gap-2 mt-3"

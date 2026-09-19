@@ -7,7 +7,7 @@ import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { NotificationService } from '../../../../shared/components/notification-message/notification.service';
-import { formatAmountWithDecimals, ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
+import { ReportColumn } from '../../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31020-cru',
@@ -45,16 +45,16 @@ export class Tls31020CruComponent implements OnChanges {
     { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
     { field: 'budget', header: '營業目標', groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: '營業額', format: formatAmount, align: 'right' },
-    { field: 'AchievementRate', header: '達成率', groupField: '營業額', format: (v) => formatPercentage(v, 2), align: 'right' },
-    { field: 'BudgetRate', header: '營業目標佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 2), align: 'right' },
+    { field: 'AchievementRate', header: '達成率', groupField: '營業額', format: (v) => formatPercentage(v, 1), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 1), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 1), align: 'right' },
     { field: 'TxnCount', header: '交易筆數', groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', groupField: '客單價', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (v) => formatAmountWithDecimals(v, 2), align: 'right' },
+    { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '月營業實績', groupField: '月累計', format: formatAmount, align: 'right' },
-    { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 2), align: 'right' },
+    { field: 'CompletionRate', header: '完成率', groupField: '月累計', format: (v) => formatPercentage(v, 1), align: 'right' },
     { field: 'PrePerformance', header: '預售業績', format: formatAmount, align: 'right', visible: false },
     { field: 'ConsumerNum', header: '消費人數', format: formatAmount, align: 'right', visible: false },
     { field: 'ConsumerOrder', header: '消費客單', format: formatAmount, align: 'right', visible: false }

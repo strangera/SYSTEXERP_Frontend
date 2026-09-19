@@ -232,6 +232,19 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
     this.initDialogColumns();
+
+    // 由溢欠彙總表第三層(每日支付別收銀機資料)點選收銀機號鑽取進入，帶入當時的查詢條件並直接查詢
+    const drillState = this.router.lastSuccessfulNavigation?.extras.state as
+      { TXN_Date?: string; ECR_No?: string; PAY_NO?: string } | undefined;
+    if (drillState?.TXN_Date && drillState?.ECR_No && drillState?.PAY_NO) {
+      this.queryForm.patchValue({
+        TXN_Date: new Date(drillState.TXN_Date),
+        ECR_No_Start: drillState.ECR_No,
+        ECR_No_End: drillState.ECR_No,
+        PAY_NO: drillState.PAY_NO,
+      });
+      this.onSubmit(this.queryForm);
+    }
   }
 
   get PAY_NO_NAME(): string {

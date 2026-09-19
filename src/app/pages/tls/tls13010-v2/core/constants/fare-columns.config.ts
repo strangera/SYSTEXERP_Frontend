@@ -405,6 +405,8 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '超過基準比率',
       type: 'number',
       editable: true,
+      allowDecimal: true,
+      decimalPlaces: 4,
       style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
     },
     // 加抽比率欄位暫時隱藏

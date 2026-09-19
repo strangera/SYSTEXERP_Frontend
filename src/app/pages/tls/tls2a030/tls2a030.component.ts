@@ -131,6 +131,25 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       });
   }
 
+  onQueryByDay(): void {
+    const raw = this.queryForm.getRawValue();
+
+    if (!raw.SaleDateStart || !raw.SaleDateEnd) {
+      this.messageService.warnBubble('請先選擇銷售日期');
+      return;
+    }
+
+    this.router.navigate(['/account/tls/tls2a030byday'], {
+      state: {
+        SaleDateStart: this.datePipe.transform(raw.SaleDateStart, 'yyyy-MM-dd'),
+        SaleDateEnd: this.datePipe.transform(raw.SaleDateEnd, 'yyyy-MM-dd'),
+        ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+        ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+        fromRoute: this.router.url,
+      },
+    });
+  }
+
   onExportExcel(): void {
     // 1. 取得查詢表單中的日期
     const startDate = this.queryForm.get('SaleDateStart')?.value;

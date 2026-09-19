@@ -38,7 +38,6 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
   ],
 })
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
-  // 讓 HTML 可以用 CRUDStatus
   CRUDStatus = CRUDStatus;
 
   deductionCategoryOptions = [
@@ -49,7 +48,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     { value: 'E', label: 'E-活動扣款' },
     { value: 'Z', label: 'Z-其他扣款' },
   ];
+
   accountOptions: any[] = [];
+  capSaletypeOptions: any[] = [];
+  edcBankOptions: any[] = [];
+  instmsTypeOptions: any[] = [];
+  payNoOptions: any[] = [];
+  calcTypeOptions: any[] = [];
 
   dataForm = this.formBuilder.group({
     CAP_Item: [
@@ -66,11 +71,16 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     GUI_FLAG: ['Y', [Validators.required]],
     CAP_TaxType: ['1', [Validators.required]],
     IsCommonlyUsed: ['Y', [Validators.required]],
-    // ✅ 合約列印區分
     Print_Area: ['', [Validators.maxLength(100)]],
-    // 只有 D 類才必填，必填 validator 於 CAP_Type 變動時動態套用
     CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
+    CAP_SALETYPE: [null as string | null],
+    EDC_BANK: [null as string | null],
+    INSTMS_TYPE: [null as string | null],
+    PAY_NO: [null as string | null],
+    CALC_TYPE: [null as string | null],
+    DOWN_PAYMENT: [null as number | null],
+    OVER_BASE_RATE: [null as number | null],
   });
 
   constructor(
@@ -82,49 +92,84 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage('TLS11020', this.dataForm);
+  ngOnInit(): void {
+    this.initializePage('TLS11020', this.dataForm);
 
-  if (this.crudstatus === CRUDStatus.Edit) {
-    this.dataForm.get('CAP_Type')?.disable();
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.dataForm.get('CAP_Type')?.disable();
+    }
+
+    this.dataForm.get('CAP_Type')?.valueChanges.subscribe((v) => {
+      this.applyBaseRateRule(v as string | null);
+    });
+    this.applyBaseRateRule(this.dataForm.get('CAP_Type')?.value ?? null);
+
+    this.dropdownApiService.queryGls1005().subscribe((data) => {
+      this.accountOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        formLabel: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'CAP_SALETYPE' }).subscribe((data) => {
+      this.capSaletypeOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'EDC_Bank' }).subscribe((data) => {
+      this.edcBankOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'instms_type' }).subscribe((data) => {
+      this.instmsTypeOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'pay_no' }).subscribe((data) => {
+      this.payNoOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'CALC_TYPE' }).subscribe((data) => {
+      this.calcTypeOptions = (data ?? []).map((x: any) => ({
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    this.initialFormSnapshot = this.dataForm.getRawValue();
   }
-
-  // 依扣款類別動態控制「分攤比率」：只有 D 類顯示且必填
-  this.dataForm.get('CAP_Type')?.valueChanges.subscribe((v) => {
-    this.applyBaseRateRule(v as string | null);
-  });
-  this.applyBaseRateRule(this.dataForm.get('CAP_Type')?.value ?? null);
-
-  this.dropdownApiService.queryGls1005().subscribe((data) => {
-    this.accountOptions = (data ?? []).map((x: any) => ({
-      label: `${x.No} - ${x.Name}`,
-      formLabel: `${x.No} - ${x.Name}`,
-      value: x.No,
-    }));
-  });
-
-  // ✅ 在「表單值 & disable 狀態」都確定後，存起來當作清除時要回到的預設
-  this.initialFormSnapshot = this.dataForm.getRawValue();
-}
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const raw = this.dataForm.getRawValue();
       const capType = raw.CAP_Type as string | null | undefined;
 
-      // ✅ CAP_Type 必須剛好 1 個字元
       if (!capType || capType.length !== 1) {
         this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
         return;
       }
 
-      // ✅ 分攤比率空字串轉 null（後端為 decimal?，空字串無法反序列化）
       (raw as any).CAP_BaseRate =
         raw.CAP_BaseRate === '' || raw.CAP_BaseRate == null
           ? null
           : raw.CAP_BaseRate;
 
-      // === 新增 ===
+      (raw as any).DOWN_PAYMENT =
+        raw.DOWN_PAYMENT === null || raw.DOWN_PAYMENT === undefined || (raw.DOWN_PAYMENT as any) === ''
+          ? null
+          : parseFloat(String(raw.DOWN_PAYMENT));
+
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         this.tls11020Service.insertTLS11020(raw).subscribe({
           next: () => {
@@ -139,10 +184,7 @@ ngOnInit(): void {
             );
           },
         });
-      }
-
-      // === 編輯 ===
-      else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         (raw as any).id = this.rowdata?.id;
         raw.CAP_Item = this.rowdata?.CAP_Item;
 
@@ -151,7 +193,7 @@ ngOnInit(): void {
             this.messageService.successBubble(
               this.translate.instant('updated-successfully')
             );
-            this.onCancel();          // 回列表（帶 fromCru）
+            this.onCancel();
             this.resetFormToDefault();
           },
           error: () => {
@@ -164,36 +206,38 @@ ngOnInit(): void {
     });
   }
 
-  // 自訂清除：保留 CAP_Item & CAP_Type
-onClear(): void {
-  // 沒快照就退回你原本的 resetFormToDefault()
-  if (!this.initialFormSnapshot) {
-    this.resetFormToDefault();
-    return;
+  onClear(): void {
+    if (!this.initialFormSnapshot) {
+      this.resetFormToDefault();
+      return;
+    }
+
+    this.dataForm.reset();
+    this.dataForm.patchValue(this.initialFormSnapshot, { emitEvent: false });
+    this.dataForm.get('CAP_Item')?.disable();
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.dataForm.get('CAP_Type')?.disable();
+    }
+    this.dataForm.markAsPristine();
+    this.dataForm.markAsUntouched();
   }
 
-  // 1) 先 reset
-  this.dataForm.reset();
-
-  // 2) 再回填「進頁面時的預設值」
-  this.dataForm.patchValue(this.initialFormSnapshot, { emitEvent: false });
-
-  // 3) 還原 disabled 狀態（CAP_Item 永遠 disabled；Edit 時 CAP_Type disabled）
-  this.dataForm.get('CAP_Item')?.disable();
-  if (this.crudstatus === CRUDStatus.Edit) {
-    this.dataForm.get('CAP_Type')?.disable();
-  }
-
-  this.dataForm.markAsPristine();
-  this.dataForm.markAsUntouched();
-}
-
-  // 只有 D 類顯示「分攤比率」欄位
   get isBaseRateVisible(): boolean {
     return String(this.dataForm.get('CAP_Type')?.value ?? '') === 'D';
   }
 
-  // 依扣款類別套用「分攤比率」的必填規則；非 D 類清空數值
+  get isCalcTypeVisible(): boolean {
+    return this.isBaseRateVisible && String(this.dataForm.get('CAP_SALETYPE')?.value ?? '') === '5';
+  }
+
+  get isDownPaymentVisible(): boolean {
+    return this.isCalcTypeVisible && String(this.dataForm.get('CALC_TYPE')?.value ?? '') === '1';
+  }
+
+  get isOverBaseRateVisible(): boolean {
+    return this.isCalcTypeVisible && String(this.dataForm.get('CALC_TYPE')?.value ?? '') === '2';
+  }
+
   private applyBaseRateRule(capType: string | null): void {
     const ctrl = this.dataForm.get('CAP_BaseRate');
     if (!ctrl) return;
@@ -207,7 +251,8 @@ onClear(): void {
     ctrl.updateValueAndValidity({ emitEvent: false });
   }
 
-private initialFormSnapshot: any = null;
+  private initialFormSnapshot: any = null;
+
   private resetFormToDefault(): void {
     this.dataForm.reset();
     this.dataForm.get('CAP_Item')?.disable();
@@ -218,6 +263,13 @@ private initialFormSnapshot: any = null;
       IsCommonlyUsed: 'Y',
       Print_Area: '',
       CAP_BaseRate: '',
+      CAP_SALETYPE: null,
+      EDC_BANK: null,
+      INSTMS_TYPE: null,
+      PAY_NO: null,
+      CALC_TYPE: null,
+      DOWN_PAYMENT: null,
+      OVER_BASE_RATE: null,
     });
     this.dataForm.markAsPristine();
   }

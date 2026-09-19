@@ -38,6 +38,7 @@
     [showReportMode]="false" [footerData]="footerData" [allowFooterHtml]="true">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
+        <p-button styleClass="p-2" label="查詢每天資料" icon="pi pi-calendar" (click)="onQueryByDay()"></p-button>
         <p-button styleClass="p-2" label="匯出溢欠彙總表.XLSX" [loading]="btnLoading2" icon="pi pi-file-excel"
           (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
       </div>

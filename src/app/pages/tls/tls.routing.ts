@@ -160,6 +160,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls2a020', loadComponent: () => import('./tls2a020/tls2a020.component').then(m => m.TLS2A020Component), data: { progNo: 'TLS2A020' } },
   // 溢欠彙總表
   { path: 'tls2a030', loadComponent: () => import('./tls2a030/tls2a030.component').then(m => m.TLS2A030Component), data: { progNo: 'TLS2A030' } },
+  // 溢欠彙總表第二層-每日資料
+  { path: 'tls2a030byday', loadComponent: () => import('./tls2a030-byday/tls2a030-byday.component').then(m => m.TLS2A030ByDayComponent), data: { progNo: 'TLS2A030' } },
+  // 溢欠彙總表第三層-每日支付別收銀機資料
+  { path: 'tls2a030bydayandpayno', loadComponent: () => import('./tls2a030-bydayandpayno/tls2a030-bydayandpayno.component').then(m => m.TLS2A030ByDayAndPayNoComponent), data: { progNo: 'TLS2A030' } },
   // 缺單據/作廢發票報表
   { path: 'tls2a040', loadComponent: () => import('./tls2a040/tls2a040.component').then(m => m.TLS2A040Component), data: { progNo: 'TLS2A040' } },
   // 第三方支付帳差報表
