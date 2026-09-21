@@ -71,23 +71,27 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   footerData: any[] = [];
   lastQueryBody: TLS26030QueryRequest | null = null;
 
-  columns: ReportColumn[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
-    { field: 'TLT_No', header: '專櫃編號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true, align: 'right' },
-    { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true, align: 'right' },
-    { field: 'Batch_No', header: '認列批號', visible: true },
-    { field: 'Preorder_status', header: '預售狀態', visible: true },
-    { field: 'CANCEL_Date', header: '作廢日期', visible: true, format: formatDate },
-    { field: 'CANCEL_ECR_No', header: '作廢機號', visible: true },
-    { field: 'CANCEL_TXN_No', header: '作廢序號', visible: true },
-    { field: 'Close_Date', header: '結帳日期', visible: true, format: formatDate },
-    { field: 'Close_Ecr_No', header: '結帳機號', visible: true },
-    { field: 'Close_Txn_No', header: '結帳序號', visible: true, format: formatToSixDigits }
-  ];
+columns: ReportColumn[] = [
+  { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate, width: '100px' },
+  { field: 'ECR_No', header: '收銀機號', visible: true, width: '90px' },
+  { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits, width: '90px' },
+
+  { field: 'TLT_No', header: '專櫃編號', visible: true, align: 'left', width: '90px' },
+  { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left', width: '160px' },
+
+  { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true, align: 'right', width: '110px' },
+  { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true, align: 'right', width: '110px' },
+
+  { field: 'Batch_No', header: '認列批號', visible: true, width: '110px' },
+
+  { field: 'Preorder_status', header: '預售狀態', visible: true, width: '90px' },
+  { field: 'CANCEL_Date', header: '作廢日期', visible: true, format: formatDate, width: '100px' },
+  { field: 'CANCEL_ECR_No', header: '作廢機號', visible: true, width: '90px' },
+  { field: 'CANCEL_TXN_No', header: '作廢序號', visible: true, width: '90px' },
+  { field: 'Close_Date', header: '結帳日期', visible: true, format: formatDate, width: '100px' },
+  { field: 'Close_Ecr_No', header: '結帳機號', visible: true, width: '90px' },
+  { field: 'Close_Txn_No', header: '結帳序號', visible: true, format: formatToSixDigits, width: '90px' }
+];
 
   // 下拉選單選項
   floorOptions: any[] = [];
