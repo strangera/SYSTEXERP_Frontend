@@ -34,11 +34,6 @@ export class DropdownRangeComponent implements OnInit {
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl
   @Input() endControl = new FormControl(); // 結束值的 FormControl
-  // 可選：對應起/迄「年度」的 FormControl（值可為 Date 或 number）。
-  // 沒有傳入時，validateRange() 維持原本純數字/字串比較，不影響既有頁面行為；
-  // 有傳入且兩邊都能取到年度時，改用「年度*1000+期別」複合值比較，涵蓋跨年度區間。
-  @Input() startYearControl: FormControl | null = null;
-  @Input() endYearControl: FormControl | null = null;
   @Input() set options(value: any[] | null) {
     // 當 options 收到資料時，停止載入
     if (value !== null) {
@@ -79,14 +74,6 @@ export class DropdownRangeComponent implements OnInit {
     this.endControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
-
-    // 有傳入年度 Input 時，年度異動（不動期別本身）也要重新驗證區間
-    this.startYearControl?.valueChanges.subscribe(() => {
-      this.validateRange();
-    });
-    this.endYearControl?.valueChanges.subscribe(() => {
-      this.validateRange();
-    });
   }
 
   onStartDropdownChange(event: DropdownChangeEvent) {
@@ -111,7 +98,8 @@ export class DropdownRangeComponent implements OnInit {
     if (startVal !== null && startVal !== undefined && startVal !== '' &&
       endVal !== null && endVal !== undefined && endVal !== '') {
 
-      if (this.isRangeInvalid(startVal, endVal)) {
+      // 直接使用 JavaScript 的大於比較，字串會按字典順序 (0-9 < A-Z)，數字則按數值比較
+      if (startVal > endVal) {
         // 設定錯誤標記
         this.startControl.setErrors({ ...errors, textRange: true });
       } else {
@@ -130,33 +118,5 @@ export class DropdownRangeComponent implements OnInit {
         this.startControl.setErrors(remainingErrors);
       }
     }
-  }
-
-  /**
-   * 判斷「起 > 迄」是否成立。
-   * 沒有傳入 startYearControl/endYearControl，或任一邊取不到年度時：
-   *   維持原本邏輯，直接用 JS 大於比較（字串按字典順序 0-9 < A-Z，數字按數值比較）。
-   * 兩邊都能取到年度時：改用「年度*1000+期別」複合值比較，涵蓋跨年度區間
-   *（週次 1~53、半年別 1~2 都遠小於 1000，複合值排序不會互相干擾）。
-   */
-  private isRangeInvalid(startVal: string | number, endVal: string | number): boolean {
-    const startYear = this.extractYear(this.startYearControl?.value);
-    const endYear = this.extractYear(this.endYearControl?.value);
-
-    if (startYear !== null && endYear !== null) {
-      return (startYear * 1000 + Number(startVal)) > (endYear * 1000 + Number(endVal));
-    }
-
-    return startVal > endVal;
-  }
-
-  /**
-   * 年度 FormControl 的值可能是 Date（calendar-range dateYearRange）或 number，統一轉成年度數字。
-   */
-  private extractYear(val: unknown): number | null {
-    if (val === null || val === undefined) return null;
-    if (val instanceof Date) return val.getFullYear();
-    const num = Number(val);
-    return Number.isFinite(num) ? num : null;
   }
 }
