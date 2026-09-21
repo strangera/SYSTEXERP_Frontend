@@ -196,7 +196,7 @@
       [ngClass]="{ 'p-disabled-row': nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData) }"
       [pSelectableRowDisabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)" [pReorderableRow]="index"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
-      <td *ngIf="showReorder" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
+      <td *ngIf="showReorder" class="text-center serial-cell" pFrozenColumn [style.min-width]="serialColumnWidth"
         [style.width]="serialColumnWidth">
         {{ rowIndex + 1 }}
       </td>

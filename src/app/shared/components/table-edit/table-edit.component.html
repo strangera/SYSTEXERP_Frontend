@@ -134,7 +134,7 @@
             'text-blue-500': rowData._isAutoInsertCandidate,
           }"></span>
       </td>
-      <td class="text-center w-1rem" [attr.colspan]="
+      <td class="text-center w-1rem serial-cell" [attr.colspan]="
           rowData._isAutoInsertCandidate && data.length && showCheckBox ? 2 : 1
         " (click)="
           rowData._isAutoInsertCandidate ? focusFirstInput(rowIndex) : null

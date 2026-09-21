@@ -31,7 +31,7 @@ import { ReportColumn } from '../../table-report.model';
       <!-- 表身 -->
       <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
         <tr>
-          <td *ngIf="expansionShowReorder" class="text-center">{{ first + rowIndex + 1 }}</td>
+          <td *ngIf="expansionShowReorder" class="text-center serial-cell">{{ first + rowIndex + 1 }}</td>
           <td *ngFor="let col of expansionColumns" class="text-center">
             <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
               {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
@@ -61,6 +61,15 @@ import { ReportColumn } from '../../table-report.model';
     </p-table>
   </div>
   `,
+  styles: [`
+    // 序號欄：純數字不需要斷行，避免三位數以上被全域 word-break: break-all 斷成兩行。
+    // 用額外的 .serial-cell class 疊加特異度蓋過全域規則，不動全域 styles.scss。
+    :host ::ng-deep .p-datatable-tbody > tr > td.serial-cell {
+      white-space: nowrap !important;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [TableModule, PrimeTemplate, NgFor, NgIf, CommonModule]
