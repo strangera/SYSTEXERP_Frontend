@@ -51,6 +51,7 @@
                   <div class="col-6">
                     <app-dropdown-range label="週次" [options]="weekOptions" optionLabel="label" optionValue="value"
                       [startControl]="queryForm.controls.CompareWeek" [endControl]="queryForm.controls.CompareWeekTo"
+                      [startYearControl]="queryForm.controls.CompareYear" [endYearControl]="queryForm.controls.CompareYearTo"
                       [submitted]="submitted" />
                   </div>
                 </div>
@@ -67,6 +68,7 @@
                   <div class="col-6">
                     <app-dropdown-range label="週次" [options]="weekOptions" optionLabel="label" optionValue="value"
                       [startControl]="queryForm.controls.week" [endControl]="queryForm.controls.weekTo"
+                      [startYearControl]="queryForm.controls.year" [endYearControl]="queryForm.controls.yearTo"
                       [submitted]="submitted" />
                   </div>
                 </div>
@@ -74,39 +76,26 @@
             </div>
           }
           @if (queryForm.controls.DayType.value === '3') {
-            <!-- 月營業報表 -->
+            <!-- 月營業報表：年月合一區間 picker，起訖各自帶年度，天生涵蓋跨年度區間 -->
             <div class="flex col-12">
               <div class="col-6 flex flex-column border-right-1 surface-border">
                 <div class="col-12 flex justify-content-center">
                   <B><u>比較資料查詢條件</u></B>
                 </div>
-                <div class="grid p-fluid">
-                  <div class="col-6">
-                    <app-calendar-range calendarType="dateYearRange" label="年度"
-                      [startControl]="queryForm.controls.CompareYear" [endControl]="queryForm.controls.CompareYearTo"
-                      [submitted]="submitted" />
-                  </div>
-                  <div class="col-6">
-                    <app-dropdown-range label="月份" [options]="monthOptions" optionLabel="label" optionValue="value"
-                      [startControl]="queryForm.controls.CompareMonth" [endControl]="queryForm.controls.CompareMonthTo"
-                      [submitted]="submitted" />
-                  </div>
+                <div class="col-12">
+                  <app-calendar-range calendarType="dateMonthRange" label="年月區間"
+                    [startControl]="queryForm.controls.CompareMonth" [endControl]="queryForm.controls.CompareMonthTo"
+                    [submitted]="submitted" />
                 </div>
               </div>
               <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
                   <B><u>基準資料查詢條件</u></B>
                 </div>
-                <div class="grid p-fluid">
-                  <div class="col-6">
-                    <app-calendar-range calendarType="dateYearRange" label="年度" [startControl]="queryForm.controls.year"
-                      [endControl]="queryForm.controls.yearTo" [submitted]="submitted" />
-                  </div>
-                  <div class="col-6">
-                    <app-dropdown-range label="月份" [options]="monthOptions" optionLabel="label" optionValue="value"
-                      [startControl]="queryForm.controls.month" [endControl]="queryForm.controls.monthTo"
-                      [submitted]="submitted" />
-                  </div>
+                <div class="col-12">
+                  <app-calendar-range calendarType="dateMonthRange" label="年月區間"
+                    [startControl]="queryForm.controls.month" [endControl]="queryForm.controls.monthTo"
+                    [submitted]="submitted" />
                 </div>
               </div>
             </div>
@@ -127,7 +116,9 @@
                   <div class="col-6">
                     <app-dropdown-range label="半年別" [options]="halfYearOptions" optionLabel="label" optionValue="value"
                       [startControl]="queryForm.controls.CompareHalfYear"
-                      [endControl]="queryForm.controls.CompareHalfYearTo" [submitted]="submitted" />
+                      [endControl]="queryForm.controls.CompareHalfYearTo"
+                      [startYearControl]="queryForm.controls.CompareYear" [endYearControl]="queryForm.controls.CompareYearTo"
+                      [submitted]="submitted" />
                   </div>
                 </div>
               </div>
@@ -143,6 +134,7 @@
                   <div class="col-6">
                     <app-dropdown-range label="半年別" [options]="halfYearOptions" optionLabel="label" optionValue="value"
                       [startControl]="queryForm.controls.halfYear" [endControl]="queryForm.controls.halfYearTo"
+                      [startYearControl]="queryForm.controls.year" [endYearControl]="queryForm.controls.yearTo"
                       [submitted]="submitted" />
                   </div>
                 </div>

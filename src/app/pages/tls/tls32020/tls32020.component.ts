@@ -91,8 +91,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     week: [null as number | null],
     yearTo: [new Date()], // 週/月/半年/年 區間查詢共用：迄年度
     weekTo: [null as number | null], // 週次區間查詢：迄週次
-    month: [null as number | null],
-    monthTo: [null as number | null], // 月份區間查詢：迄月份
+    month: [null as Date | null], // 月報表基準期：年月合一區間 picker 起
+    monthTo: [null as Date | null], // 月報表基準期：年月合一區間 picker 迄
     halfYear: [null as number | null],
     halfYearTo: [null as number | null], // 半年別區間查詢：迄半年別
 
@@ -101,8 +101,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     CompareWeek: [null as number | null],
     CompareYearTo: [new Date()], // 週/月/半年/年 區間查詢共用：迄年度
     CompareWeekTo: [null as number | null], // 週次區間查詢：迄週次
-    CompareMonth: [null as number | null],
-    CompareMonthTo: [null as number | null], // 月份區間查詢：迄月份
+    CompareMonth: [null as Date | null], // 月報表比較期：年月合一區間 picker 起
+    CompareMonthTo: [null as Date | null], // 月報表比較期：年月合一區間 picker 迄
     CompareHalfYear: [null as number | null],
     CompareHalfYearTo: [null as number | null], // 半年別區間查詢：迄半年別
 
@@ -176,10 +176,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { value: 'N', label: '否' }
   ];
 
-  monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1, // 1 到 12
-    label: `${i + 1} 月`
-  }));
   weekOptions: { value: number, label: string }[] = WEEK_OPTIONS;
   halfYearOptions = [
     { value: 1, label: '上半年' }, // 1: 上半年 (1/1 ~ 6/30)
@@ -339,13 +335,11 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
       this.setWeekOptions(today);
     } else if (type === '3') {
-      const currentMonth = today.getMonth() + 1;
-
       this.queryForm.patchValue({
-        month: currentMonth,
-        monthTo: currentMonth,
-        CompareMonth: currentMonth,
-        CompareMonthTo: currentMonth,
+        month: today,
+        monthTo: today,
+        CompareMonth: compareDefaultDate,
+        CompareMonthTo: compareDefaultDate,
       }, { emitEvent: false });
     } else if (type === '4') {
       const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
@@ -557,16 +551,16 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           }
           break;
         }
-      case '3': // 月營業報表
+      case '3': // 月營業報表（年月合一區間 picker，起訖各自帶自己的年度，天生涵蓋跨年）
         {
           if (baseMonth) {
-            const baseFromRange = this.getMonthRange(baseYearNum, baseMonth);
-            const baseToRange = baseMonthTo ? this.getMonthRange(baseYearToNum, baseMonthTo) : baseFromRange;
+            const baseFromRange = this.getMonthRange(baseMonth.getFullYear(), baseMonth.getMonth() + 1);
+            const baseToRange = baseMonthTo ? this.getMonthRange(baseMonthTo.getFullYear(), baseMonthTo.getMonth() + 1) : baseFromRange;
             if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
           if (compareMonth) {
-            const compareFromRange = this.getMonthRange(compareYearNum, compareMonth);
-            const compareToRange = compareMonthTo ? this.getMonthRange(compareYearToNum, compareMonthTo) : compareFromRange;
+            const compareFromRange = this.getMonthRange(compareMonth.getFullYear(), compareMonth.getMonth() + 1);
+            const compareToRange = compareMonthTo ? this.getMonthRange(compareMonthTo.getFullYear(), compareMonthTo.getMonth() + 1) : compareFromRange;
             if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
@@ -655,10 +649,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.queryForm.controls.CompareWeek.setValue(compareWeek, { emitEvent: false }); // 去年同期週次
       this.queryForm.controls.CompareWeekTo.setValue(compareWeek, { emitEvent: false });
     } else if (defaultType === '3') {
-      this.queryForm.controls.month.setValue(today.getMonth() + 1, { emitEvent: false });
-      this.queryForm.controls.monthTo.setValue(today.getMonth() + 1, { emitEvent: false });
-      this.queryForm.controls.CompareMonth.setValue(today.getMonth() + 1, { emitEvent: false }); // 同樣月份
-      this.queryForm.controls.CompareMonthTo.setValue(today.getMonth() + 1, { emitEvent: false });
+      this.queryForm.controls.month.setValue(today, { emitEvent: false });
+      this.queryForm.controls.monthTo.setValue(today, { emitEvent: false });
+      this.queryForm.controls.CompareMonth.setValue(compareDefaultDate, { emitEvent: false }); // 去年同期
+      this.queryForm.controls.CompareMonthTo.setValue(compareDefaultDate, { emitEvent: false });
     } else if (defaultType === '4') {
       const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
       this.queryForm.controls.halfYear.setValue(defaultHalfYear, { emitEvent: false });
