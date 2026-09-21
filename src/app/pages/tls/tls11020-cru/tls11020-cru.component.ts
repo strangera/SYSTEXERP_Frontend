@@ -235,7 +235,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   }
 
   get isOverBaseRateVisible(): boolean {
-    return this.isCalcTypeVisible && String(this.dataForm.get('CALC_TYPE')?.value ?? '') === '2';
+    const calcType = String(this.dataForm.get('CALC_TYPE')?.value ?? '');
+    return this.isCalcTypeVisible && (calcType === '2' || calcType === '3');
   }
 
   private applyBaseRateRule(capType: string | null): void {
