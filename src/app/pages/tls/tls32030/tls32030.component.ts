@@ -12,7 +12,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { finalize, startWith } from 'rxjs';
+import { finalize, map, startWith } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
 import { LocationSplitPipe } from 'src/app/shared/pipes/location-split.pipe';
 import { TLS32030Data, TLS32030FooterData, TLS32030Service } from '../../../service/api/tls/tls32030.service';
@@ -141,9 +141,29 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   floorOptions = this.dropdown.querySys3900();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
   operationsOptions = getSYS1000Options('TLT_Kind');
-  counterCodeOptions = this.dropdown.queryTltTalentContractHistory();
+  // 僅本頁做去重顯示：依「櫃號+標準化櫃名」分組去重、label 不含起訖日，不動共用API本身（TLS32060等其他呼叫端不受影響）
+  counterCodeOptions = this.dropdown.queryTltTalentContractHistory().pipe(
+    map(options => this.dedupeCounterCodeOptions(options))
+  );
   // 供 onSubmit 把勾選到的talent_id對照換算回tlt_no用；counterCodeOptions 是 shareReplay(1)，這裡再訂閱一次不會多打API
   private talentContractOptions: Option[] = [];
+
+  // 同一櫃號+標準化後同名的合約只留排序後第一筆(API本身已依生效中優先/櫃號/起始日排序)，label 改為「櫃號 - 櫃名」不含日期
+  private dedupeCounterCodeOptions(options: Option[] | null): Option[] | null {
+    if (!options) return options;
+    const seen = new Set<string>();
+    const result: Option[] = [];
+    for (const opt of options) {
+      const tltNo = opt['tlt_no'] ?? '';
+      const tltName = opt['tlt_name'] ?? '';
+      const normalizedName = String(tltName).replace(/\s+/g, '');
+      const key = `${tltNo}__${normalizedName}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ ...opt, label: `${tltNo} - ${tltName}` });
+    }
+    return result;
+  }
   ReceFilterOptions = [
     { value: 'A', label: '全部' },
     { value: 'Y', label: '是' },
