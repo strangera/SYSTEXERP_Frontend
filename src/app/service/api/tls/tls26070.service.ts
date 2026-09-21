@@ -8,7 +8,7 @@ import { environment } from '../../../../environments/environment';
 export interface TLS26070QueryRequest extends ApiRequest {
   // 報表類型
   reportType?: string; // 報表類型
-
+ tlt_building?: string[]; // 館別 A1 / A2
   // 日期查詢條件
   onedatedd?: string; // 日期（日報表）- ISO 格式
   onedatedd_c?: string; // 比較日期（日報表）- ISO 格式
