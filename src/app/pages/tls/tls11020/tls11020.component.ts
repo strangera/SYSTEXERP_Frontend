@@ -91,6 +91,12 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
   ];
 
   accountOptions: any[] = [];
+  capSaletypeOptions: any[] = [];
+  edcBankOptions: any[] = [];
+  instmsTypeOptions: any[] = [];
+  payNoOptions: any[] = [];
+  payNoVoucherOptions: { label: string; value: string }[] = [];
+  calcTypeOptions: any[] = [];
 
   queryForm = this.formBuilder.group({
     CAP_Item: ['', [Validators.maxLength(3)]],
@@ -105,25 +111,69 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
   });
 
   columns: any[] = [
-    { field: 'CAP_Item', header: '扣款項目編號', visible: true },
+    { field: 'CAP_Item', header: '扣款項目編號', visible: true, align: 'left' },
     {
       field: 'CAP_Type',
       header: '扣款類別',
       visible: true,
+      align: 'left',
       format: (value: any) =>
         this.getLabelFromOptions(value, this.deductionCategoryOptions),
       exportFormat: this.deductionCategoryOptions.map((o) => ({
         [o.value]: o.label,
       })),
     },
-    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
-    { field: 'AccNo', header: '會計科目代碼', visible: true },
-    { field: 'AccCName', header: '會計科目名稱', visible: true },
-
+    { field: 'CAP_Name', header: '扣款項目名稱', visible: true, align: 'left' },
+    {
+      field: 'CAP_SALETYPE',
+      header: '銷售類型',
+      visible: true,
+      align: 'left',
+      format: (value: any) => this.getLabelFromOptions(value, this.capSaletypeOptions),
+    },
+    {
+      field: 'EDC_BANK',
+      header: '收單行',
+      visible: true,
+      align: 'left',
+      format: (value: any) => this.getLabelFromOptions(value, this.edcBankOptions),
+    },
+    {
+      field: 'INSTMS_TYPE',
+      header: '分期期數',
+      visible: true,
+      align: 'left',
+      format: (value: any) => this.getLabelFromOptions(value, this.instmsTypeOptions),
+    },
+    {
+      field: 'PAY_NO',
+      header: '支付別編號',
+      visible: true,
+      align: 'left',
+      format: (value: any) => {
+        if (!value) return '';
+        const allOptions = [...this.payNoOptions, ...this.payNoVoucherOptions];
+        return String(value).split(',')
+          .map(code => this.getLabelFromOptions(code.trim(), allOptions))
+          .join('、');
+      },
+    },
+    {
+      field: 'CALC_TYPE',
+      header: '券類計算方式',
+      visible: true,
+      align: 'left',
+      format: (value: any) => this.getLabelFromOptions(value, this.calcTypeOptions),
+    },
+    { field: 'OVER_BASE_RATE', header: '超過基準比率', visible: true, align: 'right' },
+    { field: 'DOWN_PAYMENT', header: '超過基準金額', visible: true, align: 'right' },
+    { field: 'AccNo', header: '會計科目代碼', visible: true, align: 'left' },
+    { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left' },
     {
       field: 'GUI_FLAG',
       header: '是否開立發票',
       visible: true,
+      align: 'left',
       format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
       exportFormat: this.guiFlagOptions.map((o) => ({ [o.value]: o.label })),
     },
@@ -131,6 +181,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
       field: 'CAP_TaxType',
       header: '課稅別',
       visible: true,
+      align: 'left',
       format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
       exportFormat: this.taxTypeOptions.map((o) => ({ [o.value]: o.label })),
     },
@@ -138,14 +189,15 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
       field: 'IsCommonlyUsed',
       header: '是否常用',
       visible: true,
+      align: 'left',
       format: (value: any) =>
         this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
       exportFormat: this.isCommonlyUsedOptions.map((o) => ({
         [o.value]: o.label,
       })),
     },
-    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
-    { field: 'CAP_Remark', header: '備註', visible: true },
+    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true, align: 'left' },
+    { field: 'CAP_Remark', header: '備註', visible: true, align: 'left' },
   ];
 
   constructor(
@@ -162,6 +214,27 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
       this.queryForm,
       (f) => this.onSubmit(f)
     );
+
+    this.dropdownApiService.querySys1000({ SYS_Type: 'CAP_SALETYPE' }).subscribe((data) => {
+      this.capSaletypeOptions = (data ?? []).map((x: any) => ({ label: x.Name, value: x.No }));
+    });
+    this.dropdownApiService.querySys1000({ SYS_Type: 'EDC_Bank' }).subscribe((data) => {
+      this.edcBankOptions = (data ?? []).map((x: any) => ({ label: x.Name, value: x.No }));
+    });
+    this.dropdownApiService.querySys1000({ SYS_Type: 'instms_type' }).subscribe((data) => {
+      this.instmsTypeOptions = (data ?? []).map((x: any) => ({ label: x.Name, value: x.No }));
+    });
+    this.dropdownApiService.querySys1000({ SYS_Type: 'pay_no' }).subscribe((data) => {
+      this.payNoOptions = (data ?? []).map((x: any) => ({ label: x.Name, value: x.No }));
+    });
+    this.dropdownApiService.queryPos1006().subscribe((data) => {
+      this.payNoVoucherOptions = (data ?? [])
+        .filter(x => x.PAY_Type === '6' || x.PAY_Type === 'F')
+        .map(x => ({ label: x.Name, value: x.No }));
+    });
+    this.dropdownApiService.querySys1000({ SYS_Type: 'CALC_TYPE' }).subscribe((data) => {
+      this.calcTypeOptions = (data ?? []).map((x: any) => ({ label: x.Name, value: x.No }));
+    });
 
     // 會計科目下拉（若你 table 需要 exportFormat 對照）
     this.dropdownApiService.queryGls1005().subscribe((data) => {
