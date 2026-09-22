@@ -2226,9 +2226,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       next: res => {
         if (res.Status !== '0000' || !res.Data) return;
         const d = res.Data;
-        // 格式轉換：原始格式 21→折讓格式 23，22→24（其他保持不變）
+        // 格式轉換：原始格式 21/25→折讓格式 23，22→24（其他保持不變）
         const srcType = String(d.PUR_VoucherType ?? '').trim();
-        const allowanceType = srcType === '21' ? '23' : srcType === '22' ? '24' : srcType || undefined;
+        const allowanceType = (srcType === '21' || srcType === '25') ? '23' : srcType === '22' ? '24' : srcType || undefined;
         this.stepPurchaseAllowanceRows.update(rows => {
           const next = [...rows];
           if (!next[index]) return rows;
@@ -2500,15 +2500,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const key = this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no);
         if (salesKeys.has(key)) continue;
         salesKeys.add(key);
-        salesRowsToAppend.push({ ...parsed });
+        const validSalesTypes = new Set(['31', '32', '35']); // fin53010 銷項發票 step 允許的格式代碼
+        salesRowsToAppend.push({
+          ...parsed,
+          invoice_type: validSalesTypes.has(parsed.invoice_type ?? '') ? parsed.invoice_type : undefined,
+        });
         continue;
       }
 
       const key = this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no);
       if (purchaseKeys.has(key)) continue;
       purchaseKeys.add(key);
+      const validPurchaseTypes = new Set(['21', '22', '25', '26', '27', '28']);
       purchaseRowsToAppend.push({
-        voucher_type: parsed.invoice_type,
+        voucher_type: validPurchaseTypes.has(parsed.invoice_type ?? '') ? parsed.invoice_type : undefined,
         track_no: parsed.invoice_prefix,
         invoice_no: parsed.invoice_no,
       });
