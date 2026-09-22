@@ -24,7 +24,7 @@ import { DropDownListService, IDropdownItem } from 'src/app/service/utility/drop
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import { ColumnGroup } from 'src/app/others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { creditCardColumns, creditCardGroup, defaultColumns, overStatusOptions, TLS2A010Query } from './tls2a010.model';
+import { creditCardColumns, creditCardGroup, defaultColumns, overStatusOptions, RecalculationTLS2A010Request, TLS2A010Query } from './tls2a010.model';
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 
@@ -117,8 +117,17 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         const disabledPayNos = ['10', '12', '14', '41', '42', '43', '44', '81'];
         return disabledPayNos.includes(rowData.PAY_NO);
       }
+    },
+    {
+      label: '重算',
+      icon: 'pi pi-calculator',
+      action: (rowData: any) => this.onRecalculate(rowData),
+      hidden: (rowData: any) => this.noRecalcPayNos.includes(rowData.PAY_NO),
     }
   ];
+
+  // 這些付款別不提供重算功能
+  private readonly noRecalcPayNos = ['22', '23', '26', '27', '28', '29', '30', '57', '58', '59', '60', '72', '73', '74', '75', '76'];
 
   isRowSelectable(rowData: any) {
     // 已關帳就不能選取
@@ -377,6 +386,31 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           this.loading = false;
         },
       });
+  }
+
+  onRecalculate(rowData: any): void {
+    const payload: RecalculationTLS2A010Request = {
+      TXN_Date: this.toIsoDateString(rowData.TXN_Date),
+      ECR_No: rowData.ECR_No,
+      PAY_NO: rowData.PAY_NO,
+    };
+    this.loading = true;
+    this.tls2a010Service.recalculationTLS2A010(payload).pipe(finalize(() => this.loading = false)).subscribe(res => {
+      // 系統例外（400/500）已由全局 errorInterceptor 跳提示；這裡只處理後端回 200 但 Success:false 的業務失敗
+      if (res?.Data?.Success === false) {
+        this.messageService.errorBubble(res.Data?.Message || '重算失敗');
+        return;
+      }
+      this.messageService.successBubble(res?.Data?.Message || '重算完成');
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  // 後端 DateTime 只吃 yyyy-MM-dd，rowData.TXN_Date 可能是 '2024/05/08' 這種斜線格式，轉換後再送
+  private toIsoDateString(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   onPayNoChange(payNo: string): void {

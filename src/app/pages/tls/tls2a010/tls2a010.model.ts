@@ -14,6 +14,11 @@ export interface TLS2A010Data {
   check_status: number;     // 審核狀態 (1~4)
   check_Remark: string;     // 備註
 }
+export interface RecalculationTLS2A010Request {
+  TXN_Date: string;
+  ECR_No: string;
+  PAY_NO: string;
+}
 export interface TLS2A010Query {
   pageSize: number;
   pageIndex: number;

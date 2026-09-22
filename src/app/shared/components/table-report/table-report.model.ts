@@ -54,6 +54,7 @@ export interface AddButton {
   icon?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
+  hidden?: (rowData: any) => boolean;
 }
 /**
  * 通用的表格資料與排序酬載 (Payload)
