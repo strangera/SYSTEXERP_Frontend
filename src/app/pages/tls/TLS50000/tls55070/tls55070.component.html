@@ -94,3 +94,49 @@
     </header>
   </app-table-report>
 </div>
+
+<!-- 折扣率彙總（同匯出檔下方統計表，依倉別分組） -->
+@for (group of summaryGroups; track group.hosName) {
+  <div class="card">
+    <div class="font-bold mb-2">{{ group.hosName }}</div>
+    <p-table [value]="group.rows" styleClass="p-datatable-sm p-datatable-gridlines">
+      <ng-template pTemplate="header">
+        <tr>
+          <th rowspan="2" class="text-center">銷售日期</th>
+          <th rowspan="2" class="text-center">專櫃編號</th>
+          <th rowspan="2" class="text-center">櫃位名稱</th>
+          <th rowspan="2" class="text-center">稅別</th>
+          <th colspan="6" class="text-center">折扣率</th>
+          <th rowspan="2" class="text-center">小計</th>
+        </tr>
+        <tr>
+          <th class="text-center">折讓金額</th>
+          <th class="text-center">正品</th>
+          <th class="text-center">95折</th>
+          <th class="text-center">9折</th>
+          <th class="text-center">8折</th>
+          <th class="text-center">其他</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="text-center">{{ row.TXN_Date }}</td>
+          <td class="text-center">{{ row.TLT_No }}</td>
+          <td class="text-center">{{ row.TLT_Name }}</td>
+          <td class="text-center">{{ row.TXN_TaxType }}</td>
+          @for (f of summaryAmtFields; track f) {
+            <td class="text-right">{{ row[f] | number: '1.0-0' }}</td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr class="font-bold text-primary">
+          <td colspan="4" class="text-right">合計</td>
+          @for (f of summaryAmtFields; track f) {
+            <td class="text-right">{{ group.total[f] | number: '1.0-0' }}</td>
+          }
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}

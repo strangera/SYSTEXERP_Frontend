@@ -25,9 +25,38 @@ import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { TableReportComponent } from './table-report/table-report.component';
 import { formatAmount2, formatDate, ReportColumn } from './table-report/table-report.model';
+
+/** SP_TLS55070Query_Summary 折扣率彙總列 */
+interface TLS55070SummaryRow {
+  TXN_Date: string;
+  TLT_No: string;
+  TLT_Name: string;
+  HOS_No: string;
+  HOS_NAME: string;
+  TXN_TaxType: string;
+  TXN_Disc: number;
+  DiscRate_100: number;
+  DiscRate_95: number;
+  DiscRate_90: number;
+  DiscRate_80: number;
+  DiscRate_Other: number;
+  TXN_SaleAmt: number;
+}
+
+type SummaryAmtField = 'TXN_Disc' | 'DiscRate_100' | 'DiscRate_95' | 'DiscRate_90' | 'DiscRate_80' | 'DiscRate_Other' | 'TXN_SaleAmt';
+
+/** 依倉別分組的彙總表（對應匯出檔每個 sheet 下方的統計表） */
+interface TLS55070SummaryGroup {
+  hosName: string;
+  rows: TLS55070SummaryRow[];
+  total: Record<SummaryAmtField, number>;
+}
+
+const SUMMARY_AMT_FIELDS: SummaryAmtField[] = ['TXN_Disc', 'DiscRate_100', 'DiscRate_95', 'DiscRate_90', 'DiscRate_80', 'DiscRate_Other', 'TXN_SaleAmt'];
 
 @Component({
   selector: 'app-tls55070',
@@ -48,6 +77,7 @@ import { formatAmount2, formatDate, ReportColumn } from './table-report/table-re
     ButtonModule,
     InputTextRangeComponent,
     TableReportComponent,
+    TableModule,
     AsyncPipe
   ],
 })
@@ -58,6 +88,8 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements O
   footerData: any = null;
   totalRecords = 0;
   historyRequestBody: any = null;
+  summaryGroups: TLS55070SummaryGroup[] = [];
+  readonly summaryAmtFields = SUMMARY_AMT_FIELDS;
   queryForm = this.formBuilder.group({
     TXN_DateStart: [yesterday, [Validators.required]],
     TXN_DateEnd: [yesterday, [Validators.required]],
@@ -120,12 +152,28 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements O
       };
       this.tls55070Service.queryTLS55070(payload).pipe(finalize(() => (this.loading = false)),).subscribe((res: any) => {
         this.data = res?.Data || [];
-        console.log(res);
         this.footerData = { TXN_SaleAmt: res.TotalData };
         this.totalRecords = res?.TotalCount || 0;
         this.historyRequestBody = payload;
+        this.summaryGroups = this.buildSummaryGroups(res?.Summary ?? []);
       })
     });
+  }
+
+  private buildSummaryGroups(rows: TLS55070SummaryRow[]): TLS55070SummaryGroup[] {
+    const map = new Map<string, TLS55070SummaryGroup>();
+    for (const row of rows) {
+      const key = row.HOS_No ?? '';
+      let group = map.get(key);
+      if (!group) {
+        const total = Object.fromEntries(SUMMARY_AMT_FIELDS.map(f => [f, 0])) as Record<SummaryAmtField, number>;
+        group = { hosName: row.HOS_NAME || key, rows: [], total };
+        map.set(key, group);
+      }
+      group.rows.push(row);
+      SUMMARY_AMT_FIELDS.forEach(f => group!.total[f] += Number(row[f]) || 0);
+    }
+    return [...map.values()];
   }
 
   // === 匯出 Excel ===
