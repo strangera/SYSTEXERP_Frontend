@@ -11,7 +11,7 @@
     "analyze": "source-map-explorer dist/**/*.js",
     "prebuild:version": "node pre-build.js",
     "build:tsrdweb": "npm run prebuild:version && ng build --configuration tsrdweb && node post-build.js tsrdweb /TSRDWEB/ && git checkout src/environments/*.ts",
-    "build:systex": "npm run prebuild:version && ng build --configuration tsrdweb-systex && node post-build.js tsrdweb-systex /TSRDWEB/ && git checkout src/environments/*.ts",
+    "build:systex": "npm run prebuild:version && ng build --configuration tsrdweb-systex && node post-build.js tsrdweb-systex /SYSTEXWEB/ && git checkout src/environments/*.ts",
     "sonar": "dotenv -- npx sonar-scanner -Dsonar.token=%SONAR_TOKEN%",
     "clean:imports": "npx organize-imports-cli \"src/app/pages/**/*.ts\"",
     "sync:sys1000": "node scripts/sync-sys1000.js"
