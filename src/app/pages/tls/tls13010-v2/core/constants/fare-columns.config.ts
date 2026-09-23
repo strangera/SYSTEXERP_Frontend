@@ -405,6 +405,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '超過基準比率',
       type: 'number',
       editable: true,
+      hidden: true,
       allowDecimal: true,
       decimalPlaces: 4,
       style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
@@ -425,6 +426,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '超過基準金額',
       type: 'number',
       editable: true,
+      hidden: true,
       style: 'width: 80px; min-width: 80px; font-size: 0.65rem;'
     },
     {
