@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 export interface Garantee_Ticket {
   "id": number,
   "talent_id": number,
+  "apply_no": string,
   "tlt_no": string,
   "tlt_name": string,
   "VEN_No": string,

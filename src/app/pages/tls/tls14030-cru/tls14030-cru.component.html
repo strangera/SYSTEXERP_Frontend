@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -17,89 +19,167 @@
             ></app-dropdown>
           </div> -->
         <div class="col-12 md:col-6 lg:col-4 relative">
-          <app-dropdown-table [control]="dataForm.controls.talent_id"
-            [submitted]="submitted" optionLabel="Label" optionValue="No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-            (formValueChanged)="onformValueChanged($event)" (select)="onTalentSelected($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns"
-            [loading]="opLoading" [totalRecords]="opTotalRecords" [lazy]="true" [showOverlay]="false">
-          </app-dropdown-table>
+          <app-input-text
+            label="專櫃招募編號"
+            controlName="apply_no"
+            [control]="dataForm.controls.apply_no"
+            [submitted]="submitted"
+            [fieldMeta]="{ required: true }"
+          ></app-input-text>
           @if (!dataForm.controls.talent_id.disabled) {
-            <div class="absolute top-0 left-0 w-full h-full"
-              style="cursor: pointer; z-index: 100; background: transparent;"
-              (click)="openSearchDialog()"></div>
+            <div
+              class="absolute top-0 left-0 w-full h-full"
+              style="cursor: pointer; z-index: 100; background: transparent"
+              (click)="openSearchDialog()"
+            ></div>
           }
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="專櫃編號"
+            controlName="tlt_no"
+            [control]="dataForm.controls.tlt_no"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="dataForm.controls.tlt_name"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="櫃位名稱"
+            controlName="tlt_name"
+            [control]="dataForm.controls.tlt_name"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-        <app-dropdown class="col-12 md:col-4" label="廠商編號" [options]="VEN_No_Option" optionLabel="Label"
-          optionValue="No" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-4"
+          label="廠商編號"
+          [options]="VEN_No_Option"
+          optionLabel="Label"
+          optionValue="No"
+          [control]="dataForm.controls.VEN_No"
+          [submitted]="submitted"
+        ></app-dropdown>
       </div>
       <hr />
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保證票型態" [options]="ticket_typeOption" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.ticket_type" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="保證票型態"
+            [options]="ticket_typeOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ticket_type"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="票據種類" [options]="ticket_kindOption" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.ticket_kind" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="票據種類"
+            [options]="ticket_kindOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ticket_kind"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="票據編號" controlName="ticket_no" [control]="dataForm.controls.ticket_no"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="票據編號"
+            controlName="ticket_no"
+            [control]="dataForm.controls.ticket_no"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="保證票金額" controlName="ticket_amount" [control]="dataForm.controls.ticket_amount"
-            [submitted]="submitted"></app-input-number>
+          <app-input-number
+            label="保證票金額"
+            controlName="ticket_amount"
+            [control]="dataForm.controls.ticket_amount"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="票據到期日期"
-            [control]="dataForm.controls.expiry_date" controlName="expiry_date" [submitted]="submitted" />
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="票據到期日期"
+            [control]="dataForm.controls.expiry_date"
+            controlName="expiry_date"
+            [submitted]="submitted"
+          />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="保證票摘要" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="保證票摘要"
+            controlName="ticket_remarks"
+            [control]="dataForm.controls.ticket_remarks"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="票據收票狀態" [options]="get_ticket_statusOption" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.get_ticket_status" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="票據收票狀態"
+            [options]="get_ticket_statusOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.get_ticket_status"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="繳票日期"
-            [control]="dataForm.controls.get_date" controlName="get_date" [submitted]="submitted" />
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="繳票日期"
+            [control]="dataForm.controls.get_date"
+            controlName="get_date"
+            [submitted]="submitted"
+          />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="退票日期"
-            [control]="dataForm.controls.return_date" controlName="return_date" [submitted]="submitted" />
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="退票日期"
+            [control]="dataForm.controls.return_date"
+            controlName="return_date"
+            [submitted]="submitted"
+          />
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="封存日期"
-            [control]="dataForm.controls.close_date" controlName="close_date" [submitted]="submitted" />
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="封存日期"
+            [control]="dataForm.controls.close_date"
+            controlName="close_date"
+            [submitted]="submitted"
+          />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="備註"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
@@ -114,22 +194,50 @@
   [modal]="true"
   [draggable]="true"
   [resizable]="false"
-  [style]="{ width: '860px', 'max-width': '95vw' }">
-
+  [style]="{ width: '860px', 'max-width': '95vw' }"
+>
   <div class="grid p-fluid mb-3">
     <div class="col">
-      <input pInputText [(ngModel)]="dialogKeyword" placeholder="合約編號 / 專櫃編號 / 專櫃名稱"
-        class="w-full" (keydown.enter)="onDialogSearch()" />
+      <app-input-text
+        label="專櫃招募編號"
+        controlName="keyword"
+        [control]="opForm.controls.keyword"
+        [submitted]="false"
+        customPlaceholder="專櫃招募編號"
+        (keydown.enter)="onDialogSearch()"
+      ></app-input-text>
+    </div>
+    <div class="col-3">
+      <app-input-text
+        label="專櫃編號"
+        controlName="TLT_NO"
+        [control]="opForm.controls.TLT_NO"
+        [submitted]="false"
+        customPlaceholder="專櫃編號（選填）"
+      ></app-input-text>
     </div>
     <div class="col-4">
-      <app-dropdown label="" controlName="ven_uniform"
-        [options]="ven_uniformOption" optionLabel="Label" optionValue="No"
-        [control]="opForm.controls.ven_uniform" [submitted]="false"
-        [showClear]="true" [filter]="true" customPlaceholder="統一編號（選填）">
-      </app-dropdown>
+      <app-dropdown
+        controlName="ven_uniform"
+        [options]="ven_uniformOption"
+        optionLabel="Label"
+        optionValue="No"
+        [control]="opForm.controls.ven_uniform"
+        [submitted]="false"
+        [showClear]="true"
+        [filter]="true"
+        label="統一編號"
+        customPlaceholder="統一編號（選填）"
+      ></app-dropdown>
     </div>
     <div class="col-fixed" style="width: auto">
-      <button pButton label="查詢" icon="pi pi-search" type="button" (click)="onDialogSearch()"></button>
+      <button
+        pButton
+        label="查詢"
+        icon="pi pi-search"
+        type="button"
+        (click)="onDialogSearch()"
+      ></button>
     </div>
   </div>
 
@@ -147,24 +255,27 @@
     (onRowSelect)="onDialogRowSelect($event.data)"
     styleClass="p-datatable-sm p-datatable-gridlines p-datatable-hoverable-rows"
     [scrollable]="true"
-    scrollHeight="400px">
+    scrollHeight="400px"
+  >
     <ng-template pTemplate="header">
       <tr>
-        <th class="text-left">合約編號</th>
+        <th class="text-left">專櫃招募編號</th>
+        <th class="text-left" style="width: 120px">專櫃編號</th>
         <th class="text-left">專櫃名稱</th>
         <th class="text-center" style="width: 80px">版次</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
       <tr [pSelectableRow]="row" style="cursor: pointer">
-        <td>{{ row.contract_no }}</td>
+        <td>{{ row.apply_no }}</td>
+        <td>{{ row.tlt_no }}</td>
         <td>{{ row.Name }}</td>
         <td class="text-center">{{ row.contract_subno }}</td>
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="3" class="text-center p-4 text-500">查無資料</td>
+        <td colspan="4" class="text-center p-4 text-500">查無資料</td>
       </tr>
     </ng-template>
   </p-table>
