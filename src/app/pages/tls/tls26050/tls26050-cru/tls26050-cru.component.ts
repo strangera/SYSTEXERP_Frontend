@@ -53,19 +53,7 @@ export class Tls26050CRUComponent implements OnChanges {
 
   // API
 readonly detailQueryFn = (body: TLS26070QueryRequest) => {
-  const currentPage = (body as any).PageIndex ?? body.pageIndex ?? 1;
-  const pageSize = (body as any).PageSize ?? body.pageSize ?? 30;
-  const apiPageIndex = Math.max(currentPage - 1, 0);
-
-  const apiBody: any = {
-    ...body,
-    PageIndex: apiPageIndex,
-    PageSize: pageSize,
-    pageIndex: apiPageIndex,
-    pageSize: pageSize
-  };
-
-  return this.tls26070Service.queryTLS26070(apiBody).pipe(
+  return this.tls26070Service.queryTLS26070(body).pipe(
     map((response: any) => {
       const queryData: TLS26070Data[] = response?.Data?.QueryData ?? [];
       const sumData: TLS26070Data[] = response?.Data?.SumData ?? [];
@@ -82,7 +70,6 @@ readonly detailQueryFn = (body: TLS26070QueryRequest) => {
     takeUntilDestroyed(this.destroyRef)
   );
 };
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible']?.currentValue === true && this.rowData) {
       this.data = [];
