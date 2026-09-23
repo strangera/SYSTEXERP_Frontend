@@ -2,6 +2,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { RecalculationTLS2A010Request } from 'src/app/pages/tls/tls2a010/tls2a010.model';
 
 @Injectable({
   providedIn: 'root'
@@ -46,6 +47,10 @@ export class Tls2a010Service {
   /** 新增明細前刪除 */
   deletePOS30011Detail(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deletePOS30011Detail`, data);
+  }
+  /** 重算 */
+  recalculationTLS2A010(data: RecalculationTLS2A010Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/recalculationTLS2A010`, data);
   }
   exportTLS2A010Excel(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS2A010Excel`, data, {

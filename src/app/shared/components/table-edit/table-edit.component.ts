@@ -597,6 +597,18 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
     };
   }
+  /** 強制重跑所有非候選行對指定欄位的驗證，用於跨列校驗（如合計必須等於 100%）。 */
+  public revalidateField(field: string): void {
+    const col = this.columns.find(c => c.field === field);
+    if (!col) return;
+    for (let i = 0; i < this._tableData.length; i++) {
+      const rowData = this._tableData[i];
+      if (rowData._isAutoInsertCandidate) continue;
+      this.validationService.validateField(rowData, col, rowData[col.field], this._tableData, i);
+    }
+    this.cdr.markForCheck();
+  }
+
   /**
    * 根據 col.cellClass 屬性，獲取 <td> 標籤應用的 CSS class
    * @param rowData 當前行資料

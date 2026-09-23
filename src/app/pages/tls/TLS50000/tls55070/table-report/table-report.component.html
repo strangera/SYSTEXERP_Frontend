@@ -5,13 +5,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
-  [virtualScrollOptions]="{
-    inline: true,
-    trackBy: trackByFn,
-    autoSize: true,
-    onScroll: onScroll,
-  }" [expandedRowKeys]="expandedRows" [loading]="loading">
+  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [expandedRowKeys]="expandedRows" [loading]="loading">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [footerData]="footerData" [columns]="columns" (columnsEvent)="columns = $event"
       [dataKey]="dataKey" [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"

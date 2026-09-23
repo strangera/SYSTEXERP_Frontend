@@ -1,7 +1,7 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
 import { TLS32020Data, TLS32020QueryRequest, TLS32020Service } from '@service/api/tls/tls32020.service';
@@ -10,7 +10,9 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownRangeComponent } from '@shared/components/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/components/radiobutton/radiobutton.component';
@@ -69,7 +71,7 @@ const WEEK_OPTIONS = Array.from({ length: 53 }, (_, i) => ({
   `],
   standalone: true,
   imports: [
-    DropdownRangeComponent,
+    DropdownRangeComponent, CalendarComponent, DropdownComponent,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
     MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
@@ -91,8 +93,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     week: [null as number | null],
     yearTo: [new Date()], // 週/月/半年/年 區間查詢共用：迄年度
     weekTo: [null as number | null], // 週次區間查詢：迄週次
-    month: [null as number | null],
-    monthTo: [null as number | null], // 月份區間查詢：迄月份
+    month: [null as Date | null], // 月報表基準期：年月合一區間 picker 起
+    monthTo: [null as Date | null], // 月報表基準期：年月合一區間 picker 迄
     halfYear: [null as number | null],
     halfYearTo: [null as number | null], // 半年別區間查詢：迄半年別
 
@@ -101,8 +103,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     CompareWeek: [null as number | null],
     CompareYearTo: [new Date()], // 週/月/半年/年 區間查詢共用：迄年度
     CompareWeekTo: [null as number | null], // 週次區間查詢：迄週次
-    CompareMonth: [null as number | null],
-    CompareMonthTo: [null as number | null], // 月份區間查詢：迄月份
+    CompareMonth: [null as Date | null], // 月報表比較期：年月合一區間 picker 起
+    CompareMonthTo: [null as Date | null], // 月報表比較期：年月合一區間 picker 迄
     CompareHalfYear: [null as number | null],
     CompareHalfYearTo: [null as number | null], // 半年別區間查詢：迄半年別
 
@@ -176,10 +178,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { value: 'N', label: '否' }
   ];
 
-  monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1, // 1 到 12
-    label: `${i + 1} 月`
-  }));
   weekOptions: { value: number, label: string }[] = WEEK_OPTIONS;
   halfYearOptions = [
     { value: 1, label: '上半年' }, // 1: 上半年 (1/1 ~ 6/30)
@@ -199,8 +197,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
@@ -214,8 +212,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyeff', header: '月坪效', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
@@ -226,8 +224,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffSquare', header: '坪數差異', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
@@ -275,7 +273,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     }));
 
     // 初始化只執行一次，避免 startWith + calculateInitialRanges 造成重複計算。
-    this.setWeekOptions(this.queryForm.controls.year.value);
     this.calculateInitialRanges('3');
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
 
@@ -336,16 +333,12 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         CompareWeek: compareWeek,
         CompareWeekTo: compareWeek,
       }, { emitEvent: false });
-
-      this.setWeekOptions(today);
     } else if (type === '3') {
-      const currentMonth = today.getMonth() + 1;
-
       this.queryForm.patchValue({
-        month: currentMonth,
-        monthTo: currentMonth,
-        CompareMonth: currentMonth,
-        CompareMonthTo: currentMonth,
+        month: today,
+        monthTo: today,
+        CompareMonth: compareDefaultDate,
+        CompareMonthTo: compareDefaultDate,
       }, { emitEvent: false });
     } else if (type === '4') {
       const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
@@ -367,17 +360,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
    * auditTime(0) 可合併同一事件循環內的連續變更，避免重複計算。
    */
   private bindDateRangeChanges(): void {
-    // 年份異動時才需要重新建立週次選項。
-    merge(
-      this.queryForm.controls.year.valueChanges,
-      this.queryForm.controls.yearTo.valueChanges,
-    ).pipe(
-      auditTime(0),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.setWeekOptions(this.queryForm.controls.year.value);
-    });
-
     merge(
       this.queryForm.controls.year.valueChanges,
       this.queryForm.controls.week.valueChanges,
@@ -533,6 +515,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     const baseYearToNum = baseYearTo ? baseYearTo.getFullYear() : baseYearNum;
     const compareYearToNum = compareYearTo ? compareYearTo.getFullYear() : compareYearNum;
 
+    // 週次/半年別是獨立的「年」+「期別」元件（非合一 picker），跨年度起訖比較要另外手動驗證。
+    this.validateWeekRange();
+    this.validateHalfYearRange();
+
     switch (type) {
       case '1': // 日營業報表 (預設當天 vs 昨天)
         {
@@ -557,16 +543,16 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
           }
           break;
         }
-      case '3': // 月營業報表
+      case '3': // 月營業報表（年月合一區間 picker，起訖各自帶自己的年度，天生涵蓋跨年）
         {
           if (baseMonth) {
-            const baseFromRange = this.getMonthRange(baseYearNum, baseMonth);
-            const baseToRange = baseMonthTo ? this.getMonthRange(baseYearToNum, baseMonthTo) : baseFromRange;
+            const baseFromRange = this.getMonthRange(baseMonth.getFullYear(), baseMonth.getMonth() + 1);
+            const baseToRange = baseMonthTo ? this.getMonthRange(baseMonthTo.getFullYear(), baseMonthTo.getMonth() + 1) : baseFromRange;
             if (baseFromRange && baseToRange) baseRange = { from: baseFromRange.from, to: baseToRange.to };
           }
           if (compareMonth) {
-            const compareFromRange = this.getMonthRange(compareYearNum, compareMonth);
-            const compareToRange = compareMonthTo ? this.getMonthRange(compareYearToNum, compareMonthTo) : compareFromRange;
+            const compareFromRange = this.getMonthRange(compareMonth.getFullYear(), compareMonth.getMonth() + 1);
+            const compareToRange = compareMonthTo ? this.getMonthRange(compareMonthTo.getFullYear(), compareMonthTo.getMonth() + 1) : compareFromRange;
             if (compareFromRange && compareToRange) compareRange = { from: compareFromRange.from, to: compareToRange.to };
           }
           break;
@@ -655,10 +641,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.queryForm.controls.CompareWeek.setValue(compareWeek, { emitEvent: false }); // 去年同期週次
       this.queryForm.controls.CompareWeekTo.setValue(compareWeek, { emitEvent: false });
     } else if (defaultType === '3') {
-      this.queryForm.controls.month.setValue(today.getMonth() + 1, { emitEvent: false });
-      this.queryForm.controls.monthTo.setValue(today.getMonth() + 1, { emitEvent: false });
-      this.queryForm.controls.CompareMonth.setValue(today.getMonth() + 1, { emitEvent: false }); // 同樣月份
-      this.queryForm.controls.CompareMonthTo.setValue(today.getMonth() + 1, { emitEvent: false });
+      this.queryForm.controls.month.setValue(today, { emitEvent: false });
+      this.queryForm.controls.monthTo.setValue(today, { emitEvent: false });
+      this.queryForm.controls.CompareMonth.setValue(compareDefaultDate, { emitEvent: false }); // 去年同期
+      this.queryForm.controls.CompareMonthTo.setValue(compareDefaultDate, { emitEvent: false });
     } else if (defaultType === '4') {
       const defaultHalfYear = today.getMonth() + 1 <= 6 ? 1 : 2;
       this.queryForm.controls.halfYear.setValue(defaultHalfYear, { emitEvent: false });
@@ -671,22 +657,57 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.calculateDateRanges(defaultType);
   }
 
+  // ====================================================================
+  // 輔助函數：週次/半年別跨年度區間驗證
+  // 週次、半年別是獨立的「年」元件 + 「期別」元件（非年月合一 picker），
+  // 沒有共用元件可以直接比較日期物件，改成手動組「年度*倍數+期別」複合值比較，
+  // 錯誤直接設在對應的期別 FormControl 上（沿用既有的 textRange 錯誤訊息）。
+  // ====================================================================
+
   /**
-    * 根據年份設定週次選項 (1~53)
-    * @param year Date object
-    */
-  setWeekOptions(year: Date | null): void {
-    if (!year) return;
-
-    // 週次選項固定共用 WEEK_OPTIONS；此方法只保留原本的週次合法性檢查。
-    const maxWeeks = 53;
-
-    if (this.queryForm.controls.week.value && this.queryForm.controls.week.value > maxWeeks) {
-      this.queryForm.controls.week.setValue(null, { emitEvent: false });
+   * 判斷「年+期別」起 > 迄 是否成立。任一邊缺值視為合法（必填由 Validators.required 負責）。
+   */
+  private isYearPeriodRangeInvalid(
+    yearFrom: Date | null,
+    periodFrom: number | null,
+    yearTo: Date | null,
+    periodTo: number | null,
+    multiplier: number
+  ): boolean {
+    if (!yearFrom || periodFrom === null || periodFrom === undefined ||
+      !yearTo || periodTo === null || periodTo === undefined) {
+      return false;
     }
-    if (this.queryForm.controls.weekTo.value && this.queryForm.controls.weekTo.value > maxWeeks) {
-      this.queryForm.controls.weekTo.setValue(null, { emitEvent: false });
+    const fromComposite = yearFrom.getFullYear() * multiplier + periodFrom;
+    const toComposite = yearTo.getFullYear() * multiplier + periodTo;
+    return fromComposite > toComposite;
+  }
+
+  /** 依驗證結果，在指定的期別 FormControl 上設定/清除 textRange 錯誤。 */
+  private applyRangeError(control: FormControl<number | null>, isInvalid: boolean): void {
+    const errors = control.errors || {};
+    if (isInvalid) {
+      control.setErrors({ ...errors, textRange: true });
+      return;
     }
+    if (errors['textRange']) {
+      delete errors['textRange'];
+    }
+    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
+  }
+
+  /** 週次區間驗證：週次 1~53 遠小於 100，「年度*100+週次」複合值不會互相干擾排序。 */
+  private validateWeekRange(): void {
+    const c = this.queryForm.controls;
+    this.applyRangeError(c.week, this.isYearPeriodRangeInvalid(c.year.value, c.week.value, c.yearTo.value, c.weekTo.value, 100));
+    this.applyRangeError(c.CompareWeek, this.isYearPeriodRangeInvalid(c.CompareYear.value, c.CompareWeek.value, c.CompareYearTo.value, c.CompareWeekTo.value, 100));
+  }
+
+  /** 半年別區間驗證：半年別只有 1/2，「年度*10+半年別」複合值即可正確排序。 */
+  private validateHalfYearRange(): void {
+    const c = this.queryForm.controls;
+    this.applyRangeError(c.halfYear, this.isYearPeriodRangeInvalid(c.year.value, c.halfYear.value, c.yearTo.value, c.halfYearTo.value, 10));
+    this.applyRangeError(c.CompareHalfYear, this.isYearPeriodRangeInvalid(c.CompareYear.value, c.CompareHalfYear.value, c.CompareYearTo.value, c.CompareHalfYearTo.value, 10));
   }
 
   // ====================================================================

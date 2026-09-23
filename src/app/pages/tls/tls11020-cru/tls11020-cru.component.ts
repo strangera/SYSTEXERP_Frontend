@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {
+  FormControl,
   FormsModule,
   ReactiveFormsModule,
   Validators,
@@ -19,6 +20,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -33,6 +35,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
+    MultiSelectComponent,
     NgIf,
     TranslateModule,
   ],
@@ -54,6 +57,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   edcBankOptions: any[] = [];
   instmsTypeOptions: any[] = [];
   payNoOptions: any[] = [];
+  payNoVoucherOptions: { label: string; value: string }[] = []; // POS1006 券類用（pay_type IN ('6','F')）
   calcTypeOptions: any[] = [];
 
   dataForm = this.formBuilder.group({
@@ -77,7 +81,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     CAP_SALETYPE: [null as string | null],
     EDC_BANK: [null as string | null],
     INSTMS_TYPE: [null as string | null],
-    PAY_NO: [null as string | null],
+    PAY_NO: [null as string | null],       // 非券類單選
+    PAY_NO_MULTI: new FormControl<string[] | null>(null), // 券類多選
     CALC_TYPE: [null as string | null],
     DOWN_PAYMENT: [null as number | null],
     OVER_BASE_RATE: [null as number | null],
@@ -99,10 +104,39 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       this.dataForm.get('CAP_Type')?.disable();
     }
 
+    // 若編輯/明細且是券類，將 PAY_NO 字串拆成陣列給 multi-select
+    if (this.crudstatus !== CRUDStatus.Create) {
+      const payNo = this.dataForm.get('PAY_NO')?.value;
+      if (this.dataForm.get('CAP_SALETYPE')?.value === '5' && payNo) {
+        this.dataForm.patchValue({ PAY_NO_MULTI: payNo.split(',') }, { emitEvent: false });
+      }
+    }
+
     this.dataForm.get('CAP_Type')?.valueChanges.subscribe((v) => {
       this.applyBaseRateRule(v as string | null);
     });
     this.applyBaseRateRule(this.dataForm.get('CAP_Type')?.value ?? null);
+
+    // 切換銷售類型時清空所有從屬欄位，避免舊值殘留
+    this.dataForm.get('CAP_SALETYPE')?.valueChanges.subscribe((v) => {
+      if (v !== '3') {
+        this.dataForm.patchValue({ INSTMS_TYPE: null }, { emitEvent: false });
+      }
+      if (v !== '5') {
+        this.dataForm.patchValue(
+          { PAY_NO_MULTI: null, CALC_TYPE: null, DOWN_PAYMENT: null, OVER_BASE_RATE: null },
+          { emitEvent: false }
+        );
+      } else {
+        this.dataForm.patchValue({ PAY_NO: null }, { emitEvent: false });
+      }
+    });
+
+    // 切換卷類計算方式時清掉從屬欄位
+    this.dataForm.get('CALC_TYPE')?.valueChanges.subscribe((v) => {
+      if (v !== '1') this.dataForm.patchValue({ DOWN_PAYMENT: null }, { emitEvent: false });
+      if (v !== '2' && v !== '3') this.dataForm.patchValue({ OVER_BASE_RATE: null }, { emitEvent: false });
+    });
 
     this.dropdownApiService.queryGls1005().subscribe((data) => {
       this.accountOptions = (data ?? []).map((x: any) => ({
@@ -140,6 +174,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       }));
     });
 
+    // 券類支付別：POS1006 where pay_type IN ('6','F')
+    this.dropdownApiService.queryPos1006().subscribe((data) => {
+      this.payNoVoucherOptions = (data ?? [])
+        .filter(x => x.PAY_Type === '6' || x.PAY_Type === 'F')
+        .map(x => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
+    });
+
     this.dropdownApiService.querySys1000({ SYS_Type: 'CALC_TYPE' }).subscribe((data) => {
       this.calcTypeOptions = (data ?? []).map((x: any) => ({
         label: `${x.No} - ${x.Name}`,
@@ -160,18 +201,17 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
         return;
       }
 
-      (raw as any).CAP_BaseRate =
-        raw.CAP_BaseRate === '' || raw.CAP_BaseRate == null
-          ? null
-          : raw.CAP_BaseRate;
-
-      (raw as any).DOWN_PAYMENT =
-        raw.DOWN_PAYMENT === null || raw.DOWN_PAYMENT === undefined || (raw.DOWN_PAYMENT as any) === ''
-          ? null
-          : parseFloat(String(raw.DOWN_PAYMENT));
+      const payload = {
+        ...raw,
+        CAP_BaseRate: raw.CAP_BaseRate === '' || raw.CAP_BaseRate == null ? null : raw.CAP_BaseRate,
+        DOWN_PAYMENT: raw.DOWN_PAYMENT == null || String(raw.DOWN_PAYMENT) === ''
+          ? null : parseFloat(String(raw.DOWN_PAYMENT)),
+        PAY_NO: this.isPayNoMulti ? (raw.PAY_NO_MULTI ?? []).join(',') || null : raw.PAY_NO,
+        PAY_NO_MULTI: undefined, // 後端不需要此欄位
+      };
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.tls11020Service.insertTLS11020(raw).subscribe({
+        this.tls11020Service.insertTLS11020(payload).subscribe({
           next: () => {
             this.messageService.successBubble(
               this.translate.instant('success_message')
@@ -185,10 +225,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
           },
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        (raw as any).id = this.rowdata?.id;
-        raw.CAP_Item = this.rowdata?.CAP_Item;
-
-        this.tls11020Service.updateTLS11020(raw).subscribe({
+        this.tls11020Service.updateTLS11020({ ...payload, id: this.rowdata?.id, CAP_Item: this.rowdata?.CAP_Item }).subscribe({
           next: () => {
             this.messageService.successBubble(
               this.translate.instant('updated-successfully')
@@ -226,7 +263,16 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     return String(this.dataForm.get('CAP_Type')?.value ?? '') === 'D';
   }
 
+  get isInstmsTypeVisible(): boolean {
+    return this.isBaseRateVisible && String(this.dataForm.get('CAP_SALETYPE')?.value ?? '') === '3';
+  }
+
   get isCalcTypeVisible(): boolean {
+    return this.isBaseRateVisible && String(this.dataForm.get('CAP_SALETYPE')?.value ?? '') === '5';
+  }
+
+  /** 券類(5) 時支付別改為多選 */
+  get isPayNoMulti(): boolean {
     return this.isBaseRateVisible && String(this.dataForm.get('CAP_SALETYPE')?.value ?? '') === '5';
   }
 
@@ -235,7 +281,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   }
 
   get isOverBaseRateVisible(): boolean {
-    return this.isCalcTypeVisible && String(this.dataForm.get('CALC_TYPE')?.value ?? '') === '2';
+    const calcType = String(this.dataForm.get('CALC_TYPE')?.value ?? '');
+    return this.isCalcTypeVisible && (calcType === '2' || calcType === '3');
   }
 
   private applyBaseRateRule(capType: string | null): void {
@@ -267,6 +314,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       EDC_BANK: null,
       INSTMS_TYPE: null,
       PAY_NO: null,
+      PAY_NO_MULTI: null,
       CALC_TYPE: null,
       DOWN_PAYMENT: null,
       OVER_BASE_RATE: null,

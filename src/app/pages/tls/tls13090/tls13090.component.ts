@@ -191,7 +191,7 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
       this.messageService.warnBubble('請選擇組織代號');
       return;
     }
-    const talentIds = this.selectedItems.map(item => String(item.id));
+    const talentIds = this.selectedItems.map(item => item.talent_id);
     this.apiService.updateOrgIdBatch(talentIds, orgId).pipe(
       this.withLoading(),
       takeUntilDestroyed(this.destroyRef),
