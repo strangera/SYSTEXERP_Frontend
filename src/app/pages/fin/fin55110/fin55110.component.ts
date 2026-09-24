@@ -10,6 +10,7 @@ import { TableReportComponent } from '@shared/components/table-report/table-repo
 import { createPaginationConfig } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -30,6 +31,7 @@ import { MultiSelectComponent } from '../../../shared/components/multi-select/mu
     CalendarRangeComponent,
     MultiSelectComponent,
     ButtonComponent,
+    CheckboxModule,
     TranslateModule
   ]
 })
@@ -38,6 +40,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
     SSubpoenadate: [new Date(), [Validators.required]],
     ESubpoenadate: [new Date(), [Validators.required]],
     OrgList: [[] as string[]],
+    IsCludeDownOrg: ['N'],
     MajorList: [[] as string[]],
     ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
   });
@@ -96,6 +99,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
         ToMonth: endDate.getMonth() + 1,
         OnlyPosted: true,
         OrgList: formValue.OrgList || [],
+        IsCludeDownOrg: formValue.IsCludeDownOrg || 'N',
         MajorList: formValue.MajorList || [],
         pageIndex: 1,
         pageSize: 30,
