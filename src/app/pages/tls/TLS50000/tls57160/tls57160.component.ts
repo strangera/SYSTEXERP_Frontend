@@ -51,7 +51,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     PLU_MagNo: [null, [Validators.maxLength(20)]],
     PLU_NO: [null, [Validators.maxLength(20)]],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
-    stockIsZero: [false],
+    showNegativeStock: [false],
     pageSize: [500, [Validators.required, Validators.min(30)]],
     pageIndex: [1],
   });
