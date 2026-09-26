@@ -13,7 +13,7 @@ export class BankOptionsService {
     private http: HttpClient,
   ) { }
 
-  //銀行
+  // 銀行
   getBankOptions(searchKeyword?: string): Observable<any[]> {
     const requestBody = {
       SearchKeyword: searchKeyword || ""
@@ -22,7 +22,12 @@ export class BankOptionsService {
     return this.http
       .post<any>(`${this.apiUrl}/queryAPS1001_DropDownList`, requestBody)
       .pipe(
-        map((res) => res?.Data?.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })) ?? [])
+        map((res) =>
+          res?.Data?.map((x: any) => ({
+            label: `${x.No} - ${x.Name.replace(/^(.+?)\1/, '$1')}`,
+            value: x.No
+          })) ?? []
+        )
       );
   }
 }

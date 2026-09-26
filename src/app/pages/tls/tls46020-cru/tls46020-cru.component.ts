@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'; // 這裡已經有了，只是再次確認
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -159,17 +159,19 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
   ECR_SettleDD_Option = ECR_SettleDD_Option;
   TSB_Name_Option: { TSB_Name: string }[] = [];
 
-  ECR_Scanner_Option = SystemOptionsService.getOptions('ECR_Scanner');
-  ECR_MSR_Option = SystemOptionsService.getOptions('ECR_MSR');
-  ECR_CD_Option = SystemOptionsService.getOptions('ECR_CD');
-  ECR_ExtScr_Option = SystemOptionsService.getOptions('ECR_ExtScr');
-  ECR_GUIPrn_Option = SystemOptionsService.getOptions('ECR_GUIPrn');
-  ECR_SlipPrn_Option = SystemOptionsService.getOptions('ECR_SlipPrn');
-  ECR_OrderPrn_Option = SystemOptionsService.getOptions('ECR_OrderPrn');
-  ECR_LablePrn_Option = SystemOptionsService.getOptions('ECR_LablePrn');
-  ECR_EDC_Option = SystemOptionsService.getOptions('ECR_EDC');
-  ECR_EDC2_Option = SystemOptionsService.getOptions('ECR_EDC2');
-  ECR_ElecPay_Option = SystemOptionsService.getOptions('ECR_ElecPay');
+  // 顯示格式統一改為「代號 - 名稱」(displayText)，故改用 getSYS1000Options() 而非 SystemOptionsService.getOptions()
+  ECR_KBType_Option = getSYS1000Options('ECR_KBType');
+  ECR_Scanner_Option = getSYS1000Options('ECR_Scanner');
+  ECR_MSR_Option = getSYS1000Options('ECR_MSR');
+  ECR_CD_Option = getSYS1000Options('ECR_CD');
+  ECR_ExtScr_Option = getSYS1000Options('ECR_ExtScr');
+  ECR_GUIPrn_Option = getSYS1000Options('ECR_GUIPrn');
+  ECR_SlipPrn_Option = getSYS1000Options('ECR_SlipPrn');
+  ECR_OrderPrn_Option = getSYS1000Options('ECR_OrderPrn');
+  ECR_LablePrn_Option = getSYS1000Options('ECR_LablePrn');
+  ECR_EDC_Option = getSYS1000Options('ECR_EDC');
+  ECR_EDC2_Option = getSYS1000Options('ECR_EDC2');
+  ECR_ElecPay_Option = getSYS1000Options('ECR_ElecPay');
 
   ECR_ElecSVCrdA_Option = getSYS1000Options('ECR_ElecSVCrdA');
   ECR_ElecSVCrdB_Option = getSYS1000Options('ECR_ElecSVCrdB');

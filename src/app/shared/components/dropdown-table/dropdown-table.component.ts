@@ -216,7 +216,10 @@ export class DropdownTableComponent implements OnInit, OnDestroy {
       } else {
         selectedData = this.control.value;
       }
-    } else if (typeof this.control.value === 'string' && this.optionLabel) {
+    } else if (this.optionValue) {
+      // eslint-disable-next-line eqeqeq
+      selectedData = this.suggestions.find((item: any) => item[this.optionValue] == this.control.value);
+    } else if (this.optionLabel) {
       selectedData = this.suggestions.find((item: any) => item[this.optionLabel] === this.control.value);
     }
 

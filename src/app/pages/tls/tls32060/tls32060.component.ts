@@ -292,7 +292,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.tlt_floor_Option = res.Data; });
     this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.area_no_Option = res.Data; });
     this.dropdownApiService.queryTltTalentContractHistory().pipe(untilDestroyed(this)).subscribe(options => {
-      this.tlt_no_id_Option = options || [];
+      this.tlt_no_id_Option = this.dedupeCounterCodeOptions(options || []);
     });
 
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
@@ -371,6 +371,21 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     // 監聽 Checkbox 變更以驅動動態欄位
     this.queryForm.get('PreSale')?.valueChanges.subscribe(() => { this.setColumns(); });
     this.queryForm.get('ConsumerNum')?.valueChanges.subscribe(() => { this.setColumns(); });
+  }
+
+  // 同一櫃號+標準化後同名的合約只留第一筆(API已依生效中優先/櫃號/起始日排序)，label 改為「櫃號 - 櫃名」不含日期；同 TLS32030
+  private dedupeCounterCodeOptions(options: Option[]): Option[] {
+    const seen = new Set<string>();
+    const result: Option[] = [];
+    for (const opt of options) {
+      const tltNo = opt['tlt_no'] ?? '';
+      const tltName = opt['tlt_name'] ?? '';
+      const key = `${tltNo}__${String(tltName).replace(/\s+/g, '')}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ ...opt, label: `${tltNo} - ${tltName}` });
+    }
+    return result;
   }
 
   // 把勾選到的talent_id(下拉每筆合約獨立選項)對照本次下拉結果換算回對應tlt_no並去重

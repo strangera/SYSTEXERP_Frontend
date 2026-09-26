@@ -51,6 +51,7 @@ export class TLS55070Service {
         return {
           ...res,
           TotalData: TotalData,
+          Summary: res.Data?.Summary ?? null, // 折扣率彙總（僅第一頁有值）
           Data: enrichedDetails, // 這裡給 Table 用的資料現在每筆都有 PageRank
           TotalCount: res.TotalCount,
           Details: processedHeaders // 主檔列表

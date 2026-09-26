@@ -196,7 +196,7 @@
       [ngClass]="{ 'p-disabled-row': nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData) }"
       [pSelectableRowDisabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)" [pReorderableRow]="index"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
-      <td *ngIf="showReorder" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
+      <td *ngIf="showReorder" class="text-center serial-cell" pFrozenColumn [style.min-width]="serialColumnWidth"
         [style.width]="serialColumnWidth">
         {{ rowIndex + 1 }}
       </td>
@@ -303,10 +303,12 @@
               border: '1px solid var(--surface-border)',
               'border-left': '0',
             }"></div>
-          <p-button *ngFor="let btn of addButton" [pTooltip]="getBtnLabel(btn, rowData)" tooltipPosition="top"
-            [icon]="btn.icon" (click)="btn.action(rowData, $event)"
-            [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading"
-            [label]="btn.icon ? undefined : getBtnLabel(btn, rowData)" styleClass="p-button-text" />
+          <ng-container *ngFor="let btn of addButton">
+            <p-button *ngIf="!btn.hidden || !btn.hidden(rowData)" [pTooltip]="getBtnLabel(btn, rowData)"
+              tooltipPosition="top" [icon]="btn.icon" (click)="btn.action(rowData, $event)"
+              [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading"
+              [label]="btn.icon ? undefined : getBtnLabel(btn, rowData)" styleClass="p-button-text" />
+          </ng-container>
         </ng-container>
       </td>
     </tr>

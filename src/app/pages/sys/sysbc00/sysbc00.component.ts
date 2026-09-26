@@ -90,7 +90,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     })
   }
   loadBankDetails = (rowData: ISysbc00Data): Observable<any> => {
-    return this.sys1004Service.queryAPS1004({ BNK_No: rowData.BNK_No });
+    return this.sys1004Service.queryAPS1004({ BNK_No: rowData.BNK_No, PageSize: 9999 });
   };
   onDelete(rows: ISysbc00Data[]) {
     this.messageService.confirm({

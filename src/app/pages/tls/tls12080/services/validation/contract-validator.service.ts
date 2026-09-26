@@ -187,6 +187,14 @@ export class ContractValidatorService {
       errors.push({ field: 'location_dates', message: '櫃位地點起訖日為必填' });
     }
 
+    // 業績分攤合計必須等於 100%
+    if (validLocations.length > 0) {
+      const saleRateTotal = Math.round(validLocations.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
+      if (saleRateTotal !== 100) {
+        errors.push({ field: 'sale_rate', message: `業績分攤(%) 合計須等於 100%（目前：${saleRateTotal}%）` });
+      }
+    }
+
     // Email 格式驗證
     const email = form.get('email')?.value;
     if (email && !this.isValidEmail(email)) {

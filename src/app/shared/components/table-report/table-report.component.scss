@@ -114,6 +114,13 @@
         word-break: break-all !important; // 英文/數字過長強制斷行
         overflow-wrap: break-word !important;
       }
+      // 序號欄：純數字不需要斷行，避免三位數以上（如176）被斷成兩行看起來像兩筆資料。
+      // 用額外的 .serial-cell class 疊加特異度，蓋過上面全域/元件內的 break-all 規則。
+      > td.serial-cell {
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+      }
       // 點選/高亮且被禁用的狀態
       .p-highlight.p-disabled {
         background-color: #38a8ff !important;

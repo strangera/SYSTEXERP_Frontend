@@ -7,6 +7,7 @@ import { environment } from '../../../../environments/environment'; // 請確認
 /** 查詢條件介面 (queryAPS1004) */
 export interface IQueryAps1004Request {
   BNK_No: string; // 銀行代號 (查詢條件)
+  PageSize?: number; // 分頁筆數，明細類資料一次撈全部不分頁時帶大值
 }
 
 /** APS1004 資料表的單筆資料介面 (響應數據) */

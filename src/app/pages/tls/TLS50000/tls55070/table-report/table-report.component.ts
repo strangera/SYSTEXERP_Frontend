@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -28,7 +28,8 @@ import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayloa
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [expandAnimation]
 })
-export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableReportComponent extends BasicPrintDataComponent implements OnChanges, AfterViewInit {
+  private readonly destroyRef = inject(DestroyRef);
   @ViewChild('dt') public dt!: Table;
   @Input() lastQueryBody?: any;       // 用來儲存上一次的查詢條件
   @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
@@ -153,27 +154,16 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
+      // 不用虛擬捲動：列高不固定（商品名稱換行＋每單多一列小計）且有 rowspan 群組，
+      // 固定 itemSize 會算錯總高度導致最後幾列捲不到（#1244）。資料本來就分頁載入，DOM 量可控。
       if (this.data.length !== 0) {
         if (this.dt) {
-          this.dt.virtualScroll = false;
           setTimeout(() => {
             this.syncTableSortMeta();
           });
         }
+        this.virtualData = this.data;
         this.cdr.detectChanges();
-        // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
-        if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
-        } else {
-          if (this.data.length === this.totalRecords) { this.dt.lazy = false; }
-          this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
-          this.virtualData = Array.from({ length: this.data.length });
-          this.cdr.detectChanges();
-          this.virtualData = this.data;
-        }
       }
     }
   }
@@ -216,14 +206,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           // 更新小計與資料
           this.updateGroupTotals(res.Data);
           this.data = [...this.data, ...res.Data];
-
-          // 更新虛擬滾動容器長度
-          this.virtualData = Array.from({ length: this.data.length });
-          this.cdr.detectChanges();
+          this.virtualData = this.data;
 
           this.syncTableSortMeta();
           this.dataChange.emit(this.data);
-          this.virtualData = this.data;
+          this.cdr.detectChanges();
 
           // 更新總筆數（這裏的 TotalCount 通常是指單據總數）
           this.totalRecords = res.TotalCount || this.totalRecords;
@@ -266,29 +253,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.hasSearched = true;
       if (res && res.Data && res.Data.length > 0) {
-        this.virtualData = [];
-        this.dt.virtualScroll = false;
-        this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
+        this.virtualData = this.data;
         this.syncTableSortMeta();
         this.cdr.detectChanges();
-
-        // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
-        if (res.Data.length < pageSize) {
-          this.data = res.Data;
-          this.virtualData = this.data;
-          this.dt.virtualScroll = false;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
-        } else {
-          this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
-          this.virtualData = Array.from({ length: res.Data.length });
-          this.data = res.Data;
-          this.cdr.detectChanges();
-          this.virtualData = this.data;
-        }
         this.selectedItems = [];
         this.dataChange.emit(this.data);
       }
@@ -346,11 +316,19 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.selectAllChange.emit(false);
     }
   }
-  onScroll(event: any) {
+  ngAfterViewInit() {
+    // 未開虛擬捲動，改掛表格捲動容器的原生 scroll 事件觸發載入下一頁
+    const wrapper: HTMLElement | undefined = this.dt?.wrapperViewChild?.nativeElement;
+    if (!wrapper) return;
+    wrapper.addEventListener('scroll', this.onScroll);
+    this.destroyRef.onDestroy(() => wrapper.removeEventListener('scroll', this.onScroll));
+  }
+
+  onScroll(event: Event) {
     if (this._loading) return;
 
     if (this.lazy) {
-      const target = event.originalEvent.target;
+      const target = event.target as HTMLElement;
 
       // 取得當前最後一筆的序號
       const lastPageRank = this.data.length > 0 ? (this.data[this.data.length - 1].PageRank || 0) : 0;

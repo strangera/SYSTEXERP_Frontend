@@ -1,23 +1,30 @@
-<p-dialog
-  [visible]="visible"
-  (visibleChange)="visibleChange.emit($event)"
-  [header]="(rowData?.team_name ?? '') + ' / ' + (rowData?.division_name ?? '')"
-  [modal]="true"
-  [maximizable]="true"
-  [style]="{ width: '95vw' }"
+<p-dialog 
+  [visible]="visible" 
+  (visibleChange)="visibleChange.emit($event)" 
+  [header]="(rowData?.team_name ?? '') + ' / ' + (rowData?.division_name ?? '')" 
+  [modal]="true" 
+  [maximizable]="true" 
+  [style]="{ width: '95vw' }" 
   [contentStyle]="{ overflow: 'auto', padding: '0' }"
->
-  <app-table-report
-    tableKey="tls26050-detail"
-    [lastQueryBody]="historyRequestBody"
-    [data]="data"
-    [columns]="columns"
+> 
+  <app-table-report 
+    tableKey="tls26050-detail" 
+    [lastQueryBody]="historyRequestBody" 
+    [data]="data" 
+    [columns]="columns" 
     [totalRecords]="totalRecords"
-    [showDelete]="false"
-    [showEdit]="false"
-    [showManage]="false"
-    [loading]="loading"
+
+    [loading]="loading" 
+    [lazy]="true"
+
     [queryFunction]="detailQueryFn"
+
+    (dataChange)="onDataChange($event)"
+
+    [showDelete]="false" 
+    [showEdit]="false" 
+    [showManage]="false"
+
     [exportContext]="{ apiUrl: 'queryTLS26070' }"
-  ></app-table-report>
+  ></app-table-report> 
 </p-dialog>

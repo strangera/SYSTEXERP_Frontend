@@ -1110,6 +1110,18 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       return false;
     }
 
+    // 業績分攤合計必須等於 100%
+    const activeLocations = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim()
+    );
+    if (activeLocations.length > 0) {
+      const saleRateTotal = Math.round(activeLocations.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
+      if (saleRateTotal !== 100) {
+        this.messageService.warnBubble(`業績分攤(%) 合計須等於 100%（目前：${saleRateTotal}%）`);
+        return false;
+      }
+    }
+
     return true;
   }
 

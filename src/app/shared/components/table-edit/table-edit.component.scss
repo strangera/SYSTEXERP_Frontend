@@ -110,6 +110,15 @@
         min-width: 100px;
       }
     }
+    // 序號欄：純數字不需要斷行，避免三位數以上（如176）被全域 styles.scss 的
+    // word-break: break-all !important 斷成兩行看起來像兩筆資料。上面 102 行的
+    // white-space: nowrap 沒加 !important，蓋不過全域規則，所以另外用 .serial-cell
+    // class 疊加特異度 + !important 覆寫回來，不動全域 styles.scss。
+    .p-datatable-tbody > tr > td.serial-cell {
+      white-space: nowrap !important;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+    }
     .p-datatable-thead > tr > th {
       background: var(--table-header-bg);
     }

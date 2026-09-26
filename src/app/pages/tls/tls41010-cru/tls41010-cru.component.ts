@@ -213,6 +213,24 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   KBLevelOptions: LabelValueOption[] = []; // 機台鍵盤編號 下拉選項
   tmplDetailList: TLS41010Item[] = [];
 
+  // 周邊設定：disabled 顯示用下拉選項，統一「代號 - 名稱」格式，值只能透過切換環境變數範本(ECR_TmplNo)連動改變，不開放手動編輯
+  ECR_KBType_Option = getSYS1000Options('ECR_KBType');
+  ECR_Scanner_Option = getSYS1000Options('ECR_Scanner');
+  ECR_MSR_Option = getSYS1000Options('ECR_MSR');
+  ECR_CD_Option = getSYS1000Options('ECR_CD');
+  ECR_ExtScr_Option = getSYS1000Options('ECR_ExtScr');
+  ECR_GUIPrn_Option = getSYS1000Options('ECR_GUIPrn');
+  ECR_SlipPrn_Option = getSYS1000Options('ECR_SlipPrn');
+  ECR_OrderPrn_Option = getSYS1000Options('ECR_OrderPrn');
+  ECR_LablePrn_Option = getSYS1000Options('ECR_LablePrn');
+  ECR_EDC_Option = getSYS1000Options('ECR_EDC');
+  ECR_EDC2_Option = getSYS1000Options('ECR_EDC2');
+  ECR_ElecSVCrdA_Option = getSYS1000Options('ECR_ElecSVCrdA');
+  ECR_ElecSVCrdB_Option = getSYS1000Options('ECR_ElecSVCrdB');
+  ECR_ElecSVCrdC_Option = getSYS1000Options('ECR_ElecSVCrdC');
+  ECR_ElecPay_Option = getSYS1000Options('ECR_ElecPay');
+  ECR_Drawer_Option = getSYS1000Options('ECR_Drawer');
+
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
 

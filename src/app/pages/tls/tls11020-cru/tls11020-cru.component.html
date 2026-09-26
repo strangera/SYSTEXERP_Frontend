@@ -134,7 +134,7 @@
         ></app-dropdown>
       </div>
 
-      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isInstmsTypeVisible">
         <app-dropdown
           label="分期期數"
           [control]="dataForm.controls.INSTMS_TYPE"
@@ -144,8 +144,8 @@
         ></app-dropdown>
       </div>
 
-      <!-- 支付別編號 / 券類計算方式 / 超過基準金額（只有 D 類才顯示） -->
-      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+      <!-- 支付別編號：非券類=單選(SYS1000)，券類(5)=多選(POS1006) -->
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible && !isPayNoMulti">
         <app-dropdown
           label="支付別編號"
           [control]="dataForm.controls.PAY_NO"
@@ -153,6 +153,16 @@
           optionLabel="label"
           optionValue="value"
         ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isPayNoMulti">
+        <app-multi-select
+          label="支付別編號"
+          [control]="dataForm.controls.PAY_NO_MULTI"
+          [options]="payNoVoucherOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-multi-select>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4" *ngIf="isCalcTypeVisible">

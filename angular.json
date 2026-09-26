@@ -126,7 +126,7 @@
               ],
               "outputHashing": "all",
               "optimization": true,
-              "baseHref": "/TSRDWEB/",
+              "baseHref": "/SYSTEXWEB/",
               "assets": [
                 "src/favicon.ico",
                 "src/assets",

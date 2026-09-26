@@ -28,7 +28,7 @@ interface TLTTALENT {
   Label: string,
   tlt_no: string,
   VEN_No?: string,
-  contract_no?: string,
+  apply_no?: string,
   contract_subno?: string,
   open_fees: number,
   construct_fees: number,
@@ -65,7 +65,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [{ value: null, disabled: true }], // read only
-    talent_id: [null as number | null, [Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
+    talent_id: [null as number | null, [Validators.required]],
+    apply_no: [{ value: null as string | null, disabled: true }], // 專櫃招募編號 自動帶入
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
@@ -121,17 +122,19 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawTalentData: any[] = []; // 預載所有合約資料，用於 local filter
   opForm = this.formBuilder.group({
+    keyword: [''],
     TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
     ven_uniform: ['', [Validators.maxLength(12)]], // 統一編號
     ...createPaginationConfig([{ field: 'No', order: 1 }]), // 分頁和排序參數
   });
   suggestions: any[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'Label', header: '合約編號/名稱', mainDataField: true },
+    { field: 'Label', header: '專櫃招募編號', mainDataField: true },
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
-    { field: 'contract_no', header: '合約編號', align: 'left' },
+    { field: 'contract_no', header: '專櫃招募編號', align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
     { field: 'Name', header: '專櫃名稱' },
     { field: 'contract_subno', header: '版次' },
   ];
@@ -139,20 +142,22 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   // ── 選取合約 Dialog ──────────────────────────────────────────────
   searchDialogVisible = false;
-  dialogKeyword = '';
 
   openSearchDialog(): void {
     this.searchDialogVisible = true;
     this.opForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-    this.fetchTalentData(this.dialogKeyword);
+    this.fetchTalentData();
   }
 
   onDialogSearch(): void {
     this.opForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-    this.fetchTalentData(this.dialogKeyword);
+    this.fetchTalentData();
   }
 
   onDialogRowSelect(row: TLTTALENT): void {
+    if (!this.suggestions.find(s => s.No === row.No)) {
+      this.suggestions = [row, ...this.suggestions];
+    }
     this.dataForm.patchValue({ talent_id: Number(row.No) }, { emitEvent: false });
     this.onTalentSelected(row);
     this.searchDialogVisible = false;
@@ -162,7 +167,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = Math.floor((event.first ?? 0) / pageSize) + 1;
     this.opForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
-    this.fetchTalentData(this.dialogKeyword);
+    this.fetchTalentData();
   }
   // ────────────────────────────────────────────────────────────────
 
@@ -178,8 +183,9 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     this.loadOptions();
     console.log('編輯明細', this.dataForm.value);
 
-    if (this.crudstatus != CRUDStatus.Create) { //非新增模式不可編輯 合約編號
+    if (this.crudstatus != CRUDStatus.Create) {
       this.dataForm.get('talent_id')?.disable();
+      this.dataForm.patchValue({ apply_no: this.rowdata?.apply_no ?? null });
     }
 
     // ⭐ 監聽 talent_id 變更 重新計算保證票金額
@@ -224,6 +230,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     }
 
     const patch: Record<string, unknown> = {
+      apply_no: data.apply_no || '',
       ticket_remarks: data.ticket_remarks || '',
       tlt_name: data.Name || '',
       tlt_no: data.tlt_no || '',
@@ -328,6 +335,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         Name: raw.tlt_name ?? '',
         Label: raw.tlt_no ?? '',
         tlt_no: raw.tlt_no ?? '',
+        apply_no: raw.apply_no ?? '',
         open_fees: raw.open_fees ?? 0,
         construct_fees: raw.construct_fees ?? 0,
         expiration_fees: raw.expiration_fees ?? 0,
@@ -339,14 +347,13 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     });
   }
 
-  // 2. 修正 fetchTalentData 的參數組合
-  private fetchTalentData(keyword = '') {
+  private fetchTalentData() {
     this.opLoading = true;
 
     const formRaw = this.opForm.getRawValue();
     const params = {
-      keyword: keyword || '',          // AutoComplete 模糊搜尋（contract_no / tlt_no / tlt_name）
-      TLT_NO: formRaw.TLT_NO || '',   // 面板 dropdown 精確篩選
+      keyword: formRaw.keyword || '',
+      TLT_NO: formRaw.TLT_NO || '',
       ven_uniform: formRaw.ven_uniform || '',
       pageSize: formRaw.pageSize || 30,
       pageIndex: formRaw.pageIndex || 1,
@@ -357,11 +364,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       .subscribe({
         next: (results: any) => {
           const data = (results['Data'] ?? []) as TLTTALENT[];
-
-          // console.log('⭐fetchTalentData 取得的資料:', data);
-
-          this.opData = [...data];       // 更新 Table
-          this.suggestions = [...data];  // 更新 下拉建議清單
+          this.opData = [...data];
+          this.suggestions = [...data];
           this.opTotalRecords = results['TotalCount'] || data.length;
           this.opLoading = false;
         },
@@ -371,11 +375,10 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       });
   }
 
-  // 3. 確保事件觸發正常
   onAutoCompleteInputChange(event: any) {
-    // 判斷 event 是字串還是物件
     const keyword = (typeof event === 'string') ? event : (event?.No || '');
-    this.fetchTalentData(keyword);
+    this.opForm.patchValue({ keyword }, { emitEvent: false });
+    this.fetchTalentData();
   }
 
   onformValueChanged(event: any) {

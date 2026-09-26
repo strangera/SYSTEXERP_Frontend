@@ -23,7 +23,7 @@ export interface Tls57160Request {
   PLU_MagNo?: string;  // 統編貨號
   PLU_NO?: string;   // 貨號
   PLU_OrgPLUNo?: string; // 原始貨號
-  stockIsZero?: boolean; // 庫存是否為零 (true/false)
+  showNegativeStock?: boolean; // 顯示負庫存 (true/false)
 }
 
 /**

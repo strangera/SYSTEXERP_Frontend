@@ -4,7 +4,7 @@
  * 接收父組件的 form 和資料，不管理自己的路由
  */
 import { NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subscription, distinctUntilChanged, firstValueFrom, of, switchMap } from 'rxjs';
 
@@ -71,6 +71,8 @@ import { NotificationService } from '@shared/components/notification-message/not
   ]
 })
 export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy {
+  @ViewChild('locationTableRef') private locationTableRef?: TableEditComponent;
+
   // ========== 輸入屬性 ==========
   @Input() form!: FormGroup;
   @Input() locationData: LocationItem[] = [];
@@ -117,7 +119,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   displayLocationData: LocationItem[] = [];
   selectedLocationRows: LocationItem[] = [];
   private isOwnEmit = false;
-  /** 上次分配業績分攤時的櫃位地點數量，用來判斷是否需要重新平均 */
   private lastSaleRateCount = -1;
 
   locationEditColumns: EditColumn[] = [
@@ -136,8 +137,18 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
           const num = Number(value);
           const ok = value !== null && value !== undefined && value !== '' && !isNaN(num) && num > 0;
           return { isValid: ok, errorMessage: ok ? [] : ['業績分攤(%) 必填且需大於 0'] };
+        },
+        (_value: unknown, _rowData: unknown, data: unknown[]) => {
+          const active = (data as LocationItem[]).filter(
+            r => !(r as LocationItem & { _isAutoInsertCandidate?: boolean })._isAutoInsertCandidate &&
+                 r._status !== 'deleted' && String(r.location_no || '').trim()
+          );
+          const total = Math.round(active.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
+          const ok = total === 100;
+          return { isValid: ok, errorMessage: ok ? [] : [`業績分攤(%) 合計須等於 100%（目前：${total}%）`] };
         }
-      ]
+      ],
+      onBlur: () => setTimeout(() => this.locationTableRef?.revalidateField('sale_rate'), 0),
     },
   ];
 
@@ -604,6 +615,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.isOwnEmit = true;
     this.locationDataChange.emit(this.locationData);
   }
+
 
   // ========== 位置選擇 Dialog ==========
 
