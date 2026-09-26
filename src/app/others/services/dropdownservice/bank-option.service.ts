@@ -24,7 +24,7 @@ export class BankOptionsService {
       .pipe(
         map((res) =>
           res?.Data?.map((x: any) => ({
-            label: x.Name.replace(/^(.+?)\1/, '$1'),
+            label: `${x.No} - ${x.Name.replace(/^(.+?)\1/, '$1')}`,
             value: x.No
           })) ?? []
         )
