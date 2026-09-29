@@ -50,7 +50,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       Validators.maxLength(10),
       Validators.pattern(/^\d{8}$/)
     ]],
-    VEN_RemitFeeMode: ['', Validators.required],
+    VEN_RemitFeeMode: ['0', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]],
     VEN_EngName: ['', Validators.maxLength(100)],
     VEN_ShortName: ['', Validators.maxLength(100)],
