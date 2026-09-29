@@ -53,7 +53,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_RemitFeeMode: ['', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]],
     VEN_EngName: ['', Validators.maxLength(100)],
-    VEN_ShortName: ['', Validators.maxLength(10)],
+    VEN_ShortName: ['', Validators.maxLength(100)],
 
     // 公司資料
     VEN_Post: ['', Validators.maxLength(6)],
@@ -61,8 +61,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_GUIAddr: ['', Validators.maxLength(100)],
     VEN_Tel: ['', Validators.maxLength(15)],
     VEN_Fax: ['', Validators.maxLength(15)],
-    VEN_Email: ['', Validators.maxLength(60)],
-    VEN_GUIEmail: ['', Validators.maxLength(60)],
+    VEN_Email: ['', Validators.maxLength(200)],
+    VEN_GUIEmail: ['', Validators.maxLength(200)],
 
     // 付款資料
     VEN_PayType: ['', Validators.required],
