@@ -53,8 +53,8 @@ export const FARE_CHANGE_DETECTION_CONFIG = {
     dateFields: ['tpy_bdate', 'tpy_edate']
   },
   D: {
-    editableFields: ['tpy_bdate', 'tpy_edate', 'cap_saletype', 'instms_type', 'edc_bank', 'pay_no', 'calc_type', 'over_base_rate', 'down_payment', 'tpy_type', 'tpy_rate', 'gui_flag'],
-    numericFields: ['over_base_rate', 'down_payment', 'tpy_rate'],
+    editableFields: ['tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_rate', 'gui_flag'],
+    numericFields: ['tpy_rate'],
     dateFields: ['tpy_bdate', 'tpy_edate']
   },
   E: {
@@ -345,7 +345,7 @@ export function getDeductionCColumns(contractDates?: { bdate?: string; edate?: s
  * D 類型 (比率分攤) 欄位定義
  * 欄位較多，使用緊湊樣式 (與舊版 next1 相同配置)
  */
-export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: string }, payNoOptions: unknown[] = []): ColumnDef[] {
+export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: string }): ColumnDef[] {
   return [
     ...getBaseColumns().map(col => ({
       ...col,
@@ -355,80 +355,6 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
             col.field === 'copy_button' ? 'width: 45px; min-width: 45px; font-size: 0.65rem;' :
               col.style
     })),
-    {
-      field: 'cap_saletype',
-      header: '銷售類型',
-      type: 'dropdown',
-      editable: true,
-      hidden: true,
-      options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
-      style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
-    },
-    {
-      field: 'instms_type',
-      header: '期數',
-      type: 'dropdown',
-      editable: true,
-      hidden: true,
-      options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
-      style: 'width: 60px; min-width: 60px; font-size: 0.65rem;'
-    },
-    {
-      field: 'edc_bank',
-      header: '收單行',
-      type: 'dropdown',
-      editable: true,
-      hidden: true,
-      options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
-      style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
-    },
-    {
-      field: 'pay_no',
-      header: '支付編號',
-      type: 'dropdown',
-      editable: true,
-      hidden: true,
-      options: payNoOptions,
-      style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
-    },
-    {
-      field: 'calc_type',
-      header: '券類計算方式',
-      type: 'dropdown',
-      editable: true,
-      hidden: true,
-      options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
-      style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
-    },
-    {
-      field: 'over_base_rate',
-      header: '超過基準比率',
-      type: 'number',
-      editable: true,
-      hidden: true,
-      allowDecimal: true,
-      decimalPlaces: 4,
-      style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
-    },
-    // 加抽比率欄位暫時隱藏
-    // {
-    //   field: 'rent_plus_rate',
-    //   header: '加抽比率',
-    //   type: 'number',
-    //   editable: true,
-    //   required: true,
-    //   allowDecimal: true,
-    //   decimalPlaces: 3,
-    //   style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
-    // },
-    {
-      field: 'down_payment',
-      header: '超過基準金額',
-      type: 'number',
-      editable: true,
-      hidden: true,
-      style: 'width: 80px; min-width: 80px; font-size: 0.65rem;'
-    },
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
@@ -578,7 +504,7 @@ export function getDeductionColumnsByType(
     case FareCapType.C:
       return getDeductionCColumns(contractDates);
     case FareCapType.D:
-      return getDeductionDColumns(contractDates, payNoOptions);
+      return getDeductionDColumns(contractDates);
     case FareCapType.E:
       return getDeductionEColumns(contractDates, payNoOptions);
     default:

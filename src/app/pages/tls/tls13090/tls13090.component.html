@@ -265,13 +265,13 @@
 
 <div class="card">
   <app-table-report
-    dataKey="id"
+    dataKey="row_id"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
     [loading]="loading"
     [lastQueryBody]="lastQueryBody"
-    [queryFunction]="apiService.queryTLS13020.bind(apiService)"
+    [queryFunction]="apiService.queryTLS13010.bind(apiService)"
     [showCheckBox]="true"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"

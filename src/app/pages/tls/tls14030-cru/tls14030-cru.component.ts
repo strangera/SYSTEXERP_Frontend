@@ -66,7 +66,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   dataForm = this.formBuilder.nonNullable.group({
     id: [{ value: null, disabled: true }], // read only
     talent_id: [null as number | null, [Validators.required]],
-    apply_no: [{ value: null as string | null, disabled: true }], // 專櫃招募編號 自動帶入
+    apply_no: [null as string | null], // 專櫃招募編號 自動帶入
     tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
     tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
@@ -185,6 +185,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
     if (this.crudstatus != CRUDStatus.Create) {
       this.dataForm.get('talent_id')?.disable();
+      this.dataForm.get('apply_no')?.disable();
       this.dataForm.patchValue({ apply_no: this.rowdata?.apply_no ?? null });
     }
 
