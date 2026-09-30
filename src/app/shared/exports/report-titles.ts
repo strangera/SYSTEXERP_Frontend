@@ -35,10 +35,10 @@ export const REPORT_TITLES: Record<string, string> = {
 
   queryFIN73030: '支付申請單',
 
-  querySYS0710: 'UserBehavior 使用者權限列表',
+  querySYS0710: '使用者系統權限列表',
   querySYS0730: 'tblRoleBehavior角色系統權限列表',
-  querySYS0740: 'tblRoleBehavior角色系統權限列表',
+  querySYS0740: '作業權限之角色列表',
   querySYS0750: 'tblUserRole使用者角色列表',
-  querySYS0770AllUsers: 'tblUserRole使用者角色列表',
-  querySYS0770UserRoles: 'tblUserRole使用者角色列表',
+  querySYS0770AllUsers: '作業權限統計表',
+  querySYS0770UserRoles: '作業權限統計表',
 };
