@@ -419,13 +419,29 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
       } as TLS32060Request;
 
       console.log('查詢請求', formValue);
-      this.tls32060Service.queryTLS32060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];
-        this.historyRequestBody = formValue;
-        this.totalRecords = res.Data.length;
-        console.log('主查詢結果', res.Data);
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      });
+this.tls32060Service.queryTLS32060(formValue)
+  .pipe(
+    finalize(() => this.loading = false),
+    untilDestroyed(this)
+  )
+  .subscribe(res => {
+
+    this.data = res.Data ?? [];
+
+    this.historyRequestBody = formValue;
+
+    // 改這裡：使用後端 TotalCount
+    this.totalRecords = res.TotalCount ?? this.data.length;
+
+    console.log('主查詢結果', res.Data);
+    console.log('目前資料筆數', this.data.length);
+    console.log('總筆數 TotalCount', res.TotalCount);
+
+    this.queryStateService.setQueryState(
+      this.ProgNo,
+      frm.getRawValue()
+    );
+  });
     });
   }
 
