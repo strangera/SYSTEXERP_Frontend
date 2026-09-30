@@ -645,7 +645,9 @@ export class ValidationService {
 
   idCardValidator(control: { value: string | null }): ValidationErrors | null {
     const value = control.value;
-    if (!value) return null;
+    // FieldStateDirective 會用非字串假值（{length:Infinity}、數字）探測 maxLength/min/max，
+    // 這裡務必先擋型別，否則 toUpperCase() 會拋例外炸掉整個 Validators.compose 鏈。
+    if (!value || typeof value !== 'string') return null;
 
     const upper = value.toUpperCase();
     if (!/^[A-Z][0-9]{9}$/.test(upper)) return { invalidIdCard: true };
