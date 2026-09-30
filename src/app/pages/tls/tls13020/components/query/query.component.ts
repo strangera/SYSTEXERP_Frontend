@@ -60,6 +60,7 @@ export interface ContractItem {
   VEN_Name?: string;
   // 組織 / 分類
   org_id?: string;
+  source_type?: string;
   paper_type?: string;
   bus_type?: string;
   bus_class?: string;

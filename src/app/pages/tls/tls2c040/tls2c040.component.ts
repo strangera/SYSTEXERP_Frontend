@@ -95,16 +95,32 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  onSubmit(form: FormGroup) {
-    this.handleSubmit(form, () => {
-      this.tls2c040Service.queryTLS2C040(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data || [];
-          this.totalRecords = response.TotalCount || 0;
-          this.lastQueryBody = form.getRawValue();
-          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
-        });
-    });
-  }
+onSubmit(form: FormGroup) {
+  this.handleSubmit(form, () => {
+
+    const rawValue = form.getRawValue();
+
+    const requestBody = {
+      ...rawValue,
+      SrcSheetTypeList: rawValue.SrcSheetTypeList ?? [],
+      TransStatusList: rawValue.TransStatusList ?? []
+    };
+
+    this.tls2c040Service.queryTLS2C040(requestBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe(response => {
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount || 0;
+
+        this.lastQueryBody = requestBody;
+        this.queryStateService.setQueryState(
+          this.ProgNo,
+          this.lastQueryBody
+        );
+      });
+  });
+}
 }
