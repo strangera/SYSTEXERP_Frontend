@@ -60,7 +60,7 @@
 <div class="card">
   <div class="col-13">
     <app-table-report
-      apiUrl="queryRole"
+      [exportContext]="{ apiUrl: 'queryRole' }"
       tableKey="SYS0210"
       [data]="data"
       [columns]="columns"
