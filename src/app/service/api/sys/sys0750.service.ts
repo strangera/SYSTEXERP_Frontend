@@ -30,6 +30,8 @@ export interface QuerySYS0750Response {
   Title?: string;
   // 對應 Org_ID (varchar(20)) - 組織代碼
   Org_ID?: string;
+  // 對應 Org_Name - 組織名稱 (SYS3100)
+  Org_Name?: string;
   // 對應 str_date (date) - 有效起始日期
   Str_Date?: string;
   // 對應 end_date (date) - 有效截止日期

@@ -56,14 +56,15 @@ export class SYS0750Component extends BasicQueryPageComponent<QuerySYS0750Respon
 
 
   columns: ReportColumn[] = [
-    { field: 'User_Type', header: '使用者型態', visible: true, format: (value) => value === '1' ? '公司內部人員' : value === '2' ? '專櫃人員' : '其他' },
+    { field: 'User_Type', header: '使用者型態', visible: true, format: (value) => value === '1' ? '公司內部人員' : value === '2' ? '專櫃人員' : '其他', exportFormat: [{ '1': '公司內部人員' }, { '2': '專櫃人員' }, { '3': '其他' }] },
     { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
     { field: 'Str_Date', header: '有效起始日期', visible: false, format: formatDate },
     { field: 'End_Date', header: '有效截止日期', visible: false, format: formatDate },
-    { field: 'Status', header: '使用者狀態', visible: true, format: (value) => value === '1' ? '有效' : '停用' },
+    { field: 'Status', header: '使用者狀態', visible: true, format: (value) => value === '1' ? '有效' : '停用', exportFormat: [{ '1': '有效' }, { '2': '停用' }] },
     { field: 'Title', header: '職稱代碼', visible: true, format: (value) => SystemOptionsService.getOptions('T103').find((option) => option.SYS_Code === value)?.SYS_Name || value },
     { field: 'Org_ID', header: '組織代碼', visible: true },
+    { field: 'Org_Name', header: '組織名稱', visible: true },
     { field: 'User_Email', header: '使用者Email', visible: false },
     { field: 'TLT_No', header: '所屬專櫃編號', visible: false },
     { field: 'Remarks', header: '備註', visible: false },
