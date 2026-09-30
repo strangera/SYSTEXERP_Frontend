@@ -97,6 +97,7 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
     value ? new Date(value).toLocaleDateString() : '';
 
   columns: ReportColumn[] = [
+    { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     {
