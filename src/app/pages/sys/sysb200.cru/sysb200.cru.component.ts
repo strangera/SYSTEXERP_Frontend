@@ -18,6 +18,7 @@ import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
@@ -47,8 +48,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_No: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(14)]],
     VEN_Flag: ['', Validators.required],
     VEN_Uniform: ['', [
-      Validators.maxLength(10),
-      Validators.pattern(/^\d{8}$/)
+      Validators.maxLength(10)
     ]],
     VEN_RemitFeeMode: ['', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -121,7 +121,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   constructor(
     override readonly formBuilder: FormBuilder,
-    private sysb200Service: Sysb200Service
+    private sysb200Service: Sysb200Service,
+    private validationService: ValidationService
   ) {
     super();
   }
@@ -154,14 +155,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       if (value === '1') {
         this.dataForm.get('VEN_Uniform')?.setValidators([
           Validators.required,
-          Validators.maxLength(10),
-          Validators.pattern(/^\d{8}$/) // 8 碼數字
+          Validators.maxLength(8),
+          (control) => this.validationService.companyIdValidator(control), // 8 碼數字，含統一編號檢查碼
         ]);
       } else if (value === '2') {
         this.dataForm.get('VEN_Uniform')?.setValidators([
           Validators.required,
           Validators.maxLength(10),
-          Validators.pattern(/^[A-Z]{1}[0-9]{9}$/i) // 1 英文 + 9 碼數字
+          (control) => this.validationService.idCardValidator(control), // 1 英文 + 9 碼數字，含身份證檢查碼
         ]);
       } else {
         this.dataForm.get('VEN_Uniform')?.clearValidators();
@@ -236,23 +237,16 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     const uniform = form.get('VEN_Uniform')?.value;
     const uniformTrimmed = uniform?.trim();
 
-    if (flag === '1') {
-      const regex = /^[0-9]{8}$/;
-      if (!regex.test(uniformTrimmed)) {
-        this.messageService.warnBubble("統一編號格式錯誤（需為 8 碼數字）");
-        this.loading = false;
-        return;
-      }
+    if (flag === '1' && (!uniformTrimmed || this.validationService.companyIdValidator({ value: uniformTrimmed }))) {
+      this.messageService.warnBubble("統一編號格式錯誤，需為 8 碼數字且符合統一編號檢查碼規則");
+      this.loading = false;
+      return;
     }
 
-
-    if (flag === '2') {
-      const regex = /^[A-Z]{1}[0-9]{9}$/i;
-      if (!regex.test(uniformTrimmed)) {
-        this.messageService.warnBubble("身份證格式錯誤，需為 1 英文 + 9 碼數字");
-        this.loading = false;
-        return;
-      }
+    if (flag === '2' && (!uniformTrimmed || this.validationService.idCardValidator({ value: uniformTrimmed }))) {
+      this.messageService.warnBubble("身份證字號格式錯誤，需為 1 碼英文字母 + 9 碼數字且符合檢查碼規則");
+      this.loading = false;
+      return;
     }
 
     // 驗證聯絡人身份證
