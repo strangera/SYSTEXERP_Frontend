@@ -86,6 +86,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     CALC_TYPE: [null as string | null],
     DOWN_PAYMENT: [null as number | null],
     OVER_BASE_RATE: [null as number | null],
+    CALC_SOURCE: [null as string | null],
   });
 
   constructor(
@@ -104,8 +105,9 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       this.dataForm.get('CAP_Type')?.disable();
     }
 
-    // 若編輯/明細且是券類，將 PAY_NO 字串拆成陣列給 multi-select
+    // 若編輯/明細：做資料轉換
     if (this.crudstatus !== CRUDStatus.Create) {
+      // 券類 PAY_NO 字串拆成陣列給 multi-select
       const payNo = this.dataForm.get('PAY_NO')?.value;
       if (this.dataForm.get('CAP_SALETYPE')?.value === '5' && payNo) {
         this.dataForm.patchValue({ PAY_NO_MULTI: payNo.split(',') }, { emitEvent: false });
@@ -208,6 +210,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
           ? null : parseFloat(String(raw.DOWN_PAYMENT)),
         PAY_NO: this.isPayNoMulti ? (raw.PAY_NO_MULTI ?? []).join(',') || null : raw.PAY_NO,
         PAY_NO_MULTI: undefined, // 後端不需要此欄位
+        CALC_SOURCE: raw.CALC_SOURCE ?? null,
       };
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
@@ -318,6 +321,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       CALC_TYPE: null,
       DOWN_PAYMENT: null,
       OVER_BASE_RATE: null,
+      CALC_SOURCE: null,
     });
     this.dataForm.markAsPristine();
   }
