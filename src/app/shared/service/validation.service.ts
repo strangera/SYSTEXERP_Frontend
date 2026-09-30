@@ -610,7 +610,8 @@ export class ValidationService {
   // 特例：第7碼為 7 時（7×4=28，2+8=10），提供兩種合法總和（取 1 或 0 皆可接受）。
   companyIdValidator(control: { value: string | null }): ValidationErrors | null {
     const value = control.value;
-    if (!value) return null;
+    // 同 idCardValidator：FieldStateDirective 會用非字串假值探測 maxLength/min/max，先擋型別。
+    if (!value || typeof value !== 'string') return null;
     if (!/^\d{8}$/.test(value)) return { invalidCompanyId: true };
 
     const weights = [1, 2, 1, 2, 1, 2, 4, 1];
