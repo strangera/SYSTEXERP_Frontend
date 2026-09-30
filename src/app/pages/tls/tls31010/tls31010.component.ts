@@ -5,6 +5,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { ColumnGroup, formatAmount } from '@others/component/table/table.model';
 import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
+import { startReportAutoRefresh } from '@pages/tls/TLS30000/common/report-auto-refresh.util';
+import { REPORT_AUTO_REFRESH_HINT_TEXT } from '@pages/tls/TLS30000/common/report-auto-refresh-hint.constant';
 import { TLS31010QueryData, TLS31010Request, Tls31010Service, TLS31010TotalData } from '@service/api/tls/tls31010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -50,6 +52,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
   ]
 })
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
+  readonly autoRefreshHintText = REPORT_AUTO_REFRESH_HINT_TEXT;
   public readonly tls31010Service = inject(Tls31010Service);
   private readonly dropdown = inject(DropdownApiService);
   private readonly destroyRef = inject(DestroyRef);
@@ -129,17 +132,26 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
       this.setColumns();
       this.syncLastQueryBodyWithDisplayStatus();
     });
+
+    // 查詢日期若為系統日，每 10 分鐘自動重新查詢一次
+    startReportAutoRefresh(this.destroyRef, () => this.lastQueryBody?.TXN_Date, () => {
+      if (this.lastQueryBody) this.executeQuery(this.lastQueryBody);
+    });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = this.buildRequestBody(frm.getRawValue());
-      this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef)).subscribe(res => {
-        this.data = res.Data;
-        this.lastQueryBody = formValue;
-        this.totalRecords = res.TotalCount;
-        this.footerData = res.TotalData ?? null;
-      });
+      this.executeQuery(formValue);
+    });
+  }
+
+  private executeQuery(formValue: TLS31010Request) {
+    this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef)).subscribe(res => {
+      this.data = res.Data;
+      this.lastQueryBody = formValue;
+      this.totalRecords = res.TotalCount;
+      this.footerData = res.TotalData ?? null;
     });
   }
 
