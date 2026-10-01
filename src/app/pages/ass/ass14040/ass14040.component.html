@@ -21,11 +21,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
@@ -43,11 +39,6 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button
-            btnType="query"
-            [loading]="loading"
-            label="查詢最近結算年月"
-          ></app-button>
         </div>
       </form>
     </p-accordionTab>
