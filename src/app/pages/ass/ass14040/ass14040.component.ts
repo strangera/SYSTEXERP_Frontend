@@ -35,29 +35,31 @@ export class ASS14040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('ASS14040', '', this.queryForm, (form) => this.onSubmit(form));
+
+    // 進來就直接顯示最近結算年月
+    this.ass14040Service.queryASS14040().subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.latestMessage = response.Data?.Message || '';
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
   }
 
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      console.log('庫存月結request:', JSON.stringify(frm.value, null, 2));
-      this.ass14040Service.queryASS14040().subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.latestMessage = response.Data?.Message || '';
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-    });
+    //   this.handleSubmit(frm, () => {
+    //     console.log('庫存月結request:', JSON.stringify(frm.value, null, 2));
+
+    //   });
   }
 
   // 試算
