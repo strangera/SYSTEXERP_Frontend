@@ -489,8 +489,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     switch (type) {
       case '1': // 統編
-        // SA規格更新: 因為這支作業是新的，所以他不適抓，合約裡的統一編號，用輸入框+長度即可
-        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(16), this.validationService.numberValidator]);
+        cus_uniform_id.setValidators([Validators.required, (ctrl) => this.validationService.companyIdValidator(ctrl)]);
         VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
         VEN_EngName.setValidators([Validators.maxLength(100)]);
 
@@ -510,8 +509,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       case '2': // 身份證字號
         cus_uniform_id.setValidators([
           Validators.required,
-          Validators.maxLength(10),
-          (control) => this.validationService.identityValidator(control) // 套用 身份證字號 驗證
+          (ctrl) => this.validationService.idCardValidator(ctrl),
         ]);
         VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
         VEN_EngName.setValidators([Validators.maxLength(100)]);
