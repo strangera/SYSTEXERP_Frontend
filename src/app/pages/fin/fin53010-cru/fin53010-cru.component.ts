@@ -934,10 +934,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         field: 'ReflNo',
         header: '對象別編號',
         textAlign: 'left',
-        type: 'dropdown',
-        options: () => this.service.refNameOptions(),
-        optionLabel: 'label',
-        optionValue: 'value',
+        type: 'input',
         disabled: (_v: unknown, _i: unknown, rowData: FIN53010DetailTable) => this.isRowLocked(rowData),
       },
       {
