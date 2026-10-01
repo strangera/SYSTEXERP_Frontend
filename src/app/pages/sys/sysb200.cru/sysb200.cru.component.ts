@@ -238,13 +238,13 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     const uniformTrimmed = uniform?.trim();
 
     if (flag === '1' && (!uniformTrimmed || this.validationService.companyIdValidator({ value: uniformTrimmed }))) {
-      this.messageService.warnBubble("統一編號格式錯誤，需為 8 碼數字且符合統一編號檢查碼規則");
+    
       this.loading = false;
       return;
     }
 
     if (flag === '2' && (!uniformTrimmed || this.validationService.idCardValidator({ value: uniformTrimmed }))) {
-      this.messageService.warnBubble("身份證字號格式錯誤，需為 1 碼英文字母 + 9 碼數字且符合檢查碼規則");
+      
       this.loading = false;
       return;
     }
@@ -257,7 +257,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     });
 
     if (!contactsValid) {
-      this.messageService.warnBubble("聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空");
+
       this.loading = false;
       return;
     }
