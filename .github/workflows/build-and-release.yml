@@ -118,6 +118,22 @@ jobs:
         Write-Host "Version: ${{ github.ref_name }}"
         Write-Host "Production -> releases/production (tag rel-fe-${{ steps.ver.outputs.ver }})"
 
+    - name: Notify Discord on failure
+      if: failure()
+      shell: powershell
+      env:
+        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      run: |
+        $body = @{
+          content = $null
+          embeds = @(@{
+            title       = "❌ Build 失敗：${{ github.ref_name }}"
+            description = "**Commit：** ${{ github.sha }}`n**推送者：** ${{ github.actor }}`n**分支/Tag：** ${{ github.ref_name }}`n`n[查看 Actions 記錄](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            color       = 15158332
+          })
+        } | ConvertTo-Json -Depth 5 -Compress
+        Invoke-RestMethod -Uri $env:DISCORD_WEBHOOK_URL -Method Post -ContentType "application/json" -Body $body
+
     - name: Cleanup workspace
       shell: powershell
       if: always()
