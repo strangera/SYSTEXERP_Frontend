@@ -193,6 +193,19 @@
         ></app-input-text>
       </div>
 
+      <div class="col-12 md:col-6 lg:col-4" *ngIf="isBaseRateVisible">
+        <app-dropdown
+          label="是否是活動"
+          [control]="dataForm.controls.CALC_SOURCE"
+          [options]="[
+            { label: '否', value: '0' },
+            { label: '是', value: '1' },
+          ]"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
+      </div>
+
       <!-- 底部按鈕列：只在 非 Read 模式 顯示 -->
       <div
         class="col-12 flex justify-content-end gap-2 mt-3"

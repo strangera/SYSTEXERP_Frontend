@@ -167,6 +167,17 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
     },
     { field: 'OVER_BASE_RATE', header: '超過基準比率', visible: true, align: 'right' },
     { field: 'DOWN_PAYMENT', header: '超過基準金額', visible: true, align: 'right' },
+    {
+      field: 'CALC_SOURCE',
+      header: '是否是活動',
+      visible: true,
+      align: 'left',
+      format: (value: string | null) => {
+        if (value === null || value === undefined || value === '') return '';
+        return value === '0' ? '否' : value === '1' ? '是' : value;
+      },
+    },
+    { field: 'CAP_BaseRate', header: '分攤比率', visible: true, align: 'right' },
     { field: 'AccNo', header: '會計科目代碼', visible: true, align: 'left' },
     { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left' },
     {

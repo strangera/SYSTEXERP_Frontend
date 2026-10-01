@@ -97,6 +97,7 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
     value ? new Date(value).toLocaleDateString() : '';
 
   columns: ReportColumn[] = [
+    { field: 'apply_no', header: '專櫃招募編號', visible: true, align: 'left' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     {
@@ -161,13 +162,13 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
         contract_subno_from: v.contract_subno_from ? String(v.contract_subno_from) : undefined,
         contract_subno_to: v.contract_subno_to ? String(v.contract_subno_to) : undefined,
       };
-      this.apiService.queryTLS13020(payload).pipe(
+      this.apiService.queryTLS13010(payload).pipe(
         this.withLoading(),
         takeUntilDestroyed(this.destroyRef),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ).subscribe((res: any) => {
         if (res.Status === '0000') {
-          this.data = res.Data || [];
+          this.data = (res.Data || []).filter((item: ContractItem) => item.source_type !== '要約書');
           this.totalRecords = res.TotalCount || this.data.length;
           this.lastQueryBody = payload;
           this.selectedItems = [];

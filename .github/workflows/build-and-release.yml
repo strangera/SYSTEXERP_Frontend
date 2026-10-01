@@ -21,7 +21,15 @@ jobs:
       with:
         node-version: '18'
 
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      id: cache-node
+      with:
+        path: node_modules
+        key: node-modules-${{ hashFiles('package-lock.json') }}
+
     - name: Install dependencies
+      if: steps.cache-node.outputs.cache-hit != 'true'
       run: npm install --legacy-peer-deps
 
     - name: Build (Production)
@@ -111,12 +119,49 @@ jobs:
           Write-Host "No changes to deploy"
         }
 
+    - name: Cleanup old rel-fe tags (keep 7 days)
+      shell: powershell
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $cutoff = (Get-Date).ToUniversalTime().AddDays(-7).ToString('yyyy-MM-ddTHH:mm:ssZ')
+        $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = "application/vnd.github+json" }
+        $repo = "${{ github.repository }}"
+        $page = 1
+        do {
+          $tags = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/tags?per_page=100&page=$page" -Headers $headers
+          foreach ($tag in $tags | Where-Object { $_.name -like 'rel-fe-*' }) {
+            $commit = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/git/commits/$($tag.commit.sha)" -Headers $headers
+            if ($commit.author.date -lt $cutoff) {
+              Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/git/refs/tags/$($tag.name)" -Method Delete -Headers $headers
+              Write-Host "Deleted tag: $($tag.name)"
+            }
+          }
+          $page++
+        } while ($tags.Count -eq 100)
+
     - name: Build Summary
       shell: powershell
       run: |
         Write-Host "Build complete!"
         Write-Host "Version: ${{ github.ref_name }}"
         Write-Host "Production -> releases/production (tag rel-fe-${{ steps.ver.outputs.ver }})"
+
+    - name: Notify Discord on failure
+      if: failure()
+      shell: powershell
+      env:
+        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      run: |
+        $body = @{
+          content = $null
+          embeds = @(@{
+            title       = "❌ Build 失敗：${{ github.ref_name }}"
+            description = "**Commit：** ${{ github.sha }}`n**推送者：** ${{ github.actor }}`n**分支/Tag：** ${{ github.ref_name }}`n`n[查看 Actions 記錄](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            color       = 15158332
+          })
+        } | ConvertTo-Json -Depth 5 -Compress
+        Invoke-RestMethod -Uri $env:DISCORD_WEBHOOK_URL -Method Post -ContentType "application/json" -Body $body
 
     - name: Cleanup workspace
       shell: powershell

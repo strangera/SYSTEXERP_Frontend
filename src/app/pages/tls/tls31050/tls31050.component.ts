@@ -14,6 +14,8 @@ import {
   resetReportDateForm,
 } from '@pages/tls/TLS30000/common/report-date-range.util';
 import { applyDisplayStatusVisibility } from '@pages/tls/TLS30000/common/report-display-status.util';
+import { startReportAutoRefresh } from '@pages/tls/TLS30000/common/report-auto-refresh.util';
+import { REPORT_AUTO_REFRESH_HINT_TEXT } from '@pages/tls/TLS30000/common/report-auto-refresh-hint.constant';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import {
   footer31050Total,
@@ -74,6 +76,7 @@ import { Tls31050CRUComponent } from './tls31050-cru/tls31050-cru.component';
   ],
 })
 export class TLS31050Component extends BasicQueryPageComponent<TLS31050Item> implements OnInit {
+  readonly autoRefreshHintText = REPORT_AUTO_REFRESH_HINT_TEXT;
   public readonly tls31050Service = inject(Tls31050Service);
   private readonly tls26050Service = inject(TLS26050Service);
   private readonly datePipe = inject(DatePipe);
@@ -216,55 +219,68 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Item> imp
         this.setColumns();
         this.syncLastQueryBodyWithDisplayStatus();
       });
+
+    // 查詢日期若為系統日（僅單一日期的日報表適用），每 10 分鐘自動重新查詢一次
+    startReportAutoRefresh(
+      this.destroyRef,
+      () => (this.historyRequestBody?.TXN_DateS === this.historyRequestBody?.TXN_DateE ? this.historyRequestBody?.TXN_DateS : null),
+      () => { if (this.historyRequestBody) this.executeQuery(this.historyRequestBody); },
+    );
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = this.buildRequestBody(frm.getRawValue());
-      this.tls31050Service
-        .queryTLS31050(formValue)
-        .pipe(
-          this.withLoading(),
-          takeUntilDestroyed(this.destroyRef)
-        )
-        .subscribe((res) => {
-          this.data = res.Data ?? [];
-          this.footerTotal = res.TotalData ?? null;
-          this.footershowTotal = this.footerTotal
-            ? ({
-              budget: this.footerTotal.TotalBudget,
-              AVN_TotSaleAmt: this.footerTotal.TotalSales,
-              AchievementRate: this.footerTotal.AvgAchievementRate,
-              TxnCount: this.footerTotal.TotalTxnCount,
-              AvgTicket: this.footerTotal.AvgTicket,
-              tlt_space: this.footerTotal.TotalSpace,
-              MonthlyPSM: this.footerTotal.AvgPSM,
-              TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-              MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-              MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-              CompletionRate: this.footerTotal.AvgCompletionRate,
-              PreOrderSaleAmt: this.footerTotal.TotalPreOrderSaleAmt,
-              PrePerformance: this.footerTotal.TotalPrePerformance,
-              ConsumerNum: this.footerTotal.TotalConsumerNum,
-              ConsumerOrder: this.footerTotal.TotalConsumerOrder,
-            } as footer31050Total)
-            : null;
-          this.footershowPercent = this.footerTotal
-            ? ({
-              AchievementRate: this.footerTotal.AvgAchievementRate,
-              BudgetRate: this.footerTotal.AvgBudgetRate,
-              PerformanceRate: this.footerTotal.AvgPerformanceRate,
-              TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
-              TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
-              CompletionRate: this.footerTotal.AvgCompletionRate,
-            } as footer31050Total)
-            : null;
-          this.historyRequestBody = formValue;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-          this.queryStateService.setQueryState('tls31050_Date', this.dateForm);
-        });
+      this.executeQuery(formValue, frm.getRawValue());
     });
+  }
+
+  private executeQuery(formValue: TLS31050Request, rawFormValue?: unknown) {
+    this.tls31050Service
+      .queryTLS31050(formValue)
+      .pipe(
+        this.withLoading(),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((res) => {
+        this.data = res.Data ?? [];
+        this.footerTotal = res.TotalData ?? null;
+        this.footershowTotal = this.footerTotal
+          ? ({
+            budget: this.footerTotal.TotalBudget,
+            AVN_TotSaleAmt: this.footerTotal.TotalSales,
+            AchievementRate: this.footerTotal.AvgAchievementRate,
+            TxnCount: this.footerTotal.TotalTxnCount,
+            AvgTicket: this.footerTotal.AvgTicket,
+            tlt_space: this.footerTotal.TotalSpace,
+            MonthlyPSM: this.footerTotal.AvgPSM,
+            TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+            MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+            MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+            CompletionRate: this.footerTotal.AvgCompletionRate,
+            PreOrderSaleAmt: this.footerTotal.TotalPreOrderSaleAmt,
+            PrePerformance: this.footerTotal.TotalPrePerformance,
+            ConsumerNum: this.footerTotal.TotalConsumerNum,
+            ConsumerOrder: this.footerTotal.TotalConsumerOrder,
+          } as footer31050Total)
+          : null;
+        this.footershowPercent = this.footerTotal
+          ? ({
+            AchievementRate: this.footerTotal.AvgAchievementRate,
+            BudgetRate: this.footerTotal.AvgBudgetRate,
+            PerformanceRate: this.footerTotal.AvgPerformanceRate,
+            TempCounterSalesRate: this.footerTotal.AvgTempCounterSalesRate,
+            TempCounterAmtRate: this.footerTotal.AvgTempCounterAmtRate,
+            CompletionRate: this.footerTotal.AvgCompletionRate,
+          } as footer31050Total)
+          : null;
+        this.historyRequestBody = formValue;
+        this.totalRecords = res.TotalCount;
+        if (rawFormValue) {
+          this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+          this.queryStateService.setQueryState('tls31050_Date', this.dateForm);
+        }
+      });
   }
 
   onReport(isExcel: boolean) {

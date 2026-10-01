@@ -24,6 +24,8 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { filterHourColumns } from '../TLS30000/common/report-hour-columns.const';
 import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
+import { startReportAutoRefresh } from '../TLS30000/common/report-auto-refresh.util';
+import { REPORT_AUTO_REFRESH_HINT_TEXT } from '../TLS30000/common/report-auto-refresh-hint.constant';
 import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
 
 @Component({
@@ -53,6 +55,7 @@ import { Tls31090CRUComponent } from './tls31090-cru/tls31090-cru.component';
 })
 
 export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response> implements OnInit {
+  readonly autoRefreshHintText = REPORT_AUTO_REFRESH_HINT_TEXT;
 
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],//交易日期_起
@@ -187,6 +190,11 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
     });
+
+    // 查詢日期若為系統日，每 10 分鐘自動重新查詢一次
+    startReportAutoRefresh(this.destroyRef, () => this.historyRequestBody?.TxnDate, () => {
+      if (this.historyRequestBody) this.executeQuery(this.historyRequestBody);
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -216,49 +224,51 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         Buildings: (raw.Buildings || []).join(','),
       } as TLS31090Request;
 
-      console.log('送出request請求', formValue);
-      this.tls31090Service.queryTLS31090(formValue).pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef)).subscribe(res => {
-        this.data = res.Data.Data ?? [];               // 查詢資料
-        this.footerData = {
-          BusTypeName: '營業實績',
-          TimeType: '',
-          H00: res.Data.TotalData?.TotalH00 ?? 0,
-          H01: res.Data.TotalData?.TotalH01 ?? 0,
-          H02: res.Data.TotalData?.TotalH02 ?? 0,
-          H03: res.Data.TotalData?.TotalH03 ?? 0,
-          H04: res.Data.TotalData?.TotalH04 ?? 0,
-          H05: res.Data.TotalData?.TotalH05 ?? 0,
-          H06: res.Data.TotalData?.TotalH06 ?? 0,
-          H07: res.Data.TotalData?.TotalH07 ?? 0,
-          H08: res.Data.TotalData?.TotalH08 ?? 0,
-          H09: res.Data.TotalData?.TotalH09 ?? 0,
-          H10: res.Data.TotalData?.TotalH10 ?? 0,
-          H11: res.Data.TotalData?.TotalH11 ?? 0,
-          H12: res.Data.TotalData?.TotalH12 ?? 0,
-          H13: res.Data.TotalData?.TotalH13 ?? 0,
-          H14: res.Data.TotalData?.TotalH14 ?? 0,
-          H15: res.Data.TotalData?.TotalH15 ?? 0,
-          H16: res.Data.TotalData?.TotalH16 ?? 0,
-          H17: res.Data.TotalData?.TotalH17 ?? 0,
-          H18: res.Data.TotalData?.TotalH18 ?? 0,
-          H19: res.Data.TotalData?.TotalH19 ?? 0,
-          H20: res.Data.TotalData?.TotalH20 ?? 0,
-          H21: res.Data.TotalData?.TotalH21 ?? 0,
-          H22: res.Data.TotalData?.TotalH22 ?? 0,
-          H23: res.Data.TotalData?.TotalH23 ?? 0,
+      this.executeQuery(formValue, frm.getRawValue());
+    })
+  }
 
-          Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
-          PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
-          Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
-          PrePerformance: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
-          ConsumerNum: res.Data.TotalData.TotalConsumerNum, // 消費人數總計
-          ConsumerOrder: res.Data.TotalData.TotalConsumerOrder, // 消費客單總計
-        };
-        this.historyRequestBody = formValue;
-        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
-        console.log('查詢結果', res.Data ?? []);
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      })
+  private executeQuery(formValue: TLS31090Request, rawFormValue?: unknown) {
+    this.tls31090Service.queryTLS31090(formValue).pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef)).subscribe(res => {
+      this.data = res.Data.Data ?? [];               // 查詢資料
+      this.footerData = {
+        BusTypeName: '營業實績',
+        TimeType: '',
+        H00: res.Data.TotalData?.TotalH00 ?? 0,
+        H01: res.Data.TotalData?.TotalH01 ?? 0,
+        H02: res.Data.TotalData?.TotalH02 ?? 0,
+        H03: res.Data.TotalData?.TotalH03 ?? 0,
+        H04: res.Data.TotalData?.TotalH04 ?? 0,
+        H05: res.Data.TotalData?.TotalH05 ?? 0,
+        H06: res.Data.TotalData?.TotalH06 ?? 0,
+        H07: res.Data.TotalData?.TotalH07 ?? 0,
+        H08: res.Data.TotalData?.TotalH08 ?? 0,
+        H09: res.Data.TotalData?.TotalH09 ?? 0,
+        H10: res.Data.TotalData?.TotalH10 ?? 0,
+        H11: res.Data.TotalData?.TotalH11 ?? 0,
+        H12: res.Data.TotalData?.TotalH12 ?? 0,
+        H13: res.Data.TotalData?.TotalH13 ?? 0,
+        H14: res.Data.TotalData?.TotalH14 ?? 0,
+        H15: res.Data.TotalData?.TotalH15 ?? 0,
+        H16: res.Data.TotalData?.TotalH16 ?? 0,
+        H17: res.Data.TotalData?.TotalH17 ?? 0,
+        H18: res.Data.TotalData?.TotalH18 ?? 0,
+        H19: res.Data.TotalData?.TotalH19 ?? 0,
+        H20: res.Data.TotalData?.TotalH20 ?? 0,
+        H21: res.Data.TotalData?.TotalH21 ?? 0,
+        H22: res.Data.TotalData?.TotalH22 ?? 0,
+        H23: res.Data.TotalData?.TotalH23 ?? 0,
+
+        Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
+        PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
+        Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
+        PrePerformance: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
+        ConsumerNum: res.Data.TotalData.TotalConsumerNum, // 消費人數總計
+        ConsumerOrder: res.Data.TotalData.TotalConsumerOrder, // 消費客單總計
+      };
+      this.historyRequestBody = formValue;
+      this.totalRecords = res.Data.Data.length;      // 長度計算筆數
+      if (rawFormValue) this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {

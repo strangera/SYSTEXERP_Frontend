@@ -23,6 +23,8 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { applyDisplayStatusVisibility } from '../TLS30000/common/report-display-status.util';
+import { startReportAutoRefresh } from '../TLS30000/common/report-auto-refresh.util';
+import { REPORT_AUTO_REFRESH_HINT_TEXT } from '../TLS30000/common/report-auto-refresh-hint.constant';
 import { filterHourColumns } from '../TLS30000/common/report-hour-columns.const';
 import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
 
@@ -52,6 +54,7 @@ import { Tls31080CRUComponent } from './tls31080-cru/tls31080-cru.component';
   ]
 })
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
+  readonly autoRefreshHintText = REPORT_AUTO_REFRESH_HINT_TEXT;
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],
     TimeMode: ['A'],
@@ -134,29 +137,33 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         Buildings: (raw.Buildings || []).join(','),
       } as TLS31080Request;
 
-      this.tls31080Service.queryTLS31080(formValue)
-        .pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef))
-        .subscribe(res => {
-          // ★ 核心修正點：正確解構雙層 Data
-          // res 是 ApiResponse，res.Data 是 queryTLS31080Result 物件
-          const resultObj = res?.Data || {};
-          const resData = Array.isArray(resultObj.Data) ? resultObj.Data : []; // 確保一定是 Array
-          const totalData = resultObj.TotalData || {};
-
-          // 明細顯示格式：
-          // 1. 營業實績 / 交易筆數 => 千分位
-          // 2. 營業實績佔比 => 加上 %
-          this.data = resData.map((row: TLS31080Response) => this.formatDisplayRow(row));
-
-          // 總計固定顯示三列：營業實績、交易筆數、營業實績佔比，並套用相同顯示格式
-          this.footerData = this.buildFooterRows(resData, totalData)
-            .map((row: TLS31080Response) => this.formatDisplayRow(row));
-
-          this.historyRequestBody = formValue;
-          this.totalRecords = res.TotalCount ?? resData.length;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        });
+      this.executeQuery(formValue, frm.getRawValue());
     });
+  }
+
+  private executeQuery(formValue: TLS31080Request, rawFormValue?: unknown) {
+    this.tls31080Service.queryTLS31080(formValue)
+      .pipe(this.withLoading(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        // ★ 核心修正點：正確解構雙層 Data
+        // res 是 ApiResponse，res.Data 是 queryTLS31080Result 物件
+        const resultObj = res?.Data || {};
+        const resData = Array.isArray(resultObj.Data) ? resultObj.Data : []; // 確保一定是 Array
+        const totalData = resultObj.TotalData || {};
+
+        // 明細顯示格式：
+        // 1. 營業實績 / 交易筆數 => 千分位
+        // 2. 營業實績佔比 => 加上 %
+        this.data = resData.map((row: TLS31080Response) => this.formatDisplayRow(row));
+
+        // 總計固定顯示三列：營業實績、交易筆數、營業實績佔比，並套用相同顯示格式
+        this.footerData = this.buildFooterRows(resData, totalData)
+          .map((row: TLS31080Response) => this.formatDisplayRow(row));
+
+        this.historyRequestBody = formValue;
+        this.totalRecords = res.TotalCount ?? resData.length;
+        if (rawFormValue) this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+      });
   }
 
   /**
@@ -385,6 +392,11 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
     this.queryForm.get('ConsumerNum')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.setColumns();
+    });
+
+    // 查詢日期若為系統日，每 10 分鐘自動重新查詢一次
+    startReportAutoRefresh(this.destroyRef, () => this.historyRequestBody?.TxnDate, () => {
+      if (this.historyRequestBody) this.executeQuery(this.historyRequestBody);
     });
   }
 

@@ -18,6 +18,7 @@ import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
@@ -47,13 +48,12 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_No: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(14)]],
     VEN_Flag: ['', Validators.required],
     VEN_Uniform: ['', [
-      Validators.maxLength(10),
-      Validators.pattern(/^\d{8}$/)
+      Validators.maxLength(10)
     ]],
-    VEN_RemitFeeMode: ['', Validators.required],
+    VEN_RemitFeeMode: ['0', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]],
     VEN_EngName: ['', Validators.maxLength(100)],
-    VEN_ShortName: ['', Validators.maxLength(10)],
+    VEN_ShortName: ['', Validators.maxLength(100)],
 
     // 公司資料
     VEN_Post: ['', Validators.maxLength(6)],
@@ -61,8 +61,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_GUIAddr: ['', Validators.maxLength(100)],
     VEN_Tel: ['', Validators.maxLength(15)],
     VEN_Fax: ['', Validators.maxLength(15)],
-    VEN_Email: ['', Validators.maxLength(60)],
-    VEN_GUIEmail: ['', Validators.maxLength(60)],
+    VEN_Email: ['', Validators.maxLength(200)],
+    VEN_GUIEmail: ['', Validators.maxLength(200)],
 
     // 付款資料
     VEN_PayType: ['', Validators.required],
@@ -121,7 +121,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   constructor(
     override readonly formBuilder: FormBuilder,
-    private sysb200Service: Sysb200Service
+    private sysb200Service: Sysb200Service,
+    private validationService: ValidationService
   ) {
     super();
   }
@@ -154,14 +155,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       if (value === '1') {
         this.dataForm.get('VEN_Uniform')?.setValidators([
           Validators.required,
-          Validators.maxLength(10),
-          Validators.pattern(/^\d{8}$/) // 8 碼數字
+          Validators.maxLength(8),
+          (control) => this.validationService.companyIdValidator(control), // 8 碼數字，含統一編號檢查碼
         ]);
       } else if (value === '2') {
         this.dataForm.get('VEN_Uniform')?.setValidators([
           Validators.required,
           Validators.maxLength(10),
-          Validators.pattern(/^[A-Z]{1}[0-9]{9}$/i) // 1 英文 + 9 碼數字
+          (control) => this.validationService.idCardValidator(control), // 1 英文 + 9 碼數字，含身份證檢查碼
         ]);
       } else {
         this.dataForm.get('VEN_Uniform')?.clearValidators();
@@ -219,105 +220,194 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      console.log("表單 valid 狀態：", form.valid);
-      if (!form.valid) {
-        this.messageService.warnBubble("請確認所有必填欄位皆已正確填寫");
-        return;
-      }
+onSubmit(form: FormGroup): void {
 
-      this.loading = true;
-    });
+  const flag = form.get('VEN_Flag')?.value;
+  const uniform = form.get('VEN_Uniform')?.value;
+  const uniformTrimmed =
+    typeof uniform === 'string'
+      ? uniform.trim()
+      : '';
 
+  // 1. 統一編號驗證
+  if (
+    flag === '1' &&
+    (
+      !uniformTrimmed ||
+      this.validationService.companyIdValidator({
+        value: uniformTrimmed
+      })
+    )
+  ) {
+    this.messageService.warnBubble(
+      "統一編號格式錯誤，需為 8 碼數字且符合統一編號檢查碼規則"
+    );
+    return;
+  }
 
-    // 處理 VEN_Uniform
-    const flag = form.get('VEN_Flag')?.value;
-    const uniform = form.get('VEN_Uniform')?.value;
-    const uniformTrimmed = uniform?.trim();
+  // 2. 身份證字號驗證
+  if (
+    flag === '2' &&
+    (
+      !uniformTrimmed ||
+      this.validationService.idCardValidator({
+        value: uniformTrimmed
+      })
+    )
+  ) {
+    this.messageService.warnBubble(
+      "身份證字號格式錯誤，需為 1 碼英文字母 + 9 碼數字且符合檢查碼規則"
+    );
+    return;
+  }
 
-    if (flag === '1') {
-      const regex = /^[0-9]{8}$/;
-      if (!regex.test(uniformTrimmed)) {
-        this.messageService.warnBubble("統一編號格式錯誤（需為 8 碼數字）");
-        this.loading = false;
-        return;
-      }
+  // 3. 聯絡人身份證驗證
+  const contactsValid = this.contacts.every(item => {
+    if (
+      !item.VEN_BossID ||
+      String(item.VEN_BossID).trim() === ''
+    ) {
+      return true;
     }
 
+    const regex = /^[A-Z]{1}[0-9]{9}$/i;
 
-    if (flag === '2') {
-      const regex = /^[A-Z]{1}[0-9]{9}$/i;
-      if (!regex.test(uniformTrimmed)) {
-        this.messageService.warnBubble("身份證格式錯誤，需為 1 英文 + 9 碼數字");
-        this.loading = false;
-        return;
-      }
-    }
+    return regex.test(
+      String(item.VEN_BossID).trim()
+    );
+  });
 
-    // 驗證聯絡人身份證
-    const contactsValid = this.contacts.every(item => {
-      if (!item.VEN_BossID || item.VEN_BossID.trim() === '') return true;
-      const regex = /^[A-Z]{1}[0-9]{9}$/i;
-      return regex.test(item.VEN_BossID.trim());
-    });
+  if (!contactsValid) {
+    this.messageService.warnBubble(
+      "聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空"
+    );
+    return;
+  }
 
-    if (!contactsValid) {
-      this.messageService.warnBubble("聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空");
-      this.loading = false;
-      return;
-    }
+  // 4. 最後才檢查其他必填欄位
+  if (!form.valid) {
+    form.markAllAsTouched();
 
-    // 處理 VEN_No（如果是多選下拉，取第一個）
-    const VEN_No = Array.isArray(form.get('VEN_No')?.value)
+    this.messageService.warnBubble(
+      "請確認所有必填欄位皆已正確填寫"
+    );
+    return;
+  }
+
+
+  // 前面驗證全部通過後才執行共用提交流程
+  this.handleSubmit(form, () => {
+
+    console.log("表單 valid 狀態：", form.valid);
+
+    this.loading = true;
+
+    // 處理 VEN_No
+    const VEN_No = Array.isArray(
+      form.get('VEN_No')?.value
+    )
       ? form.get('VEN_No')?.value[0]
       : form.get('VEN_No')?.value;
 
-    // 查找選中的銀行分行，取得 BNK_No 和 BNK_BranchNo
-    const selectedBankValue = form.get('VEN_BankNo')?.value;
-    const selectedBank = this.bankBranchOptions.find(b => b.value === selectedBankValue);
+    // 查找選中的銀行分行
+    const selectedBankValue =
+      form.get('VEN_BankNo')?.value;
+
+    const selectedBank =
+      this.bankBranchOptions.find(
+        b => b.value === selectedBankValue
+      );
 
     // 組資料
     const data = {
       id: this.rowdata?.id ?? 0,
-      ...form.getRawValue(),
-      VEN_No: VEN_No,
-      VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
-      VEN_PayConditionDay: Number(form.get('VEN_PayConditionDay')?.value),
-      VEN_BNK_No: selectedBank?.BNK_No ?? null,
-      VEN_BNK_BranchNo: selectedBank?.BNK_BranchNo ?? null,
-      pOS20131Details: this.contacts.map(item => ({
-        VEN_Boss: item.VEN_Boss,
-        VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),
-        VEN_BossTitle: item.VEN_BossTitle,
-        VEN_BossTel: item.VEN_BossTel,
-        VEN_BossAddr: item.VEN_BossAddr,
-        VEN_BossEmail: item.VEN_BossEmail,
-        id: typeof item.id === 'number' ? item.id : 0
-      }))
 
+      ...form.getRawValue(),
+
+      VEN_No: VEN_No,
+
+      VEN_Uniform:
+        uniformTrimmed === ''
+          ? null
+          : uniformTrimmed,
+
+      VEN_PayConditionDay:
+        Number(
+          form.get('VEN_PayConditionDay')?.value
+        ),
+
+      VEN_BNK_No:
+        selectedBank?.BNK_No ?? null,
+
+      VEN_BNK_BranchNo:
+        selectedBank?.BNK_BranchNo ?? null,
+
+      pOS20131Details:
+        this.contacts.map(item => ({
+
+          VEN_Boss:
+            item.VEN_Boss,
+
+          VEN_BossID:
+            !item.VEN_BossID ||
+            String(item.VEN_BossID).trim() === ''
+              ? null
+              : String(item.VEN_BossID).trim(),
+
+          VEN_BossTitle:
+            item.VEN_BossTitle,
+
+          VEN_BossTel:
+            item.VEN_BossTel,
+
+          VEN_BossAddr:
+            item.VEN_BossAddr,
+
+          VEN_BossEmail:
+            item.VEN_BossEmail,
+
+          id:
+            typeof item.id === 'number'
+              ? item.id
+              : 0
+        }))
     };
 
     // 呼叫 API
-    const apiCall$ = this.isFormCreateable
-      ? this.sysb200Service.insertSYSB200(data)
-      : this.sysb200Service.updateSYSB200(data);
-
+    const apiCall$ =
+      this.isFormCreateable
+        ? this.sysb200Service.insertSYSB200(data)
+        : this.sysb200Service.updateSYSB200(data);
 
     apiCall$
-      .pipe(finalize(() => this.loading = false))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
       .subscribe({
+
         next: () => {
-          this.messageService.successBubble(this.crudstatus === 'Create' ? '新增成功' : '修改成功');
+
+          this.messageService.successBubble(
+            this.crudstatus === 'Create'
+              ? '新增成功'
+              : '修改成功'
+          );
 
           // 設定回列表時自動刷新
-          localStorage.setItem('refreshList', 'true');
+          localStorage.setItem(
+            'refreshList',
+            'true'
+          );
 
-          this.onCancel(); // 返回列表
-        },
+          this.onCancel();
+        }
 
       });
-  }
+
+  });
+}
   onDataChange(event: any) {
     console.log('dataChange 觸發', event);
     this.contacts = event;

@@ -55,6 +55,7 @@ export class ValidationService {
       requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
       bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
       invalidCompanyId: '統一編號格式錯誤',
+      invalidIdCard: '身份證字號格式錯誤',
       reserveAmtTooLarge: '保留款金額不可大於應付金額',
       invalidIp: 'IP 位址格式錯誤 (範例: 192.168.1.1)',
       renewalDateTooEarly: `日期不可早於上份契約截止日後一天（最早可選 ${validatorValue?.min}）`,
@@ -609,7 +610,8 @@ export class ValidationService {
   // 特例：第7碼為 7 時（7×4=28，2+8=10），提供兩種合法總和（取 1 或 0 皆可接受）。
   companyIdValidator(control: { value: string | null }): ValidationErrors | null {
     const value = control.value;
-    if (!value) return null;
+    // 同 idCardValidator：FieldStateDirective 會用非字串假值探測 maxLength/min/max，先擋型別。
+    if (!value || typeof value !== 'string') return null;
     if (!/^\d{8}$/.test(value)) return { invalidCompanyId: true };
 
     const weights = [1, 2, 1, 2, 1, 2, 4, 1];
@@ -630,6 +632,36 @@ export class ValidationService {
       : (sum % 5 === 0) || ((sum - digitSums[6] + altDigit) % 5 === 0);
 
     return valid ? null : { invalidCompanyId: true };
+  }
+
+  // 身份證字號（10碼：1碼大寫英文字母代表戶籍地 + 9碼數字，含檢查碼）
+  // 演算法：首碼英文字母轉換為兩位數值（A=10...），計算式：
+  // N1十位數 + N1個位數x9 + N2x8 + N3x7 + N4x6 + N5x5 + N6x4 + N7x3 + N8x2 + N9x1 + N10x1
+  // 總和需為 10 的倍數（餘數為 0）才合法。
+  private readonly idCardLetterMap: Record<string, number> = {
+    A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, G: 16, H: 17, I: 34, J: 18,
+    K: 19, L: 20, M: 21, N: 22, O: 35, P: 23, Q: 24, R: 25, S: 26, T: 27,
+    U: 28, V: 29, W: 30, X: 31, Y: 32, Z: 33,
+  };
+
+  idCardValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    // FieldStateDirective 會用非字串假值（{length:Infinity}、數字）探測 maxLength/min/max，
+    // 這裡務必先擋型別，否則 toUpperCase() 會拋例外炸掉整個 Validators.compose 鏈。
+    if (!value || typeof value !== 'string') return null;
+
+    const upper = value.toUpperCase();
+    if (!/^[A-Z][0-9]{9}$/.test(upper)) return { invalidIdCard: true };
+
+    const letterValue = this.idCardLetterMap[upper[0]];
+    const tens = Math.floor(letterValue / 10);
+    const ones = letterValue % 10;
+    const digits = upper.slice(1).split('').map(Number); // N2~N10 共 9 碼
+    const weights = [8, 7, 6, 5, 4, 3, 2, 1, 1];
+
+    const sum = tens + ones * 9 + digits.reduce((acc, d, i) => acc + d * weights[i], 0);
+
+    return sum % 10 === 0 ? null : { invalidIdCard: true };
   }
 
   invoicePeriodValidator(): ValidatorFn {
