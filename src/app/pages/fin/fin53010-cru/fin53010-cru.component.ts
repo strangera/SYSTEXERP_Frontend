@@ -4114,6 +4114,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const uniformNo = String(item?.['No'] ?? '').trim();
     const inGLS1016 = uniformNo && this.service.refNameOptions().some(o => String(o.value) === uniformNo);
     rowData.ReflNo = inGLS1016 ? uniformNo : '';
+    rowData.recKey = inGLS1016 ? uniformNo : rowData.recKey;
   };
 
   public vouTermChange(event: Event): void {
