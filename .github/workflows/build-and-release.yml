@@ -111,6 +111,27 @@ jobs:
           Write-Host "No changes to deploy"
         }
 
+    - name: Cleanup old rel-fe tags (keep 7 days)
+      shell: powershell
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $cutoff = (Get-Date).ToUniversalTime().AddDays(-7).ToString('yyyy-MM-ddTHH:mm:ssZ')
+        $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; Accept = "application/vnd.github+json" }
+        $repo = "${{ github.repository }}"
+        $page = 1
+        do {
+          $tags = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/tags?per_page=100&page=$page" -Headers $headers
+          foreach ($tag in $tags | Where-Object { $_.name -like 'rel-fe-*' }) {
+            $commit = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/git/commits/$($tag.commit.sha)" -Headers $headers
+            if ($commit.author.date -lt $cutoff) {
+              Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/git/refs/tags/$($tag.name)" -Method Delete -Headers $headers
+              Write-Host "Deleted tag: $($tag.name)"
+            }
+          }
+          $page++
+        } while ($tags.Count -eq 100)
+
     - name: Build Summary
       shell: powershell
       run: |
