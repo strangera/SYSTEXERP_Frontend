@@ -61,31 +61,36 @@ export interface VendorData {
   ],
 })
 export class SYSB200Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
-    VEN_NoList: [[]],
-    VEN_Status: [''],
-    VEN_Uniform: ['', [Validators.maxLength(10)]],
-    VEN_Flag: [null],
-    VEN_Name: ['', [Validators.maxLength(60)]],
-    VEN_EName: ['', [Validators.maxLength(60)]],
-    VEN_SName: [null, [Validators.maxLength(10)]],
-    VEN_BNK_No: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
-    VEN_GUIAddr: ['', [Validators.maxLength(100)]],
-    VEN_Address: ['', [Validators.maxLength(100)]],
-    VEN_Boss: ['', [Validators.maxLength(12)]],
-    VEN_BossTitle: ['', [Validators.maxLength(16)]],
-    VEN_BossEmail: ['', [Validators.maxLength(60)]],
-    VEN_BossTel: ['', [Validators.maxLength(15)]],
-    VEN_BossID: ['', [Validators.maxLength(10)]],
-    VEN_BossAddr: ['', [Validators.maxLength(100)]],
-    VEN_Tel: ['', [Validators.maxLength(15)]],
-    VEN_Fax: ['', [Validators.maxLength(15)]],
-    VEN_Remark: ['', [Validators.maxLength(160)]],
-    VEN_PayConditionDay: ['', [this.validationService.numberValidator]],
-    pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'VEN_No', order: 1 }]],
-  });
+ queryForm = this.formBuilder.group({
+  VEN_NoList: [[]],
+  VEN_Status: [''],
+  VEN_Uniform: ['', [Validators.maxLength(10)]],
+  VEN_Flag: [null],
+
+  VEN_Name: ['', [Validators.maxLength(100)]],
+  VEN_EngName: ['', [Validators.maxLength(100)]],
+  VEN_ShortName: ['', [Validators.maxLength(100)]],
+
+  VEN_BNK_No: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
+  VEN_GUIAddr: ['', [Validators.maxLength(100)]],
+  VEN_Address: ['', [Validators.maxLength(100)]],
+
+  VEN_Boss: ['', [Validators.maxLength(12)]],
+  VEN_BossTitle: ['', [Validators.maxLength(16)]],
+  VEN_BossEmail: ['', [Validators.maxLength(60)]],
+  VEN_BossTel: ['', [Validators.maxLength(15)]],
+  VEN_BossID: ['', [Validators.maxLength(10)]],
+  VEN_BossAddr: ['', [Validators.maxLength(100)]],
+
+  VEN_Tel: ['', [Validators.maxLength(15)]],
+  VEN_Fax: ['', [Validators.maxLength(15)]],
+  VEN_Remark: ['', [Validators.maxLength(160)]],
+  VEN_PayConditionDay: ['', [this.validationService.numberValidator]],
+
+  pageSize: [30],
+  pageIndex: [1],
+  SortBy: [[{ field: 'VEN_No', order: 1 }]],
+});
   approvalOptions: { label: string; value: string }[] = [
     { label: '未審核', value: '0' },
     { label: '已審核', value: '1' },
