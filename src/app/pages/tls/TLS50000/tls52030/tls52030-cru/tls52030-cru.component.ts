@@ -138,9 +138,12 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       { field: 'ODD_Remark', header: '單項備註', type: 'input', width: '150px' },
     ];
   }
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
   ComponentLineCalculate(row: IODDetail) {
     const confirmQty = Number(row.ODD_ConfirmQty ?? 0);
-    const buyPrice = Number(row.ODD_BuyPrc ?? 0); // 這邊會即時讀到使用者修改後的驗收單價
+    const buyPrice = this.roundToTwo(Number(row.ODD_BuyPrc ?? 0)); // 這邊會即時讀到使用者修改後的驗收單價，進價需四捨五入到小數2位
     const salePrice = Number(row.ODD_SalePrc ?? 0);
     const stockTaxType = row.PLU_StockTaxType;
     const saleTaxType = row.PLU_TaxType;
@@ -338,7 +341,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
           const confirmQty = (item.POD_SubQty || 0) - (item.ODD_ConfirmQty_Finished || 0);
 
           // 2. 準備計算所需的基本值
-          const buyPrice = Number(item.ODD_BuyPrc ?? 0);
+          const buyPrice = this.roundToTwo(Number(item.ODD_BuyPrc ?? 0)); // 進價需四捨五入到小數2位
           const salePrice = Number(item.ODD_SalePrc ?? 0);
           const stockTaxType = item.PLU_StockTaxType;
           const saleTaxType = item.PLU_TaxType;
@@ -358,6 +361,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
           return {
             ...item,
             ODD_ConfirmQty: confirmQty, // 設定驗收數量
+            ODD_BuyPrc: buyPrice, // 確保帶入的進價是四捨五入後的值，不是 item 原始未處理值
             ODD_BuyNet: buyNet,
             ODD_BuyTax: buyTax,
             ODD_BuyAmt: buyAmt,

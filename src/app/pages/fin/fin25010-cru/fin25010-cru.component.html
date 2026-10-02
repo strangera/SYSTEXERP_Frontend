@@ -2,87 +2,169 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
-    <app-button *ngIf="isFormCreateable" btnType="default" icon="pi pi-plus" (click)="onGenerate()" label="產生電匯付款"
-      [disabled]="selectedItems.length === 0 || !canGenerate" [loading]="loading"></app-button>
+    <app-button
+      *ngIf="isFormCreateable"
+      btnType="default"
+      icon="pi pi-plus"
+      (click)="onGenerate()"
+      label="產生電匯付款"
+      [disabled]="selectedItems.length === 0 || !canGenerate"
+      [loading]="loading"
+    ></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div *ngIf="isFormReadable" class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="匯款來源單號" controlName="PAM_No" [control]="dataForm.controls.PAM_No"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="匯款來源單號"
+            controlName="PAM_No"
+            [control]="dataForm.controls.PAM_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar label="收/付款日" controlName="D_Date" [control]="dataForm.controls.D_Date"
-            [submitted]="submitted"></app-calendar>
+          <app-calendar
+            label="收/付款日"
+            controlName="D_Date"
+            [control]="dataForm.controls.D_Date"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar calendarType="dateTimeOne" label="建立日期" controlName="CRT_Date"
-            [control]="dataForm.controls.CRT_Date" [submitted]="submitted"></app-calendar>
+          <app-calendar
+            calendarType="dateTimeOne"
+            label="建立日期"
+            controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="dataForm.controls.WSLIP_NO"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="匯款單號"
+            controlName="WSLIP_NO"
+            [control]="dataForm.controls.WSLIP_NO"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
       <div *ngIf="!isFormReadable" class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar label="收/付款日" controlName="ACP_ExpectPayDate" [control]="dataForm.controls.ACP_ExpectPayDate"
-            [submitted]="submitted"></app-calendar>
+          <app-calendar
+            label="收/付款日"
+            controlName="ACP_ExpectPayDate"
+            [control]="dataForm.controls.ACP_ExpectPayDate"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
         <div class="col-12 md:col-8">
-          <app-dropdown-range label="廠客代號" [startControl]="dataForm.controls.ven_no_b"
-            [endControl]="dataForm.controls.ven_no_e" [submitted]="submitted" [options]="venNoOptions | async"
-            optionLabel="label" optionValue="value"></app-dropdown-range>
+          <app-dropdown-range
+            label="廠客代號"
+            [startControl]="dataForm.controls.ven_no_b"
+            [endControl]="dataForm.controls.ven_no_e"
+            [submitted]="submitted"
+            [options]="venNoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+          ></app-dropdown-range>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="應付帳款ID" controlName="ACP_No" [control]="dataForm.controls.ACP_No"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="應付帳款ID"
+            controlName="ACP_No"
+            [control]="dataForm.controls.ACP_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="傳票型態" controlName="Voucher_Kind" [control]="dataForm.controls.Voucher_Kind"
-            [options]="voucherKindOptions | async" optionLabel="label" optionValue="value" [submitted]="submitted"
-            [editable]="false"></app-dropdown>
+          <app-dropdown
+            label="傳票型態"
+            controlName="Voucher_Kind"
+            [control]="dataForm.controls.Voucher_Kind"
+            [options]="voucherKindOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+            [editable]="false"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="付款方式" controlName="VEN_PayType" [options]="venPayTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.VEN_PayType" [submitted]="submitted"
-            [editable]="false"></app-dropdown>
+          <app-dropdown
+            label="付款方式"
+            controlName="VEN_PayType"
+            [options]="venPayTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.VEN_PayType"
+            [submitted]="submitted"
+            [editable]="false"
+          ></app-dropdown>
         </div>
       </div>
       <div *ngIf="!isFormReadable" class="col-12">
         <ul class="line-height-3 pl-4">
           <li>
-            挑選應付帳款維護中付款方式為電匯,預計付款日<=收 /付款日且尚未付款完畢資料 </li>
+            挑選應付帳款維護中付款方式為電匯/現金,預計付款日<=收
+            /付款日且尚未付款完畢資料
+          </li>
           <li>
-            挑選保留款沖款維護中付款方式為電匯,保留款沖款日<=收 /付款日且尚未付款完畢資料 </li>
+            挑選保留款沖款維護中付款方式為電匯,保留款沖款日<=收
+            /付款日且尚未付款完畢資料
+          </li>
           <li>
-            挑選帳款貼現沖款維護中付款方式為電匯,貼現日<=收 /付款日且尚未付款完畢資料 </li>
+            挑選帳款貼現沖款維護中付款方式為電匯,貼現日<=收
+            /付款日且尚未付款完畢資料
+          </li>
           <li>挑選應收維護尚未收款完畢資料</li>
         </ul>
       </div>
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
-      <hr>
+      <hr />
     </form>
-    <app-table-report [apiUrl]="apiUrl" [data]="data" [columns]="columns" dataKey="UniqueKey" [showCheckBox]="isFormCreateable"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
-      [totalRecords]="totalRecords" [loading]="loading" groupRowsBy="ven_no" [subTotalData]="subTotalData"
-      [footerData]="footerData" [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
-    </app-table-report>
+    <app-table-report
+      [apiUrl]="apiUrl"
+      [data]="data"
+      [columns]="columns"
+      dataKey="UniqueKey"
+      [showCheckBox]="isFormCreateable"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event; calculateFooter()"
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      groupRowsBy="ven_no"
+      [subTotalData]="subTotalData"
+      [footerData]="footerData"
+      [customTemplates]="{ ACP_Amt: acpAmtTemplate }"
+    ></app-table-report>
   </p-panel>
 </div>
 <ng-template #acpAmtTemplate let-rowData let-index="index">
-  <ng-container *ngIf="!isFormReadable && (rowData.IN_TYPE === '3' || rowData.IN_TYPE === '2'); else normalText">
-    <p-inputNumber class="w-full" styleClass="w-full" inputId="integeronly" (onInput)="onAmtInput(rowData)"
-      [(ngModel)]="rowData.ACP_Amt" placeholder="請輸入付款金額" />
+  <ng-container
+    *ngIf="
+      !isFormReadable && (rowData.IN_TYPE === '3' || rowData.IN_TYPE === '2');
+      else normalText
+    "
+  >
+    <p-inputNumber
+      class="w-full"
+      styleClass="w-full"
+      inputId="integeronly"
+      (onInput)="onAmtInput(rowData)"
+      [(ngModel)]="rowData.ACP_Amt"
+      placeholder="請輸入付款金額"
+    />
   </ng-container>
 
   <ng-template #normalText>
     <span [class.text-red-500]="rowData.ACP_Amt < 0">
-      {{ rowData.ACP_Amt | number:'1.0-0' }}
+      {{ rowData.ACP_Amt | number: "1.0-0" }}
     </span>
   </ng-template>
 </ng-template>

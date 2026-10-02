@@ -301,7 +301,9 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     let total = 0;
     for (const item of this.selectedItems) {
       const amt = Number(item.ACP_Amt) || 0;
-      const weightedAmt = item.IN_TYPE === '1' ? amt : -amt;
+      // 保留款(3)依 RMT_TYPE 判斷：應付保留款為加項、應收保留款為減項
+      const isPayable = item.IN_TYPE === '3' ? item.RMT_TYPE === '1' : item.IN_TYPE === '1';
+      const weightedAmt = isPayable ? amt : -amt;
 
       // 更新總計
       total += weightedAmt;

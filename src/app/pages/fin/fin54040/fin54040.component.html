@@ -12,9 +12,6 @@
           <app-calendar class="col-12 md:col-6 lg:col-4" label="年份" calendarType="dateYearOne"
             [control]="queryForm.controls.onedatedd" [submitted]="submitted"></app-calendar>
         </div>
-        <!-- <div class="my-3">
-          <p>最近關帳日期：{{closeDate}}</p>
-        </div> -->
         <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -22,4 +19,12 @@
       </form>
     </p-accordionTab>
   </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report tableKey="fin54040" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin54040Service.queryFIN54040.bind(fin54040Service)" [loading]="loading" [showManage]="false"
+    [showDelete]="false">
+  </app-table-report>
 </div>

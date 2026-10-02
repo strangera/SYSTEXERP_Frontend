@@ -25,11 +25,11 @@ import { PanelModule } from 'primeng/panel';
 import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/components/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 interface MediaItem {
@@ -101,18 +101,18 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     mtSupp: [null as string | null],
     mtYear: [null as number | null],
     mtMonth: [null as number | null],
-    mtDay: [null as number | null, [Validators.required]],
-    mtPeriod: [null as number | null, [Validators.required]],
+    mtDay: [null as number | null],
+    mtPeriod: [null as number | null],
     maintenanceMethod: [null as string | null],
     ivnSupp: [null as string | null],
     ivnYear: [null as number | null],
     ivnMonth: [null as number | null],
-    ivnDay: [null as number | null, [Validators.required]],
-    expYear: [null as number | null, [Validators.required]],
+    ivnDay: [null as number | null],
+    expYear: [null as number | null],
     expMonth: [null as number | null],
-    addExpYear: [null as number | null, [Validators.required]],
+    addExpYear: [null as number | null],
     addExpMonth: [null as number | null],
-    ivnPeriod: [null as number | null, [Validators.required]],
+    ivnPeriod: [null as number | null],
     illustrate: [null as string | null, [Validators.maxLength(160)]],
   });
 
@@ -416,7 +416,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
                 Files: this.uploadedFiles,
               }).pipe(
                 switchMap((uploadRes: unknown) => {
-                  const data = (uploadRes as { Data?: Array<{ ImageUrl?: string; imageUrl?: string }> })?.Data?.[0];
+                  const data = (uploadRes as { Data?: { ImageUrl?: string; imageUrl?: string }[] })?.Data?.[0];
                   const rawUrl = data?.ImageUrl ?? data?.imageUrl;
                   const photoUrl = rawUrl ?? null;
                   const updatePayload: UpdateASS11040Request = {
@@ -538,7 +538,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
             })
             .pipe(
               switchMap((uploadRes: unknown) => {
-                const data = (uploadRes as { Data?: Array<{ ImageUrl?: string; imageUrl?: string }> })?.Data?.[0];
+                const data = (uploadRes as { Data?: { ImageUrl?: string; imageUrl?: string }[] })?.Data?.[0];
                 const rawUrl = data?.ImageUrl ?? data?.imageUrl;
                 const photoUrl = rawUrl ?? null;
                 return this.ass11040Service.updateASS11040(buildUpdatePayload(photoUrl));
