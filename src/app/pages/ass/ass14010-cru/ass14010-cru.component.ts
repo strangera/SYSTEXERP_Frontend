@@ -70,6 +70,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   });
   //---------下拉選單-------------------------------------------------------
   SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
+  private supplierPayDays = new Map<string, number>(); // 供應商編號 -> 月結(付款條件)天數
   RECEIPT_TYPE_Options: { value: string; label: string }[] = [ // 單據種類 下拉選項
     { value: "0", label: '發票' },
     { value: "1", label: '單據' },
@@ -135,6 +136,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
         // 更換供應商時，原本選擇的驗收單全部清除
         this.itemData = [];
+
+        // 月結天數隨供應商改變，重算付款日期
+        this.supplierData = this.supplierData.map(item => ({ ...item, TICKET_DATE: this.calcTicketDate(item.RECEIPT_DATE) ?? item.TICKET_DATE }));
 
         this.dataForm.patchValue({
           TOKEN_NO: '',
@@ -287,6 +291,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           value: item.VEN_No ?? item.No ?? '',
           label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
+        this.supplierPayDays = new Map(
+          (resSup.Data ?? [])
+            .filter((item: any) => item.VEN_PayConditionDay != null)
+            .map((item: any) => [item.VEN_No ?? item.No ?? '', Number(item.VEN_PayConditionDay)] as [string, number])
+        );
 
         // 2. 發票格式
         this.INV_FORMAT_Options = (resInv.Data.INV_GUITypes ?? [])
@@ -377,24 +386,35 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     const date = new Date(value);
     return isNaN(date.getTime()) ? null : date;
   }
-  /** 傳入 Date 或日期字串，回傳該月份最後一天的 Date 物件 */
-  private getLastDayOfMonth(dateValue: Date | string | null | undefined): Date | null {
-    if (!dateValue) return null;
-    const date = new Date(dateValue);
+  /** 付款日期 = 發票日期次月1號 + 供應商月結天數；尚未選供應商或查無天數時回傳 null */
+  private calcTicketDate(receiptDate: Date | string | null | undefined): Date | null {
+    if (!receiptDate) return null;
+    const date = new Date(receiptDate);
     if (isNaN(date.getTime())) return null;
 
-    // 下個月的第 0 天即為本月的最後一天
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const supplierId = this.dataForm.controls.SUPPLIER_ID.value;
+    const payDays = supplierId ? this.supplierPayDays.get(supplierId) : undefined;
+    if (payDays === undefined) return null;
+
+    return new Date(date.getFullYear(), date.getMonth() + 1, 1 + payDays);
   }
+
+  /** 申報年月僅限雙數月：選到單數月自動進位到下一個雙數月（1→2、3→4…） */
+  private toEvenMonth = (_rowData: Ass14010Supplier, value: Date | null): Record<string, unknown> => {
+    if (!(value instanceof Date) || isNaN(value.getTime())) return {};
+    const month = value.getMonth() + 1;
+    return month % 2 === 0 ? {} : { DEC_YM: new Date(value.getFullYear(), month, 1) };
+  };
   //欄位名稱初始化
   private initSupplierColumns() {
     this.supplierColumn = [
       { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'RECEIPT_NO', header: '發票號碼', type: 'input' },
-      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date' },
+      // 發票日期變更 -> 自動帶入付款日期（發票日期次月1號 + 供應商月結天數）
+      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', calculate: (_row, value) => { const d = this.calcTicketDate(value); return d ? { TICKET_DATE: d } : {}; } },
       { field: 'TICKET_DATE', header: '付款日期', type: 'date' },
-      // --- 申報年月：改為月份選擇器（比照 TLS2F010CRU columns3 DEC_YM 定義） ---
-      { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
+      // --- 申報年月：月份選擇器，僅限雙數月（比照 FIN72010 #1042：選到單數月自動進位） ---
+      { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month', calculate: this.toEvenMonth },
       { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
@@ -414,21 +434,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   }
   // 依據明細驗收單號進行主檔 token_no 刷新
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
-    // 1. 處理發票日期變更 -> 自動帶入付款日期為當月最後一天
-    this.supplierData = eventData.map(item => {
-      if (item.RECEIPT_DATE) {
-        const lastDay = this.getLastDayOfMonth(item.RECEIPT_DATE);
-
-        // 這裡採用「只要有發票日期就自動計算帶入」的邏輯
-        // 若希望使用者手動修改後不被覆蓋，可以加條件 (例如 !item.TICKET_DATE)
-        return {
-          ...item,
-          TICKET_DATE: lastDay
-        };
-      }
-      return item;
-    });
-
     // 2. 實作「發票號清空連帶清除單據資料」
     // 檢查是否還有任何發票號碼存在
     // const hasReceiptNo = this.supplierData.some(item => item.RECEIPT_NO && item.RECEIPT_NO.trim() !== '');
@@ -481,6 +486,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     const receiptNoPattern = /^[A-Z]{2}\d{8}$/;
     if (!receiptNoPattern.test(RECEIPT_NO)) {
       return { isValid: false, errorMessage: '發票號碼格式不正確，應為兩碼英文加八碼數字。' };
+    }
+    // 申報年月僅限雙數月
+    if (rowData.DEC_YM instanceof Date && (rowData.DEC_YM.getMonth() + 1) % 2 !== 0) {
+      return { isValid: false, errorMessage: '申報年月僅接受雙數月（02/04/06/08/10/12）。' };
     }
     // 3. 發票總金額應為未稅金額加稅額總金額
     const expectedTotal = (Number(rowData.TOTAL_NTX_AMT) || 0) + (Number(rowData.TOTAL_TX_AMT) || 0);
