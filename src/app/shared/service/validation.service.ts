@@ -644,12 +644,13 @@ export class ValidationService {
     U: 28, V: 29, W: 30, X: 31, Y: 32, Z: 33,
   };
 
-  idCardValidator(control: { value: string | null }): ValidationErrors | null {
+  idCardValidator(control: { value: string | null }, requireUpperCase = false): ValidationErrors | null {
     const value = control.value;
     // FieldStateDirective 會用非字串假值（{length:Infinity}、數字）探測 maxLength/min/max，
     // 這裡務必先擋型別，否則 toUpperCase() 會拋例外炸掉整個 Validators.compose 鏈。
     if (!value || typeof value !== 'string') return null;
 
+    if (requireUpperCase && !/^[A-Z]/.test(value)) return { invalidIdCard: true };
     const upper = value.toUpperCase();
     if (!/^[A-Z][0-9]{9}$/.test(upper)) return { invalidIdCard: true };
 

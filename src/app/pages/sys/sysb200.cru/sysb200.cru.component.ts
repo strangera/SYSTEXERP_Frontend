@@ -162,7 +162,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         this.dataForm.get('VEN_Uniform')?.setValidators([
           Validators.required,
           Validators.maxLength(10),
-          (control) => this.validationService.idCardValidator(control), // 1 英文 + 9 碼數字，含身份證檢查碼
+          (control) => this.validationService.idCardValidator(control, true), // 首碼大寫英文 + 9 碼數字，含身份證檢查碼
         ]);
       } else {
         this.dataForm.get('VEN_Uniform')?.clearValidators();
@@ -252,11 +252,11 @@ onSubmit(form: FormGroup): void {
       !uniformTrimmed ||
       this.validationService.idCardValidator({
         value: uniformTrimmed
-      })
+      }, true)
     )
   ) {
     this.messageService.warnBubble(
-      "身份證字號格式錯誤，需為 1 碼英文字母 + 9 碼數字且符合檢查碼規則"
+      "身份證字號格式錯誤，首碼需為大寫英文字母 + 9 碼數字且符合檢查碼規則"
     );
     return;
   }
@@ -270,7 +270,7 @@ onSubmit(form: FormGroup): void {
       return true;
     }
 
-    const regex = /^[A-Z]{1}[0-9]{9}$/i;
+    const regex = /^[A-Z]{1}[0-9]{9}$/;
 
     return regex.test(
       String(item.VEN_BossID).trim()
@@ -279,7 +279,7 @@ onSubmit(form: FormGroup): void {
 
   if (!contactsValid) {
     this.messageService.warnBubble(
-      "聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空"
+      "聯絡人身份證號格式錯誤，首碼需為大寫英文 + 9 碼數字，或留空"
     );
     return;
   }
