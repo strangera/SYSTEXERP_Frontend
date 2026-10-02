@@ -392,6 +392,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { initialValue: this.dataForm.controls.VouDate.value },
   );
 
+  /** 供 stepFlowEffect 追蹤補發票設定（新增時 N → 隱藏發票步驟） */
+  private readonly invYnSignal = toSignal(
+    this.dataForm.controls.INV_YN.valueChanges.pipe(
+      startWith(this.dataForm.controls.INV_YN.value),
+    ),
+    { initialValue: this.dataForm.controls.INV_YN.value },
+  );
+
   /** 科目代號下拉搜尋字串：數字開頭用 startsWith，中文用 contains */
   // 注意：此 signal 需搭配 accNoFilterRowKey 一起使用，避免單一共用的搜尋字串
   // 同時套用到「所有列」的下拉選項，導致正在輸入篩選文字的那一列以外的列，
@@ -1386,10 +1394,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }
 
+    const isInvYnNo = this.invYnSignal() === 'N';
     const ordered = ['3', '4', '5', '8', '6', '9', '7']
       .filter(v => {
-        if (v === '5' || v === '6') return normalTypes.has(v);
-        if (v === '8' || v === '9') return allowanceTypes.has(v);
+        if (v === '5' || v === '6') {
+          // 新增 + 補發票=否：永遠不顯示，避免使用者手動加入發票科目後意外出現步驟
+          if (this.isFormCreateable && isInvYnNo) return false;
+          // 編輯：有科目資料才顯示（含外部系統補入的情況）
+          return normalTypes.has(v);
+        }
+        if (v === '8' || v === '9') {
+          if (this.isFormCreateable && isInvYnNo) return false;
+          return allowanceTypes.has(v);
+        }
         return normalTypes.has(v);
       })
       .map(v => Number(v));

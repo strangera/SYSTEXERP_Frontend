@@ -22,12 +22,11 @@ import { CalendarComponent } from '../../../shared/components/calendar/calendar.
 })
 export class FIN54045Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    vendorSName: ['', Validators.required], //反年結（預設 disabled，會由後端填入並控制狀態）
+    vendorSName: ['', Validators.required],
     pageSize: [1000],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'cls_date', order: -1 }]],
   });
-
 
   data: any[] = [];
   lastQueryBody: any;
@@ -45,28 +44,28 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private datePipe: DatePipe,
     public readonly fin54045Service: Fin54045Service
-
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN54045', 'fin/fin54045cru', this.queryForm, (form) => this.onSubmit(form));
-
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 後端需求：FIN54045 查詢 body 為空物件 {}
-      this.fin54045Service.queryFIN54045({})
+      const yearValue = this.queryForm.get('vendorSName')?.value;
+      const closeYear = this.datePipe.transform(yearValue, 'yyyy') || '';
+      const body = closeYear ? { CloseYEAR: closeYear } : {};
+
+      this.fin54045Service.queryFIN54045(body)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.lastQueryBody = {};
+          this.lastQueryBody = body;
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
 
-          // 若後端回傳反年結欄位，填入並 disable；否則啟用給使用者輸入
           const respAny = response as any;
           const vendorFromResp = (respAny?.VendorSName ?? respAny?.vendorSName ?? respAny?.Data?.VendorSName ?? respAny?.Data?.vendorSName) as string | undefined;
           if (vendorFromResp) {
@@ -79,10 +78,6 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  /**
-   * 執行反年結：呼叫 executeFIN54045
-   * 後端需求：body = { CloseYEAR: 'string' }
-   */
   defineDateCheckout(): void {
     if (this.queryForm.invalid) {
       this.submitted = true;
@@ -90,7 +85,6 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
     }
 
     const yearValue = this.queryForm.get('vendorSName')?.value;
-    // calendar 回傳 Date（年選擇器），只送 YYYY 給後端
     const closeYear = yearValue ? (this.datePipe.transform(yearValue, 'yyyy') ?? '') : '';
 
     if (!closeYear) {
@@ -104,10 +98,7 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe(res => {
         this.messageService.successBubble(res.Message || '執行完成');
-        // 執行後重新查詢
         this.onSubmit(this.queryForm);
       });
   }
-
-
 }
