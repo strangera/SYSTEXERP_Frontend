@@ -197,8 +197,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
@@ -212,8 +212,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyeff', header: '月坪效', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
@@ -224,8 +224,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffSquare', header: '坪數差異', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: (value: number | string) => this.queryForm.controls.DayType.value === '1' ? '' : formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效差異' : '月坪效差異', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻差異' : '月坪貢獻差異', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
@@ -275,6 +275,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     // 初始化只執行一次，避免 startWith + calculateInitialRanges 造成重複計算。
     this.calculateInitialRanges('3');
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
+    this.updatePyeffContribColumnHeader(this.queryForm.controls.DayType.value);
 
     this.bindDayTypeChanges();
     this.bindDateRangeChanges();
@@ -353,6 +354,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     this.calculateDateRanges(type);
     this.updateYMColumnHeader(type);
+    this.updatePyeffContribColumnHeader(type);
   }
 
   /**
@@ -836,6 +838,49 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.columns = this.columns.map(col =>
       col.field === 'YM' ? { ...col, header: newHeader } : col
     );
+  }
+
+
+  /**
+   * 依 DayType 動態更新「坪效 / 坪貢獻」欄位 Header。
+   * DayType = 1：顯示日坪效 / 日坪貢獻。
+   * 其他 DayType：顯示月坪效 / 月坪貢獻。
+   */
+  private updatePyeffContribColumnHeader(dayType: string | null): void {
+    if (!dayType) return;
+
+    const isDaily = dayType === '1';
+
+    this.columns = this.columns.map(col => {
+      switch (col.field) {
+        // 比較期
+        case 'ComparePyeff':
+          return { ...col, header: isDaily ? '日坪效' : '月坪效' };
+
+        case 'ComparePyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻' : '月坪貢獻' };
+
+        // 基準期
+        case 'BasePyeff':
+          return { ...col, header: isDaily ? '日坪效' : '月坪效' };
+
+        case 'BasePyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻' : '月坪貢獻' };
+
+        // 差異
+        case 'DiffPyeff':
+          return { ...col, header: isDaily ? '日坪效差異' : '月坪效差異' };
+
+        case 'DiffPyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻差異' : '月坪貢獻差異' };
+
+        default:
+          return col;
+      }
+    });
+
+    // OnPush 模式下通知畫面更新
+    this.cdr.markForCheck();
   }
 
 
