@@ -414,6 +414,32 @@ export class FIN53010Service {
       );
   }
 
+  /** 最新已審核申報年月（yyyyMM 字串，null = 尚無審核紀錄） */
+  public readonly latestAuditedRepYM = signal<string | null>(null);
+
+  /** 最新已審核期的下一個雙數月，供新增發票列預設帶入申報年月；無審核紀錄時為 null（fallback 到發票日期計算） */
+  public readonly defaultDeclareYm = computed((): Date | null => {
+    const latest = this.latestAuditedRepYM();
+    if (!latest || latest.length !== 6) return null;
+    const year = Number(latest.slice(0, 4));
+    const month = Number(latest.slice(4, 6)); // 1-based，TDS1002 申報期必為雙數月
+    const nextMonth = month + 2;
+    return new Date(
+      nextMonth > 12 ? year + 1 : year,
+      (nextMonth > 12 ? nextMonth - 12 : nextMonth) - 1, // Date month 0-based
+      1,
+    );
+  });
+
+  public getLatestAuditedRepYM(): void {
+    this.http.post<ApiResponse<string | null>>(`${apiUrl}/getLatestAuditedRepYM`, {}).pipe(
+      take(1),
+      map(res => res?.Data ?? null),
+      tap(res => this.latestAuditedRepYM.set(res)),
+      catchError(() => of(null)),
+    ).subscribe();
+  }
+
   public getDefaultOrgId(): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${apiUrl}/getDefaultOrgId`, {}).pipe(take(1));
   }
