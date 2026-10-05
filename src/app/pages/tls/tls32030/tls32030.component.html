@@ -48,6 +48,10 @@
                   <app-dropdown label="週次" controlName="week" [options]="weekOptions" optionLabel="label"
                     optionValue="value" [control]="queryForm.controls.week" [submitted]="submitted" />
                 </div>
+                <div class="col-12">
+                  <app-calendar-range label="比較日期範圍" [startControl]="queryForm.controls.ViewCompareFrom"
+                    [endControl]="queryForm.controls.ViewCompareTo" [submitted]="submitted" />
+                </div>
               </div>
             </div>
             <div class="col-6 flex flex-column">
@@ -62,6 +66,10 @@
                 <div class="col-6">
                   <app-dropdown label="週次" controlName="CompareWeek" [options]="weekOptions" optionLabel="label"
                     optionValue="value" [control]="queryForm.controls.CompareWeek" [submitted]="submitted" />
+                </div>
+                <div class="col-12">
+                  <app-calendar-range label="基準日期範圍" [startControl]="queryForm.controls.ViewBaseFrom"
+                    [endControl]="queryForm.controls.ViewBaseTo" [submitted]="submitted" />
                 </div>
               </div>
             </div>
@@ -81,6 +89,10 @@
                   <app-dropdown label="月份" controlName="month" [options]="monthOptions" optionLabel="label"
                     optionValue="value" [control]="queryForm.controls.month" [submitted]="submitted" />
                 </div>
+                <div class="col-12">
+                  <app-calendar-range label="比較日期範圍" [startControl]="queryForm.controls.ViewCompareFrom"
+                    [endControl]="queryForm.controls.ViewCompareTo" [submitted]="submitted" />
+                </div>
               </div>
             </div>
             <div class="col-6 flex flex-column">
@@ -95,6 +107,10 @@
                 <div class="col-6">
                   <app-dropdown label="月份" controlName="CompareMonth" [options]="monthOptions" optionLabel="label"
                     optionValue="value" [control]="queryForm.controls.CompareMonth" [submitted]="submitted" />
+                </div>
+                <div class="col-12">
+                  <app-calendar-range label="基準日期範圍" [startControl]="queryForm.controls.ViewBaseFrom"
+                    [endControl]="queryForm.controls.ViewBaseTo" [submitted]="submitted" />
                 </div>
               </div>
             </div>
@@ -114,6 +130,10 @@
                   <app-dropdown label="半年別" controlName="halfYear" [options]="halfYearOptions" optionLabel="label"
                     optionValue="value" [control]="queryForm.controls.halfYear" [submitted]="submitted" />
                 </div>
+                <div class="col-12">
+                  <app-calendar-range label="比較日期範圍" [startControl]="queryForm.controls.ViewCompareFrom"
+                    [endControl]="queryForm.controls.ViewCompareTo" [submitted]="submitted" />
+                </div>
               </div>
             </div>
             <div class="col-6 flex flex-column">
@@ -130,6 +150,10 @@
                     optionLabel="label" optionValue="value" [control]="queryForm.controls.CompareHalfYear"
                     [submitted]="submitted" />
                 </div>
+                <div class="col-12">
+                  <app-calendar-range label="基準日期範圍" [startControl]="queryForm.controls.ViewBaseFrom"
+                    [endControl]="queryForm.controls.ViewBaseTo" [submitted]="submitted" />
+                </div>
               </div>
             </div>
           </div>
@@ -143,6 +167,10 @@
                 <app-calendar calendarType="dateYearOne" label="年度" controlName="year"
                   [control]="queryForm.controls.year" [submitted]="submitted" />
               </div>
+              <div class="col-12">
+                <app-calendar-range label="比較日期範圍" [startControl]="queryForm.controls.ViewCompareFrom"
+                  [endControl]="queryForm.controls.ViewCompareTo" [submitted]="submitted" />
+              </div>
             </div>
             <div class="col-6 flex flex-column">
               <div class="col-12 flex justify-content-center">
@@ -151,6 +179,10 @@
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="年度" controlName="CompareYear"
                   [control]="queryForm.controls.CompareYear" [submitted]="submitted" />
+              </div>
+              <div class="col-12">
+                <app-calendar-range label="基準日期範圍" [startControl]="queryForm.controls.ViewBaseFrom"
+                  [endControl]="queryForm.controls.ViewBaseTo" [submitted]="submitted" />
               </div>
             </div>
           </div>
