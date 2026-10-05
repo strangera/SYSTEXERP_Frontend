@@ -292,6 +292,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
       .pipe(untilDestroyed(this))
       .subscribe(() => { this.syncCDateToQueryForm(); });
 
+    // 週報：修改年度後依現有週數重新帶出日期範圍
+    this.dateForm.controls.onedateyy.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.queryWeek('base'));
+    this.c_dateForm.controls.onedateyy.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.queryWeek('compare'));
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.tlt_building_Option = res.Data; });
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.tlt_floor_Option = res.Data; });
     this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => { this.area_no_Option = res.Data; });
@@ -471,16 +478,20 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     }
   }
 
-  queryWeek(event: string) {
-    const control = this.dateForm.controls['onedateyy'];
-    if (!control.value) return;
+  // 依年度+週數帶出日期範圍；base = 左側 dateForm、compare = 右側 c_dateForm，各自獨立不互相覆蓋
+  queryWeek(target: 'base' | 'compare') {
+    const form = target === 'base' ? this.dateForm : this.c_dateForm;
+    const year = form.controls.onedateyy.value;
+    const weeks = form.controls.weeks.value;
+    if (!year || !weeks) return;
     const payload = {
-      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
-      weeks: event,
+      onedateyy: this.datePipe.transform(year, 'yyyy') ?? '',
+      weeks,
     };
-    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
-      this.dateForm.controls['startdate'].setValue(response.Data[0].WeekStart ? new Date(response.Data[0].WeekStart) : null);
-      this.dateForm.controls['enddate'].setValue(response.Data[0].WeekEnd ? new Date(response.Data[0].WeekEnd) : null);
+    this.tls26050Service.queryTLS26050Week(payload).pipe(untilDestroyed(this)).subscribe((response) => {
+      const week = response.Data?.[0];
+      form.controls.startdate.setValue(week?.WeekStart ? new Date(week.WeekStart) : null);
+      form.controls.enddate.setValue(week?.WeekEnd ? new Date(week.WeekEnd) : null);
     });
   }
 
@@ -582,10 +593,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
           const compareYear = compareEnd.getFullYear();
           const compareYearDate = new Date(compareYear, 0, 1);
           const compareWeek = this.getWeekNumber(compareEnd);
-          this.c_dateForm.get('onedateyy')?.setValue(compareYearDate);
-          this.c_dateForm.get('weeks')?.setValue(compareWeek);
-          this.c_dateForm.get('startdate')?.setValue(compareStart);
-          this.c_dateForm.get('enddate')?.setValue(compareEnd);
+          // emitEvent: false：只更新右側顯示，避免觸發右側年度監聽重查週別 API
+          this.c_dateForm.patchValue({
+            onedateyy: compareYearDate,
+            weeks: compareWeek,
+            startdate: compareStart,
+            enddate: compareEnd,
+          }, { emitEvent: false });
         }
         break;
       case '3': {
@@ -661,14 +675,9 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         compareEnd = d;
         break;
       }
-      case '2': {
-        const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
-        const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
-        if (chooseYear && chooseWeeks) {
-          const yearNumber = chooseYear.getFullYear();
-          const { weekStart, weekEnd } = this.getDateRangeByYearWeek(yearNumber, Number(chooseWeeks));
-          this.queryForm.patchValue({ CompareDateFrom: weekStart, CompareDateTo: weekEnd });
-        }
+      case '2': { // 週報：日期範圍由 queryWeek('compare') 呼叫週別 API 帶出，與左側同一套週數定義
+        compareStart = this.c_dateForm.controls.startdate.value;
+        compareEnd = this.c_dateForm.controls.enddate.value;
         break;
       }
       case '3': {
@@ -741,17 +750,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     return String(weekNo);
   }
 
-  getDateRangeByYearWeek(year: number, week: number) {
-    const simple = new Date(year, 0, 4);
-    const dayOfWeek = simple.getDay() || 7;
-    const firstWeekMonday = new Date(simple);
-    firstWeekMonday.setDate(simple.getDate() - dayOfWeek + 1);
-    const weekStart = new Date(firstWeekMonday);
-    weekStart.setDate(firstWeekMonday.getDate() + (week - 1) * 7);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    return { weekStart, weekEnd };
-  }
 
   // 3. 修正動態欄位切換邏輯
   setColumns() {

@@ -84,7 +84,7 @@
                   label="比較週數"
                   controlName="weeks"
                   [control]="dateForm.controls.weeks"
-                  (blurEvent)="queryWeek($event)"
+                  (blurEvent)="queryWeek('base')"
                   [submitted]="submitted"
                 ></app-input-text>
               </div>
@@ -118,7 +118,7 @@
                   label="基準週數"
                   controlName="weeks"
                   [control]="c_dateForm.controls.weeks"
-                  (blurEvent)="queryWeek($event)"
+                  (blurEvent)="queryWeek('compare')"
                   [submitted]="submitted"
                 ></app-input-text>
               </div>
