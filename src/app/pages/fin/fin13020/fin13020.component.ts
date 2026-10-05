@@ -97,7 +97,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> implements O
       label: '列印',
       icon: 'pi pi-print',
       action: (rowData: any) => this.onPrintOne(rowData),
-      disabled: (rowData: any) => this.editDisabled(rowData),
     },
   ];
 
