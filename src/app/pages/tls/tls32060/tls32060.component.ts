@@ -25,6 +25,8 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ColumnGroup, formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
+import { TLS32060TableReportComponent }
+  from './tls32060-table-report.component';
 
 const today = new Date();
 const yesterday = new Date(today);
@@ -68,7 +70,7 @@ dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
     MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CommonModule,
     CalendarComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent,
     ButtonComponent, TableModule, TableReportComponent, RadiobuttonComponent,
-    TranslateModule, MultiSelectComponent, ButtonModule, CheckboxModule,
+    TranslateModule, MultiSelectComponent, ButtonModule, CheckboxModule,  TLS32060TableReportComponent
   ]
 })
 // 各櫃業績報表
@@ -93,7 +95,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     ReceFilter: ['A'],
     PreSale: [false],           // 顯示預售欄位開關
     ConsumerNum: [false],       // 顯示消費人數/客單開關
-    pageSize: [20],
+    pageSize: [3000],
     pageIndex: [1],
   });
 
