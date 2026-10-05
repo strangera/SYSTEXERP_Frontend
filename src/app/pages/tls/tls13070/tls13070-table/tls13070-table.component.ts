@@ -207,9 +207,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
       }
       seq++;
     }
-    // 檢查globalindex
-    console.log('TLS13070  前5筆序號:', result.slice(0, 5).map(r => ({ seq: r.globalIndex, apply_no: r.apply_no })));
-    // console.log('TLS13070 前5筆序號:', result.filter(r => r.isMainRow).slice(0, 5).map(r => ({ seq: r.globalIndex, apply_no: r.apply_no })));
     return result;
   }
 }

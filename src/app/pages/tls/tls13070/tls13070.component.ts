@@ -149,8 +149,6 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
           this.lastQueryBody = body;
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          //前10筆序號
-          console.log('TLS13070 前10筆序號:', response.Data.slice(0, 10).map(r => ({ seq: r.apply_no })));
         });
     });
   }
