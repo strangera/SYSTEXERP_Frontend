@@ -132,7 +132,9 @@ export function getDeductionAColumns(contractDates?: { bdate?: string; edate?: s
       header: '單價',
       type: 'number',
       editable: true,
-      required: true
+      required: true,
+      allowDecimal: true,
+      decimalPlaces: 2
     },
     {
       field: 'tpy_qty',
@@ -207,6 +209,8 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       type: 'number',
       editable: true,
       required: true,
+      allowDecimal: true,
+      decimalPlaces: 2,
       style: 'min-width: 80px;'
     },
     {
