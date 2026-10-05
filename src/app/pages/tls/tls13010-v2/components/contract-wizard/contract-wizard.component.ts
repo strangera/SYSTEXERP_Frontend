@@ -1283,8 +1283,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       'A': '代扣款A類(管銷費用)',
       'B': '代扣款B類(水電費)',
       'C': '代扣款C類(分期付款)',
-      'D': '代扣款D類(業績抽成)',
-      'E': '代扣款E類(其他)'
+      'D': '代扣款D類(業績抽成)'
     };
     return typeNames[capType] || `代扣款${capType}類`;
   }

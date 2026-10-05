@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
 import { ButtonModule } from 'primeng/button';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { finalize, Observable } from 'rxjs';
 import { BasicPrintDataComponent } from 'src/app/others/componentextends/basic-print/basic-print-data.component';
 
@@ -30,7 +30,6 @@ export interface FlattenedTls13070Row extends Tls13070Response {
   styleUrls: ['./tls13070-table.component.scss'],
 })
 export class Tls13070TableComponent extends BasicPrintDataComponent implements OnChanges {
-  @ViewChild('dt') private dt!: Table;
   @ViewChild('opList') private readonly opList!: OverlayPanel;
   @ViewChild('opRemark') private readonly opRemark!: OverlayPanel;
 
@@ -64,8 +63,9 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   private readonly tls13070Service = inject(Tls13070Service);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly trackByFn = (index: number, item: FlattenedTls13070Row): number =>
-    item?.globalIndex ?? index;
+  // 主行/子行需唯一 key（序號-子行序），否則子行 fallback 到 index 會與其他主行序號撞 key，造成 DOM 重用錯亂、主行消失
+  readonly trackByFn = (index: number, item: FlattenedTls13070Row): string =>
+    item ? `${item.globalIndex}-${item.rowIndex}` : `${index}`;
 
   // 箭頭函式確保 this 正確，傳給 virtualScrollOptions.onScroll
   readonly onVirtualScroll = (event: any) => {
@@ -80,9 +80,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
     if (changes['data']) {
       if (this.lastQueryBody) this.hasSearched = true;
       this.flatData = this.buildFlatData(this.data ?? []);
-    }
-    if (changes['lastQueryBody'] && this.lastQueryBody && this.dt) {
-      this.dt.multiSortMeta = this.lastQueryBody.SortBy;
     }
     if (changes['aps1003_A'] && this.aps1003_A) {
       this.aps1003_A.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(res => {
@@ -150,7 +147,6 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / 30) + 1,
       pageSize: 30,
-      SortBy: this.dt?.multiSortMeta,
     };
     this.queryFunction(body)
       .pipe(finalize(() => (this.isLoading = false)), takeUntilDestroyed(this.destroyRef))
@@ -202,7 +198,7 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
           isLastSubRow: i === len - 1,
           recordEven: seq % 2 === 0,
           rowspanCount: len,
-          globalIndex: i === 0 ? seq : null!,
+          globalIndex: seq,
           singleCag: item.cagList?.[i],
           singleLevel: item.levelList?.[i],
           singleLimit: item.limitList?.[i],

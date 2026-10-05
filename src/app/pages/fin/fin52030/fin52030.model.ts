@@ -30,6 +30,7 @@ export interface FIN52030Detail {
   AccCName?: string;
   AccDC: string;
   AccNo: string;
+  ACCT_KEY?: string | null;
   DetailNo?: string;
   DetailNoName?: string;
   NoteDesc?: string;
@@ -85,7 +86,7 @@ export type FIN52030DetailDataResponse = Omit<ApiResponse<FIN52030DetailData[]>,
 export interface FIN52030DetailTable extends FIN52030Detail {
   AccName?: string;
   DetailName?: string;
-  recKey?: number;
+  recKey?: string | null;
   AccAmtD?: number;
   AccAmtC?: number;
 }

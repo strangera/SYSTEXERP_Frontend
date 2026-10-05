@@ -76,18 +76,17 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     FareCapType.B,
     FareCapType.C,
     FareCapType.D,
-    FareCapType.E
   ];
 
   // ========== 資料狀態 ==========
   /** 原始資料 (包含所有項目) */
   originalFareData: Record<string, FareItem[]> = {
-    'A': [], 'B': [], 'C': [], 'D': [], 'E': []
+    'A': [], 'B': [], 'C': [], 'D': []
   };
 
   /** 顯示用資料 (根據顯示模式過濾) */
   fareData: Record<string, FareItem[]> = {
-    'A': [], 'B': [], 'C': [], 'D': [], 'E': []
+    'A': [], 'B': [], 'C': [], 'D': []
   };
 
   /** 各類型的顯示模式 */
@@ -237,8 +236,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.columnCache[cacheKey]) {
       let columns = getDeductionColumnsByType(
         capType as FareCapType,
-        this.contractDates,
-        this.payNoOptions
+        this.contractDates
       );
 
       // 更新組織選項
@@ -357,7 +355,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   // ========== 資料處理 ==========
   private processFareItems(): void {
     // 清空原始資料
-    this.originalFareData = { 'A': [], 'B': [], 'C': [], 'D': [], 'E': [] };
+    this.originalFareData = { 'A': [], 'B': [], 'C': [], 'D': [] };
 
     // 將 fareItems 分類到各類型
     this.fareItems.forEach(item => {
@@ -849,13 +847,13 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
   /**
    * 處理按類型分類的代扣款資料
-   * @param faresByType API 回傳的 { A: [], B: [], C: [], D: [], E: [] } 結構
+   * @param faresByType API 回傳的 { A: [], B: [], C: [], D: [] } 結構
    */
   private processLoadedItemsByType(
     faresByType: Record<string, FareItem[]>
   ): void {
     // 清空現有資料
-    this.originalFareData = { 'A': [], 'B': [], 'C': [], 'D': [], 'E': [] };
+    this.originalFareData = { 'A': [], 'B': [], 'C': [], 'D': [] };
 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 

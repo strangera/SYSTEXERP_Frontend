@@ -41,8 +41,7 @@ const CAP_TYPE_NAMES: Record<string, string> = {
   'A': '代扣款A類(管銷費用)',
   'B': '代扣款B類(水電費)',
   'C': '代扣款C類(分期付款)',
-  'D': '代扣款D類(業績抽成)',
-  'E': '代扣款E類(其他)'
+  'D': '代扣款D類(業績抽成)'
 };
 
 /** 各代扣款類型的必填欄位 */
@@ -70,12 +69,6 @@ const FARE_REQUIRED_FIELDS: Record<string, { field: string; label: string }[]> =
     { field: 'gui_flag', label: '是否開立發票' }
   ],
   'D': [
-    { field: 'tpy_bdate', label: '扣款起始年月' },
-    { field: 'tpy_edate', label: '扣款結束年月' },
-    { field: 'tpy_rate', label: '比率' },
-    { field: 'gui_flag', label: '是否開立發票' }
-  ],
-  'E': [
     { field: 'tpy_bdate', label: '扣款起始年月' },
     { field: 'tpy_edate', label: '扣款結束年月' },
     { field: 'tpy_rate', label: '比率' },

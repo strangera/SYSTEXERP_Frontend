@@ -4,7 +4,7 @@
   </p-button>
 </div>
 
-<p-table #dt [value]="flatData" [scrollable]="true" scrollHeight="900px" sortMode="multiple" [rowTrackBy]="trackByFn"
+<p-table [value]="flatData" [scrollable]="true" scrollHeight="900px" [rowTrackBy]="trackByFn"
   [resizableColumns]="true" [reorderableColumns]="true" [loading]="loading || isLoading"
   [virtualScroll]="flatData.length >= 30" [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,

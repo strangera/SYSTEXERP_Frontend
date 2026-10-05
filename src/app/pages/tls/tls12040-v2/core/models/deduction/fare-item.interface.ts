@@ -8,7 +8,7 @@ import { DataStatus } from '../../constants/workflow-step.enum';
 /**
  * 扣款類型
  */
-export type FareType = 'A' | 'B' | 'C' | 'D' | 'E';
+export type FareType = 'A' | 'B' | 'C' | 'D';
 
 /**
  * 扣款類型名稱
@@ -17,8 +17,7 @@ export const FARE_TYPE_NAMES: Record<FareType, string> = {
   A: '一次扣款',
   B: '每月扣款',
   C: '平均分攤',
-  D: '比率分攤',
-  E: '活動扣款'
+  D: '比率分攤'
 };
 
 /**
@@ -109,7 +108,6 @@ export interface FaresByType {
   B: FareItem[];
   C: FareItem[];
   D: FareItem[];
-  E: FareItem[];
 }
 
 /**

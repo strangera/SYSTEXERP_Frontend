@@ -17,6 +17,7 @@ import { MultiSelectComponent } from '../../../shared/components/multi-select/mu
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { formatAmount } from '../../../others/component/table/table.model';
+import { TLS13050TableReportComponent } from './tls13050-table-report.component';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -32,6 +33,7 @@ import { formatAmount } from '../../../others/component/table/table.model';
     InputNumberRangeComponent,
     ButtonComponent,
     TableReportComponent,
+    TLS13050TableReportComponent,
     TranslateModule,
   ],
 })
@@ -61,24 +63,24 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
   organizationCodeOptions: any = [];
-  columns: ReportColumn[] = [
-    { field: 'apply_no', header: '專櫃招募編號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value) },
-    { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value) },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'LocationText', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'cag_bdate', header: '起始日期', visible: true },
-    { field: 'cag_edate', header: '結束日期', visible: true },
-    { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount },
-    { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount },
-    { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount },
-    { field: 'limit_charge_rate', header: '抽成率', visible: true },
-    { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
-    { field: 'finishedrate', header: '年度包底營業額完成率', visible: true },
-    { field: 'check_day', header: '月結天數', visible: true },
-  ];
+columns: ReportColumn[] = [
+  { field: 'apply_no', header: '專櫃招募編號', visible: true, width: '120px' },
+  { field: 'tlt_no', header: '專櫃編號', visible: true, width: '100px' },
+  { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value), width: '90px' },
+  { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value), width: '80px' },
+  { field: 'org_name', header: '組織名稱', visible: true, width: '120px' },
+  { field: 'LocationText', header: '位置編號', visible: true, width: '100px' },
+  { field: 'tlt_name', header: '專櫃名稱', visible: true, width: '80px' },
+  { field: 'cag_bdate', header: '起始日期', visible: true, width: '100px' },
+  { field: 'cag_edate', header: '結束日期', visible: true, width: '100px' },
+  { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount, width: '130px' },
+  { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount, width: '130px' },
+  { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount, width: '130px' },
+  { field: 'limit_charge_rate', header: '抽成率', visible: true, width: '90px' },
+  { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount, width: '150px' },
+  { field: 'finishedrate', header: '年度包底營業額完成率', visible: true, width: '150px' },
+  { field: 'check_day', header: '月結天數', visible: true, width: '90px' },
+];
   buildingNoOptions: IDropdownItem[] = [];
 
   constructor(

@@ -230,16 +230,26 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     this.dataForm.get('cus_uniform_id')?.valueChanges.pipe(
       untilDestroyed(this)
     ).subscribe(value => {
-      // Only trigger auto-fill if type is '1' (Tax ID) and we aren't skipping initial value changes
-      if (this.skipValueChanges || this.dataForm.get('cus_type')?.value !== '1') return;
+      if (this.skipValueChanges) return;
+      const cusType = this.dataForm.get('cus_type')?.value;
 
-      if (value && value.length >= 8) { // Typical minimum length for Tax ID
+      // 身分證：自動將首碼轉大寫
+      if (cusType === '2' && value && typeof value === 'string' && value[0] !== value[0]?.toUpperCase()) {
+        this.dataForm.get('cus_uniform_id')?.setValue(value[0].toUpperCase() + value.slice(1), { emitEvent: false });
+        return;
+      }
+
+      // 統編：查詢廠商資料
+      if (cusType !== '1') return;
+      if (value && value.length >= 8) {
         this.fetchVendorData(value);
       }
     });
 
     // 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
     this.skipValueChanges = false;
+    // 依目前 cus_type 補上正確的 validator（Edit 模式不會觸發 valueChanges，需手動初始化）
+    this.applyCusTypeValidators(this.dataForm.get('cus_type')?.value || '1');
   }
 
   onSubmit(frm: FormGroup) {
@@ -479,6 +489,31 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     });
   }
 
+  // 只設 validator，不 reset 值；供 init 和 onCusTypeChange 共用
+  private applyCusTypeValidators(type: string): void {
+    const cus_uniform_id = this.dataForm.get('cus_uniform_id');
+    const VEN_Name = this.dataForm.get('VEN_Name');
+    const VEN_EngName = this.dataForm.get('VEN_EngName');
+    if (!cus_uniform_id || !VEN_Name || !VEN_EngName) return;
+
+    switch (type) {
+      case '1':
+        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(8), (ctrl) => this.validationService.companyIdValidator(ctrl)]);
+        break;
+      case '2':
+        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(10), (ctrl) => this.validationService.idCardValidator(ctrl, true)]);
+        break;
+      default:
+        cus_uniform_id.setValidators([Validators.required, Validators.maxLength(16)]);
+        break;
+    }
+    VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
+    VEN_EngName.setValidators([Validators.maxLength(100)]);
+    cus_uniform_id.updateValueAndValidity();
+    VEN_Name.updateValueAndValidity();
+    VEN_EngName.updateValueAndValidity();
+  }
+
   // 廠商類型 radio button 連動的驗證器變化
   onCusTypeChange(type: string): void {
     const cus_uniform_id = this.dataForm.get('cus_uniform_id');
@@ -487,14 +522,10 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
     if (!cus_uniform_id || !VEN_Name || !VEN_EngName) return;
 
+    this.applyCusTypeValidators(type);
+
     switch (type) {
       case '1': // 統編
-        cus_uniform_id.setValidators([Validators.required, (ctrl) => this.validationService.companyIdValidator(ctrl)]);
-        VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
-        VEN_EngName.setValidators([Validators.maxLength(100)]);
-
-        //內容重設
-        // 如果有資料就設定為快取廠商資料
         if (this.cachedVendorData.cus_uniform_id) {
           cus_uniform_id.setValue(this.cachedVendorData.cus_uniform_id);
           VEN_Name.setValue(this.cachedVendorData.VEN_Name);
@@ -507,37 +538,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         break;
 
       case '2': // 身份證字號
-        cus_uniform_id.setValidators([
-          Validators.required,
-          (ctrl) => this.validationService.idCardValidator(ctrl),
-        ]);
-        VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
-        VEN_EngName.setValidators([Validators.maxLength(100)]);
-
         cus_uniform_id.setValue('');
         VEN_Name.setValue('');
         VEN_EngName.setValue('');
-
         break;
 
       case '3': // 員工id
         {
-          cus_uniform_id.setValidators([
-            Validators.required,
-            Validators.maxLength(16),
-          ]);
-          VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
-          VEN_EngName.setValidators([Validators.maxLength(100)]);
-
-          // VEN_Name 直接套用token的 tblUser.user_name 給員工id
           const userNo = this.authService.getUserInfo()?.user_No ?? ''
           const userName = this.authService.getUserInfo()?.user_Name ?? ''
-          if (userNo && userName) { //有用戶名不允許編輯
+          if (userNo && userName) {
             cus_uniform_id.enable();
-
             cus_uniform_id.setValue(userNo);
             VEN_Name.setValue(userName);
-
             VEN_EngName.setValue('');
           } else {
             this.messageService.errorBubble('錯誤: 無法取得用戶資訊');
@@ -545,14 +558,8 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           break;
         }
       default:
-        console.log('error');
         break;
     }
-
-    // 重設狀態並更新驗證器
-    cus_uniform_id.updateValueAndValidity();
-    VEN_Name.updateValueAndValidity();
-    VEN_EngName.updateValueAndValidity();
   }
 
   // --潛在明細檔 操作---

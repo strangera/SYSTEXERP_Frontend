@@ -159,6 +159,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? usrMap.get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
+      recKey: v.ACCT_KEY ?? undefined,
     }));
 
     this.tableData.set(mappedTableData);
@@ -266,14 +267,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         optionLabel: 'label',
         optionValue: 'value',
       },
-      {
-        field: 'SubDetailNo',
-        header: '對象別編號',
-        type: 'dropdown',
-        options: () => this.service.refNameOptions(),
-        optionLabel: 'label',
-        optionValue: 'value',
-      },
+      { field: 'SubDetailNo', header: '對象別編號', type: 'input' },
       { field: 'recKey', header: '對帳KEY值', type: 'input' },
     ];
   });
@@ -317,12 +311,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().filter(row => !!row.AccNo).map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }) => ({
+        Details: this.tableData().filter(row => !!row.AccNo).map(({ AccAmtD, AccAmtC, NoteDesc, recKey, ...rest }) => ({
           ...rest,
           index: rest.SerNo,
           AccName: undefined,
           DetailName: undefined,
-          recKey: undefined,
+          ACCT_KEY: recKey ?? undefined,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
           NoteDesc: NoteDesc !== undefined && NoteDesc !== null ? String(NoteDesc) : '',
@@ -469,6 +463,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.logger.debug('selectTemplateItem:', [rowData, item]);
     rowData.DetailNo = String(item?.value ?? '');
     rowData.DetailName = String(item?.label ?? '');
+    const uniformNo = String(item?.['No'] ?? '').trim();
+    const inGLS1016 = !!uniformNo && this.service.refNameOptions().some(o => String(o.value) === uniformNo);
+    rowData.SubDetailNo = inGLS1016 ? uniformNo : '';
+    rowData.recKey = inGLS1016 ? uniformNo : null;
   }
 
   public onCancelClearTable(): void {

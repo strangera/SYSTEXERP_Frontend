@@ -1,7 +1,7 @@
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccDescOption, AccNoList, FIN52030Data, FIN52030DetailDataResponse, FIN52030InsertPayload, FIN52030Payload, FIN52030UpdatePayload, NoteDescResponse } from '@pages/fin/fin52030/fin52030.model';
 import { FavoriteService } from '@service/system/favorite.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -101,10 +101,9 @@ export class FIN52030Service {
 
   public getRefNameOptions(): void {
     this.RefNameLoading.set(!0);
-    this.http.post<ApiResponse<VendorList[]>>(`${apiUrl}/queryVendorList`, {}).pipe(
+    this.dropdownApi.queryGLS1016().pipe(
       take(1),
-      tap(res => this.logger.debug('getRefNameOptions:', [res])),
-      map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
+      map(res => res ?? []),
       tap(res => this.refNameOptions.set(res)),
       finalize(() => this.RefNameLoading.set(!1)),
     ).subscribe();
@@ -144,7 +143,7 @@ export class FIN52030Service {
     this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
       take(1),
       tap(res => this.logger.debug('getVendorOptions:', [res])),
-      tap(res => this.vendorOptions.set(res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'] } as Option)) ?? [])),
+      tap(res => this.vendorOptions.set(res?.map(item => ({ value: item['VEN_No'], label: item['Name'], short: item['ShortName'], No: item['No'] } as Option)) ?? [])),
       finalize(() => this.venLoading.set(!1)),
     ).subscribe();
   }

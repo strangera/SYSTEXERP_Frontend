@@ -1260,6 +1260,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getVoucherTypeOptions();
     this.service.getBankNoOptions();
     this.service.getStepDropdownOptions();
+    this.service.getLatestAuditedRepYM();
 
     // 新增模式：從 GLS1012 帶入預設組織代號
     if (this.isFormCreateable) {
@@ -2020,16 +2021,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const full = String(item.InvoiceNumber ?? '').trim();
     const prefix = full.length === 10 ? full.slice(0, 2) : '';
     const no = full.length === 10 ? full.slice(2) : full;
+    const invoiceDate = this.parsePickDate(item.InvoiceDate);
+    const toNextEven = (dt: Date) => { const m = dt.getMonth(); return m % 2 === 0 ? new Date(dt.getFullYear(), m + 1, 1) : new Date(dt.getFullYear(), m, 1); };
     const ym = item.DeclareYM ? String(item.DeclareYM) : '';
-    const declareYm = /^\d{6}$/.test(ym)
-      ? new Date(Number(ym.slice(0, 4)), Number(ym.slice(4, 6)) - 1, 1)
-      : null;
+    const apiDeclareYm = /^\d{6}$/.test(ym) ? new Date(Number(ym.slice(0, 4)), Number(ym.slice(4, 6)) - 1, 1) : null;
+    const declareYm = this.service.defaultDeclareYm() ?? apiDeclareYm ?? (invoiceDate ? toNextEven(invoiceDate) : null);
     return {
       id: item.SourceId ?? undefined,
       invoice_type: item.InvoiceType || undefined,
       invoice_prefix: prefix || undefined,
       invoice_no: no || undefined,
-      invoice_date: this.parsePickDate(item.InvoiceDate),
+      invoice_date: invoiceDate,
       declare_ym: declareYm,
       buyer_uniform: item.BuyerUniform ?? undefined,
       total_amount: item.TotalAmount ?? undefined,
@@ -3330,13 +3332,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ? (row.invoice_date instanceof Date ? row.invoice_date : null)
         : (row.declare_ym instanceof Date ? row.declare_ym : null);
       if (!srcDate) return;
-      const month = srcDate.getMonth();
-      const nextEvenMonth = month % 2 === 0
-        ? new Date(srcDate.getFullYear(), month + 1, 1)
-        : new Date(srcDate.getFullYear(), month, 1);
-      event.rowData.declare_ym = nextEvenMonth;
-      // 申報年月結案檢查
-      const ym = this.datePipe.transform(nextEvenMonth, 'yyyyMM');
+      // 發票日期觸發：優先用最新已審核期的下一期；手動改申報年月則從該日期修正為雙數月
+      const targetDate = f === 'invoice_date' && this.service.defaultDeclareYm()
+        ? this.service.defaultDeclareYm()!
+        : (() => { const m = srcDate.getMonth(); return m % 2 === 0 ? new Date(srcDate.getFullYear(), m + 1, 1) : new Date(srcDate.getFullYear(), m, 1); })();
+      event.rowData.declare_ym = targetDate;
+      const ym = this.datePipe.transform(targetDate, 'yyyyMM');
       if (ym) {
         this.service.checkRepYYYYMMAudited(ym).pipe(take(1)).subscribe(isAudited => {
           if (isAudited) {
@@ -3437,17 +3438,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ? (row.invoice_date instanceof Date ? row.invoice_date : null)
         : (row.declare_ym instanceof Date ? row.declare_ym : null);
       if (!srcDate) return;
-      // getMonth() 是 0-based：0=1月(奇), 1=2月(偶)...
-      // 奇數月 → getMonth() % 2 === 0；偶數月 → getMonth() % 2 === 1
-      const month = srcDate.getMonth();
-      const nextEvenMonth = month % 2 === 0
-        ? new Date(srcDate.getFullYear(), month + 1, 1) // 奇數月 → 下個月（偶數月）
-        : new Date(srcDate.getFullYear(), month, 1);    // 偶數月 → 同月 1 日
-      // 直接 mutate rowData（與 table-edit 內部 _tableData 同一引用），
-      // 這樣後續 dataChange 帶出的 cleanData 就已包含更新後的 declare_ym
-      event.rowData.declare_ym = nextEvenMonth;
-      // 申報年月結案檢查
-      const ym = this.datePipe.transform(nextEvenMonth, 'yyyyMM');
+      // 發票日期觸發：優先用最新已審核期的下一期；手動改申報年月則從該日期修正為雙數月
+      // 直接 mutate rowData（與 table-edit 內部 _tableData 同一引用）
+      const targetDate = f === 'invoice_date' && this.service.defaultDeclareYm()
+        ? this.service.defaultDeclareYm()!
+        : (() => { const m = srcDate.getMonth(); return m % 2 === 0 ? new Date(srcDate.getFullYear(), m + 1, 1) : new Date(srcDate.getFullYear(), m, 1); })();
+      event.rowData.declare_ym = targetDate;
+      const ym = this.datePipe.transform(targetDate, 'yyyyMM');
       if (ym) {
         this.service.checkRepYYYYMMAudited(ym).pipe(take(1)).subscribe(isAudited => {
           if (isAudited) {
@@ -3543,7 +3540,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const srcDate = f === 'credit_date'
         ? (row.credit_date instanceof Date ? row.credit_date : null)
         : (row.declare_ym instanceof Date ? row.declare_ym : null);
-      this.applyAllowanceDeclareYm(event, srcDate);
+      this.applyAllowanceDeclareYm(event, srcDate, f === 'credit_date');
       return;
     }
 
@@ -3571,7 +3568,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const srcDate = f === 'credit_date'
         ? (row.credit_date instanceof Date ? row.credit_date : null)
         : (row.declare_ym instanceof Date ? row.declare_ym : null);
-      this.applyAllowanceDeclareYm(event, srcDate);
+      this.applyAllowanceDeclareYm(event, srcDate, f === 'credit_date');
       return;
     }
 
@@ -3588,15 +3585,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
   }
 
-  /** 折讓列共用：由來源日期算申報年月（一律進位到雙數月），並做結案檢查（比照正常進項/銷項） */
-  private applyAllowanceDeclareYm(event: StepFieldChangeEvent, srcDate: Date | null): void {
+  /** 折讓列共用：由來源日期算申報年月（一律進位到雙數月），並做結案檢查（比照正常進項/銷項）
+   *  @param isDateTrigger true = 由 credit_date 觸發（優先用 defaultDeclareYm）；false = 手動改 declare_ym（保留雙數月修正） */
+  private applyAllowanceDeclareYm(event: StepFieldChangeEvent, srcDate: Date | null, isDateTrigger = false): void {
     if (!srcDate) return;
-    const month = srcDate.getMonth();
-    const nextEvenMonth = month % 2 === 0
-      ? new Date(srcDate.getFullYear(), month + 1, 1)
-      : new Date(srcDate.getFullYear(), month, 1);
-    event.rowData.declare_ym = nextEvenMonth;
-    const ym = this.datePipe.transform(nextEvenMonth, 'yyyyMM');
+    const toNextEven = (d: Date) => { const m = d.getMonth(); return m % 2 === 0 ? new Date(d.getFullYear(), m + 1, 1) : new Date(d.getFullYear(), m, 1); };
+    const targetDate = isDateTrigger && this.service.defaultDeclareYm()
+      ? this.service.defaultDeclareYm()!
+      : toNextEven(srcDate);
+    event.rowData.declare_ym = targetDate;
+    const ym = this.datePipe.transform(targetDate, 'yyyyMM');
     if (ym) {
       this.service.checkRepYYYYMMAudited(ym).pipe(take(1)).subscribe(isAudited => {
         if (isAudited) {
@@ -3658,16 +3656,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     prefix: string,
     no: string,
   ): Partial<FIN53010StepPurchaseInvoiceRow> {
-    const repYm = d.PUR_RepYYYYMM ? String(d.PUR_RepYYYYMM).trim() : '';
-    const declareYm = /^\d{6}$/.test(repYm)
-      ? new Date(Number(repYm.slice(0, 4)), Number(repYm.slice(4, 6)) - 1, 1)
-      : null;
     const vendorTaxId = d.PUR_VenUniform ?? undefined;
     const venNo = (vendorTaxId ? this.service.vendorUniformToVenNoMap().get(vendorTaxId) : undefined)
       ?? (d.PUR_VenNo ?? undefined);
     // PUR_GUIDate 可能已被攔截器轉成 Date 物件；是 Date 直接用，是字串才 parse
     const rawDate = d.PUR_GUIDate as unknown;
     const invoiceDate = rawDate instanceof Date ? rawDate : (rawDate ? parseApiDateToLocal(String(rawDate)) : null);
+    const toNextEven = (dt: Date) => { const m = dt.getMonth(); return m % 2 === 0 ? new Date(dt.getFullYear(), m + 1, 1) : new Date(dt.getFullYear(), m, 1); };
+    const repYm = d.PUR_RepYYYYMM ? String(d.PUR_RepYYYYMM).trim() : '';
+    const apiDeclareYm = /^\d{6}$/.test(repYm) ? new Date(Number(repYm.slice(0, 4)), Number(repYm.slice(4, 6)) - 1, 1) : null;
+    const declareYm = this.service.defaultDeclareYm() ?? apiDeclareYm ?? (invoiceDate ? toNextEven(invoiceDate) : null);
     return {
       voucher_type: d.PUR_VoucherType ?? undefined,
       track_no: prefix,
@@ -4131,7 +4129,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const uniformNo = String(item?.['No'] ?? '').trim();
     const inGLS1016 = uniformNo && this.service.refNameOptions().some(o => String(o.value) === uniformNo);
     rowData.ReflNo = inGLS1016 ? uniformNo : '';
-    rowData.recKey = inGLS1016 ? uniformNo : rowData.recKey;
+    rowData.recKey = inGLS1016 ? uniformNo : undefined;
   };
 
   public vouTermChange(event: Event): void {

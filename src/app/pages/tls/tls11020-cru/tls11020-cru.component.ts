@@ -48,7 +48,6 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     { value: 'B', label: 'B-每月扣款' },
     { value: 'C', label: 'C-平均分攤' },
     { value: 'D', label: 'D-比率分攤' },
-    { value: 'E', label: 'E-活動扣款' },
     { value: 'Z', label: 'Z-其他扣款' },
   ];
 
