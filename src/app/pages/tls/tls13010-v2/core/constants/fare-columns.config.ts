@@ -19,7 +19,6 @@ export enum FareCapType {
   B = 'B', // 每月扣款
   C = 'C', // 平均分攤
   D = 'D', // 比率分攤
-  E = 'E'  // 活動扣款
 }
 
 /**
@@ -29,8 +28,7 @@ export const FARE_CAP_TYPE_LABELS: Record<FareCapType, string> = {
   [FareCapType.A]: '一次扣款',
   [FareCapType.B]: '每月扣款',
   [FareCapType.C]: '平均分攤',
-  [FareCapType.D]: '比率分攤',
-  [FareCapType.E]: '活動扣款'
+  [FareCapType.D]: '比率分攤'
 };
 
 /**
@@ -417,88 +415,11 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
 }
 
 /**
- * E 類型 (活動扣款) 欄位定義
- * 與舊版 next1 完全一致
- */
-export function getDeductionEColumns(contractDates?: { bdate?: string; edate?: string }, payNoOptions: unknown[] = []): ColumnDef[] {
-  return [
-    ...getBaseColumns(),
-    {
-      field: 'tpy_bdate',
-      header: '扣款起始年月',
-      type: 'date',
-      editable: true,
-      dateFormat: 'year-month',
-      required: true,
-      defaultValueFunction: () => contractDates?.bdate ? new Date(contractDates.bdate) : null
-    },
-    {
-      field: 'tpy_edate',
-      header: '扣款結束年月',
-      type: 'date',
-      editable: true,
-      dateFormat: 'year-month',
-      required: true,
-      defaultValueFunction: () => contractDates?.edate ? new Date(contractDates.edate) : null
-    },
-    {
-      field: 'cap_saletype',
-      header: '銷售類型',
-      type: 'dropdown',
-      editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptionsE,
-      autoWidth: true
-    },
-    {
-      field: 'tpy_type',
-      header: '單位',
-      type: 'dropdown',
-      editable: true,
-      options: TPY_TYPE_OPTIONS_WITH_BLANK,
-      required: true,
-      autoWidth: true
-    },
-    {
-      field: 'tpy_rate',
-      header: '比率',
-      headerTooltip: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02',
-      type: 'number',
-      editable: true,
-      required: true,
-      allowDecimal: true,
-      decimalPlaces: 3,
-      validateMax: 1,
-      validateMessage: '比率請輸入 1 以下的數字，如 2% 請輸入 0.02'
-    },
-    {
-      field: 'pay_no',
-      header: '支付編號',
-      type: 'dropdown',
-      editable: true,
-      options: payNoOptions,
-      autoWidth: true
-    },
-    {
-      field: 'gui_flag',
-      header: '是否開立發票',
-      type: 'dropdown',
-      editable: false,
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true
-    }
-  ];
-}
-
-/**
  * 依照類型取得欄位定義
  */
 export function getDeductionColumnsByType(
   capType: FareCapType,
-  contractDates?: { bdate?: string; edate?: string },
-  payNoOptions: unknown[] = []
+  contractDates?: { bdate?: string; edate?: string }
 ): ColumnDef[] {
   switch (capType) {
     case FareCapType.A:
@@ -509,8 +430,6 @@ export function getDeductionColumnsByType(
       return getDeductionCColumns(contractDates);
     case FareCapType.D:
       return getDeductionDColumns(contractDates);
-    case FareCapType.E:
-      return getDeductionEColumns(contractDates, payNoOptions);
     default:
       return getDeductionBColumns(contractDates);
   }

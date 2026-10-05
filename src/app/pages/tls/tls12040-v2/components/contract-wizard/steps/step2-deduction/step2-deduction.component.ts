@@ -80,12 +80,11 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     FareCapType.B,
     FareCapType.C,
     FareCapType.D,
-    FareCapType.E
   ];
 
   // 依類型分組的資料
   fareData: FaresByType = {
-    A: [], B: [], C: [], D: [], E: []
+    A: [], B: [], C: [], D: []
   };
 
   // 各類型顯示模式
@@ -206,8 +205,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.columnCache[cacheKey]) {
       let columns = getDeductionColumnsByType(
         capType as FareCapType,
-        this.contractDates,
-        this.payNoOptions
+        this.contractDates
       );
 
       // 更新組織選項
@@ -277,7 +275,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
   // ========== 資料處理 ==========
   private groupFaresByType(): void {
-    this.fareData = { A: [], B: [], C: [], D: [], E: [] };
+    this.fareData = { A: [], B: [], C: [], D: [] };
 
     this.fareItems.forEach(item => {
       const type = item.cap_type as keyof FaresByType;

@@ -242,8 +242,7 @@ export class ContractDateValidator {
       'A': '一次扣款',
       'B': '每月扣款',
       'C': '平均分攤',
-      'D': '比率分攤',
-      'E': '活動扣款'
+      'D': '比率分攤'
     };
     return typeNames[capType] || capType;
   }
