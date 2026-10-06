@@ -241,6 +241,15 @@ export class ASS16060Component
     });
   }
 
+  /** 僅「已申請」(1) 可編輯，已審核等其他狀態禁用 */
+  readonly editDisabled = (row: ASS16060MasterDisplayRow): boolean =>
+    row.MTRETURNM_STATUS !== '1';
+
+  onTableEdit(row: ASS16060MasterDisplayRow): void {
+    if (this.editDisabled(row)) return;
+    this.onEdit(row);
+  }
+
   /** 管理欄檢視 → CRU Read（整筆 row 帶過去，CRU 頁再打 queryASS16060 補明細） */
   onTableDetail(row: ASS16060MasterDisplayRow): void {
     if (!this.hasPermission(this.Actions.Query)) return;

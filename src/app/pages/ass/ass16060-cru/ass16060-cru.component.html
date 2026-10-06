@@ -1,6 +1,15 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    @if (isFormEditable) {
+      <app-button
+        btnType="default"
+        icon="pi pi-check-circle"
+        label="審核"
+        [loading]="loading"
+        (click)="onApprove()"
+      ></app-button>
+    }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
@@ -26,7 +35,7 @@
           optionLabel="label"
           optionValue="value"
           [control]="df().RETURN_EMP_ID"
-          [disabled]="isFormReadable"
+          [disabled]="!isCreateMode"
           [submitted]="submitted"
         ></app-dropdown>
         <app-dropdown
@@ -37,7 +46,7 @@
           optionLabel="label"
           optionValue="value"
           [control]="df().ORG_ID"
-          [disabled]="isFormReadable"
+          [disabled]="!isCreateMode"
           [submitted]="submitted"
         ></app-dropdown>
         <app-calendar
@@ -46,7 +55,7 @@
           label="申請日期"
           controlName="APPLY_DATE"
           [control]="df().APPLY_DATE"
-          [disabled]="isFormReadable"
+          [disabled]="!isCreateMode"
           [submitted]="submitted"
         ></app-calendar>
         <app-input-textarea
@@ -69,30 +78,29 @@
         (selectionChange)="selectedItems = $event"
         (insert)="onTableInsert()"
         (dataChange)="tableData.set($event)"
-        [showCheckBox]="!isFormReadable"
-        [showDelete]="!isFormReadable"
+        [showCheckBox]="isCreateMode"
+        [showDelete]="isCreateMode"
         [showInsert]="false"
         [disabled]="isFormReadable"
-        [canInsert]="true"
+        [canInsert]="!isEditMode"
         [loading]="tableLoading()"
         [tableRequired]="false"
       ></app-table-edit>
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          [disabled]="isFormReadable"
-          (clickEvent)="clearDetailTable()"
-        ></app-button>
-        <app-button
-          btnType="submit"
-          [loading]="loading"
-          [disabled]="isFormReadable"
-        ></app-button>
-      </div>
+      @if (!isFormReadable) {
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
+        >
+          @if (isCreateMode) {
+            <app-button
+              btnType="cancel"
+              [form]="dataForm"
+              (clickEvent)="clearDetailTable()"
+            ></app-button>
+          }
+          <app-button btnType="submit" [loading]="loading"></app-button>
+        </div>
+      }
     </form>
   </p-panel>
 </div>

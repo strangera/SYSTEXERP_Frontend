@@ -96,11 +96,13 @@
       [lastQueryBody]="lastQueryBody"
       [queryFunction]="queryFunction"
       [showManage]="true"
-      [showEdit]="false"
+      [showEdit]="true"
+      [editDisabled]="editDisabled"
       [showDetail]="true"
       [showDelete]="false"
       [showCheckBox]="false"
       [lazy]="true"
+      (edit)="onTableEdit($event)"
       (detail)="onTableDetail($event)"
     >
     </app-table-report>
