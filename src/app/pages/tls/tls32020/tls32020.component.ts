@@ -276,6 +276,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.calculateInitialRanges('3');
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
     this.updatePyeffContribColumnHeader(this.queryForm.controls.DayType.value);
+    this.updateMonthCumulativeColumnVisibility(this.queryForm.controls.DayType.value);
 
     this.bindDayTypeChanges();
     this.bindDateRangeChanges();
@@ -355,6 +356,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.calculateDateRanges(type);
     this.updateYMColumnHeader(type);
     this.updatePyeffContribColumnHeader(type);
+    this.updateMonthCumulativeColumnVisibility(type);
   }
 
   /**
@@ -405,12 +407,14 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 使用者直接操作實際 DatePicker 時才刷新年度群組 Header。
+   * 使用者直接操作實際 DatePicker（起日或迄日任一變動）時刷新年度群組 Header。
    */
   private bindActualDateHeaderChanges(): void {
     merge(
       this.queryForm.controls.BaseDateFrom.valueChanges,
+      this.queryForm.controls.BaseDateTo.valueChanges,
       this.queryForm.controls.CompareDateFrom.valueChanges,
+      this.queryForm.controls.CompareDateTo.valueChanges,
     ).pipe(
       auditTime(0),
       takeUntilDestroyed(this.destroyRef)
@@ -462,6 +466,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.columnGroup = this.columnGroup.map(group => {
       if (group.field.startsWith('diff')) {
         return group; // 差異群組標頭固定文字，不隨基準/比較年度變動
+      }
+      if (group.field === 'compareMonth') {
+        return { ...group, header: `${compareYearStr} 月累計` };
       }
       const newHeader = this.getOriginHeader(group.field);
       if (group.field.startsWith('compare') || group.field.startsWith('Comp')) {
@@ -883,6 +890,19 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.cdr.markForCheck();
   }
 
+
+  /** 月累計三欄（月營業目標/營業實績/完成率）僅日營業報表(DayType=1)顯示，隨報表類型選項即時切換。 */
+  private updateMonthCumulativeColumnVisibility(dayType: string | null): void {
+    if (!dayType) return;
+
+    const isDaily = dayType === '1';
+    const monthFields = ['CompareMonthTarget', 'CompareMonthSale', 'CompareMonthAchieveRate'];
+
+    this.columns = this.columns.map(col =>
+      monthFields.includes(col.field) ? { ...col, visible: isDaily } : col
+    );
+    this.cdr.markForCheck();
+  }
 
   // ====================================================================
   // 查詢與匯出
