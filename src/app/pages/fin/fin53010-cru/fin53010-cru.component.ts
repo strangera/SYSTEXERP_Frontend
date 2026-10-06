@@ -1399,13 +1399,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const ordered = ['3', '4', '5', '8', '6', '9', '7']
       .filter(v => {
         if (v === '5' || v === '6') {
-          // 新增 + 補發票=否：永遠不顯示，避免使用者手動加入發票科目後意外出現步驟
-          if (this.isFormCreateable && isInvYnNo) return false;
-          // 編輯：有科目資料才顯示（含外部系統補入的情況）
+          // 補發票=否：不顯示發票頁籤（新增與編輯一致）
+          if (isInvYnNo) return false;
           return normalTypes.has(v);
         }
         if (v === '8' || v === '9') {
-          if (this.isFormCreateable && isInvYnNo) return false;
+          if (isInvYnNo) return false;
           return allowanceTypes.has(v);
         }
         return normalTypes.has(v);
