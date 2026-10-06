@@ -57,24 +57,47 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
   exportExcelLoading = false;
 
   columns: ReportColumn[] = [
-    { field: 'STYPE_ID', header: '會計科目代碼', visible: true, align: 'left' },
-    { field: 'STYPE_NAME', header: '會計科目名稱', visible: true, align: 'left' },
-    { field: 'ASSET_ID', header: '資產編號', visible: true, align: 'left', width: '150px' },
-    { field: 'GOODS_ID', header: '品項編號', visible: true, align: 'left', width: '150px' },
-    { field: 'GOODS_NAME', header: '品項名稱', visible: true, align: 'left' },
-    { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: true, align: 'left' },
-    { field: 'HOLD_ORG_NAME', header: '保管單位名稱', visible: true, align: 'left' },
-    { field: 'GET_DATE', header: '取得日期', visible: true, align: 'left', format: formatDate, width: '100px' },
-    { field: 'NOTES', header: '備註', visible: true, align: 'left', width: '300px' },
-    { field: 'EXP_YEAR', header: '耐用年數', visible: true, align: 'right', format: formatAmount },
+    {
+      field: '__ITEM_NO',
+      header: '項次',
+      visible: true,
+      align: 'center',
+      width: '70px',
+      showSort: false,
+      format: (_value: any, rowIndex?: number) => (rowIndex ?? 0) + 1
+    },
+    { field: 'STYPE_ID', header: '會計科目代碼', visible: false, align: 'left' },
+    { field: 'STYPE_NAME', header: '會計科目名稱', visible: false, align: 'left' },
+
+    { field: 'ASSET_ID', header: '財產編號', visible: true,  width: '150px' },
+    { field: 'GOODS_ID', header: '品項編號', visible: true,  width: '100px' },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true, width: '100px' },
+
+    { field: 'EXP_YEAR', header: '耐用年數', visible: true,  format: formatAmount, width: '40px' },
+
+    { field: 'GET_DATE', header: '購入日期', visible: true, align: 'right', format: formatDate, width: '100px' },
+
     { field: 'GET_COST', header: '取得成本', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'RESI_VALUE', header: '殘值', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'YEAR_BEGIN_DEPREAMT', header: '年初累計折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'PREV_DEPREAMT', header: '前期折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'YEAR_DEPREAMT', header: '本期折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'MONTH_DEPREAMT', header: '本月折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'ACCUMULATED_DEPREAMT', header: '累計折舊', visible: true, align: 'right', format: formatAmount, width: '100px' },
-    { field: 'AMT', header: '帳面價值（淨值）', visible: true, align: 'right', format: formatAmount, width: '100px' },
+
+    { field: 'RESI_VALUE', header: '預留殘值', visible: true, align: 'right', format: formatAmount, width: '40px' },
+
+    { field: 'YEAR_BEGIN_DEPREAMT', header: '年初累計折舊', visible: true, align: 'right', format: formatAmount, width: '110px' },
+
+    { field: 'PREV_DEPREAMT', header: '前期折舊', visible: false, align: 'right', format: formatAmount, width: '100px' },
+
+    { field: 'YEAR_DEPREAMT', header: '本期折舊金額', visible: true, align: 'right', format: formatAmount, width: '110px' },
+
+    { field: 'MONTH_DEPREAMT', header: '本月折舊金額', visible: true, align: 'right', format: formatAmount, width: '110px' },
+
+    { field: 'ACCUMULATED_DEPREAMT', header: '累計折舊金額', visible: true, align: 'right', format: formatAmount, width: '110px' },
+
+    { field: 'AMT', header: '帳面價值', visible: true, align: 'right', format: formatAmount, width: '100px' },
+
+    { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: false, align: 'left' },
+
+    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true,  width: '50px' },
+
+    { field: 'NOTES', header: '財產註記', visible: true, align: 'left', width: '150px' },
   ];
 
   keeperUnitOptions: Option[] = [];
