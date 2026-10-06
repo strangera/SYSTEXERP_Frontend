@@ -184,6 +184,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { value: 2, label: '下半年' } // 2: 下半年 (7/1 ~ 12/31)
   ];
 
+  // 總計列(footerData)的坪數/坪效/坪貢獻不顯示，與匯出一致；小計列與明細列照常格式化
+  private readonly blankInGrandTotal = (fmt: (value: number) => string) =>
+    (value: number, _rowIndex?: number, row?: unknown): string => row === this.footerData ? '' : fmt(value);
+
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   // 表頭三層群組：topGroupField (基準期/比較期/差異) > groupField (營業額/客單價/坪效/預售消費) > 個別欄位
   columns: ReportColumn[] = [
@@ -196,9 +200,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'CompareAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'compareRevenue', topGroupField: 'compare' },
     { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
-    { field: 'CompareTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'CompareTltSpace', header: '坪數', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
@@ -211,9 +215,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'revenue', topGroupField: 'base' },
     { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
-    { field: 'BaseTltSpace', header: '坪數', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BaseTltSpace', header: '坪數', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
@@ -223,9 +227,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'GrowthRate', header: '成長率', align: 'right', format: (value: number) => `${((value ?? 0) * 100).toFixed(1)}%`, isSubTotal: true, groupField: 'diffRevenue', topGroupField: 'diff' },
     { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
-    { field: 'DiffSquare', header: '坪數差異', align: 'right', format: (value: number) => formatAmountWithDecimals(value, 2), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效差異' : '月坪效差異', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻差異' : '月坪貢獻差異', align: 'right', format: (value: number) => formatInt(value), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffSquare', header: '坪數差異', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效差異' : '月坪效差異', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻差異' : '月坪貢獻差異', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
