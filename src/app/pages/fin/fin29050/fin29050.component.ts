@@ -19,12 +19,13 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin29050',
   templateUrl: './fin29050.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     ButtonModule,
     TableSubheaderComponent,
     DropdownRangeComponent,

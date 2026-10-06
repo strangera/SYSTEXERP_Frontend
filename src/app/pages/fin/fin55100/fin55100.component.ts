@@ -19,12 +19,13 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
 import { TableSubheaderGroupingComponent } from '../fin55100/fin55100-table/fin55100-table.component';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin55100',
   templateUrl: './fin55100.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     TableSubheaderGroupingComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, RadiobuttonComponent,

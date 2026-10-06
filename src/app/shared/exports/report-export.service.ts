@@ -124,7 +124,7 @@ export class ReportExportService {
       report_title: finalReportTitle,
       columns: excelColumns,
       expansion_columns: excelExpansionColumns,
-      config: event,
+      config: { ...event, footer_DataType: context.printRemark !== false ? progNo : undefined },
       footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
       // file_name 優先用 finalReportTitle（REPORT_TITLES/prog_name，跟 report_title 內容同一個來源），
       // 沒有才退回原本的 prog_id/progNo，避免下載檔名一直只顯示看不懂的作業代碼

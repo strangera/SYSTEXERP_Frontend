@@ -14,12 +14,13 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin29070',
   templateUrl: './fin29070.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     MenubarComponent,
     ButtonComponent,
     AccordionModule,

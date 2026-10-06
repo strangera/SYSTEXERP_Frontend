@@ -144,6 +144,7 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() allowMultilineHeader = false;
   @Input() showFilter = true;
   @Input() showReportMode = true;
+  @Input() showSignature = false;
   @Input() customReport = false;
   @Output() exportEvent = new EventEmitter<string>();
   @Output() delete = new EventEmitter<any>();

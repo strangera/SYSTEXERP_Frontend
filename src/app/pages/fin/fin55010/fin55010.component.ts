@@ -17,12 +17,13 @@ import { FIN55010Detail, FIN55010Service } from '../../../service/api/fin/fin550
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin55010',
   templateUrl: './fin55010.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     MenubarComponent,
     ButtonComponent,
     AccordionModule,

@@ -18,13 +18,14 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
 import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
 import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table.component';
 import { InputTextComponent } from 'src/app/shared/components/input-text/input-text.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin55080',
   // 使用內嵌模板，符合單一檔案規範
   templateUrl: './fin55080.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     TableSubheaderGroupingComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,

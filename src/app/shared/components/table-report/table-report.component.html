@@ -418,7 +418,7 @@
           styleClass="p-button-text p-button-sm ml-2" pTooltip="滾動到頂部" />
       </div>
     </div>
-    @if (currentProgNo() && showReportMode && data.length){
+    @if (currentProgNo() && (showReportMode || showSignature) && data.length){
     <app-report-signature [dataType]="currentProgNo()!" />
     }
   </ng-template>

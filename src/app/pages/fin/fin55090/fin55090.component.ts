@@ -19,12 +19,13 @@ import { MultiSelectComponent } from '../../../shared/components/multi-select/mu
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin55090',
   templateUrl: './fin55090.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     TableSubheaderGroupingComponent, InputTextComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
     FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,
