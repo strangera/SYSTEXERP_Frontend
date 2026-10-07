@@ -640,6 +640,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       DEPRE_SDATE: this.depreciationDateForApi(raw['amortizationYearMonth']),
       HANDLE_NOTE: raw['disposeRemark'] != null && raw['disposeRemark'] !== '' ? String(raw['disposeRemark']) : null,
 
+      NOTES: raw['assetNotes'] != null && raw['assetNotes'] !== '' ? String(raw['assetNotes']) : null,
       // 畫面 `remark` 僅對應採購說明
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       CRT_USR_No: this.user?.user_No ?? null,
@@ -728,7 +729,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       GET_COST: raw['purchasePrice'] != null && raw['purchasePrice'] !== '' ? Number(raw['purchasePrice']) : null,
       ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
       EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
-
+      NOTES: raw['assetNotes'] != null && raw['assetNotes'] !== '' ? String(raw['assetNotes']) : null,
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       // API：RESI_VALUE = 預留殘值（residual）
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
@@ -753,7 +754,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         case CRUDStatus.Create:
           if (this.canAdd()) {
             const raw = frm.getRawValue() as Record<string, unknown>;
-            // 表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；depreciationLifeMM→FIR_EXP_YEAR；amortizedAmount→TAL_DEPRE_AMT、amortizedMonth→TAL_DEPRE_MON。
+            // 表單無欄位不送出：MID, STO_NO, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；depreciationLifeMM→FIR_EXP_YEAR；amortizedAmount→TAL_DEPRE_AMT、amortizedMonth→TAL_DEPRE_MON。
             const payload: InsertASS13010Request = this.buildInsertPayload(raw);
             this.ass13010Service
               .insertASS13010(payload)

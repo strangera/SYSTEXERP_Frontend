@@ -306,6 +306,7 @@ export interface UpdateASS13010Request {
   GET_COST?: number | null;
   ASSET_STATUS?: string | null;
   EQUIP_ID?: string | null;
+  NOTES?: string | null;
   PURCHASE_NOTES?: string | null;
   RESI_VALUE?: number | null;
   EXP_YEAR?: number | null;
