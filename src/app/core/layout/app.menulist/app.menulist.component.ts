@@ -40,6 +40,7 @@ export class AppMenulistComponent { // 移除 implements OnInit, OnDestroy
   private readonly currentPageProgNo = toSignal(this.currentPageService.currentPageProgNo$, { initialValue: null as string | null });
 
   private rawMenuModel = signal<MenuItem[]>([]);
+  private initialRequested = false;
 
   constructor() {
     effect(() => {
@@ -48,8 +49,9 @@ export class AppMenulistComponent { // 移除 implements OnInit, OnDestroy
         // 重建選單並更新 Signal
         const newModel = this.appMenulistService.buildMenuModel(newData);
         this.rawMenuModel.set(newModel);
-      } else if (newData.length === 0) {
-        // 如果數據為空 (首次載入或重設)，重新發起請求 (保持原有副作用邏輯)
+      } else if (newData.length === 0 && !this.initialRequested) {
+        // 首次載入發起一次請求；無任何權限的帳號回來也是空陣列，不重複打否則會無限迴圈
+        this.initialRequested = true;
         this.systemDataService.getFunRightsInfo().subscribe();
         this.systemDataService.queryAllSystemCode().subscribe();
       }

@@ -64,7 +64,7 @@
     <app-table-report tableKey="ASS14010" [data]="data" [columns]="columns" [addButton]="addButton"
       (edit)="onEdit($event)" (detail)="onDetail($event)" [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showDelete]="true" [showCheckBox]="true"
-      [showReportMode]="false" dataKey="ID" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [showReportMode]="false" [showSignature]="true" dataKey="ID" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
       [queryFunction]="queryFn" [loading]="loading" [isRowSelectable]="isRowSelectable">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">

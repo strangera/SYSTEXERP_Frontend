@@ -25,7 +25,7 @@ import { TableReportPermissionService } from './services/table-report-permission
 import { TableReportSelectionService } from './services/table-report-selection.service';
 import { TableReportSubtotalService } from './services/table-report-subtotal.service';
 import { TableReportUtilityService } from './services/table-report-utility.service';
-import { TableReportWidthService } from './services/table-report-width.service';
+import { ColumnWidthInfo, TableReportWidthService } from './services/table-report-width.service';
 import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @UntilDestroy()
@@ -144,6 +144,7 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() allowMultilineHeader = false;
   @Input() showFilter = true;
   @Input() showReportMode = true;
+  @Input() showSignature = false;
   @Input() customReport = false;
   @Output() exportEvent = new EventEmitter<string>();
   @Output() delete = new EventEmitter<any>();
@@ -199,7 +200,10 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
   private isNextPagePreloaded = false;
-  private columnWidthsReady = false;
+  /** 依全部已載入資料估算的欄寬（key = field）；不在表內的欄位沿用 col.width / 預設值 */
+  columnWidths: Record<string, ColumnWidthInfo> = {};
+  /** 元件內部（loadMoreData / lazy 排序重查）最後一次指派給 data 的陣列，用來辨識外部回綁 */
+  private internalData?: any[];
   private loadMoreSub?: Subscription;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
@@ -244,7 +248,53 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     return this.widthService.serialColumnWidth;
   }
 
+  /** 資料列欄寬（th/td 共用）：有估算結果用估算值，否則維持 col.width / 預設最小寬度 */
+  getColWidth(col: ReportColumn): string | undefined {
+    return this.columnWidths[col.field]?.px ?? col.width;
+  }
+
+  getColMinWidth(col: ReportColumn): string {
+    return this.columnWidths[col.field]?.px ?? (col.width || '55px');
+  }
+
+  /** 只有內容超過上限被截斷的欄位才設 max-width（配合 CSS 省略號） */
+  getColMaxWidth(col: ReportColumn): string | null {
+    const info = this.columnWidths[col.field];
+    return info?.truncated ? info.px : null;
+  }
+
+  /** 只有被截斷的欄位才回傳完整文字當原生 title，其餘回 null（不輸出 title 屬性） */
+  getCellTitle(col: ReportColumn, rowData: any, rowIndex: number): string | null {
+    if (!this.columnWidths[col.field]?.truncated) return null;
+    const text = String(this.tableUtility.getFormattedValue(col, rowData?.[col.field], rowIndex, rowData) ?? '');
+    return col.type === 'html' ? this.widthService.stripHtml(text) : text;
+  }
+
+  /** reset：以 rows 重算並取代；grow：以 rows（新追加的資料）重算後與現有欄寬取較大值（只增不減） */
+  private recalculateColumnWidths(rows: any[], mode: 'reset' | 'grow'): void {
+    const templateFields = new Set(Object.keys(this.customTemplates ?? {}).filter(k => !!this.customTemplates[k]));
+    const next = this.widthService.calculateColumnWidths(
+      this.columns, rows, this.totalRecords, this.showReorder, templateFields
+    );
+    this.columnWidths = mode === 'grow' ? this.widthService.mergeGrowOnly(this.columnWidths, next) : next;
+  }
+
+  /** lazy 模式下，外部重新綁定的 data 是否為「前一份資料 + 追加列」（首列同一參照），而非全新查詢 */
+  private isAppendOfPrevious(previous: any[] | undefined, current: any[] | undefined): boolean {
+    return this.effectiveLazy && !!previous?.length && !!current && current.length > previous.length && current[0] === previous[0];
+  }
+
   ngOnChanges(changes: SimpleChanges) {
+    const dataChange = changes['data'];
+    const structural = !!(changes['columns'] || changes['customTemplates'] || changes['showReorder']);
+    // 內部（loadMoreData / lazy 排序重查）已自行處理過欄寬的資料，外部回綁時不重算
+    const dataHandledInternally = !!dataChange && dataChange.currentValue === this.internalData;
+    if (structural || (dataChange && !dataHandledInternally)) {
+      const append = !structural && this.isAppendOfPrevious(dataChange?.previousValue, dataChange?.currentValue);
+      this.recalculateColumnWidths(this.data, append ? 'grow' : 'reset');
+    } else if (changes['totalRecords'] && !dataChange) {
+      this.recalculateColumnWidths(this.data, 'grow');
+    }
     if (changes['data'] || changes['totalRecords']) {
       this.handleDataChange(changes);
     }
@@ -307,21 +357,6 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
         this.cdr.detectChanges();
       }, 0);
       this.isNextPagePreloaded = false;
-      // 全新查詢（前一次資料為空）才重新啟用欄寬計算；load-more 追加不重算
-      if (!changes['data'].previousValue?.length) {
-        this.columnWidthsReady = false;
-      }
-    }
-
-    if (!this.columnWidthsReady && this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
-      this.columnWidthsReady = true;
-      // defer off the critical render path — avoids blocking first paint
-      setTimeout(() => {
-        this.columns = this.widthService.calculateAndFixColumnWidths(
-          this.columns, this.data, this.totalRecords, this.showReorder
-        );
-        this.cdr.detectChanges();
-      }, 0);
     }
 
     if (this.data && this.data.length !== 0) {
@@ -407,6 +442,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
           this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
+          this.internalData = this.data;
+          this.recalculateColumnWidths(res.Data, 'grow');
           this.dataChange.emit(this.data);
         }
       });
@@ -483,6 +520,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
           this.totalRecords = res.TotalCount || this.data.length;
           this.virtualScrollEnabled = this.effectiveLazy && this.data.length >= 30;
           this.virtualData = this.data;
+          this.internalData = this.data;
+          this.recalculateColumnWidths(this.data, 'reset');
           this.selectedItems = [];
           this.dataChange.emit(this.data);
           this.syncTableSortMeta();

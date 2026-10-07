@@ -180,6 +180,8 @@ export interface FaSItem {
  * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
 export interface FaSitemQuery {
   MATERIAL_TYPE?: string | null;
+  /** 品項編號/名稱查詢字串，支援 % 萬用字元（如 '3%' 只列 3 開頭） */
+  SearchText?: string | null;
 }
 
 /**

@@ -102,6 +102,11 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     CompareWeek: [null as number | null],
     CompareMonth: [null as number | null],
     CompareHalfYear: [null as number | null],
+    // 週/月/半年/年營業報表：唯讀顯示用，值與送出查詢的 CompareDate*/BaseDate* 同源；disabled 故不參與驗證與 form.value
+    ViewCompareFrom: [{ value: null as Date | null, disabled: true }],
+    ViewCompareTo: [{ value: null as Date | null, disabled: true }],
+    ViewBaseFrom: [{ value: null as Date | null, disabled: true }],
+    ViewBaseTo: [{ value: null as Date | null, disabled: true }],
     FloorList: [""],
     AreaList: [""],
     BuildingList: [""],
@@ -279,6 +284,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.BaseDateTo.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareDateFrom.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareDateTo.setValue(null, { emitEvent: false });
+      this.setViewRanges(null, null);
       if (type === '2') this.setWeekOptions(null);
     });
     // 訂閱欄位變化後重新計算區間（若有值才計算）
@@ -371,35 +377,34 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     const baseMonth = this.queryForm.controls.CompareMonth.value;
     const baseHalfYear = this.queryForm.controls.CompareHalfYear.value;
 
-    if (!compareYear || !baseYear) return;
-
-    const compareYearNum = compareYear.getFullYear();
-    const baseYearNum = baseYear.getFullYear();
-
-    switch (type) {
-      case '2': // 週
-        if (compareWeek) compareRange = this.getWeekRange(compareYearNum, compareWeek);
-        if (baseWeek) baseRange = this.getWeekRange(baseYearNum, baseWeek);
-        break;
-      case '3': // 月
-        if (compareMonth) compareRange = this.getMonthRange(compareYearNum, compareMonth);
-        if (baseMonth) baseRange = this.getMonthRange(baseYearNum, baseMonth);
-        break;
-      case '4': // 半年
-        if (compareHalfYear) compareRange = this.getHalfYearRange(compareYearNum, compareHalfYear);
-        if (baseHalfYear) baseRange = this.getHalfYearRange(baseYearNum, baseHalfYear);
-        break;
-      case '5': // 年
-        compareRange = this.getYearRange(compareYearNum);
-        baseRange = this.getYearRange(baseYearNum);
-        break;
-    }
+    // 左右兩側各自獨立計算：年度未選或被清除時該側為 null，不殘留舊值
+    const rangeOf = (year: Date | null, week: number | null, month: number | null, halfYear: number | null) => {
+      if (!year) return null;
+      const yearNum = year.getFullYear();
+      switch (type) {
+        case '2': return week ? this.getWeekRange(yearNum, week) : null;
+        case '3': return month ? this.getMonthRange(yearNum, month) : null;
+        case '4': return halfYear ? this.getHalfYearRange(yearNum, halfYear) : null;
+        case '5': return this.getYearRange(yearNum);
+        default: return null;
+      }
+    };
+    compareRange = rangeOf(compareYear, compareWeek, compareMonth, compareHalfYear);
+    baseRange = rangeOf(baseYear, baseWeek, baseMonth, baseHalfYear);
 
     // 正確對齊賦值：左邊算出的塞給 Compare，右邊算出的塞給 Base
     this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
     this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
     this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
     this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
+    this.setViewRanges(compareRange, baseRange);
+  }
+
+  private setViewRanges(compareRange: { from: Date, to: Date } | null, baseRange: { from: Date, to: Date } | null): void {
+    this.queryForm.controls.ViewCompareFrom.setValue(compareRange?.from ?? null, { emitEvent: false });
+    this.queryForm.controls.ViewCompareTo.setValue(compareRange?.to ?? null, { emitEvent: false });
+    this.queryForm.controls.ViewBaseFrom.setValue(baseRange?.from ?? null, { emitEvent: false });
+    this.queryForm.controls.ViewBaseTo.setValue(baseRange?.to ?? null, { emitEvent: false });
   }
 
   private getMonthRange(yearNum: number, month: number): { from: Date, to: Date } | null {

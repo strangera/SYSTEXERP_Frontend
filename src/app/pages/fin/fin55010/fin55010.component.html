@@ -85,4 +85,7 @@
     [loading]="loading" [showSerialNo]="true" [showPaginator]="true" [showGroupheader]="false" [showCheckBox]="true"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
   </app-table-subheader>
+  @if (data.length) {
+    <app-report-signature dataType="FIN55010" />
+  }
 </div>

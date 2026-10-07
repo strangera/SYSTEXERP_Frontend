@@ -16,13 +16,14 @@ import { CalendarRangeComponent } from '../../../shared/components/calendar-rang
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../others/component/table/table.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 //1.2.9.4 AP及ARNET之報表
 @Component({
   selector: 'app-fin29040',
   templateUrl: './fin29040.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [ReportSignatureComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

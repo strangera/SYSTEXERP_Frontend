@@ -20,12 +20,13 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin42010',
   templateUrl: './fin42010.component.html',
   standalone: true,
-  imports: [
+  imports: [ReportSignatureComponent, 
     MenubarComponent,
     AccordionModule,
     FormsModule,

@@ -103,9 +103,23 @@
         vertical-align: middle;
       }
     }
+    // 資料列儲存格一律單行；欄寬由元件依全部資料估算後以 inline style 套用。
+    // 必須寫在 multiline-cell 之前（同特異度，後者勝出），讓 multiline-cell 維持例外
+    .p-datatable-tbody > tr > td.data-cell {
+      white-space: nowrap !important;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+      // 估算寬度超過上限的欄位：截斷顯示省略號（max-width 由元件僅對這些欄位設定）
+      &.truncate-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
     // 支援儲存格內容依 \n 換行（例如以分隔符號組成的多筆資料）
     .p-datatable-tbody > tr > td.multiline-cell {
       white-space: pre-line !important;
+      word-break: break-all !important;
+      overflow-wrap: break-word !important;
     }
     // --- 資料列與單元格樣式 (tbody / tr / td) ---
     .p-datatable-tbody > tr {

@@ -118,4 +118,7 @@
     [footerData]="footerData"
     [historyRequestBody]="historyRequestBody"
   ></app-table-subheader-grouping>
+  @if (data.length) {
+    <app-report-signature dataType="FIN55090" />
+  }
 </div>

@@ -35,6 +35,28 @@ export interface ASS16060InsertRequest {
   DetailTable: ASS16060DetailItem[];
 }
 
+/** queryASS16060Master — 單一主檔（含退回說明 NOTES 與狀態） */
+export interface ASS16060MasterInfo {
+  MTRETURN_ID?: string | null;
+  EMP_ID?: string | null;
+  ORG_ID?: string | null;
+  WH_ID?: string | null;
+  RETURN_DATE?: string | null;
+  NOTES?: string | null;
+  /** 1=已申請、2=已審核 */
+  MTRETURNM_STATUS?: string | null;
+}
+
+/** updateASS16060 — 請求本體（明細只有 LINE_NUM、QTY、NOTES 有作用） */
+export interface ASS16060UpdateRequest {
+  MID: number;
+  STO_NO: string;
+  MTRETURN_ID: string;
+  WH_ID: string;
+  NOTES?: string | null;
+  DetailTable: ASS16060DetailItem[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -77,6 +99,35 @@ export class ASS16060Service {
   ): Observable<ApiResponse<unknown>> {
     return this.http.post<ApiResponse<unknown>>(
       `${this.apiUrl}/insertASS16060`,
+      body,
+    );
+  }
+
+  /** 查單一退回單主檔（SP_ASS16060Query 不回退回說明，編輯頁用這支） */
+  queryASS16060Master(
+    body: { MID: number; STO_NO: string; MTRETURN_ID: string },
+  ): Observable<ApiResponse<ASS16060MasterInfo>> {
+    return this.http.post<ApiResponse<ASS16060MasterInfo>>(
+      `${this.apiUrl}/queryASS16060Master`,
+      body,
+    );
+  }
+
+  /** 審核（僅已申請單據；後端 SP_ASS16060Approve 把狀態改為 2） */
+  approveASS16060(
+    body: { MID: number; STO_NO: string; MTRETURN_ID: string },
+  ): Observable<ApiResponse<{ MTRETURN_ID?: string; MTRETURNM_STATUS?: string; MESSAGE?: string }>> {
+    return this.http.post<ApiResponse<{ MTRETURN_ID?: string; MTRETURNM_STATUS?: string; MESSAGE?: string }>>(
+      `${this.apiUrl}/approveASS16060`,
+      body,
+    );
+  }
+
+  updateASS16060(
+    body: ASS16060UpdateRequest,
+  ): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(
+      `${this.apiUrl}/updateASS16060`,
       body,
     );
   }

@@ -9,6 +9,7 @@ import {
   ASS16060DetailItem,
   ASS16060InsertRequest,
   ASS16060Service,
+  ASS16060UpdateRequest,
 } from '@service/api/ass/ass16060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -23,10 +24,15 @@ import { TableEditComponent } from '@shared/components/table-edit/table-edit.com
 import { EditColumn } from '@shared/components/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
+
+/** SYS1000 AM_MTRETURNM_STATUS：1=已申請（可編輯/審核）、2=已審核 */
+const STATUS_APPLIED = '1';
 
 /** 領用退料 CRU — 明細列（畫面僅序號+四欄；序號由 table-edit 內建） */
 export interface ASS16060TableItem {
+  /** 既有明細項次（編輯時以此對應 SP 更新列；新增時為空） */
+  LINE_NUM?: number;
   GOODS_ID?: string;
   /** 僅 UI；後端 DetailTable 欄位未定，暫不送出 */
   UNIT?: string;
@@ -82,6 +88,7 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
+      disabled: () => !this.isCreateMode,
       onChange: (value: string | null, row: ASS16060TableItem) => {
         const match = this.itemOptions().find((opt) => opt.value === value);
         row.UNIT = match ? match.unitName : '';
@@ -130,11 +137,41 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
       this.tableData.set([this.defaultNewItem()]);
     }
 
-    // 檢視：先用 router state 的 row 填表頭，再打 queryASS16060 補主檔覆寫+明細
-    if (this.isFormReadable && this.rowdata?.MTRETURN_ID) {
+    // 檢視/編輯：先用 router state 的 row 填表頭，再打 API 補主檔（含退回說明、狀態）+明細
+    if (this.crudstatus !== CRUDStatus.Create && this.rowdata?.MTRETURN_ID) {
       this.patchMasterForm(this.rowdata);
+      if (this.isEditMode) {
+        if (this.rowdata.MTRETURNM_STATUS !== STATUS_APPLIED) {
+          this.lockReadonly();
+        } else {
+          this.disableNonEditableControls();
+        }
+      }
       this.loadDetail(this.rowdata.MTRETURN_ID);
     }
+  }
+
+  get isCreateMode(): boolean {
+    return this.crudstatus === CRUDStatus.Create;
+  }
+
+  get isEditMode(): boolean {
+    return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  /** 編輯模式只開放倉別/退回說明/明細數量與單項說明，其餘表頭欄位鎖住 */
+  private disableNonEditableControls(): void {
+    const ctrls = this.dataForm.controls;
+    ctrls.RETURN_EMP_ID.disable({ emitEvent: false });
+    ctrls.ORG_ID.disable({ emitEvent: false });
+    ctrls.APPLY_DATE.disable({ emitEvent: false });
+  }
+
+  /** 非「已申請」單據（已審核）一律整頁唯讀 */
+  private lockReadonly(): void {
+    this.crudstatus = CRUDStatus.Read;
+    this.formTitle = '顯示資料';
+    this.dataForm.disable({ emitEvent: false });
   }
 
   /** router state 的列表 row → 表頭 form（覆寫主檔欄位） */
@@ -147,41 +184,41 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
     });
   }
 
-  /** 用 MTRETURN_ID 呼叫 queryASS16060 取主檔+明細 — 覆寫表頭並填入明細 table */
+  /** 取單一主檔（退回說明、狀態）+ 明細 — 覆寫表頭並填入明細 table */
   private loadDetail(mtreturnId: string): void {
     this.tableLoading.set(true);
-    this.service
-      .queryASS16060({ MTRETURN_ID: mtreturnId, PageSize: 999, PageIndex: 1 })
+    forkJoin({
+      master: this.service.queryASS16060Master({ MID: 0, STO_NO: '', MTRETURN_ID: mtreturnId }),
+      detail: this.service.queryASS16060({ MTRETURN_ID: mtreturnId, PageSize: 999, PageIndex: 1 }),
+    })
       .pipe(
         finalize(() => this.tableLoading.set(false)),
         untilDestroyed(this),
       )
       .subscribe({
-        next: (res) => {
-          if (res.Status !== '0000') {
-            this.notification.errorBubble(res.Message || '取得明細失敗');
+        next: ({ master, detail }) => {
+          if (master.Status !== '0000' || detail.Status !== '0000') {
+            this.notification.errorBubble(master.Message || detail.Message || '取得明細失敗');
             return;
           }
-          const rows = res.Data ?? [];
-          // 用 rows[0] 覆寫主檔欄位（後端為準）；若該欄位後端沒回則保留 router state 帶過來的值
-          if (rows.length > 0) {
-            const head = rows[0];
-            const ctrls = this.dataForm.controls;
+          const head = master.Data;
+          if (head) {
             this.dataForm.patchValue({
-              WH_ID: head.WH_ID ?? ctrls.WH_ID.value,
-              RETURN_EMP_ID: head.EMP_ID ?? ctrls.RETURN_EMP_ID.value,
-              ORG_ID: head.ORG_ID ?? ctrls.ORG_ID.value,
-              APPLY_DATE: head.RETURN_DATE
-                ? this.toLocalDate(head.RETURN_DATE)
-                : ctrls.APPLY_DATE.value,
+              WH_ID: head.WH_ID ?? null,
+              RETURN_EMP_ID: head.EMP_ID ?? null,
+              ORG_ID: head.ORG_ID ?? null,
+              APPLY_DATE: this.toLocalDate(head.RETURN_DATE),
               REMARK: head.NOTES ?? null,
             });
+            if (this.isEditMode && head.MTRETURNM_STATUS !== STATUS_APPLIED) {
+              this.lockReadonly();
+            }
           }
-          // 把所有 detail rows 轉成明細 table items
           this.tableData.set(
-            rows.map((row): ASS16060TableItem => {
+            (detail.Data ?? []).map((row): ASS16060TableItem => {
               const match = this.itemOptions().find((opt) => opt.value === row.GOODS_ID);
               return {
+                LINE_NUM: row.LINE_NUM ?? undefined,
                 GOODS_ID: row.GOODS_ID ?? undefined,
                 UNIT: match ? match.unitName : undefined,
                 QTY: row.QTY ?? undefined,
@@ -189,11 +226,57 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
               };
             })
           );
-        },
-        error: () => {
-          this.notification.errorBubble('取得明細失敗');
+          this.savedSnapshot = this.currentSnapshot();
         },
       });
+  }
+
+  /** 最近一次載入/存檔後的可編輯內容快照，用來判斷審核前是否有未存檔修改 */
+  private savedSnapshot = '';
+
+  private currentSnapshot(): string {
+    const raw = this.dataForm.getRawValue();
+    const norm = (v: string | null | undefined) => (v?.trim() ? v.trim() : null);
+    return JSON.stringify({
+      wh: raw.WH_ID ?? null,
+      remark: norm(raw.REMARK),
+      rows: this.tableData().map((r) => [r.LINE_NUM ?? null, r.QTY != null ? Number(r.QTY) : null, norm(r.NOTES)]),
+    });
+  }
+
+  public onApprove(): void {
+    const mtreturnId = this.rowdata?.MTRETURN_ID;
+    if (!mtreturnId || !this.isFormEditable || this.tableLoading()) return;
+
+    if (this.currentSnapshot() !== this.savedSnapshot) {
+      this.notification.warnBubble('請先按確認存檔再審核');
+      return;
+    }
+
+    this.notification.confirm({
+      header: '領用退料審核',
+      message: `是否確認審核退回單 ${mtreturnId}？審核後單據不可再編輯。`,
+      accept: () => {
+        this.loading = true;
+        this.service
+          .approveASS16060({ MID: 0, STO_NO: '', MTRETURN_ID: mtreturnId })
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => (this.loading = false)),
+          )
+          .subscribe({
+            next: (res) => {
+              if (res.Status !== '0000') {
+                this.notification.errorBubble(res.Message || '審核失敗');
+                return;
+              }
+              this.notification.successBubble(res.Data?.MESSAGE || '審核成功');
+              this.lockReadonly();
+              this.loadDetail(mtreturnId);
+            },
+          });
+      },
+    });
   }
 
   /** `YYYY-MM-DD` 純日期 → 當地零時 Date（避免 UTC 漂移）；其他交給 new Date */
@@ -247,7 +330,7 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
       });
 
     this.dropdownApi
-      .queryFasItemDropdown({})
+      .queryFasItemDropdown(this.crudstatus === CRUDStatus.Create ? { SearchText: '3%' } : {})
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         const list = opts ?? [];
@@ -326,8 +409,58 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060MasterDi
     return out;
   }
 
+  private submitUpdate(): void {
+    const mtreturnId = this.rowdata?.MTRETURN_ID;
+    if (!mtreturnId) {
+      this.loading = false;
+      this.notification.errorBubble('缺少退回單號，無法修改');
+      return;
+    }
+
+    const raw = this.dataForm.getRawValue();
+    const updatePayload: ASS16060UpdateRequest = {
+      MID: 0,
+      STO_NO: '',
+      MTRETURN_ID: mtreturnId,
+      WH_ID: raw.WH_ID ?? '',
+      NOTES: raw.REMARK?.trim() ? raw.REMARK.trim() : null,
+      DetailTable: this.tableData()
+        .filter((item) => item.LINE_NUM != null)
+        .map((item): ASS16060DetailItem => ({
+          LINE_NUM: item.LINE_NUM,
+          QTY: item.QTY != null ? Number(item.QTY) : null,
+          NOTES: item.NOTES?.trim() ? item.NOTES.trim() : null,
+        })),
+    };
+
+    this.tableLoading.set(true);
+    this.service
+      .updateASS16060(updatePayload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status !== '0000') {
+            this.notification.errorBubble(res.Message || '修改失敗');
+            return;
+          }
+          this.notification.successBubble('修改成功');
+          this.loadDetail(mtreturnId);
+        },
+      });
+  }
+
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      if (this.isFormEditable) {
+        this.submitUpdate();
+        return;
+      }
       if (!this.isFormCreateable) {
         this.loading = false;
         return;
