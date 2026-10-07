@@ -647,7 +647,7 @@
   </div>
 }
 
-@if (isFormReadable && !isFormCreateable && aps2002_CRelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps2002_CRelatedRows().length > 0 && purchaseAllowanceTriggerRows().length > 0) {
   <div class="card">
     <p-panel header="進項折讓發票" class="line-height-3 m-0">
       <app-table-report
@@ -668,7 +668,7 @@
   </div>
 }
 
-@if (isFormReadable && !isFormCreateable && aps2002RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps2002RelatedRows().length > 0 && hasPurchaseInvoiceTrigger()) {
   <div class="card">
     <p-panel header="進項發票" class="line-height-3 m-0">
       <app-table-report
@@ -689,7 +689,7 @@
   </div>
 }
 
-@if (isFormReadable && !isFormCreateable && aps4023_CRelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps4023_CRelatedRows().length > 0 && salesAllowanceTriggerRows().length > 0) {
   <div class="card">
     <p-panel header="銷項折讓發票" class="line-height-3 m-0">
       <app-table-report
@@ -710,7 +710,7 @@
   </div>
 }
 
-@if (isFormReadable && !isFormCreateable && aps4023RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps4023RelatedRows().length > 0 && hasSalesInvoiceTrigger()) {
   <div class="card">
     <p-panel header="銷項發票" class="line-height-3 m-0">
       <app-table-report

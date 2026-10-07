@@ -359,6 +359,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   });
 
+  /** 進項發票觸發條件（type=5 + 正向：AccDC='D'放借方，或AccDC未知），唯讀 Panel 顯示用 */
+  public readonly hasPurchaseInvoiceTrigger = computed(() => {
+    const accVt = this.service.accVoucherTypeMap();
+    const accMap = this.service.accNoMap();
+    return this.tableData().some(row => {
+      const accNo = String(row.AccNo ?? '');
+      if (String(accVt.get(accNo)) !== '5') return false;
+      const accDC = String(accMap.get(accNo)?.['AccDC'] ?? '').trim();
+      return accDC !== 'D' || (row.AccAmtD ?? 0) > 0;
+    });
+  });
+
+  /** 銷項發票觸發條件（type=6 + 正向：AccDC='C'放貸方，或AccDC未知），唯讀 Panel 顯示用 */
+  public readonly hasSalesInvoiceTrigger = computed(() => {
+    const accVt = this.service.accVoucherTypeMap();
+    const accMap = this.service.accNoMap();
+    return this.tableData().some(row => {
+      const accNo = String(row.AccNo ?? '');
+      if (String(accVt.get(accNo)) !== '6') return false;
+      const accDC = String(accMap.get(accNo)?.['AccDC'] ?? '').trim();
+      return accDC !== 'C' || (row.AccAmtC ?? 0) > 0;
+    });
+  });
+
   /** APS1001 銀行下拉 + 步驟列上 POS2013 銀行代號（清單無該代碼時補佔位） */
   public readonly bankNoOptionsForStep = computed(() => {
     const base = this.service.bankNoOptions();
