@@ -19,6 +19,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { FileExportService } from '../../../shared/service/file-export.service';
+import { ASS15040TableReportComponent } from './ass15040-table-report.component';
 import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } from './ass15040.model';
 
 
@@ -39,6 +40,7 @@ import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } fro
     TableReportComponent,
     TranslateModule,
     ButtonModule,
+    ASS15040TableReportComponent
   ],
 })
 export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Response> implements OnInit {
@@ -51,6 +53,7 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
 
   data: QueryASS15040Response[] = [];
   totalRecords = 0;
+  footerData: QueryASS15040Response[] = [];
   lastQueryBody?: QueryASS15040Request;
   readonly tableLoading = signal(false);
   exportPdfLoading = false;
@@ -64,16 +67,16 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
       align: 'center',
       width: '70px',
       showSort: false,
-      format: (_value: any, rowIndex?: number) => (rowIndex ?? 0) + 1
+      format: (value: any) => value ?? ''
     },
     { field: 'STYPE_ID', header: '會計科目代碼', visible: false, align: 'left' },
     { field: 'STYPE_NAME', header: '會計科目名稱', visible: false, align: 'left' },
 
-    { field: 'ASSET_ID', header: '財產編號', visible: true,  width: '150px' },
-    { field: 'GOODS_ID', header: '品項編號', visible: true,  width: '100px' },
+    { field: 'ASSET_ID', header: '財產編號', visible: true, width: '150px' },
+    { field: 'GOODS_ID', header: '品項編號', visible: true, width: '100px' },
     { field: 'GOODS_NAME', header: '品項名稱', visible: true, width: '100px' },
 
-    { field: 'EXP_YEAR', header: '耐用年數', visible: true,  format: formatAmount, width: '40px' },
+    { field: 'EXP_YEAR', header: '耐用年數', visible: true, format: formatAmount, width: '40px' },
 
     { field: 'GET_DATE', header: '購入日期', visible: true, align: 'right', format: formatDate, width: '100px' },
 
@@ -95,7 +98,7 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
 
     { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: false, align: 'left' },
 
-    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true,  width: '50px' },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true, width: '50px' },
 
     { field: 'NOTES', header: '財產註記', visible: true, align: 'left', width: '150px' },
   ];
@@ -143,13 +146,40 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
               return;
             }
             const rows = res?.Data?.QueryData ?? [];
-            this.data = rows;
-            this.totalRecords =
-              res?.Data?.TotalCount ??
-              rows.find(x => typeof x.TOTAL_COUNT === 'number')?.TOTAL_COUNT ??
-              res?.TotalCount ??
-              rows.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
+            let itemNo = 0;
+
+            const processedRows = rows.map(row => {
+              // 小計、總計都不編項次
+              if (
+                row.STYPE_NAME === '小計' ||
+                row.STYPE_NAME === '總計'
+              ) {
+                return {
+                  ...row,
+                  __ITEM_NO: null
+                };
+              }
+
+              itemNo++;
+
+              return {
+                ...row,
+                __ITEM_NO: itemNo
+              };
+            });
+
+            // 小計保留原本位置，總計移到 footer
+            this.data = processedRows.filter(
+              x => x.STYPE_NAME !== '總計'
+            );
+
+            this.footerData = processedRows.filter(
+              x => x.STYPE_NAME === '總計'
+            );
+
+            // 總筆數只算實際明細
+            this.totalRecords = itemNo;
           },
           error: () => {
             this.data = [];
