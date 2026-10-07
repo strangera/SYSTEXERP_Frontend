@@ -84,10 +84,12 @@
 </div>
 <div class="card">
   <div class="col-13">
-<app-table-report
+<app-ass15040-table-report
   [data]="data"
   [columns]="columns"
   [totalRecords]="totalRecords"
+  [footerData]="footerData"
+  footerLabelField="STYPE_NAME"
   tableKey="ASS15040_Data"
   dataKey="ASSET_ID"
   [allowMultilineHeader]="true"
@@ -128,6 +130,6 @@
           ></p-button>
         </div>
       </header>
-    </app-table-report>
+    </app-ass15040-table-report>
   </div>
 </div>
