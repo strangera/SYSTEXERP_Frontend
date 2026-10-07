@@ -59,8 +59,8 @@
             [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
             [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
             [pSortableColumnDisabled]=" col.showSort === false || showSort === false " pFrozenColumn
-            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
             (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
             {{ col.header }}
             <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
@@ -78,8 +78,8 @@
           <th *ngIf="col.groupField" scope="col" class="text-center"
             [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
             [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
             (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
             {{ col.header }}
             <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
@@ -118,8 +118,8 @@
             [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
             [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
             [pSortableColumnDisabled]=" col.showSort === false || showSort === false " pFrozenColumn
-            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
             (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
             {{ col.header }}
             <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
@@ -152,8 +152,8 @@
           <th *ngIf="col.groupField" scope="col" class="text-center"
             [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
             [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
+            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
             (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
             {{ col.header }}
             <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
@@ -178,8 +178,8 @@
         <th *ngFor="let col of columns" scope="col" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
           [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
-          [ngClass]="{ 'multiline-header': allowMultilineHeader }" [style.min-width]="col.width || '55px'"
-          [style.width]="col.width">
+          [ngClass]="{ 'multiline-header': allowMultilineHeader }" [style.min-width]="getColMinWidth(col)"
+          [style.width]="getColWidth(col)">
           {{ col.header }}
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
@@ -225,8 +225,10 @@
           " />
       </td>
 
-      <td *ngFor="let col of columns" [style.text-align]="col.align || 'center'" [style.text-overflow]="'ellipsis'"
-        [style.min-width]="col.width || '55px'" [style.width]="col.width" (dblclick)="detail.emit(rowData)"
+      <td *ngFor="let col of columns" class="data-cell" [class.truncate-cell]="getColMaxWidth(col) !== null"
+        [style.text-align]="col.align || 'center'" [style.text-overflow]="'ellipsis'"
+        [style.min-width]="getColMinWidth(col)" [style.width]="getColWidth(col)" [style.max-width]="getColMaxWidth(col)"
+        [attr.title]="getCellTitle(col, rowData, rowIndex)" (dblclick)="detail.emit(rowData)"
         [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
         <ng-container *ngIf="customTemplates[col.field]; else defaultCell">
           <ng-container *ngTemplateOutlet="

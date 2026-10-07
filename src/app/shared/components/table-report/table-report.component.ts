@@ -25,7 +25,7 @@ import { TableReportPermissionService } from './services/table-report-permission
 import { TableReportSelectionService } from './services/table-report-selection.service';
 import { TableReportSubtotalService } from './services/table-report-subtotal.service';
 import { TableReportUtilityService } from './services/table-report-utility.service';
-import { TableReportWidthService } from './services/table-report-width.service';
+import { ColumnWidthInfo, TableReportWidthService } from './services/table-report-width.service';
 import { AddButton, ColumnGroup, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @UntilDestroy()
@@ -200,7 +200,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
   private isNextPagePreloaded = false;
-  private columnWidthsReady = false;
+  /** 依全部已載入資料估算的欄寬（key = field）；不在表內的欄位沿用 col.width / 預設值 */
+  columnWidths: Record<string, ColumnWidthInfo> = {};
   private loadMoreSub?: Subscription;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
@@ -245,7 +246,39 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     return this.widthService.serialColumnWidth;
   }
 
+  /** 資料列欄寬（th/td 共用）：有估算結果用估算值，否則維持 col.width / 預設最小寬度 */
+  getColWidth(col: ReportColumn): string | undefined {
+    return this.columnWidths[col.field]?.px ?? col.width;
+  }
+
+  getColMinWidth(col: ReportColumn): string {
+    return this.columnWidths[col.field]?.px ?? (col.width || '55px');
+  }
+
+  /** 只有內容超過上限被截斷的欄位才設 max-width（配合 CSS 省略號） */
+  getColMaxWidth(col: ReportColumn): string | null {
+    const info = this.columnWidths[col.field];
+    return info?.truncated ? info.px : null;
+  }
+
+  /** 只有被截斷的欄位才回傳完整文字當原生 title，其餘回 null（不輸出 title 屬性） */
+  getCellTitle(col: ReportColumn, rowData: any, rowIndex: number): string | null {
+    if (!this.columnWidths[col.field]?.truncated) return null;
+    const text = String(this.tableUtility.getFormattedValue(col, rowData?.[col.field], rowIndex, rowData) ?? '');
+    return col.type === 'html' ? this.widthService.stripHtml(text) : text;
+  }
+
+  private recalculateColumnWidths(): void {
+    const templateFields = new Set(Object.keys(this.customTemplates ?? {}).filter(k => !!this.customTemplates[k]));
+    this.columnWidths = this.widthService.calculateColumnWidths(
+      this.columns, this.data, this.totalRecords, this.showReorder, templateFields
+    );
+  }
+
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['data'] || changes['columns'] || changes['totalRecords'] || changes['customTemplates'] || changes['showReorder']) {
+      this.recalculateColumnWidths();
+    }
     if (changes['data'] || changes['totalRecords']) {
       this.handleDataChange(changes);
     }
@@ -308,21 +341,6 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
         this.cdr.detectChanges();
       }, 0);
       this.isNextPagePreloaded = false;
-      // 全新查詢（前一次資料為空）才重新啟用欄寬計算；load-more 追加不重算
-      if (!changes['data'].previousValue?.length) {
-        this.columnWidthsReady = false;
-      }
-    }
-
-    if (!this.columnWidthsReady && this.data && this.data.length > 0 && this.columns && this.columns.length > 0) {
-      this.columnWidthsReady = true;
-      // defer off the critical render path — avoids blocking first paint
-      setTimeout(() => {
-        this.columns = this.widthService.calculateAndFixColumnWidths(
-          this.columns, this.data, this.totalRecords, this.showReorder
-        );
-        this.cdr.detectChanges();
-      }, 0);
     }
 
     if (this.data && this.data.length !== 0) {
