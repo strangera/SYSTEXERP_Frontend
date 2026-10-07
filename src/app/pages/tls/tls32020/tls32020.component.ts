@@ -241,7 +241,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { field: 'compareRevenue', header: 'XXXX 營業額' },
     { field: 'compareATV', header: 'XXXX 客單價' },
     { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' },
-    { field: 'compareMonth', header: '月累計' },
+    { field: 'compareMonth', header: '月累積' },
     { field: 'comparePreSaleConsumer', header: 'XXXX 預售/消費' }, // <--- 比較期群組
     { field: 'revenue', header: 'YYYY 營業額' },
     { field: 'atv', header: 'YYYY 客單價' },
@@ -472,7 +472,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         return group; // 差異群組標頭固定文字，不隨基準/比較年度變動
       }
       if (group.field === 'compareMonth') {
-        return { ...group, header: `${compareYearStr} 月累計` };
+        return { ...group, header: `${compareYearStr} 月累積` };
       }
       const newHeader = this.getOriginHeader(group.field);
       if (group.field.startsWith('compare') || group.field.startsWith('Comp')) {
@@ -895,7 +895,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
 
-  /** 月累計三欄（月營業目標/營業實績/完成率）僅日營業報表(DayType=1)顯示，隨報表類型選項即時切換。 */
+  /** 月累積三欄（月營業目標/營業實績/完成率）僅日營業報表(DayType=1)顯示，隨報表類型選項即時切換。 */
   private updateMonthCumulativeColumnVisibility(dayType: string | null): void {
     if (!dayType) return;
 
