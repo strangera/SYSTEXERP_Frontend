@@ -10,15 +10,15 @@ import { DropdownComponent } from '@shared/components/dropdown/dropdown.componen
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { Column } from '../../../others/component/table/table.model';
 import { TLS13060QueryRequest, TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadiobuttonYNComponent } from '../../../shared/components/radiobutton-yn/radiobutton-yn.component';
-import { Column } from '../../../others/component/table/table.model';
-import { TLTTALENT_columns } from './tls13060.model';
+import { Pay_no_Option, TLS13060_columnGroup, TLTTALENT_columns } from './tls13060.model';
 
 @Component({
   selector: 'app-tls13060',
@@ -70,6 +70,7 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   totalRecords = 0;
   data: TLS13060ResponseItem[] = [];
   columns: Column[] = TLTTALENT_columns;
+  columnGroup = TLS13060_columnGroup;
   lastQueryBody: TLS13060QueryRequest | null = null;
   vandorCategoryOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   tlt_nocationOptions = this.dropdown.queryTltTalent();
@@ -80,6 +81,7 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   tlt_term_typeOptions = getSYS1000Options('tlt_term_type');
   paytypeOptions = getSYS1000Options('paytype');
   yesNoOptions = getSYS1000Options('YES_NO');
+  pay_noOptions = Pay_no_Option;
 
   constructor(
     public readonly tLS13060Service: TLS13060Service,
