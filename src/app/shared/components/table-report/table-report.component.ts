@@ -202,6 +202,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   private isNextPagePreloaded = false;
   /** 依全部已載入資料估算的欄寬（key = field）；不在表內的欄位沿用 col.width / 預設值 */
   columnWidths: Record<string, ColumnWidthInfo> = {};
+  /** 元件內部（loadMoreData / lazy 排序重查）最後一次指派給 data 的陣列，用來辨識外部回綁 */
+  private internalData?: any[];
   private loadMoreSub?: Subscription;
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
   @Input() emptyMessage = '查無資料';
@@ -268,16 +270,30 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
     return col.type === 'html' ? this.widthService.stripHtml(text) : text;
   }
 
-  private recalculateColumnWidths(): void {
+  /** reset：以 rows 重算並取代；grow：以 rows（新追加的資料）重算後與現有欄寬取較大值（只增不減） */
+  private recalculateColumnWidths(rows: any[], mode: 'reset' | 'grow'): void {
     const templateFields = new Set(Object.keys(this.customTemplates ?? {}).filter(k => !!this.customTemplates[k]));
-    this.columnWidths = this.widthService.calculateColumnWidths(
-      this.columns, this.data, this.totalRecords, this.showReorder, templateFields
+    const next = this.widthService.calculateColumnWidths(
+      this.columns, rows, this.totalRecords, this.showReorder, templateFields
     );
+    this.columnWidths = mode === 'grow' ? this.widthService.mergeGrowOnly(this.columnWidths, next) : next;
+  }
+
+  /** lazy 模式下，外部重新綁定的 data 是否為「前一份資料 + 追加列」（首列同一參照），而非全新查詢 */
+  private isAppendOfPrevious(previous: any[] | undefined, current: any[] | undefined): boolean {
+    return this.effectiveLazy && !!previous?.length && !!current && current.length > previous.length && current[0] === previous[0];
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['data'] || changes['columns'] || changes['totalRecords'] || changes['customTemplates'] || changes['showReorder']) {
-      this.recalculateColumnWidths();
+    const dataChange = changes['data'];
+    const structural = !!(changes['columns'] || changes['customTemplates'] || changes['showReorder']);
+    // 內部（loadMoreData / lazy 排序重查）已自行處理過欄寬的資料，外部回綁時不重算
+    const dataHandledInternally = !!dataChange && dataChange.currentValue === this.internalData;
+    if (structural || (dataChange && !dataHandledInternally)) {
+      const append = !structural && this.isAppendOfPrevious(dataChange?.previousValue, dataChange?.currentValue);
+      this.recalculateColumnWidths(this.data, append ? 'grow' : 'reset');
+    } else if (changes['totalRecords'] && !dataChange) {
+      this.recalculateColumnWidths(this.data, 'grow');
     }
     if (changes['data'] || changes['totalRecords']) {
       this.handleDataChange(changes);
@@ -426,6 +442,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
           this.subtotalService.updateGroupTotals(res.Data, this.columns, this.groupRowsBy);
           this.virtualData = this.data;
           this.totalRecords = res.TotalCount || this.data.length;
+          this.internalData = this.data;
+          this.recalculateColumnWidths(res.Data, 'grow');
           this.dataChange.emit(this.data);
         }
       });
@@ -502,6 +520,8 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
           this.totalRecords = res.TotalCount || this.data.length;
           this.virtualScrollEnabled = this.effectiveLazy && this.data.length >= 30;
           this.virtualData = this.data;
+          this.internalData = this.data;
+          this.recalculateColumnWidths(this.data, 'reset');
           this.selectedItems = [];
           this.dataChange.emit(this.data);
           this.syncTableSortMeta();

@@ -80,6 +80,27 @@ export class TableReportWidthService {
     return result;
   }
 
+  /** 合併欄寬：每欄取較大值（只增不減）；truncated 一旦成立就保留；next 沒有的欄位保留 previous */
+  public mergeGrowOnly(
+    previous: Record<string, ColumnWidthInfo>,
+    next: Record<string, ColumnWidthInfo>
+  ): Record<string, ColumnWidthInfo> {
+    const merged: Record<string, ColumnWidthInfo> = { ...previous };
+    for (const field of Object.keys(next)) {
+      const prev = previous[field];
+      const cur = next[field];
+      if (!prev) {
+        merged[field] = cur;
+        continue;
+      }
+      merged[field] = {
+        px: Number.parseFloat(cur.px) > Number.parseFloat(prev.px) ? cur.px : prev.px,
+        truncated: prev.truncated || cur.truncated,
+      };
+    }
+    return merged;
+  }
+
   /** 去除 HTML 標籤與實體，回傳畫面上實際顯示的純文字 */
   public stripHtml(html: string): string {
     return html.replaceAll(/<[^>]*>/g, '').replaceAll(/&[a-zA-Z#0-9]+;/g, ' ');
