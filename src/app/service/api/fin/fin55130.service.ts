@@ -106,7 +106,7 @@ export class Fin55130Service {
   }
 
   /** 匯出明細 PDF */
-  exportFIN55050DetailPDF(body: { VouNo: string }): Observable<HttpResponse<Blob>> {
+  exportFIN55050DetailPDF(body: { VouNo: string; SignatureDataType?: string }): Observable<HttpResponse<Blob>> {
     const url = `${this.apiUrl}/exportFIN55050DetailPDF`;
     return this.http.post(url, body, {
       observe: 'response',

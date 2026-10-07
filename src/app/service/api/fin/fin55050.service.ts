@@ -153,7 +153,7 @@ export class FIN55050Service {
   }
 
   /** 匯出明細 PDF */
-  exportFIN55050DetailPDF(body: { VouNo: string }): Observable<HttpResponse<Blob>> {
+  exportFIN55050DetailPDF(body: { VouNo: string; SignatureDataType?: string }): Observable<HttpResponse<Blob>> {
     const url = `${this.apiUrl}/exportFIN55050DetailPDF`;
     return this.http.post(url, body, {
       observe: 'response',
@@ -177,8 +177,7 @@ export class FIN55050Service {
   }
 
   queryFIN55050Detail(body: { VouNo: string }): Observable<any> {
-    const url = `${this.apiUrl}/queryFIN55050Detail`.replace('/FIN0000/GLS1000', '/FIN0000/GLS1000'); // 保持同路徑前綴
-    return this.http.post<any>(`${environment.ApiUrl}/FIN0000/GLS1000/queryFIN55050Detail`, body);
+    return this.http.post<any>(`${this.apiUrl}/queryFIN55050Detail`, body);
   }
 
 }

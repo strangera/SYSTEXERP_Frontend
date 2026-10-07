@@ -172,6 +172,7 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
     this.PDFBtnLoading = true;
     this.fin55050Service.exportFIN55050DetailPDF({
       VouNo: this.vouNo,
+      SignatureDataType: 'FIN55050',
     })
       .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
