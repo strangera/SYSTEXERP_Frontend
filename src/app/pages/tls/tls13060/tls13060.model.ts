@@ -1,5 +1,19 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
+import { ColumnGroup } from "@shared/components/table-report/table-report.model";
+import { transformOptionsForExport } from "src/app/others/componentextends/basic-print/basic-print-data.component";
 import { Column, formatDate, formatYN } from "../../../others/component/table/table.model";
+
+export const Pay_no_Option = [
+  { value: '0', label: '不收取' },
+  { value: '1', label: '收取' },
+];
+
+// 列印/匯出由後端產生，不會套用 format，需另外提供 exportFormat 對照
+const Pay_no_ExportFormat = transformOptionsForExport(Pay_no_Option);
+
+export const formatPayNo = (value: string): string => {
+  return Pay_no_Option.find((opt) => opt.value === value)?.label ?? '';
+};
 
 export const TLTTALENT_columns: Column[] = [
   // { field: 'talent_id', header: '合約編號系統 id', visible: true },
@@ -122,6 +136,35 @@ export const TLTTALENT_columns: Column[] = [
   // { field: 'app_date', header: '核准日期', visible: true, format: formatDateTime },
   // { field: 'app_usr_no', header: '核准人員', visible: true },
   // { field: 'app_usr_name', header: '核准人員姓名', visible: true },
+
+  // 有價券 (Pay_no_Option)
+  // { field: 'pay_no_79', header: 'APP提貨單', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_77', header: '感熱紙抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_78', header: 'APP抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_62', header: '商品提貨單', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_20', header: '禮券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_71', header: '商品抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_72', header: '外來提貨單(抵用券)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_73', header: '外來禮券(抵用券)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_74', header: '活動券(自營)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_75', header: '折價券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  // { field: 'pay_no_76', header: '現抵', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+
+  { field: 'pay_no_79', header: 'APP提貨單', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_77', header: '感熱紙抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_78', header: 'APP抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_62', header: '商品提貨單', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_20', header: '禮券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_71', header: '商品抵用券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_72', header: '外來提貨單(抵用券)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_73', header: '外來禮券(抵用券)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_74', header: '活動券(自營)', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_75', header: '折價券', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+  { field: 'pay_no_76', header: '現抵', groupField: '有價券', visible: true, format: formatPayNo, exportFormat: Pay_no_ExportFormat },
+];
+
+export const TLS13060_columnGroup: ColumnGroup[] = [
+  { field: '有價券', header: '有價券' },
 ];
 
 /**

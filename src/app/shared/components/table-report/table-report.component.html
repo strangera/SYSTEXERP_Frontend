@@ -1,146 +1,354 @@
-<p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
-  [scrollHeight]="autoHeight ? undefined : '700px'" [(selection)]="selectedItems" sortMode="multiple"
-  (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!effectiveLazy" [resetPageOnSort]="false"
-  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
-  [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
-  styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
-  (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="effectiveLazy" [virtualScroll]="virtualScrollEnabled"
-  [virtualScrollDelay]="0" [virtualScrollOptions]="{
+<p-table
+  #dt
+  [columns]="selectedColumns"
+  [value]="virtualData"
+  [scrollable]="true"
+  [dataKey]="dataKey"
+  [scrollHeight]="autoHeight ? undefined : '700px'"
+  [(selection)]="selectedItems"
+  sortMode="multiple"
+  (onSort)="onSort($event)"
+  (sortFunction)="customSort($event)"
+  [customSort]="!effectiveLazy"
+  [resetPageOnSort]="false"
+  [selectionMode]="showCheckBox ? 'multiple' : null"
+  [rowTrackBy]="trackByFn"
+  [resizableColumns]="true"
+  [reorderableColumns]="true"
+  (onColReorder)="onColReorder($event)"
+  (onLazyLoad)="onLazyLoad()"
+  styleClass="p-datatable-sm p-datatable-gridlines"
+  [selectAll]="isAllSelected"
+  (selectAllChange)="onSelectAllChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  [rowSelectable]="rowSelectableWrapper"
+  [lazy]="effectiveLazy"
+  [virtualScroll]="virtualScrollEnabled"
+  [virtualScrollDelay]="0"
+  [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
     onScroll: onScroll,
     itemSize: ItemSize,
-    numToleratedItems: computedNumToleratedItems
-  }" [expandedRowKeys]="expandedRows" [loading]="loading">
+    numToleratedItems: computedNumToleratedItems,
+  }"
+  [expandedRowKeys]="expandedRows"
+  [loading]="loading"
+>
   <ng-template pTemplate="caption">
-    <app-table-report-caption [data]="data" [footerData]="footerData" [columns]="columns"
-      (columnsEvent)="columns = $event" [dataKey]="dataKey" [selectedColumns]="selectedColumns"
-      (selectedColumnsEvent)="selectedColumns = $event" [selectedItems]="selectedItems" [tableKey]="tableKey"
-      [showCaption]="showCaption" [showFilter]="showFilter" [showReportMode]="showReportMode" [showDelete]="showDelete"
-      [showInsert]="showInsert" (insert)="insert.emit()" [showExcel]="showExcel" [expansionColumns]="expansionColumns"
-      [expandedRows]="expandedRows" [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
-      [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
-      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
-      (delete)="delete.emit($event)" [deleteDisabled]="deleteDisabled" (exportExcel)="exportExcel.emit()"
-      (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)" [exportContext]="exportContext">
+    <app-table-report-caption
+      [data]="data"
+      [footerData]="footerData"
+      [columns]="columns"
+      (columnsEvent)="columns = $event"
+      [dataKey]="dataKey"
+      [selectedColumns]="selectedColumns"
+      (selectedColumnsEvent)="selectedColumns = $event"
+      [selectedItems]="selectedItems"
+      [tableKey]="tableKey"
+      [showCaption]="showCaption"
+      [showFilter]="showFilter"
+      [showReportMode]="showReportMode"
+      [showDelete]="showDelete"
+      [showInsert]="showInsert"
+      (insert)="insert.emit()"
+      [showExcel]="showExcel"
+      [expansionColumns]="expansionColumns"
+      [expandedRows]="expandedRows"
+      [showExcelExport]="showExcelExport"
+      [showExcelImport]="showExcelImport"
+      [pageOrientation]="pageOrientation"
+      [pageSizeSetting]="pageSizeSetting"
+      [showCustomExcelImport]="showCustomExcelImport"
+      [exportExcelLoading]="exportExcelLoading"
+      [showPage]="false"
+      (delete)="delete.emit($event)"
+      [deleteDisabled]="deleteDisabled"
+      (exportExcel)="exportExcel.emit()"
+      (importExcel)="importExcel.emit($event)"
+      [totalRecords]="dt.totalRecords"
+      [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)"
+      [exportContext]="exportContext"
+    >
       <header><ng-content select="header"></ng-content></header>
     </app-table-report-caption>
   </ng-template>
 
   <ng-template pTemplate="header" let-columns>
-    <ng-container *ngIf="columnGroup && columnGroup.length > 0 && !(topColumnGroup && topColumnGroup.length > 0)">
+    <ng-container
+      *ngIf="
+        columnGroup &&
+        columnGroup.length > 0 &&
+        !(topColumnGroup && topColumnGroup.length > 0)
+      "
+    >
       <tr>
-        <th *ngIf="showReorder" scope="col" class="text-center" rowspan="2" pFrozenColumn
-          [style.min-width]="serialColumnWidth" [style.width]="serialColumnWidth">
+        <th
+          *ngIf="showReorder"
+          scope="col"
+          class="text-center"
+          rowspan="2"
+          pFrozenColumn
+          [style.min-width]="serialColumnWidth"
+          [style.width]="serialColumnWidth"
+        >
           序號
         </th>
-        <th *ngIf="showCheckBox" scope="col" class="w-1rem group-header text-center" rowspan="2">
+        <th
+          *ngIf="showCheckBox"
+          scope="col"
+          class="w-1rem group-header text-center"
+          rowspan="2"
+        >
           <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
-          <span *ngIf="tableHeaderCheckboxLabel"> {{ tableHeaderCheckboxLabel }} </span>
+          <span *ngIf="tableHeaderCheckboxLabel">
+            {{ tableHeaderCheckboxLabel }}
+          </span>
         </th>
-        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem group-header" rowspan="2"> 收合/展開 </th>
+        <th
+          *ngIf="expansionColumns.length"
+          scope="col"
+          class="w-1rem group-header"
+          rowspan="2"
+        >
+          收合/展開
+        </th>
 
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 分組 Header -->
-          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" scope="col"
-            [attr.colspan]=" tableUtility.getColumnSpan(columns, col.groupField!) " class="group-header text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)"
+            scope="col"
+            [attr.colspan]="
+              tableUtility.getColumnSpan(columns, col.groupField!)
+            "
+            class="group-header text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="col.showSort === false"
+            [style.min-width]="col.width || '55px'"
+            [style.width]="col.width"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ getGroupHeader(col.groupField!) }}
           </th>
 
           <!-- 非分組欄位 (跨兩列) -->
-          <th *ngIf="!col.groupField" scope="col" rowspan="2" class="text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]=" col.showSort === false || showSort === false " pFrozenColumn
-            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="getColMinWidth(col)"
-            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="!col.groupField"
+            scope="col"
+            rowspan="2"
+            class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="
+              col.showSort === false || showSort === false
+            "
+            pFrozenColumn
+            [frozen]="!!col.frozen"
+            [alignFrozen]="col.alignFrozen || 'right'"
+            [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ col.header }}
-            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
-              [field]="col.sortField ?? col.field" />
+            <p-sortIcon
+              *ngIf="showSort && col.showSort !== false && data.length"
+              [field]="col.sortField ?? col.field"
+            />
           </th>
         </ng-container>
 
-        <th [hidden]="!showManage" scope="col" rowspan="2" class="w-1rem text-center group-header" alignFrozen="right"
-          pFrozenColumn [frozen]="true"> 管理 </th>
+        <th
+          [hidden]="!showManage"
+          scope="col"
+          rowspan="2"
+          class="w-1rem text-center group-header"
+          alignFrozen="right"
+          pFrozenColumn
+          [frozen]="true"
+        >
+          管理
+        </th>
       </tr>
 
       <!-- 分組子列 -->
       <tr>
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="col.groupField" scope="col" class="text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="getColMinWidth(col)"
-            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="col.groupField"
+            scope="col"
+            class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="col.showSort === false"
+            [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ col.header }}
-            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
+            <p-sortIcon
+              *ngIf="showSort && col.showSort !== false && data.length"
+              [field]="col.field"
+            />
           </th>
         </ng-container>
       </tr>
     </ng-container>
 
     <!-- 選用的第三層表頭分組：columnGroup 之上再多一層 (例如 TLS32020 的「比較期/基準期/差異」) -->
-    <ng-container *ngIf="columnGroup && columnGroup.length > 0 && topColumnGroup && topColumnGroup.length > 0">
+    <ng-container
+      *ngIf="
+        columnGroup &&
+        columnGroup.length > 0 &&
+        topColumnGroup &&
+        topColumnGroup.length > 0
+      "
+    >
       <tr>
-        <th *ngIf="showReorder" scope="col" class="text-center" rowspan="3" pFrozenColumn
-          [style.min-width]="serialColumnWidth" [style.width]="serialColumnWidth">
+        <th
+          *ngIf="showReorder"
+          scope="col"
+          class="text-center"
+          rowspan="3"
+          pFrozenColumn
+          [style.min-width]="serialColumnWidth"
+          [style.width]="serialColumnWidth"
+        >
           序號
         </th>
-        <th *ngIf="showCheckBox" scope="col" class="w-1rem group-header text-center" rowspan="3">
+        <th
+          *ngIf="showCheckBox"
+          scope="col"
+          class="w-1rem group-header text-center"
+          rowspan="3"
+        >
           <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
-          <span *ngIf="tableHeaderCheckboxLabel"> {{ tableHeaderCheckboxLabel }} </span>
+          <span *ngIf="tableHeaderCheckboxLabel">
+            {{ tableHeaderCheckboxLabel }}
+          </span>
         </th>
-        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem group-header" rowspan="3"> 收合/展開 </th>
+        <th
+          *ngIf="expansionColumns.length"
+          scope="col"
+          class="w-1rem group-header"
+          rowspan="3"
+        >
+          收合/展開
+        </th>
 
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 第三層分組 Header -->
-          <th *ngIf="tableUtility.shouldRenderTopGroupHeader(col, i, columns)" scope="col"
-            [attr.colspan]=" tableUtility.getTopGroupColumnSpan(columns, col.topGroupField!) " class="group-header text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="tableUtility.shouldRenderTopGroupHeader(col, i, columns)"
+            scope="col"
+            [attr.colspan]="
+              tableUtility.getTopGroupColumnSpan(columns, col.topGroupField!)
+            "
+            class="group-header text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="col.showSort === false"
+            [style.min-width]="col.width || '55px'"
+            [style.width]="col.width"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ getTopGroupHeader(col.topGroupField!) }}
           </th>
 
           <!-- 無第三層分組欄位 (跨三列) -->
-          <th *ngIf="!col.topGroupField" scope="col" rowspan="3" class="text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]=" col.showSort === false || showSort === false " pFrozenColumn
-            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'" [style.min-width]="getColMinWidth(col)"
-            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="!col.topGroupField"
+            scope="col"
+            rowspan="3"
+            class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="
+              col.showSort === false || showSort === false
+            "
+            pFrozenColumn
+            [frozen]="!!col.frozen"
+            [alignFrozen]="col.alignFrozen || 'right'"
+            [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ col.header }}
-            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
-              [field]="col.sortField ?? col.field" />
+            <p-sortIcon
+              *ngIf="showSort && col.showSort !== false && data.length"
+              [field]="col.sortField ?? col.field"
+            />
           </th>
         </ng-container>
 
-        <th [hidden]="!showManage" scope="col" rowspan="3" class="w-1rem text-center group-header" alignFrozen="right"
-          pFrozenColumn [frozen]="true"> 管理 </th>
+        <th
+          [hidden]="!showManage"
+          scope="col"
+          rowspan="3"
+          class="w-1rem text-center group-header"
+          alignFrozen="right"
+          pFrozenColumn
+          [frozen]="true"
+        >
+          管理
+        </th>
       </tr>
 
       <!-- 第二層分組 Header -->
       <tr>
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)" scope="col"
-            [attr.colspan]=" tableUtility.getColumnSpan(columns, col.groupField!) " class="group-header text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="col.width || '55px'"
-            [style.width]="col.width" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)"
+            scope="col"
+            [attr.colspan]="
+              tableUtility.getColumnSpan(columns, col.groupField!)
+            "
+            class="group-header text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="col.showSort === false"
+            [style.min-width]="col.width || '55px'"
+            [style.width]="col.width"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ getGroupHeader(col.groupField!) }}
           </th>
         </ng-container>
@@ -149,14 +357,28 @@
       <!-- 分組子列 (個別欄位) -->
       <tr>
         <ng-container *ngFor="let col of columns; let i = index">
-          <th *ngIf="col.groupField" scope="col" class="text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }" pResizableColumn
-            [pSortableColumn]=" showSort ? col.sortField ?? col.field : undefined "
-            [pSortableColumnDisabled]="col.showSort === false" [style.min-width]="getColMinWidth(col)"
-            [style.width]="getColWidth(col)" [attr.draggable]="true" (dragstart)="onCustomDragStart($event, col, i)"
-            (dragover)="onCustomDragOver($event, col)" (drop)="onCustomDrop($event, col, i)">
+          <th
+            *ngIf="col.groupField"
+            scope="col"
+            class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pResizableColumn
+            [pSortableColumn]="
+              showSort ? col.sortField ?? col.field : undefined
+            "
+            [pSortableColumnDisabled]="col.showSort === false"
+            [style.min-width]="getColMinWidth(col)"
+            [style.width]="getColWidth(col)"
+            [attr.draggable]="true"
+            (dragstart)="onCustomDragStart($event, col, i)"
+            (dragover)="onCustomDragOver($event, col)"
+            (drop)="onCustomDrop($event, col, i)"
+          >
             {{ col.header }}
-            <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
+            <p-sortIcon
+              *ngIf="showSort && col.showSort !== false && data.length"
+              [field]="col.field"
+            />
           </th>
         </ng-container>
       </tr>
@@ -165,52 +387,116 @@
     <!-- 無 Column Group 一般情況 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="showReorder" scope="col" class="text-center" pFrozenColumn [style.min-width]="serialColumnWidth"
-          [style.width]="serialColumnWidth">
+        <th
+          *ngIf="showReorder"
+          scope="col"
+          class="text-center"
+          pFrozenColumn
+          [style.min-width]="serialColumnWidth"
+          [style.width]="serialColumnWidth"
+        >
           序號
         </th>
         <th *ngIf="showCheckBox" scope="col" class="w-1rem text-center">
           <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
-          <span *ngIf="tableHeaderCheckboxLabel"> {{ tableHeaderCheckboxLabel }} </span>
+          <span *ngIf="tableHeaderCheckboxLabel">
+            {{ tableHeaderCheckboxLabel }}
+          </span>
         </th>
-        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem">收合/展開</th>
+        <th *ngIf="expansionColumns.length" scope="col" class="w-1rem">
+          收合/展開
+        </th>
 
-        <th *ngFor="let col of columns" scope="col" pReorderableColumn pResizableColumn
+        <th
+          *ngFor="let col of columns"
+          scope="col"
+          pReorderableColumn
+          pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
-          [ngClass]="{ 'multiline-header': allowMultilineHeader }" [style.min-width]="getColMinWidth(col)"
-          [style.width]="getColWidth(col)">
+          [pSortableColumnDisabled]="!showSort || col.showSort === false"
+          class="text-center wrap-header"
+          [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+          [style.min-width]="getColMinWidth(col)"
+          [style.width]="getColWidth(col)"
+        >
           {{ col.header }}
-          <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
+          <p-sortIcon
+            *ngIf="showSort && col.showSort !== false && data.length"
+            [field]="col.field"
+          />
         </th>
 
-        <th [hidden]="!showManage" scope="col" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
-          [frozen]="true"> 管理 </th>
+        <th
+          [hidden]="!showManage"
+          scope="col"
+          class="w-1rem text-center"
+          alignFrozen="right"
+          pFrozenColumn
+          [frozen]="true"
+        >
+          管理
+        </th>
       </tr>
     </ng-container>
   </ng-template>
 
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
-    let-expanded="expanded">
-    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData) }"
-      [pSelectableRowDisabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)" [pReorderableRow]="index"
-      [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
-      <td *ngIf="showReorder" class="text-center serial-cell" pFrozenColumn [style.min-width]="serialColumnWidth"
-        [style.width]="serialColumnWidth">
+  <ng-template
+    pTemplate="body"
+    let-rowIndex="rowIndex"
+    let-rowData
+    let-columns="columns"
+    let-index="rowIndex"
+    let-expanded="expanded"
+  >
+    <tr
+      [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined"
+      [pSelectableRow]="rowData"
+      [ngClass]="{
+        'p-disabled-row': nonSelectableKeys.has(
+          dataKey ? rowData?.[dataKey] : rowData
+        ),
+      }"
+      [pSelectableRowDisabled]="
+        nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)
+      "
+      [pReorderableRow]="index"
+      [pSelectableRowIndex]="rowIndex"
+      (click)="itemClick.emit(rowData)"
+    >
+      <td
+        *ngIf="showReorder"
+        class="text-center serial-cell"
+        pFrozenColumn
+        [style.min-width]="serialColumnWidth"
+        [style.width]="serialColumnWidth"
+      >
         {{ rowIndex + 1 }}
       </td>
       <td *ngIf="showCheckBox">
-        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-          [disabled]="nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)" />
+        <p-tableCheckbox
+          class="flex justify-content-center"
+          [pSelectableRow]="rowData"
+          [value]="rowData"
+          [disabled]="
+            nonSelectableKeys.has(dataKey ? rowData?.[dataKey] : rowData)
+          "
+        />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
-        <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-          [raised]="!expandedRows[rowData?.[dataKey ?? index]]" [loading]="rowData?.expansionLoading" [icon]="
+        <p-button
+          pRipple
+          [text]="true"
+          [rounded]="true"
+          [plain]="true"
+          severity="secondary"
+          [raised]="!expandedRows[rowData?.[dataKey ?? index]]"
+          [loading]="rowData?.expansionLoading"
+          [icon]="
             expandedRows[rowData?.[dataKey ?? index]]
               ? 'pi pi-chevron-down'
               : 'pi pi-chevron-right'
-          " (click)="
+          "
+          (click)="
             tableUtility.toggleRowExpansionLogic(
               rowData,
               dataKey ?? 'id',
@@ -219,160 +505,269 @@
               expandedRows,
               this
             )
-          " [disabled]="
+          "
+          [disabled]="
             rowData?.expansionLoading ||
             (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)
-          " />
+          "
+        />
       </td>
 
-      <td *ngFor="let col of columns" class="data-cell" [class.truncate-cell]="getColMaxWidth(col) !== null"
-        [style.text-align]="col.align || 'center'" [style.text-overflow]="'ellipsis'"
-        [style.min-width]="getColMinWidth(col)" [style.width]="getColWidth(col)" [style.max-width]="getColMaxWidth(col)"
-        [attr.title]="getCellTitle(col, rowData, rowIndex)" (dblclick)="detail.emit(rowData)"
-        [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
+      <td
+        *ngFor="let col of columns"
+        class="data-cell"
+        [class.truncate-cell]="getColMaxWidth(col) !== null"
+        [style.text-align]="col.align || 'center'"
+        [style.text-overflow]="'ellipsis'"
+        [style.min-width]="getColMinWidth(col)"
+        [style.width]="getColWidth(col)"
+        [style.max-width]="getColMaxWidth(col)"
+        [attr.title]="getCellTitle(col, rowData, rowIndex)"
+        (dblclick)="detail.emit(rowData)"
+        [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']"
+      >
         <ng-container *ngIf="customTemplates[col.field]; else defaultCell">
-          <ng-container *ngTemplateOutlet="
+          <ng-container
+            *ngTemplateOutlet="
               customTemplates[col.field];
               context: { $implicit: rowData, column: col, index: rowIndex }
-            "></ng-container>
+            "
+          ></ng-container>
         </ng-container>
         <ng-template #defaultCell>
           <ng-container [ngSwitch]="col.type">
-            <div *ngSwitchCase="'image'" class="flex justify-content-center align-items-center">
-              <p-image *ngIf="rowData[col.field] && !rowData[col.field + '_error']"
-                [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true"
-                appendTo="body" (onImageError)="rowData[col.field + '_error'] = true"></p-image>
-              <span *ngIf="!rowData[col.field] || rowData[col.field + '_error']"
-                class="text-xs p-2 bg-gray-100 border-round text-500">
+            <div
+              *ngSwitchCase="'image'"
+              class="flex justify-content-center align-items-center"
+            >
+              <p-image
+                *ngIf="rowData[col.field] && !rowData[col.field + '_error']"
+                [src]="tableUtility.getImage(rowData[col.field])"
+                alt="Image"
+                width="50"
+                [preview]="true"
+                appendTo="body"
+                (onImageError)="rowData[col.field + '_error'] = true"
+              ></p-image>
+              <span
+                *ngIf="!rowData[col.field] || rowData[col.field + '_error']"
+                class="text-xs p-2 bg-gray-100 border-round text-500"
+              >
                 無法讀取圖片
               </span>
             </div>
-            <p-button *ngSwitchCase="'button'" [label]="col.buttonLabel ?? rowData?.[col.field]" severity="info"
-              (click)="selectButton.emit(rowData)" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              [link]="col.link"></p-button>
-            <div *ngSwitchCase="'html'" [innerHTML]="
+            <p-button
+              *ngSwitchCase="'button'"
+              [label]="col.buttonLabel ?? rowData?.[col.field]"
+              severity="info"
+              (click)="selectButton.emit(rowData)"
+              [disabled]="col.disabled ? col.disabled(rowData) : false"
+              [link]="col.link"
+            ></p-button>
+            <div
+              *ngSwitchCase="'html'"
+              [innerHTML]="
                 sanitizer.bypassSecurityTrustHtml(rowData[col.field])
-              " class="html-cell"></div>
+              "
+              class="html-cell"
+            ></div>
             <ng-container *ngSwitchCase="'link'">
-              <p-button *ngIf="
+              <p-button
+                *ngIf="
                   !(col.linkDisabled && col.linkDisabled(rowData));
                   else linkDisabled
-                " [link]="true" [label]="
+                "
+                [link]="true"
+                [label]="
                   col.format
                     ? col.format(rowData?.[col.field], rowIndex, rowData)
                     : rowData?.[col.field]
-                " (click)="
+                "
+                (click)="
                   !(col.linkDisabled && col.linkDisabled(rowData)) &&
                     linkClick.emit({ rowData: rowData, field: col.field })
-                "></p-button>
+                "
+              ></p-button>
               <ng-template #linkDisabled>
                 <span>
                   {{
-                  tableUtility.getFormattedValue(
-                  col,
-                  rowData?.[col.field],
-                  rowIndex,
-                  rowData
-                  )
+                    tableUtility.getFormattedValue(
+                      col,
+                      rowData?.[col.field],
+                      rowIndex,
+                      rowData
+                    )
                   }}
                 </span>
               </ng-template>
             </ng-container>
             <span *ngSwitchDefault>
               {{
-              tableUtility.getFormattedValue(
-              col,
-              rowData?.[col.field],
-              rowIndex,
-              rowData
-              )
+                tableUtility.getFormattedValue(
+                  col,
+                  rowData?.[col.field],
+                  rowIndex,
+                  rowData
+                )
               }}
             </span>
           </ng-container>
         </ng-template>
       </td>
 
-      <td [hidden]="!showManage" [ngClass]="{ 'flex justify-content-center gap-2': showManage }"
-        [style]="{ height: '100%' }" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="true"
-        [style.text-align]="'center'">
-        <p-button [text]="true" [outlined]="true" [pTooltip]="getEditTooltip(rowData)" tooltipPosition="top"
-          icon="pi pi-pencil" (click)="edit.emit(rowData)" *ngIf="showEdit"
-          [disabled]="editDisabled(rowData) || !hasPermission('30')" [loading]="buttonsLoading" />
-        <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)" *ngIf="showDetail"
-          [loading]="buttonsLoading" [disabled]="detailDisabled(rowData) || !hasPermission('10')" />
+      <td
+        [hidden]="!showManage"
+        [ngClass]="{ 'flex justify-content-center gap-2': showManage }"
+        [style]="{ height: '100%' }"
+        class="no-wrap icon-button"
+        alignFrozen="right"
+        pFrozenColumn
+        [frozen]="true"
+        [style.text-align]="'center'"
+      >
+        <p-button
+          [text]="true"
+          [outlined]="true"
+          [pTooltip]="getEditTooltip(rowData)"
+          tooltipPosition="top"
+          icon="pi pi-pencil"
+          (click)="edit.emit(rowData)"
+          *ngIf="showEdit"
+          [disabled]="editDisabled(rowData) || !hasPermission('30')"
+          [loading]="buttonsLoading"
+        />
+        <p-button
+          pTooltip="查看"
+          tooltipPosition="top"
+          icon="pi pi-eye"
+          (click)="detail.emit(rowData)"
+          *ngIf="showDetail"
+          [loading]="buttonsLoading"
+          [disabled]="detailDisabled(rowData) || !hasPermission('10')"
+        />
         <ng-container *ngIf="addButton.length">
-          <div [ngStyle]="{
+          <div
+            [ngStyle]="{
               border: '1px solid var(--surface-border)',
               'border-left': '0',
-            }"></div>
+            }"
+          ></div>
           <ng-container *ngFor="let btn of addButton">
-            <p-button *ngIf="!btn.hidden || !btn.hidden(rowData)" [pTooltip]="getBtnLabel(btn, rowData)"
-              tooltipPosition="top" [icon]="btn.icon" (click)="btn.action(rowData, $event)"
-              [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading"
-              [label]="btn.icon ? undefined : getBtnLabel(btn, rowData)" styleClass="p-button-text" />
+            <p-button
+              *ngIf="!btn.hidden || !btn.hidden(rowData)"
+              [pTooltip]="getBtnLabel(btn, rowData)"
+              tooltipPosition="top"
+              [icon]="btn.icon"
+              (click)="btn.action(rowData, $event)"
+              [disabled]="btn.disabled ? btn.disabled(rowData) : false"
+              [loading]="buttonsLoading"
+              [label]="btn.icon ? undefined : getBtnLabel(btn, rowData)"
+              styleClass="p-button-text"
+            />
           </ng-container>
         </ng-container>
       </td>
     </tr>
 
-    <tr *ngIf="
+    <tr
+      *ngIf="
         expansionColumns.length && expandedRows[rowData?.[dataKey ?? index]]
-      " class="p-row-expansion">
-      <td [attr.colspan]="
+      "
+      class="p-row-expansion"
+    >
+      <td
+        [attr.colspan]="
           this.columns.length +
           (showManage ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (showReorder ? 1 : 0) +
           1
-        " class="p-0">
-        <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
-          [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
-          [expansionShowSort]="expansionShowSort" [expansionShowReorder]="expansionShowReorder" />
+        "
+        class="p-0"
+      >
+        <app-table-expansion
+          [rowData]="rowData"
+          [expansionDataKey]="expansionDataKey"
+          [expansionColumns]="expansionColumns"
+          [expansionMultiSortMeta]="expansionMultiSortMeta"
+          [expansionShowSort]="expansionShowSort"
+          [expansionShowReorder]="expansionShowReorder"
+        />
       </td>
     </tr>
-    <tr *ngIf="
+    <tr
+      *ngIf="
         rowData && isGroupLastRow(rowData, rowIndex) && _hasSubtotalColumns
-      " class="font-bold text-sm bg-gray-200 text-primary">
-      <td class="text-center" [colSpan]="
+      "
+      class="font-bold text-sm bg-gray-200 text-primary"
+    >
+      <td
+        class="text-center"
+        [colSpan]="
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
           tableUtility.getFirstSubtotalIndex(selectedColumns)
-        ">
+        "
+      >
         <span class="font-bold">
           {{ subTotalLabel }}
           {{
-          groupRowsBy && showSubTotalGroupValue
-          ? "(" +
-          tableUtility.getGroupValue(rowData, groupRowsBy, selectedColumns) +
-          ")"
-          : ""
+            groupRowsBy && showSubTotalGroupValue
+              ? "(" +
+                tableUtility.getGroupValue(
+                  rowData,
+                  groupRowsBy,
+                  selectedColumns
+                ) +
+                ")"
+              : ""
           }}
         </span>
       </td>
       <ng-container *ngFor="let col of selectedColumns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstSubtotalIndex(selectedColumns)"
-          [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }" [ngClass]="[
+        <td
+          *ngIf="i >= tableUtility.getFirstSubtotalIndex(selectedColumns)"
+          [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }"
+          [ngClass]="[
             col.cellClass ? col.cellClass(rowData, 'subtotal') || '' : '',
-          ]">
+          ]"
+        >
           <span class="font-bold">{{ getGroupSubtotal(rowData, col) }}</span>
         </td>
       </ng-container>
-      <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+      <td
+        [hidden]="!showManage"
+        class="text-center"
+        alignFrozen="right"
+        pFrozenColumn
+        [frozen]="true"
+      ></td>
     </tr>
-    <ng-container *ngIf="
+    <ng-container
+      *ngIf="
         _loading && data.length < totalRecords && rowIndex === data.length - 1
-      ">
+      "
+    >
       <tr *ngFor="let i of [0, 1, 2, 3]">
-        <td [colSpan]="
+        <td
+          [colSpan]="
             (showReorder ? 1 : 0) +
             (showCheckBox ? 1 : 0) +
             (expansionColumns.length ? 1 : 0)
-          " pFrozenColumn>
+          "
+          pFrozenColumn
+        >
           <p-skeleton />
         </td>
         <td *ngFor="let col of columns"><p-skeleton /></td>
-        <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
+        <td
+          [hidden]="!showManage"
+          class="text-center"
+          alignFrozen="right"
+          pFrozenColumn
+          [frozen]="true"
+        >
           <p-skeleton />
         </td>
       </tr>
@@ -380,34 +775,57 @@
   </ng-template>
 
   <ng-template pTemplate="footer" let-rowData>
-    <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">
-      <td class="text-center" [colSpan]="
+    <tr
+      *ngFor="let row of footerRows"
+      class="font-bold text-center text-sm text-primary"
+    >
+      <td
+        class="text-center"
+        [colSpan]="
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
           tableUtility.getFirstFooterIndex(selectedColumns, row)
-        ">
+        "
+      >
         <span class="font-bold">
           {{
-          footerLabelField && row[footerLabelField] !== null
-          ? row[footerLabelField]
-          : footerLabel
+            footerLabelField && row[footerLabelField] !== null
+              ? row[footerLabelField]
+              : footerLabel
           }}
         </span>
       </td>
       <ng-container *ngFor="let col of selectedColumns; let i = index">
         <td
-          *ngIf="i >= tableUtility.getFirstFooterIndex(selectedColumns, row) && !tableUtility.isSpannedByPrevious(footerSpanConfig, selectedColumns, col.field)"
-          [colSpan]="tableUtility.getColSpanForField(footerSpanConfig, col.field)"
-          [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }" [ngClass]="[
+          *ngIf="
+            i >= tableUtility.getFirstFooterIndex(selectedColumns, row) &&
+            !tableUtility.isSpannedByPrevious(
+              footerSpanConfig,
+              selectedColumns,
+              col.field
+            )
+          "
+          [colSpan]="
+            tableUtility.getColSpanForField(footerSpanConfig, col.field)
+          "
+          [ngStyle]="{ 'text-align': col.align ? col.align : 'center' }"
+          [ngClass]="[
             col.cellClass ? col.cellClass(rowData, 'footer') || '' : '',
-          ]">
+          ]"
+        >
           <span class="font-bold">
             {{ tableUtility.getFormattedValue(col, row[col.field], 0, row) }}
           </span>
         </td>
       </ng-container>
-      <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
+      <td
+        [hidden]="!showManage"
+        class="text-center"
+        alignFrozen="right"
+        pFrozenColumn
+        [frozen]="true"
+      ></td>
     </tr>
   </ng-template>
   <ng-template pTemplate="summary" *ngIf="showSummary">
@@ -416,24 +834,37 @@
         <span [pTooltip]="'已載入筆數 ' + data.length">
           總筆數: {{ totalRecords }} 筆
         </span>
-        <p-button icon="pi pi-arrow-up" (click)="dt.scrollTo({ top: 0, behavior: 'smooth' })"
-          styleClass="p-button-text p-button-sm ml-2" pTooltip="滾動到頂部" />
+        <p-button
+          icon="pi pi-arrow-up"
+          (click)="dt.scrollTo({ top: 0, behavior: 'smooth' })"
+          styleClass="p-button-text p-button-sm ml-2"
+          pTooltip="滾動到頂部"
+        />
       </div>
     </div>
-    @if (currentProgNo() && (showReportMode || showSignature) && data.length){
-    <app-report-signature [dataType]="currentProgNo()!" />
+    @if (
+      !hideSignature &&
+      currentProgNo() &&
+      (showReportMode || showSignature) &&
+      data.length
+    ) {
+      <app-report-signature [dataType]="currentProgNo()!" />
     }
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr *ngIf="hasSearched">
-      <td [attr.colspan]="
+      <td
+        [attr.colspan]="
           (showReorder ? 1 : 0) +
           (showCheckBox ? 1 : 0) +
           (expansionColumns.length ? 1 : 0) +
           selectedColumns.length +
           (showManage ? 1 : 0)
-        ">
-        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+        "
+      >
+        <div
+          class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500"
+        >
           <i class="pi pi-search mr-2"></i>
           {{ emptyMessage || "查無資料" }}
         </div>
