@@ -64,6 +64,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     MVM_Status: [{ value: '', disabled: true }], // 狀態
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期
     APPLY_USR_No: [{ value: this.authService.currentUserValue?.user_No, disabled: true }], // 申請人編號，預帶登入人員
+    APPLY_USR_Name: [{ value: this.authService.currentUserValue?.user_Name, disabled: true }], // 申請人姓名，預帶登入人員；編輯時由 rowdata patchValue 覆蓋回原申請人姓名
     MVM_Remark: [null, [Validators.maxLength(200)]], // 倉別調撥單說明
   });
 

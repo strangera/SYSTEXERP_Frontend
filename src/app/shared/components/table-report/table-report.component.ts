@@ -145,6 +145,7 @@ export class TableReportComponent implements OnChanges, AfterViewInit, OnDestroy
   @Input() showFilter = true;
   @Input() showReportMode = true;
   @Input() showSignature = false;
+  @Input() hideSignature = false; // 強制隱藏報表簽核欄（優先於 showReportMode/showSignature）
   @Input() customReport = false;
   @Output() exportEvent = new EventEmitter<string>();
   @Output() delete = new EventEmitter<any>();
