@@ -1128,6 +1128,25 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢專櫃招募編號(TLTTALENT.apply_no) 下拉選單（去重） */
+  queryTLTTALENTApplyNoDropDownList(): Observable<Option[] | null> {
+    return this.queryDropdownWithParams<TLTTALENTItem, TLTTALENTQuery>('/TLS0000/TLS2000/queryTLTTALENTDropDownList', {}).pipe(
+      map(items => {
+        if (!items) return null;
+        const seen = new Set<string>();
+        const result: Option[] = [];
+        for (const item of items) {
+          if (item.apply_no && !seen.has(item.apply_no)) {
+            seen.add(item.apply_no);
+            result.push({ value: item.apply_no, label: `${item.apply_no} - ${item.tlt_name}` });
+          }
+        }
+        return result;
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+  }
+
   /** 查詢專櫃主檔(TLTTALENT) (依照審核狀態查詢) */
   queryTltTalentStatus(body: TalentStatusQuery): Observable<IDropdownItem[] | null> {
     return this.queryDropdownWithParams<IDropdownItem, TalentStatusQuery>('/queryTLTTALENT_Status_DropDownList', body).pipe(
