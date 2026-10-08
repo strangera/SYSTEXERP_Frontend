@@ -1043,6 +1043,13 @@
       [filter]="true"
       (valueChange)="$event && ptaFilterForm.controls.VEN_No.setValue(null)"
     />
+    <app-input-number
+      class="col-12 md:col-4"
+      label="金額"
+      controlName="Amt"
+      [control]="ptaFilterForm.controls.Amt"
+      [submitted]="submitted"
+    />
   </form>
   <div class="flex justify-content-end mb-2">
     <app-button

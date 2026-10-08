@@ -1231,6 +1231,8 @@ export interface QueryGLS3003AbatAcctRequest {
   PTA?: string | null;
   /** 廠商或員工代號（對應 GLS3002.DetailNo，模糊查詢） */
   VEN_No?: string | null;
+  /** 借方或貸方餘額查詢條件 */
+  Amt?: number | null;
 }
 
 export interface QueryGLS3003AbatAcctResponse {

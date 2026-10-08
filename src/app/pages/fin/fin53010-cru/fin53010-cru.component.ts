@@ -15,6 +15,7 @@ import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DialogComponent } from '@shared/components/dialog/dialog.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/components/input-number/input-number.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
@@ -103,6 +104,7 @@ function parseApiDateToLocal(s: string | null | undefined): Date | null {
     CalendarComponent,
     DialogComponent,
     DropdownComponent,
+    InputNumberComponent,
     InputTextComponent,
     MenubarComponent,
     TableComponent,
@@ -239,6 +241,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     PTA: [''],
     VEN_No: [null as string | null],  // 廠商代號
     USR_No: [null as string | null],  // 員工代號（與 VEN_No 二選一）
+    Amt: [null as number | null],
   });
   ptaDialogColumns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true },
@@ -4202,13 +4205,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   filterPtaDialog(): void {
-    const { VouNo, PTA, VEN_No, USR_No } = this.ptaFilterForm.value;
+    const { VouNo, PTA, VEN_No, USR_No, Amt } = this.ptaFilterForm.value;
     this.ptaDialogLoading = true;
     this.service.queryGLS3003AbatAcct({
       AccNo: this.currentEditingPtaAccNo,
       VouNo: VouNo || null,
       PTA: PTA || null,
       VEN_No: VEN_No || USR_No || null,  // 廠商或員工代號二選一
+      Amt: Amt ?? null,
     })
       .pipe(finalize(() => (this.ptaDialogLoading = false)), take(1))
       .subscribe((response: { Data?: QueryGLS3003AbatAcctResponse[] | null }) => {
