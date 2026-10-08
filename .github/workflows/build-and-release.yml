@@ -33,7 +33,8 @@ jobs:
       shell: powershell
       run: |
         $currentSha = git rev-parse HEAD
-        $lastSha = "${{ vars.LAST_BUILD_SHA }}"
+        $cacheFile = "C:\actions-runner\.last-build-sha-frontend.txt"
+        $lastSha = if (Test-Path $cacheFile) { (Get-Content $cacheFile -Raw).Trim() } else { "" }
         $isPush = "${{ github.event_name }}" -eq "push"
         $isManual = "${{ github.event_name }}" -eq "workflow_dispatch"
         if (-not $isPush -and -not $isManual -and $lastSha -eq $currentSha) {
@@ -189,16 +190,10 @@ jobs:
     - name: Save last build SHA
       if: steps.check.outputs.skip != 'true' && github.event_name == 'workflow_dispatch'
       shell: powershell
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        $headers = @{
-          Authorization = "Bearer $env:GITHUB_TOKEN"
-          Accept = "application/vnd.github+json"
-        }
-        $body = "{""value"":""${{ steps.check.outputs.sha }}""}"
-        Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/actions/variables/LAST_BUILD_SHA" -Method PATCH -Headers $headers -Body $body -ContentType "application/json"
-        Write-Host "Saved LAST_BUILD_SHA: ${{ steps.check.outputs.sha }}"
+        $sha = "${{ steps.check.outputs.sha }}"
+        $sha | Out-File -FilePath "C:\actions-runner\.last-build-sha-frontend.txt" -Encoding UTF8 -NoNewline
+        Write-Host "Saved SHA: $sha"
 
     - name: Build Summary
       if: steps.check.outputs.skip != 'true'
