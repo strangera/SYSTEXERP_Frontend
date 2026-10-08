@@ -57,7 +57,13 @@ export class Tls31050CRUComponent implements OnChanges {
     { field: 'BudgetRate', header: '營業目標佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 2), align: 'right' },
     { field: 'PerformanceRate', header: '營業實績佔比', groupField: '營業佔比', format: (v) => formatPercentage(v, 2), align: 'right' },
     { field: 'TxnCount', header: '交易筆數', groupField: '客單價', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', groupField: '客單價', format: formatAmount, align: 'right' },
+{ 
+  field: 'AvgTicket', 
+  header: '客單價', 
+  groupField: '客單價', 
+  format: (v) => formatAmountWithDecimals(v, 2), 
+  align: 'right' 
+},
     { field: 'tlt_space', header: '坪數', groupField: '營業坪效', format: (v) => formatAmountWithDecimals(v, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: '月累計', format: formatAmount, align: 'right' },
@@ -124,34 +130,102 @@ private queryDetail(): void {
       this.data = res.Data ?? [];
       this.footerTotal = res.TotalData ?? null;
 
-this.footershowTotal = this.footerTotal
-  ? {
-      budget: this.footerTotal.TotalBudget,
-      AVN_TotSaleAmt: this.footerTotal.TotalSales,
+      const totalBudget = this.data.reduce(
+        (sum, item) => sum + Number(item.budget ?? 0),
+        0
+      );
 
-      AchievementRate: this.footerTotal.AvgAchievementRate,
+      const totalSales = this.data.reduce(
+        (sum, item) => sum + Number(item.AVN_TotSaleAmt ?? 0),
+        0
+      );
 
-      BudgetRate: 100,
-      PerformanceRate: 100,
+      const totalTxnCount = this.data.reduce(
+        (sum, item) => sum + Number(item.TxnCount ?? 0),
+        0
+      );
 
-      TxnCount: this.footerTotal.TotalTxnCount,
-      AvgTicket: this.footerTotal.AvgTicket,
+      const totalNormalSales = this.data.reduce(
+        (sum, item) => sum + Number(item.NormalSales ?? 0),
+        0
+      );
 
-      tlt_space: this.footerTotal.TotalSpace,
-      MonthlyPSM: this.footerTotal.AvgPSM,
+      const totalSpecialSales = this.data.reduce(
+        (sum, item) => sum + Number(item.SpecialSales ?? 0),
+        0
+      );
 
-      MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-      MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-      CompletionRate: this.footerTotal.AvgCompletionRate,
+      const totalDiscount95Sales = this.data.reduce(
+        (sum, item) => sum + Number(item.Discount95Sales ?? 0),
+        0
+      );
 
-      PrePerformance: this.footerTotal.TotalPrePerformance,
-      ConsumerNum: this.footerTotal.TotalConsumerNum,
-      ConsumerOrder: this.footerTotal.TotalConsumerOrder
-    } as footerShowTotal
-  : null;
+      const totalDiscount90Sales = this.data.reduce(
+        (sum, item) => sum + Number(item.Discount90Sales ?? 0),
+        0
+      );
+
+      const totalDiscount80Sales = this.data.reduce(
+        (sum, item) => sum + Number(item.Discount80Sales ?? 0),
+        0
+      );
+
+      const totalDiscount70Sales = this.data.reduce(
+        (sum, item) => sum + Number(item.Discount70Sales ?? 0),
+        0
+      );
+
+      // 達成率：前端自行計算
+      const achievementRate =
+        totalBudget !== 0
+          ? (totalSales / totalBudget) * 100
+          : 0;
+
+      // 客單價：前端自行計算
+      const avgTicket =
+        totalTxnCount !== 0
+          ? totalSales / totalTxnCount
+          : 0;
+
+      this.footershowTotal = {
+        budget: totalBudget,
+        AVN_TotSaleAmt: totalSales,
+
+        NormalSales: totalNormalSales,
+        SpecialSales: totalSpecialSales,
+        Discount95Sales: totalDiscount95Sales,
+        Discount90Sales: totalDiscount90Sales,
+        Discount80Sales: totalDiscount80Sales,
+        Discount70Sales: totalDiscount70Sales,
+
+        AchievementRate: achievementRate,
+
+        BudgetRate: 100,
+        PerformanceRate: 100,
+
+        TxnCount: totalTxnCount,
+        AvgTicket: avgTicket,
+
+        tlt_space: this.footerTotal?.TotalSpace ?? 0,
+        MonthlyPSM: this.footerTotal?.AvgPSM ?? 0,
+
+        MonthlyBudgetTotal: this.footerTotal?.TotalMonthlyBudget ?? 0,
+        MonthlySalesTotal: this.footerTotal?.TotalMonthlySales ?? 0,
+        CompletionRate: this.footerTotal?.AvgCompletionRate ?? 0,
+
+        PrePerformance: this.footerTotal?.TotalPrePerformance ?? 0,
+        ConsumerNum: this.footerTotal?.TotalConsumerNum ?? 0,
+        ConsumerOrder: this.footerTotal?.TotalConsumerOrder ?? 0
+      } as footerShowTotal;
 
       this.totalRecords = res.TotalCount;
     });
+}
+private sumBy(field: keyof TLS31050DetailItem): number {
+  return this.data.reduce(
+    (sum, item) => sum + Number(item[field] ?? 0),
+    0
+  );
 }
 
   columnGroup: ColumnGroup[] = [
