@@ -178,7 +178,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     // ================= 本期 Group =================
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
-    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right', groupField: '本期' },
+    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value*100, 2), align: 'right', groupField: '本期' },
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_CustCnt', header: '本期來客數', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right', groupField: '本期' },
