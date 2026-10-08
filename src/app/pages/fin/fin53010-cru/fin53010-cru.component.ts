@@ -1349,6 +1349,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         },
       });
     }
+
+    // 傳票日期變動時，清除已自動計算的預計付款/收款日並重新計算
+    this.dataForm.controls.VouDate.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      const hasAR = this.stepARRows().length > 0;
+      const hasAP = this.stepAPRows().length > 0;
+      if (!hasAR && !hasAP) return;
+      this.stepARRows.update(rows => rows.map(r => ({ ...r, pta_date: undefined })));
+      this.stepAPRows.update(rows => rows.map(r => ({ ...r, acp_expect_pay_date: undefined })));
+      this.reconcileStepExpectedDates();
+    });
   }
 
   public readonly canGoBack = computed(() => this.currentStep() > 1);
@@ -1789,27 +1801,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   /** 預計付款/收款日：下個月第一天 + VEN_PayConditionDay 天；無天數設定時回傳 undefined */
-  private calcExpectPayDate(venOpt: Record<string, unknown> | undefined): Date | undefined {
-    const payCondDay = venOpt?.['VEN_PayConditionDay'] as number | null | undefined;
-    if (payCondDay == null) return undefined;
-    // 天數為 0：代表即付，用系統今日
-    if (payCondDay === 0) return new Date();
-    const today = new Date();
-    const base = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    return new Date(base.getFullYear(), base.getMonth(), base.getDate() + payCondDay);
-  }
-
   /**
    * AP/AR 步驟列預計付款/收款日的「唯一」填值入口——具收斂性、可重入、只補空白列。
-   *
-   * 設計目標：傳票明細填完 → 產生應收/應付 → 打 API → 日期一定帶得進來，不再有時序漏帶。
-   *
-   * 兩個獨立來源（任一成功即可帶入日期，徹底杜絕單一來源失效造成的空白）：
-   *   1) 後端權威值 getCalculatedPayDate(廠商, 立帳日)——不依賴下拉是否帶回 VEN_PayConditionDay。
-   *   2) 前端計算值 calcExpectPayDate(已補水化廠商的 VEN_PayConditionDay)——作為 fallback。
-   *
-   * 尚未有定論的廠商會被非同步補查（後端日期 + 廠商補水化），回來後再套用一次，直到收斂。
-   * 只填「目前為空」的列，因此不會覆蓋 DB 載入值或使用者手動輸入值。
+   * 日期來源唯一：後端 getCalculatedPayDate(廠商, 立帳日)，與 fn_GetExpectedPayDate 邏輯一致。
+   * 只填「目前為空」的列，不覆蓋 DB 載入值或使用者手動輸入值。
    */
   private reconcileStepExpectedDates(): void {
     const vouRaw = this.vouDateForStepSync();
@@ -1817,7 +1812,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const dateKey = this.datePipe.transform(vouDate, 'yyyy-MM-dd') ?? '';
 
     const pendingBackend = new Set<string>();
-    const pendingHydrate = new Set<string>();
 
     // 回傳 Date=可填、null=確定無日期、undefined=尚無定論(已排入待查)
     const resolveDate = (venNo: string): Date | null | undefined => {
@@ -1825,14 +1819,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       if (this.service.isEmployeePayee(venNo)) return vouDate;
       const backend = this.service.getCachedPayDate(venNo, dateKey);
       if (backend instanceof Date) return backend;
-      if (backend === undefined) pendingBackend.add(venNo);
-      if (this.service.isVendorHydratedForFin53010(venNo)) {
-        const clientDate = this.calcExpectPayDate(this.service.findVendorOptionByVenNo(venNo));
-        if (clientDate) return clientDate;
-        if (backend === null) return null; // 後端與前端都判定無日期 → 確定不帶
-      } else {
-        pendingHydrate.add(venNo);
-      }
+      if (backend === null) return null;
+      pendingBackend.add(venNo);
       return undefined;
     };
 
@@ -1857,7 +1845,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     applyOnce(); // 同步填入已快取者，並蒐集 pending
     const waits: Observable<unknown>[] = [
       ...[...pendingBackend].map(v => this.service.ensureCalculatedPayDate(v, dateKey)),
-      ...[...pendingHydrate].map(v => this.service.ensureFin53010VendorForSteps(v)),
     ];
     if (waits.length > 0) {
       forkJoin(waits).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
