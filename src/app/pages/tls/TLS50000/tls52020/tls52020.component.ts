@@ -182,6 +182,14 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
   }
+  printDirect(rowData: ITLS52020Data[]) {
+    const params = { CRN_NoList: rowData.map(item => item.CRN_No) };
+    this.printLoading = true;
+    this.fileExportService.executePdfPrint(
+      this.tls52020Service.exportTLS52020PDF(params).pipe(untilDestroyed(this), finalize(() => this.printLoading = false)),
+      (isLoading) => this.btnLoading = isLoading
+    ).subscribe();
+  }
   btnLoading = false;
   statusChange(rowData: ITLS52020Data, status: string) {
     this.btnLoading = true;

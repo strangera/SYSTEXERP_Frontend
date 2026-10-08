@@ -227,6 +227,14 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       (isLoading) => this.btnLoading = isLoading
     ).subscribe();
   }
+  printDirect(rowData: ITLS52010Data[]) {
+    const params = { PO_NoList: rowData.map(item => item.PO_No) };
+    this.printLoading = true;
+    this.fileExportService.executePdfPrint(
+      this.tls52010Service.exportTLS52010PDF(params).pipe(untilDestroyed(this), finalize(() => this.printLoading = false)),
+      (isLoading) => this.btnLoading = isLoading
+    ).subscribe();
+  }
   statusChange(rowData: ITLS52010Data, status: string) {
     this.btnLoading = true;
     this.tls52010Service.updateStatusTLS52010([rowData], status).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {

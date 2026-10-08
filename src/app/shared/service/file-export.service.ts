@@ -38,6 +38,44 @@ export class FileExportService {
   }
 
 
+  public executePdfPrint(
+    pdfObservable: Observable<HttpResponse<Blob>>,
+    btnLoadingSetter?: (isLoading: boolean) => void
+  ): Observable<HttpResponse<Blob>> {
+    btnLoadingSetter?.(true);
+
+    return pdfObservable.pipe(
+      tap({
+        next: (response: HttpResponse<Blob>) => {
+          const blob = response.body;
+          if (!blob || blob.size === 0) {
+            this.messageService.warnBubble('目前無資料可供列印。');
+            return;
+          }
+          this.printPdfBlob(blob);
+        },
+        error: () => this.messageService.errorBubble('列印失敗，請重試。'),
+        finalize: () => btnLoadingSetter?.(false)
+      })
+    );
+  }
+
+  private printPdfBlob(blob: Blob) {
+    const url = globalThis.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    iframe.src = url;
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        globalThis.URL.revokeObjectURL(url);
+        iframe.remove();
+      }, 60000);
+    };
+    document.body.appendChild(iframe);
+  }
+
   public handleResponse(
     response: HttpResponse<Blob>,
     fileExtension: string,

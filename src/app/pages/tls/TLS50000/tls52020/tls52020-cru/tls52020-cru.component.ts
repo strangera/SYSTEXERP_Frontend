@@ -145,8 +145,9 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       // 再次檢查，防止在延遲期間，使用者清除了 VEN_No/LOGO_No
       if (!this.dataForm.controls.VEN_No.value || !this.dataForm.controls.LOGO_No.value || !value) return;
       this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-        if (results.Data && results.Data.length > 0) {
-          const newData = results.Data[0];
+        const keyword = value.trim();
+        const newData = results.Data?.find(d => d.PLU_No === keyword || d.PLU_MagNo === keyword || d.PLU_OrgPLUNo === keyword);
+        if (newData) {
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
           const salePrc = newData.PLU_SalePrc || 0;
           const taxType = newData.PLU_StockTaxType;
@@ -207,7 +208,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           // }, 40);
 
         } else {
-          this.messageService.errorBubble('查無該商品資訊');
+          this.messageService.errorBubble(`查無國際條碼「${keyword}」，請確認條碼是否輸入完整`);
           // 在原地清空欄位值
           Object.assign(this.data[index], {
             PLU_MagNo: '', PLU_Name: '', PLU_No: '', UNIT_NAME: '', PLU_BoxQty: 0,
