@@ -32,7 +32,7 @@ export interface FIN15040QueryRequest extends ApiRequest {
   INV_Cancel?: string;           // 發票狀態
   ECR_No?: string[];             // 收銀機號
   IncludeNextDayVoid?: boolean;  // 包含隔日作廢
-  ExcludeB2B?: boolean;          // 排除B2B發票 (INV_TXNType <> '3')
+  OnlyB2B?: boolean;             // 僅有B2B發票 (INV_TXNType = '3')
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {
