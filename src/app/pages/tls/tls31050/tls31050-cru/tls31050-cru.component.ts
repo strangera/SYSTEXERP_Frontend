@@ -113,18 +113,46 @@ export class Tls31050CRUComponent implements OnChanges {
     };
   }
 
-  private queryDetail(): void {
-    const request = this.buildRequest();
-    this.historyRequestBody = request;
-    this.loading = true;
-    this.tls31050Service.queryTLS31050Detail(request)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe(res => {
-        this.data = res.Data ?? [];
-        this.footerTotal = res.TotalData ?? null;
-        this.totalRecords = res.TotalCount;
-      });
-  }
+private queryDetail(): void {
+  const request = this.buildRequest();
+  this.historyRequestBody = request;
+  this.loading = true;
+
+  this.tls31050Service.queryTLS31050Detail(request)
+    .pipe(finalize(() => this.loading = false))
+    .subscribe(res => {
+      this.data = res.Data ?? [];
+      this.footerTotal = res.TotalData ?? null;
+
+this.footershowTotal = this.footerTotal
+  ? {
+      budget: this.footerTotal.TotalBudget,
+      AVN_TotSaleAmt: this.footerTotal.TotalSales,
+
+      AchievementRate: this.footerTotal.AvgAchievementRate,
+
+      BudgetRate: 100,
+      PerformanceRate: 100,
+
+      TxnCount: this.footerTotal.TotalTxnCount,
+      AvgTicket: this.footerTotal.AvgTicket,
+
+      tlt_space: this.footerTotal.TotalSpace,
+      MonthlyPSM: this.footerTotal.AvgPSM,
+
+      MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+      MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+      CompletionRate: this.footerTotal.AvgCompletionRate,
+
+      PrePerformance: this.footerTotal.TotalPrePerformance,
+      ConsumerNum: this.footerTotal.TotalConsumerNum,
+      ConsumerOrder: this.footerTotal.TotalConsumerOrder
+    } as footerShowTotal
+  : null;
+
+      this.totalRecords = res.TotalCount;
+    });
+}
 
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
