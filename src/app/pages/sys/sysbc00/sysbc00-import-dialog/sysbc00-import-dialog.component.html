@@ -1,0 +1,143 @@
+<p-dialog header="匯入銀行資料" [modal]="true" [(visible)]="visible" [style]="{ width: '70rem' }"
+  [breakpoints]="{ '1199px': '90vw', '575px': '100vw' }" [draggable]="false" (onHide)="onHide()">
+  <div class="flex align-items-center gap-2 mb-3">
+    <input #fileInput type="file" class="hidden" accept=".jsp,.txt,.csv" (change)="onFileSelected($event)" />
+    <app-button label="選擇檔案" icon="pi pi-folder-open" severity="secondary" [outlined]="true"
+      (click)="fileInput.click()" />
+    <span class="flex-1">{{ selectedFile()?.name || '請選擇金管會下載的機構代號檔(bankno_excel.jsp)' }}</span>
+    <app-button label="上傳並預覽" icon="pi pi-upload" [loading]="loading()" [disabled]="!selectedFile() || loading()"
+      (click)="onPreview()" />
+    @if (preview()) {
+      <app-button label="確認匯入" icon="pi pi-check" severity="success" [disabled]="loading()"
+        (click)="onConfirm()" />
+    }
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="p-3 mb-3 border-round surface-100 text-red-600">{{ msg }}</div>
+  }
+
+  @if (result(); as r) {
+    <div class="p-3 mb-3 border-round surface-100 text-green-700 font-bold">匯入完成</div>
+    <div class="grid mb-2">
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">資料列<div class="text-xl font-bold">{{ r.TotalRows }}</div></div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">略過(證券商/外銀辦事處)<div class="text-xl font-bold">{{ r.SkippedRows }}</div></div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">銀行<div class="text-xl font-bold">新增 {{ r.BankNew }}</div>已存在 {{ r.BankExisting }}</div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">分行<div class="text-xl font-bold">新增 {{ r.BranchNew }} / 更新 {{ r.BranchUpdate }}</div>無變更 {{ r.BranchUnchanged }}</div></div>
+    </div>
+    <p-tabView>
+      <p-tabPanel header="新增銀行 ({{ r.BankNew }})">
+        <p-table [value]="r.NewBanks" [paginator]="r.NewBanks.length > 10" [rows]="10" size="small"
+          emptyMessage="沒有新增銀行">
+          <ng-template pTemplate="header">
+            <tr><th style="width: 10rem">銀行代號</th><th>銀行名稱</th></tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr><td>{{ row.BNK_No }}</td><td>{{ row.BNK_Name }}</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+      <p-tabPanel header="被略過的異常列 ({{ r.AnomalyCount }})">
+        <p-table [value]="r.Anomalies" [paginator]="r.Anomalies.length > 10" [rows]="10" size="small"
+          emptyMessage="沒有異常資料">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 7rem">檔案行號</th>
+              <th style="width: 6rem">類型</th>
+              <th style="width: 9rem">代碼</th>
+              <th>名稱</th>
+              <th>原因</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.LineNo }}</td>
+              <td>{{ row.Type }}</td>
+              <td>{{ row.Code }}</td>
+              <td>{{ row.Name }}</td>
+              <td>{{ row.Reason }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  }
+
+  @if (preview(); as p) {
+    <div class="grid mb-2">
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">資料列<div class="text-xl font-bold">{{ p.TotalRows }}</div></div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">略過(證券商/外銀辦事處)<div class="text-xl font-bold">{{ p.SkippedRows }}</div></div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">銀行列<div class="text-xl font-bold">{{ p.BankRows }}</div>已存在 {{ p.BankExisting }} / 新增 {{ p.BankNew }} / 異常 {{ p.BankAnomalies }}</div></div>
+      <div class="col-6 md:col-3"><div class="surface-100 border-round p-2">分行列<div class="text-xl font-bold">{{ p.BranchRows }}</div>新增 {{ p.BranchNew }} / 更新 {{ p.BranchUpdate }} / 無變更 {{ p.BranchUnchanged }} / 異常 {{ p.BranchAnomalies }}</div></div>
+    </div>
+    <div class="mb-2 text-color-secondary">預覽僅供檢視，尚未寫入資料庫。</div>
+
+    <p-tabView>
+      <p-tabPanel header="新增銀行 ({{ p.BankNew }})">
+        <p-table [value]="p.NewBanks" [paginator]="p.NewBanks.length > 10" [rows]="10" size="small"
+          emptyMessage="沒有新增銀行">
+          <ng-template pTemplate="header">
+            <tr><th style="width: 10rem">銀行代號</th><th>銀行名稱</th></tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr><td>{{ row.BNK_No }}</td><td>{{ row.BNK_Name }}</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="分行明細 ({{ p.BranchRows }})">
+        <div class="flex align-items-center gap-2 mb-2">
+          <label for="bankFilter">銀行代號</label>
+          <input id="bankFilter" class="p-inputtext p-component" maxlength="3" placeholder="例如 004，空白為全部"
+            [value]="bankFilter()" (input)="onBankFilterInput($event)" />
+          <span>共 {{ filteredBranches().length }} 筆</span>
+        </div>
+        <p-table [value]="filteredBranches()" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20, 50, 100]"
+          size="small" emptyMessage="沒有資料">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 7rem">銀行代號</th>
+              <th style="width: 8rem">分行代號</th>
+              <th>匯入後分行名稱</th>
+              <th>目前資料庫名稱</th>
+              <th style="width: 7rem">動作</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.BNK_No }}</td>
+              <td>{{ row.BNK_BranchNo }}</td>
+              <td>{{ row.BNK_BranchName }}</td>
+              <td>{{ row.OldName }}</td>
+              <td>{{ row.Action }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="異常明細 ({{ p.AnomalyCount }})">
+        <p-table [value]="p.Anomalies" [paginator]="p.Anomalies.length > 10" [rows]="10" size="small"
+          emptyMessage="沒有異常資料">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 7rem">檔案行號</th>
+              <th style="width: 6rem">類型</th>
+              <th style="width: 9rem">代碼</th>
+              <th>名稱</th>
+              <th>原因</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.LineNo }}</td>
+              <td>{{ row.Type }}</td>
+              <td>{{ row.Code }}</td>
+              <td>{{ row.Name }}</td>
+              <td>{{ row.Reason }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  }
+</p-dialog>

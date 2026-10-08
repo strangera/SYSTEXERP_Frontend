@@ -54,6 +54,52 @@ export interface IDeleteSysbc00Request {
   idList: number[]; // 要刪除的記錄 ID 列表
 }
 
+/** 匯入銀行資料預覽:新增銀行 */
+export interface IImportBankItem {
+  BNK_No: string;
+  BNK_Name: string;
+}
+
+/** 匯入銀行資料預覽:分行明細 (Action: 新增/更新/無變更) */
+export interface IImportBranchItem {
+  BNK_No: string;
+  BNK_BranchNo: string;
+  BNK_BranchName: string;
+  Action: '新增' | '更新' | '無變更';
+  OldName: string | null;
+}
+
+/** 匯入銀行資料預覽:異常明細 */
+export interface IImportAnomalyItem {
+  LineNo: number;
+  Type: string;
+  Code: string;
+  Name: string;
+  Reason: string;
+}
+
+/** 匯入銀行資料預覽結果 (Success=false 時只看 Message) */
+export interface IPreviewImportSysbc00 {
+  Success: boolean;
+  Message: string | null;
+  FileName: string;
+  TotalRows: number;
+  SkippedRows: number;
+  BankRows: number;
+  BankExisting: number;
+  BankNew: number;
+  BankAnomalies: number;
+  BranchRows: number;
+  BranchNew: number;
+  BranchUpdate: number;
+  BranchUnchanged: number;
+  BranchAnomalies: number;
+  AnomalyCount: number;
+  NewBanks: IImportBankItem[];
+  Branches: IImportBranchItem[];
+  Anomalies: IImportAnomalyItem[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -98,5 +144,25 @@ export class Sysbc00Service {
     // 根據 Swagger 範例，請求體需要是一個包含 idList 屬性的物件
     const body: IDeleteSysbc00Request = { idList: idList };
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteSYSBC00`, body);
+  }
+
+  /**
+   * 上傳金管會機構代號檔並預覽匯入結果 (不寫入 DB)
+   * @param file 金管會下載的機構代號檔
+   */
+  previewImportSYSBC00(file: File): Observable<ApiResponse<IPreviewImportSysbc00>> {
+    const formData = new FormData();
+    formData.append('InputFile', file, file.name);
+    return this.http.post<ApiResponse<IPreviewImportSysbc00>>(`${this.apiUrl}/previewImportSYSBC00`, formData);
+  }
+
+  /**
+   * 重新上傳同一份檔案並確認匯入 (後端重新解析後單一交易寫入；Branches 不回傳)
+   * @param file 金管會下載的機構代號檔
+   */
+  confirmImportSYSBC00(file: File): Observable<ApiResponse<IPreviewImportSysbc00>> {
+    const formData = new FormData();
+    formData.append('InputFile', file, file.name);
+    return this.http.post<ApiResponse<IPreviewImportSysbc00>>(`${this.apiUrl}/confirmImportSYSBC00`, formData);
   }
 }

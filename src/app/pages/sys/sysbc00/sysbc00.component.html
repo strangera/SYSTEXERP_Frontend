@@ -2,6 +2,8 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-button label="匯入銀行資料" icon="pi pi-upload" [permissionCode]="Actions.ExcelImport"
+      (click)="onOpenImport()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -37,3 +39,5 @@
     [expansionLoadFn]="loadBankDetails" [isRowSelectable]="isRowSelectable" [lastQueryBody]="lastQueryBody"
     [queryFunction]="sysbc00Service.querySYSBC00.bind(sysbc00Service)"></app-table-report>
 </div>
+<app-sysbc00-import-dialog [(visible)]="importVisible" (imported)="onSubmit(queryForm)" />
+

@@ -14,6 +14,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
 import { Column, formatDateTime } from '../../../others/component/table/table.model';
+import { Sysbc00ImportDialogComponent } from './sysbc00-import-dialog/sysbc00-import-dialog.component';
 
 @Component({
   selector: 'app-sysbc00',
@@ -28,6 +29,7 @@ import { Column, formatDateTime } from '../../../others/component/table/table.mo
     InputTextComponent,
     TableReportComponent,
     TranslateModule,
+    Sysbc00ImportDialogComponent,
   ],
 })
 // 銀行基本資料維護作業
@@ -40,6 +42,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'BNK_No', order: 1 }]],
   });
+  importVisible = false;
   totalRecords = 0;
   lastQueryBody: IQuerySysbc00Request | null = null
   data: ISysbc00Data[] = [];
@@ -89,7 +92,12 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
       });
     })
   }
-  loadBankDetails = (rowData: ISysbc00Data): Observable<any> => {
+  onOpenImport() {
+    if (this.hasPermission(this.Actions.ExcelImport)) {
+      this.importVisible = true;
+    }
+  }
+  loadBankDetails =(rowData: ISysbc00Data): Observable<any> => {
     return this.sys1004Service.queryAPS1004({ BNK_No: rowData.BNK_No, PageSize: 9999 });
   };
   onDelete(rows: ISysbc00Data[]) {
