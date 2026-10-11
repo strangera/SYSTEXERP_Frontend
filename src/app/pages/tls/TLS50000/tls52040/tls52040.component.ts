@@ -131,7 +131,6 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已審核); },
       disabled: (rowData: ITLS52040Data) =>
         rowData.RJM_Status !== POStatus.已確認 ||
-        !!rowData.ReAPRV_Date ||
         !rowData.CanAPRV ||
         !this.hasPermission(Actions.Audit)
     },
@@ -139,7 +138,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已確認); },
-      disabled: (rowData: ITLS52040Data) => rowData.Request_No !== null || rowData.RJM_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit)
+      disabled: (rowData: ITLS52040Data) => !!rowData.Rebate_No || rowData.RJM_Status !== POStatus.已審核 || !rowData.CanReAPRV || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢單據',
@@ -182,7 +181,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       RJM_No: rowData.RJM_No,
       RJM_Status: status,
       RJM_Status_Ori: rowData.RJM_Status,
-      Rebate_No: rowData.Request_No || '',
+      Rebate_No: rowData.Rebate_No || '',
     }
     this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
