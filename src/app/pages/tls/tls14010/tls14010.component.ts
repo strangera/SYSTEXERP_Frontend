@@ -4,17 +4,17 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
+import { formatDate } from '../../../others/component/table/table.model';
 import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
-import { formatDate } from '../../../others/component/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 //建立查詢項目的interface
@@ -68,7 +68,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     //分頁查詢
     pageSize: [1000],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'tlt_no', order: 0 }]],
+    SortBy: [[{ field: 'tlt_no', order: 0 }, { field: 'contract_subno', order: 1 }]],
   });
   // 表格
   // ----------------------------------------------------------------
