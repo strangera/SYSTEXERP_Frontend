@@ -62,6 +62,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   data: TLS13050QueryItem[] = [];
   selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
+  lastQueryBody: QueryTLS13050Request | null = null;
   organizationCodeOptions: any = [];
   columns: ReportColumn[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true, width: '120px' },
@@ -90,6 +91,9 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   ) {
     super();
   }
+
+  // 排序走後端 API，讓 query-cache 攔截器更新快取條件（含 SortBy），匯出才會跟著排序
+  readonly queryFn = (body: QueryTLS13050Request) => this.tls13050Service.queryTLS13050(body);
 
   ngOnInit(): void {
     this.initializePage('TLS13050', undefined, this.queryForm, (form) => this.onSubmit(form));
@@ -195,6 +199,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
           next: (res) => {
             this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? this.data.length;
+            this.lastQueryBody = body;
             this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
           },
 
@@ -205,7 +210,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   private percent(v: number): string {
     if (v === null || v === undefined) return '';
     const n = Number(v);
-    return Number.isNaN(n) ? '' : `${n.toFixed(2)}%`;
+    return Number.isNaN(n) ? '' : `${n.toFixed(1)}%`;
   }
 
 }
