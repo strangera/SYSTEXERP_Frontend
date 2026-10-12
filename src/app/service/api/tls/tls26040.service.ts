@@ -54,6 +54,7 @@ export interface TLS26040Data {
   TXN_TotSaleAmt: number;          // 修正欄位名稱
   isClose: string;                 // 是否已關帳
   details?: any[];  // 展開的詳細資料
+  rowKey?: string;  // 前端組合鍵 (sad_date_tlt_no_batch_no)，供表格展開/選取識別
 }
 
 // --- TLS26040 明細回應資料 Model 定義 ---

@@ -120,7 +120,8 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
       this.tls26040Service.queryTLS26040(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
+          // 後端未回傳唯一 id（全部為 0），組合鍵避免展開時所有列共用同一個 key 而全部展開
+          this.data = (response.Data ?? []).map(r => ({ ...r, rowKey: `${r.sad_date}_${r.tlt_no}_${r.batch_no}` }));
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           this.lastQueryBody = body;
