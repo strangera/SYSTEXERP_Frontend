@@ -315,9 +315,10 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   onShowDialog() {
     this.dialogVisible = true
     this.dialogLoading = true;
-    this.tls52030Service.getPOS2016(this.dataForm.getRawValue()).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    const queryBody = { ...this.dataForm.getRawValue(), ODM_No: this.isFormCreateable ? null : this.rowdata?.ODM_No };
+    this.tls52030Service.getPOS2016(queryBody).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
-      this.dialogLastQueryParams = this.dataForm.getRawValue();
+      this.dialogLastQueryParams = queryBody;
       this.totalRecords = response.TotalCount;
     })
   }

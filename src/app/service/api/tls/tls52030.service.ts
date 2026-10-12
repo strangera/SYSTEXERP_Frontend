@@ -124,6 +124,7 @@ export interface IGetPOS2016Request {
   // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string | null; // 廠商編號
+  ODM_No?: string | null; // 目前編輯的驗收單號(排除占用時不計本張單)，新增時不帶
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */
