@@ -62,6 +62,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccNoPrepaid: new FormControl<string | void>(void 0),
     AccNoPost: new FormControl<string | void>(void 0),
     AccNoRemitFee: new FormControl<string | void>(void 0),
+    AccNoChkBank: new FormControl<string | void>(void 0),
+    AccNoChkAR: new FormControl<string | void>(void 0),
     billTransferCon: new FormControl<'N' | 'Y'>('N'),
   });
   public readonly df = computed(() => this.dataForm.controls);

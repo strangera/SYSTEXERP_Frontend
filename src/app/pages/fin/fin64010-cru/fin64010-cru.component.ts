@@ -194,24 +194,12 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
       });
 
     // 4) 票面銀行(全省銀行代號) → BNK_Key
-    //    ✅ label 會是 NO - NAME（你原本想要的）
+    //    queryAps1001 已回傳 Option[]（value = BNK_No+BNK_BranchNo 7碼），直接使用
     this.dropdownApiService.queryAps1001({ SearchKeyword: '' })
       .pipe(untilDestroyed(this))
-      .subscribe((response: any) => {
-        const list = Array.isArray(response)
-          ? response
-          : (Array.isArray(response?.Data) ? response.Data : []);
-
-        const opts = list
-          .map((x: any) => ({
-            value: String(x.No ?? ''),
-            label: `${x.No ?? ''} - ${x.Name ?? ''}`,
-            raw: x,
-          }))
-          .filter((x: any) => x.value);
-
-        this.bankNoOptions = opts;
-        this.colleBankOptions = opts; // 若你頁面仍保留「託收銀行代號」下拉，沿用同一份
+      .subscribe((options) => {
+        this.bankNoOptions = options ?? [];
+        this.colleBankOptions = options ?? [];
       });
 
     // 5) 託收帳戶（COL_BNK_id）
@@ -279,15 +267,10 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private normalizeDetailRow(res: any): FIN64010DetailRow | null {
-    const data = res?.Data;
-    let row: any = null;
-
-    if (Array.isArray(data)) row = data[0];
-    else if (data && Array.isArray(data?.QueryData)) row = data.QueryData[0];
-    else row = data;
-
-    const looksLikeDetail = row && (row.CHK_No || row.BNK_No || row.VEN_No || row.CHK_Amt != null);
-    return looksLikeDetail ? (row as FIN64010DetailRow) : null;
+    const row = res?.Data?.QueryData ?? null;
+    return (row?.CHK_No || row?.BNK_No || row?.VEN_No || row?.CHK_Amt != null)
+      ? (row as FIN64010DetailRow)
+      : null;
   }
 
   private loadDetailByRoute(): void {
@@ -316,12 +299,29 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
             return;
           }
 
-          // ✅ 保證 Id 一定有值
           this.dataForm.patchValue({
-            Id: Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id ?? id),
-
-            CHK_Status: String((row as any)?.CHK_Status ?? ''),
-            // ...其他欄位照你原本 patch
+            Id:           Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id ?? id),
+            CHK_No:       String(row.CHK_No ?? ''),
+            VEN_No:       String(row.VEN_No ?? ''),
+            BNK_Key:      String(row.BNK_No ?? ''),   // SP 回傳 BNK_No = BNK_No+BNK_BranchNo（7碼，修 SP 後正確）
+            BNK_AccNo:    String(row.BNK_AccNo ?? ''),
+            COL_BNK_id:   String(row.CHK_BNK_No ?? ''),
+            CHK_ReceDate:  row.CHK_ReceDate  ? new Date(row.CHK_ReceDate)  : null,
+            CHK_ExpireDate: row.CHK_ExpireDate ? new Date(row.CHK_ExpireDate) : null,
+            CHK_PreDate:   row.CHK_PreDate   ? new Date(row.CHK_PreDate)   : null,
+            CHK_CashDate:  row.CHK_CashDate  ? new Date(row.CHK_CashDate)  : null,
+            CHK_ColleDate: row.CHK_ColleDate ? new Date(row.CHK_ColleDate) : null,
+            CHK_Amt:      row.CHK_Amt ?? null,
+            Ticket_YN:    String(row.Ticket_YN ?? ''),
+            CHK_Type:     String(row.CHK_Type ?? ''),
+            CHK_Comment:  String(row.CHK_Comment ?? ''),
+            ORG_ID:       String(row.ORG_ID ?? ''),
+            ProjectNo:    String(row.ProjectNo ?? ''),
+            RCV_No:       String(row.RCV_No ?? ''),
+            CHK_Status:   String(row.CHK_Status ?? ''),
+            TranStatus:   String(row.Tran_Status ?? ''),
+            AccName:      String(row.AccName ?? ''),
+            VouNo:        String(row.VouNo ?? ''),
           }, { emitEvent: false });
 
           this.applyReadonlyRules();
@@ -513,7 +513,9 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     // 只在「目前表單還是空」時才補（避免覆蓋使用者已輸入的內容）
     const curBank = String(this.dataForm.controls.BNK_Key.value ?? '').trim();
     if (!curBank) {
-      const bnk = String(listRow.BNK_Key ?? listRow.BNK_No ?? '').trim();
+      const bnkNo = String(listRow.BNK_No ?? '').trim();
+      const bnkBranch = String(listRow.BNK_BranchNo ?? '').trim();
+      const bnk = String(listRow.BNK_Key ?? (bnkBranch ? bnkNo + bnkBranch : bnkNo)).trim();
       if (bnk) this.dataForm.controls.BNK_Key.patchValue(bnk, { emitEvent: false });
     }
 

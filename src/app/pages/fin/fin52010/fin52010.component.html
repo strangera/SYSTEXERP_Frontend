@@ -1,66 +1,211 @@
+<!-- @format -->
+
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <form [formGroup]="dataForm" id="queryForm" (ngSubmit)="onSubmit()">
     <div class="grid p-fluid">
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="系統年結年度" controlName="AccYear" [disabled]="!0"
-        [control]="df().AccYear" [submitted]="submitted"></app-input-text>
-      <app-input-text class="col-6 md:col-3 lg:col-2" label="系統開帳年月" controlName="OpenDate" [control]="df().OpenDate"
-        [submitted]="submitted"></app-input-text>
-      <app-input-text class="col-6 md:col-3 lg:col-2" label="系統關帳年月" controlName="CloseDate" [disabled]="!0"
-        [control]="df().CloseDate" [submitted]="submitted"></app-input-text>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="預設組織" controlName="ORG_ID" [options]="org_id_Options"
-        optionLabel="label" optionValue="value" [showClear]="!1" [control]="df().ORG_ID"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="累積盈虧科目" controlName="AccNoTotPL"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoTotPL"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="本期損益科目" controlName="AccNoCurPL"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoCurPL"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="現金科目" controlName="CashAccNo"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().CashAccNo"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="應收帳款科目" controlName="AccNoAR"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoAR"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="應付帳款科目" controlName="AccNoAP"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoAP"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="進項稅額科目" controlName="AccNoInTax"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoInTax"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="銷項稅額科目" controlName="AccNoOutTax"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoOutTax"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="郵電費科目" controlName="AccNoPost"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoPost"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="銀行匯款手續費科目" controlName="AccNoRemitFee"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoRemitFee"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="預支費用科目" controlName="AccNoPrepaid"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoPrepaid"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="應付票據是否需領用才拋轉傳票" controlName="billTransferCon"
-        [options]="service.billTransferConOptions()" optionLabel="label" optionValue="value" [showClear]="!1"
-        [control]="df().billTransferCon" [submitted]="submitted"></app-dropdown>
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="系統年結年度"
+        controlName="AccYear"
+        [disabled]="!0"
+        [control]="df().AccYear"
+        [submitted]="submitted"
+      ></app-input-text>
+      <app-input-text
+        class="col-6 md:col-3 lg:col-2"
+        label="系統開帳年月"
+        controlName="OpenDate"
+        [control]="df().OpenDate"
+        [submitted]="submitted"
+      ></app-input-text>
+      <app-input-text
+        class="col-6 md:col-3 lg:col-2"
+        label="系統關帳年月"
+        controlName="CloseDate"
+        [disabled]="!0"
+        [control]="df().CloseDate"
+        [submitted]="submitted"
+      ></app-input-text>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="預設組織"
+        controlName="ORG_ID"
+        [options]="org_id_Options"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="!1"
+        [control]="df().ORG_ID"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="累積盈虧科目"
+        controlName="AccNoTotPL"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoTotPL"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="本期損益科目"
+        controlName="AccNoCurPL"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoCurPL"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="現金科目"
+        controlName="CashAccNo"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().CashAccNo"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="應收帳款科目"
+        controlName="AccNoAR"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoAR"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="應付帳款科目"
+        controlName="AccNoAP"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoAP"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="進項稅額科目"
+        controlName="AccNoInTax"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoInTax"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="銷項稅額科目"
+        controlName="AccNoOutTax"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoOutTax"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="郵電費科目"
+        controlName="AccNoPost"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoPost"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="銀行匯款手續費科目"
+        controlName="AccNoRemitFee"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoRemitFee"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="預支費用科目"
+        controlName="AccNoPrepaid"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!1"
+        [control]="df().AccNoPrepaid"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="票據兌現-銀行存款科目(借方)"
+        controlName="AccNoChkBank"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!0"
+        [control]="df().AccNoChkBank"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="票據兌現-應收票據科目(貸方)"
+        controlName="AccNoChkAR"
+        [options]="service.gls1005Options()"
+        optionLabel="label"
+        optionValue="value"
+        [loading]="service.gls1005Loading()"
+        [showClear]="!0"
+        [control]="df().AccNoChkAR"
+        [submitted]="submitted"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="應付票據是否需領用才拋轉傳票"
+        controlName="billTransferCon"
+        [options]="service.billTransferConOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="!1"
+        [control]="df().billTransferCon"
+        [submitted]="submitted"
+      ></app-dropdown>
     </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
       <!-- <app-button btnType="clear"
                       [form]="dataForm"></app-button> -->
-      <app-button btnType="submit" [label]="'更新'" [loading]="loading"></app-button>
+      <app-button
+        btnType="submit"
+        [label]="'更新'"
+        [loading]="loading"
+      ></app-button>
     </div>
   </form>
 </div>

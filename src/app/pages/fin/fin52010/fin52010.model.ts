@@ -17,6 +17,8 @@ export interface FIN52010Data {
   CompNo: string;
   ORG_ID: string;
   OpenDate: string;
+  AccNoChkBank: string;
+  AccNoChkAR: string;
 }
 
 export type FIN52010DataResponse = Omit<ApiResponse<FIN52010Data[]>, 'Data'> & { Data: FIN52010Data; };
@@ -38,6 +40,8 @@ export interface FIN52010UpdatePayload {
   AccNoPrepaid?: string;
   AccNoRemitFee?: string;
   AccYear?: string;
+  AccNoChkBank?: string;
+  AccNoChkAR?: string;
 }
 
 export type FIN52010UpdateResult = Omit<ApiResponse<_FIN52010UpdateResult[]>, 'Data'> & { Data: _FIN52010UpdateResult; };
@@ -58,6 +62,8 @@ interface _FIN52010UpdateResult {
   AccNoPrepaid: string;
   AccNoRemitFee: string;
   AccYear: string;
+  AccNoChkBank: string;
+  AccNoChkAR: string;
 }
 
 export interface GLS1005Option extends Pick<Option, 'value' | 'label'> {
