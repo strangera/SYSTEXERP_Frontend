@@ -44,26 +44,40 @@ const formatAmountRounded = (val: number | string): string => {
       .bg-group-base {
         background-color: #e3edf4 !important;
       }
+
       .bg-group-compare {
         background-color: #e2f2e5 !important;
       }
+
       .bg-group-diff {
         background-color: #fff1e0 !important;
       }
+
       .bg-group-growth {
         background-color: #f3e9f7 !important;
       }
+
       .p-datatable-tbody > tr:hover > td.bg-group-base {
         background-color: #d4e3ee !important;
       }
+
       .p-datatable-tbody > tr:hover > td.bg-group-compare {
         background-color: #d3e9d8 !important;
       }
+
       .p-datatable-tbody > tr:hover > td.bg-group-diff {
         background-color: #ffe6c7 !important;
       }
+
       .p-datatable-tbody > tr:hover > td.bg-group-growth {
         background-color: #ebd9f2 !important;
+      }
+
+      /* 資料列高度約為原本 1.3 倍 */
+      app-table-report .p-datatable-tbody > tr,
+      app-table-report .p-datatable-tbody > tr > td {
+        height: 60px !important;
+        min-height: 60px !important;
       }
     }
   `],
