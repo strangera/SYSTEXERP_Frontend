@@ -1,0 +1,12 @@
+:host ::ng-deep .ven-name-cell {
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
+
+  white-space: normal !important;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+
+  height: 69px !important;
+  vertical-align: middle;
+}

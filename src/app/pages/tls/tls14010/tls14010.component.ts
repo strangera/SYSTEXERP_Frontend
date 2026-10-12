@@ -39,10 +39,22 @@ yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   selector: 'app-tls14010',
   templateUrl: './tls14010.component.html',
+  styleUrls: ['./tls14010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableReportComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    ButtonComponent,
+    TableReportComponent,
+    TranslateModule
+  ]
 })
-
 // 合約狀態清單
 export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   implements OnInit {
@@ -98,28 +110,94 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   ven_uniform_Options: apiOption[] = []; // 統編代碼的下拉選單 1106新增
 
   data: TLTContract[] = [];
-  columns: ReportColumn[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true },
-    { field: 'ven_uniform', header: '廠商統編', visible: true },
-    { field: 'VEN_Name', header: '廠商統編名稱', visible: true },
-    { field: 'contract_subno', header: '版本', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true },
-    { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_contract_edate', header: '營運終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_bdate', header: '合約起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_edate', header: '合約終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'apply_status', header: '合約狀態', visible: true, format: (value: string) => this.statusOptions.find((option) => option.value === value)?.label || value },
-    { field: 'LocationText', header: '承租內容', visible: true },
-    { field: 'tlt_openflag', header: '營運狀況', visible: true, format: (value: string) => this.tlt_openOptions.find((option) => option.value === value)?.label || value },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
-  ];
+columns: ReportColumn[] = [
+  { field: 'tlt_no', header: '專櫃編號', visible: true, width: '110px' },
+  { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true, width: '120px' },
+  { field: 'ven_uniform', header: '廠商統編', visible: true, width: '120px' },
+  {
+  field: 'VEN_Name',
+  header: '廠商統編名稱',
+  visible: true,
+  width: '90px',
+  cellClass: () => 'ven-name-cell'
+},
+  { field: 'contract_subno', header: '版本', visible: true, width: '80px' },
+  { field: 'bus_type', header: '大分類', visible: true, width: '100px' },
+  { field: 'bus_type_name', header: '大分類名稱', visible: true, width: '140px' },
+
+  {
+    field: 'tlt_contract_bdate',
+    header: '營運起始日',
+    visible: true,
+    width: '120px',
+    format: (value: string) =>
+      value ? new Date(value).toLocaleDateString() : ''
+  },
+  {
+    field: 'tlt_contract_edate',
+    header: '營運終止日',
+    visible: true,
+    width: '120px',
+    format: (value: string) =>
+      value ? new Date(value).toLocaleDateString() : ''
+  },
+  {
+    field: 'tlt_bdate',
+    header: '合約起始日',
+    visible: true,
+    width: '120px',
+    format: (value: string) =>
+      value ? new Date(value).toLocaleDateString() : ''
+  },
+  {
+    field: 'tlt_edate',
+    header: '合約終止日',
+    visible: true,
+    width: '120px',
+    format: (value: string) =>
+      value ? new Date(value).toLocaleDateString() : ''
+  },
+
+  {
+    field: 'apply_status',
+    header: '合約狀態',
+    visible: true,
+    width: '110px',
+    format: (value: string) =>
+      this.statusOptions.find((option) => option.value === value)?.label || value
+  },
+
+  { field: 'LocationText', header: '承租內容', visible: true, width: '250px' },
+
+  {
+    field: 'tlt_openflag',
+    header: '營運狀況',
+    visible: true,
+    width: '120px',
+    format: (value: string) =>
+      this.tlt_openOptions.find((option) => option.value === value)?.label || value
+  },
+
+  {
+    field: 'CRT_Date',
+    header: '建立日期',
+    visible: false,
+    width: '140px',
+    format: formatDate
+  },
+  { field: 'CRT_USR_No', header: '建立人員代碼', visible: false, width: '130px' },
+  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false, width: '130px' },
+
+  {
+    field: 'UPD_Date',
+    header: '變更日期',
+    visible: false,
+    width: '140px',
+    format: formatDate
+  },
+  { field: 'UPD_USR_No', header: '變更人員代碼', visible: false, width: '130px' },
+  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false, width: '130px' }
+];
 
   selectedItems: TLTContract[] = [];// 多選項目
 
