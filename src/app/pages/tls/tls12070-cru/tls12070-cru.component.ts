@@ -97,51 +97,84 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     super(); // 呼叫父類建構子
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS12070', this.dataForm);
-    console.log('讀取資料', this.dataForm.value);
-    console.log('這是前面的查詢條件', this.rowdata);
+ngOnInit(): void {
+  this.initializePage('TLS12070', this.dataForm);
 
-    const state = this.router.lastSuccessfulNavigation?.extras.state;
-    this.queryConditions = state?.['queryConditions'];
-    console.log('queryConditions: ', this.queryConditions);
+  const state =
+    this.router.lastSuccessfulNavigation?.extras.state;
 
+  this.queryConditions =
+    state?.['queryConditions'] ?? {};
 
-    // 進來就用id讀取資料/
-    const contact_USR_No = this.dataForm.get('contact_USR_No')?.value
-    if (contact_USR_No) {
-      console.log('取得contact_USR_No', contact_USR_No);
-      this.loadDetail(contact_USR_No);
-    }
+  console.log('rowdata:', this.rowdata);
+  console.log('queryConditions:', this.queryConditions);
+
+  const contact_USR_No =
+    this.dataForm.get('contact_USR_No')?.value;
+
+  if (contact_USR_No) {
+    console.log(
+      '取得 contact_USR_No:',
+      contact_USR_No
+    );
+
+    this.loadDetail(contact_USR_No);
   }
+}
 
-  loadDetail(contact_USR_No: string) {
-    const request = {
-      contact_USR_No: contact_USR_No,
-      contact_Date_Start: formatDate(this.queryConditions.contact_Date_Start, 'yyyy-MM-dd', 'en-US'),
-      contact_Date_End: formatDate(this.queryConditions.contact_Date_End, 'yyyy-MM-dd', 'en-US'),
-    }
-    console.log('意願明細Request: ', request);
+loadDetail(contact_USR_No: string) {
+  const request = {
+    contact_USR_No: contact_USR_No,
 
-    this.tls12070Service.queryTLS12070_Detail(request).pipe(untilDestroyed(this)).subscribe({
+    contact_Date_Start:
+      this.queryConditions?.contact_Date_Start ?? null,
+
+    contact_Date_End:
+      this.queryConditions?.contact_Date_End ?? null,
+  };
+
+  console.log('意願明細 Request:', request);
+
+  this.tls12070Service
+    .queryTLS12070_Detail(request)
+    .pipe(untilDestroyed(this))
+    .subscribe({
       next: (response) => {
         if (response.Status === '0000') {
-          this.willing_data = response.Data || [];
-          console.log('意願明細Result', response.Data);
-          this.totalRecords = response.TotalCount || response.Data.length;
+          this.willing_data =
+            response.Data || [];
+
+          console.log(
+            '意願明細 Result',
+            response.Data
+          );
+
+          this.totalRecords =
+            response.TotalCount ||
+            response.Data.length;
         } else {
-          console.error('API error:', response.Status, response.Message);
+          console.error(
+            'API error:',
+            response.Status,
+            response.Message
+          );
         }
+
         this.loading = false;
         this.messageService.unblockUi();
       },
+
       error: (err: string) => {
-        console.error('API error:', err);
+        console.error(
+          'API error:',
+          err
+        );
+
         this.loading = false;
         this.messageService.unblockUi();
       },
     });
-  }
+}
 
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();

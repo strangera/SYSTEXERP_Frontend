@@ -1,24 +1,25 @@
 import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { AccordionModule } from 'primeng/accordion';
 import { apiOption } from 'src/app/shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 export interface Customer_interview {
-  contact_Date_Start: string; // 接洽日期_起始日
-  contact_Date_End: string; // 接洽日期_終止日
-  contact_USR_No: string; // 接洽人員
+  contact_Date_Start: string | null;
+  contact_Date_End: string | null;
+  contact_USR_No: string;
 }
 
 // 意願報表內容
@@ -37,9 +38,6 @@ export interface Willing_data {
 }
 
 
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
-
 
 // 2.1.2.7 專櫃訪談紀錄追蹤表
 @Component({
@@ -55,14 +53,12 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   // 查詢
   queryForm = this.formBuilder.group({
-    // Customer_interview表單
-    contact_Date_Start: [yesterday],  // 訪談日期_起始日
-    contact_Date_End: [yesterday],  // 訪談日期_終止日
-    contact_USR_No: [[], [Validators.maxLength(20)]], // contact_USR_No (drop，應該就是接洽人員)
+    contact_Date_Start: [null],
+    contact_Date_End: [null],
+    contact_USR_No: [[]],
 
-    //分頁查詢
     pageSize: [1000],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'contact_USR_No', order: 1 }]],
   });
   // 表格
@@ -75,7 +71,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: ReportColumn[] = [
-    { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
+    { field: 'contact_USR_Name', header: '訪談人員', visible: true },
     { field: 'ven_uniform', header: '廠商統一編號', visible: false },
     { field: 'ven_uniform_Count', header: '潛在客戶總數', visible: true },
     { field: 'ID_Count', header: '拜訪記錄次數', visible: true },
@@ -102,7 +98,24 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   ) {
     super();
   }
+  private formatQueryDate(value: any): string | null {
+    if (!value) {
+      return null;
+    }
 
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+
+    // Calendar 空值被轉成 Unix Epoch 時視為沒選日期
+    if (date.getTime() === 0) {
+      return null;
+    }
+
+    return formatDate(date, 'yyyy-MM-dd', 'en-US');
+  }
   ngOnInit(): void {
     this.initializePage('TLS12070', 'TLS/TLS12070cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
@@ -110,35 +123,59 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
+
     this.handleSubmit(frm, () => {
+      const rawValue = frm.getRawValue();
 
       const request = {
-        ...frm.getRawValue(),
-        contact_Date_Start: formatDate(frm.getRawValue().contact_Date_Start, 'yyyy-MM-dd', 'en-US'),
-        contact_Date_End: formatDate(frm.getRawValue().contact_Date_End, 'yyyy-MM-dd', 'en-US'),
-      }
+        ...rawValue,
+
+        contact_Date_Start:
+          this.formatQueryDate(rawValue.contact_Date_Start),
+
+        contact_Date_End:
+          this.formatQueryDate(rawValue.contact_Date_End),
+      };
 
       console.log('主查詢request', request);
-      // 查詢 Customer_interview資料表
-      this.tls12070Service.queryTLS12070_Count(request).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.interviewLastQueryBody = request;
-            this.interview_data = response.Data || [];
-            console.log('Result', response.Data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+
+      this.tls12070Service
+        .queryTLS12070_Count(request)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.interviewLastQueryBody = request;
+              this.interview_data = response.Data || [];
+
+              console.log('Result', response.Data);
+
+              this.totalRecords =
+                response.TotalCount || response.Data.length;
+
+              this.queryStateService.setQueryState(
+                this.ProgNo,
+                request
+              );
+            } else {
+              console.error(
+                'API error:',
+                response.Status,
+                response.Message
+              );
+            }
+
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+
+          error: (err: string) => {
+            console.error('API error:', err);
+
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+        });
     });
   }
 
@@ -148,35 +185,60 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     this.onSubmit(frm);
   }
 
-  // 查詢 意願報表
   onWillingClick(frm: FormGroup) {
     this.activeReport = 'willing';
-    console.log('查詢條件', frm.value);
+
     this.handleSubmit(frm, () => {
-      this.tls12070Service.queryTLS12070_Summary(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.willingLastQueryBody = frm.value;
-            this.willing_data = response.Data || [];
-            console.log('意願Result', response.Data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+      const rawValue = frm.getRawValue();
+
+      const request = {
+        ...rawValue,
+
+        contact_Date_Start:
+          this.formatQueryDate(rawValue.contact_Date_Start),
+
+        contact_Date_End:
+          this.formatQueryDate(rawValue.contact_Date_End),
+      };
+
+      console.log('意願報表 request', request);
+
+      this.tls12070Service
+        .queryTLS12070_Summary(request)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.willingLastQueryBody = request;
+              this.willing_data = response.Data || [];
+
+              this.totalRecords =
+                response.TotalCount || response.Data.length;
+              this.queryStateService.setQueryState(
+                this.ProgNo,
+                request
+              );
+            } else {
+              console.error(
+                'API error:',
+                response.Status,
+                response.Message
+              );
+            }
+
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+
+          error: (err: string) => {
+            console.error('API error:', err);
+
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+        });
     });
-
   }
-
   loadOptions() {
     // 查詢 接待人員
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
@@ -190,7 +252,15 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   }
 
   onDetail1(event: any) {
-    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+    const queryConditions =
+      this.queryStateService.getQueryStateValue(this.ProgNo);
+
+    this.navigateWithState(
+      CRUDStatus.Read,
+      {
+        contact_USR_No: event.contact_USR_No
+      },
+      queryConditions
+    );
   }
 }
