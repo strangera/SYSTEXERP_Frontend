@@ -192,11 +192,32 @@ export class ContractValidatorService {
       errors.push({ field: 'location_dates', message: '櫃位地點起訖日為必填' });
     }
 
-    // 業績分攤合計必須等於 100%
+    // 業績分攤合計必須等於 100%（依日期區間分組各自加總）
     if (validLocations.length > 0) {
-      const saleRateTotal = Math.round(validLocations.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
-      if (saleRateTotal !== 100) {
-        errors.push({ field: 'sale_rate', message: `業績分攤(%) 合計須等於 100%（目前：${saleRateTotal}%）` });
+      const saleGroups = new Map<string, number>();
+      validLocations.forEach((r: any) => {
+        const key = `${r.tlt_bdate ?? ''}|${r.tlt_edate ?? ''}`;
+        saleGroups.set(key, Math.round(((saleGroups.get(key) ?? 0) + (Number(r.sale_rate) || 0)) * 100) / 100);
+      });
+      saleGroups.forEach((total, key) => {
+        if (total !== 100) {
+          const [bdate, edate] = key.split('|');
+          errors.push({ field: 'sale_rate', message: `同一區間業績分攤(%) 合計須等於 100%（${bdate || '未填'}～${edate || '未填'}：${total}%）` });
+        }
+      });
+    }
+
+    // 有始有終：至少一筆地點起始日 = 營運起始日，至少一筆地點截止日 = 營運截止日
+    if (validLocations.length > 0 && contractBdate && contractEdate) {
+      const norm = (d: string | Date | null | undefined): string =>
+        d ? (d instanceof Date ? d.toLocaleDateString('sv-SE') : String(d).split('T')[0]) : '';
+      const operBdateStr = norm(contractBdate);
+      const operEdateStr = norm(contractEdate);
+      if (!validLocations.some(loc => norm(loc.tlt_bdate) === operBdateStr)) {
+        errors.push({ field: 'location_dates', message: `至少須有一筆地點起始日等於營運起始日（${operBdateStr}）` });
+      }
+      if (!validLocations.some(loc => norm(loc.tlt_edate) === operEdateStr)) {
+        errors.push({ field: 'location_dates', message: `至少須有一筆地點截止日等於營運截止日（${operEdateStr}）` });
       }
     }
 

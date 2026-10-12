@@ -1110,14 +1110,43 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       return false;
     }
 
-    // 業績分攤合計必須等於 100%
+    // 業績分攤合計必須等於 100%（依日期區間分組各自加總）
     const activeLocations = this.wizardState.locationData.filter(
       loc => loc._status !== 'deleted' && loc.location_no?.trim()
     );
     if (activeLocations.length > 0) {
-      const saleRateTotal = Math.round(activeLocations.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
-      if (saleRateTotal !== 100) {
-        this.messageService.warnBubble(`業績分攤(%) 合計須等於 100%（目前：${saleRateTotal}%）`);
+      const groups = new Map<string, number>();
+      activeLocations.forEach(r => {
+        const key = `${r.tlt_bdate ?? ''}|${r.tlt_edate ?? ''}`;
+        groups.set(key, Math.round(((groups.get(key) ?? 0) + (Number(r.sale_rate) || 0)) * 100) / 100);
+      });
+      const invalidGroups: string[] = [];
+      groups.forEach((total, key) => {
+        if (total !== 100) {
+          const [bdate, edate] = key.split('|');
+          invalidGroups.push(`${bdate || '未填'}～${edate || '未填'}：${total}%`);
+        }
+      });
+      if (invalidGroups.length > 0) {
+        this.messageService.warnBubble(`同一區間業績分攤(%) 合計須等於 100%（${invalidGroups.join('、')}）`);
+        return false;
+      }
+    }
+
+    // 有始有終：至少一筆地點起始日 = 營運起始日，至少一筆地點截止日 = 營運截止日
+    const operBdate = this.step1Form.get('tlt_contract_bdate')?.value;
+    const operEdate = this.step1Form.get('tlt_contract_edate')?.value;
+    if (activeLocations.length > 0 && operBdate && operEdate) {
+      const norm = (d: string | Date | null | undefined): string =>
+        d ? (d instanceof Date ? d.toLocaleDateString('sv-SE') : String(d).split('T')[0]) : '';
+      const operBdateStr = norm(operBdate);
+      const operEdateStr = norm(operEdate);
+      if (!activeLocations.some(loc => norm(loc.tlt_bdate) === operBdateStr)) {
+        this.messageService.warnBubble(`至少須有一筆地點起始日等於營運起始日（${operBdateStr}）`);
+        return false;
+      }
+      if (!activeLocations.some(loc => norm(loc.tlt_edate) === operEdateStr)) {
+        this.messageService.warnBubble(`至少須有一筆地點截止日等於營運截止日（${operEdateStr}）`);
         return false;
       }
     }

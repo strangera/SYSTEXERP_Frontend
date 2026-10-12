@@ -119,19 +119,25 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       field: 'sale_rate', header: '業績分攤(%)', type: 'inputNumber',
       min: 0, max: 100, maxFractionDigits: 2, suffix: '%', minWidth: '130px',
       validate: [
-        (value: unknown) => {
-          const num = Number(value);
-          const ok = value !== null && value !== undefined && value !== '' && !isNaN(num) && num > 0;
-          return { isValid: ok, errorMessage: ok ? [] : ['業績分攤(%) 必填且需大於 0'] };
-        },
         (_value: unknown, _rowData: unknown, data: unknown[]) => {
           const active = (data as LocationItem[]).filter(
             r => !(r as LocationItem & { _isAutoInsertCandidate?: boolean })._isAutoInsertCandidate &&
                  r._status !== 'deleted' && String(r.location_no || '').trim()
           );
-          const total = Math.round(active.reduce((s, r) => s + (Number(r.sale_rate) || 0), 0) * 100) / 100;
-          const ok = total === 100;
-          return { isValid: ok, errorMessage: ok ? [] : [`業績分攤(%) 合計須等於 100%（目前：${total}%）`] };
+          const groups = new Map<string, number>();
+          active.forEach(r => {
+            const key = `${r.tlt_bdate ?? ''}|${r.tlt_edate ?? ''}`;
+            groups.set(key, Math.round(((groups.get(key) ?? 0) + (Number(r.sale_rate) || 0)) * 100) / 100);
+          });
+          const invalidGroups: string[] = [];
+          groups.forEach((total, key) => {
+            if (total !== 100) {
+              const [bdate, edate] = key.split('|');
+              invalidGroups.push(`${bdate || '未填'}～${edate || '未填'}：${total}%`);
+            }
+          });
+          const ok = invalidGroups.length === 0;
+          return { isValid: ok, errorMessage: ok ? [] : [`同一區間業績分攤(%) 合計須等於 100%（${invalidGroups.join('、')}）`] };
         }
       ],
       onBlur: () => setTimeout(() => this.locationTableRef?.revalidateField('sale_rate'), 0),
@@ -139,7 +145,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   ];
 
   selectedLocationRows: LocationItem[] = [];
-  private lastSaleRateCount = -1;
 
   locationDefaultInsertData = {
     location_no: '',
@@ -1091,22 +1096,32 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const active = this.locationData.filter(
       loc => loc._status !== 'deleted' && String(loc.location_no || '').trim()
     );
-    const n = active.length;
-    const anyMissing = active.some(loc => loc.sale_rate == null || Number(loc.sale_rate) <= 0);
-    const countChanged = this.lastSaleRateCount >= 0 && n !== this.lastSaleRateCount;
-    this.lastSaleRateCount = n;
-    if (n === 0) return;
-    if (!countChanged && !anyMissing) return;
+    if (active.length === 0) return;
 
-    const base = Math.floor((100 / n) * 100) / 100;
-    active.forEach((loc, i) => {
-      const newRate = i === n - 1
-        ? Math.round((100 - base * (n - 1)) * 100) / 100
-        : base;
-      if (loc.sale_rate !== newRate) {
-        loc.sale_rate = newRate;
-        if (loc._status === 'original') loc._status = 'modified';
-      }
+    const groups = new Map<string, LocationItem[]>();
+    active.forEach(loc => {
+      const key = `${loc.tlt_bdate ?? ''}|${loc.tlt_edate ?? ''}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(loc);
+    });
+
+    groups.forEach(groupItems => {
+      const anyMissing = groupItems.some(
+        loc => loc.sale_rate == null || String(loc.sale_rate).trim() === ''
+      );
+      if (!anyMissing) return;
+
+      const gn = groupItems.length;
+      const base = Math.floor((100 / gn) * 100) / 100;
+      groupItems.forEach((loc, i) => {
+        const newRate = i === gn - 1
+          ? Math.round((100 - base * (gn - 1)) * 100) / 100
+          : base;
+        if (loc.sale_rate !== newRate) {
+          loc.sale_rate = newRate;
+          if (loc._status === 'original') loc._status = 'modified';
+        }
+      });
     });
   }
 
