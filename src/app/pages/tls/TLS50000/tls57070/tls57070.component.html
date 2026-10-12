@@ -3,36 +3,75 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="存貨年月" controlName="STK_YM"
-              [control]="queryForm.controls.STK_YM" [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="存貨年月"
+              controlName="STK_YM"
+              [control]="queryForm.controls.STK_YM"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="倉別" controlName="HOS_NOList" [options]="HOS_NOListOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.HOS_NOList"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="倉別"
+              controlName="HOS_NOList"
+              [options]="HOS_NOListOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.HOS_NOList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="品牌" controlName="LOGO_NoList" [options]="LOGO_NoListOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="品牌"
+              controlName="LOGO_NoList"
+              [options]="LOGO_NoListOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.LOGO_NoList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="顯示方式" controlName="ShowType" [options]="showTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ShowType" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="顯示方式"
+              controlName="ShowType"
+              [options]="showTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ShowType"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="調整成本" controlName="ShowSTK_SYSADJUSTCOST" [options]="sysAdjustCostOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.ShowSTK_SYSADJUSTCOST"
-              [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="調整成本"
+              controlName="ShowSTK_SYSADJUSTCOST"
+              [options]="sysAdjustCostOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ShowSTK_SYSADJUSTCOST"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -41,18 +80,34 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="tls57070" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [footerData]="footerData" [loading]="loading" [showReportMode]="false" [showManage]="false" [showDelete]="false"
-    [subTotalData]="DetailSumData" [columnGroup]="columnGroup"
-    [groupRowsBy]="lastQueryBody?.ShowType === 'D' ? 'LOGO_CH_NAME' : ''" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls57070Service.queryTLS57070.bind(tls57070Service)" [showSort]="false">
-    <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="產出存貨月結表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
-          [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        <p-button styleClass="p-2" label="產出存貨月結表.XLSX" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-      </div>
-    </header>
-  </app-table-report>
+
+  <app-tls57070-table
+    [data]="data"
+    [columns]="columns"
+
+    [totalRecords]="totalRecords"
+
+    [footerData]="footerData"
+
+    [subTotalData]="DetailSumData"
+
+    [columnGroup]="columnGroup"
+
+    [groupRowsBy]="
+      lastQueryBody?.ShowType === 'D'
+        ? 'LOGO_CH_NAME'
+        : ''
+    "
+
+    [lastQueryBody]="lastQueryBody"
+
+    [loading]="loading"
+
+    [btnLoading]="btnLoading"
+
+    (exportPDF)="onExportPDF()"
+
+    (exportXLSX)="onExportXLSX()">
+  </app-tls57070-table>
+
 </div>

@@ -4,20 +4,20 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@others/component/table/table.model';
 import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/components/multi-select/multi-select.component';
-import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { ColumnGroup, formatAmountWithDecimals, ReportColumn } from '@shared/components/table-report/table-report.model';
-import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
+import { Tls57070TableComponent } from './tls57070-table.component';
 
 @Component({
   selector: 'app-tls57070',
@@ -35,7 +35,7 @@ import { finalize } from 'rxjs';
     TranslateModule,
     AsyncPipe,
     DropdownComponent,
-    TableReportComponent
+    Tls57070TableComponent
   ],
 })
 export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
