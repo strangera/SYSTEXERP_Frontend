@@ -1,0 +1,5 @@
+:host ::ng-deep app-table-report .p-datatable-tbody > tr,
+:host ::ng-deep app-table-report .p-datatable-tbody > tr > td {
+  height: 60px !important;
+  min-height: 60px !important;
+}
