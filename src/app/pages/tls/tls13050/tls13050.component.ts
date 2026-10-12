@@ -6,17 +6,17 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs/operators';
 import { DropdownApiService } from 'src/app/service/utility/dropdown-api.service';
+import { formatAmount } from '../../../others/component/table/table.model';
 import { QueryTLS13050Request, TLS13050QueryItem, Tls13050Service } from '../../../service/api/tls/tls13050.service';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { InputNumberRangeComponent } from '../../../shared/components/input-number-range/input-number-range.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
-import { formatAmount } from '../../../others/component/table/table.model';
 import { TLS13050TableReportComponent } from './tls13050-table-report.component';
 @Component({
   selector: 'app-tls13050',
@@ -62,25 +62,26 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
   data: TLS13050QueryItem[] = [];
   selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
+  lastQueryBody: QueryTLS13050Request | null = null;
   organizationCodeOptions: any = [];
-columns: ReportColumn[] = [
-  { field: 'apply_no', header: '專櫃招募編號', visible: true, width: '120px' },
-  { field: 'tlt_no', header: '專櫃編號', visible: true, width: '100px' },
-  { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value), width: '90px' },
-  { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value), width: '80px' },
-  { field: 'org_name', header: '組織名稱', visible: true, width: '120px' },
-  { field: 'LocationText', header: '位置編號', visible: true, width: '100px' },
-  { field: 'tlt_name', header: '專櫃名稱', visible: true, width: '80px' },
-  { field: 'cag_bdate', header: '起始日期', visible: true, width: '100px' },
-  { field: 'cag_edate', header: '結束日期', visible: true, width: '100px' },
-  { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount, width: '130px' },
-  { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount, width: '130px' },
-  { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount, width: '130px' },
-  { field: 'limit_charge_rate', header: '抽成率', visible: true, width: '90px' },
-  { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount, width: '150px' },
-  { field: 'finishedrate', header: '年度包底營業額完成率', visible: true, width: '150px' },
-  { field: 'check_day', header: '月結天數', visible: true, width: '90px' },
-];
+  columns: ReportColumn[] = [
+    { field: 'apply_no', header: '專櫃招募編號', visible: true, width: '120px' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, width: '100px' },
+    { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value), width: '90px' },
+    { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value), width: '80px' },
+    { field: 'org_name', header: '組織名稱', visible: true, width: '120px' },
+    { field: 'LocationText', header: '位置編號', visible: true, width: '100px' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, width: '80px' },
+    { field: 'cag_bdate', header: '起始日期', visible: true, width: '100px' },
+    { field: 'cag_edate', header: '結束日期', visible: true, width: '100px' },
+    { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount, width: '130px' },
+    { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount, width: '130px' },
+    { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount, width: '130px' },
+    { field: 'limit_charge_rate', header: '抽成率', visible: true, width: '90px', format: (v: number) => this.percent(v), exportFormat: 'suffix:%' as unknown as Record<string, string>[] },
+    { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount, width: '150px' },
+    { field: 'finishedrate', header: '年度包底營業額完成率', visible: true, width: '150px', format: (v: number) => this.percent(v), exportFormat: 'suffix:%' as unknown as Record<string, string>[] },
+    { field: 'check_day', header: '月結天數', visible: true, width: '90px' },
+  ];
   buildingNoOptions: IDropdownItem[] = [];
 
   constructor(
@@ -90,6 +91,9 @@ columns: ReportColumn[] = [
   ) {
     super();
   }
+
+  // 排序走後端 API，讓 query-cache 攔截器更新快取條件（含 SortBy），匯出才會跟著排序
+  readonly queryFn = (body: QueryTLS13050Request) => this.tls13050Service.queryTLS13050(body);
 
   ngOnInit(): void {
     this.initializePage('TLS13050', undefined, this.queryForm, (form) => this.onSubmit(form));
@@ -127,10 +131,11 @@ columns: ReportColumn[] = [
 
   getFloorName(floorText: string): string {
     if (!floorText) return '';
-    if (floorText.includes('/')) {
-      return floorText.split('/')[1];
-    }
-    return floorText;
+    const floors = floorText.split(',').map(f => {
+      const idx = f.indexOf('/');
+      return (idx >= 0 ? f.slice(idx + 1) : f).trim();
+    }).filter(f => f);
+    return [...new Set(floors)].join(',');
   }
 
   private formatQueryDate(date: unknown): string {
@@ -194,6 +199,7 @@ columns: ReportColumn[] = [
           next: (res) => {
             this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? this.data.length;
+            this.lastQueryBody = body;
             this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
           },
 
@@ -201,5 +207,9 @@ columns: ReportColumn[] = [
     });
   }
 
-
+  private percent(v: number): string {
+    if (v === null || v === undefined) return '';
+    const n = Number(v);
+    return Number.isNaN(n) ? '' : `${n.toFixed(1)}%`;
+  }
 }
