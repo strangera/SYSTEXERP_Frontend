@@ -1,12 +1,17 @@
 <p-dialog header="匯入銀行資料" [modal]="true" [(visible)]="visible" [style]="{ width: '70rem' }"
   [breakpoints]="{ '1199px': '90vw', '575px': '100vw' }" [draggable]="false" (onHide)="onHide()">
   <div class="flex align-items-center gap-2 mb-3">
+    <app-button label="載入金管會最新資料" icon="pi pi-cloud-download" [permissionCode]="Actions.ExcelImport"
+      [loading]="loadingFsc()" [disabled]="loading()" (click)="onLoadFsc()" />
+    <span class="text-color-secondary">由系統向金管會取得最新機構代號檔並預覽；或使用下方手動上傳。</span>
+  </div>
+  <div class="flex align-items-center gap-2 mb-3">
     <input #fileInput type="file" class="hidden" accept=".jsp,.txt,.csv,.xlsx" (change)="onFileSelected($event)" />
     <app-button label="選擇檔案" icon="pi pi-folder-open" severity="secondary" [outlined]="true"
       (click)="fileInput.click()" />
     <span class="flex-1">{{ selectedFile()?.name || '請選擇金管會下載的機構代號檔(bankno_excel.jsp，或另存的 .xlsx)' }}</span>
-    <app-button label="上傳並預覽" icon="pi pi-upload" [loading]="loading()" [disabled]="!selectedFile() || loading()"
-      (click)="onPreview()" />
+    <app-button label="上傳並預覽" icon="pi pi-upload" [loading]="loading() && source() === 'file'"
+      [disabled]="!selectedFile() || loading()" (click)="onPreview()" />
     @if (preview()) {
       <app-button label="確認匯入" icon="pi pi-check" severity="success" [disabled]="loading()"
         (click)="onConfirm()" />

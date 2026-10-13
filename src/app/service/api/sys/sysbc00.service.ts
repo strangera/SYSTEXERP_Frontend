@@ -83,6 +83,8 @@ export interface IPreviewImportSysbc00 {
   Success: boolean;
   Message: string | null;
   FileName: string;
+  PreviewId: string | null;
+  Expired: boolean;
   TotalRows: number;
   SkippedRows: number;
   BankRows: number;
@@ -154,6 +156,29 @@ export class Sysbc00Service {
     const formData = new FormData();
     formData.append('InputFile', file, file.name);
     return this.http.post<ApiResponse<IPreviewImportSysbc00>>(`${this.apiUrl}/previewImportSYSBC00`, formData);
+  }
+
+  /**
+   * 由後端向金管會取得最新機構代號檔並預覽匯入結果 (網址由後端設定檔決定，不寫入 DB)
+   */
+  previewFscSYSBC00(): Observable<ApiResponse<IPreviewImportSysbc00>> {
+    return this.http.post<ApiResponse<IPreviewImportSysbc00>>(`${this.apiUrl}/previewFscSYSBC00`, {});
+  }
+
+  /**
+   * 以預覽時後端暫存的金管會檔案確認匯入 (逾時/不存在時 Expired=true)
+   * @param previewId 預覽回傳的暫存識別碼
+   */
+  confirmFscSYSBC00(previewId: string): Observable<ApiResponse<IPreviewImportSysbc00>> {
+    return this.http.post<ApiResponse<IPreviewImportSysbc00>>(`${this.apiUrl}/confirmFscSYSBC00`, { PreviewId: previewId });
+  }
+
+  /**
+   * 捨棄金管會預覽暫存檔
+   * @param previewId 預覽回傳的暫存識別碼
+   */
+  discardFscSYSBC00(previewId: string): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/discardFscSYSBC00`, { PreviewId: previewId });
   }
 
   /**
