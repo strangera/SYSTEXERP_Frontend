@@ -1659,13 +1659,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
             const d = resolveStepDetail(r.gls3002_id, r.PTA);
             if (!d) return r;
-            return { ...r, acp_amt: detailAmt(d), note_desc: this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
+            return { ...r, acp_amt: detailAmt(d), note_desc: r.note_desc || this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo };
           }));
           this.stepARRows.update(rows => rows.filter(r => !isDanglingStep(r)).map(r => {
             if ((r as Record<string, unknown>)['_dataStatus'] === 'new') return r;
             const d = resolveStepDetail(r.gls3002_id, r.PTA);
             if (!d) return r;
-            return { ...r, ars_amt: detailAmt(d), note_desc: this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo, ACCT_KEY: d.recKey !== undefined ? (d.recKey ?? null) : r.ACCT_KEY };
+            return { ...r, ars_amt: detailAmt(d), note_desc: r.note_desc || this.resolveNoteDescForStep(d), gls3002_id: typeof d.id === 'number' ? d.id : r.gls3002_id, _detailSerNo: d.SerNo, ACCT_KEY: d.recKey !== undefined ? (d.recKey ?? null) : r.ACCT_KEY };
           }));
 
           // 編輯模式：廠商切換後補同步既有 DB 列的廠商付款方式等欄位
