@@ -38,6 +38,9 @@ export interface TLS26080DetailTable {
   tlt_id_desc?: string;        // 抽成類別名稱
   tlt_no: string;              // 專櫃編號
   tlt_name: string;            // 櫃位名稱
+  apply_no?: string | null;           // 招募編號
+  tlt_contract_bdate?: string | null; // 營運起始日
+  tlt_contract_edate?: string | null; // 營運截止日
   calc_date_type: 'Y' | 'N';   // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
   cap_item_D16: string;        // D16
   tpy_rate_D16: number;        // D16 費用比率 (不含'%')

@@ -81,7 +81,7 @@
 
 <!-- 選擇專櫃 Dialog -->
 <app-dialog [visible]="displayDialog()" header="選擇專櫃" (visibleChange)="displayDialog.set($event)" (save)="saveDialog()"
-  [disable]="!selectedItemsDialog().length" width="860px">
+  [disable]="!selectedItemsDialog().length" width="1200px">
 
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryDialog()">
     <div class="grid p-fluid">

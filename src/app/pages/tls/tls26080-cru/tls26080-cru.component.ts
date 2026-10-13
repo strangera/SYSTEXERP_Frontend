@@ -165,7 +165,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly dialogColumns: ReportColumn[] = [
     { field: 'No', header: '專櫃編號' },
-    { field: 'Name', header: '專櫃名稱' },
+    { field: 'Name', header: '專櫃名稱', maxWidth: '10rem' },
+    { field: 'apply_no', header: '招募編號', maxWidth: '5rem' },
+    { field: 'tlt_contract_bdate', header: '營運起始日', format: v => this.datePipe.transform(v, 'yyyy/MM/dd'), maxWidth: '5rem' },
+    { field: 'tlt_contract_edate', header: '營運截止日', format: v => this.datePipe.transform(v, 'yyyy/MM/dd'), maxWidth: '5rem' },
   ];
 
   public readonly queryTalentDialog = () => {
@@ -419,6 +422,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         format: (v, _i, r) =>
           (v != null && String(v) !== '' ? String(v) : this.service.tltTalentMap().get(r.tlt_no)?.['Name']) ?? '',
       },
+      { field: 'apply_no', header: '招募編號' },
+      { field: 'tlt_contract_bdate', header: '營運起始日', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') ?? '' },
+      { field: 'tlt_contract_edate', header: '營運截止日', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') ?? '' },
       {
         field: 'tlt_id',
         header: '抽成類別',
@@ -634,8 +640,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         // fare_rate_*/pod_status 僅顯示用，insert／update 明細後端 Request 皆已無這些欄位，不寫入
         // （queryTLS26080_Detail 回應也已不再帶 approved_usrno/approved_usr_name/approved_date，明細列不再有這些欄位）
         TALPORDERD_VOUCHERDetails: validTableData.map(item => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除合約分攤與審核狀態欄位，不送 API
-          const { fare_rate_d16: _fr16, fare_rate_d17: _fr17, pod_status: _podStatus, ...row } = item;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除合約分攤、審核狀態、招募編號/營運起訖日（僅顯示用）欄位，不送 API
+          const { fare_rate_d16: _fr16, fare_rate_d17: _fr17, pod_status: _podStatus, apply_no: _applyNo, tlt_contract_bdate: _cbdate, tlt_contract_edate: _cedate, ...row } = item;
           return {
             ...row,
             pod_no: d.pod_no ?? '',
@@ -700,6 +706,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tlt_id_desc: '',
       tlt_no: (item['No'] as string) ?? item.value,
       tlt_name: (item['Name'] as string) ?? '',
+      apply_no: (item['apply_no'] as string | null) ?? null,
+      tlt_contract_bdate: (item['tlt_contract_bdate'] as string | null) ?? null,
+      tlt_contract_edate: (item['tlt_contract_edate'] as string | null) ?? null,
       calc_date_type: 'Y' as const,
       cap_item_D16: 'D16',
       tpy_rate_D16: 0,

@@ -519,6 +519,9 @@ export interface TalentOpenFlagQuery {
  */
 export interface TalentOpenFlagItem extends IDropdownItem {
   talent_id: number;
+  apply_no?: string | null;           // 招募編號
+  tlt_contract_bdate?: string | null; // 營運起始日
+  tlt_contract_edate?: string | null; // 營運截止日
 }
 
 /**

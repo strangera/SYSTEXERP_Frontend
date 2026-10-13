@@ -69,12 +69,14 @@ export class TableReportWidthService {
 
       const extra = col.type === 'link' ? TableReportWidthService.LINK_BUTTON_EXTRA : 0;
       const estimated = maxTextWidth === 0 ? 0 : Math.ceil(maxTextWidth + TableReportWidthService.PADDING_BUFFER + extra);
-      const cappedEstimate = Math.min(estimated, TableReportWidthService.MAX_COLUMN_WIDTH);
+      const colMaxPx = col.maxWidth ? this.parseWidthToPx(col.maxWidth, rootFontPx) : null;
+      const maxPx = Math.min(colMaxPx ?? TableReportWidthService.MAX_COLUMN_WIDTH, TableReportWidthService.MAX_COLUMN_WIDTH);
+      const cappedEstimate = Math.min(estimated, maxPx);
       const finalPx = Math.max(minPx, cappedEstimate);
 
       result[col.field] = {
         px: `${finalPx}px`,
-        truncated: estimated > TableReportWidthService.MAX_COLUMN_WIDTH && estimated > minPx,
+        truncated: estimated > maxPx && estimated > minPx,
       };
     }
     return result;

@@ -5,6 +5,7 @@ export interface ReportColumn {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   width?: string;    // 欄位寬度，例如 '80px'、'10rem'
+  maxWidth?: string; // 欄位最大寬度（px/rem），內容超過時截斷顯示省略號，滑鼠移上顯示完整文字
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: 'percentage' | 'decimal2' | Record<string, string>[];
   groupField?: string; //
