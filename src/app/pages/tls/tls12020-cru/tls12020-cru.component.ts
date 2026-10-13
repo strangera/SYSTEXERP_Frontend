@@ -398,125 +398,191 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     return null;
   }
 
-  private mapRowDataToForm(row: any) {
-    return {
-      vendorUID: row.ven_uniform,          // 廠商統一編號
-      vendorCName: row.VEN_Name,           // 廠商名稱(中文)
-      vendorEName: row.VEN_EngName,        // 廠商名稱(英文)
-      brand: row.tlt_name,                 // 品牌
-      bus_type: row.bus_type,              // 業種
-      VEN_Boss: row.VEN_ContactPerson,     // 聯絡人
-      VEN_BossTel: row.VEN_BossTel,        // 聯絡人電話
-      VEN_BossTitle: row.VEN_BossTitle,    // 聯絡人稱謂
-      VEN_BossMobile: row.VEN_BossMobile,  // 聯絡人手機
-      VEN_BossEmail: row.VEN_BossEmail,    // 聯絡人電子郵件
-      VEN_BossFax: row.VEN_BossFax,        // 聯絡人傳真
-      VEN_Addr: row.VEN_Addr,              // 公司地址
-      contact_Date: row.contact_Date ? new Date(row.contact_Date) : undefined,      // 訪談日期 (轉 Date)
-      contact_Time: (() => {
-        const t = row.contact_Time;
-        if (!t) return undefined;
-        // 可能格式: "1613" 或 "16:13" 或 已是 Date
-        if (t instanceof Date) return t;
-        if (typeof t === 'string') {
-          if (/^\d{4}$/.test(t)) {
-            const hh = parseInt(t.substring(0, 2), 10);
-            const mm = parseInt(t.substring(2, 4), 10);
-            const d = new Date();
-            d.setHours(hh, mm, 0, 0);
-            return d;
-          }
-          if (/^\d{2}:\d{2}$/.test(t)) {
-            const [h, m] = t.split(':');
-            const d = new Date();
-            d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
-            return d;
-          }
+ private mapRowDataToForm(row: any) {
+  return {
+    vendorUID: row.ven_uniform,
+    vendorCName: row.VEN_Name,
+    vendorEName: row.VEN_EngName,
+
+    brand: row.tlt_name,
+    bus_type: row.bus_type,
+
+    VEN_Boss: row.VEN_ContactPerson,
+    VEN_BossTel: row.VEN_BossTel,
+    VEN_BossTitle: row.VEN_BossTitle,
+    VEN_BossMobile: row.VEN_BossMobile,
+    VEN_BossEmail: row.VEN_BossEmail,
+    VEN_BossFax: row.VEN_BossFax,
+    VEN_Addr: row.VEN_Addr,
+
+    contact_Date: row.contact_Date
+      ? new Date(row.contact_Date)
+      : undefined,
+
+    contact_Time: (() => {
+      const t = row.contact_Time;
+
+      if (!t) return undefined;
+
+      if (t instanceof Date) {
+        return t;
+      }
+
+      if (typeof t === 'string') {
+
+        // DB 格式，例如 0930、1613
+        if (/^\d{4}$/.test(t)) {
+          const hh = parseInt(t.substring(0, 2), 10);
+          const mm = parseInt(t.substring(2, 4), 10);
+
+          const d = new Date();
+          d.setHours(hh, mm, 0, 0);
+
+          return d;
         }
-        return undefined;
-      })(),      // 訪談時間 (轉 Date)
-      building_no: row.building_no,        // 館別
-      willing_level: row.willing_level,    // 意願等級
-      FLOOR_NO: row.FLOOR_NO,              // 樓層編號
-      LOCATION_No: row.LOCATION_No,        // 位置編號
-      contact_record: row.contact_record ?? '',  // 洽談重點
-      contact_remarks: row.contact_remarks ?? '',// 備註
-      contact_USR_Name: row.contact_USR_Name, // 訪談人員
-    };
-  }
+
+        // 例如 09:30、16:13
+        if (/^\d{2}:\d{2}$/.test(t)) {
+          const [h, m] = t.split(':');
+
+          const d = new Date();
+          d.setHours(
+            parseInt(h, 10),
+            parseInt(m, 10),
+            0,
+            0
+          );
+
+          return d;
+        }
+      }
+
+      return undefined;
+    })(),
+
+    building_no: row.building_no,
+    willing_level: row.willing_level,
+    FLOOR_NO: row.FLOOR_NO,
+    LOCATION_No: row.LOCATION_No,
+
+    contact_record: row.contact_record ?? '',
+    contact_remarks: row.contact_remarks ?? '',
+
+    // Dropdown 的 value 是 No，所以修改時要塞使用者代碼
+    contact_USR_Name: row.contact_USR_No,
+  };
+}
 
 
 
   onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue();
-      const body = {
-        ...formValue,
-        ID: 0,
-        ven_uniform: formValue.vendorUID,
-        VEN_Name: formValue.vendorCName,
-        VEN_EngName: formValue.vendorEName,
-        VEN_ContactPerson: formValue.VEN_Boss,
-        contact_USR_No: formValue.contact_USR_Name,
-        tlt_name: formValue.brand,
-        bus_type: formValue.bus_type,
-        VEN_BossTel: formValue.VEN_BossTel,
-        VEN_BossTitle: formValue.VEN_BossTitle,
-        VEN_BossMobile: formValue.VEN_BossMobile,
-        VEN_BossEmail: formValue.VEN_BossEmail,
-        VEN_BossFax: formValue.VEN_BossFax,
-        VEN_Addr: formValue.VEN_Addr,
-        contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DD (DateOnly)
-        contact_Time: this.formatTime(formValue.contact_Time),
-        FLOOR_NO: formValue.FLOOR_NO,
-        LOCATION_No: formValue.LOCATION_No,
-        contact_record: formValue.contact_record,
-        contact_remarks: formValue.contact_remarks,
-        contact_USR_Name: formValue.contact_USR_Name,
+  this.handleSubmit(frm, () => {
+
+    const formValue = frm.getRawValue();
+
+    // formValue.contact_USR_Name 現在實際上是人員代碼 No
+    const selectedContactUser = this.contact_USR_NameOptions.find(
+      (item: any) => item.No === formValue.contact_USR_Name
+    );
+
+    const body = {
+      ...formValue,
+
+      ID: 0,
+
+      ven_uniform: formValue.vendorUID,
+      VEN_Name: formValue.vendorCName,
+      VEN_EngName: formValue.vendorEName,
+      VEN_ContactPerson: formValue.VEN_Boss,
+
+      // 訪談人員代碼
+      contact_USR_No: formValue.contact_USR_Name,
+
+      // 訪談人員中文姓名
+      contact_USR_Name: selectedContactUser?.Name ?? '',
+
+      tlt_name: formValue.brand,
+      bus_type: formValue.bus_type,
+
+      VEN_BossTel: formValue.VEN_BossTel,
+      VEN_BossTitle: formValue.VEN_BossTitle,
+      VEN_BossMobile: formValue.VEN_BossMobile,
+      VEN_BossEmail: formValue.VEN_BossEmail,
+      VEN_BossFax: formValue.VEN_BossFax,
+      VEN_Addr: formValue.VEN_Addr,
+
+      contact_Date: this.formatDateOnly(formValue.contact_Date),
+      contact_Time: this.formatTime(formValue.contact_Time),
+
+      willing_level: formValue.willing_level,
+      building_no: formValue.building_no,
+      FLOOR_NO: formValue.FLOOR_NO,
+      LOCATION_No: formValue.LOCATION_No,
+
+      contact_record: formValue.contact_record,
+      contact_remarks: formValue.contact_remarks,
+    };
+
+    const currentContactDate = body.contact_Date;
+    const currentContactTime = body.contact_Time;
+
+    const isSameDateTime =
+      this.originalContactDate !== null &&
+      this.originalContactTime !== null &&
+      this.originalContactDate === currentContactDate &&
+      this.originalContactTime === currentContactTime;
+
+    if (isSameDateTime && this.originalID) {
+
+      const updateBody = {
+        ...body,
+        ID: this.originalID
       };
 
-      // determine whether to call update or insert
-      const currentContactDate = body.contact_Date; // formatted YYYY-MM-DDT00:00:00
-      const currentContactTime = body.contact_Time; // formatted HHmm
-
-      const isSameDateTime = (this.originalContactDate !== null && this.originalContactTime !== null)
-        && (this.originalContactDate === currentContactDate) && (this.originalContactTime === currentContactTime);
-
-      if (isSameDateTime && this.originalID) {
-        // call update API
-        const updateBody = { ...body, ID: this.originalID };
-        this.tls12020Service
-          .updateTLS12020(updateBody)
-          .pipe(finalize(() => (this.btnLoading = false)))
-          .subscribe({
-            next: (res) => {
-              if (res.Status === '0000') {
-                this.messageService.successBubble(this.translate.instant('更新成功'));
-              } else {
-                this.messageService.errorBubble(this.translate.instant('更新失敗') + '：' + (res.Message || ''));
-              }
-              this.onCancel();
+      this.tls12020Service
+        .updateTLS12020(updateBody)
+        .pipe(finalize(() => (this.btnLoading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(
+                this.translate.instant('更新成功')
+              );
+            } else {
+              this.messageService.errorBubble(
+                this.translate.instant('更新失敗') + '：' + (res.Message || '')
+              );
             }
-          });
-      } else {
-        // call insert API
-        this.tls12020Service
-          .insertTLS12020(body)
-          .pipe(finalize(() => (this.btnLoading = false)))
-          .subscribe({
-            next: (res) => {
-              if (res.Status === '0000') {
-                this.messageService.successBubble(this.translate.instant('新增成功'));
-                this.dataForm.reset();
-              } else {
-                this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
-              }
-              this.onCancel();
-            },
-          });
-      }
-    });
-  }
+
+            this.onCancel();
+          }
+        });
+
+    } else {
+
+      this.tls12020Service
+        .insertTLS12020(body)
+        .pipe(finalize(() => (this.btnLoading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(
+                this.translate.instant('新增成功')
+              );
+
+              this.dataForm.reset();
+            } else {
+              this.messageService.errorBubble(
+                this.translate.instant('新增失敗') + '：' + (res.Message || '')
+              );
+            }
+
+            this.onCancel();
+          }
+        });
+    }
+  });
+}
   override onCancel(): void {
     this.router.navigate(
       ['/account/tls/tls12020'],
