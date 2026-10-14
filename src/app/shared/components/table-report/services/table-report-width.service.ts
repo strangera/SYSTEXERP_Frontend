@@ -13,10 +13,12 @@ export class TableReportWidthService {
   public serialColumnWidth = '60px';
 
   /** 單欄寬度上限 (px) */
-  public static readonly MAX_COLUMN_WIDTH = 600;
+  public static readonly MAX_COLUMN_WIDTH = 240;
   private static readonly DEFAULT_MIN_WIDTH = 55;
-  private static readonly CHINESE_CHAR_WIDTH = 16;
-  private static readonly ANY_CHAR_WIDTH = 9;
+  private static readonly CHINESE_CHAR_WIDTH = 12;
+  private static readonly ANY_CHAR_WIDTH = 7;
+  private static readonly SERIAL_HEADER_WIDTH = 32;
+  private static readonly SERIAL_DIGIT_WIDTH = 9;
   private static readonly PADDING_BUFFER = 24;
   private static readonly LINK_BUTTON_EXTRA = 16;
 
@@ -33,9 +35,9 @@ export class TableReportWidthService {
   ): Record<string, ColumnWidthInfo> {
     // 1. 動態計算序號欄寬度
     if (showReorder) {
-      const headerWidth = 2 * TableReportWidthService.CHINESE_CHAR_WIDTH;
+      const headerWidth = TableReportWidthService.SERIAL_HEADER_WIDTH;
       const maxSerialString = String(totalRecords || data?.length || 1);
-      const bodyWidth = maxSerialString.length * TableReportWidthService.ANY_CHAR_WIDTH;
+      const bodyWidth = maxSerialString.length * TableReportWidthService.SERIAL_DIGIT_WIDTH;
       const finalSerialWidth = Math.max(headerWidth, bodyWidth, 14);
       this.serialColumnWidth = `${finalSerialWidth}px`;
     }
