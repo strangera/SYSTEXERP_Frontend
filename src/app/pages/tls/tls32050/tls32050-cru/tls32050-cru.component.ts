@@ -80,32 +80,24 @@ export class Tls32050CRUComponent implements OnChanges {
     }
   }
 
-  // 沿用主查詢頁的 historyRequestBody，將被點擊列的 OrgId 帶入 OrgList、Bus_Class 帶入 BusClassList。
-  //
-  // ⚠️ TLS32050Response 的列資料只有 Bus_Class、沒有 BusType，但 TLS32060Request.BusClassList 要求
-  // {BusType, BusClass} 成對精確比對（SP_TLS32060Query 內是 BC.BusType = T.bus_type AND BC.BusClass = T.bus_class，
-  // 兩者都要對才會命中）。若隨便帶空字串當 BusType 會導致完全查不到資料而不是「少篩選」。
-  // 因此改用「回推」：優先從主查詢頁當時實際送出的 BusClassList（tuple 陣列 [bus_type, bus_class]）
-  // 找出 bus_class 等於被點擊列 Bus_Class 的那筆取出 BusType；找不到、且主查詢頁剛好只鎖了單一大分類時，
-  // 退而求其次直接用那個大分類；兩者都無法確定 BusType 時寧可不加這個中分類篩選（只靠 OrgList narrow），
-  // 避免比 SP 用錯 BusType 反而讓明細整個查不到資料。
+  // 沿用主查詢頁的 historyRequestBody，將被點擊列的 OrgId 帶入 OrgList、
+  // Bus_Type/Bus_Class 帶入 BusClassList，BusSClassList 只保留屬於該大/中分類的小分類。
+  // （SP_TLS32060Query 是 BusType + BusClass 成對精確比對，列資料缺任一值就不加這個篩選，避免整個查不到資料。）
   private buildRequest(): TLS32060Request {
     const q = this.queryConditions!;
     const row = this.rowData!;
+    const busType = row.Bus_Type;
+    const busClass = row.Bus_Class;
 
-    // TLS32050Request.BusClassList/BusSClassList 型別宣告雖是 string[]，但 tls32050.component.ts
-    // onSubmit() 實際組裝送出的是 tuple 陣列，跟 TLS32060Request 要求的物件陣列格式不同，需轉換。
-    const rawBusClassList = (q.BusClassList ?? []) as unknown as string[][];
+    // TLS32050Request.BusSClassList 型別宣告雖是 string[]，但 tls32050.component.ts
+    // onSubmit() 實際組裝送出的是 tuple 陣列 [bus_type, bus_class, bus_sclass]，需轉換成物件陣列。
     const rawBusSClassList = (q.BusSClassList ?? []) as unknown as string[][];
 
-    const busSClassList = rawBusSClassList
-      .filter(t => Array.isArray(t) && t.length >= 3)
-      .map(t => ({ BusType: t[0], BusClass: t[1], BusSClass: t[2] }));
-
-    const matchedTuple = rawBusClassList.find(pair => Array.isArray(pair) && pair[1] === row.Bus_Class);
-    const inferredBusType = matchedTuple?.[0] ?? ((q.BusTypeList?.length === 1) ? q.BusTypeList[0] : null);
-    const busClassList = (row.Bus_Class && inferredBusType)
-      ? [{ BusType: inferredBusType, BusClass: row.Bus_Class }]
+    const busClassList = (busType && busClass) ? [{ BusType: busType, BusClass: busClass }] : [];
+    const busSClassList = (busType && busClass)
+      ? rawBusSClassList
+        .filter(t => Array.isArray(t) && t.length >= 3 && t[0] === busType && t[1] === busClass)
+        .map(t => ({ BusType: t[0], BusClass: t[1], BusSClass: t[2] }))
       : [];
 
     return {

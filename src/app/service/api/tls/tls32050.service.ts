@@ -1,6 +1,6 @@
-import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiRequest, ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 // 主檔 request
@@ -35,6 +35,7 @@ export interface TLS32050Response extends ApiRequest {
   "OrgName": string | null, // 樓組名稱
 
   "TltKindName": string | null, // 櫃別名稱
+  "Bus_Type": string | null, // 大分類代碼
   "BusClassName": string | null, // 中分類(商品類別)名稱
   "Bus_Class": string | null, // 中分類代碼（TEAM 有值，小計/合計/總計為 NULL）
 
