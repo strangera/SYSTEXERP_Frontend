@@ -195,6 +195,10 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
   // 對照 TLS32070 報表欄位，額外加入折扣別/抽成率
+  // 總計列(footerTotal)的坪數不顯示，與匯出一致；明細列照常格式化
+  private readonly blankInGrandTotal = (fmt: (value: number) => string) =>
+    (value: number, _rowIndex?: number, row?: unknown): string => row === this.footerTotal ? '' : fmt(value);
+
   columns: ReportColumn[] = [
     // 基本資訊
     { field: 'BuildingName', header: '館別', align: 'left' },
@@ -211,7 +215,7 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
     // reportType/exportFormat 是給共通報表 /exportPDF /exportExcel（table-report-caption → ReportExportService）用的匯出格式，
     // 跟畫面上 format callback 是兩條獨立路徑，兩邊都要設才能讓畫面跟匯出檔顯示一致（同 TLS32070 做法）。
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較期' },
-    { field: 'Comp_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '比較期' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', format: this.blankInGrandTotal((v) => formatAmountWithDecimals(v, 2)), exportFormat: 'decimal2', groupField: '比較期' },
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '比較期' },
@@ -222,7 +226,7 @@ export class TLS32080Component extends BasicQueryPageComponent<TLS32080Response>
 
     // 基準期 (本期)
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準期' },
-    { field: 'Base_Space', header: '坪數', align: 'right', format: (v) => formatAmountWithDecimals(v, 2), exportFormat: 'decimal2', groupField: '基準期' },
+    { field: 'Base_Space', header: '坪數', align: 'right', format: this.blankInGrandTotal((v) => formatAmountWithDecimals(v, 2)), exportFormat: 'decimal2', groupField: '基準期' },
     { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', format: formatAmountRounded, reportType: 'integer', groupField: '基準期' },

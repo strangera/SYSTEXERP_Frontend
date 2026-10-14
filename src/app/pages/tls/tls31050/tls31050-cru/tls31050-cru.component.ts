@@ -206,9 +206,6 @@ private queryDetail(): void {
         TxnCount: totalTxnCount,
         AvgTicket: avgTicket,
 
-        tlt_space: this.footerTotal?.TotalSpace ?? 0,
-        MonthlyPSM: this.footerTotal?.AvgPSM ?? 0,
-
         MonthlyBudgetTotal: this.footerTotal?.TotalMonthlyBudget ?? 0,
         MonthlySalesTotal: this.footerTotal?.TotalMonthlySales ?? 0,
         CompletionRate: this.footerTotal?.AvgCompletionRate ?? 0,

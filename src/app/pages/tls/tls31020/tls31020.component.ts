@@ -259,8 +259,6 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Item> imp
             AvgTicket: this.footerTotal.AvgTicket,
             ConsumerNum: this.footerTotal.TotalConsumerNum,
             ConsumerOrder: this.footerTotal.TotalConsumerOrder,
-            tlt_space: this.footerTotal.TotalSpace,
-            MonthlyPSM: this.footerTotal.AvgPSM,
             MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
             TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
             // ❌ 移除 AvgTempCounterSalesRate 與 AvgTempCounterAmtRate

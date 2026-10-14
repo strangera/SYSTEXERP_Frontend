@@ -177,6 +177,10 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   monthOptions = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `${i + 1} 月` }));
   weekOptions: { value: number, label: string }[] = [];
   halfYearOptions = [{ value: 1, label: '上半年' }, { value: 2, label: '下半年' }];
+  // 總計列(footerData)的坪數/日坪效不顯示，與匯出一致；明細列照常格式化
+  private readonly blankInGrandTotal = (fmt: (value: number) => string) =>
+    (value: number, _rowIndex?: number, row?: unknown): string => row === this.footerData ? '' : fmt(value);
+
   columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', align: 'left' },
     { field: 'Org_Name', header: '組織', align: 'left' },
@@ -185,22 +189,22 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'TltName', header: '專櫃名稱', align: 'left' },
 
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
-    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: this.blankInGrandTotal((value) => formatAmountWithDecimals(value, 2)) },
     { field: 'Comp_SaleAmt', header: '銷售總金額', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_Target', header: '目標', align: 'right', width: '75px', groupField: '比較', format: formatAmount },
-    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較', format: this.blankInGrandTotal(formatAmount) },
     { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較', format: (value) => formatPercentage(value, 2) },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_PrePerformance', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount, visible: this.isPreSale },
     { field: 'Comp_ConsumerNum', header: '消費人數', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
     { field: 'Comp_ConsumerOrder', header: '消費客單', align: 'right', groupField: '比較', format: formatAmount, visible: this.isConsumerNum },
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
-    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: this.blankInGrandTotal((value) => formatAmountWithDecimals(value, 2)) },
     { field: 'Base_SaleAmt', header: '銷售總金額', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_Target', header: '目標', align: 'right', width: '75px', groupField: '基準', format: formatAmount },
-    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準', format: this.blankInGrandTotal(formatAmount) },
     { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準', format: (value) => formatPercentage(value, 2) },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_PrePerformance', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount, visible: this.isPreSale },

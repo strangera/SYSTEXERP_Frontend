@@ -252,8 +252,6 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Item> imp
             AchievementRate: this.footerTotal.AvgAchievementRate,
             TxnCount: this.footerTotal.TotalTxnCount,
             AvgTicket: this.footerTotal.AvgTicket,
-            tlt_space: this.footerTotal.TotalSpace,
-            MonthlyPSM: this.footerTotal.AvgPSM,
             TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
             MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
             MonthlySalesTotal: this.footerTotal.TotalMonthlySales,

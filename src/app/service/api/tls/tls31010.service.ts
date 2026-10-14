@@ -103,8 +103,6 @@ export class Tls31010Service {
           AchievementRate: res.Data.TotalData.AvgAchievementRate,
           TxnCount: res.Data.TotalData.TotalTxnCount,
           AvgTicket: res.Data.TotalData.AvgTicket,
-          tlt_space: res.Data.TotalData.TotalSpace,
-          MonthlyPSM: res.Data.TotalData.AvgPSM,
           MonthlyBudgetTotal: res.Data.TotalData.TotalMonthlyBudget,
           MonthlySalesTotal: res.Data.TotalData.TotalMonthlySales,
           CompletionRate: res.Data.TotalData.AvgCompletionRate,

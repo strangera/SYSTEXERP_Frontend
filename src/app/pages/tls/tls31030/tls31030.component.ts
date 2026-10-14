@@ -250,8 +250,6 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
             AVN_TotSaleAmt: this.footerTotal.TotalSales,
             TxnCount: this.footerTotal.TotalTxnCount,
             AvgTicket: this.footerTotal.AvgTicket,
-            tlt_space: this.footerTotal.TotalSpace,
-            MonthlyPSM: this.footerTotal.AvgPSM,
             MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
             TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
             MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,

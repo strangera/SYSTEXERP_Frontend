@@ -156,8 +156,6 @@ export class Tls31030CRUComponent implements OnChanges {
           AVN_TotSaleAmt: this.footerTotal.TotalSales,
           TxnCount: this.footerTotal.TotalTxnCount,
           AvgTicket: this.footerTotal.AvgTicket,
-          tlt_space: this.footerTotal.TotalSpace,
-          MonthlyPSM: this.footerTotal.AvgPSM,
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           AchievementRate: this.footerTotal.AvgAchievementRate,
