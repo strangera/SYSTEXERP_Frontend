@@ -16,9 +16,9 @@
           <span *ngIf="loadingDates">讀取中...</span>
           <span *ngIf="!loadingDates">{{ closeDate }}</span>
         </h6>
-        <h6>最近執行鎖定時間：
+        <h6>最近關帳日期：
           <span *ngIf="loadingDates">讀取中...</span>
-          <span *ngIf="!loadingDates">{{ summaryDate }}</span>
+          <span *ngIf="!loadingDates">{{ (lastCloseDate | date: 'yyyy/MM/dd') ?? 'N/A' }}</span>
         </h6>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

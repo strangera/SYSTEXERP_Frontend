@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -6,6 +6,7 @@ import { formatDateToYYYY_MM_DD } from '@others/component/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { forkJoin, Observable } from 'rxjs'; // 引入 forkJoin 和 Observable
 import { finalize, map } from 'rxjs/operators';
+import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -18,6 +19,7 @@ import { CalendarComponent } from '../../../shared/components/calendar/calendar.
   standalone: true,
   imports: [
     NgIf,
+    DatePipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -33,12 +35,13 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   closeDate: string | undefined;
-  summaryDate: string | undefined;
+  lastCloseDate: string | null = null; // 最近關帳日期 (同 TLS2C030)
   importDate: string | undefined; // 新增：存儲匯入日期
   loadingDates = false;
 
   constructor(
     private tls2c050Service: TLS2C050Service,
+    private tls2c010Service: TLS2C010Service,
   ) {
     super();
   }
@@ -66,6 +69,14 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
       if (date) {
         const dateStr = formatDateToYYYY_MM_DD(date);
         if (dateStr) {
+          // 發票日期須已日結 (<= 最近關帳日期) 才可轉檔
+          const lastCloseStr = this.lastCloseDate ? formatDateToYYYY_MM_DD(this.lastCloseDate) : null;
+          if (!lastCloseStr || dateStr > lastCloseStr) {
+            this.messageService.warnBubble('請先日結，再執行轉檔');
+            this.loading = false; // handleSubmit 已先設 loading=true，提前 return 需自行還原
+            return;
+          }
+
           // --- 新增提示訊息 ---
           this.messageService.infoBubble('執行轉檔中，請稍後...');
 
@@ -147,9 +158,9 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
       map(response => response.Data?.CLS_DATE ?? 'N/A')
     );
 
-    // 2. 取得彙總日期
-    const summaryDateApi$ = this.tls2c050Service.getTLS2C050Date_invoice().pipe(
-      map(response => response.Data?.invoice_lock_date ?? 'N/A')
+    // 2. 取得最近關帳日期 (同 TLS2C030)
+    const lastCloseDateApi$ = this.tls2c010Service.getTLS2C010Date().pipe(
+      map((response: { Data?: { CLS_DATE?: string } }) => response.Data?.CLS_DATE || null)
     );
 
     // 3. 取得原匯檔發票日期 (新 API)
@@ -157,12 +168,12 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
       map(response => response.Data?.CLS_DATE ?? null)
     );
 
-    forkJoin([closeDateApi$, summaryDateApi$, importDateApi$])
+    forkJoin([closeDateApi$, lastCloseDateApi$, importDateApi$])
       .pipe(finalize(() => (this.loadingDates = false)))
       .subscribe({
-        next: ([closeDate, summaryDate, importDate]) => {
+        next: ([closeDate, lastCloseDate, importDate]) => {
           this.closeDate = closeDate;
-          this.summaryDate = summaryDate;
+          this.lastCloseDate = lastCloseDate;
           this.importDate = importDate ?? 'N/A';
 
           // 如果有取得 importDate，則將其設為表單預設值
