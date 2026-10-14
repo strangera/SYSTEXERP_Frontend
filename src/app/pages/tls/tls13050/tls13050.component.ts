@@ -68,7 +68,7 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     { field: 'apply_no', header: '專櫃招募編號', visible: true, width: '120px' },
     { field: 'tlt_no', header: '專櫃編號', visible: true, width: '100px' },
     { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value), width: '90px' },
-    { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value), width: '80px' },
+    { field: 'FloorText', header: '樓層', visible: true, width: '80px' },
     { field: 'org_name', header: '組織名稱', visible: true, width: '120px' },
     { field: 'LocationText', header: '位置編號', visible: true, width: '100px' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, width: '80px' },
@@ -77,9 +77,9 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount, width: '130px' },
     { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount, width: '130px' },
     { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount, width: '130px' },
-    { field: 'limit_charge_rate', header: '抽成率', visible: true, width: '90px', format: (v: number) => this.percent(v), exportFormat: 'suffix:%' as unknown as Record<string, string>[] },
+    { field: 'limit_charge_rate', header: '抽成率', visible: true, width: '90px', format: (v: number) => this.percent(v), exportFormat: 'percentage1' },
     { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount, width: '150px' },
-    { field: 'finishedrate', header: '年度包底營業額完成率', visible: true, width: '150px', format: (v: number) => this.percent(v), exportFormat: 'suffix:%' as unknown as Record<string, string>[] },
+    { field: 'finishedrate', header: '年度包底營業額完成率', visible: true, width: '150px', format: (v: number) => this.percent(v), exportFormat: 'percentage1' },
     { field: 'check_day', header: '月結天數', visible: true, width: '90px' },
   ];
   buildingNoOptions: IDropdownItem[] = [];
@@ -127,15 +127,6 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     if (!buildingNo) return '';
     const building = this.buildingNoOptions.find(opt => opt.No === buildingNo || opt.value === buildingNo);
     return building ? building.Name : buildingNo;
-  }
-
-  getFloorName(floorText: string): string {
-    if (!floorText) return '';
-    const floors = floorText.split(',').map(f => {
-      const idx = f.indexOf('/');
-      return (idx >= 0 ? f.slice(idx + 1) : f).trim();
-    }).filter(f => f);
-    return [...new Set(floors)].join(',');
   }
 
   private formatQueryDate(date: unknown): string {
