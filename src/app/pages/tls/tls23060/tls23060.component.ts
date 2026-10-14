@@ -36,11 +36,30 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
 @Component({
   selector: 'app-tls23060',
   templateUrl: './tls23060.component.html',
+  styles: [`
+    :host ::ng-deep {
+      app-table-report .p-datatable-tbody > tr,
+      app-table-report .p-datatable-tbody > tr > td {
+        height: 60px !important;
+        min-height: 60px !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
-    CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeComponent, RadiobuttonComponent, MultiSelectComponent, ButtonComponent,
-    TranslateModule, ButtonModule, TableReportComponent, DialogComponent,
+    CommonModule,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    RadiobuttonComponent,
+    MultiSelectComponent,
+    ButtonComponent,
+    TranslateModule,
+    ButtonModule,
+    TableReportComponent,
+    DialogComponent,
   ],
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> implements OnInit {

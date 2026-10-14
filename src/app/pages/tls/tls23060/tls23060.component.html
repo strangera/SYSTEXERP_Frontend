@@ -4,47 +4,97 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              label="銷售日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton class="col-12" label="類型" groupname="rece_yn" [control]="queryForm.controls.rece_yn"
-              [options]="WhetherOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              class="col-12"
+              label="類型"
+              groupname="rece_yn"
+              [control]="queryForm.controls.rece_yn"
+              [options]="WhetherOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" [control]="queryForm.controls.ECR_No" [options]="ECRNoOptions"
-              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              [control]="queryForm.controls.ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" [control]="queryForm.controls.tlt_no" [options]="CounterOptions"
-              optionLabel="formLabel" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              [control]="queryForm.controls.tlt_no"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別" [control]="queryForm.controls.tlt_building" [options]="BUILDING_NO_Options"
-              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="館別"
+              [control]="queryForm.controls.tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [control]="queryForm.controls.tlt_floor" [options]="floorOptions"
-              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [control]="queryForm.controls.tlt_floor"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [control]="queryForm.controls.org_id" [options]="OrganizationCodeOptions"
-              optionLabel="formLabel" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="組織代碼/名稱"
+              [control]="queryForm.controls.org_id"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -54,33 +104,86 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="TLS23060_MAIN" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [loading]="loading" dataKey="_rowKey" [queryFunction]="queryTLS23060ForReport"
-    [showManage]="false" [showDelete]="false" [showReportMode]="false" [showDetail]="true" (detail)="onDetail($event)"
-    [footerData]="footerData">
+  <app-table-report
+    tableKey="TLS23060_MAIN"
+    [lastQueryBody]="historyRequestBody"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    dataKey="_rowKey"
+    [queryFunction]="queryTLS23060ForReport"
+    [showManage]="false"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showDetail]="true"
+    [ItemSize]="60"
+    (detail)="onDetail($event)"
+    [footerData]="footerData"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2" label="收銀機區間報表.xlsx" icon="pi pi-file-excel" [loading]="btnLoading"
-          [disabled]="data.length === 0" (click)="onExportExcel()"></p-button>
-        <p-button styleClass="p-2" label="收銀機區間報表.PDF" icon="pi pi-file" [loading]="btnLoading"
-          [disabled]="data.length === 0" (click)="onExportPDF()"></p-button>
+        <p-button
+          styleClass="p-2"
+          label="收銀機區間報表.xlsx"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportExcel()"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="收銀機區間報表.PDF"
+          icon="pi pi-file"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportPDF()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="專櫃/機台日期明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
-  width="95vw">
-  <app-table-report tableKey="TLS23060_DETAIL" [columns]="detailColumns" [data]="dialogData"
-    [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" dataKey="_rowKey"
-    [lastQueryBody]="dialogHistoryRequestBody" [queryFunction]="queryTLS23060DetailForReport" [showManage]="false"
-    [showDelete]="false" [showDetail]="false" [footerData]="dialogFooterData" [showReportMode]="false">
+<app-dialog
+  [visible]="dialogVisible"
+  header="專櫃/機台日期明細"
+  (visibleChange)="onDialogClose($event)"
+  [showFooter]="false"
+  width="95vw"
+>
+  <app-table-report
+    tableKey="TLS23060_DETAIL"
+    [columns]="detailColumns"
+    [data]="dialogData"
+    [totalRecords]="dialogTotalRecords"
+    [loading]="dialogLoading"
+    dataKey="_rowKey"
+    [lastQueryBody]="dialogHistoryRequestBody"
+    [queryFunction]="queryTLS23060DetailForReport"
+    [showManage]="false"
+    [showDelete]="false"
+    [showDetail]="false"
+    [footerData]="dialogFooterData"
+    [showReportMode]="false"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2" label="匯出明細表.xlsx" icon="pi pi-file-excel" [loading]="btnLoading"
-          [disabled]="dialogData.length === 0" (click)="onExportDetailExcel()"></p-button>
-        <p-button styleClass="p-2" label="匯出明細表.PDF" icon="pi pi-file" [loading]="btnLoading"
-          [disabled]="dialogData.length === 0" (click)="onExportDetailPDF()"></p-button>
+        <p-button
+          styleClass="p-2"
+          label="匯出明細表.xlsx"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="dialogData.length === 0"
+          (click)="onExportDetailExcel()"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="匯出明細表.PDF"
+          icon="pi pi-file"
+          [loading]="btnLoading"
+          [disabled]="dialogData.length === 0"
+          (click)="onExportDetailPDF()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>
