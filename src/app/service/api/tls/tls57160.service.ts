@@ -32,6 +32,8 @@ export interface Tls57160Request {
  */
 export interface Tls57160DataItem {
   HOS_No?: string;   // 館別編號
+  LOGO_No?: string;  // 品牌代碼
+  LOGO_CH_NAME?: string; // 品牌名稱
   PLU_MagNo?: string;  // 統編貨號
   PLU_Name?: string;  // 商品名稱
   PLU_No?: string;   // 貨號

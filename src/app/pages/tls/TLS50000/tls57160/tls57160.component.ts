@@ -64,6 +64,8 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
   data: Tls57160DataItem[] = [];
   columns: ReportColumn[] = [
     // { field: 'HOS_No', header: '倉別', visible: true },  // 倉別 (HOS_No)
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'PLU_MagNo', header: '管理編號', visible: true }, // 商品編號 (PLU_MagNo)
     { field: 'PLU_Name', header: '商品名稱', visible: true }, // 商品名稱 (PLU_Name)
     { field: 'PLU_No', header: '國際條碼', visible: true },  // 國際條碼 (PLU_No)
