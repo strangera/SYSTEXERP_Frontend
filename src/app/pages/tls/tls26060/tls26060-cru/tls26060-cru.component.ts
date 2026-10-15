@@ -7,6 +7,7 @@ import { DialogModule } from 'primeng/dialog';
 import { map } from 'rxjs';
 import { TLS26060Data, TLS26060QueryRequest } from 'src/app/service/api/tls/tls26060.service';
 import { TLS26070Data, TLS26070QueryRequest, TLS26070Service } from 'src/app/service/api/tls/tls26070.service';
+import { getSYS1000Options } from 'src/app/service/system/sys1000.service';
 
 // 新增各櫃層級明細 Modal，比照 TLS32040/32050、TLS26050 的做法（Dialog + app-table-report）：
 // 內容改呼叫 TLS26070Service.queryTLS26070，欄位比照 TLS26070 現有 columns 定義。
@@ -64,9 +65,13 @@ export class Tls26060CRUComponent implements OnChanges {
   private buildRequest(): TLS26070QueryRequest {
     const q = this.queryConditions ?? {};
     const row = this.rowData!;
+    // 列資料的 tlt_kind 是櫃別名稱，需轉回 SYS1000 TLT_Kind 代碼才能當篩選參數
+    const kindCode = row.tlt_kind
+      ? getSYS1000Options('TLT_Kind').find(o => o.label === row.tlt_kind || o.value === row.tlt_kind)?.value
+      : undefined;
     return {
       ...q,
-      tlt_kind: row.tlt_kind ? [row.tlt_kind] : (q.tlt_kind ?? null),
+      tlt_kind: kindCode ? [kindCode] : (q.tlt_kind ?? null),
     } as TLS26070QueryRequest;
   }
 
