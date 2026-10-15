@@ -5,8 +5,8 @@ export const environment = {
   production: true,
   showDebugToggleInMenu: true,
   version: '@@BUILD_VERSION@@', // 由 pre-build.js 寫入
-  BaseUrl: '/TSRDWEB', // Demo：/TSRDWEB，合群：/SYSTEXWEB
-  ApiUrl: '/TSRD_WEBAPI', // Demo：/TSRD_WEBAPI，合群：/SYSTEX_WEBAPI
+  BaseUrl: '/SYSTEXWEB',
+  ApiUrl: '/SYSTEX_WEBAPI',
   // 品牌設定（精誠）。
   brand: {
     companyFullName: '精誠資訊',
