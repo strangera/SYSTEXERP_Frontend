@@ -283,6 +283,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       isPrint: ''
     };
   }
+  // 2026/10/15 業務流程不需鎖定/反鎖定功能，畫面按鈕已移除，onLock/onUnLock 程式先保留
   onLock(): void {
     const raw = this.queryForm.getRawValue();
 

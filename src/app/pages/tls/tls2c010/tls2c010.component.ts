@@ -205,6 +205,7 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
 
   /**
    * 執行鎖定
+   * 2026/10/15 業務流程不需此功能，畫面按鈕已移除，程式先保留
    */
   onLock(): void {
     this.handleSubmit(this.queryForm, () => {
@@ -233,6 +234,7 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
 
   /**
    * 執行反鎖定
+   * 2026/10/15 業務流程不需此功能，畫面按鈕已移除，程式先保留
    */
   onUnLock(): void {
     this.handleSubmit(this.queryForm, () => {
