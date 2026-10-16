@@ -10,12 +10,12 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
+import { TableComponent } from '../../../others/component/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../others/component/table/table.component';
 import { TableSubheaderComponent } from './fin42020-table/fin42020-table.component';
 
 @Component({
@@ -66,13 +66,18 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      form.value.YM = this.datePipe.transform(form.value.YM, 'yyyyMM');
-      this.fin42020Service.queryFIN42020(form.value)
+      // 另組 payload，不要直接改 form.value
+      const raw = form.getRawValue();
+      const payload: QueryFIN42020Request = {
+        ...raw,
+        YM: this.datePipe.transform(raw.YM, 'yyyyMM') ?? '',
+      };
+      this.fin42020Service.queryFIN42020(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-          this.lastPrintQueryBody = form.getRawValue();
+          this.queryStateService.setQueryState(this.ProgNo, raw);
+          this.lastPrintQueryBody = payload;
         });
     });
 
@@ -83,13 +88,7 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
       return;
     }
 
-    const raw = this.lastPrintQueryBody!;
-    const printRequest: QueryFIN42020Request = {
-      ...raw,
-      YM: this.datePipe.transform(raw.YM, 'yyyyMM') ?? ''
-    };
-
-    const req$ = this.fin42020Service.exportFIN42020PDF({ ...printRequest });
+    const req$ = this.fin42020Service.exportFIN42020PDF({ ...this.lastPrintQueryBody! });
     this.fileExportService
       .executeFileExport(req$, '.pdf', v => (this.exportPDFLoading = v))
       .subscribe();
@@ -100,13 +99,7 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
       return;
     }
 
-    const raw = this.lastPrintQueryBody!;
-    const printRequest: QueryFIN42020Request = {
-      ...raw,
-      YM: this.datePipe.transform(raw.YM, 'yyyyMM') ?? ''
-    };
-
-    const req$ = this.fin42020Service.exportFIN42020Excel({ ...printRequest });
+    const req$ = this.fin42020Service.exportFIN42020Excel({ ...this.lastPrintQueryBody! });
     this.fileExportService
       .executeFileExport(req$, '.excel', v => (this.exportExcelLoading = v))
       .subscribe();

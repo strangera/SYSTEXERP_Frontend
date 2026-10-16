@@ -32,6 +32,7 @@ export class TableSubheaderComponent implements OnInit, OnChanges {
     'LastYearRatio',
     'GrowthRate',
     'BudgetAmount',
+    'BudgetDiffAmount',
     'BudgetGrowthRate',
     'CurrentAccumAmount',
     'CurrentAccumRatio',
@@ -56,6 +57,7 @@ export class TableSubheaderComponent implements OnInit, OnChanges {
 
   private initializeColumns(): void {
     this.columns = [
+      { field: 'AccountCode', header: '科目代號', align: 'left' },
       { field: 'AccountName', header: '科目名稱', align: 'left' },
 
       // 本月
@@ -65,6 +67,7 @@ export class TableSubheaderComponent implements OnInit, OnChanges {
       { field: 'LastYearRatio', header: '佔比(%)', format: formatPercent, align: 'right' },
       { field: 'GrowthRate', header: '增減率(%)', format: formatPercent, align: 'right' },
       { field: 'BudgetAmount', header: '預算', format: formatAmount, align: 'right' },
+      { field: 'BudgetDiffAmount', header: '預算與本期差異', format: formatAmount, align: 'right' },
       { field: 'BudgetGrowthRate', header: '預算比增減率', format: formatPercent, align: 'right' },
 
       // 累計

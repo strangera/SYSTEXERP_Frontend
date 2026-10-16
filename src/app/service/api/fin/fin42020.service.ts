@@ -19,6 +19,7 @@ export interface FIN42020Data {
     LastYearRatio: number;  // 去年同期佔比
     GrowthRate: number;     // 本月增減率
     BudgetAmount: number;   // 本月預算
+    BudgetDiffAmount: number; // 預算與本期差異
     BudgetGrowthRate: number; // 本月預算比增減率
     CurrentAccumAmount: number; // 本期累計金額
     CurrentAccumRatio: number; // 本期累計佔比
