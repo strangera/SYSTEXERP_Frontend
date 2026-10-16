@@ -16,14 +16,17 @@ export const environment = {
   // BaseUrl: 'https://10.3.11.6/TSRD_WEBAPI',
   // ApiUrl: 'https://10.3.11.6/TSRD_WEBAPI',
 
+  // 登入後略過 SSO 系統選單，直接進入 ERP (account/dashboard)；精誠版為 true
+  skipSsoDashboard: false,
+
   // 品牌設定（南紡）。精誠版走 environment.systex.ts，兩版差異集中在這個物件。
   brand: {
     companyFullName: '南紡流通事業股份有限公司(南紡購物中心)',
-    companyName: '南紡流通事業股份有限公司',
     title: '南紡管理平台',
     documentTitle: '南紡購物中心 | 商場管理系統',
     logo: 'assets/layout/images/logo.webp',
     loginLogo: 'assets/layout/images/login_logo.webp',
+    ssoLogo: 'assets/images/sso/logo-main.svg',
     walletName: '南紡錢包',
   },
 

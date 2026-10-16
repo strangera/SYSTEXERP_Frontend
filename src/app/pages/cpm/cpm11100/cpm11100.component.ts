@@ -127,7 +127,8 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
   Under_Negotiation = '';
   In_Operation = '';
   Outof_Service = '';
-  blank = environment.ApiUrl + '/images/blank.jpg';
+  // 用於新開視窗的 HTML 字串，需組成絕對網址
+  blank = new URL('assets/images/blank.jpg', document.baseURI).href;
   showFloorPlan = false; // 控制是否顯示平面圖區塊
 
   // ----------------------------------------------------------------

@@ -42,6 +42,11 @@ export class TLS23120Service {
       .pipe(tap(res => console.log('查詢結果:', res)));
   }
 
+  /** 取得登入分店名稱(POS1001)，與後端 PDF 抬頭同源 */
+  getStoreNameTLS23120(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/getStoreNameTLS23120`, {});
+  }
+
   /** 匯出 PDF（後端產檔） */
   exportTLS23120PDF(body: any): Observable<HttpResponse<Blob>> {
     const url = `${this.apiUrl}/exportTLS23120PDF`;

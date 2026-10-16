@@ -7,14 +7,16 @@ export const environment = {
   version: '@@BUILD_VERSION@@', // 由 pre-build.js 寫入
   BaseUrl: '/SYSTEXWEB',
   ApiUrl: '/SYSTEX_WEBAPI',
+  // 登入後略過 SSO 系統選單，直接進入 ERP (account/dashboard)
+  skipSsoDashboard: true,
   // 品牌設定（精誠）。
   brand: {
     companyFullName: '精誠資訊',
-    companyName: '精誠資訊',
     title: '精誠資訊',
     documentTitle: '精誠資訊 | 商場管理系統',
     logo: 'assets/layout/images/logo-systex.webp',
     loginLogo: 'assets/layout/images/logo-systex.webp',
+    ssoLogo: 'assets/images/sso/systex-logo-main.svg',
     walletName: '精誠錢包',
   },
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',

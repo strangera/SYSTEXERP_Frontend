@@ -42,3 +42,19 @@ try {
   console.error(`請確認 ${templatePath} 檔案是否存在。`);
   process.exit(1);
 }
+
+// 依打包版本替換 index.html 的 favicon（src/index.html 預設為南紡的 favicon.ico）
+const faviconMap = {
+  'tsrdweb-systex': 'systex-favicon.ico',
+};
+const favicon = faviconMap[configName];
+if (favicon) {
+  const indexPath = path.join(__dirname, outputPath, 'index.html');
+  const html = fs.readFileSync(indexPath, 'utf8');
+  if (!html.includes('href="favicon.ico"')) {
+    console.error(`[${configName}] index.html 找不到 href="favicon.ico"，favicon 替換失敗`);
+    process.exit(1);
+  }
+  fs.writeFileSync(indexPath, html.replace('href="favicon.ico"', `href="${favicon}"`), 'utf8');
+  console.log(`[${configName}] index.html favicon 已替換為 ${favicon}`);
+}

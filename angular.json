@@ -129,6 +129,7 @@
               "baseHref": "/SYSTEXWEB/",
               "assets": [
                 "src/favicon.ico",
+                "src/systex-favicon.ico",
                 "src/assets",
                 "src/serve.json",
                 "src/web.config.template",

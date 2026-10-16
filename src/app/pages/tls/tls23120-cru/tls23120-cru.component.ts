@@ -10,7 +10,8 @@ import {
   NgSwitchCase,
   NgSwitchDefault,
 } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
@@ -72,6 +73,11 @@ interface TltGroup {
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   data: any[] = [];
   dataForm = this.formBuilder.nonNullable.group({ showBusType: true });
+
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** 抬頭公司名稱：與後端 PDF 同源(POS1001.SYS_StoreName)，取不到時為空 */
+  storeName = signal('');
 
   printedAt = '';
   queryFormValue: any;
@@ -149,6 +155,15 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     this.buildSelectedColumns();
     this.buildTltGroups();
     this.initializePage('TLS23120', this.dataForm);
+    this.loadStoreName();
+  }
+
+  private loadStoreName(): void {
+    this.tls23120Service.getStoreNameTLS23120().pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+      this.storeName.set(res.Data ?? '');
+    });
   }
 
   buildSelectedColumns(): void {
@@ -308,7 +323,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
         const returnAmt = Number(firstRow?.return_amt ?? 0);
 
         if (si === 0) {
-          aoa.push([this.brand.companyName, '專櫃日對帳單', '']);
+          aoa.push([this.storeName(), '專櫃日對帳單', '']);
 
           const infoItems: string[] = [
             this.showBusType

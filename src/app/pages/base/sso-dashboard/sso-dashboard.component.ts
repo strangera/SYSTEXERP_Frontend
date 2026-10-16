@@ -50,8 +50,8 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
   public router = inject(Router);
   private readonly subscriptions: Subscription[] = [];
   public user: UserInfo | null = null;
-  public imagesUrl = environment.ApiUrl + '/images/sso/';
-  public logo = this.imagesUrl + 'logo-main.svg';
+  public imagesUrl = 'assets/images/sso/';
+  public logo = environment.brand.ssoLogo; // 南紡/精誠依打包版本切換
   public currentPage = 0;
   public pagedItems: ApiItem[][] = [];
   public items: MenuItem[] = [
@@ -76,16 +76,23 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
   }
   ngOnInit() {
     if (!this.authService.isLoggedIn()) return;         // 1. 如果沒有 UserInfo 不往下執行
-    this.fetchUrlList();                                // 2. 讀取SSO清單
-    const userInfo = this.authService.currentUserValue; // 3. 直接從 AuthService 獲取最新狀態
-    if (                                                // 4. tblUser.USER_PwdExpireDate 過期判斷
-      userInfo?.USER_PwdExpireDate &&
-      (new Date(userInfo.USER_PwdExpireDate) <= new Date())
-    ) {
+    const userInfo = this.authService.currentUserValue; // 2. 直接從 AuthService 獲取最新狀態
+    const pwdExpired = !!userInfo?.USER_PwdExpireDate && (new Date(userInfo.USER_PwdExpireDate) <= new Date());
+    if (environment.skipSsoDashboard && !pwdExpired) {  // 3. 精誠版：略過 SSO 選單直接進 ERP
+      this.enterErp();
+      return;
+    }
+    if (!environment.skipSsoDashboard) this.fetchUrlList(); // 4. 讀取SSO清單
+    if (pwdExpired) {                                   // 5. tblUser.USER_PwdExpireDate 過期判斷
       this.messageService.warnBubble('為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。', '建議您定期更換密碼');
       this.visible = true;
       this.noClose = true; // 禁用關閉，強制用戶修改密碼
     }
+  }
+  // 沿用舊密碼展延後：精誠版直接進 ERP，其餘留在 SSO 選單
+  onPwdExtended(): void {
+    this.visible = false;
+    if (environment.skipSsoDashboard) this.enterErp();
   }
   fetchUrlList(): void {
     if (!this.authService.currentUserValue) return;
@@ -121,12 +128,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     if (item.System_Id === ERP_SYSTEM_ID) {
       // 內部系統
-      this.systemDataService.resetData();
-      this.subscriptions.push(
-        this.ssoDashboardService.inner().pipe(concatMap(() => {
-          return this.systemDataService.getFunRightsInfo().pipe(concatMap(() => this.systemDataService.queryAllSystemCode()));
-        }), finalize(() => this.loading = false)).subscribe(() => { this.router.navigate(['account', 'dashboard']); })
-      );
+      this.enterErp();
     } else {
       // 外部系統導向
       this.subscriptions.push(this.ssoDashboardService.getOuterToken().pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
@@ -141,6 +143,19 @@ export class SsoDashboardComponent implements OnInit, OnDestroy {
       })
       );
     }
+  }
+  // 進入 ERP：驗證 token → 載入權限 → 載入系統代碼，完成後導向 account/dashboard
+  private enterErp(): void {
+    this.loading = true;
+    this.systemDataService.resetData();
+    this.subscriptions.push(
+      this.ssoDashboardService.inner().pipe(concatMap(() => {
+        return this.systemDataService.getFunRightsInfo().pipe(concatMap(() => this.systemDataService.queryAllSystemCode()));
+      }), finalize(() => this.loading = false)).subscribe(() => {
+        // 略過 SSO 選單時用 replaceUrl，避免瀏覽器「上一頁」又回到此頁再自動導一次
+        this.router.navigate(['account', 'dashboard'], { replaceUrl: environment.skipSsoDashboard });
+      })
+    );
   }
   private appendOrReplaceParam(url: string, key: string, value: string): string {
     try {

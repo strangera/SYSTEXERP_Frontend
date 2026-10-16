@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { TooltipModule } from 'primeng/tooltip';
+import { environment } from 'src/environments/environment';
 import { DebugToggleService } from '../../services/debug-toggle.service';
 
 // 為了與父組件傳入的 user() 類型匹配，我們定義一個 UserInfo 接口（或使用 FunsrightInfo 內的用戶部分）
@@ -90,7 +91,8 @@ export class AppTopbarUserComponent {
     {
       label: '個人資料',
       items: [
-        { label: '回主畫面', icon: 'pi pi-home', command: () => this.router.navigate(['/sso/dashboard']) },
+        // 精誠版沒有 SSO 選單，回主畫面直接回 ERP 首頁
+        { label: '回主畫面', icon: 'pi pi-home', command: () => this.router.navigate([environment.skipSsoDashboard ? '/account/dashboard' : '/sso/dashboard']) },
         { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/account/changepsw']) },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
       ]

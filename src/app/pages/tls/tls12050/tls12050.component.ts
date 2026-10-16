@@ -63,7 +63,7 @@ export class TLS12050Component extends BasicQueryPageComponent<TLS12050Detail> i
     { field: 'contract_no', header: '合約編號', visible: true },
     { field: 'contract_subno', header: '版次', visible: true },
   ];
-  blank = environment.ApiUrl + '/images/blank.jpg';
+  blank = 'assets/images/blank.jpg';
   selectedImage?: string; // 圖片 URL
   selectedFloor = ''; // 選擇的樓層
   selectedbuilding_no = ''; // 選擇的館別
