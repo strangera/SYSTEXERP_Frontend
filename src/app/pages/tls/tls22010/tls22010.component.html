@@ -3,50 +3,93 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="日期" calendarType="dateOne" [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              label="日期"
+              calendarType="dateOne"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions | async" optionLabel="Name" optionValue="No"
-              [control]="queryForm.controls.floor_noList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions | async"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.floor_noList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_NoList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <label for="SysAccountStatus">系統帳</label>
-            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value"
-              formControlName="SysAccountStatus" placeholder="請選擇"></p-dropdown>
+            <p-dropdown
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              formControlName="SysAccountStatus"
+              placeholder="請選擇"
+            ></p-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <label for="CloseAccountStatus">清機帳</label>
-            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value"
-              formControlName="CloseAccountStatus" placeholder="請選擇"></p-dropdown>
+            <p-dropdown
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              formControlName="CloseAccountStatus"
+              placeholder="請選擇"
+            ></p-dropdown>
           </div>
 
           <div class="col-12">
-            <app-radiobutton label="查詢條件" groupname="radioOption" [control]="queryForm.controls.ShowStatus"
-              [submitted]="submitted" [options]="[
+            <app-radiobutton
+              label="查詢條件"
+              groupname="radioOption"
+              [control]="queryForm.controls.ShowStatus"
+              [submitted]="submitted"
+              [options]="[
                 { value: '1', label: '只顯示有交易之機台' },
                 { value: '2', label: '顯示所有之機台' },
                 { value: '3', label: '顯示可能離線之機台' },
                 { value: '4', label: '顯示未清機之機台' },
                 { value: '5', label: '異常交易' },
-              ]" (valueChange)="queryForm.controls.ShowStatus.setValue($event)"></app-radiobutton>
+              ]"
+              (valueChange)="queryForm.controls.ShowStatus.setValue($event)"
+            ></app-radiobutton>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -55,10 +98,23 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="TLS22010" dataKey="ID" [data]="data" (detail)="onDetail($event)"
-    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [showDetail]="true" [showEdit]="false"
-    [showReportMode]="false" [footerData]="footerData" [columns]="columns" [lastQueryBody]="historyRequestBody"
-    [queryFunction]="tls22010Service.queryTLS22010.bind(tls22010Service)" [addButton]="addButton">
+  <app-table-report
+    tableKey="TLS22010"
+    dataKey="ID"
+    [data]="data"
+    (detail)="onDetail($event)"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showDelete]="false"
+    [showDetail]="true"
+    [showEdit]="false"
+    [showReportMode]="true"
+    [footerData]="footerData"
+    [columns]="columns"
+    [lastQueryBody]="historyRequestBody"
+    [queryFunction]="tls22010Service.queryTLS22010.bind(tls22010Service)"
+    [addButton]="addButton"
+  >
     <header>
       <div class="flex justify-content-between align-items-center mb-2">
         <div>
@@ -143,11 +199,30 @@
   </ul>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="收銀機對帳明細" (visibleChange)="onDialogClose($event)" [showFooter]="false"
-  width="95vw">
-  <app-table-report tableKey="TLS22010CRU" [data]="dialogData" [columns]="columnscru" [showCheckBox]="false"
-    dataKey="TXN_No" [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" [showManage]="false"
-    [showDelete]="false" [lastQueryBody]="dialogHistoryRequestBody" [footerData]="dialogFooterData" [ItemSize]="25"
-    [showReportMode]="false" [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
-    apiUrl="queryTLS22010_Detail" [customReport]="true" (exportEvent)="onExport($event)"></app-table-report>
+<app-dialog
+  [visible]="dialogVisible"
+  header="收銀機對帳明細"
+  (visibleChange)="onDialogClose($event)"
+  [showFooter]="false"
+  width="95vw"
+>
+  <app-table-report
+    tableKey="TLS22010CRU"
+    [data]="dialogData"
+    [columns]="columnscru"
+    [showCheckBox]="false"
+    dataKey="TXN_No"
+    [totalRecords]="dialogTotalRecords"
+    [loading]="dialogLoading"
+    [showManage]="false"
+    [showDelete]="false"
+    [lastQueryBody]="dialogHistoryRequestBody"
+    [footerData]="dialogFooterData"
+    [ItemSize]="25"
+    [showReportMode]="false"
+    [queryFunction]="tls22010Service.queryTLS22010_Detail.bind(tls22010Service)"
+    apiUrl="queryTLS22010_Detail"
+    [customReport]="true"
+    (exportEvent)="onExport($event)"
+  ></app-table-report>
 </app-dialog>
