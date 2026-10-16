@@ -27,12 +27,33 @@ import { formatAmount, formatDate, ReportColumn, } from '../../../shared/compone
 @Component({
   selector: 'app-tls23040',
   templateUrl: './tls23040.component.html',
+  styles: [`
+    :host ::ng-deep {
+      app-table-report .p-datatable-tbody > tr,
+      app-table-report .p-datatable-tbody > tr > td {
+        height: 60px !important;
+        min-height: 60px !important;
+      }
+    }
+  `],
   standalone: true,
   imports: [
-    CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeComponent, MultiSelectComponent, InputTextComponent, ButtonComponent,
-    CheckboxModule, DialogModule, RadioButtonModule, TranslateModule, ButtonModule,
-    InputTextRangeComponent, TableReportComponent,
+    CommonModule,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    MultiSelectComponent,
+    InputTextComponent,
+    ButtonComponent,
+    CheckboxModule,
+    DialogModule,
+    RadioButtonModule,
+    TranslateModule,
+    ButtonModule,
+    InputTextRangeComponent,
+    TableReportComponent,
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> implements OnInit {
