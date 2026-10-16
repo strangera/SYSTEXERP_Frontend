@@ -354,10 +354,12 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           AMT: item.AMT
         }));
 
-        // 當該供應商查無驗收單時跳出提醒
-        const supplierID = this.dataForm.get('SUPPLIER_ID')?.value
-        if (supplierID && this.TOKEN_NO_Options.length === 0) { // 供應商有值但是找不到任何單據資料
-          this.messageService.warnBubble('該供應商沒有相關驗收單！');
+        // 當該供應商查無驗收單時跳出提醒 (新增才檢查)
+        if (this.crudstatus == CRUDStatus.Create) {
+          const supplierID = this.dataForm.get('SUPPLIER_ID')?.value
+          if (supplierID && this.TOKEN_NO_Options.length === 0) { // 供應商有值但是找不到任何單據資料
+            this.messageService.warnBubble('該供應商沒有相關驗收單！');
+          }
         }
 
         // 重新建立欄位，更新 dropdown options
