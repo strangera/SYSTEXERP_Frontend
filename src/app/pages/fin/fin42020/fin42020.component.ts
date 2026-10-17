@@ -9,6 +9,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -22,12 +23,13 @@ import { TableSubheaderComponent } from './fin42020-table/fin42020-table.compone
   selector: 'app-fin42020',
   templateUrl: './fin42020.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarComponent, CheckboxModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
 })
 export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> implements OnInit {
   queryForm = this.formBuilder.group({
     YM: ['', Validators.required],
     Org_ID: [],
+    IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: ['', Validators.required],
     AmtUnit: ['', Validators.required],
   });

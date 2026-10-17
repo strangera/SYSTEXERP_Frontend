@@ -23,6 +23,7 @@ import { MenubarComponent } from '../../../shared/components/menubar/menubar.com
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
+import { CheckboxModule } from 'primeng/checkbox';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
 import {
   FIN42040Data,
@@ -49,6 +50,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
     TableReportComponent,
     RadiobuttonComponent,
     CalendarComponent,
+    CheckboxModule
   ],
 })
 export class FIN42040Component
@@ -66,6 +68,7 @@ export class FIN42040Component
     YM: [null as Date | string | null, [Validators.required]],
     CompareYM: [null as Date | string | null, [Validators.required]],
     Org_ID: [''],
+    IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
 
