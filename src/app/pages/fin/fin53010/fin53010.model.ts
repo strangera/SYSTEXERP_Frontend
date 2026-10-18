@@ -139,6 +139,8 @@ export interface InsertFIN53010DetailBody {
 export interface InsertAPS3001DataBody {
   /** 來源傳票明細 SerNo（後端據此對應 gls3002_id，一對一連動用） */
   Source_SerNo?: number | null;
+  /** 來源明細在 Details[] 陣列的位置（0-based），保底配對用 */
+  detail_index?: number | null;
   org_id?: string | null;
   ACP_YYYYMM?: string | null;
   ACP_Date?: string | null;
@@ -1106,6 +1108,8 @@ export interface FIN53010StepAP {
   gls3002_id?: number | null;
   /** 來源傳票明細 SerNo（存檔時送後端對應 gls3002_id；由明細連動而來） */
   _detailSerNo?: number;
+  /** 來源明細在 rowsToSync[] 的位置（0-based），後端保底配對用 */
+  _detailIndex?: number;
 }
 
 /** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */

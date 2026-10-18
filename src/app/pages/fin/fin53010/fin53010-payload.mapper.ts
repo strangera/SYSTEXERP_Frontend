@@ -94,6 +94,7 @@ function mapStepApToInsert(
   const bank = splitVenBankAccount(row.ven_bank_account);
   return {
     Source_SerNo: row._detailSerNo ?? null,
+    detail_index: row._detailIndex ?? null,
     org_id: row.org_id,
     ACP_YYYYMM: vouYyyyMm(deps.vouDate, deps.datePipe),
     ACP_Date: toYmd(row.acp_date ?? undefined, deps.datePipe),

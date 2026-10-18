@@ -1508,7 +1508,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           ? table
           : table.filter(r => (r as unknown as Record<string, unknown>)['_dataStatus'] === 'new');
 
-        for (const row of rowsToSync) {
+        for (let _ri = 0; _ri < rowsToSync.length; _ri++) {
+          const row = rowsToSync[_ri];
           const accNo = String(row.AccNo ?? '');
           const vt = accVt.get(accNo);
           if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
@@ -1520,7 +1521,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             // 應付帳款：方向對齊（貸方科目放貸方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應付列是否產生
             if (!this.isCreatingDirectionRow(row)) continue;
-            ap.push({ ...this.buildStepApRowFromDetailTableRow(row, vouDate), _detailSerNo: row.SerNo });
+            ap.push({ ...this.buildStepApRowFromDetailTableRow(row, vouDate), _detailSerNo: row.SerNo, _detailIndex: _ri });
           } else if (vt === '4') {
             // 應收帳款：方向對齊（借方科目放借方）才產生 step row；反向為沖銷，不新增
             // ABAT_YN 僅影響 PTA 自動編碼，不影響應收列是否產生
