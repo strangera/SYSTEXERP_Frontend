@@ -1,4 +1,3 @@
-import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -21,7 +20,6 @@ import { ReportColumn } from '@shared/components/table-report/table-report.model
 
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { SharedDropdownService } from '@others/services/shared-dropdown.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownOption, formatApproveStatus, formatOpenflagStatus, Pos2013DropdownOption } from '@others/constants/business.constants';
@@ -32,7 +30,6 @@ import { ContractItem } from '../tls13020/components/query/query.component';
   templateUrl: './tls13090.component.html',
   standalone: true,
   imports: [
-    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     AccordionModule,
@@ -53,14 +50,13 @@ import { ContractItem } from '../tls13020/components/query/query.component';
 export class TLS13090Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
   protected readonly apiService = inject(TLS13010Service);
   private readonly sharedDropdownService = inject(SharedDropdownService);
-  private readonly dropdown = inject(DropdownApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   queryForm = this.formBuilder.group({
-    apply_noList: [[] as string[]],
+    apply_no: ['' as string],
     bus_type: [null as string | null],
     approve_statusList: [[] as string[]],
-    tlt_noList: [[] as string[]],
+    tlt_no: ['' as string],
     tlt_name: ['', [Validators.maxLength(50)]],
     ven_uniformList: [[] as string[]],
     location_no: [null as string | null],
@@ -132,9 +128,6 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
   organizationCodeOptions: DropdownOption[] = [];
   businessTypeOptions: DropdownOption[] = [];
 
-  readonly applyNoOptions = this.dropdown.queryTLTTALENTApplyNoDropDownList();
-  readonly tltNoOptions = this.dropdown.queryTLTTALENTDropDownList();
-
   get approvalStatusOptions() { return this.sharedDropdownService.approveStatusOptions; }
   readonly openFlagOptions = getSYS1000Options('tlt_openflag');
 
@@ -164,8 +157,16 @@ export class TLS13090Component extends BasicQueryPageComponent<ContractItem> imp
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const v = form.value;
+      const splitToList = (s: string) => !s ? [] : s
+        .normalize('NFKC')
+        .replace(/[,，、;；]+/g, ',')
+        .replace(/\s+/g, ',')
+        .split(',').map(x => x.trim()).filter(Boolean);
+      const { apply_no, tlt_no, ...rest } = v;
       const payload = {
-        ...v,
+        ...rest,
+        apply_noList: splitToList(apply_no ?? ''),
+        tlt_noList: splitToList(tlt_no ?? ''),
         contract_subno_from: v.contract_subno_from ? String(v.contract_subno_from) : undefined,
         contract_subno_to: v.contract_subno_to ? String(v.contract_subno_to) : undefined,
       };
