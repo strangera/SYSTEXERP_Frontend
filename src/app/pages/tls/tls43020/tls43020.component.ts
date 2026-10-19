@@ -7,7 +7,6 @@ import { QueryTls43020Request, QueryTls43020Response, Tls43020Service } from '@s
 import { MenubarComponent } from '@shared/components/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
-import { CalendarRangeComponent } from '@shared/components/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/components/calendar/calendar.component';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/components/input-text/input-text.component';
@@ -34,7 +33,6 @@ import { finalize, Observable } from 'rxjs';
     DropdownComponent,
     TableReportComponent,
     TranslateModule,
-    CalendarRangeComponent,
     Button,
     TooltipModule,
     NgStyle
@@ -46,10 +44,8 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
   queryForm = this.formBuilder.nonNullable.group({
     NOT_No: ['', [Validators.maxLength(20)]],
     NOT_Date: [null as null | Date],
-    NOT_BegDate_Start: [null as null | Date],
-    NOT_BegDate_End: [null as null | Date],
-    NOT_EndDate_Start: [null as null | Date],
-    NOT_EndDate_End: [null as null | Date],
+    NOT_BegDate: [null as null | Date],
+    NOT_EndDate: [null as null | Date],
     NOT_File: ['', [Validators.maxLength(200)]],
     NOT_Status: ['0'],
     pageSize: [500],
@@ -135,10 +131,8 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
       const body = {
         ...frm.value,
         NOT_Date: this.datePipe.transform(frm.value.NOT_Date, 'yyyy-MM-dd') || null,
-        NOT_BegDate_Start: this.datePipe.transform(frm.value.NOT_BegDate_Start, 'yyyy-MM-dd') || null,
-        NOT_BegDate_End: this.datePipe.transform(frm.value.NOT_BegDate_End, 'yyyy-MM-dd') || null,
-        NOT_EndDate_Start: this.datePipe.transform(frm.value.NOT_EndDate_Start, 'yyyy-MM-dd') || null,
-        NOT_EndDate_End: this.datePipe.transform(frm.value.NOT_EndDate_End, 'yyyy-MM-dd') || null
+        NOT_BegDate: this.datePipe.transform(frm.value.NOT_BegDate, 'yyyy-MM-dd') || null,
+        NOT_EndDate: this.datePipe.transform(frm.value.NOT_EndDate, 'yyyy-MM-dd') || null
       };
       this.tls43020Service.queryTls43020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;

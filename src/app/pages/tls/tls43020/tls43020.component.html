@@ -16,14 +16,12 @@
               [control]="queryForm.controls.NOT_Date" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="有效開始日期時間" startControlName="NOT_BegDate_Start" endControlName="NOT_BegDate_End"
-              [startControl]="queryForm.controls.NOT_BegDate_Start" [endControl]="queryForm.controls.NOT_BegDate_End"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar calendarType="dateOne" label="有效開始日期時間" controlName="NOT_BegDate"
+              [control]="queryForm.controls.NOT_BegDate" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range label="有效結束日期時間" startControlName="NOT_EndDate_Start" endControlName="NOT_EndDate_End"
-              [startControl]="queryForm.controls.NOT_EndDate_Start" [endControl]="queryForm.controls.NOT_EndDate_End"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar calendarType="dateOne" label="有效結束日期時間" controlName="NOT_EndDate"
+              [control]="queryForm.controls.NOT_EndDate" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="媒體檔案名稱" controlName="NOT_File" [control]="queryForm.controls.NOT_File"

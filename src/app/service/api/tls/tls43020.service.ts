@@ -10,10 +10,8 @@ export interface QueryTls43020Request {
   SortBy?: { field: string, order: number }[],
   NOT_No?: string,
   NOT_Date?: string,
-  NOT_BegDate_Start?: string,
-  NOT_BegDate_End?: string,
-  NOT_EndDate_Start?: string,
-  NOT_EndDate_End?: string,
+  NOT_BegDate?: string | null,
+  NOT_EndDate?: string | null,
   NOT_File?: string,
   NOT_Status?: string,
 }
