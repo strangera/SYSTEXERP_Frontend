@@ -34,6 +34,7 @@ export interface QueryFIN42020Request {
     YM: string;     // 年月 YYYYMM
     Org_ID?: string;     // 部門，可空白
     IsCludeDownOrg?: string; // 是否含以下部門(Y=是/N=否)
+    IsROC?: string; // 是否為ROC報表(Y=是/N=否)
     ReportType: number; // 1=統制, 2=明細
     AmtUnit: number; // 1=元, 2=千, 3=萬
 }

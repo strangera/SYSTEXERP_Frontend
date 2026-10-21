@@ -32,6 +32,7 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
     IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: ['', Validators.required],
     AmtUnit: ['', Validators.required],
+    IsROC: ['N'], // 是否為ROC報表(Y=是/N=否)
   });
 
   // Dropdown options

@@ -13,6 +13,7 @@ export interface FIN42040QueryRequest extends ApiRequest {
   IsCludeDownOrg?: string; // 是否含以下部門(Y=是/N=否)
   ReportType?: number;
   AmtUnit?: number;
+  IsROC?: string; // 是否為ROC報表(Y=是/N=否)
 }
 
 export interface FIN42040Data {

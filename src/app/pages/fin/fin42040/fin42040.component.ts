@@ -71,6 +71,7 @@ export class FIN42040Component
     IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
+    IsROC: ['N'], // 是否為ROC報表(Y=是/N=否)
 
     ...createPaginationConfig([{ field: 'SortNo', order: 1 }]),
     pageSize: [30],

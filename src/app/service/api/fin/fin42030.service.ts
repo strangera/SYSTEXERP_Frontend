@@ -9,6 +9,7 @@ export interface FIN42030QueryRequest extends ApiRequest {
   YM?: string;
   Org_ID?: string;
   IsCludeDownOrg?: string; // 是否含以下部門(Y=是/N=否)
+  IsROC?: string; // 是否為ROC報表(Y=是/N=否)
   ReportType?: number;
   AmtUnit?: number;
 }
