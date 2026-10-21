@@ -54,6 +54,7 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
     IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: [1, [Validators.required]],        // 類別：1=統制, 2=明細
     AmtUnit: [1, [Validators.required]],           // 單位金額表示：1=元, 2=千, 3=萬
+    IsROC: ['N'], // 是否為ROC報表(Y=是/N=否)
 
     //分頁查詢
     ...createPaginationConfig([{ field: '', order: 1 }]), // 分頁和排序參數

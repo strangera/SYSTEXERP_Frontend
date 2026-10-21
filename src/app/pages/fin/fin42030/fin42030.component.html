@@ -70,6 +70,17 @@
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+          <!-- 是否為ROC報表 -->
+          <div class="col-12 md:col-4 lg:col-4 mt-4">
+            <p-checkbox
+              inputId="IsROC"
+              formControlName="IsROC"
+              [binary]="true"
+              trueValue="Y"
+              falseValue="N"
+            ></p-checkbox>
+            <label for="IsROC">是否為ROC報表</label>
+          </div>
         </div>
 
         <div
