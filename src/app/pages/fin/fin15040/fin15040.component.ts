@@ -80,7 +80,6 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     HasUniform: [null],                                     // 是否有統一編號
     ECR_No: [null],                                         // 收銀機號                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
-    IncludeNextDayVoid: [true],                              // 包含隔日作廢
     OnlyB2B: [false],                                        // 僅有B2B發票
     INV_Cancel: [null],                                      // 發票狀態
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
