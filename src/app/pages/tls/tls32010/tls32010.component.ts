@@ -84,14 +84,15 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'SaleAmt', header: '營業實績', align: 'right', format: formatAmount },
     { field: 'CustCnt', header: '交易筆數', align: 'right', format: formatAmount },
     { field: 'AvgTicketAmt', header: '客單價', align: 'right', format: formatAmount },
-    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount },
+    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount, visible: false, cellClass: (row, type) => this.partialPeriodClass(row, type) },
+    { field: 'MonthlySpaceContrib', header: '月坪貢獻', align: 'right', format: formatAmount, visible: false, cellClass: (row, type) => this.partialPeriodClass(row, type) },
     { field: 'AchievementRate', header: '達成率', align: 'right', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
     { field: 'TltSpaceRank', header: '坪數', align: 'right', groupField: '排名順位' },
     { field: 'BudgetRank', header: '營業目標', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'SaleAmtRank', header: '營業實績', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'CustCntRank', header: '交易筆數', align: 'right', groupField: '排名順位' },
     { field: 'AvgTicketAmtRank', header: '客單價', align: 'right', format: formatAmountCN, groupField: '排名順位' },
-    { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位', visible: false },
     { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     // { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
     { field: 'PreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
@@ -423,6 +424,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
         finalize(() => this.loading = false)
       ).subscribe(response => {
         this.historyRequestBody = body; // 這時候歷史請求參數就確定包含了正確的 PreSale 與 ConsumerNum 布林值
+        this.setMonthlySpaceColumnsVisible(['3', '4', '5'].includes(formValue.reportType ?? ''));
 
         const rawData = response.Data || [];
         if (rawData.length > 0) {
@@ -475,6 +477,17 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.historyRequestBody.PreSale = this.queryForm.get('PreSale')?.value === true;
       this.historyRequestBody.ConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;
     }
+  }
+
+  private partialPeriodClass(row: TLS32010Data, type?: string): string {
+    if (type === 'footer' || type === 'subtotal') return '';
+    const isMonthly = ['3', '4', '5'].includes(this.historyRequestBody?.reportType ?? '');
+    return isMonthly && row.IsPartialPeriod === 1 ? 'text-red-500' : '';
+  }
+
+  private setMonthlySpaceColumnsVisible(visible: boolean) {
+    const fields = ['MonthlySpaceEfficiency', 'MonthlySpaceContrib', 'MonthlySpaceEfficiencyRank'];
+    this.columns = this.columns.map(col => fields.includes(col.field) ? { ...col, visible } : col);
   }
 
   setColumns() {
