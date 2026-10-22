@@ -1,5 +1,5 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,7 +24,8 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { auditTime, merge, shareReplay, take } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
-
+import { TableTLS32020Component } from
+  './table-tls32020/table-tls32020.component';
 // 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位。
 // Intl.NumberFormat 僅建立一次，避免表格每個儲存格都重新建立 locale formatter。
 const INTEGER_FORMATTER = new Intl.NumberFormat('zh-TW', {
@@ -74,11 +75,17 @@ const WEEK_OPTIONS = Array.from({ length: 53 }, (_, i) => ({
     DropdownRangeComponent, CalendarComponent, DropdownComponent,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
+    MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,TableTLS32020Component
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
+  @ViewChild(TableTLS32020Component)
+private tls32020Table?: TableTLS32020Component;
+
+private getExportColumnFields(): string[] {
+  return this.tls32020Table?.getExportColumnFields() ?? [];
+}
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
@@ -977,37 +984,63 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
     return chunks;
   }
-
-  onExportPDF() {
-    if (!this.historyRequestBody) {
-      this.messageService.warnBubble('請先執行查詢以產生報表。');
-      return;
-    }
-
-    const export$ = this.tls32020Service.exportTLS32020PDF(this.historyRequestBody);
-
-    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
-    this.fileExportService.executeFileExport(
-      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
-      '.pdf',
-      (isLoading) => this.pdfBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+onExportPDF() {
+  if (!this.historyRequestBody) {
+    this.messageService.warnBubble('請先執行查詢以產生報表。');
+    return;
   }
 
-  onExportXLSX() {
-    if (!this.historyRequestBody) {
-      this.messageService.warnBubble('請先執行查詢以產生報表。');
-      return;
-    }
+  // 取得 TLS32020 專用 Table 齒輪選取的欄位
+  const exportColumns = this.getExportColumnFields();
 
-    const export$ = this.tls32020Service.exportTLS32020Excel(this.historyRequestBody);
+  // 保留原本查詢條件，新增匯出欄位
+  const request: TLS32020QueryRequest = {
+    ...this.historyRequestBody,
+    ExportColumns: exportColumns
+  };
 
-    this.fileExportService.executeFileExport(
-      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
-      '.xlsx',
-      (isLoading) => this.excelBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+  console.log('PDF 匯出欄位：', exportColumns);
+  console.log('PDF Request：', request);
+
+  // 呼叫 Service 執行 PDF 匯出
+  const export$ = this.tls32020Service.exportTLS32020PDF(request);
+
+  // 保留原本檔案下載及 Loading 處理
+  this.fileExportService.executeFileExport(
+    export$.pipe(takeUntilDestroyed(this.destroyRef)),
+    '.pdf',
+    (isLoading) => this.pdfBtnLoading = isLoading
+  ).subscribe();
+}
+
+onExportXLSX() {
+  if (!this.historyRequestBody) {
+    this.messageService.warnBubble('請先執行查詢以產生報表。');
+    return;
   }
+
+  // 取得 TLS32020 專用 Table 齒輪選取的欄位
+  const exportColumns = this.getExportColumnFields();
+
+  // 保留原本查詢條件，新增匯出欄位
+  const request: TLS32020QueryRequest = {
+    ...this.historyRequestBody,
+    ExportColumns: exportColumns
+  };
+
+  console.log('Excel 匯出欄位：', exportColumns);
+  console.log('Excel Request：', request);
+
+  // 呼叫 Service 執行 Excel 匯出
+  const export$ = this.tls32020Service.exportTLS32020Excel(request);
+
+  // 保留原本檔案下載及 Loading 處理
+  this.fileExportService.executeFileExport(
+    export$.pipe(takeUntilDestroyed(this.destroyRef)),
+    '.xlsx',
+    (isLoading) => this.excelBtnLoading = isLoading
+  ).subscribe();
+}
 
   setColumns() {
     this.columns = applyDisplayStatusVisibility(this.columns, {
