@@ -44,7 +44,7 @@ export interface TLS32010Data {
   AvgTicketAmt: number;
   MonthlySpaceEfficiency: number;
   MonthlySpaceContrib: number;
-  IsPartialPeriod?: number | null;
+  IsPartialPeriod?: boolean | number | null;
   AchievementRate: number;
   TltSpaceRank: number | null;
   BudgetRank: number | null;

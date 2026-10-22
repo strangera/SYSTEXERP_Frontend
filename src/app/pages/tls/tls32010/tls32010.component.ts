@@ -72,7 +72,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   isPreSale = this.queryForm.get('PreSale')?.value ?? false;
   isConsumerNum = this.queryForm.get('ConsumerNum')?.value ?? false;
 
-  columns: ReportColumn[] = [
+  columns: ReportColumn[] = this.withPartialPeriodClass([
     { field: 'BuildingDesc', header: '館別', align: 'left' },
     { field: 'OrgName', header: '組織名稱', align: 'left' },
     { field: 'CabinetKindName', header: '櫃別', align: 'left' },
@@ -84,8 +84,8 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'SaleAmt', header: '營業實績', align: 'right', format: formatAmount },
     { field: 'CustCnt', header: '交易筆數', align: 'right', format: formatAmount },
     { field: 'AvgTicketAmt', header: '客單價', align: 'right', format: formatAmount },
-    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount, visible: false, cellClass: (row, type) => this.partialPeriodClass(row, type) },
-    { field: 'MonthlySpaceContrib', header: '月坪貢獻', align: 'right', format: formatAmount, visible: false, cellClass: (row, type) => this.partialPeriodClass(row, type) },
+    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount, visible: false },
+    { field: 'MonthlySpaceContrib', header: '月坪貢獻', align: 'right', format: formatAmount, visible: false },
     { field: 'AchievementRate', header: '達成率', align: 'right', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
     { field: 'TltSpaceRank', header: '坪數', align: 'right', groupField: '排名順位' },
     { field: 'BudgetRank', header: '營業目標', align: 'right', format: formatAmountCN, groupField: '排名順位' },
@@ -98,7 +98,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'PreOrderAmt', header: '預售業績', visible: this.isPreSale, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerNum', header: '消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
     { field: 'ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', isTotal: true },
-  ];
+  ]);
   columnGroup = [
     { field: '單位', header: '單位' },
     { field: '排名順位', header: '排名順位' }
@@ -479,10 +479,14 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     }
   }
 
+  private withPartialPeriodClass(columns: ReportColumn[]): ReportColumn[] {
+    return columns.map(col => ({ ...col, cellClass: (row: TLS32010Data, type?: string) => this.partialPeriodClass(row, type) }));
+  }
+
   private partialPeriodClass(row: TLS32010Data, type?: string): string {
     if (type === 'footer' || type === 'subtotal') return '';
     const isMonthly = ['3', '4', '5'].includes(this.historyRequestBody?.reportType ?? '');
-    return isMonthly && row.IsPartialPeriod === 1 ? 'text-red-500' : '';
+    return isMonthly && Boolean(row.IsPartialPeriod) ? 'text-red-500' : '';
   }
 
   private setMonthlySpaceColumnsVisible(visible: boolean) {
