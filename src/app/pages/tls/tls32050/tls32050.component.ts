@@ -19,7 +19,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap } from 'rxjs';
 import { yesterday } from 'src/app/shared/models/system/query-form.model';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
@@ -172,6 +172,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: 'Base_PrePerformance', header: '本期預售實績', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_ConsumerNum', header: '本期消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_ConsumerOrder', header: '本期消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '本期' },
+    { field: 'Base_MonthSpaceEff', header: '月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '本期' },
+    { field: 'Base_MonthSpaceContrib', header: '月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '本期' },
 
     // ================= 上期 Group =================
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right', width: '100px', groupField: '上期' },
@@ -180,6 +182,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: 'Comp_PrePerformance', header: '上期預售實績', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '上期' },
     { field: 'Comp_ConsumerNum', header: '上期消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '上期' },
     { field: 'Comp_ConsumerOrder', header: '上期消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '上期' },
+    { field: 'Comp_MonthSpaceEff', header: '月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '上期' },
+    { field: 'Comp_MonthSpaceContrib', header: '月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '上期' },
 
     // ================= 差異 Group =================
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right', groupField: '差異' },
@@ -189,10 +193,11 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '差異' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '差異' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '差異' },
+    { field: 'Diff_MonthSpaceEff', header: '月坪效差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '差異' },
+    { field: 'Diff_MonthSpaceContrib', header: '月坪貢獻差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '差異' },
 
     // ================= 坪效 Group =================
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right', width: '100px', groupField: '坪效' },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right', groupField: '坪效' },
 
     // 保留原預售金額獨立欄位 (依需求保留)
     { field: 'AVN_PreOrderAmt', header: '預售金額', visible: true, format: formatAmount, align: 'right' },
@@ -202,7 +207,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: '本期', header: '本期' },
     { field: '上期', header: '上期' },
     { field: '差異', header: '差異' },
-    { field: '坪效', header: '坪效' },
+    { field: '坪效', header: '營運效益' },
   ];
 
   tlt_kind_Option = [
@@ -347,8 +352,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
           map(res => ({ selectedMValues, data: res.Data }))
         );
-      }),
-      tap(result => { console.log('所有 API 呼叫結果：', result); })
+      })
     ).subscribe(result => {
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
         const groupKey = `${mValue.bus_type}_${mValue.No}`;
@@ -387,6 +391,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
+        ReportType: this.dateForm.get('reportType')?.value,
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
         BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
         CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -405,12 +410,12 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         ConsumerNum: frm.getRawValue().ConsumerNum,   // 補上 ConsumerNum
       } as TLS32050Request;
 
-      console.log('查詢請求', formValue);
+      const showMonthSpace = ['3', '4', '5'].includes(this.dateForm.controls.reportType.value);
       this.tls32050Service.queryTLS32050(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.setMonthSpaceColumnsVisible(showMonthSpace);
         this.data = res.Data ?? [];
         this.historyRequestBody = formValue;
         this.totalRecords = res.Data.length;
-        console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         this.queryStateService.setQueryState('tls32050_Date', this.dateForm);
         this.queryStateService.setQueryState('tls32050_CDate', this.c_dateForm);
@@ -752,6 +757,15 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
 
   // 3. 修正動態欄位切換邏輯
+  private setMonthSpaceColumnsVisible(visible: boolean) {
+    const fields = [
+      'Base_MonthSpaceEff', 'Base_MonthSpaceContrib',
+      'Comp_MonthSpaceEff', 'Comp_MonthSpaceContrib',
+      'Diff_MonthSpaceEff', 'Diff_MonthSpaceContrib',
+    ];
+    this.columns = this.columns.map(col => fields.includes(col.field) ? { ...col, visible } : col);
+  }
+
   setColumns() {
     const isPreSale = this.queryForm.get('PreSale')?.value === true;
     const isConsumerNum = this.queryForm.get('ConsumerNum')?.value === true;

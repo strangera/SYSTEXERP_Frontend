@@ -23,6 +23,7 @@ export interface TLS32050Request extends ApiRequest {
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
   "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
   "BuildingList": string, // 館別（SYS3800） → TLTTALENT_LOCATION.tlt_building
+  "ReportType"?: string, // 報表類型：1=日 2=週 3=月 4=半年 5=年 6=區間（月坪效欄位僅 3/4/5 顯示）
 }
 
 // 主檔 response
@@ -53,7 +54,12 @@ export interface TLS32050Response extends ApiRequest {
   "Diff_TxnCnt": number, // 交易筆數差異
   "Diff_AvgTicket": number, // 客單價差異
   "Space": number, // 營業坪數（坪）
-  "Base_DaySpaceEff": number // 本期日平均坪效（每坪每日銷售）
+  "Base_MonthSpaceEff": number | string, // 本期月坪效
+  "Comp_MonthSpaceEff": number | string, // 上期月坪效
+  "Diff_MonthSpaceEff": number | string, // 月坪效差異（本期 - 上期）
+  "Base_MonthSpaceContrib": number | string, // 本期月坪貢獻
+  "Comp_MonthSpaceContrib": number | string, // 上期月坪貢獻
+  "Diff_MonthSpaceContrib": number | string, // 月坪貢獻差異（本期 - 上期）
   "AVN_PreOrderAmt": number; // 預售金額
   "PrePerformance": number; // 預售業績
   "ConsumerNum": number; // 消費人數

@@ -64,7 +64,14 @@ export interface TLS32060Response extends ApiRequest {
   "Diff_TxnCnt": number, // 交易筆數差異
   "Diff_AvgTicket": number, // 客單價差異
 
-  "Base_DaySpaceEff": number, // 本期日平均坪效（每坪每日銷售）
+  "Base_MonthSpaceEff": number, // 本期月坪效
+  "Comp_MonthSpaceEff": number, // 上期月坪效
+  "Diff_MonthSpaceEff": number, // 月坪效差異（本期 - 上期）
+  "Base_MonthSpaceContrib": number, // 本期月坪貢獻
+  "Comp_MonthSpaceContrib": number, // 上期月坪貢獻
+  "Diff_MonthSpaceContrib": number, // 月坪貢獻差異（本期 - 上期）
+  "Base_IsPartialPeriod": boolean | null, // 本期櫃位營業期間不足（僅單櫃明細列為 true，彙總列為 false）
+  "Comp_IsPartialPeriod": boolean | null, // 上期櫃位營業期間不足
   "PrePerformance": number, // 預售業績
   "ConsumerNum": number, // 消費人數
   "ConsumerOrder": number // 消費客單
