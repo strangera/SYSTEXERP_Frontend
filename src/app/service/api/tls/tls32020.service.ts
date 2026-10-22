@@ -27,6 +27,8 @@ export interface TLS32020QueryRequest {
   PreSale?: boolean;
   ConsumerNum?: boolean;
   ShowBuilding?: boolean;
+    /** 齒輪選取的匯出欄位 */
+  ExportColumns?: string[];
 }
 
 export interface TLS32020Data {
