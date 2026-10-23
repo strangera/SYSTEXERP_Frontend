@@ -1,0 +1,34 @@
+{
+  "name": "TLS57040 商品目錄表：未勾顯示庫存為零查詢，結果列庫存皆非0、捲動列序連續",
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "http://localhost:4200/login"
+    },
+    {
+      "action": "login"
+    },
+    {
+      "action": "navigate",
+      "url": "http://localhost:4200/account/tls/tls57040"
+    },
+    {
+      "action": "click",
+      "locator": {
+        "role": "button",
+        "name": "查詢",
+        "nth": 0
+      }
+    },
+    {
+      "action": "expect",
+      "text": "總筆數: 12664 筆"
+    },
+    {
+      "action": "click",
+      "locator": {
+        "selector": "table tbody tr:last-child td:nth-child(2)"
+      }
+    }
+  ]
+}
