@@ -116,12 +116,13 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
+          // 後端 id 不唯一，改用前端組合鍵作為表格選取識別
+          this.data = (response.Data ?? []).map(r => ({ ...r, rowKey: `${r.sad_date}_${r.tlt_no}_${r.batch_no}_${r.talent_id}` }));
           this.totalRecords = this.data.length;
           // 預售總金額加總
           this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
           // 如果資料已經在結帳區塊，則從查詢結果中移除
-          this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
+          this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.rowKey === item.rowKey));
         });
     });
   }
@@ -233,15 +234,15 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     this.checkoutData = [...this.checkoutData, ...this.selectedItems];
     this.selectedItems = [];
     // 移除所選的資料
-    this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
+    this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.rowKey === item.rowKey));
   }
 
   onRemove(event: TLS26040Data[]) {
-    const idsToRemove = new Set(event.map(item => item.id));
-    this.checkoutData = this.checkoutData.filter(item => !idsToRemove.has(item.id));
+    const keysToRemove = new Set(event.map(item => item.rowKey));
+    this.checkoutData = this.checkoutData.filter(item => !keysToRemove.has(item.rowKey));
     this.selectedCheckoutItems = [];
-    // 把移除的資料加回 data 但重複的id不要加
-    const itemsToAddBack = event.filter(item => !this.data.some(dataItem => dataItem.id === item.id));
+    // 把移除的資料加回 data 但重複的不要加
+    const itemsToAddBack = event.filter(item => !this.data.some(dataItem => dataItem.rowKey === item.rowKey));
     this.data = [...this.data, ...itemsToAddBack];
     // 重新排序 data 依預售日期由小至大
     this.data.sort((a, b) => (a.sad_date! > b.sad_date! ? 1 : -1));
@@ -250,7 +251,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
   isRowSelectable(rowData: TLS26040Data): boolean {
     if (!this.selectedCheckoutItems) return true;
     // 如果該列資料已存在於 checkoutData 中，則不可選取
-    return !this.checkoutData.some(item => item.id === rowData.id);
+    return !this.checkoutData.some(item => item.rowKey === rowData.rowKey);
   }
   //#endregion
 }

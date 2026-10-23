@@ -26,7 +26,7 @@
       <div class="m-0 mt-2 border-top-1 surface-border pt-3">
         <app-table
           tableKey="TLS26040_Checkout"
-          dataKey="id"
+          dataKey="rowKey"
           [data]="checkoutData"
           [columns]="checkoutColumns"
           [selectedItems]="selectedCheckoutItems"
@@ -140,7 +140,7 @@
 <div class="card">
   <app-table
     tableKey="TLS26040_CRU"
-    dataKey="id"
+    dataKey="rowKey"
     [data]="data"
     [columns]="columns"
     [selectedItems]="selectedItems"
