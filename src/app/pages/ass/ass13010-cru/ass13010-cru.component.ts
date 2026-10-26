@@ -64,14 +64,17 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     //---
     //折舊資訊
     //---
-    depreciation: [],
-    totalDepreciation: [],
-    depreciationLife: [, [Validators.maxLength(8)]],
+    depreciation: [, [Validators.required]], // 折舊會計科目
+    totalDepreciation: [, [Validators.required]], // 累計折舊科目
+    depreciationLife: [, [Validators.required, Validators.maxLength(8)]],
+
+    // 異動折舊年限，SP 計算欄位，只供顯示
     changeExpYear: [{ value: null, disabled: true }],
-    residual: [, [Validators.maxLength(8)]],
-    depreciationLifeMM: [, [Validators.maxLength(8)]],
-    amortizedAmount: [, [Validators.maxLength(8)]],
-    amortizedMonth: [, [Validators.maxLength(8)]],
+
+    residual: [, [Validators.required, Validators.maxLength(8)]],
+    depreciationLifeMM: [, [Validators.required, Validators.maxLength(8)]],
+    amortizedAmount: [, [Validators.maxLength(8)]], // 已攤提金額
+    amortizedMonth: [, [Validators.maxLength(8)]], // 已攤提月數
     //---
     //保管資訊
     //---
@@ -116,7 +119,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD_DropDownList
   /** 所有人員（含 Org_ID），供依單位篩選 */
   allUserOptionsWithOrg: Option[] = [];
-  /** 保管人下拉：全部人員（不依保管單位篩選） */
+  /** 保管人下拉：依 保管單位 篩選該單位人員 */
   keepingPersonOptions: Option[] = [];
   /** 使用人下拉：依 使用單位 篩選該單位人員 */
   userOptions: Option[] = [];
@@ -142,17 +145,6 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('ASS13010', this.dataForm);
     this.accordionTabCss = this.crudstatus === CRUDStatus.Create ? 'create-accordionTab' : 'edit-accordionTab';
     this.loadDropdownOptions();
-    // 新增模式依資產類型決定折舊資訊是否必填
-    this.dataForm.controls.assetsType.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(assetType => {
-        this.updateDepreciationValidators(assetType);
-      });
-
-    // 初始化折舊欄位驗證
-    this.updateDepreciationValidators(
-      this.dataForm.controls.assetsType.value
-    );
     // 監聽「品項編號 (itemCode)」選取事件，自動帶入「資產類型 (assetsType)」及會計科目/折舊設定
     // 僅新增模式會觸發：編輯模式下 itemCode 欄位鎖定不可改，明細載入 patchValue 也用 emitEvent:false 不會觸發此處。
     this.dataForm.controls.itemCode.valueChanges.pipe(untilDestroyed(this)).subscribe(selectedGoodsId => {
@@ -172,6 +164,25 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       }
 
       this.autoFillAccountingByItem(selectedOption);
+    });
+    this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.updateKeepingPersonOptions();
+      if (!this.allUserOptionsWithOrg.length) {
+        return;
+      }
+      const unitVal = this.dataForm.controls.keepingUnit.value;
+      const personVal = this.dataForm.controls.keepingPerson.value;
+      if (unitVal == null || unitVal === '' || personVal == null || personVal === '') {
+        return;
+      }
+      const allowed = this.keepingPersonOptions.some(o => this.isSameOptionValue(o.value, personVal));
+      if (!allowed) {
+        this.dataForm.patchValue(
+          { keepingPerson: null },
+          { emitEvent: false }
+        );
+        this.dataForm.controls.keepingPerson.markAsPristine({ onlySelf: true });
+      }
     });
     this.dataForm.controls.userUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateUserOptions();
@@ -343,9 +354,26 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     return String(optionValue ?? '').trim() === String(formValue ?? '').trim();
   }
 
-  /** 保管人與保管單位不連動：保管人一律可選全部人員，保管單位亦可任選 */
   private updateKeepingPersonOptions(): void {
-    this.keepingPersonOptions = [...this.allUserOptionsWithOrg];
+    const unitVal = String(
+      this.dataForm.controls.keepingUnit.value ?? ''
+    ).trim();
+
+    if (!unitVal) {
+      this.keepingPersonOptions = [
+        ...this.allUserOptionsWithOrg
+      ];
+      return;
+    }
+
+    this.keepingPersonOptions =
+      this.allUserOptionsWithOrg.filter(option => {
+        const orgId = String(
+          (option as Option & { Org_ID?: string }).Org_ID ?? ''
+        ).trim();
+
+        return orgId === unitVal;
+      });
   }
 
   private updateUserOptions(): void {
@@ -364,37 +392,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
   }
-  /** 新增模式：資產(1)、無形資產(4)才需要填寫折舊資訊 */
-  private updateDepreciationValidators(assetType: string | null): void {
-    if (this.crudstatus !== CRUDStatus.Create) return;
 
-    const type = String(assetType ?? '').trim();
-    const isRequired = type === '1' || type === '4';
-
-    const fields = [
-      'depreciation',
-      'totalDepreciation',
-      'depreciationLife',
-      'residual',
-      'depreciationLifeMM',
-    ] as const;
-
-    fields.forEach(field => {
-      const control = this.dataForm.controls[field];
-
-      const validators = [
-        ...(isRequired ? [Validators.required] : []),
-        ...(field === 'depreciationLife' ||
-          field === 'residual' ||
-          field === 'depreciationLifeMM'
-          ? [Validators.maxLength(8)]
-          : []),
-      ];
-
-      control.setValidators(validators);
-      control.updateValueAndValidity({ emitEvent: false });
-    });
-  }
   private applyPendingEmployeeSelection(): void {
     if (
       !this.pendingEmployeeSelection ||
@@ -409,6 +407,44 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     // 先依單位建立正常 options
     this.updateKeepingPersonOptions();
     this.updateUserOptions();
+
+    // ==============================
+    // 保管人
+    // ==============================
+    if (keepingPerson) {
+      const targetValue =
+        String(keepingPerson).trim();
+
+      let exists =
+        this.keepingPersonOptions.some(option =>
+          String(option.value ?? '').trim() === targetValue
+        );
+
+      // 如果因為歷史單位等原因被過濾掉，
+      // 從完整人員清單補回
+      if (!exists) {
+        const employee =
+          this.allUserOptionsWithOrg.find(option =>
+            String(option.value ?? '').trim() === targetValue
+          );
+
+        if (employee) {
+          this.keepingPersonOptions = [
+            ...this.keepingPersonOptions,
+            employee,
+          ];
+
+          exists = true;
+        }
+      }
+
+      console.log(
+        'HOLD_EMP_ID:',
+        keepingPerson,
+        '保管人是否存在 options:',
+        exists
+      );
+    }
 
     // ==============================
     // 使用人

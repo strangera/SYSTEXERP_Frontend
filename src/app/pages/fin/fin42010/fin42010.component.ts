@@ -7,12 +7,10 @@ import { CommonModule, formatDate } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -22,12 +20,13 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
+import { ReportSignatureComponent } from '@shared/biz-components/report-signature/report-signature.component';
 
 @Component({
   selector: 'app-fin42010',
   templateUrl: './fin42010.component.html',
   standalone: true,
-  imports: [ReportSignatureComponent,
+  imports: [ReportSignatureComponent, 
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -39,7 +38,6 @@ import { TableSubheaderComponent } from './fin42010-table/fin42010-table.compone
     TableComponent,
     TranslateModule,
     CommonModule,
-    CheckboxModule,
     CalendarComponent,
     TableSubheaderComponent,
     ButtonModule]
@@ -49,7 +47,6 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     BudgetVersion: [null, [Validators.required]], //版本
     BudgetYear: [null, [Validators.required]], //年
     OrgId: [null], //部門
-    IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     AmtUnit: [1, [Validators.required]], // 金額單位表示
     ShowZero: [1, [Validators.required]] //是否顯示整年度預算為0的會科
   });

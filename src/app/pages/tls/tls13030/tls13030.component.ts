@@ -9,24 +9,24 @@ import {
 import { TranslateModule } from '@ngx-translate/core';
 import { map } from 'rxjs/operators';
 
-import { LazyLoadEvent } from '../../../others/component/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { LazyLoadEvent } from '../../../others/component/table/table.model';
 
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 // UI
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/components/calendar-range/calendar-range.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/components/dropdown/dropdown.component';
 import { MultiLocationFilterComponent } from 'src/app/shared/biz-components/multi-location-filter/multi-location-filter.component';
-import { createPaginationConfig } from '../../../others/component/table/table.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
+import { createPaginationConfig } from '../../../others/component/table/table.model';
 
 @UntilDestroy()
 @Component({
@@ -69,7 +69,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
     'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
     'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
     'tlt_bdate', 'tlt_edate', 'cap_type', 'CAP_Name',
-    'tpy_bdate', 'tpy_edate', 'tpy_totalamt', 'down_payment', 'ADV_payment',
+    'tpy_bdate', 'tpy_edate', 'tpy_totalamt', 'down_payment',
     'period_nos', 'tpy_amount', 'tpy_rate', 'org_id', 'org_name'
   ]);
 
@@ -153,7 +153,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> implements O
     { field: 'tpy_bdate', header: '扣款起日', visible: true },
     { field: 'tpy_edate', header: '扣款迄日', visible: true },
     { field: 'tpy_totalamt', header: '總金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
-    { field: 'ADV_payment', header: '頭期款', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    { field: 'down_payment', header: '頭期款', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'period_nos', header: '期數', visible: true },
     { field: 'tpy_amount', header: '每期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'down_payment', header: '首期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },

@@ -9,16 +9,15 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
-import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/others/component/table/table.model';
 import { TableReportComponent } from 'src/app/shared/components/table-report/table-report.component';
 import { ReportColumn } from 'src/app/shared/components/table-report/table-report.model';
+import { createPaginationConfig, formatAmount, formatPercentage } from 'src/app/others/component/table/table.model';
+import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/components/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/components/input-text/input-text.component';
-import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
 import { RadiobuttonComponent } from '../../../shared/components/radiobutton/radiobutton.component';
 
 @Component({
@@ -39,7 +38,6 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
     TranslateModule,
     CommonModule,
     CalendarComponent,
-    CheckboxModule,
     ButtonModule,
   ]
 })
@@ -51,10 +49,8 @@ export class FIN42050Component extends BasicQueryPageComponent<FIN42050Data> imp
     BudgetYM2: [null, [Validators.required]],      // 預算版本2年月
     BudgetVersion2: [null, [Validators.required]], // 預算版本2
     Org_ID: [null],                                // 部門（可空）
-    IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: [1, [Validators.required]],        // 類別：1=統制, 2=明細
     AmtUnit: [1, [Validators.required]],           // 單位金額表示：1=元, 2=千, 3=萬
-    IsROC: ['N'], // 是否為ROC報表(Y=是/N=否)
 
     //分頁查詢
     ...createPaginationConfig([{ field: '', order: 1 }]), // 分頁和排序參數

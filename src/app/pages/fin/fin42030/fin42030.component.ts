@@ -25,7 +25,6 @@ import { RadiobuttonComponent } from '../../../shared/components/radiobutton/rad
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 
 
-import { CheckboxModule } from 'primeng/checkbox';
 import {
   FIN42030Data,
   FIN42030QueryRequest,
@@ -51,7 +50,6 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
     TableReportComponent,
     RadiobuttonComponent,
     CalendarComponent,
-    CheckboxModule
   ],
 })
 export class FIN42030Component
@@ -68,10 +66,8 @@ export class FIN42030Component
   queryForm = this.formBuilder.group({
     YM: [null as Date | string | null, [Validators.required]],
     Org_ID: [''],
-    IsCludeDownOrg: ['N'], // 是否含以下部門(Y=是/N=否)
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
-    IsROC: ['N'], // 是否為ROC報表(Y=是/N=否)
 
     ...createPaginationConfig([{ field: 'SortNo', order: 1 }]),
     pageSize: [30],

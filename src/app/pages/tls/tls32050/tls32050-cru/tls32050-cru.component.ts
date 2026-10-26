@@ -58,41 +58,26 @@ export class Tls32050CRUComponent implements OnChanges {
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_CustCnt', header: '本期來客數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Base_MonthSpaceEff', header: '本期月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
-    { field: 'Base_MonthSpaceContrib', header: '本期月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Comp_MonthSpaceEff', header: '上期月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
-    { field: 'Comp_MonthSpaceContrib', header: '上期月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
 
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Diff_MonthSpaceEff', header: '月坪效差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
-    { field: 'Diff_MonthSpaceContrib', header: '月坪貢獻差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right' },
 
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible']?.currentValue === true && this.rowData && this.queryConditions) {
       this.data = [];
       this.totalRecords = 0;
-      this.setMonthSpaceColumnsVisible(['3', '4', '5'].includes(this.queryConditions.ReportType ?? ''));
       this.queryDetail();
     }
-  }
-
-  private setMonthSpaceColumnsVisible(visible: boolean): void {
-    const fields = [
-      'Base_MonthSpaceEff', 'Base_MonthSpaceContrib',
-      'Comp_MonthSpaceEff', 'Comp_MonthSpaceContrib',
-      'Diff_MonthSpaceEff', 'Diff_MonthSpaceContrib',
-    ];
-    this.columns = this.columns.map(col => fields.includes(col.field) ? { ...col, visible } : col);
   }
 
   // 沿用主查詢頁的 historyRequestBody，將被點擊列的 OrgId 帶入 OrgList、

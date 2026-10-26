@@ -91,12 +91,11 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
   columns: ReportColumn[] = this.buildColumns('A', null, null);
 
-  private readonly formatReportAmount = (value: number | string) => {
+  private readonly formatReportAmount = (value: any) => {
     if (typeof value === 'string' && value.endsWith('%')) {
       return value;
     }
-    // row 已先經 formatDisplayRow 轉成千分位字串（如 "8,975"），需先去逗號，否則 Number() 會得到 NaN 而顯示空白
-    return formatAmount(typeof value === 'string' ? value.replaceAll(',', '') : value);
+    return formatAmount(value);
   };
 
   private buildColumns(TimeMode: string, TimeFromHH: number | null, TimeToHH: number | null): ReportColumn[] {

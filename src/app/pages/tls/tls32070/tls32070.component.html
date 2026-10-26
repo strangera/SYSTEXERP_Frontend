@@ -24,22 +24,8 @@
           <!-- 日營業報表 -->
           @if (dateForm.controls.reportType.value === "DAY") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
-                <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
-                </div>
-                <div class="col-12">
-                  <app-calendar
-                    calendarType="dateOne"
-                    label="比較日期"
-                    [control]="dateForm.controls.onedatedd"
-                    [submitted]="submitted"
-                  ></app-calendar>
-                </div>
-              </div>
-              <!-- 基準資料放右邊 -->
-              <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
                   <b><u>基準資料查詢條件</u></b>
                 </div>
@@ -47,6 +33,20 @@
                   <app-calendar
                     calendarType="dateOne"
                     label="基準日期"
+                    [control]="dateForm.controls.onedatedd"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+              </div>
+              <!-- 比較資料放右邊 -->
+              <div class="col-6 flex flex-column">
+                <div class="col-12 flex justify-content-center">
+                  <b><u>比較資料查詢條件</u></b>
+                </div>
+                <div class="col-12">
+                  <app-calendar
+                    calendarType="dateOne"
+                    label="比較日期"
                     [control]="c_dateForm.controls.onedatedd"
                     [submitted]="submitted"
                   ></app-calendar>
@@ -58,22 +58,22 @@
           <!-- 週營業報表 -->
           @if (dateForm.controls.reportType.value === "WEEK") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
                 <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
+                  <b><u>基準資料查詢條件</u></b>
                 </div>
                 <div class="col-12">
                   <app-calendar
                     calendarType="dateYearOne"
-                    label="比較年度"
+                    label="基準年度"
                     [control]="dateForm.controls.onedateyy"
                     [submitted]="submitted"
                   ></app-calendar>
                 </div>
                 <div class="col-12">
                   <app-input-text
-                    label="比較週數"
+                    label="基準週數"
                     controlName="weeks"
                     [control]="dateForm.controls.weeks"
                     (blurEvent)="queryWeek($event)"
@@ -82,29 +82,29 @@
                 </div>
                 <div class="col-12">
                   <app-calendar-range
-                    label="比較日期範圍"
+                    label="基準日期範圍"
                     [startControl]="dateForm.controls.startdate"
                     [endControl]="dateForm.controls.enddate"
                     [submitted]="submitted"
                   />
                 </div>
               </div>
-              <!-- 基準資料放右邊 -->
+              <!-- 比較資料放右邊 -->
               <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
-                  <b><u>基準資料查詢條件</u></b>
+                  <b><u>比較資料查詢條件</u></b>
                 </div>
                 <div class="col-12">
                   <app-calendar
                     calendarType="dateYearOne"
-                    label="基準年度"
+                    label="比較年度"
                     [control]="c_dateForm.controls.onedateyy"
                     [submitted]="submitted"
                   ></app-calendar>
                 </div>
                 <div class="col-12">
                   <app-input-text
-                    label="基準週數"
+                    label="比較週數"
                     controlName="weeks"
                     [control]="c_dateForm.controls.weeks"
                     [submitted]="submitted"
@@ -112,7 +112,7 @@
                 </div>
                 <div class="col-12">
                   <app-calendar-range
-                    label="基準日期範圍"
+                    label="比較日期範圍"
                     [startControl]="c_dateForm.controls.startdate"
                     [endControl]="c_dateForm.controls.enddate"
                     [submitted]="submitted"
@@ -125,22 +125,8 @@
           <!-- 月營業報表 -->
           @if (dateForm.controls.reportType.value === "MONTH") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
-                <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
-                </div>
-                <div class="col-12">
-                  <app-calendar
-                    calendarType="dateMonthOne"
-                    label="比較年月"
-                    [control]="dateForm.controls.onedatemm"
-                    [submitted]="submitted"
-                  ></app-calendar>
-                </div>
-              </div>
-              <!-- 基準資料放右邊 -->
-              <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
                   <b><u>基準資料查詢條件</u></b>
                 </div>
@@ -148,6 +134,20 @@
                   <app-calendar
                     calendarType="dateMonthOne"
                     label="基準年月"
+                    [control]="dateForm.controls.onedatemm"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+              </div>
+              <!-- 比較資料放右邊 -->
+              <div class="col-6 flex flex-column">
+                <div class="col-12 flex justify-content-center">
+                  <b><u>比較資料查詢條件</u></b>
+                </div>
+                <div class="col-12">
+                  <app-calendar
+                    calendarType="dateMonthOne"
+                    label="比較年月"
                     [control]="c_dateForm.controls.onedatemm"
                     [submitted]="submitted"
                   ></app-calendar>
@@ -159,22 +159,22 @@
           <!-- 半年營業報表 -->
           @if (dateForm.controls.reportType.value === "HALFYEAR") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
                 <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
+                  <b><u>基準資料查詢條件</u></b>
                 </div>
                 <div class="col-12">
                   <app-calendar
                     calendarType="dateYearOne"
-                    label="比較年度"
+                    label="基準年度"
                     [control]="dateForm.controls.halfyear_onedateyy"
                     [submitted]="submitted"
                   ></app-calendar>
                 </div>
                 <div class="col-12">
                   <app-dropdown
-                    label="比較半年別"
+                    label="基準半年別"
                     controlName="halfyear"
                     [options]="halfyearOptions"
                     optionLabel="label"
@@ -184,22 +184,22 @@
                   ></app-dropdown>
                 </div>
               </div>
-              <!-- 基準資料放右邊 -->
+              <!-- 比較資料放右邊 -->
               <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
-                  <b><u>基準資料查詢條件</u></b>
+                  <b><u>比較資料查詢條件</u></b>
                 </div>
                 <div class="col-12">
                   <app-calendar
                     calendarType="dateYearOne"
-                    label="基準年度"
+                    label="比較年度"
                     [control]="c_dateForm.controls.halfyear_onedateyy"
                     [submitted]="submitted"
                   ></app-calendar>
                 </div>
                 <div class="col-12">
                   <app-dropdown
-                    label="基準半年別"
+                    label="比較半年別"
                     controlName="halfyear"
                     [options]="halfyearOptions"
                     optionLabel="label"
@@ -215,22 +215,8 @@
           <!-- 年營業報表 -->
           @if (dateForm.controls.reportType.value === "YEAR") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
-                <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
-                </div>
-                <div class="col-12">
-                  <app-calendar
-                    calendarType="dateYearOne"
-                    label="比較年度"
-                    [control]="dateForm.controls.year_onedateyy"
-                    [submitted]="submitted"
-                  ></app-calendar>
-                </div>
-              </div>
-              <!-- 基準資料放右邊 -->
-              <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
                   <b><u>基準資料查詢條件</u></b>
                 </div>
@@ -238,6 +224,20 @@
                   <app-calendar
                     calendarType="dateYearOne"
                     label="基準年度"
+                    [control]="dateForm.controls.year_onedateyy"
+                    [submitted]="submitted"
+                  ></app-calendar>
+                </div>
+              </div>
+              <!-- 比較資料放右邊 -->
+              <div class="col-6 flex flex-column">
+                <div class="col-12 flex justify-content-center">
+                  <b><u>比較資料查詢條件</u></b>
+                </div>
+                <div class="col-12">
+                  <app-calendar
+                    calendarType="dateYearOne"
+                    label="比較年度"
                     [control]="c_dateForm.controls.year_onedateyy"
                     [submitted]="submitted"
                   ></app-calendar>
@@ -249,28 +249,28 @@
           <!-- 自訂區間營業報表 -->
           @if (dateForm.controls.reportType.value === "SAD") {
             <div class="flex col-12">
-              <!-- 比較資料放左邊 -->
+              <!-- 基準資料放左邊 -->
               <div class="col-6 flex flex-column border-right-1 surface-border">
-                <div class="col-12 flex justify-content-center">
-                  <b><u>比較資料查詢條件</u></b>
-                </div>
-                <div class="col-12">
-                  <app-calendar-range
-                    label="比較日期範圍"
-                    [startControl]="dateForm.controls.sad_startdate"
-                    [endControl]="dateForm.controls.sad_enddate"
-                    [submitted]="submitted"
-                  />
-                </div>
-              </div>
-              <!-- 基準資料放右邊 -->
-              <div class="col-6 flex flex-column">
                 <div class="col-12 flex justify-content-center">
                   <b><u>基準資料查詢條件</u></b>
                 </div>
                 <div class="col-12">
                   <app-calendar-range
                     label="基準日期範圍"
+                    [startControl]="dateForm.controls.sad_startdate"
+                    [endControl]="dateForm.controls.sad_enddate"
+                    [submitted]="submitted"
+                  />
+                </div>
+              </div>
+              <!-- 比較資料放右邊 -->
+              <div class="col-6 flex flex-column">
+                <div class="col-12 flex justify-content-center">
+                  <b><u>比較資料查詢條件</u></b>
+                </div>
+                <div class="col-12">
+                  <app-calendar-range
+                    label="比較日期範圍"
                     [startControl]="c_dateForm.controls.sad_startdate"
                     [endControl]="c_dateForm.controls.sad_enddate"
                     [submitted]="submitted"

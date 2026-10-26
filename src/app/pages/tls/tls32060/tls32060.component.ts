@@ -20,7 +20,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize, map, of, switchMap } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { CalendarComponent } from '../../../shared/components/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/components/menubar/menubar.component';
@@ -153,7 +153,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
   ];
 
   totalRecords = 0;
-  monthSpaceVisible = false;
   data: TLS32060Response[] = [];
   historyRequestBody: TLS32060Request | null = null;
 
@@ -186,8 +185,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Base_PrePerformance', header: '本期預售實績', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_ConsumerNum', header: '本期消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '本期' },
     { field: 'Base_ConsumerOrder', header: '本期消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '本期' },
-    { field: 'Base_MonthSpaceEff', header: '月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '本期' },
-    { field: 'Base_MonthSpaceContrib', header: '月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '本期' },
 
     // ================= 上期 Group =================
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right', groupField: '上期' },
@@ -196,8 +193,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Comp_PrePerformance', header: '上期預售實績', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '上期' },
     { field: 'Comp_ConsumerNum', header: '上期消費人數', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '上期' },
     { field: 'Comp_ConsumerOrder', header: '上期消費客單', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '上期' },
-    { field: 'Comp_MonthSpaceEff', header: '月坪效', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '上期' },
-    { field: 'Comp_MonthSpaceContrib', header: '月坪貢獻', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '上期' },
 
     // ================= 差異 Group =================
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right', groupField: '差異' },
@@ -207,18 +202,17 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, format: formatAmount, align: 'right', groupField: '差異' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '差異' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, format: formatAmount, align: 'right', groupField: '差異' },
-    { field: 'Diff_MonthSpaceEff', header: '月坪效差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '差異' },
-    { field: 'Diff_MonthSpaceContrib', header: '月坪貢獻差異', visible: false, format: (value) => formatAmountWithDecimals(value, 0), align: 'right', groupField: '差異' },
 
     // ================= 坪效 Group =================
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right', groupField: '坪效' },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right', groupField: '坪效' },
   ];
 
   columnGroup: ColumnGroup[] = [
     { field: '本期', header: '本期' },
     { field: '上期', header: '上期' },
     { field: '差異', header: '差異' },
-    { field: '坪效', header: '營運效益' },
+    { field: '坪效', header: '坪效' },
   ];
 
   tlt_kind_Option = [
@@ -272,9 +266,14 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     this.initializePage('TLS32060', 'TLS/TLS32060cru', this.queryForm, (frm) => this.onSubmit(frm));
     this.columns = this.columns.map((col): ReportColumn => ({
       ...col,
-      cellClass: (row: TLS32060Response) => {
-        const groupClass = this.groupBgClass(col.groupField);
-        return this.isPartialPeriod(row) ? `${groupClass} text-red-500` : groupClass;
+      cellClass: () => {
+        switch (col.groupField) {
+          case '本期': return 'bg-group-base';
+          case '上期': return 'bg-group-compare';
+          case '差異': return 'bg-group-diff';
+          case '坪效': return 'bg-group-growth';
+          default: return '';
+        }
       },
     }));
 
@@ -346,7 +345,8 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
         return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
           map(res => ({ selectedMValues, data: res.Data }))
         );
-      })
+      }),
+      tap(result => { console.log('所有 API 呼叫結果：', result); })
     ).subscribe(result => {
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
         const groupKey = `${mValue.bus_type}_${mValue.No}`;
@@ -407,7 +407,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const showMonthSpace = ['3', '4', '5'].includes(this.dateForm.controls.reportType.value);
       const formValue = {
         ...frm.getRawValue(),
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -428,6 +427,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
         ConsumerNum: frm.getRawValue().ConsumerNum,   // 帶入 ConsumerNum 狀態
       } as TLS32060Request;
 
+      console.log('查詢請求', formValue);
 this.tls32060Service.queryTLS32060(formValue)
   .pipe(
     finalize(() => this.loading = false),
@@ -435,14 +435,16 @@ this.tls32060Service.queryTLS32060(formValue)
   )
   .subscribe(res => {
 
-    this.setMonthSpaceColumnsVisible(showMonthSpace);
-
     this.data = res.Data ?? [];
 
     this.historyRequestBody = formValue;
 
     // 改這裡：使用後端 TotalCount
     this.totalRecords = res.TotalCount ?? this.data.length;
+
+    console.log('主查詢結果', res.Data);
+    console.log('目前資料筆數', this.data.length);
+    console.log('總筆數 TotalCount', res.TotalCount);
 
     this.queryStateService.setQueryState(
       this.ProgNo,
@@ -781,31 +783,6 @@ this.tls32060Service.queryTLS32060(formValue)
     return String(weekNo);
   }
 
-
-  private groupBgClass(groupField?: string): string {
-    switch (groupField) {
-      case '本期': return 'bg-group-base';
-      case '上期': return 'bg-group-compare';
-      case '差異': return 'bg-group-diff';
-      case '坪效': return 'bg-group-growth';
-      default: return '';
-    }
-  }
-
-  // 月、半年、年報：櫃位本期或上期營業期間不足時整列標紅（彙總列旗標為 false 不會標）
-  private isPartialPeriod(row: TLS32060Response): boolean {
-    return this.monthSpaceVisible && (row.Base_IsPartialPeriod === true || row.Comp_IsPartialPeriod === true);
-  }
-
-  private setMonthSpaceColumnsVisible(visible: boolean) {
-    this.monthSpaceVisible = visible;
-    const fields = [
-      'Base_MonthSpaceEff', 'Base_MonthSpaceContrib',
-      'Comp_MonthSpaceEff', 'Comp_MonthSpaceContrib',
-      'Diff_MonthSpaceEff', 'Diff_MonthSpaceContrib',
-    ];
-    this.columns = this.columns.map(col => fields.includes(col.field) ? { ...col, visible } : col);
-  }
 
   // 2. 修正動態欄位開關邏輯
   setColumns() {

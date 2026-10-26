@@ -38,19 +38,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <!-- 是否含以下所屬部門 -->
-          <div class="col-12 md:col-4 lg:col-4 mt-4">
-            <p-checkbox
-              inputId="IsCludeDownOrg"
-              formControlName="IsCludeDownOrg"
-              [binary]="true"
-              trueValue="Y"
-              falseValue="N"
-            ></p-checkbox>
-            <label for="IsCludeDownOrg">是否含以下所屬部門</label>
-          </div>
-        </div>
-        <div class="grid p-fluid">
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="類別"
@@ -69,17 +57,6 @@
               [control]="queryForm.controls.AmtUnit"
               [submitted]="submitted"
             ></app-radiobutton>
-          </div>
-          <!-- 是否為ROC報表 -->
-          <div class="col-12 md:col-4 lg:col-4 mt-4">
-            <p-checkbox
-              inputId="IsROC"
-              formControlName="IsROC"
-              [binary]="true"
-              trueValue="Y"
-              falseValue="N"
-            ></p-checkbox>
-            <label for="IsROC">是否為ROC報表</label>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,8 +24,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { auditTime, merge, shareReplay, take } from 'rxjs';
 import { CategorySelectComponent } from 'src/app/shared/biz-components/category-select/category-select.component';
-import { TableTLS32020Component } from
-  './table-tls32020/table-tls32020.component';
+
 // 交易筆數/客單價/月坪效/月坪貢獻類欄位：千分位、四捨五入到整數位。
 // Intl.NumberFormat 僅建立一次，避免表格每個儲存格都重新建立 locale formatter。
 const INTEGER_FORMATTER = new Intl.NumberFormat('zh-TW', {
@@ -75,17 +74,11 @@ const WEEK_OPTIONS = Array.from({ length: 53 }, (_, i) => ({
     DropdownRangeComponent, CalendarComponent, DropdownComponent,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,TableTLS32020Component
+    MultiSelectComponent, CalendarRangeComponent, CategorySelectComponent, CheckboxModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
-  @ViewChild(TableTLS32020Component)
-private tls32020Table?: TableTLS32020Component;
-
-private getExportColumnFields(): string[] {
-  return this.tls32020Table?.getExportColumnFields() ?? [];
-}
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly dropdown = inject(DropdownApiService);
   private readonly datePipe = inject(DatePipe);
@@ -195,11 +188,6 @@ private getExportColumnFields(): string[] {
   private readonly blankInGrandTotal = (fmt: (value: number) => string) =>
     (value: number, _rowIndex?: number, row?: unknown): string => row === this.footerData ? '' : fmt(value);
 
-  // 週營業報表(DayType=2)的坪效/坪貢獻（含差異）所有列留空；依「上次查詢送出的報表類型」判斷，不看目前單選按鈕
-  private readonly blankWhenWeekly = (fmt: (value: number) => string) =>
-    (value: number, rowIndex?: number, row?: unknown): string =>
-      this.historyRequestBody?.DayType === '2' ? '' : this.blankInGrandTotal(fmt)(value, rowIndex, row);
-
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   // 表頭三層群組：topGroupField (基準期/比較期/差異) > groupField (營業額/客單價/坪效/預售消費) > 個別欄位
   columns: ReportColumn[] = [
@@ -213,8 +201,8 @@ private getExportColumnFields(): string[] {
     { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'compareATV', topGroupField: 'compare' },
     { field: 'CompareTltSpace', header: '坪數', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
-    { field: 'ComparePyContrib', header: '月坪貢獻', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
+    { field: 'ComparePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'compareSalesPerArea', topGroupField: 'compare' },
     { field: 'Comp_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
     { field: 'Comp_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'comparePreSaleConsumer', topGroupField: 'compare' },
@@ -228,8 +216,8 @@ private getExportColumnFields(): string[] {
     { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTicket', header: '客單價', align: 'right', format: formatInt, isSubTotal: true, groupField: 'atv', topGroupField: 'base' },
     { field: 'BaseTltSpace', header: '坪數', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyeff', header: '月坪效', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
-    { field: 'BasePyContrib', header: '月坪貢獻', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效' : '月坪效', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
+    { field: 'BasePyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻' : '月坪貢獻', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'salesPerArea', topGroupField: 'base' },
     { field: 'Base_PrePerformance', header: '預售實績', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerNum', header: '消費人數', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
     { field: 'Base_ConsumerOrder', header: '消費客單', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'preSaleConsumer', topGroupField: 'base' },
@@ -240,8 +228,8 @@ private getExportColumnFields(): string[] {
     { field: 'DiffTxn', header: '交易筆數差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffATV', topGroupField: 'diff' },
     { field: 'DiffSquare', header: '坪數差異', align: 'right', format: this.blankInGrandTotal((value: number) => formatAmountWithDecimals(value, 2)), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
-    { field: 'DiffPyContrib', header: '月坪貢獻差異', align: 'right', format: this.blankWhenWeekly(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyeff', header: this.queryForm.controls.DayType.value === '1' ? '日坪效差異' : '月坪效差異', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
+    { field: 'DiffPyContrib', header: this.queryForm.controls.DayType.value === '1' ? '日坪貢獻差異' : '月坪貢獻差異', align: 'right', format: this.blankInGrandTotal(formatInt), isSubTotal: true, groupField: 'diffSalesPerArea', topGroupField: 'diff' },
     { field: 'Diff_PrePerformance', header: '預售實績差異', visible: this.isPreSale, align: 'right', format: formatAmount, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerNum', header: '消費人數差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
     { field: 'Diff_ConsumerOrder', header: '消費客單差異', visible: this.isConsumerNum, align: 'right', format: formatInt, isSubTotal: true, groupField: 'diffPreSaleConsumer', topGroupField: 'diff' },
@@ -292,6 +280,7 @@ private getExportColumnFields(): string[] {
     this.applyRequiredByDayType('3');
     this.calculateDateRanges('3');
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
+    this.updatePyeffContribColumnHeader(this.queryForm.controls.DayType.value);
     this.updateMonthCumulativeColumnVisibility(this.queryForm.controls.DayType.value);
 
     this.bindDayTypeChanges();
@@ -337,6 +326,7 @@ private getExportColumnFields(): string[] {
     this.applyRequiredByDayType(type);
     this.calculateDateRanges(type);
     this.updateYMColumnHeader(type);
+    this.updatePyeffContribColumnHeader(type);
     this.updateMonthCumulativeColumnVisibility(type);
   }
 
@@ -786,6 +776,49 @@ private getExportColumnFields(): string[] {
   }
 
 
+  /**
+   * 依 DayType 動態更新「坪效 / 坪貢獻」欄位 Header。
+   * DayType = 1：顯示日坪效 / 日坪貢獻。
+   * 其他 DayType：顯示月坪效 / 月坪貢獻。
+   */
+  private updatePyeffContribColumnHeader(dayType: string | null): void {
+    if (!dayType) return;
+
+    const isDaily = dayType === '1';
+
+    this.columns = this.columns.map(col => {
+      switch (col.field) {
+        // 比較期
+        case 'ComparePyeff':
+          return { ...col, header: isDaily ? '日坪效' : '月坪效' };
+
+        case 'ComparePyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻' : '月坪貢獻' };
+
+        // 基準期
+        case 'BasePyeff':
+          return { ...col, header: isDaily ? '日坪效' : '月坪效' };
+
+        case 'BasePyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻' : '月坪貢獻' };
+
+        // 差異
+        case 'DiffPyeff':
+          return { ...col, header: isDaily ? '日坪效差異' : '月坪效差異' };
+
+        case 'DiffPyContrib':
+          return { ...col, header: isDaily ? '日坪貢獻差異' : '月坪貢獻差異' };
+
+        default:
+          return col;
+      }
+    });
+
+    // OnPush 模式下通知畫面更新
+    this.cdr.markForCheck();
+  }
+
+
   /** 月累積三欄（月營業目標/營業實績/完成率）僅日營業報表(DayType=1)顯示，隨報表類型選項即時切換。 */
   private updateMonthCumulativeColumnVisibility(dayType: string | null): void {
     if (!dayType) return;
@@ -984,63 +1017,37 @@ private getExportColumnFields(): string[] {
 
     return chunks;
   }
-onExportPDF() {
-  if (!this.historyRequestBody) {
-    this.messageService.warnBubble('請先執行查詢以產生報表。');
-    return;
+
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const export$ = this.tls32020Service.exportTLS32020PDF(this.historyRequestBody);
+
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
+    this.fileExportService.executeFileExport(
+      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
+      '.pdf',
+      (isLoading) => this.pdfBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
   }
 
-  // 取得 TLS32020 專用 Table 齒輪選取的欄位
-  const exportColumns = this.getExportColumnFields();
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
 
-  // 保留原本查詢條件，新增匯出欄位
-  const request: TLS32020QueryRequest = {
-    ...this.historyRequestBody,
-    ExportColumns: exportColumns
-  };
+    const export$ = this.tls32020Service.exportTLS32020Excel(this.historyRequestBody);
 
-  console.log('PDF 匯出欄位：', exportColumns);
-  console.log('PDF Request：', request);
-
-  // 呼叫 Service 執行 PDF 匯出
-  const export$ = this.tls32020Service.exportTLS32020PDF(request);
-
-  // 保留原本檔案下載及 Loading 處理
-  this.fileExportService.executeFileExport(
-    export$.pipe(takeUntilDestroyed(this.destroyRef)),
-    '.pdf',
-    (isLoading) => this.pdfBtnLoading = isLoading
-  ).subscribe();
-}
-
-onExportXLSX() {
-  if (!this.historyRequestBody) {
-    this.messageService.warnBubble('請先執行查詢以產生報表。');
-    return;
+    this.fileExportService.executeFileExport(
+      export$.pipe(takeUntilDestroyed(this.destroyRef)), // 將 takeUntilDestroyed 加入 Service 回傳的 Observable
+      '.xlsx',
+      (isLoading) => this.excelBtnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
   }
-
-  // 取得 TLS32020 專用 Table 齒輪選取的欄位
-  const exportColumns = this.getExportColumnFields();
-
-  // 保留原本查詢條件，新增匯出欄位
-  const request: TLS32020QueryRequest = {
-    ...this.historyRequestBody,
-    ExportColumns: exportColumns
-  };
-
-  console.log('Excel 匯出欄位：', exportColumns);
-  console.log('Excel Request：', request);
-
-  // 呼叫 Service 執行 Excel 匯出
-  const export$ = this.tls32020Service.exportTLS32020Excel(request);
-
-  // 保留原本檔案下載及 Loading 處理
-  this.fileExportService.executeFileExport(
-    export$.pipe(takeUntilDestroyed(this.destroyRef)),
-    '.xlsx',
-    (isLoading) => this.excelBtnLoading = isLoading
-  ).subscribe();
-}
 
   setColumns() {
     this.columns = applyDisplayStatusVisibility(this.columns, {

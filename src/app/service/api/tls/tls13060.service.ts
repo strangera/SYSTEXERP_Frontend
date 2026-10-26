@@ -32,25 +32,18 @@ export interface TLS13060QueryRequest {
 
 export interface TLS13060ResponseItem {
   upd_date: string;
-  tlt_bdate: string;
-  tlt_edate: string;
-  contract_subno: string;
-  building_desc: string;
-  tlt_building: string;
-  org_id: string;
-  org_name: string;
   location_no: string;
   VEN_Name: string;
   tlt_name: string;
   tlt_no: string;
   pos_yn: string;
   rece_yn: string;
-  cap_saletype2: string;
   cash_yn: string;
   invoice_type: string;
+  pay_no_79: string;
+  pay_no_77: string;
+  pay_no_78: string;
   pay_no_62: string;
-  pay_no_24: string;
-  pay_no_25: string;
   pay_no_20: string;
   pay_no_71: string;
   pay_no_72: string;
@@ -58,8 +51,6 @@ export interface TLS13060ResponseItem {
   pay_no_74: string;
   pay_no_75: string;
   pay_no_76: string;
-  pay_no_77: string;
-  pay_no_78: string;
 }
 
 @Injectable({

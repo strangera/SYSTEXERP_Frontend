@@ -1,6 +1,6 @@
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { ApiRequest } from '@shared/utils/rxjs-operators/validate-api-response';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -10,10 +10,8 @@ export interface FIN42040QueryRequest extends ApiRequest {
   CompareYM?: string;
   Org_ID?: string;
   Org_Name?: string;
-  IsCludeDownOrg?: string; // 是否含以下部門(Y=是/N=否)
   ReportType?: number;
   AmtUnit?: number;
-  IsROC?: string; // 是否為ROC報表(Y=是/N=否)
 }
 
 export interface FIN42040Data {
@@ -44,7 +42,7 @@ export class FIN42040Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) { }
+  ) {}
 
   queryFIN42040(body: FIN42040QueryRequest): Observable<any> {
     const url = `${this.apiUrl}/FIN0000/FIN4000/queryFIN42040`;

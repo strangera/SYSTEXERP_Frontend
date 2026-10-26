@@ -279,12 +279,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // locationData 從父元件更新時，自動刷新顯示
     if (changes['locationData']) {
-      if (!this.isViewMode && this.syncContractDatesToLocations()) {
-        this.updateDisplayLocationData();
-        this.emitDataChange();
-        return;
-      }
       this.updateDisplayLocationData();
     }
     // 父元件 API 載入完成，載入依賴下拉（中分類、小分類）
@@ -1181,31 +1177,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   // ========== 位置表格相關 ==========
-
-  private syncContractDatesToLocations(): boolean {
-    const contractBdate = this.form?.get('tlt_bdate')?.value;
-    const contractEdate = this.form?.get('tlt_edate')?.value;
-    if (!contractBdate && !contractEdate) return false;
-    let synced = false;
-    this.locationData.forEach(loc => {
-      if (loc._status === 'deleted') return;
-      let changed = false;
-      if (contractBdate && loc.tlt_bdate !== contractBdate) { loc.tlt_bdate = contractBdate; changed = true; }
-      if (contractEdate && loc.tlt_edate !== contractEdate) { loc.tlt_edate = contractEdate; changed = true; }
-      if (changed) {
-        if (loc._status === 'original') loc._status = 'modified';
-        synced = true;
-      }
-    });
-    if (synced) {
-      this.locationDefaultInsertData = {
-        ...this.locationDefaultInsertData,
-        ...(contractBdate ? { tlt_bdate: contractBdate } : {}),
-        ...(contractEdate ? { tlt_edate: contractEdate } : {}),
-      };
-    }
-    return synced;
-  }
 
   /**
    * 更新顯示的位置資料（過濾已刪除項目）

@@ -15,22 +15,26 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text
+            <app-multi-select
               label="專櫃招募編號"
-              controlName="apply_no"
-              [customPlaceholder]="'多筆請以逗號分隔，如 00000069,00000691'"
-              [control]="queryForm.controls.apply_no"
+              controlName="apply_noList"
+              [options]="applyNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.apply_noList"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text
+            <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
-              [customPlaceholder]="'多筆請以逗號分隔，如 000008,000009'"
-              [control]="queryForm.controls.tlt_no"
+              controlName="tlt_noList"
+              [options]="tltNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_noList"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text

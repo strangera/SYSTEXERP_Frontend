@@ -259,18 +259,16 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // 當 locationData 變更時，更新顯示資料（跳過自己 emit 觸發的回流）
     if (changes['locationData']) {
       if (this.isOwnEmit) {
         this.isOwnEmit = false;
         return;
       }
-      const synced = this.crudstatus !== CRUDStatus.Read && this.syncContractDatesToLocations();
+      // 載入既有資料時，若尚無業績分攤值則平均帶入（已有值則保留）
       this.applySaleRateDistribution();
       if (!changes['locationData'].firstChange) {
         this.updateDisplayLocationData();
-      }
-      if (synced) {
-        this.locationDataChange.emit(this.locationData);
       }
     }
   }
@@ -550,31 +548,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   // ========== 位置表格 ==========
-  private syncContractDatesToLocations(): boolean {
-    const contractBdate = this.form?.get('tlt_bdate')?.value;
-    const contractEdate = this.form?.get('tlt_edate')?.value;
-    if (!contractBdate && !contractEdate) return false;
-    let synced = false;
-    this.locationData.forEach(loc => {
-      if (loc._status === 'deleted') return;
-      let changed = false;
-      if (contractBdate && loc.tlt_bdate !== contractBdate) { loc.tlt_bdate = contractBdate; changed = true; }
-      if (contractEdate && loc.tlt_edate !== contractEdate) { loc.tlt_edate = contractEdate; changed = true; }
-      if (changed) {
-        if (loc._status === 'original') loc._status = 'modified';
-        synced = true;
-      }
-    });
-    if (synced) {
-      this.locationDefaultInsertData = {
-        ...this.locationDefaultInsertData,
-        ...(contractBdate ? { tlt_bdate: contractBdate } : {}),
-        ...(contractEdate ? { tlt_edate: contractEdate } : {}),
-      };
-    }
-    return synced;
-  }
-
   private updateDisplayLocationData(): void {
     this.displayLocationData = this.locationData.filter(loc => loc._status !== 'deleted');
   }

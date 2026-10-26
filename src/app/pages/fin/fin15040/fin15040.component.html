@@ -193,8 +193,14 @@
             [control]="queryForm.controls.ECR_No"
             [submitted]="submitted"
           ></app-multi-select>
-          <!-- 僅有B2B發票 -->
+          <!-- 包含隔日作廢 / 僅有B2B發票 -->
           <div class="col-12 md:col-6 lg:col-4 flex align-items-end pb-2 gap-4">
+            <p-checkbox
+              formControlName="IncludeNextDayVoid"
+              [binary]="true"
+              inputId="includeNextDayVoid"
+              label="包含隔日作廢"
+            ></p-checkbox>
             <p-checkbox
               formControlName="OnlyB2B"
               [binary]="true"
