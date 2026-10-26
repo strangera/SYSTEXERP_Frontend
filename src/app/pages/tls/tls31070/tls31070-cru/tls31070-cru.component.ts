@@ -147,6 +147,7 @@ export class Tls31070CRUComponent implements OnChanges {
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
+          PrePerformance: this.footerTotal.TotalPrePerformance,
         } : null;
         this.totalRecords = res.TotalCount;
       });
