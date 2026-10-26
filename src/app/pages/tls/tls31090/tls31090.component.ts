@@ -262,7 +262,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
         PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
         Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
-        PrePerformance: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
+        PrePerformance: res.Data.TotalData?.TotalPrePerformance ?? 0, // 預售實績總計
         ConsumerNum: res.Data.TotalData.TotalConsumerNum, // 消費人數總計
         ConsumerOrder: res.Data.TotalData.TotalConsumerOrder, // 消費客單總計
       };

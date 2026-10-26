@@ -121,7 +121,7 @@ export class Tls31090CRUComponent implements OnChanges, OnInit {
           PrePerformance: t.PrePerformance ?? 0,
           ConsumerNum: t.ConsumerNum ?? 0,
           ConsumerOrder: t.ConsumerOrder ?? 0,
-          SubTotal: t.Sales ?? 0,
+          SubTotal: t.SubTotal ?? 0,
         } : null;
         this.totalRecords = this.data.length;
       });
