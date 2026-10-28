@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,6 +13,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay } from 'rxjs/operators';
+import { getSYS1000, getSYS1000Options$ } from '@service/system/sys1000.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
@@ -54,6 +55,7 @@ import { formatAmount, formatDate, ReportColumn, } from '../../../shared/compone
     ButtonModule,
     InputTextRangeComponent,
     TableReportComponent,
+    AsyncPipe,
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -120,11 +122,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
     { value: '1', label: '外交官零稅' },
     { value: '2', label: '事後登錄' },
   ];
-  readonly txnStatusOptions = [
-    { value: '1', label: '正常交易' }, { value: '2', label: '作廢交易' },
-    { value: '3', label: '退貨交易' }, { value: '4', label: '預售交易' },
-    { value: '5', label: '預售解約' }, { value: '6', label: '預售退貨' },
-  ];
+  readonly txnStatusOptions$ = getSYS1000Options$(this.systemDataService, 'TXN_Type');
 
   private dropdownInit$?: Observable<any>;
 
@@ -520,7 +518,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  private readonly getLabelFromOptions = (value: any, options: any[]): string => options?.find((opt) => String(opt.value) === String(value))?.label ?? value;
 
   // ===== 報表欄位結構定義 (採用共通 ReportColumn 規範且修正對齊樣式) =====
   invoiceColumns: ReportColumn[] = [
@@ -534,7 +531,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, align: 'right', format: formatAmount, isTotal: true },
-    { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
+    { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => val == null ? '' : String(getSYS1000('TXN_Type', val)) },
     { field: 'TXN_VIP', header: '外交官零稅', visible: true, format: (v: any) => v === 'Y' ? '是' : '否' },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
