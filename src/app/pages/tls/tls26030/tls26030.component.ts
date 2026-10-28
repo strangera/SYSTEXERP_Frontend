@@ -87,7 +87,7 @@ columns: ReportColumn[] = [
   { field: 'Preorder_status', header: '預售狀態', visible: true, width: '90px' },
   { field: 'CANCEL_Date', header: '作廢日期', visible: true, format: formatDate, width: '100px' },
   { field: 'CANCEL_ECR_No', header: '作廢機號', visible: true, width: '90px' },
-  { field: 'CANCEL_TXN_No', header: '作廢序號', visible: true, width: '90px' },
+  { field: 'CANCEL_TXN_No', header: '作廢序號', visible: true, format: formatToSixDigits, width: '90px' },
   { field: 'Close_Date', header: '結帳日期', visible: true, format: formatDate, width: '100px' },
   { field: 'Close_Ecr_No', header: '結帳機號', visible: true, width: '90px' },
   { field: 'Close_Txn_No', header: '結帳序號', visible: true, format: formatToSixDigits, width: '90px' }
