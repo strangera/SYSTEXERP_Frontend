@@ -44,12 +44,9 @@ export class FIN13020Service {
       param,
     );
   }
-queryFIN13100ByVoucherNo(voucherNo: string) {
-  return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13100`, {
-    PageSize: 10,
-    PageIndex: 1,
-    VouNoStart: voucherNo,
-    VouNoEnd: voucherNo,
+checkFIN13020VoucherNo(voucherNo: string) {
+  return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/checkFIN13020VoucherNo`, {
+    Voucher_No: voucherNo,
   });
 }
   // Source 不傳時後端不過濾，APS + POS 都查

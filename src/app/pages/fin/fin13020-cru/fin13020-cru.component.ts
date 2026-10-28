@@ -275,13 +275,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           return;
         }
 
-        this.fin13020Service.queryFIN13100ByVoucherNo(vouNo).subscribe({
+        this.fin13020Service.checkFIN13020VoucherNo(vouNo).subscribe({
           next: (res: any) => {
-            const exists =
-              Array.isArray(res?.Data) &&
-              res.Data.some((x: any) => String(x.VouNo ?? '').trim() === vouNo);
+            const isValid = res?.Status === '0000' && res?.Data === true;
 
-            if (!exists) {
+            if (!isValid) {
               ctrl?.setErrors({ ...ctrl.errors, voucherNotFound: true });
               ctrl?.markAsTouched();
               this.messageService.warnBubble(`查無傳票編號：${vouNo}`);
