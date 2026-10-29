@@ -28,7 +28,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="交易型態" [control]="queryForm.controls.TXN_Status" [options]="txnStatusOptions"
+            <app-multi-select label="交易型態" [control]="queryForm.controls.TXN_Status" [options]="txnStatusOptions$ | async"
               optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
 

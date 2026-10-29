@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options, getSYS1000Options$ } from '@service/system/sys1000.service';
 import { TableReportComponent } from '@shared/components/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -215,32 +215,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   ];
 
 
-  readonly txnStatusOptions = [
-    {
-      value: '1',
-      label: '正常交易'
-    },
-    {
-      value: '2',
-      label: '作廢交易'
-    },
-    {
-      value: '3',
-      label: '退貨交易'
-    },
-    {
-      value: '4',
-      label: '預售交易'
-    },
-    {
-      value: '5',
-      label: '預售解約'
-    },
-    {
-      value: '6',
-      label: '預售退貨'
-    },
-  ];
+  readonly txnStatusOptions$ = getSYS1000Options$(this.systemDataService, 'TXN_Type');
 
 
   readonly carrierTypeOptions =
