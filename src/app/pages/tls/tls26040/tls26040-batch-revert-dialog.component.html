@@ -1,0 +1,55 @@
+<p-dialog
+  header="整批還原"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="onHide()"
+  [modal]="true"
+  [style]="{ width: '1100px' }"
+  [breakpoints]="{ '1199px': '90vw' }"
+>
+  <form [formGroup]="queryForm" (ngSubmit)="onQuery()">
+    <div class="grid p-fluid">
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="批號"
+        controlName="batch_no"
+        [control]="queryForm.controls.batch_no"
+        [submitted]="submitted"
+      ></app-input-text>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+  </form>
+
+  <div class="mt-3">
+    <app-table-report
+      tableKey="TLS26040BatchRevert"
+      [lazy]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      [showReportMode]="false"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="data.length"
+      [loading]="loading"
+      [footerData]="footerData"
+      footerLabel="合計"
+    ></app-table-report>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <app-button
+      label="關閉"
+      [outlined]="true"
+      severity="secondary"
+      (click)="visible.set(false)"
+    ></app-button>
+    <app-button
+      label="確認還原"
+      [loading]="loading"
+      [disabled]="!queriedBatchNo"
+      (click)="onRevert()"
+    ></app-button>
+  </ng-template>
+</p-dialog>

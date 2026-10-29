@@ -17,6 +17,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { TableComponent } from '../../../others/component/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../others/component/table/table.model';
+import { TLS26040BatchRevertDialogComponent } from './tls26040-batch-revert-dialog.component';
 
 @Component({
   selector: 'app-tls26040',
@@ -33,7 +34,8 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, fo
     TableComponent,
     TranslateModule,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    TLS26040BatchRevertDialogComponent
   ]
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
@@ -61,6 +63,8 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
       disabled: (rowData: TLS26040Data) => rowData.isClose === 'Y',
     }
   ];
+
+  batchRevertVisible = false;
 
   columns: Column[] = [
     { field: 'id', header: 'ID', visible: false },
@@ -155,7 +159,6 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
       }
     });
   }
-
 
   onExportExcel(): void {
     if (!this.data || this.data.length === 0) {
