@@ -87,7 +87,7 @@ export class SubmitDataService {
       sale_rate: loc.sale_rate ?? 0,
       tlt_bdate: this.formatDateToString(loc.tlt_bdate),
       tlt_edate: this.formatDateToString(loc.tlt_edate),
-      _status: loc._status || 'original'
+      _status: (this.hasValidId(loc.id) && loc._status === 'original') ? 'modified' : (loc._status || 'original')
     }));
   }
 

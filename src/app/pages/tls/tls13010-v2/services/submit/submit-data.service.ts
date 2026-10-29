@@ -191,7 +191,7 @@ export class SubmitDataService {
       sale_rate: loc.sale_rate ?? 0,
       tlt_bdate: this.formatDate(loc.tlt_bdate),
       tlt_edate: this.formatDate(loc.tlt_edate),
-      _status: loc._status || 'original'
+      _status: (loc.id && loc._status === 'original') ? 'modified' : (loc._status || 'original')
     }));
   }
 

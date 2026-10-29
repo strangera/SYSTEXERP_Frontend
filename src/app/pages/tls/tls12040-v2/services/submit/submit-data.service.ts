@@ -67,7 +67,8 @@ export class SubmitDataService {
       ...loc,
       id: this.hasValidId(loc.id) ? loc.id : undefined,
       tlt_bdate: this.formatDateToString(loc.tlt_bdate),
-      tlt_edate: this.formatDateToString(loc.tlt_edate)
+      tlt_edate: this.formatDateToString(loc.tlt_edate),
+      _status: (this.hasValidId(loc.id) && loc._status === 'original') ? 'modified' : (loc._status || 'new')
     }));
   }
 
