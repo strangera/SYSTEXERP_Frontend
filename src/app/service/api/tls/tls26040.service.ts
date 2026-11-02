@@ -27,6 +27,7 @@ export interface TLS26040QueryInsertRequest {
 export interface TLS26040DetailRequest extends ApiRequest {
   sad_date?: string;               // 預售日期
   tlt_no?: string;                 // 專櫃編號
+  batch_no?: string;               // 批號（有帶時改查該批號下所有專櫃明細）
 }
 
 // --- TLS26040 新增 Model 定義 ---
@@ -40,6 +41,11 @@ export interface TLS26040InsertRequest {
 // --- TLS26040 還原 Model 定義 --- (新增)
 export interface TLS26040RevertRequest {
   id: number;                      // ID
+}
+
+// --- TLS26040 批號還原 Model 定義 ---
+export interface RevertBatchTLS26040Request {
+  batch_no: string;                // 預售業績歸屬批號
 }
 
 // --- TLS26040 回應資料 Model 定義 ---
@@ -98,6 +104,11 @@ export class TLS26040Service {
   // 還原預售資料 (新增)
   revertTLS26040(data: TLS26040RevertRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/RevertTLS26040`, data);
+  }
+
+  // 批號還原預售資料
+  revertBatchTLS26040(data: RevertBatchTLS26040Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/RevertBatchTLS26040`, data);
   }
 
   /** 匯出 Excel */

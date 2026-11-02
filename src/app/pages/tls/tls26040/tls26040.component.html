@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="整批還原" icon="pi pi-undo" (click)="batchRevertVisible = true"></app-button>
     <app-button btnType="create" (click)="onCreate()" label="新增"></app-button>
   </div>
   <p-accordion>
@@ -113,3 +114,8 @@
     </header>
   </app-table>
 </div>
+
+<app-tls26040-batch-revert-dialog
+  [(visible)]="batchRevertVisible"
+  (reverted)="onSubmit(queryForm)"
+></app-tls26040-batch-revert-dialog>
