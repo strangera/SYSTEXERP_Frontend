@@ -100,6 +100,11 @@ export function calculateNetTax(row: Record<string, unknown>) {
   };
 }
 
+/** 金額四捨五入至小數 2 位，避免浮點數相減產生 0.1 + 0.2 類誤差 */
+export function roundAmount(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 /* =====================================
    零稅必填檢核
    ===================================== */
@@ -195,6 +200,9 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: () => getSYS1000Options('PLU_TaxType'), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
   { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  // 未稅/稅額：預設由換開發票稅額依銷售金額比例分攤，可手動調整，改其中一個自動回推另一個
+  { field: 'INV_Net', header: '未稅金額', type: 'inputNumber', calculate: (row) => ({ INV_Tax: roundAmount((Number(row['INV_SaleAmt']) || 0) - (Number(row['INV_Net']) || 0)) }), minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'INV_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => ({ INV_Net: roundAmount((Number(row['INV_SaleAmt']) || 0) - (Number(row['INV_Tax']) || 0)) }), minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [
@@ -203,6 +211,8 @@ export const COLUMNS_DETAIL_VIEW: Column[] = [
   { field: 'PLU_TaxType', header: '稅別', format: (v) => getSYS1000('PLU_TaxType', v) },
   { field: 'INV_Qty', header: '銷售數量' },
   { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
+  { field: 'TXN_Net', header: '未稅金額', format: formatAmount },
+  { field: 'TXN_Tax', header: '稅額', format: formatAmount },
 ];
 
 // ===== 介面定義 =====
@@ -242,6 +252,8 @@ export interface TLS2J030Data {
   INV_ItemName?: string;
   INV_Qty?: number;
   INV_SaleAmt?: number;  // 編輯時使用 (注：TXN_SaleAmt 已在換開發票欄位中定義，用於後端回傳/查看時使用)
+  INV_Net?: number;      // 明細未稅金額 (編輯時使用，送出對應 POS21011.TXN_Net)
+  INV_Tax?: number;      // 明細稅額 (編輯時使用，送出對應 POS21011.TXN_Tax)
   isInvoiceClose?: string; // 是否已關帳 (Y/N)
   ORG_TXN_Date?: string;    // 來源發票日期(多筆以逗號區隔，前端依此換行顯示)
 }

@@ -49,7 +49,7 @@
             換開發票明細
           </span>
         </p-divider>
-        <app-table-edit #detailEdit tableKey="DetailEdit" class="col-12" [(data)]="detailEditData"
+        <app-table-edit #detailEdit tableKey="DetailEdit" class="col-12" [data]="detailEditData"
           [columns]="columnsdetail" dataStatusField="status" [tableRequired]="true" [showDelete]="true"
           [showInsert]="false" [canInsert]="true" [showCheckBox]="true" (dataChange)="onDetailEditDataChange($event)"
           (fieldChange)="onDetailFieldChange($event)">

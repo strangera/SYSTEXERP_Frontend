@@ -25,6 +25,7 @@ import {
   COLUMNS_NATURAL_EDIT,
   COLUMNS_NATURAL_VIEW,
   GUI_PAPER_OPTIONS,
+  roundAmount,
   TLS2J030Data,
   TLS2J030Source
 } from '../tls2j030/tls2j030.model';
@@ -69,7 +70,12 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   columnsNaturalView = COLUMNS_NATURAL_VIEW;
   columnschange: EditColumn[] = [];
   columnsChangeView = COLUMNS_CHANGE_VIEW;
-  columnsdetail = COLUMNS_DETAIL_EDIT;
+  // 明細未稅/稅額僅「應稅且非零稅率」可手動調整，其餘由 allocateDetailNetTax() 帶值
+  columnsdetail: EditColumn[] = COLUMNS_DETAIL_EDIT.map(col =>
+    col.field === 'INV_Net' || col.field === 'INV_Tax'
+      ? { ...col, disabled: (_v: unknown, _i?: number, row?: TLS2J030Data) => !this.isDetailNetTaxEditable(row) }
+      : col
+  );
   columnsDetailView = COLUMNS_DETAIL_VIEW;
 
   isViewMode = false;
@@ -81,6 +87,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   // 儲存 TDS1010 項目對應，用於動態生成下拉選單
   private itemMap: Record<string, { label: string; value: string }[]> = {};
+
+  // 明細銷售金額/稅別變更後，待 dataChange 拿到最新資料再重新分攤未稅/稅額
+  private detailAllocatePending = false;
+
+  // 換開發票這些欄位變更時，需重新分攤明細未稅/稅額
+  private readonly allocateTriggerChangeFields = new Set([
+    'PLU_TaxType', 'TXN_SaleTax', 'TXN_SaleNoTax', 'TXN_Net', 'TXN_Tax', 'INV_NoneTax',
+  ]);
 
   // 非第一列需鎖定（自動跟隨第一列）的欄位
   private readonly lockedChangeFields: (keyof TLS2J030Data)[] = [
@@ -364,6 +378,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   // ===== 事件處理與資料更新 =====
 
   onDetailFieldChange(event: { field?: string, rowData: any, index?: number }) {
+    if (event.field === 'INV_SaleAmt' || event.field === 'PLU_TaxType') {
+      this.detailAllocatePending = true;
+      return;
+    }
     if (event.field !== 'bus_type_name') return;
 
     try {
@@ -401,10 +419,15 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 只在 row 數量變動（新增/刪除）時重建 columns，避免 calendar popup 被打斷
     if (rowCountChanged) {
       this.updateColumnsChange();
+      this.allocateDetailNetTax();
     }
   }
 
   onChangeFieldChange(event: FieldChangeEvent): void {
+    if (this.allocateTriggerChangeFields.has(event.field)) {
+      this.allocateDetailNetTax();
+      return;
+    }
     if (event.field !== 'TXN_Date') return;
     const result = this.validateInvoiceDateAfterLockDate(event.value, event.rowData as Record<string, unknown>, [], 'TXN_Date', '發票日期');
     if (!result.isValid) {
@@ -413,7 +436,58 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   }
 
   onDetailEditDataChange(data: any[]) {
+    // 刪除明細或銷售金額/稅別變更時重新分攤；單純改未稅/稅額不重算，保留使用者調整值
+    const rowRemoved = data.length < this.detailEditData.length;
     this.detailEditData = data;
+    if (rowRemoved || this.detailAllocatePending) {
+      this.detailAllocatePending = false;
+      this.allocateDetailNetTax();
+    }
+  }
+
+  /** 零稅率註記跟隨換開發票第一列 */
+  private isZeroTaxRate(): boolean {
+    return String(this.changeEditData[0]?.INV_NoneTax ?? '0') === '1';
+  }
+
+  /** 明細未稅/稅額是否可手動調整：應稅且非零稅率 */
+  private isDetailNetTaxEditable(row?: TLS2J030Data): boolean {
+    return String(row?.PLU_TaxType ?? '') === '1' && !this.isZeroTaxRate();
+  }
+
+  /**
+   * 依銷售金額比例，把應稅換開發票的稅額分攤到應稅明細，最後一筆吸收尾差，使明細加總與發票頭一致；
+   * 免稅、零稅率明細：未稅 = 銷售金額、稅額 = 0
+   */
+  private allocateDetailNetTax(): void {
+    const taxInvoice = this.changeEditData.find(r => String(r.PLU_TaxType) === '1');
+    const headerTax = taxInvoice && !this.isZeroTaxRate() ? Number(taxInvoice.TXN_Tax) || 0 : 0;
+    const rows = this.detailEditData.filter(d => !d._isAutoInsertCandidate);
+    const taxRows = rows.filter(d => this.isDetailNetTaxEditable(d));
+    const totalAmt = taxRows.reduce((sum, d) => sum + (Number(d.INV_SaleAmt) || 0), 0);
+
+    let allocatedTax = 0;
+    rows.forEach(d => {
+      const amt = Number(d.INV_SaleAmt) || 0;
+      if (!taxRows.includes(d)) {
+        d.INV_Net = amt;
+        d.INV_Tax = 0;
+      } else {
+        const isLast = d === taxRows[taxRows.length - 1];
+        const tax = isLast
+          ? roundAmount(headerTax - allocatedTax)
+          : (totalAmt ? Math.round(headerTax * amt / totalAmt) : 0);
+        allocatedTax += tax;
+        d.INV_Tax = tax;
+        d.INV_Net = roundAmount(amt - tax);
+      }
+      // 值已由程式帶入，清掉先前的必填錯誤提示
+      if (d._validationErrors) {
+        delete d._validationErrors['INV_Net'];
+        delete d._validationErrors['INV_Tax'];
+      }
+    });
+    this.detailEditData = [...this.detailEditData];
   }
 
   /** 查詢來源發票 */
@@ -524,6 +598,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
         });
 
         this.changeEditData = [...this.changeEditData];
+        this.allocateDetailNetTax();
       }
     } catch (e) {
       console.error('同步來源發票合計至換開發票失敗', e);
@@ -626,6 +701,32 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       errors.push(`明細免稅金額加總 (${detailSaleNoTax.toFixed(2)}) 與換開免稅發票金額加總 (${changeSaleNoTax.toFixed(2)}) 不一致，請檢查資料`);
     }
 
+    // 商品明細逐筆：未稅 + 稅額 = 銷售金額
+    this.detailEditData.forEach((item, idx) => {
+      const amt = Number(item.INV_SaleAmt) || 0;
+      const net = Number(item.INV_Net) || 0;
+      const tax = Number(item.INV_Tax) || 0;
+      if (Math.abs((net + tax) - amt) > 0.01) {
+        errors.push(`商品明細第 ${idx + 1} 筆：未稅(${net}) + 稅額(${tax}) 須等於銷售金額(${amt})`);
+      }
+    });
+
+    // 應稅明細未稅/稅額加總 vs. 應稅換開發票未稅/稅額（TLS2J040 三聯式列印直接取明細值，兩邊必須一致）
+    const taxInvoice = this.changeEditData.find(row => String(row.PLU_TaxType) === '1');
+    if (taxInvoice) {
+      const taxItems = this.detailEditData.filter(item => item.PLU_TaxType === '1');
+      const detailNet = taxItems.reduce((sum, item) => sum + (Number(item.INV_Net) || 0), 0);
+      const detailTax = taxItems.reduce((sum, item) => sum + (Number(item.INV_Tax) || 0), 0);
+      const changeNet = Number(taxInvoice.TXN_Net) || 0;
+      const changeTax = Number(taxInvoice.TXN_Tax) || 0;
+      if (Math.abs(detailNet - changeNet) > 0.01) {
+        errors.push(`明細應稅未稅金額加總 (${detailNet.toFixed(2)}) 與換開應稅發票未稅金額 (${changeNet.toFixed(2)}) 不一致，請檢查資料`);
+      }
+      if (Math.abs(detailTax - changeTax) > 0.01) {
+        errors.push(`明細應稅稅額加總 (${detailTax.toFixed(2)}) 與換開應稅發票稅額 (${changeTax.toFixed(2)}) 不一致，請檢查資料`);
+      }
+    }
+
     return { warnings, errors };
   }
 
@@ -691,6 +792,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       INV_ItemName: item.INV_ItemName || '',
       PLU_TaxType: item.PLU_TaxType || '',
       TXN_SaleAmt: item.INV_SaleAmt || 0,
+      TXN_Net: item.INV_Net || 0,
+      TXN_Tax: item.INV_Tax || 0,
       INV_Qty: item.INV_Qty || 0
     }));
 
