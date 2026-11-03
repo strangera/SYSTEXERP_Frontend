@@ -428,8 +428,10 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // - 從坪數改成其他單位，且數量仍停在先前自動帶入的總坪數（未被手動改過）：還原為 1
     if (fieldName === 'tpy_type' && this.totalLocationSpace > 0) {
       if (newValue === '01') {
-        rowData.tpy_qty = this.totalLocationSpace;
-      } else if (rowData.tpy_qty === this.totalLocationSpace) {
+        if (!(Number(rowData.tpy_qty) > 1)) {
+          rowData.tpy_qty = this.totalLocationSpace;
+        }
+      } else if (Number(rowData.tpy_qty) === this.totalLocationSpace) {
         rowData.tpy_qty = 1;
       }
     }
@@ -442,6 +444,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
     // 發射變更
     this.emitChanges();
+    this.cdr.detectChanges();
   }
 
   private handleSelectionChange(rowData: FareItem, capType: string): void {
@@ -464,7 +467,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
       // 如果選擇坪數單位，設定預設數量為總坪數
       if (rowData.tpy_type === '01' && this.totalLocationSpace > 0) {
-        if (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1) {
+        if (!(Number(rowData.tpy_qty) > 1)) {
           rowData.tpy_qty = this.totalLocationSpace;
         }
       }
@@ -725,6 +728,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         copiedItem[field] = null;
       }
     });
+    copiedItem.tpy_type = '';
 
     // 設定日期為合約日期
     if (this.contractDates.bdate) {

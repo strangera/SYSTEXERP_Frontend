@@ -557,9 +557,14 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 更新欄位值
     (rowData as unknown as Record<string, unknown>)[fieldName] = newValue;
 
-    // 當單位改為「坪數」(tpy_type = '01') 時，自動帶入坪數總和
-    if (fieldName === 'tpy_type' && newValue === '01' && this.totalLocationSpace > 0) {
-      rowData.tpy_qty = this.totalLocationSpace;
+    if (fieldName === 'tpy_type' && this.totalLocationSpace > 0) {
+      if (newValue === '01') {
+        if (!(Number(rowData.tpy_qty) > 1)) {
+          rowData.tpy_qty = this.totalLocationSpace;
+        }
+      } else if (Number(rowData.tpy_qty) === this.totalLocationSpace) {
+        rowData.tpy_qty = 1;
+      }
     }
 
     // 依類型自動計算金額
@@ -568,6 +573,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 使用 CrudTrackingService 判斷是否真的有修改
     this.updateItemStatus(rowData, capType);
     this.emitDataChange();
+    this.cdr.detectChanges();
   }
 
   private handleSelectionChange(rowData: FareItem, capType: string): void {
@@ -589,7 +595,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
       // 如果選擇坪數單位，設定預設數量為總坪數
       if (rowData.tpy_type === '01' && this.totalLocationSpace > 0) {
-        if (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1) {
+        if (!(Number(rowData.tpy_qty) > 1)) {
           rowData.tpy_qty = this.totalLocationSpace;
         }
       }
