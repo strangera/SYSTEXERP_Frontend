@@ -15,6 +15,7 @@ import { InputTextComponent } from '../../../shared/components/input-text/input-
 import { TableReportComponent } from '../../../shared/components/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/components/table-report/table-report.model';
 import { createPaginationConfig, formatAmount } from '../../../others/component/table/table.model';
+import { GUI_STATUS_OPTIONS } from '../tls2j030/tls2j030.model';
 
 @Component({
   selector: 'app-tls2j040',
@@ -64,7 +65,9 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
     { field: 'TotalTax', header: '稅額', visible: true },
 
     // TaxType 已在後端轉中文，所以直接顯示
-    { field: 'TaxType', header: '稅別', visible: true }
+    { field: 'TaxType', header: '稅別', visible: true },
+
+    { field: 'GUI_Status', header: '換開狀態', visible: true, format: (v: string) => GUI_STATUS_OPTIONS.find(o => o.value === String(v ?? ''))?.label ?? v },
   ];
 
   formatDateOnly(value: any): string {
@@ -92,6 +95,8 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
   };
 
   onRowClick(row: any) {
+    // 已作廢的換開發票不開 PDF
+    if (String(row?.GUI_Status) === '1') return;
 
     const payload: TLS2J040Request = {
       TxnDate: row.InvoiceCreateDate,  // 換開日期
