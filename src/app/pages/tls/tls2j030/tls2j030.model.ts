@@ -199,10 +199,10 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'INV_ItemName', header: '項目名稱', type: 'dropdown', validate: [validateRequired] },
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: () => getSYS1000Options('PLU_TaxType'), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
-  { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   // 未稅/稅額：預設由換開發票稅額依銷售金額比例分攤，可手動調整，改其中一個自動回推另一個
   { field: 'INV_Net', header: '未稅金額', type: 'inputNumber', calculate: (row) => ({ INV_Tax: roundAmount((Number(row['INV_SaleAmt']) || 0) - (Number(row['INV_Net']) || 0)) }), minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'INV_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => ({ INV_Net: roundAmount((Number(row['INV_SaleAmt']) || 0) - (Number(row['INV_Tax']) || 0)) }), minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'INV_SaleAmt', header: '銷售金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [
@@ -210,9 +210,9 @@ export const COLUMNS_DETAIL_VIEW: Column[] = [
   { field: 'INV_ItemName', header: '項目名稱' },
   { field: 'PLU_TaxType', header: '稅別', format: (v) => getSYS1000('PLU_TaxType', v) },
   { field: 'INV_Qty', header: '銷售數量' },
-  { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
   { field: 'TXN_Net', header: '未稅金額', format: formatAmount },
   { field: 'TXN_Tax', header: '稅額', format: formatAmount },
+  { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
 ];
 
 // ===== 介面定義 =====
