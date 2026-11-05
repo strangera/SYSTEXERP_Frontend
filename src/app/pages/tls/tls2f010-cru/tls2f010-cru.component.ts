@@ -464,6 +464,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           if (firstDetail || firstMain) {
             const taxVal = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('應稅'))?.value ?? '';
             const deductVal = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項可扣抵'))?.value ?? '';
+            const guiType = String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? '');
             const defaultVenUniform = (details.find((d: any) => d?.ven_uniform) ?? firstDetail)?.ven_uniform ?? firstMain?.ven_uniform ?? '';
             const commYm = this.dataForm.controls.COMM_YM.value;
             let targetDate = null;
@@ -480,10 +481,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               PUR_GUINO: '',
               PUR_GUIDate: defaultInvoiceDate,
               DEC_YM: targetDate || null,
-              GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
+              GUIType: guiType,
               TAX_TYPE: taxVal,
               Deduct_Code: deductVal,
               PUR_GUIPaper: '21',
+              ...this.getReceiptTaxDefaults(guiType),
               INV_UseType: '2',
             };
           } else {
@@ -726,11 +728,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     this.checkIsInsertDisable();
     if (this.selectedMain) {
       const m = this.selectedMain as any;
+      const guiType = String(m?.tlttalent?.invoice_type ?? m?.invoice_type ?? this.detailDefaultInsert?.GUIType ?? '');
       this.detailDefaultInsert = {
         ...this.detailDefaultInsert,
         VEN_No: m?.ven_no != null ? String(m?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
         ven_uniform: m?.ven_uniform ?? this.detailDefaultInsert?.ven_uniform ?? '',
-        GUIType: String(m?.tlttalent?.invoice_type ?? m?.invoice_type ?? this.detailDefaultInsert?.GUIType ?? ''),
+        GUIType: guiType,
+        ...this.getReceiptTaxDefaults(guiType),
         DEC_YM: this.dataForm.controls.COMM_YM.value || null,
       };
     }
@@ -819,6 +823,15 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.GUIAmt = net + tax;
       }
     }
+  }
+
+  /** 單據別為收據時，回傳課稅別/扣抵代號/發票格式預設值（免稅/不可扣抵/22）；非收據回傳空物件，不覆寫既有值 */
+  private getReceiptTaxDefaults(guiType: string): Partial<{ TAX_TYPE: string; Deduct_Code: string; PUR_GUIPaper: string }> {
+    const isReceipt = (this.mapValueToLabel(this.invoiceTypeOptions, guiType) ?? '').includes('收據');
+    if (!isReceipt) return {};
+    const find = (opts: { label: string; value: string }[] | null | undefined, kw: string): string =>
+      (opts ?? []).find(o => String(o.label ?? '').includes(kw))?.value ?? '';
+    return { TAX_TYPE: find(this.taxTypeOptions, '免稅'), Deduct_Code: find(this.discountOptions, '代表進項不可扣抵'), PUR_GUIPaper: '22' };
   }
 
   private mapValueToLabel(options: { label: string, value: any }[] | any, raw: any): string | undefined {
