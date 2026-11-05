@@ -236,7 +236,7 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
               header: '新增成功',
               message: vouNo ? `傳票編號為:${vouNo}` : (res.Message || '儲存成功'),
               acceptLabel: '回查詢畫面',
-              rejectLabel: '取消',
+              showRejectButton: false,
               accept: () => this.onCancel(),
             });
           } else {
