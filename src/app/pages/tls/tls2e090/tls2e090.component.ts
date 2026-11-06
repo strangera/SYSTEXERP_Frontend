@@ -34,7 +34,40 @@ type QueryApiFn = (body: Tls2e090QueryBody) => Observable<ApiResponse<any, any>>
   selector: 'app-tls2e090',
   templateUrl: './tls2e090.component.html',
   standalone: true,
-  imports: [ButtonModule, RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  styles: [`
+    :host ::ng-deep {
+      app-table-report .p-datatable-tbody > tr,
+      app-table-report .p-datatable-tbody > tr > td {
+        height: 60px !important;
+        min-height: 60px !important;
+      }
+
+      app-table-report .p-datatable-tbody > tr > td.data-cell {
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+      }
+    }
+  `],
+  imports: [
+    ButtonModule,
+    RadiobuttonComponent,
+    SelectButtonModule,
+    TableReportComponent,
+    InputNumberComponent,
+    AsyncPipe,
+    RadiobuttonYNComponent,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    DropdownComponent,
+    MultiSelectComponent,
+    CheckboxModule,
+    TranslateModule
+  ]
 })
 export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
