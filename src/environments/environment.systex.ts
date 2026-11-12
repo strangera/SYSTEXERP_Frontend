@@ -5,7 +5,7 @@ export const environment = {
   production: true,
   showDebugToggleInMenu: true,
   version: '@@BUILD_VERSION@@', // 由 pre-build.js 寫入
-  BaseUrl: '/SYSTEXWEB',
+  BaseUrl: '/SYSTEX_WEBAPI',
   ApiUrl: '/SYSTEX_WEBAPI',
   // 登入後略過 SSO 系統選單，直接進入 ERP (account/dashboard)
   skipSsoDashboard: true,
